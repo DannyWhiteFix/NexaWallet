@@ -92,9 +92,6 @@
 #include <boost/program_options/parsers.hpp>
 #include <list>
 #include <map>
-#include <openssl/conf.h>
-#include <openssl/crypto.h>
-#include <openssl/rand.h>
 #include <set>
 #include <thread>
 #include <vector>
@@ -156,75 +153,6 @@ bool fServer = false;
 std::string strMiscWarning;
 bool fLogIPs = DEFAULT_LOGIPS;
 CTranslationInterface translationInterface;
-
-// None of this is needed with OpenSSL 1.1.0
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-/** Init OpenSSL library multithreading support */
-static std::mutex **ppmutexOpenSSL;
-void locking_callback(int mode, int i, const char *file, int line) NO_THREAD_SAFETY_ANALYSIS
-{
-    if (mode & CRYPTO_LOCK)
-    {
-        (*ppmutexOpenSSL[i]).lock();
-    }
-    else
-    {
-        (*ppmutexOpenSSL[i]).unlock();
-    }
-}
-#endif
-
-// Init
-class CInit
-{
-public:
-    CInit()
-    {
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-        // Init OpenSSL library multithreading support
-        ppmutexOpenSSL = (std::mutex **)OPENSSL_malloc(CRYPTO_num_locks() * sizeof(std::mutex *));
-        for (int i = 0; i < CRYPTO_num_locks(); i++)
-            ppmutexOpenSSL[i] = new std::mutex();
-        CRYPTO_set_locking_callback(locking_callback);
-
-        // OpenSSL can optionally load a config file which lists optional loadable modules and engines.
-        // We don't use them so we don't require the config. However some of our libs may call functions
-        // which attempt to load the config file, possibly resulting in an exit() or crash if it is missing
-        // or corrupt. Explicitly tell OpenSSL not to try to load the file. The result for our libs will be
-        // that the config appears to have been loaded and there are no modules/engines available.
-        OPENSSL_no_config();
-#else
-        OPENSSL_init_crypto(OPENSSL_INIT_ADD_ALL_CIPHERS | OPENSSL_INIT_ADD_ALL_DIGESTS, nullptr);
-#endif
-
-#ifdef WIN32
-        // Seed OpenSSL PRNG with current contents of the screen
-        RAND_screen();
-#endif
-
-        // Seed OpenSSL PRNG with performance counter
-        RandAddSeed();
-    }
-    ~CInit()
-    {
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-        // Securely erase the memory used by the PRNG
-        RAND_cleanup();
-        // Shutdown OpenSSL library multithreading support
-        CRYPTO_set_locking_callback(nullptr);
-        for (int i = 0; i < CRYPTO_num_locks(); i++)
-            delete ppmutexOpenSSL[i];
-        OPENSSL_free(ppmutexOpenSSL);
-#else
-        // Adding this on the side of caution, perhaps unnecessary according to OpenSSL 1.1 docs:
-        // "Deinitialises OpenSSL (both libcrypto and libssl). All resources allocated by OpenSSL are freed.
-        // Typically there should be no need to call this function directly as it is initiated automatically on
-        // application exit. This is done via the standard C library atexit() function."
-        // https://www.openssl.org/docs/man1.1.1/man3/OPENSSL_cleanup.html
-        OPENSSL_cleanup();
-#endif
-    }
-} instance_of_cinit;
 
 std::string formatInfoUnit(double value)
 {
@@ -734,6 +662,7 @@ void SetupEnvironment()
     SetConsoleCP(CP_UTF8);
     SetConsoleOutputCP(CP_UTF8);
 #endif
+    RandomInit();
 }
 
 bool SetupNetworking()

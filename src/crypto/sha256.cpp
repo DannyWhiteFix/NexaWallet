@@ -12,7 +12,7 @@
 
 #if defined(__x86_64__) || defined(__amd64__)
 #if defined(USE_ASM)
-#include <cpuid.h>
+#include "compat/cpuid_compat.h"
 namespace sha256_sse4
 {
 void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks);
@@ -479,13 +479,6 @@ TransformD64Type TransformD64 = sha256::TransformD64;
 TransformD64Type TransformD64_4way = nullptr;
 TransformD64Type TransformD64_8way = nullptr;
 
-#if defined(USE_ASM) && (defined(__x86_64__) || defined(__amd64__) || defined(__i386__))
-// We can't use cpuid.h's __get_cpuid as it does not support subleafs.
-void inline cpuid(uint32_t leaf, uint32_t subleaf, uint32_t& a, uint32_t& b, uint32_t& c, uint32_t& d)
-{
-  __asm__ ("cpuid" : "=a"(a), "=b"(b), "=c"(c), "=d"(d) : "0"(leaf), "2"(subleaf));
-}
-#endif
 } // namespace
 
 std::string SHA256AutoDetect()
@@ -493,7 +486,7 @@ std::string SHA256AutoDetect()
     std::string ret = "standard";
 #if defined(USE_ASM) && (defined(__x86_64__) || defined(__amd64__) || defined(__i386__))
     uint32_t eax, ebx, ecx, edx;
-    cpuid(1, 0, eax, ebx, ecx, edx);
+    GetCPUID(1, 0, eax, ebx, ecx, edx);
     if ((ecx >> 19) & 1) {
 #if defined(__x86_64__) || defined(__amd64__)
         Transform = sha256_sse4::Transform;
@@ -503,7 +496,7 @@ std::string SHA256AutoDetect()
         TransformD64_4way = sha256d64_sse41::Transform_4way;
         ret = "sse4(1way+4way)";
 #if defined(ENABLE_AVX2) && !defined(BUILD_BITCOIN_INTERNAL)
-        cpuid(7, 0, eax, ebx, ecx, edx);
+        GetCPUID(7, 0, eax, ebx, ecx, edx);
         if ((ebx >> 5) & 1) {
             TransformD64_8way = sha256d64_avx2::Transform_8way;
             ret += ",avx2(8way)";

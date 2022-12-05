@@ -78,7 +78,6 @@
 #include <boost/bind/bind.hpp>
 #include <boost/function.hpp>
 #include <boost/interprocess/sync/file_lock.hpp>
-#include <openssl/crypto.h>
 #include <thread>
 
 #if ENABLE_ZMQ

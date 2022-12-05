@@ -210,7 +210,7 @@ void TestChaCha20(const std::string &hexkey, uint64_t nonce, uint64_t seek, cons
     std::vector<unsigned char> out = ParseHex(hexout);
     std::vector<unsigned char> outres;
     outres.resize(out.size());
-    rng.Output(outres.data(), outres.size());
+    rng.Keystream(outres.data(), outres.size());
     BOOST_CHECK(out == outres);
 }
 
