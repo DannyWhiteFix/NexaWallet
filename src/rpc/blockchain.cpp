@@ -1329,14 +1329,7 @@ UniValue getblockchaininfo(const UniValue &params, bool fHelp)
     obj.pushKV("verificationprogress", Checkpoints::GuessVerificationProgress(tip, !fCheckpointsEnabled));
     obj.pushKV("initialblockdownload", IsInitialBlockDownload());
     obj.pushKV("chainwork", tip->chainWork().GetHex());
-
-    CCoinsStats stats;
-    FlushStateToDisk();
-    if (GetUTXOStats(pcoinsdbview, stats))
-    {
-        obj.pushKV("coinsupply", ValueFromAmount(stats.nTotalAmount));
-    }
-
+    obj.pushKV("coinsupply", GetCoinsMinted((int)chainActive.Height(), Params().GetConsensus()));
     obj.pushKV("size_on_disk", CalculateCurrentUsage());
     obj.pushKV("pruned", fPruneMode);
     if (fPruneMode)
