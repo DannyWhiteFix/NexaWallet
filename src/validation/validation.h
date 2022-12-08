@@ -109,6 +109,10 @@ bool TestBlockValidity(CValidationState &state,
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params &consensusParams);
 
+/** return total number of satoshis minted till nHeight
+ */
+uint64_t GetCoinsMinted(int nHeight, const Consensus::Params &consensusParams);
+
 /**
  * Determine what nVersion a new block should use.
  */

@@ -1412,6 +1412,25 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params &consensusParams)
     return nSubsidy;
 }
 
+uint64_t GetCoinsMinted(int nHeight, const Consensus::Params &consensusParams)
+{
+    uint64_t total_minted = 0;
+    const int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
+    CAmount nSubsidy = consensusParams.initialSubsidy;
+    int tracked_height = nHeight;
+    for (int i = 0; i <= halvings; ++i)
+    {
+        if (tracked_height >= consensusParams.nSubsidyHalvingInterval)
+        {
+            total_minted += (nSubsidy >>= i) * consensusParams.nSubsidyHalvingInterval;
+            tracked_height -= consensusParams.nSubsidyHalvingInterval;
+        }
+        else
+            total_minted += (nSubsidy >>= i) * tracked_height;
+    }
+    return total_minted;
+}
+
 int32_t ComputeBlockVersion(const CBlockIndex *pindexPrev, const Consensus::Params &params)
 {
     LOCK(cs_main);
