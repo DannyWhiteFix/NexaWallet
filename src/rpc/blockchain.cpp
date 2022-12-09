@@ -1263,6 +1263,7 @@ UniValue getblockchaininfo(const UniValue &params, bool fHelp)
             "  \"initialblockdownload\": xxxx, (bool) (debug information) estimate of whether this node is in Initial "
             "Block Download mode.\n"
             "  \"chainwork\": \"xxxx\"     (string) total amount of work in active chain, in hexadecimal\n"
+            "  \"coinsupply\": xxxxxxx     (numeric) total amount of satoshis minted so far in the active chain\n"
             "  \"size_on_disk\": xxxxxx,   (numeric) the estimated size of the block and undo files on disk\n"
             "  \"pruned\": xx,             (boolean) if the blocks are subject to pruning\n"
             "  \"pruneheight\": xxxxxx,    (numeric) lowest-height complete block stored (only present if pruning is "
