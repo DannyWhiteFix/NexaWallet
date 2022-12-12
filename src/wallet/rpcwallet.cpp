@@ -2759,7 +2759,7 @@ UniValue getwalletinfo(const UniValue &params, bool fHelp)
     obj.pushKV("balance", ValueFromAmount(pwalletMain->GetBalance()));
     obj.pushKV("unconfirmed_balance", ValueFromAmount(pwalletMain->GetUnconfirmedBalance()));
     obj.pushKV("immature_balance", ValueFromAmount(pwalletMain->GetImmatureBalance()));
-    obj.pushKV("txcount", (int)pwalletMain->mapWallet.size());
+    obj.pushKV("txcount", (int)pwalletMain->mapWallet.size() / 3);
     obj.pushKV("keypoololdest", pwalletMain->GetOldestKeyPoolTime());
     obj.pushKV("keypoolsize", (int)pwalletMain->GetKeyPoolSize());
     if (pwalletMain->IsCrypted())

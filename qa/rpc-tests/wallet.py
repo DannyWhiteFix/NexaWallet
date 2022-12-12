@@ -127,6 +127,7 @@ class WalletTest (BitcoinTestFramework):
         walletinfo = self.nodes[0].getwalletinfo()
         assert_equal(walletinfo['immature_balance'], COINBASE_REWARD)
         assert_equal(walletinfo['balance'], 0)
+        assert_equal(walletinfo['txcount'], 1)
 
         self.sync_blocks()
         self.nodes[1].generate(101)
@@ -155,6 +156,7 @@ class WalletTest (BitcoinTestFramework):
 
         walletinfo = self.nodes[0].getwalletinfo()
         assert_equal(walletinfo['immature_balance'], 0)
+        assert_equal(walletinfo['txcount'], 3)
         waitFor(30, lambda: self.nodes[2].getbalance("",0) == SentAmt)
         waitFor(30, lambda: self.nodes[2].getbalance("*",0) == SentAmt)
         assert self.nodes[2].getbalance("") == 0
