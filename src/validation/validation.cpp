@@ -1422,11 +1422,14 @@ uint64_t GetCoinsMinted(int nHeight, const Consensus::Params &consensusParams)
     {
         if (tracked_height >= consensusParams.nSubsidyHalvingInterval)
         {
-            total_minted += (nSubsidy >>= i) * consensusParams.nSubsidyHalvingInterval;
+            total_minted += nSubsidy * consensusParams.nSubsidyHalvingInterval;
             tracked_height -= consensusParams.nSubsidyHalvingInterval;
         }
         else
-            total_minted += (nSubsidy >>= i) * tracked_height;
+        {
+            total_minted += nSubsidy * tracked_height;
+        }
+        nSubsidy >>= 1;
     }
     return total_minted;
 }

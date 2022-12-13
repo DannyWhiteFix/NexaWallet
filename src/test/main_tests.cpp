@@ -21,6 +21,12 @@ static void TestCoinEmission(const Consensus::Params &consensusParams)
     BOOST_CHECK_EQUAL(GetCoinsMinted(1049999, consensusParams), 1049999000000000);
     BOOST_CHECK_EQUAL(GetCoinsMinted(1050000, consensusParams), 1050000000000000);
     BOOST_CHECK_EQUAL(GetCoinsMinted(1050001, consensusParams), 1050000500000000);
+    BOOST_CHECK_EQUAL(GetCoinsMinted(2100000, consensusParams), 1575000000000000);
+    BOOST_CHECK_EQUAL(GetCoinsMinted(3150000, consensusParams), 1837500000000000);
+    BOOST_CHECK_EQUAL(GetCoinsMinted(4200000, consensusParams), 1968750000000000);
+    BOOST_CHECK_EQUAL(GetCoinsMinted(10500000, consensusParams), 2097949218750000);
+    BOOST_CHECK_EQUAL(GetCoinsMinted(11550000, consensusParams), 2098974608850000);
+    BOOST_CHECK_EQUAL(GetCoinsMinted(26250000, consensusParams), 2099999929650000);
 }
 
 static void TestBlockSubsidyHalvings(const Consensus::Params &consensusParams)
