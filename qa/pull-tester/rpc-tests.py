@@ -403,8 +403,16 @@ def runtests():
                             t_args = t_rep[1:]
                             all_args_found = True
                             for targ in t_args:
-                                if not targ in passOn.split(' '):
-                                    all_args_found = False
+                                # WhenElectrumFound() add a electrum.exec= argument to electrum tests even if we did not pass it
+                                # at the command line, so we need to special-case electrum tests otherwise they won't be run cause
+                                # no electrum.exec has been added to passOn
+                                if targ.split('=')[0] == "--electrum.exec":
+                                    if not targ in passOn.split(' ') + [targ]:
+                                        all_args_found = False
+                                else:
+                                    if not targ in passOn.split(' '):
+                                        all_args_found = False
+
                             if all_args_found:
                                 tests_to_run.append(t)
                                 found = True
