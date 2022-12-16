@@ -124,6 +124,7 @@ class BlockchainTest(BitcoinTestFramework):
             'blocks',
             'chain',
             'chainwork',
+            'coinsupply',
             'difficulty',
             'headers',
             'initialblockdownload',
