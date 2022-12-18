@@ -490,19 +490,8 @@ CNode *ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure
     return nullptr;
 }
 
-void CNode::CloseSocketDisconnect()
+void CNode::ClearPriorityQueues()
 {
-    // if this is an outbound node that was not added via addenode then decrement the counter.
-    if (fAutoOutbound)
-        requester.nOutbound--;
-
-    fDisconnect = true;
-    if (hSocket != INVALID_SOCKET)
-    {
-        LOG(NET, "disconnecting peer %s\n", GetLogName());
-        CloseSocket(hSocket);
-    }
-
     // Purge any noderef's in the priority message queues relating to this peer. If we don't
     // remove the node references here then we won't be able to complete the disconnection.
     {
@@ -527,6 +516,22 @@ void CNode::CloseSocketDisconnect()
                 it++;
         }
     }
+}
+
+void CNode::CloseSocketDisconnect()
+{
+    // if this is an outbound node that was not added via addenode then decrement the counter.
+    if (fAutoOutbound)
+        requester.nOutbound--;
+
+    fDisconnect = true;
+    if (hSocket != INVALID_SOCKET)
+    {
+        LOG(NET, "disconnecting peer %s\n", GetLogName());
+        CloseSocket(hSocket);
+    }
+
+    ClearPriorityQueues();
 
     // in case this fails, we'll empty the recv buffer when the CNode is deleted
     TRY_LOCK(cs_vRecvMsg, lockRecv);
@@ -1310,6 +1315,13 @@ void CleanupDisconnectedNodes()
                 // occurred prior to insertion into vNodesDisconnected
                 delete pnode;
             }
+        }
+        else
+        {
+            // Due to timing issues with locking a noderef can still be present in the priority queues
+            // even though we already attempted to remove them when we called CloseSocketDisconnect() so
+            // in the event that we still have a positive noderef count we need to purge again.
+            pnode->ClearPriorityQueues();
         }
     }
 }

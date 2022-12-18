@@ -953,6 +953,9 @@ public:
      */
     void DisconnectIfBanned();
 
+    /** Clear the priority send and receive queues of any noderefs that match this node */
+    void ClearPriorityQueues();
+
     void CloseSocketDisconnect();
 
     //! returns the name of this node for logging.  Respects the user's choice to not log the node's IP
