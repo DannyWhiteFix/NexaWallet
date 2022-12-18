@@ -38,7 +38,7 @@ uint256 CBlockHeader::GetMiningHeaderCommitment() const
 uint256 GetMiningHash(const uint256 &headerCommitment, const std::vector<unsigned char> &nonce)
 {
     CHashWriter ret(SER_GETHASH, 0);
-    assert(nonce.size() <= CBlockHeader::MAX_NONCE_SIZE);
+    DbgAssert(nonce.size() <= CBlockHeader::MAX_NONCE_SIZE, );
     ret << headerCommitment << nonce;
     uint256 r = ret.GetHash();
     return r;

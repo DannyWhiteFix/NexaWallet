@@ -208,7 +208,6 @@ public:
     std::set<uint64_t> UpdateResolvedTxsAndIdentifyMissing(const std::map<uint64_t, CTransactionRef> &mapPartialTxHash,
         const std::vector<uint64_t> &blockCheapHashes,
         uint64_t grapheneVersion);
-    bool CheckBlockHeader(const CBlockHeader &block, CValidationState &state);
 };
 
 // This class is used to respond to requests for missing transactions after sending an Graphene block.
