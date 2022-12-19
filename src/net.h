@@ -88,7 +88,7 @@ static const bool DEFAULT_UPNP = false;
 /** The maximum number of peer connections to maintain. */
 static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
 /** BU: The maximum number of outbound peer connections */
-static const unsigned int DEFAULT_MAX_OUTBOUND_CONNECTIONS = 16;
+static const unsigned int DEFAULT_MAX_OUTBOUND_CONNECTIONS = 8;
 /** Limits number of IPs learned from a DNS seed */
 static const unsigned int MAX_DNS_SEEDED_IPS = 256;
 /** BU: The daily maximum disconnects while searching for xthin nodes to connect */
