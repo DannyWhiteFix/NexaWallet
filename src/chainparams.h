@@ -120,7 +120,10 @@ public:
     const std::string &CashAddrPrefix() const { return cashaddrPrefix; }
     const std::vector<SeedSpec6> &FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData &Checkpoints() const { return checkpointData; }
+    /** The pre-allocation chunk size for blk?????.dat files */
     uint64_t nBlockFileSize;
+    /** The pre-allocation chunk size for rev?????.dat files */
+    uint64_t nUndoFileSize;
 
 protected:
     CChainParams() {}

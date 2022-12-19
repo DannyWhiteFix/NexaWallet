@@ -310,8 +310,8 @@ public:
         // * UNIX timestamp of last checkpoint block
         checkpointData.nTimeLastCheckpoint = 1573825449;
 
-        // Size of each new blockfile where all the blocks are stored to disk
-        nBlockFileSize = 16ULL * 0x8000000ULL; // 2GB
+        nBlockFileSize = 0x8000000ULL; // 2GB
+        nUndoFileSize = 0x2000000ULL; // 32MiB
     }
 };
 
@@ -396,8 +396,8 @@ public:
 
         cashaddrPrefix = "nexareg";
 
-        // Size of each new blockfile where all the blocks are stored to disk
-        nBlockFileSize = 0x2000000ULL; // 32MiB
+        nBlockFileSize = 0x20000ULL; // 128KiB
+        nUndoFileSize = 0x2000ULL; // 8KiB
     }
 };
 static CRegTestParams regTestParams;
@@ -499,8 +499,8 @@ public:
         // * UNIX timestamp of last checkpoint block
         checkpointData.nTimeLastCheckpoint = 1661700138;
 
-        // Size of each new blockfile where all the blocks are stored to disk
         nBlockFileSize = 0x8000000ULL; // 128MiB
+        nUndoFileSize = 0x800000ULL; // 8MiB
     }
 };
 
@@ -611,8 +611,8 @@ public:
         // * UNIX timestamp of last checkpoint block
         checkpointData.nTimeLastCheckpoint = 1661829976;
 
-        // Size of each new blockfile where all the blocks are stored to disk
-        nBlockFileSize = 16ULL * 0x8000000ULL; // 2GB
+        nBlockFileSize = 0x8000000ULL; // 128MiB
+        nUndoFileSize = 0x800000ULL; // 8MiB
     }
 };
 

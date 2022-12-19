@@ -24,9 +24,9 @@ static const BlockDBMode DEFAULT_BLOCK_DB_MODE = SEQUENTIAL_BLOCK_FILES;
 extern BlockDBMode BLOCK_DB_MODE;
 extern CDatabaseAbstract *pblockdb;
 
-/** The pre-allocation chunk size for blk?????.dat files (since 0.8) */
+/** The pre-allocation chunk size for blk?????.dat files */
 static const uint64_t DEFAULT_BLOCKFILE_CHUNK_SIZE = 0x1000000; // 16 MiB
-/** The pre-allocation chunk size for rev?????.dat files (since 0.8) */
+/** The pre-allocation chunk size for rev?????.dat files */
 static const uint64_t DEFAULT_UNDOFILE_CHUNK_SIZE = 0x100000; // 1 MiB
 extern uint64_t blockfile_chunk_size;
 extern uint64_t undofile_chunk_size;

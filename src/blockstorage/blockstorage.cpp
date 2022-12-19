@@ -45,10 +45,7 @@ void InitializeBlockStorage(const int64_t &_nBlockTreeDBCache,
     {
         // raise preallocation size of block and undo files
         blockfile_chunk_size = Params().nBlockFileSize;
-        // multiply by 8 as this is the same difference between default and max blockfile size
-        // we do not have a define max undofile size
-        if (Params().NetworkIDString() != CBaseChainParams::REGTEST)
-            undofile_chunk_size = undofile_chunk_size * 8;
+        undofile_chunk_size = Params().nUndoFileSize;
     }
 
     blockcache.Init();
@@ -925,8 +922,6 @@ bool FindBlockPos(CValidationState &state,
             {
                 fCheckForPruning = true;
             }
-            // Don't preallocate on regtest because we want it to run space efficiently for quick tests
-            if (Params().NetworkIDString() != CBaseChainParams::REGTEST)
             {
                 if (CheckDiskSpace(nNewChunks * blockfile_chunk_size - pos.nPos))
                 {
@@ -979,7 +974,6 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, uint64_
         {
             fCheckForPruning = true;
         }
-        if (Params().NetworkIDString() != CBaseChainParams::REGTEST)
         {
             if (CheckDiskSpace(nNewChunks * undofile_chunk_size - pos.nPos))
             {

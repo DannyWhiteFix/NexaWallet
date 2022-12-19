@@ -28,7 +28,7 @@ static const uint64_t BLOCK_CHAIN_SIZE = 1;
 /* Minimum free space (in GB) needed for data directory when pruned; Does not include prune target */
 static const uint64_t CHAIN_STATE_SIZE = 1;
 /* Total required space (in GB) depending on user choice (prune, not prune) */
-static uint64_t requiredSpace;
+static uint64_t requiredSpace = BLOCK_CHAIN_SIZE;
 
 /* Check free space asynchronously to prevent hanging the UI thread.
 
