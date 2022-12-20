@@ -62,6 +62,14 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.sync_blocks()
         self.nodes[0].generate(101)
         self.sync_blocks()
+
+        # check that coinbase transaction has to have the fee field set to 0
+        block = self.nodes[0].getblock(101)
+        cbTxIdem = block['txidem'][0]
+        rawCbTx = self.nodes[0].getrawtransaction(cbTxIdem, True)
+        assert_equal(rawCbTx['fee'],0)
+
+
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),1500000)
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),1000000)
         txidem = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),5000000)

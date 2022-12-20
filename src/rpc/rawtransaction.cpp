@@ -128,23 +128,23 @@ void TxToJSON(const CTransaction &tx, const int64_t txTime, const uint256 hashBl
     }
     entry.pushKV("spends", ValueFromAmount(inAmt));
     entry.pushKV("sends", ValueFromAmount(outAmt));
-    entry.pushKV("fee", ValueFromAmount(inAmt - outAmt));
+    CAmount feeAmt = 0;
+    if (!tx.IsCoinBase())
+    {
+        feeAmt = inAmt - outAmt;
+    }
+    entry.pushKV("fee", ValueFromAmount(feeAmt));
 
     UniValue vin(UniValue::VARR);
     for (const CTxIn &txin : tx.vin)
     {
         UniValue in(UniValue::VOBJ);
-        if (tx.IsCoinBase())
-            in.pushKV("coinbase", HexStr(txin.scriptSig.begin(), txin.scriptSig.end()));
-        else
-        {
-            in.pushKV("outpoint", txin.prevout.hash.GetHex());
-            in.pushKV("amount", ValueFromAmount(txin.amount));
-            UniValue o(UniValue::VOBJ);
-            o.pushKV("asm", ScriptToAsmStr(txin.scriptSig, true));
-            o.pushKV("hex", HexStr(txin.scriptSig.begin(), txin.scriptSig.end()));
-            in.pushKV("scriptSig", o);
-        }
+        in.pushKV("outpoint", txin.prevout.hash.GetHex());
+        in.pushKV("amount", ValueFromAmount(txin.amount));
+        UniValue o(UniValue::VOBJ);
+        o.pushKV("asm", ScriptToAsmStr(txin.scriptSig, true));
+        o.pushKV("hex", HexStr(txin.scriptSig.begin(), txin.scriptSig.end()));
+        in.pushKV("scriptSig", o);
         in.pushKV("sequence", (int64_t)txin.nSequence);
         vin.push_back(in);
     }
