@@ -9,6 +9,7 @@
 
 #include "crypto/chacha20.h"
 #include "crypto/common.h"
+#include "span.h"
 #include "uint256.h"
 
 #include <limits>
@@ -18,12 +19,13 @@
 void RandAddSeed();
 
 /**
- * Functions to gather random data via the OpenSSL PRNG
+ * Functions to gather random data
  */
 void GetRandBytes(unsigned char *buf, int num);
+void GetRandBytes(Span<unsigned char> bytes) noexcept;
 uint64_t GetRand(uint64_t nMax);
 int GetRandInt(int nMax);
-uint256 GetRandHash();
+uint256 GetRandHash() noexcept;
 
 /**
  * Add a little bit of randomness to the output of GetStrongRangBytes.
@@ -64,7 +66,7 @@ private:
         {
             RandomSeed();
         }
-        rng.Output(bytebuf, sizeof(bytebuf));
+        rng.Keystream(bytebuf, sizeof(bytebuf));
         bytebuf_size = sizeof(bytebuf);
     }
 
@@ -75,10 +77,18 @@ private:
     }
 
 public:
-    explicit FastRandomContext(bool fDeterministic = false);
+    explicit FastRandomContext(bool fDeterministic = false) noexcept;
 
     /** Initialize with explicit seed (only for testing) */
-    explicit FastRandomContext(const uint256 &seed);
+    explicit FastRandomContext(const uint256 &seed) noexcept;
+
+    // Do not permit copying a FastRandomContext (move it, or create a new one to get reseeded).
+    FastRandomContext(const FastRandomContext &) = delete;
+    FastRandomContext(FastRandomContext &&) = delete;
+    FastRandomContext &operator=(const FastRandomContext &) = delete;
+
+    /** Move a FastRandomContext. If the original one is used again, it will be reseeded. */
+    FastRandomContext &operator=(FastRandomContext &&from) noexcept;
 
     /** Generate a random 64-bit integer. */
     uint64_t rand64()
@@ -131,7 +141,7 @@ public:
     /** Generate a random 32-bit integer. */
     uint32_t rand32() { return randbits(32); }
     /** generate a random uint256. */
-    uint256 rand256();
+    uint256 rand256() noexcept;
 
     /** Generate a random boolean. */
     bool randbool() { return randbits(1); }

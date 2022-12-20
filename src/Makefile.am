@@ -196,6 +196,7 @@ BITCOIN_CORE_H = \
   pow.h \
   protocol.h \
   random.h \
+  randomenv.h \
   reverse_iterator.h \
   reverselock.h \
   rpc/blockchain.h \
@@ -416,6 +417,8 @@ libnexa_a_SOURCES = \
   pubkey.h \
   random.cpp \
   random.h \
+  randomenv.h \
+  randomenv.cpp \
   script/bitfield.cpp \
   script/bitfield.h \
   script/pushtxstate.cpp \
@@ -598,6 +601,7 @@ libnexa_util_a_SOURCES = \
   fs.cpp \
   logging.cpp \
   random.cpp \
+  randomenv.cpp \
   rpc/protocol.cpp \
   support/cleanse.cpp \
   sync.cpp \
@@ -650,7 +654,7 @@ nexad_LDADD = \
   $(LIBSECP256K1)
 
 
-nexad_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
+nexad_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
 
 # nexa-cli binary #
 nexa_cli_SOURCES = nexa-cli.cpp
@@ -671,7 +675,7 @@ nexa_cli_LDADD = \
   $(LIBNEXA_CRYPTO_AVX2) \
   $(LIBRSM)
 
-nexa_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
+nexa_cli_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
 # nexa tx binary #
@@ -727,7 +731,7 @@ nexa_miner_LDADD = \
   $(LIBRSM) \
   $(LIBSECP256K1)
 
-nexa_miner_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
+nexa_miner_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
 # nexa library #
@@ -738,7 +742,7 @@ if GLIBC_BACK_COMPAT
 libnexa_la_SOURCES += compat/glibc_compat.cpp
 endif
 
-libnexa_la_LDFLAGS = $(AM_LDFLAGS) $(SSL_LIBS) $(CRYPTO_LIBS) $(BOOST_LIBS) -no-undefined $(RELDFLAGS) $(PTHREAD_FLAGS)
+libnexa_la_LDFLAGS = $(AM_LDFLAGS) $(CRYPTO_LIBS) $(BOOST_LIBS) -no-undefined $(RELDFLAGS) $(PTHREAD_FLAGS)
 libnexa_la_LIBADD = $(LIBSECP256K1)
 libnexa_la_CPPFLAGS = $(AM_CPPFLAGS) $(NEXA_INCLUDES) -I$(BOOST_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include $(JNI_CXXFLAGS) -DBUILD_BITCOIN_INTERNAL
 libnexa_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)

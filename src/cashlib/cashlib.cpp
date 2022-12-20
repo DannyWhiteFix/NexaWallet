@@ -67,10 +67,6 @@ CRecursiveSharedCriticalSection::CRecursiveSharedCriticalSection(const char *n) 
 CRecursiveSharedCriticalSection::~CRecursiveSharedCriticalSection() {}
 #endif
 
-#ifndef ANDROID
-#include <openssl/rand.h>
-#endif
-
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -2224,11 +2220,7 @@ void GetStrongRandBytes(unsigned char *buf, int num) { RandomBytes(buf, num); }
 /** Return random bytes from cryptographically acceptable random sources */
 SLAPI int RandomBytes(unsigned char *buf, int num)
 {
-    if (RAND_bytes(buf, num) != 1)
-    {
-        memset(buf, 0, num);
-        return 0;
-    }
+    GetStrongRandBytes(buf, num);
     return num;
 }
 #endif

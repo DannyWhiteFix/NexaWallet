@@ -35,8 +35,8 @@
 #include <boost/test/unit_test.hpp>
 #include <thread>
 
-uint256 insecure_rand_seed = GetRandHash();
-FastRandomContext insecure_rand_ctx(insecure_rand_seed);
+uint256 insecure_rand_seed;
+FastRandomContext insecure_rand_ctx;
 
 FalseScriptImportedState fsis;
 
@@ -65,6 +65,9 @@ BasicTestingSetup::BasicTestingSetup(const std::string &chainName)
 BasicTestingSetup::~BasicTestingSetup() { ECC_Stop(); }
 TestingSetup::TestingSetup(const std::string &chainName) : BasicTestingSetup(chainName)
 {
+    insecure_rand_seed = GetRandHash();
+    insecure_rand_ctx = FastRandomContext(insecure_rand_seed);
+
     const CChainParams &chainparams = Params();
     // Ideally we'd move all the RPC tests to the functional testing framework
     // instead of unit tests, but for now we need these here.

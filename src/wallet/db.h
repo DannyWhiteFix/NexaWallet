@@ -156,7 +156,10 @@ public:
     bool Write(const K &key, const T &value, bool fOverwrite = true)
     {
         if (!pdb)
+        {
+            LOGA("CDB::Write: no underlying database open for %s\n", strFile.c_str());
             return false;
+        }
         if (fReadOnly)
             assert(!"Write called on database in read-only mode");
 
@@ -174,6 +177,11 @@ public:
 
         // Write
         int ret = pdb->put(activeTxn, &datKey, &datValue, (fOverwrite ? 0 : DB_NOOVERWRITE));
+        if (ret != 0)
+        {
+            LOGA("CDB::Write: unexpected write error '%s' (%d) for database %s\n", db_strerror(ret), ret,
+                strFile.c_str());
+        }
 
         // Clear memory in case it was a private key
         memset(datKey.get_data(), 0, datKey.get_size());
