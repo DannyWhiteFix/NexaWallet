@@ -458,20 +458,6 @@ bool CXRequestThinBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
     return true;
 }
 
-bool CXThinBlock::CheckBlockHeader(const CBlockHeader &block, CValidationState &state)
-{
-    // Check proof of work matches claimed amount
-    if (!CheckProofOfWork(header.GetMiningHash(), header.nBits, Params().GetConsensus()))
-        return state.DoS(50, error("CheckBlockHeader(): proof of work failed"), REJECT_INVALID, "high-hash");
-
-    // Check timestamp
-    if (header.GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60)
-        return state.Invalid(
-            error("CheckBlockHeader(): block timestamp too far in the future"), REJECT_INVALID, "time-too-new");
-
-    return true;
-}
-
 /**
  * Handle an incoming Xthin or Xpedited block
  * Once the block is validated apart from the Merkle root, forward the Xpedited block with a hop count of nHops.
