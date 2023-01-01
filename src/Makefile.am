@@ -47,6 +47,7 @@ LIBNEXA_SERVER=libnexa_server.a
 LIBNEXA_COMMON=libnexa_common.a
 LIBNEXA_CLI=libnexa_cli.a
 LIBNEXA_UTIL=libnexa_util.a
+LIBNEXA_FALCON=falcon512/libnexa_falcon512.a
 LIBNEXA_CRYPTO=crypto/libnexa_crypto.a
 LIBNEXA_CRYPTO_SSE41=crypto/libnexa_crypto_sse41.a
 LIBNEXA_CRYPTO_AVX2=crypto/libnexa_crypto_avx2.a
@@ -82,6 +83,7 @@ EXTRA_LIBRARIES += \
   $(LIBNEXA_CRYPTO) \
   $(LIBNEXA_CRYPTO_SSE41) \
   $(LIBNEXA_CRYPTO_AVX2) \
+  $(LIBNEXA_FALCON) \
   $(LIBNEXA_UTIL) \
   $(LIBNEXA_COMMON) \
   $(LIBNEXA_SERVER) \
@@ -510,6 +512,24 @@ crypto_libnexa_crypto_avx2_a_CPPFLAGS += -DENABLE_AVX2
 endif
 crypto_libnexa_crypto_avx2_a_SOURCES = crypto/sha256_avx2.cpp
 
+# falcon512 primitives library
+falcon512_libnexa_falcon512_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_CONFIG_INCLUDES)
+falcon512_libnexa_falcon512_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+falcon512_libnexa_falcon512_a_SOURCES = \
+  falcon512/codec.c \
+  falcon512/common.c \
+  falcon512/falcon.c \
+  falcon512/falcon.h \
+  falcon512/fft.c \
+  falcon512/fpr.c \
+  falcon512/fpr.h \
+  falcon512/inner.h \
+  falcon512/keygen.c \
+  falcon512/rng.c \
+  falcon512/shake.c \
+  falcon512/sign.c \
+  falcon512/vrfy.c
+
 # common: shared between nexad, and nexa-qt and non-server tools
 libnexa_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(NEXA_INCLUDES)
 libnexa_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -651,6 +671,7 @@ nexad_LDADD = \
   $(LIBNEXA_CRYPTO) \
   $(LIBNEXA_CRYPTO_SSE41) \
   $(LIBNEXA_CRYPTO_AVX2) \
+  $(LIBNEXA_FALCON) \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
@@ -677,6 +698,7 @@ nexa_cli_LDADD = \
   $(LIBNEXA_CRYPTO) \
   $(LIBNEXA_CRYPTO_SSE41) \
   $(LIBNEXA_CRYPTO_AVX2) \
+  $(LIBNEXA_FALCON) \
   $(LIBRSM)
 
 nexa_cli_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
@@ -699,6 +721,7 @@ nexa_tx_LDADD = \
   $(LIBNEXA_CRYPTO) \
   $(LIBNEXA_CRYPTO_SSE41) \
   $(LIBNEXA_CRYPTO_AVX2) \
+  $(LIBNEXA_FALCON) \
   $(LIBSECP256K1) \
   $(LIBRSM)
 
@@ -732,6 +755,7 @@ nexa_miner_LDADD = \
   $(LIBNEXA_CRYPTO) \
   $(LIBNEXA_CRYPTO_SSE41) \
   $(LIBNEXA_CRYPTO_AVX2) \
+  $(LIBNEXA_FALCON) \
   $(LIBRSM) \
   $(LIBSECP256K1)
 
@@ -740,7 +764,7 @@ nexa_miner_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 
 # nexa library #
 if BUILD_NEXA_LIBS
-libnexa_la_SOURCES = $(libnexa_a_SOURCES) $(crypto_libnexa_crypto_a_SOURCES)
+libnexa_la_SOURCES = $(libnexa_a_SOURCES) $(crypto_libnexa_crypto_a_SOURCES) $(falcon512_libnexa_falcon512_a_SOURCES)
 
 if GLIBC_BACK_COMPAT
 libnexa_la_SOURCES += compat/glibc_compat.cpp
@@ -765,6 +789,7 @@ CLEANFILES += *.gcda *.gcno
 CLEANFILES += compat/*.gcda compat/*.gcno
 CLEANFILES += consensus/*.gcda consensus/*.gcno
 CLEANFILES += crypto/*.gcda crypto/*.gcno
+CLEANFILES += falcon512/*.gcda falcon512/*.gcno
 CLEANFILES += policy/*.gcda policy/*.gcno
 CLEANFILES += primitives/*.gcda primitives/*.gcno
 CLEANFILES += script/*.gcda script/*.gcno
