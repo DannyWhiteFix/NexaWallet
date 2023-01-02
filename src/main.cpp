@@ -339,12 +339,11 @@ bool GetTransaction(const uint256 &hash,
     if (blockIndex == nullptr)
     {
         // attempt to use coin database to locate block that contains transaction, and scan it
-        // just try the first 16 outputs.  If the tx has fewer, its benign.  If the tx has more, then we may miss
-        // finding it with this method... but this method is uncertain anyway -- it won't work if all outputs are
-        // already spent
+        // by MAX_TX_NUM_VOUT outputs.  If the tx has fewer, it's benign.
+        // This method is uncertain -- it won't work if all outputs are already spent
         if (fAllowSlow)
         {
-            for (int i = 0; i < 16; i++)
+            for (unsigned int i = 0; i < MAX_TX_NUM_VOUT; i++)
             {
                 CoinAccessor coin(*pcoinsTip, COutPoint(hash, i));
                 if (!coin->IsSpent())
