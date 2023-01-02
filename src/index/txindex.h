@@ -68,7 +68,7 @@ public:
 
     /// Look up the on-disk location of a transaction by id or idem.
     /// @returns A reference to the transaction, and the epoch time it was confirmed
-    bool FindTx(const uint256 &txhash, uint256 &blockhash, CTransactionRef &ptx, int32_t &time) const;
+    bool FindTx(const uint256 &hash, uint256 &blockhash, CTransactionRef &ptx, int32_t &time) const;
 
     /// Start initializes the sync state and registers the instance as a
     /// ValidationInterface so that it stays in sync with blockchain updates.

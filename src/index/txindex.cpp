@@ -91,7 +91,6 @@ bool TxIndex::WriteGenesisTransaction()
 }
 static const CBlockIndex *NextSyncBlock(const CBlockIndex *pindex_prev)
 {
-    LOCK(cs_main);
     if (!pindex_prev)
     {
         return chainActive.Genesis();
@@ -201,12 +200,13 @@ bool TxIndex::WriteBlock(const CBlock &block, const CBlockIndex *pindex)
         }
         pos.nTxOffset += ::GetSerializeSize(*tx, SER_DISK, CLIENT_VERSION);
     }
+    prevoutPos.shrink_to_fit();
+
     return db->WriteTxs(idPos, idemPos, prevoutPos);
 }
 
 bool TxIndex::WriteBestBlock(CBlockIndex *block_index)
 {
-    LOCK(cs_main);
     if (!db->WriteBestBlock(chainActive.GetLocator(block_index)))
     {
         return error("%s: Failed to write locator to disk", __func__);
@@ -240,12 +240,12 @@ void TxIndex::BlockConnected(const CBlock &block, CBlockIndex *pindex)
 }
 
 bool TxIndex::IsSynced() { return fSynced.load(); }
-bool TxIndex::FindTx(const uint256 &txhash, uint256 &blockhash, CTransactionRef &ptx, int32_t &txTime) const
+bool TxIndex::FindTx(const uint256 &hash, uint256 &blockhash, CTransactionRef &ptx, int32_t &txTime) const
 {
     CDiskTxPos postx;
-    if (!db->ReadTxIdPos(txhash, postx))
+    if (!db->ReadTxIdPos(hash, postx))
     {
-        if (!db->ReadTxIdemPos(txhash, postx))
+        if (!db->ReadTxIdemPos(hash, postx))
             return false;
     }
 
@@ -264,8 +264,8 @@ bool TxIndex::FindTx(const uint256 &txhash, uint256 &blockhash, CTransactionRef 
         return error("%s: Deserialize or I/O error - %s", __func__, e.what());
     }
     blockhash = header.GetHash();
-    if (ptx->GetId() != txhash)
-        return error("%s: txid mismatch", __func__);
+    if (ptx->GetId() != hash && ptx->GetIdem() != hash)
+        return error("%s: txid and idem mismatch", __func__);
     txTime = header.nTime;
 
     return true;

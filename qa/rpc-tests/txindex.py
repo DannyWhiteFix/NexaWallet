@@ -55,6 +55,12 @@ class TxIndexTest(BitcoinTestFramework):
                     self.nodes[1].getrawtransaction(tx)
                 except JSONRPCException as e:
                     raise AssertionError("getrawtransaction failed")
+            txns = self.nodes[1].getblock(blockhash)['txidem']
+            for tx in txns:
+                try:
+                    self.nodes[1].getrawtransaction(tx)
+                except JSONRPCException as e:
+                    raise AssertionError("getrawtransaction by idem failed")
 
         # Check we can not find an invalid tx
         logging.info("Checking invalid tx...")
@@ -107,6 +113,12 @@ class TxIndexTest(BitcoinTestFramework):
                     self.nodes[1].getrawtransaction(tx)
                 except JSONRPCException as e:
                     raise AssertionError("getrawtransaction failed (4)")
+            txns = self.nodes[1].getblock(blockhash)['txidem']
+            for tx in txns:
+                try:
+                    self.nodes[1].getrawtransaction(tx)
+                except JSONRPCException as e:
+                    raise AssertionError("getrawtransaction by idem failed (4)")
 
         #### Restart with txindex turned off, mine some blocks and then restart with txindex on.
         #    The txindex should automatically catch up and the new entries should be acessible.
@@ -159,6 +171,12 @@ class TxIndexTest(BitcoinTestFramework):
                     self.nodes[1].getrawtransaction(tx)
                 except JSONRPCException as e:
                     raise AssertionError("getrawtransaction failed")
+            txns = self.nodes[1].getblock(blockhash)['txidem']
+            for tx in txns:
+                try:
+                    self.nodes[1].getrawtransaction(tx)
+                except JSONRPCException as e:
+                    raise AssertionError("getrawtransaction by idem failed")
 
         # Do a reindex and validate the txindex is working on both nodes
         logging.info("Restarting...")
