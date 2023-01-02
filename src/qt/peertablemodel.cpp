@@ -73,14 +73,11 @@ public:
             }
         }
 
-        // Try to retrieve the CNodeStateStats for each node.
+        // Retrieve the CNodeStateStats for each node.
+        bool fAllStats = false;
+        for (CNodeCombinedStats &stats : cachedNodeStats)
         {
-            TRY_LOCK(cs_main, lockMain);
-            if (lockMain)
-            {
-                for (CNodeCombinedStats &stats : cachedNodeStats)
-                    stats.fNodeStateStatsAvailable = GetNodeStateStats(stats.nodeStats.nodeid, stats.nodeStateStats);
-            }
+            stats.fNodeStateStatsAvailable = GetNodeStateStats(stats.nodeStats.nodeid, stats.nodeStateStats, fAllStats);
         }
 
         if (sortColumn >= 0)
