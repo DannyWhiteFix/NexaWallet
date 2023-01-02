@@ -396,7 +396,6 @@ CBlockIndex *AddToBlockIndex(const CChainParams &chainparams, const CBlockHeader
     // We assign the sequence id to blocks only when the full data is available,
     // to avoid miners withholding blocks but broadcasting headers, to get a
     // competitive advantage.
-    pindexNew->nSequenceId = 0;
     pindexNew->nTimeReceived = GetTime();
     BlockMap::iterator miPrev = mapBlockIndex.find(block.hashPrevBlock);
     if (miPrev != mapBlockIndex.end())
@@ -603,12 +602,19 @@ bool LoadBlockIndexDB()
                 if (pindex->pprev->nChainTx)
                 {
                     pindex->nChainTx = pindex->pprev->nChainTx + pindex->txCount();
-                    pindex->nStatus |= BLOCK_LINKED;
-                }
-                else
-                {
-                    pindex->nChainTx = 0;
-                    mapBlocksUnlinked.insert(std::make_pair(pindex->pprev, pindex));
+                    if (pindex->nSequenceId > 0 && pindex->pprev->IsLinked() &&
+                        (pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TRANSACTIONS)
+                    {
+                        pindex->nStatus |= BLOCK_LINKED;
+                    }
+                    else
+                    {
+                        if (pindex->nStatus & BLOCK_HAVE_DATA && pindex->pprev->IsValid(BLOCK_VALID_TREE))
+                        {
+                            mapBlocksUnlinked.insert(std::make_pair(pindex->pprev, pindex));
+                        }
+                        pindex->nStatus &= ~BLOCK_LINKED;
+                    }
                 }
             }
             else
@@ -617,6 +623,7 @@ bool LoadBlockIndexDB()
                 pindex->nStatus |= BLOCK_LINKED;
             }
         }
+
         if (fCheckpointsEnabled && !CheckAgainstCheckpoint(pindex->height(), *pindex->phashBlock, chainparams))
         {
             pindex->nStatus |= BLOCK_FAILED_VALID; // block doesn't match checkpoints so invalid
@@ -864,7 +871,9 @@ void CheckBlockIndex(const Consensus::Params &consensusParams)
     int nHeight = 0;
     CBlockIndex *pindexFirstInvalid = nullptr; // Oldest ancestor of pindex which is invalid.
     CBlockIndex *pindexFirstMissing = nullptr; // Oldest ancestor of pindex which does not have BLOCK_HAVE_DATA.
-    CBlockIndex *pindexFirstNeverProcessed = nullptr; // Oldest ancestor of pindex for which nTx == 0.
+    // Oldest ancestor of pindex for which does not have BLOCK_PROCESSED
+    CBlockIndex *pindexFirstNeverProcessed = nullptr;
+    CBlockIndex *pindexFirstNeverLinked = nullptr; // Oldest ancestor of pindex for which does not have BLOCK_LINKED
     // Oldest ancestor of pindex which does not have BLOCK_VALID_TREE (regardless of being valid or not).
     CBlockIndex *pindexFirstNotTreeValid = nullptr;
     // Oldest ancestor of pindex which does not have BLOCK_VALID_TRANSACTIONS (regardless of being valid or not).
@@ -882,6 +891,8 @@ void CheckBlockIndex(const Consensus::Params &consensusParams)
             pindexFirstMissing = pindex;
         if (pindexFirstNeverProcessed == nullptr && !pindex->processed())
             pindexFirstNeverProcessed = pindex;
+        if (pindexFirstNeverLinked == nullptr && !pindex->IsLinked())
+            pindexFirstNeverLinked = pindex;
         if (pindex->pprev != nullptr && pindexFirstNotTreeValid == nullptr &&
             (pindex->nStatus & BLOCK_VALID_MASK) < BLOCK_VALID_TREE)
             pindexFirstNotTreeValid = pindex;
@@ -902,30 +913,30 @@ void CheckBlockIndex(const Consensus::Params &consensusParams)
             assert(pindex->GetBlockHash() == consensusParams.hashGenesisBlock); // Genesis block's hash must match.
             assert(pindex == chainActive.Genesis()); // The current active chain's genesis block must be this block.
         }
-        // nSequenceId can't be set for blocks that aren't linked
-        if (!pindex->IsLinked())
-            assert(pindex->nSequenceId == 0);
-        // VALID_TRANSACTIONS is equivalent to nTx > 0 for all nodes (whether or not pruning has occurred).
-        // HAVE_DATA is only equivalent to nTx > 0 (or VALID_TRANSACTIONS) if no pruning has occurred.
-        if (!fHavePruned)
-        {
-            assert(pindexFirstMissing == pindexFirstNeverProcessed);
-        }
-        else
-        {
-            // If we have pruned, then we can only say that HAVE_DATA implies nTx > 0
-            if (pindex->nStatus & BLOCK_HAVE_DATA)
-                assert(pindex->txCount() > 0);
-        }
+
         if (pindex->nStatus & BLOCK_HAVE_UNDO)
             assert(pindex->nStatus & BLOCK_HAVE_DATA);
         // This is pruning-independent.
         assert(((pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TRANSACTIONS) == pindex->processed());
+        if (pindexFirstNeverProcessed != nullptr)
+        {
+            assert(!pindexFirstNeverProcessed->IsLinked());
+            assert(!(pindexFirstNeverProcessed->nStatus & BLOCK_HAVE_DATA));
+            assert(!((pindexFirstNeverProcessed->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TRANSACTIONS));
+        }
         // IsLinked() is true, is used to signal that all parent blocks have been processed and linked (but
         // may have been pruned).
-        assert((pindexFirstNeverProcessed != nullptr) == (!pindex->IsLinked()));
-        assert((pindexFirstNotTransactionsValid != nullptr) == (!pindex->IsLinked()));
-        assert(pindex->height() == nHeight); // nHeight must be consistent.
+        assert((pindexFirstNeverLinked != nullptr) == (!pindex->IsLinked()));
+        // If transactions are valid then we should have at least processed the block but the block
+        // may or may not be linked as might be the case if there two blocks at the same height present so
+        // we must check the sequence id is set; If it is set then the block must also be linked.
+        if (pindex->pprev && pindexFirstNotTransactionsValid == nullptr && (pindex->nSequenceId > 0))
+            assert(pindex->pprev->IsLinked());
+        // If transactions are not valid then we should have at least processed the block and have the block data
+        if (pindexFirstNotTransactionsValid != nullptr && (pindex->nStatus & BLOCK_HAVE_DATA))
+            assert(pindex->processed());
+        // nHeight must be consistent.
+        assert(pindex->height() == nHeight);
         // For every block except the genesis block, the chainwork must be larger than the parent's.
         assert(pindex->pprev == nullptr || pindex->chainWork() >= pindex->pprev->chainWork());
         // The pskip pointer must point back for all but the first 2 blocks.
@@ -949,7 +960,7 @@ void CheckBlockIndex(const Consensus::Params &consensusParams)
 
         /*  This section does not apply to PV since blocks can arrive and be processed in potentially any order.
             Leaving the commented section for now for further review.
-        if (!CBlockIndexWorkComparator()(pindex, chainActive.Tip()) && pindexFirstNeverProcessed == nullptr) {
+        if (!CBlockIndexWorkComparator()(pindex, chainActive.Tip()) && pindexFirstNeverLinked == nullptr) {
             if (pindexFirstInvalid == nullptr) {
                 // If this block sorts at least as good as the current tip and
                 // is valid and we have all data for its parents, it must be in
@@ -986,7 +997,7 @@ void CheckBlockIndex(const Consensus::Params &consensusParams)
             }
             rangeUnlinked.first++;
         }
-        if (pindex->pprev && (pindex->nStatus & BLOCK_HAVE_DATA) && pindexFirstNeverProcessed != nullptr &&
+        if (pindex->pprev && (pindex->nStatus & BLOCK_HAVE_DATA) && pindexFirstNeverLinked != nullptr &&
             pindexFirstInvalid == nullptr)
         {
             // If this block has block data available, some parent was never received, and has no invalid parents, it
@@ -996,9 +1007,11 @@ void CheckBlockIndex(const Consensus::Params &consensusParams)
         // Can't be in mapBlocksUnlinked if we don't HAVE_DATA
         if (!(pindex->nStatus & BLOCK_HAVE_DATA))
             assert(!foundInUnlinked);
-        if (pindexFirstMissing == nullptr)
-            assert(!foundInUnlinked); // We aren't missing data for any parent -- cannot be in mapBlocksUnlinked.
-        if (pindex->pprev && (pindex->nStatus & BLOCK_HAVE_DATA) && pindexFirstNeverProcessed == nullptr &&
+        // We aren't missing data for any parent -- cannot be in mapBlocksUnlinked unless
+        // there was a fork block that was received after the current chain tip was connected.
+        if (pindexFirstMissing == nullptr && pindex->nSequenceId > 0)
+            assert(!foundInUnlinked);
+        if (pindex->pprev && (pindex->nStatus & BLOCK_HAVE_DATA) && pindexFirstNeverLinked == nullptr &&
             pindexFirstMissing != nullptr)
         {
             // We HAVE_DATA for this block, have received data for all parents at some point, but we're currently
@@ -1044,8 +1057,8 @@ void CheckBlockIndex(const Consensus::Params &consensusParams)
                 pindexFirstInvalid = nullptr;
             if (pindex == pindexFirstMissing)
                 pindexFirstMissing = nullptr;
-            if (pindex == pindexFirstNeverProcessed)
-                pindexFirstNeverProcessed = nullptr;
+            if (pindex == pindexFirstNeverLinked)
+                pindexFirstNeverLinked = nullptr;
             if (pindex == pindexFirstNotTreeValid)
                 pindexFirstNotTreeValid = nullptr;
             if (pindex == pindexFirstNotTransactionsValid)
@@ -1545,10 +1558,8 @@ CBlockIndex *FindMostWorkChain()
                 }
                 else if (fMissingData)
                 {
-                    // If we're missing data, then add back to mapBlocksUnlinked,
-                    // so that if the block arrives in the future we can try adding
-                    // to setBlockIndexCandidates again.
-                    mapBlocksUnlinked.insert(std::make_pair(pindexFailed->pprev, pindexFailed));
+                    pindexFailed->nStatus &= ~BLOCK_LINKED;
+                    pindexFailed->nStatus &= ~BLOCK_PROCESSED;
                 }
                 setBlockIndexCandidates.erase(pindexFailed);
                 pindexFailed = pindexFailed->pprev;
@@ -1857,17 +1868,21 @@ bool ReceivedBlockTransactions(ConstCBlockRef pblock,
     AssertLockHeld(cs_main); // for setBlockIndexCandidates & setDirtyBlockIndex
     WRITELOCK(cs_mapBlockIndex); // for nStatus and nSequenceId
 
+    pindexNew->nStatus |= BLOCK_PROCESSED;
+    pindexNew->nStatus |= BLOCK_HAVE_DATA;
+    pindexNew->nFile = pos.nFile;
+    pindexNew->nDataPos = pos.nPos;
+    pindexNew->nUndoPos = 0;
+
     // Did not commit to the correct # of transactions
     if (pindexNew->header.txCount != pblock->vtx.size())
     {
         pindexNew->nStatus |= BLOCK_FAILED_VALID;
     }
-    pindexNew->nStatus |= BLOCK_PROCESSED;
-    pindexNew->nFile = pos.nFile;
-    pindexNew->nDataPos = pos.nPos;
-    pindexNew->nUndoPos = 0;
-    pindexNew->nStatus |= BLOCK_HAVE_DATA;
-    pindexNew->RaiseValidity(BLOCK_VALID_TRANSACTIONS);
+    else
+    {
+        pindexNew->RaiseValidity(BLOCK_VALID_TRANSACTIONS);
+    }
     setDirtyBlockIndex.insert(pindexNew);
 
     if (pindexNew->pprev == nullptr || pindexNew->pprev->IsLinked())
@@ -1879,9 +1894,14 @@ bool ReceivedBlockTransactions(ConstCBlockRef pblock,
         // Recursively process any descendant blocks that now may be eligible to be connected.
         while (!queue.empty())
         {
+            // Once we receive a block and set the sequence id, we do not ever set it back to zero. It remains
+            // an integral part of detemining which block has priority over other blocks at when more than one is
+            // received at the same chain height. This sequence id needs to remain unchanged even after re-orgs
+            // are complete.
             CBlockIndex *pindex = queue.front();
             queue.pop_front();
             pindex->nSequenceId = ++nBlockSequenceId;
+
             if (chainActive.Tip() == nullptr || !setBlockIndexCandidates.value_comp()(pindex, chainActive.Tip()))
             {
                 setBlockIndexCandidates.insert(pindex);
@@ -1904,6 +1924,7 @@ bool ReceivedBlockTransactions(ConstCBlockRef pblock,
         if (pindexNew->pprev && pindexNew->pprev->IsValid(BLOCK_VALID_TREE))
         {
             mapBlocksUnlinked.insert(std::make_pair(pindexNew->pprev, pindexNew));
+            pindexNew->nStatus &= ~BLOCK_LINKED;
         }
     }
 

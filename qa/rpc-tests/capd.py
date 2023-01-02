@@ -25,7 +25,7 @@ CAPD_QUERY_MAX_INVS = 2000
 
 CAPD_XVERSION_STR = '000000020000000e'
 
-TIMEOUT = 20;
+TIMEOUT = 30;
 
 def hashToHex(x):
     return x[::-1].hex()
