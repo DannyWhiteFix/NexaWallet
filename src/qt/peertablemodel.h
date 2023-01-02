@@ -6,8 +6,9 @@
 #ifndef NEXA_QT_PEERTABLEMODEL_H
 #define NEXA_QT_PEERTABLEMODEL_H
 
-#include "main.h" // For CNodeStateStats
+#include "main.h"
 #include "net.h"
+#include "nodestate.h"
 
 #include <QAbstractTableModel>
 #include <QStringList>

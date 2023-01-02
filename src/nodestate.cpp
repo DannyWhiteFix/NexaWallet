@@ -5,6 +5,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "nodestate.h"
+
+#include "connmgr.h"
 #include "main.h"
 
 extern std::atomic<int> nPreferredDownload;
@@ -91,4 +93,38 @@ void CState::Clear()
 {
     LOCK(cs_cstate);
     mapNodeState.clear();
+}
+
+bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats, bool fAllStats)
+{
+    CNodeRef node(connmgr->FindNodeFromId(nodeid));
+    if (!node)
+        return false;
+
+    CNodeStateAccessor state(nodestate, nodeid);
+    DbgAssert(state != nullptr, return false);
+
+    stats.nMisbehavior = node->nMisbehavior.load();
+    stats.nSyncHeight = state->pindexBestKnownBlock ? state->pindexBestKnownBlock->height() : -1;
+    stats.nCommonHeight = state->pindexLastCommonBlock ? state->pindexLastCommonBlock->height() : -1;
+
+    if (!fAllStats)
+        return true;
+
+    std::vector<uint256> vBlocksInFlight;
+    requester.GetBlocksInFlight(vBlocksInFlight, nodeid);
+
+    READLOCK(cs_mapBlockIndex);
+    for (const uint256 &hash : vBlocksInFlight)
+    {
+        // lookup block by hash to find height
+        BlockMap::iterator mi = mapBlockIndex.find(hash);
+        if (mi != mapBlockIndex.end())
+        {
+            CBlockIndex *pindex = (*mi).second;
+            if (pindex)
+                stats.vHeightInFlight.push_back(pindex->height());
+        }
+    }
+    return true;
 }

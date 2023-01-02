@@ -111,4 +111,14 @@ public:
 
 extern CState nodestate;
 
+/** Get statistics from node state */
+struct CNodeStateStats
+{
+    int nMisbehavior;
+    int nSyncHeight;
+    int nCommonHeight;
+    std::vector<int> vHeightInFlight;
+};
+bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats, bool fAllStats = true);
+
 #endif // NEXA_NODESTATE_H

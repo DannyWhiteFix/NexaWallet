@@ -174,38 +174,6 @@ void FinalizeNode(NodeId nodeid)
 
 } // namespace
 
-
-bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats)
-{
-    CNodeRef node(connmgr->FindNodeFromId(nodeid));
-    if (!node)
-        return false;
-
-    CNodeStateAccessor state(nodestate, nodeid);
-    DbgAssert(state != nullptr, return false);
-
-    stats.nMisbehavior = node->nMisbehavior.load();
-    stats.nSyncHeight = state->pindexBestKnownBlock ? state->pindexBestKnownBlock->height() : -1;
-    stats.nCommonHeight = state->pindexLastCommonBlock ? state->pindexLastCommonBlock->height() : -1;
-
-    std::vector<uint256> vBlocksInFlight;
-    requester.GetBlocksInFlight(vBlocksInFlight, nodeid);
-
-    READLOCK(cs_mapBlockIndex);
-    for (const uint256 &hash : vBlocksInFlight)
-    {
-        // lookup block by hash to find height
-        BlockMap::iterator mi = mapBlockIndex.find(hash);
-        if (mi != mapBlockIndex.end())
-        {
-            CBlockIndex *pindex = (*mi).second;
-            if (pindex)
-                stats.vHeightInFlight.push_back(pindex->height());
-        }
-    }
-    return true;
-}
-
 void RegisterNodeSignals(CNodeSignals &nodeSignals)
 {
     nodeSignals.GetHeight.connect(&GetHeight);

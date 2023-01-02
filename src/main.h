@@ -45,7 +45,6 @@ class CTxMemPool;
 class CValidationInterface;
 class CValidationState;
 
-struct CNodeStateStats;
 struct LockPoints;
 
 /** Global variable that points to the coins database */
@@ -235,9 +234,6 @@ bool GetTransaction(const uint256 &hash,
     bool *fInMemPool = nullptr,
     bool *fInOrphanPool = nullptr);
 
-/** Get statistics from node state */
-bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
-
 /**
    Determine whether free transactions are subject to rate limiting. If -relay.limitFreeRelay is not zero then rate
    limiting for free txns will be in effect. If it is zero, then no free transactions will be allowed to enter the
@@ -250,14 +246,6 @@ std::string FormatStateMessage(const CValidationState &state);
 
 /** Get the BIP135 state for a given deployment at the current tip. */
 ThresholdState VersionBitsTipState(const Consensus::Params &params, Consensus::DeploymentPos pos);
-
-struct CNodeStateStats
-{
-    int nMisbehavior;
-    int nSyncHeight;
-    int nCommonHeight;
-    std::vector<int> vHeightInFlight;
-};
 
 /**
  * Test whether the LockPoints height and time are still valid on the current chain
