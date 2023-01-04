@@ -264,20 +264,13 @@ void static ProcessGetData(CNode *pfrom, const Consensus::Params &consensusParam
         }
         else if (inv.IsKnownType())
         {
+            std::shared_ptr<CDataStream> pStream = nullptr;
             CTransactionRef ptx = nullptr;
+            CDataStream txStream(SER_NETWORK, PROTOCOL_VERSION);
 
-            // Send stream from relay memory
-            {
-                // We need to release this lock before push message. There is a potential deadlock because
-                // cs_vSend is often taken before cs_mapRelay
-                LOCK(cs_mapRelay);
-                std::map<CInv, CTransactionRef>::iterator mi = mapRelay.find(inv);
-                if (mi != mapRelay.end())
-                {
-                    ptx = (*mi).second;
-                }
-            }
-            if (!ptx)
+            // Check for stream from relay memory first since this is the most efficient data to send.
+            pStream = maprelay.Find(inv.hash);
+            if (!pStream)
             {
                 ptx = CommitQGet(inv.hash);
                 if (!ptx)
@@ -286,12 +279,15 @@ void static ProcessGetData(CNode *pfrom, const Consensus::Params &consensusParam
                 }
             }
 
-            // If we found a txn then push it
-            if (ptx)
+            // If we found a txn or a stream then push it
+            if (pStream || ptx)
             {
                 if (pfrom->txConcat)
                 {
-                    ss << *ptx;
+                    if (pStream)
+                        ss << *pStream;
+                    else
+                        ss << *ptx;
 
                     // Send the concatenated txns if we're over the limit. We don't want to batch
                     // too many and end up delaying the send.
@@ -305,7 +301,10 @@ void static ProcessGetData(CNode *pfrom, const Consensus::Params &consensusParam
                 {
                     // Or if this is not a peer that supports
                     // concatenation then send the transaction right away.
-                    pfrom->PushMessage(NetMsgType::TX, ptx);
+                    if (pStream)
+                        pfrom->PushMessage(NetMsgType::TX, *pStream);
+                    else
+                        pfrom->PushMessage(NetMsgType::TX, ptx);
                 }
                 pfrom->txsSent += 1;
             }

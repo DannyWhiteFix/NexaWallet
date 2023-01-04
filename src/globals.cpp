@@ -221,9 +221,8 @@ std::list<CStatBase *> mallocedStats;
 CStatMap statistics;
 CTweakMap tweaks;
 
-map<CInv, CTransactionRef> mapRelay;
-deque<pair<int64_t, CInv> > vRelayExpiration;
-CCriticalSection cs_mapRelay;
+// Relay map and associated counters
+CMapRelay maprelay;
 
 CCriticalSection cs_vNodes;
 vector<CNode *> vNodes GUARDED_BY(cs_vNodes);

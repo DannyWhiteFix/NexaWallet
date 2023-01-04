@@ -479,6 +479,7 @@ public:
 
     void Clear()
     {
+        LOCK(cs_addrman);
         vRandom.clear();
         nKey = insecure_rand.rand256();
         for (size_t bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; bucket++)
@@ -522,9 +523,9 @@ public:
     //! Add a single address.
     bool Add(const CAddress &addr, const CNetAddr &source, int64_t nTimePenalty = 0)
     {
+        LOCK(cs_addrman);
         bool fRet = false;
         {
-            LOCK(cs_addrman);
             Check();
             fRet |= Add_(addr, source, nTimePenalty);
             Check();
@@ -538,9 +539,9 @@ public:
     //! Add multiple addresses.
     bool Add(const std::vector<CAddress> &vAddr, const CNetAddr &source, int64_t nTimePenalty = 0)
     {
+        LOCK(cs_addrman);
         int nAdd = 0;
         {
-            LOCK(cs_addrman);
             Check();
             for (std::vector<CAddress>::const_iterator it = vAddr.begin(); it != vAddr.end(); it++)
                 nAdd += Add_(*it, source, nTimePenalty) ? 1 : 0;
