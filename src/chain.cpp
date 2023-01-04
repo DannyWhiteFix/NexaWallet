@@ -9,6 +9,40 @@
 
 using namespace std;
 
+std::string ToString(BlockStatus s)
+{
+    std::string ret;
+    auto tmp = s & BlockStatus::BLOCK_VALID_MASK;
+    if (tmp == BLOCK_VALID_HEADER)
+        ret = "valid header";
+    else if (tmp == BLOCK_VALID_TREE)
+        ret = "valid header & tree";
+    else if (tmp == BLOCK_VALID_TRANSACTIONS)
+        ret = "valid header, tree, and transactions";
+    else if (tmp == BLOCK_VALID_CHAIN)
+        ret = "valid header, tree, transactions, and chain";
+    else if (tmp == BLOCK_VALID_SCRIPTS)
+        ret = "valid header, tree, transactions, chain, and scripts";
+    else
+        ret = "unvalidated";
+    ret += "; ";
+    if (s & BLOCK_HAVE_DATA)
+        ret += "has data";
+    if (s & BLOCK_HAVE_UNDO)
+        ret += ", has undo";
+
+    if (s & BLOCK_FAILED_VALID)
+        ret += ", failed validity";
+    if (s & BLOCK_FAILED_CHILD)
+        ret += ", bad parent";
+    ret += "; ";
+    if (s & BLOCK_PROCESSED)
+        ret += "processed";
+    if (s & BLOCK_LINKED)
+        ret += ", linked";
+    return ret;
+}
+
 /**
  * CChain implementation
  */

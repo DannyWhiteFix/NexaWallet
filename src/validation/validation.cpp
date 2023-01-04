@@ -602,8 +602,7 @@ bool LoadBlockIndexDB()
                 if (pindex->pprev->nChainTx)
                 {
                     pindex->nChainTx = pindex->pprev->nChainTx + pindex->txCount();
-                    if (pindex->nSequenceId > 0 && pindex->pprev->IsLinked() &&
-                        (pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TRANSACTIONS)
+                    if (pindex->pprev->IsLinked() && (pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TRANSACTIONS)
                     {
                         pindex->nStatus |= BLOCK_LINKED;
                     }
@@ -1874,6 +1873,12 @@ bool ReceivedBlockTransactions(ConstCBlockRef pblock,
     pindexNew->nDataPos = pos.nPos;
     pindexNew->nUndoPos = 0;
 
+    // Once we receive a block and set the sequence id, we do not ever set it back to zero. It remains
+    // an integral part of detemining which block has priority over other blocks at when more than one is
+    // received at the same chain height. This sequence id needs to remain unchanged even after re-orgs
+    // are complete.
+    pindexNew->nSequenceId = ++nBlockSequenceId;
+
     // Did not commit to the correct # of transactions
     if (pindexNew->header.txCount != pblock->vtx.size())
     {
@@ -1894,13 +1899,12 @@ bool ReceivedBlockTransactions(ConstCBlockRef pblock,
         // Recursively process any descendant blocks that now may be eligible to be connected.
         while (!queue.empty())
         {
-            // Once we receive a block and set the sequence id, we do not ever set it back to zero. It remains
-            // an integral part of detemining which block has priority over other blocks at when more than one is
-            // received at the same chain height. This sequence id needs to remain unchanged even after re-orgs
-            // are complete.
             CBlockIndex *pindex = queue.front();
             queue.pop_front();
-            pindex->nSequenceId = ++nBlockSequenceId;
+            // We should have assigned a sequence id right away, but if we didn't (transitioning to the new code)
+            // assign it now
+            if (pindex->nSequenceId == 0)
+                pindex->nSequenceId = ++nBlockSequenceId;
 
             if (chainActive.Tip() == nullptr || !setBlockIndexCandidates.value_comp()(pindex, chainActive.Tip()))
             {
@@ -3355,8 +3359,8 @@ bool ActivateBestChainStep(CValidationState &state,
 
                 // Update the UI at least every 5 seconds just in case we get in a long loop
                 // as can happen during IBD.  We need an atomic here because there may be other
-                // threads running concurrently.
-                static std::atomic<int64_t> nLastUpdate = {GetTime()};
+                // threads running concurrently.  Start at 0 so it updates right away the first time
+                static std::atomic<int64_t> nLastUpdate = {0};
                 if (nLastUpdate.load() < GetTime() - 5)
                 {
                     uiInterface.NotifyBlockTip(IsInitialBlockDownload(), pindexNewTip, false);

@@ -90,8 +90,9 @@ UniValue blockheaderToJSON(const CBlockIndex *blockindex, UniValue &result)
 
     result.pushKV("hash", blockindex->GetBlockHash().GetHex());
     int confirmations = -1;
+    bool mainChain = chainActive.Contains(blockindex);
     // Only report confirmations if the block is on the main chain
-    if (chainActive.Contains(blockindex))
+    if (mainChain)
         confirmations = chainActive.Height() - blockindex->height() + 1;
     result.pushKV("confirmations", confirmations);
     result.pushKV("height", (uint64_t)blockindex->height());
@@ -107,6 +108,8 @@ UniValue blockheaderToJSON(const CBlockIndex *blockindex, UniValue &result)
     result.pushKV("chainwork", blockindex->chainWork().GetHex());
     result.pushKV("utxoCommitment", HexStr(blockindex->header.utxoCommitment));
     result.pushKV("minerData", HexStr(blockindex->header.minerData));
+    result.pushKV("status", ToString((BlockStatus)blockindex->nStatus));
+    result.pushKV("onMainChain", mainChain);
 
     if (blockindex->pprev)
         result.pushKV("previousblockhash", blockindex->pprev->GetBlockHash().GetHex());
@@ -714,11 +717,6 @@ UniValue getblockheader(const UniValue &params, bool fHelp)
             {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found by block hash");
             }
-            if (!chainActive.Contains(pindex))
-            {
-                throw JSONRPCError(
-                    RPC_INVALID_PARAMETER, strprintf("Block is not in chain %s", Params().NetworkIDString()));
-            }
         }
     }
     else
@@ -850,6 +848,7 @@ static UniValue getblock(const UniValue &params, bool fHelp)
             "  \"previousblockhash\" : \"hash\",  (string) The hash of the previous block\n"
             "  \"ancestorblockhash\" : \"hash\",  (string) The hash of the ancestor block\n"
             "  \"nextblockhash\" : \"hash\"       (string) The hash of the next block\n"
+            "  \"status\": status,      (string) Block status\n"
             "}\n"
             "\nResult (for verbosity = 2, tx_count = false):\n"
             "{\n"
