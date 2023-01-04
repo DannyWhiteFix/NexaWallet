@@ -6,7 +6,6 @@
 #include "respend/respendrelayer.h"
 #include "DoubleSpendProof.h"
 #include "DoubleSpendProofStorage.h"
-#include "net.h" // RelayTransaction
 #include "primitives/transaction.h"
 #include "protocol.h"
 #include "streams.h"

@@ -2968,50 +2968,6 @@ void NetCleanup()
 #endif
     }
 }
-
-
-void RelayTransaction(const CTransactionRef ptx)
-{
-    CInv inv(MSG_TX, ptx->GetId());
-    {
-        LOCK(cs_mapRelay);
-        // Expire old relay messages
-        while (!vRelayExpiration.empty() && vRelayExpiration.front().first < GetTime())
-        {
-            mapRelay.erase(vRelayExpiration.front().second);
-            vRelayExpiration.pop_front();
-        }
-
-        // Save original serialized message so newer versions are preserved
-        mapRelay.insert(std::make_pair(inv, ptx));
-        vRelayExpiration.push_back(std::make_pair(GetTime() + 15 * 60, inv));
-    }
-
-    LOCK(cs_vNodes);
-    for (CNode *pnode : vNodes)
-    {
-        if (!pnode->fRelayTxes)
-        {
-            continue;
-        }
-
-        LOCK(pnode->cs_filter);
-        // If the bloom filter is not empty then a peer must have sent us a filter
-        // and we can assume this node is an SPV node.
-        if (pnode->pfilter && !pnode->pfilter->IsEmpty())
-        {
-            if (pnode->pfilter->IsRelevantAndUpdate(ptx))
-            {
-                pnode->PushInventory(inv);
-            }
-        }
-        else
-        {
-            pnode->PushInventory(inv);
-        }
-    }
-}
-
 void CNode::RecordBytesRecv(uint64_t bytes) { nTotalBytesRecv.fetch_add(bytes); }
 void CNode::RecordBytesSent(uint64_t bytes)
 {
@@ -3578,4 +3534,117 @@ int64_t PoissonNextSend(int64_t nNow, int average_interval_seconds)
     return nNow + (int64_t)(log1p(GetRand(1ULL << 48) * -0.0000000000000035527136788 /* -1/2^48 */) *
                                 average_interval_seconds * -1000000.0 +
                             0.5);
+}
+
+void RelayTransaction(const CTransactionRef ptx)
+{
+    std::shared_ptr pStream = std::make_shared<CDataStream>(CDataStream(SER_NETWORK, PROTOCOL_VERSION));
+    *pStream << *ptx;
+
+    CInv inv(MSG_TX, ptx->GetId());
+    maprelay.Add(inv.hash, pStream);
+
+    // Take refs
+    std::vector<CNode *> vNodesCopy;
+    {
+        LOCK(cs_vNodes);
+        vNodesCopy = vNodes;
+        for (CNode *pnode : vNodes)
+        {
+            pnode->AddRef();
+        }
+    }
+
+    for (CNode *pnode : vNodesCopy)
+    {
+        if (!pnode->fRelayTxes)
+        {
+            continue;
+        }
+
+        LOCK(pnode->cs_filter);
+        // If the bloom filter is not empty then a peer must have sent us a filter
+        // and we can assume this node is an SPV node.
+        if (pnode->pfilter && !pnode->pfilter->IsEmpty())
+        {
+            if (pnode->pfilter->IsRelevantAndUpdate(ptx))
+            {
+                pnode->PushInventory(inv);
+            }
+        }
+        else
+        {
+            pnode->PushInventory(inv);
+        }
+    }
+
+    // Release refs
+    for (CNode *pnode : vNodesCopy)
+        pnode->Release();
+
+    // Expire and/or Trim mapRelay messages
+    maprelay.Expire();
+}
+
+CMapRelay::CMapRelay() {}
+void CMapRelay::Add(const uint256 &hash, std::shared_ptr<CDataStream> pStream)
+{
+    LOCK(cs_mapRelay);
+
+    // Save original serialized message so that when we service getdata requests we don't have
+    // to re-serialize the transaction multiple times.
+    //
+    // Relay transaction should only be called once, after the transaction is accepted to the txpool,
+    // therefore we don't have to check the mapRelay for the existence of a prior entry before serializing
+    // the transaction.  In other words, we don't need to worry about doing this step twice.
+    auto ret = mapRelay.insert(std::pair<uint256, std::shared_ptr<CDataStream> >(hash, pStream));
+    if (ret.second == true)
+    {
+        nMapRelayBytes += (32 + (*pStream).size());
+
+        // Add the tx id to the expiration deque. Use and expire time not too far in the future
+        // since we only need to keep the transaction for a short period of time during tx propagation, and
+        // generally tx propagation should only take a few seconds.
+        int64_t nExpireTime = GetTime() + (Params().GetConsensus().nPowTargetSpacing);
+        vRelayExpiration.emplace_back(std::make_pair(nExpireTime, hash));
+    }
+}
+
+std::shared_ptr<CDataStream> CMapRelay::Find(const uint256 &hash)
+{
+    LOCK(cs_mapRelay);
+    auto mi = mapRelay.find(hash);
+    if (mi == mapRelay.end())
+        return nullptr;
+
+    return mi->second;
+}
+
+void CMapRelay::Expire()
+{
+    LOCK(cs_mapRelay);
+
+    // Expire and/or Trim messages
+    uint64_t nMaxMapRelay = maxTxPool.Value() * ONE_MEGABYTE / 10;
+    while (
+        !vRelayExpiration.empty() && ((vRelayExpiration.front().first < GetTime()) || (nMapRelayBytes > nMaxMapRelay)))
+    {
+        const uint256 &hash = vRelayExpiration.front().second;
+        auto mi = mapRelay.find(hash);
+        if (mi != mapRelay.end())
+        {
+            nMapRelayBytes -= (32 + (*mi->second).size());
+        }
+        mapRelay.erase(hash);
+        vRelayExpiration.pop_front();
+    }
+
+    // As a safeguard, if the data gets out of sync then start over. This should never happen!
+    if (vRelayExpiration.size() != mapRelay.size())
+    {
+        DbgAssert(vRelayExpiration.size() == mapRelay.size(), );
+        vRelayExpiration.clear();
+        mapRelay.clear();
+        nMapRelayBytes = 0;
+    }
 }

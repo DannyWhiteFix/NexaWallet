@@ -210,8 +210,8 @@ extern CCriticalSection cs_vNodes;
 extern std::list<CNode *> vNodesDisconnected;
 extern CCriticalSection cs_vNodesDisconnected;
 
-extern std::map<CInv, CTransactionRef> mapRelay;
-extern std::deque<std::pair<int64_t, CInv> > vRelayExpiration;
+extern std::map<uint256, CDataStream> mapRelay;
+extern std::deque<std::pair<int64_t, uint256> > vRelayExpiration;
 extern CCriticalSection cs_mapRelay;
 
 extern std::vector<std::string> vAddedNodes;
@@ -1065,6 +1065,29 @@ typedef std::vector<CNodeRef> VNodeRefs;
 
 class CTransaction;
 void RelayTransaction(const CTransactionRef ptx);
+
+/** Store recently relayed transactions as serialized objects */
+class CMapRelay
+{
+private:
+    CCriticalSection cs_mapRelay;
+    uint64_t nMapRelayBytes = 0;
+    std::map<uint256, std::shared_ptr<CDataStream> > mapRelay GUARDED_BY(cs_mapRelay);
+    std::deque<std::pair<int64_t, uint256> > vRelayExpiration GUARDED_BY(cs_mapRelay);
+
+public:
+    CMapRelay();
+
+    /** Add datastream object to the map and remove any expired entries */
+    void Add(const uint256 &hash, std::shared_ptr<CDataStream> pStream);
+
+    /** Find a datastream in maprelay and return the datastream and true if found */
+    std::shared_ptr<CDataStream> Find(const uint256 &hash);
+
+    /** Expire and Trim messages from mapRelay */
+    void Expire();
+};
+extern CMapRelay maprelay;
 
 /** Access to the (IP) address database (peers.dat) */
 class CAddrDB

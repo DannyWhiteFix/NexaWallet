@@ -1628,8 +1628,6 @@ extern UniValue getstructuresizes(const UniValue &params, bool fHelp)
     ret.pushKV("setservAddNodeAddresses", (int64_t)setservAddNodeAddresses.size());
     ret.pushKV("statistics", (int64_t)statistics.size());
     ret.pushKV("tweaks", (int64_t)tweaks.size());
-    ret.pushKV("mapRelay", (int64_t)mapRelay.size());
-    ret.pushKV("vRelayExpiration", (int64_t)vRelayExpiration.size());
 
     {
         LOCK(cs_vNodes);
