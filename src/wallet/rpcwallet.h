@@ -10,4 +10,7 @@ class CRPCTable;
 
 void RegisterWalletRPCCommands(CRPCTable &tableRPC);
 
+/** Sign a message using a wallets private key */
+bool SignMessage(const UniValue &params, UniValue &sig, std::string &error);
+
 #endif // NEXA_WALLET_RPCWALLET_H
