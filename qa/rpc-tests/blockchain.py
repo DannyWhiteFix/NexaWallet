@@ -224,6 +224,9 @@ class BlockchainTest(BitcoinTestFramework):
         header_by_height = node.getblockheader("200")
         assert_equal (header_by_height, header)
 
+        assert_equal(header['status'], "valid header, tree, transactions, chain, and scripts; has data, has undo; processed, linked")
+        assert_equal(header['onMainChain'], True)
+
     def _test_getblock(self):
         node = self.nodes[0]
 
@@ -245,7 +248,11 @@ class BlockchainTest(BitcoinTestFramework):
         blockhash = self.nodes[0].generate(1)[0]
         self.nodes[0].invalidateblock(blockhash)
         b = self.nodes[0].getblock(blockhash)
+        bh = self.nodes[0].getblockheader(blockhash)
         assert_equal(blockhash, b['hash'])
+        assert_equal(b['status'], 'valid header, tree, transactions, chain, and scripts; has data, has undo, failed validity, bad parent; processed, linked')
+        assert_equal(b['onMainChain'], False)
+        assert_equal(bh['onMainChain'], False)
 
     def _test_rollbackchain_and_reconsidermostworkchain(self):
         # Save the hash of the current chaintip and then mine 10 blocks
@@ -291,7 +298,7 @@ class BlockchainTest(BitcoinTestFramework):
         try:
             self.nodes[0].rollbackchain(self.nodes[0].getblockcount() - 101)
         except JSONRPCException as e:
-            logging.info (e.error['message'])
+            # logging.info (e.error['message'])
             assert("You are attempting to rollback the chain by 101 blocks, however the limit is 100 blocks." in e.error['message'])
         assert_equal(blockcount, self.nodes[0].getblockcount())
         assert_equal(blockcount, self.nodes[1].getblockcount())
@@ -380,7 +387,7 @@ class BlockchainTest(BitcoinTestFramework):
         try:
             self.nodes[0].reconsidermostworkchain()
         except JSONRPCException as e:
-            logging.info (e.error['message'])
+            # expected error logging.info (e.error['message'])
             assert("You are attempting to rollback the chain by 120 blocks, however the limit is 100 blocks." in e.error['message'])
         # check that nothing happened and we're still on the same chaintip
         assert_equal(self.nodes[0].getbestblockhash(), bestblockhashfork2);

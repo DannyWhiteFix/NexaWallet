@@ -152,6 +152,9 @@ enum BlockStatus : uint32_t
     BLOCK_LINKED = 512, //! block has been linked to the previous one in the chain
 };
 
+/** Convert a block status to an user-readable format */
+std::string ToString(BlockStatus s);
+
 /** The block chain is a tree shaped structure starting with the
  * genesis block at the root, with each block potentially having multiple
  * candidates to be the next block. A blockindex may have multiple pprev pointing
