@@ -556,7 +556,46 @@ UniValue listactiveaddresses(const UniValue &params, bool fHelp)
     return ret;
 }
 
+bool SignMessage(const UniValue &params, UniValue &sig, std::string &error)
+{
+    LOCK(pwalletMain->cs_wallet);
 
+    try
+    {
+        EnsureWalletIsUnlocked();
+    }
+    catch (...)
+    {
+        error = "Wallet could not be unlocked";
+        return false;
+    }
+
+    std::string strAddress = params[0].get_str();
+    std::string strMessage = params[1].get_str();
+    CTxDestination dest = DecodeDestination(strAddress);
+    if (!IsValidDestination(dest))
+    {
+        error = "Invalid coin address";
+        return false;
+    }
+
+    CKey key;
+    if (!pwalletMain->GetKey(dest, key))
+    {
+        error = "Private key not available, or address has no single key";
+        return false;
+    }
+
+    vector<unsigned char> vchSig = signmessage(strMessage, key);
+    if (vchSig.empty())
+    {
+        error = "Sign failed";
+        return false;
+    }
+
+    sig = EncodeBase64(&vchSig[0], vchSig.size());
+    return true;
+}
 UniValue signmessage(const UniValue &params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
@@ -584,26 +623,15 @@ UniValue signmessage(const UniValue &params, bool fHelp)
             "\nAs json rpc\n" +
             HelpExampleRpc("signmessage", "\"nexa:qpnfq7r98lkm2h7jksy0h5mqpwvttxlc3q6zkwmcha\", \"my message\""));
 
-    LOCK(pwalletMain->cs_wallet);
 
-    EnsureWalletIsUnlocked();
-
-    string strAddress = params[0].get_str();
-    string strMessage = params[1].get_str();
-
-    CTxDestination dest = DecodeDestination(strAddress);
-    if (!IsValidDestination(dest))
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid coin address");
-
-    CKey key;
-    if (!pwalletMain->GetKey(dest, key))
-        throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available, or address has no single key");
-
-    vector<unsigned char> vchSig = signmessage(strMessage, key);
-    if (vchSig.empty())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
-
-    return EncodeBase64(&vchSig[0], vchSig.size());
+    UniValue signature;
+    std::string error = "";
+    if (!SignMessage(params, signature, error))
+    {
+        throw JSONRPCError(RPC_TYPE_ERROR, error);
+    }
+    else
+        return signature;
 }
 
 UniValue signdata(const UniValue &params, bool fHelp)

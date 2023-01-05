@@ -385,6 +385,84 @@ UniValue createmultisig(const UniValue &params, bool fHelp)
     return result;
 }
 
+bool VerifyMessage(const UniValue &params, std::string &error)
+{
+    string strAddress = params[0].get_str();
+    string strSign = params[1].get_str();
+    string strMessage = params[2].get_str();
+
+    CTxDestination destination = DecodeDestination(strAddress);
+    if (!IsValidDestination(destination))
+    {
+        error = "Invalid address";
+        return false;
+    }
+
+    bool fInvalid = false;
+    vector<unsigned char> vchSig = DecodeBase64(strSign.c_str(), &fInvalid);
+
+    if (fInvalid)
+    {
+        error = "Malformed base64 encoding";
+        return false;
+    }
+
+    CHashWriter ss(SER_GETHASH, 0);
+    ss << strMessageMagic;
+    ss << strMessage;
+
+    CPubKey pubkey;
+    if (!pubkey.RecoverCompact(ss.GetHash(), vchSig))
+    {
+        error = "Could not recover key";
+        return false;
+    }
+
+    ScriptTemplateDestination *st = nullptr;
+    const CKeyID *keyID = std::get_if<CKeyID>(&destination);
+    if (keyID)
+    {
+        if (pubkey.GetID() == *keyID)
+        {
+            return true;
+        }
+        else
+        {
+            error = "Verify Message Failed";
+            return false;
+        }
+    }
+    else if ((st = std::get_if<ScriptTemplateDestination>(&destination)) != nullptr)
+    {
+        CGroupTokenInfo groupInfo;
+        std::vector<unsigned char> templateHash;
+        if (ScriptTemplateError::OK != GetScriptTemplate(st->toScript(), &groupInfo, &templateHash))
+        {
+            error = "Address cannot be resolved to a public key";
+            return false;
+        }
+        if (templateHash != p2pktId)
+        {
+            error = "Address cannot be resolved to a public key (template is not well-known)";
+            return false;
+        }
+        ScriptTemplateDestination signedBy(P2pktOutput(pubkey));
+        if (*st == signedBy)
+        {
+            return true;
+        }
+        else
+        {
+            error = "Verify Message Failed";
+            return false;
+        }
+    }
+    else
+    {
+        error = "Address does not refer to key";
+        return false;
+    }
+}
 UniValue verifymessage(const UniValue &params, bool fHelp)
 {
     if (fHelp || params.size() != 3)
@@ -407,60 +485,15 @@ UniValue verifymessage(const UniValue &params, bool fHelp)
             "\nAs json rpc\n" +
             HelpExampleRpc("verifymessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\", \"signature\", \"my message\""));
 
-    LOCK(cs_main);
-
-    string strAddress = params[0].get_str();
-    string strSign = params[1].get_str();
-    string strMessage = params[2].get_str();
-
-    CTxDestination destination = DecodeDestination(strAddress);
-    if (!IsValidDestination(destination))
+    std::string error = "";
+    if (!VerifyMessage(params, error))
     {
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
-    }
-
-    bool fInvalid = false;
-    vector<unsigned char> vchSig = DecodeBase64(strSign.c_str(), &fInvalid);
-
-    if (fInvalid)
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
-
-    CHashWriter ss(SER_GETHASH, 0);
-    ss << strMessageMagic;
-    ss << strMessage;
-
-    CPubKey pubkey;
-    if (!pubkey.RecoverCompact(ss.GetHash(), vchSig))
         return false;
-
-    ScriptTemplateDestination *st = nullptr;
-    const CKeyID *keyID = std::get_if<CKeyID>(&destination);
-    if (keyID)
-    {
-        return (pubkey.GetID() == *keyID);
-    }
-    else if ((st = std::get_if<ScriptTemplateDestination>(&destination)) != nullptr)
-    {
-        CGroupTokenInfo groupInfo;
-        std::vector<unsigned char> templateHash;
-        if (ScriptTemplateError::OK != GetScriptTemplate(st->toScript(), &groupInfo, &templateHash))
-        {
-            throw JSONRPCError(RPC_TYPE_ERROR, "Address cannot be resolved to a public key");
-        }
-        if (templateHash != p2pktId)
-        {
-            throw JSONRPCError(
-                RPC_TYPE_ERROR, "Address cannot be resolved to a public key (template is not well-known)");
-        }
-        ScriptTemplateDestination signedBy(P2pktOutput(pubkey));
-        return (*st == signedBy);
     }
     else
     {
-        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
+        return true;
     }
-
-    return (pubkey.GetID() == *keyID);
 }
 
 UniValue setmocktime(const UniValue &params, bool fHelp)
