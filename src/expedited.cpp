@@ -25,7 +25,7 @@ bool CheckAndRequestExpeditedBlocks(CNode *pfrom)
 {
     {
         // take a copy of this string since we may modify it
-        for (std::string strAddr : mapMultiArgs["-expeditedblock"])
+        for (std::string strAddr : expeditedBlockNodes)
         {
             std::string strListeningPeerIP;
             std::string strPeerIP = pfrom->addr.ToString();

@@ -415,6 +415,8 @@ void UnlimitedSetup(void)
     miningNumMiners.init("mining/miners", STAT_OP_AVE | STAT_KEEP | STAT_KEEP_COUNT);
     std::vector<std::string> msgTypes = getAllNetMessageTypes();
 
+    expeditedBlockNodes = mapMultiArgs["-expeditedblock"];
+
     for (std::vector<std::string>::const_iterator i = msgTypes.begin(); i != msgTypes.end(); ++i)
     {
         mallocedStats.push_front(new CStatHistory<uint64_t>("net/recv/msg/" + *i));
