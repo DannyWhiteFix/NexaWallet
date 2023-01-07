@@ -1,0 +1,23 @@
+FROM bchunlimited/nexa:ubuntu20.04
+
+# change the url to your forked repo if you dont want to pull the bitcoinunlimted repo
+RUN git clone https://gitlab.com/nexa/nexa
+
+# to checkout a specific branch uncomment the lines in the section below
+###############
+# WORKDIR /nexa
+# git checkout <branch name>
+###############
+
+WORKDIR /nexa/depends
+
+RUN make HOST=x86_64-w64-mingw32
+
+WORKDIR /nexa
+
+RUN ./autogen.sh
+RUN CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --enable-reduce-exports --with-gui=no --with-incompatible-bdb --prefix=/
+
+RUN make -j`nproc`
+
+RUN mkdir /root/.nexa/
