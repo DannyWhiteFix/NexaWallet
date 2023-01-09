@@ -21,47 +21,6 @@ static uint256 xpeditedBlkSent[NUM_XPEDITED_STORE];
 static int xpeditedBlkSendPos = 0;
 
 
-bool CheckAndRequestExpeditedBlocks(CNode *pfrom)
-{
-    {
-        // take a copy of this string since we may modify it
-        for (std::string strAddr : expeditedBlockNodes)
-        {
-            std::string strListeningPeerIP;
-            std::string strPeerIP = pfrom->addr.ToString();
-            // Add the peer's listening port if it was provided (only misbehaving clients do not provide it)
-            if (pfrom->addrFromPort != 0)
-            {
-                // get addrFromPort
-                std::ostringstream ss;
-                ss << pfrom->addrFromPort;
-
-                int pos1 = strAddr.rfind(":");
-                int pos2 = strAddr.rfind("]:");
-                if (pos1 <= 0 && pos2 <= 0)
-                    strAddr += ':' + ss.str();
-
-                pos1 = strPeerIP.rfind(":");
-                pos2 = strPeerIP.rfind("]:");
-
-                // Handle both ipv4 and ipv6 cases
-                if (pos1 <= 0 && pos2 <= 0)
-                    strListeningPeerIP = strPeerIP + ':' + ss.str();
-                else if (pos1 > 0)
-                    strListeningPeerIP = strPeerIP.substr(0, pos1) + ':' + ss.str();
-                else
-                    strListeningPeerIP = strPeerIP.substr(0, pos2) + ':' + ss.str();
-            }
-            else
-                strListeningPeerIP = strPeerIP;
-
-            if (strAddr == strListeningPeerIP)
-                connmgr->PushExpeditedRequest(pfrom, EXPEDITED_BLOCKS);
-        }
-    }
-    return false;
-}
-
 bool HandleExpeditedRequest(CDataStream &vRecv, CNode *pfrom)
 {
     uint64_t options;

@@ -12,6 +12,10 @@
 
 class CConnMgr
 {
+    // A list of node IPs to forward blocks to pre-validation (set with -expeditedblock flag)
+    // This list may contain nodes were are not yet connected to, which is how it differs from the next vector.
+    std::vector<std::string> expeditedBlockNodes;
+
     // We send expedited blocks to these nodes
     std::vector<CNode *> vSendExpeditedBlocks;
     // We send expedited txs to these nodes
@@ -89,6 +93,14 @@ public:
     void RemovedNode(CNode *pNode);
 
     /**
+     * Call with a newly connected node to sign it up for expedited modes if its on the expedited whitelist
+     * @param[in] pNode         The node
+     * @return True if the request was sent.  False if thin blocks are disabled for us or the peer.
+     */
+    bool CheckAndRequestExpeditedBlocks(CNode *pfrom);
+
+    /**
+     * (internal, use CheckAndRequestExpeditedBlocks)
      * Call to request a node to send, or stop sending, expedited blocks or transactions to us.
      * @param[in] pNode         The node
      * @param[in] flags         EXPEDITED_STOP, EXPEDITED_BLOCKS, EXPEDITED_TXS

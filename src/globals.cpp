@@ -269,9 +269,6 @@ std::map<uint256, CTxCommitData> *txCommitQ GUARDED_BY(csCommitQ) = nullptr;
 // Control the execution of the parallel tx validation and serial mempool commit phases
 CThreadCorral txProcessingCorral;
 
-// A list of node IPs to forward blocks to pre-validation (set with -expeditedblock flag)
-std::vector<std::string> expeditedBlockNodes;
-
 // Configuration Tweaks
 
 std::string bip135Vote;
