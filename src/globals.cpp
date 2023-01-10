@@ -127,6 +127,12 @@ std::map<uint256, NodeId> mapBlockSource GUARDED_BY(cs_main);
 std::set<int> setDirtyFileInfo GUARDED_BY(cs_main);
 /** Dirty block index entries. */
 std::set<CBlockIndex *> setDirtyBlockIndex GUARDED_BY(cs_main);
+
+/** Hold current block templates size and transaction counts */
+CCriticalSection csCurrentCandidate;
+uint64_t nLastBlockTx GUARDED_BY(csCurrentCandidate) = 0;
+uint64_t nLastBlockSize GUARDED_BY(csCurrentCandidate) = 0;
+
 /** Holds temporary mining candidates */
 CCriticalSection csMiningCandidates;
 map<int64_t, CMiningCandidate> miningCandidatesMap GUARDED_BY(csMiningCandidates);

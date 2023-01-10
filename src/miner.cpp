@@ -45,6 +45,11 @@ extern CTweak<unsigned int> xvalTweak;
 extern CTweak<uint32_t> dataCarrierSize;
 extern CTweak<uint64_t> miningPrioritySize;
 
+/** Hold current block templates size and transaction counts */
+extern CCriticalSection csCurrentCandidate;
+extern uint64_t nLastBlockTx;
+extern uint64_t nLastBlockSize;
+
 using namespace std;
 
 //////////////////////////////////////////////////////////////////////////////
@@ -57,10 +62,6 @@ using namespace std;
 // transactions in the memory pool. When we select transactions from the
 // pool, we select by highest priority or fee rate, so we might consider
 // transactions that depend on transactions that aren't yet in the block.
-
-uint64_t nLastBlockTx = 0;
-uint64_t nLastBlockSize = 0;
-
 
 int64_t UpdateTime(CBlockHeader *pblock, const Consensus::Params &consensusParams, const CBlockIndex *pindexPrev)
 {
@@ -234,8 +235,11 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
         addPackageTxs(&vtxe, true);
         nTotalPackage += GetStopwatchMicros() - nStartPackage;
 
-        nLastBlockTx = nBlockTx;
-        nLastBlockSize = nBlockSize;
+        {
+            LOCK(csCurrentCandidate);
+            nLastBlockTx = nBlockTx;
+            nLastBlockSize = nBlockSize;
+        }
         LOGA("CreateNewBlock: total size %llu txs: %llu of %llu fees: %lld sigops %u\n", nBlockSize, nBlockTx,
             mempool._size(), nFees, nBlockSigOps);
 
