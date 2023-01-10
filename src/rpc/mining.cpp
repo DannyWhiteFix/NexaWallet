@@ -40,6 +40,10 @@
 
 #include <univalue.h>
 
+extern CCriticalSection csCurrentCandidate;
+extern uint64_t nLastBlockTx;
+extern uint64_t nLastBlockSize;
+
 using namespace std;
 
 /**
@@ -275,18 +279,17 @@ UniValue getmininginfo(const UniValue &params, bool fHelp)
 
 
     UniValue obj(UniValue::VOBJ);
+    CBlockIndex *pindex = chainActive.Tip();
+    obj.pushKV("blocks", (int)pindex->height());
     {
-        LOCK(cs_main);
-        CBlockIndex *pindex = chainActive.Tip();
-        obj.pushKV("blocks", (int)pindex->height());
+        LOCK(csCurrentCandidate);
         obj.pushKV("currentblocksize", (uint64_t)nLastBlockSize);
         obj.pushKV("currentblocktx", (uint64_t)nLastBlockTx);
-        obj.pushKV("currentmaxblocksize", pindex->GetNextMaxBlockSize());
-        obj.pushKV("difficulty", (double)GetDifficulty());
-        obj.pushKV("errors", GetWarnings("statusbar"));
-        obj.pushKV("networkhashps", getnetworkhashps(params, false));
     }
-
+    obj.pushKV("currentmaxblocksize", pindex->GetNextMaxBlockSize());
+    obj.pushKV("difficulty", (double)GetDifficulty());
+    obj.pushKV("errors", GetWarnings("statusbar"));
+    obj.pushKV("networkhashps", getnetworkhashps(params, false));
     obj.pushKV("pooledtx", (uint64_t)mempool.size()); // .size takes the mempool read lock internally
     obj.pushKV("chain", Params().NetworkIDString());
 
