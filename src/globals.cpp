@@ -269,7 +269,6 @@ std::map<uint256, CTxCommitData> *txCommitQ GUARDED_BY(csCommitQ) = nullptr;
 // Control the execution of the parallel tx validation and serial mempool commit phases
 CThreadCorral txProcessingCorral;
 
-
 // Configuration Tweaks
 
 std::string bip135Vote;

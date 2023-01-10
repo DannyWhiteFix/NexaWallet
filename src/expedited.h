@@ -20,11 +20,8 @@ enum
     EXPEDITED_MSG_XTHIN = 2,
 };
 
+// See connmgr.h for expedited node tracking
 
-// Checks to see if the node is configured in nexa.conf to
-extern bool CheckAndRequestExpeditedBlocks(CNode *pfrom);
-
-// be an expedited block source and if so, request them.
 extern void SendExpeditedBlock(CXThinBlock &thinBlock, unsigned char hops, CNode *pskip = nullptr);
 extern void SendExpeditedBlock(const CBlock &block, CNode *pskip = nullptr);
 extern bool HandleExpeditedRequest(CDataStream &vRecv, CNode *pfrom);

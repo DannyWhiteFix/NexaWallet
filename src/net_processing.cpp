@@ -18,6 +18,7 @@
 #include "blockstorage/blockstorage.h"
 #include "capd/capd.h"
 #include "chain.h"
+#include "connmgr.h"
 #include "dosman.h"
 #include "electrum/rostrum.h"
 #include "expedited.h"
@@ -668,7 +669,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
         }
 
         // This step done after final handshake
-        CheckAndRequestExpeditedBlocks(pfrom);
+        connmgr->CheckAndRequestExpeditedBlocks(pfrom);
 
         pfrom->fSuccessfullyConnected = true;
     }

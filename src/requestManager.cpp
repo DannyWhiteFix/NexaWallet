@@ -1110,18 +1110,24 @@ void CRequestManager::FindNextBlocksToDownload(CNode *node, size_t count, std::v
         return;
     }
 
-    if (state->pindexLastCommonBlock == nullptr)
+    CBlockIndex *tmp = state->pindexLastCommonBlock;
+    if (tmp == nullptr)
     {
         // Bootstrap quickly by guessing a parent of our best tip is the forking point.
         // Guessing wrong in either direction is not a problem.
-        state->pindexLastCommonBlock =
-            chainActive[std::min(state->pindexBestKnownBlock->height(), chainActive.Height())];
+        tmp = chainActive[std::min(state->pindexBestKnownBlock->height(), chainActive.Height())];
+        // Extremely unlikely but chainActive can change between when we get the Height and when we index it.
+        // Also, a reorg could happen so there is no active block at either height when we try to access it.
+        // In this case just punt and start with the tip.
+        if (tmp == nullptr)
+        {
+            tmp = chainActive.Tip();
+        }
     }
 
     // If the peer reorganized, our previous pindexLastCommonBlock may not be an ancestor
     // of its current tip anymore. Go back enough to fix that.
-    state->pindexLastCommonBlock =
-        const_cast<CBlockIndex *>(LastCommonAncestor(state->pindexLastCommonBlock, state->pindexBestKnownBlock));
+    state->pindexLastCommonBlock = const_cast<CBlockIndex *>(LastCommonAncestor(tmp, state->pindexBestKnownBlock));
     if (state->pindexLastCommonBlock == state->pindexBestKnownBlock)
         return;
 

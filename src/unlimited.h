@@ -97,6 +97,9 @@ extern CTweakRef<uint64_t> maxScriptTemplateOpsTweak;
 // The maximum number of allowed sigcheck operations (consensus param)
 extern CTweak<uint64_t> maxSigChecks;
 
+// A list of node IPs to forward blocks to pre-validation (set with -expeditedblock flag)
+extern std::vector<std::string> expeditedBlockNodes;
+
 // print out a configuration warning during initialization
 // bool InitWarning(const std::string &str);
 
