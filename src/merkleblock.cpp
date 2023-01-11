@@ -15,6 +15,20 @@ using namespace std;
 #ifndef ANDROID // limit dependencies
 CMerkleBlock::CMerkleBlock(const CBlock &block, CBloomFilter &filter)
 {
+    /* A bloom filter over a block can contain transaction ids, idems, prevouts, or outputs
+       because the caller may be looking for:
+       1. specific transactions by id or idem (their choice)
+       2. spends of their own utxos (prevouts)
+       3. money sent to them (outputs).
+
+       We search transactions to see whether they match any of the above.  However when constructing the merkle
+       block, we always use tx ids (NEVER IDEM) because the block's merkle tree uses the tx id.  The reason the tx
+       id is used in the block's merkle tree is so that the blockchain commits to exact transaction bytes, thus
+       preserving the chain of signatures and keeping every node with the exact same blockchain data.
+       (Recall that the idem is the same for malleated transactions, where malleated transactions spend the same
+       prevouts to the same outputs (cause the same UTXO database state change), but are not exactly the same.
+     */
+
     header = block.GetBlockHeader();
 
     vector<bool> vMatch;
@@ -25,7 +39,7 @@ CMerkleBlock::CMerkleBlock(const CBlock &block, CBloomFilter &filter)
 
     for (const auto &tx : block.vtx)
     {
-        vMatch.push_back(filter.MatchAndInsertOutputs(tx));
+        vMatch.push_back(filter.MatchAndInsertOutpoints(tx));
     }
 
     for (size_t i = 0; i < block.vtx.size(); i++)

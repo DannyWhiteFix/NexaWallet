@@ -145,7 +145,7 @@ public:
     //! Scans output scripts for matches and adds those outpoints to the filter
     //! for spend detection. Returns true if any output matched, or the txid
     //! matches.
-    bool MatchAndInsertOutputs(const CTransactionRef &tx);
+    bool MatchAndInsertOutpoints(const CTransactionRef &tx);
 
     //! Scan inputs to see if the spent outpoints are a match, or the input
     //! scripts contain matching elements.
@@ -154,7 +154,7 @@ public:
     //! Check if the transaction is relevant for any reason.
     //! Also adds any outputs which match the filter to the filter (to match
     //! their spending txes)
-    bool IsRelevantAndUpdate(const CTransactionRef &tx) { return MatchAndInsertOutputs(tx) || MatchInputs(tx); }
+    bool IsRelevantAndUpdate(const CTransactionRef &tx) { return MatchAndInsertOutpoints(tx) || MatchInputs(tx); }
 #endif
 };
 

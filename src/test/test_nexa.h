@@ -174,7 +174,10 @@ public:
 
 extern FalseScriptImportedState fsis;
 
-// test block for unit tests. This returns a real block from the NEXA mainnet blockchain.
+// Test blocks for unit tests. These functions return real blocks taken from the NEXA mainnet blockchain.
 CBlock TestBlock1();
+CBlock TestBlock2();
+CBlock TestBlock3();
+CBlock TestBlock4();
 
 #endif // NEXA_TEST_NEXA_H

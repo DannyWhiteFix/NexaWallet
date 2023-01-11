@@ -183,7 +183,7 @@ bool CBloomFilter::IsWithinSizeConstraints() const
 }
 
 #ifndef ANDROID // We do not want to pull "Solver" into the Android cashlib compile
-bool CBloomFilter::MatchAndInsertOutputs(const CTransactionRef &tx)
+bool CBloomFilter::MatchAndInsertOutpoints(const CTransactionRef &tx)
 {
     bool fFound = false;
     // Match if the filter contains the hash of tx
@@ -192,9 +192,17 @@ bool CBloomFilter::MatchAndInsertOutputs(const CTransactionRef &tx)
         return true;
     if (isEmpty)
         return false;
-    const uint256 hash = tx->GetIdem();
-    if (contains(hash))
+    // Match if the filter contains either the tx id or idem.  I will hang onto the idem because I need it later to
+    // check if the bloom filter matches the tx outputs, or insert tx outputs into the bloom if it does match
+    const uint256 idem = tx->GetIdem();
+    if (contains(idem))
         fFound = true;
+    if (!fFound)
+    {
+        const uint256 id = tx->GetId();
+        if (contains(id))
+            fFound = true;
+    }
 
     for (unsigned int i = 0; i < tx->vout.size(); i++)
     {
@@ -214,7 +222,7 @@ bool CBloomFilter::MatchAndInsertOutputs(const CTransactionRef &tx)
             {
                 fFound = true;
                 if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_ALL)
-                    insert(COutPoint(hash, i));
+                    insert(COutPoint(idem, i));
                 else if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_P2PUBKEY_ONLY)
                 {
                     txnouttype type;
@@ -222,10 +230,10 @@ bool CBloomFilter::MatchAndInsertOutputs(const CTransactionRef &tx)
                     if (Solver(txout.scriptPubKey, type, vSolutions))
                     {
                         if (type == TX_PUBKEY || type == TX_MULTISIG || type == TX_CLTV)
-                            insert(COutPoint(hash, i));
+                            insert(COutPoint(idem, i));
                         // Also add if its the script template variety of p2pubkey
                         else if (type == TX_SCRIPT_TEMPLATE && vSolutions[0] == p2pktId)
-                            insert(COutPoint(hash, i));
+                            insert(COutPoint(idem, i));
                     }
                 }
                 break;
