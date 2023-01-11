@@ -1313,23 +1313,23 @@ UniValue getblockchaininfo(const UniValue &params, bool fHelp)
             "\nExamples:\n" +
             HelpExampleCli("getblockchaininfo", "") + HelpExampleRpc("getblockchaininfo", ""));
 
-    LOCK(cs_main);
-
+    // Get the chain tip and use it throughout so we can get an atomic view of the blockchain
+    // without neededing to take a cs_main lock.
     CBlockIndex *tip = chainActive.Tip();
     if (!tip)
         throw runtime_error("No Chain Tip");
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("chain", Params().NetworkIDString());
-    obj.pushKV("blocks", (int)chainActive.Height());
+    obj.pushKV("blocks", (int)tip->height());
     obj.pushKV("headers", pindexBestHeader ? pindexBestHeader.load()->height() : -1);
     obj.pushKV("bestblockhash", tip->GetBlockHash().GetHex());
-    obj.pushKV("difficulty", (double)GetDifficulty());
+    obj.pushKV("difficulty", (double)GetDifficulty(tip));
     obj.pushKV("mediantime", (int64_t)tip->GetMedianTimePast());
     obj.pushKV("verificationprogress", Checkpoints::GuessVerificationProgress(tip, !fCheckpointsEnabled));
     obj.pushKV("initialblockdownload", IsInitialBlockDownload());
     obj.pushKV("chainwork", tip->chainWork().GetHex());
-    obj.pushKV("coinsupply", GetCoinsMinted((int)chainActive.Height(), Params().GetConsensus()));
+    obj.pushKV("coinsupply", GetCoinsMinted((int)tip->height(), Params().GetConsensus()));
     obj.pushKV("size_on_disk", CalculateCurrentUsage());
     obj.pushKV("pruned", fPruneMode);
     if (fPruneMode)
