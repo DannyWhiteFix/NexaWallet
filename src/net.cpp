@@ -1256,16 +1256,12 @@ void CleanupDisconnectedNodes()
     //
     list<CNode *> vNodesDisconnectedCopy;
     {
-        LOCK2(cs_vNodes, cs_vNodesDisconnected);
         // Disconnect unused nodes
-        vector<CNode *> vNodesCopy = vNodes;
-        for (CNode *pnode : vNodesCopy)
+        LOCK2(cs_vNodes, cs_vNodesDisconnected);
+        for (CNode *pnode : vNodes)
         {
             if (pnode->fDisconnect)
             {
-                // remove from vNodes
-                vNodes.erase(remove(vNodes.begin(), vNodes.end(), pnode), vNodes.end());
-
                 // inform connection manager
                 connmgr->RemovedNode(pnode);
 
@@ -1281,6 +1277,13 @@ void CleanupDisconnectedNodes()
                 // hold in disconnected pool until all other refs are released
                 vNodesDisconnected.push_back(pnode);
             }
+        }
+        for (CNode *pnode : vNodesDisconnected)
+        {
+            // remove from vNodes
+            auto it = std::find(vNodes.begin(), vNodes.end(), pnode);
+            if (it != vNodes.end())
+                vNodes.erase(it);
         }
         vNodesDisconnectedCopy = vNodesDisconnected;
     }
