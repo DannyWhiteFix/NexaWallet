@@ -725,18 +725,19 @@ UniValue getblockheader(const UniValue &params, bool fHelp)
     }
     if (isNumber)
     {
-        const int current_tip = chainActive.Height();
+        READLOCK(chainActive.cs_chainLock);
+        const int tip_height = chainActive.Height();
         if (height < 0)
         {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Target block height %d is negative", height));
         }
-        if (height > current_tip)
+        if (height > tip_height)
         {
             throw JSONRPCError(
-                RPC_INVALID_PARAMETER, strprintf("Target block height %d after current tip %d", height, current_tip));
+                RPC_INVALID_PARAMETER, strprintf("Target block height %d after current tip %d", height, tip_height));
         }
-        LOG(RPC, "%s for height %d (tip is at %d)", __func__, height, current_tip);
-        pindex = chainActive[height];
+        LOG(RPC, "%s for height %d (tip is at %d)", __func__, height, tip_height);
+        pindex = chainActive._idx(height);
         DbgAssert(pindex && pindex->height() == height, throw std::runtime_error(__func__));
     }
 
@@ -898,18 +899,19 @@ static UniValue getblock(const UniValue &params, bool fHelp)
     }
     if (isNumber)
     {
-        const int current_tip = chainActive.Height();
+        READLOCK(chainActive.cs_chainLock);
+        const int tip_height = chainActive.Height();
         if (height < 0)
         {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Target block height %d is negative", height));
         }
-        if (height > current_tip)
+        if (height > tip_height)
         {
             throw JSONRPCError(
-                RPC_INVALID_PARAMETER, strprintf("Target block height %d after current tip %d", height, current_tip));
+                RPC_INVALID_PARAMETER, strprintf("Target block height %d after current tip %d", height, tip_height));
         }
-        LOG(RPC, "%s for height %d (tip is at %d)", __func__, height, current_tip);
-        pindex = chainActive[height];
+        LOG(RPC, "%s for height %d (tip is at %d)", __func__, height, tip_height);
+        pindex = chainActive._idx(height);
         DbgAssert(pindex && pindex->height() == height, throw std::runtime_error(__func__));
     }
 
@@ -2036,7 +2038,6 @@ static UniValue getblockstats(const UniValue &params, bool fHelp)
             HelpExampleRpc("getblockstats", "1000 '[\"minfeerate\",\"avgfeerate\"]'"));
     }
 
-    LOCK(cs_main);
 
     CBlockIndex *pindex = nullptr;
     bool isNumber = true;
@@ -2081,18 +2082,19 @@ static UniValue getblockstats(const UniValue &params, bool fHelp)
     }
     if (isNumber)
     {
-        const int current_tip = chainActive.Height();
+        READLOCK(chainActive.cs_chainLock);
+        const int tip_height = chainActive.Height();
         if (height < 0)
         {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Target block height %d is negative", height));
         }
-        if (height > current_tip)
+        if (height > tip_height)
         {
             throw JSONRPCError(
-                RPC_INVALID_PARAMETER, strprintf("Target block height %d after current tip %d", height, current_tip));
+                RPC_INVALID_PARAMETER, strprintf("Target block height %d after current tip %d", height, tip_height));
         }
-        LOG(RPC, "%s for height %d (tip is at %d)", __func__, height, current_tip);
-        pindex = chainActive[height];
+        LOG(RPC, "%s for height %d (tip is at %d)", __func__, height, tip_height);
+        pindex = chainActive._idx(height);
         DbgAssert(pindex && pindex->height() == height, throw std::runtime_error(__func__));
     }
 
@@ -2253,10 +2255,7 @@ static UniValue getblockstats(const UniValue &params, bool fHelp)
     }
     ret_all.pushKV("subsidy", ValueFromAmount(GetBlockSubsidy(pindex->height(), Params().GetConsensus())));
     ret_all.pushKV("time", pindex->GetBlockTime());
-    {
-        READLOCK(cs_mapBlockIndex);
-        ret_all.pushKV("time_received", pindex->nTimeReceived);
-    }
+    ret_all.pushKV("time_received", pindex->nTimeReceived);
     ret_all.pushKV("total_out", ValueFromAmount(total_out));
     ret_all.pushKV("total_size", total_size);
     ret_all.pushKV("totalfee", ValueFromAmount(totalfee));
