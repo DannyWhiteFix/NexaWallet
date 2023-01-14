@@ -661,7 +661,7 @@ static bool IsPriorityMsg(std::string strCommand)
         strCommand == NetMsgType::GET_XBLOCKTX || strCommand == NetMsgType::XPEDITEDREQUEST ||
         strCommand == NetMsgType::XPEDITEDBLK || strCommand == NetMsgType::XPEDITEDTXN ||
         strCommand == NetMsgType::CMPCTBLOCK || strCommand == NetMsgType::GETBLOCKTXN ||
-        strCommand == NetMsgType::BLOCKTXN || strCommand == NetMsgType::BLOCK)
+        strCommand == NetMsgType::BLOCKTXN)
     {
         return true;
     }
