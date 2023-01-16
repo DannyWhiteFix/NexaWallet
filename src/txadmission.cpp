@@ -241,8 +241,16 @@ void ThreadCommitToMempool()
                 LOG(MEMPOOL, "MemoryPool sz %u txn, %u kB\n", mempool.size(), mempool.DynamicMemoryUsage() / 1000);
                 LimitMempoolSize(mempool, maxTxPool.Value() * ONE_MEGABYTE, txPoolExpiry.Value() * 60 * 60);
 
-                CValidationState state;
-                FlushStateToDisk(state, FLUSH_STATE_PERIODIC);
+                // This is only a periodic flush and probably isn't even needed here so there is no danger if we
+                // skip a flush from time to time for lack of getting the lock.
+                // And because we are within a CORRAL we don't want to take the cs_main lock if some other higher level
+                // CORRAL has taken it, since this would cause a deadlock.
+                TRY_LOCK(cs_main, lock);
+                if (lock)
+                {
+                    CValidationState state;
+                    FlushStateToDisk(state, FLUSH_STATE_PERIODIC);
+                }
 
                 // The flush to disk above is only periodic therefore we need to check if we need to trim
                 // any excess from the cache.
@@ -372,6 +380,7 @@ void CommitTxToMempool()
             TestConflictEnqueueTx(it.second);
         }
     }
+
     ProcessOrphans(vWhatChanged);
 }
 
@@ -1359,35 +1368,7 @@ bool CheckSequenceLocks(const CTransactionRef tx,
     return EvaluateSequenceLocks(index, lockPair);
 }
 
-bool CheckFinalTx(const CTransactionRef tx, int flags, const Snapshot *ss)
-{
-    // By convention a negative value for flags indicates that the
-    // current network-enforced consensus rules should be used. In
-    // a future soft-fork scenario that would mean checking which
-    // rules would be enforced for the next block and setting the
-    // appropriate flags. At the present time no soft-forks are
-    // scheduled, so no flags are set.
-    flags = std::max(flags, 0);
-
-    // CheckFinalTx() uses chainActive.Height()+1 to evaluate
-    // nLockTime because when IsFinalTx() is called within
-    // CBlock::AcceptBlock(), the height of the block *being*
-    // evaluated is what is used. Thus if we want to know if a
-    // transaction can be part of the *next* block, we need to call
-    // IsFinalTx() with one more than chainActive.Height().
-    const int64_t nBlockHeight = max((int64_t)((ss != nullptr) ? ss->tipHeight + 1 : 0), chainActive.Height() + 1);
-
-    // BIP113 will require that time-locked transactions have nLockTime set to
-    // less than the median time of the previous block they're contained in.
-    // When the next block is created its previous block will be the current
-    // chain tip, so we use that to calculate the median time passed to
-    // IsFinalTx() if LOCKTIME_MEDIAN_TIME_PAST is set.
-    const int64_t nMedianTimePast = (ss != nullptr) ? ss->tipMedianTimePast : chainActive.Tip()->GetMedianTimePast();
-    const int64_t nBlockTime = (flags & LOCKTIME_MEDIAN_TIME_PAST) ? nMedianTimePast : GetAdjustedTime();
-
-    return IsFinalTx(tx, nBlockHeight, nBlockTime);
-}
-
+bool CheckFinalTx(const CTransactionRef tx, int flags, const Snapshot *ss) { return CheckFinalTx(tx.get(), flags, ss); }
 bool CheckFinalTx(const CTransaction *tx, int flags, const Snapshot *ss)
 {
     // By convention a negative value for flags indicates that the
@@ -1404,7 +1385,19 @@ bool CheckFinalTx(const CTransaction *tx, int flags, const Snapshot *ss)
     // evaluated is what is used. Thus if we want to know if a
     // transaction can be part of the *next* block, we need to call
     // IsFinalTx() with one more than chainActive.Height().
-    const int64_t nBlockHeight = max((int64_t)((ss != nullptr) ? ss->tipHeight + 1 : 0), chainActive.Height() + 1);
+    //
+    // If we are processing a block then we have to increase the block height allowed for non-final
+    // transactions again by one. This is because transactions could be processing while the block
+    // is also processing and therefore the chaintip will not yet have been updated whereas on some
+    // other peer they could have received the block and already sent new transactions at that block height.
+    int nBlockHeightDelta = 0;
+    if (PV->NumBlocksValidating() > 0)
+    {
+        nBlockHeightDelta = 1;
+        // LOG(MEMPOOL, "CheckFinalTx() block height was increased by 1\n");
+    }
+    const int64_t nBlockHeight = max((int64_t)((ss != nullptr) ? ss->tipHeight + 1 + nBlockHeightDelta : 0),
+        chainActive.Height() + 1 + nBlockHeightDelta);
 
     // BIP113 will require that time-locked transactions have nLockTime set to
     // less than the median time of the previous block they're contained in.

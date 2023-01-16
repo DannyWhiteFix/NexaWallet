@@ -48,6 +48,7 @@
 #include "util.h"
 #include "utilstrencodings.h"
 #include "utiltime.h"
+#include "validation/parallel.h"
 #include "validation/validation.h"
 #include "validationinterface.h"
 #include "version.h"
@@ -371,6 +372,9 @@ CTweak<uint64_t> maxSigChecks("test.maxBlockSigChecks",
     0);
 
 CTweak<bool> parallelTweak("test.parallel", "Turn Parallel Block Validation on or off (default: true)", true);
+CTweak<bool> pvtest("test.pvtest",
+    strprintf("Slow down input checking to 1 every second (default: %u)", DEFAULT_PV_TESTMODE),
+    DEFAULT_PV_TESTMODE);
 
 CTweak<bool> unsafeGetBlockTemplate("mining.unsafeGetBlockTemplate",
     "Allow getblocktemplate to succeed even if the chain tip is old or this node is not connected to other nodes "

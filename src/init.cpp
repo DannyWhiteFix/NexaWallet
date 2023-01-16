@@ -449,8 +449,8 @@ static void ReconsiderChainOnStartup()
 {
     if (!fReindex && !(avoidReconsiderMostWorkChain.Value()))
     {
-        TxAdmissionPause txlock;
         LOCK(cs_main);
+        TxAdmissionPause txlock;
         try
         {
             bool fOverride = false;

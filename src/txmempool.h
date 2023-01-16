@@ -564,12 +564,15 @@ public:
     CTxMemPool();
     ~CTxMemPool();
 
-    /** Atomically (with respect to the mempool) call f on each mempool entry, and then clear the mempool */
+    /** Atomically (with respect to the mempool) call f on each mempool entry, and then clear the mempool.
+     * We user a reverse iterator so that in the case of transaction chains we'lll iterate from the beginning
+     * of the chain to the end (going from lower ancestor score to higher)
+     */
     template <typename Lambda>
     void forEachThenClear(const Lambda &f)
     {
         WRITELOCK(cs_txmempool);
-        for (CTxMemPool::indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++)
+        for (auto it = mapTx.get<ancestor_score>().rbegin(); it != mapTx.get<ancestor_score>().rend(); it--)
         {
             f(*it);
         }
@@ -579,19 +582,22 @@ public:
     void _forEachThenClear(const Lambda &f)
     {
         AssertWriteLockHeld(cs_txmempool);
-        for (CTxMemPool::indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++)
+        for (auto it = mapTx.get<ancestor_score>().rbegin(); it != mapTx.get<ancestor_score>().rend(); it++)
         {
             f(*it);
         }
         _clear();
     }
 
-    /** Atomically (with respect to the mempool) call f on each mempool entry */
+    /** Atomically (with respect to the mempool) call f on each mempool entry.
+     * We user a reverse iterator so that in the case of transaction chains we'lll iterate from the beginning
+     * of the chain to the end (going from lower ancestor score to higher)
+     */
     template <typename Lambda>
     void forEach(const Lambda &f)
     {
         WRITELOCK(cs_txmempool);
-        for (CTxMemPool::indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++)
+        for (auto it = mapTx.get<ancestor_score>().rbegin(); it != mapTx.get<ancestor_score>().rend(); it++)
         {
             f(*it);
         }

@@ -1605,13 +1605,13 @@ UniValue invalidateblock(const UniValue &params, bool fHelp)
     uint256 hash(uint256S(strHash));
     CValidationState state;
 
-    TxAdmissionPause txlock;
 
     CBlockIndex *pblockindex = LookupBlockIndex(hash);
     if (!pblockindex)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
 
     LOCK(cs_main);
+    TxAdmissionPause txlock;
 
     InvalidateBlock(state, Params().GetConsensus(), pblockindex);
 
@@ -1895,8 +1895,8 @@ UniValue reconsidermostworkchain(const UniValue &params, bool fHelp)
         fOverride = params[0].get_bool();
 
     {
-        TxAdmissionPause txlock;
         LOCK(cs_main);
+        TxAdmissionPause txlock;
         error = ReconsiderMostWorkChain(fOverride);
     }
 
