@@ -19,6 +19,8 @@
 
 #include <thread>
 
+static const bool DEFAULT_PV_TESTMODE = false;
+
 /**
  * Class that keeps track of number of signature operations
  * and bytes hashed to compute signature hashes.
@@ -160,10 +162,12 @@ private:
     std::vector<CCheckQueue<CScriptCheck> *> vQueues;
     /** Number of threads */
     unsigned int nThreads;
-    /** All threads currently running */
+    /** All threads currently available */
     boost::thread_group threadGroup;
     /** The semaphore limits the number of parallel validation threads */
     CSemaphore semThreadCount;
+    /** The number of threads currently being used for block validation */
+    std::atomic<unsigned int> numBlocksValidating{0};
 
     struct CHandleBlockMsgThreads
     {
@@ -200,6 +204,8 @@ public:
         const CInv &inv,
         uint64_t blockSize);
 
+    /** Number of block validation threads currently validating a block */
+    unsigned int NumBlocksValidating() { return numBlocksValidating.load(); }
     /** Initialize a PV session */
     bool Initialize(const boost::thread::id this_id, const CBlockIndex *pindex, const bool fParallel);
 

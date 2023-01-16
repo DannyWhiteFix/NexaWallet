@@ -342,6 +342,8 @@ void CParallelValidation::InitThread(const boost::thread::id this_id,
         this_id, CHandleBlockMsgThreads{nullptr, inv.hash, pblock->hashPrevBlock, pblock->nBits, pblock->nBits, INT_MAX,
                      GetTimeMillis(), blockSize, false, pfrom->id, false, false});
 
+    numBlocksValidating.store(mapBlockValidationThreads.size());
+
     LOG(PARALLEL, "Launching validation for %s with number of block validation threads running: %d\n",
         pblock->GetHash().ToString(), mapBlockValidationThreads.size());
 }
@@ -351,6 +353,8 @@ void CParallelValidation::Erase(const boost::thread::id this_id)
     LOCK(cs_blockvalidationthread);
     if (mapBlockValidationThreads.count(this_id))
         mapBlockValidationThreads.erase(this_id);
+
+    numBlocksValidating.store(mapBlockValidationThreads.size());
 }
 
 void CParallelValidation::Quit(std::map<boost::thread::id, CHandleBlockMsgThreads>::iterator iter)
@@ -587,6 +591,9 @@ void HandleBlockMessageThread(CNodeRef noderef, const string strCommand, ConstCB
         // unless we're still syncing with the network.
         // Such an unrequested block may still be processed, subject to the
         // conditions in AcceptBlock().
+        //
+        // During block processing, and since txns can be accepted into the mempool during block processing
+        // we must allow non-final txns into the mempool until the block has finished processing.
         bool forceProcessing = pfrom->fWhitelisted && !IsInitialBlockDownload();
         const CChainParams &chainparams = Params();
         if (PV->Enabled())

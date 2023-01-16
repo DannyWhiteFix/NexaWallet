@@ -131,6 +131,8 @@ UniValue generateBlocks(boost::shared_ptr<CReserveScript> coinbaseScript,
     {
         std::unique_ptr<CBlockTemplate> pblocktemplate;
         {
+            LOCK(cs_main); // cs_main is taken here because it is taken again later in CreateNewBlock()
+                           // but we have to preserve the lockorder with TxAdmissionPause
             TxAdmissionPause lock; // flush any tx waiting to enter the txpool
             pblocktemplate = BlockAssembler(Params()).CreateNewBlock(coinbaseScript->reserveScript);
         }

@@ -610,6 +610,47 @@ class MyTest (BitcoinTestFramework):
             waitFor(30, lambda: self.nodes[3].gettxpoolinfo()["bytes"] == 0)
 
 
+        # clear all pools and add 5 txns to the pool
+        self.commitTxpool()
+        self.sync_blocks()
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
+        # Start node0 with pvtest=1 and other nodes with pvtest=0. This will make any mined block on node0 process
+        # it's inputs slowly while giving it's own txadmission the chance to allow other txns/chains and double spends
+        # to be processed while the block is also being processed. The end result should be that all mempools off all
+        # nodes should sync up.
+        logging.info("Check tx admission during block processing")
+        self.nodes = start_nodes(4, self.options.tmpdir, [["-test.pvtest=1", "-debug=mempool, bench"], ["-test.pvtest=0", "-debug=mempool, bench"], ["-test.pvtest=0"], ["-test.pvtest=1"]])
+        interconnect_nodes(self.nodes)
+
+        # add a few txns to node0. Not too many because each transaction will take about 1 second to process when the
+        # block is mined.
+        addr = self.nodes[0].getnewaddress()
+        for i in range(5):
+            tx = self.nodes[0].sendtoaddress(addr, "500")
+        self.sync_all()
+
+        # Mine block on node 0 and while at the same time try to send txns/chains
+        # and double spends to the mempool.
+        self.nodes[2].generate(1) # Mine block on other than node0 so that we don't hold the cs_main lock on node0
+        time.sleep(1) # give time for block to propagate
+        addr = self.nodes[0].getnewaddress()
+        for i in range(10):
+            tx = self.nodes[1].sendtoaddress(addr, "500")
+
+        # There should temporarily be 15 txns in node0's txpool during the period where the block is still being
+        # processed.
+        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()["size"] == 15)
+
+        # After the blocks are processed there should only be
+        # the transactions that were sent "after" the block was mined.
+        self.sync_blocks()
+        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()["size"] == 10)
+        waitFor(30, lambda: self.nodes[1].gettxpoolinfo()["size"] == 10)
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()["size"] == 10)
+        waitFor(30, lambda: self.nodes[3].gettxpoolinfo()["size"] == 10)
+
 
 if __name__ == '__main__':
         MyTest().main()

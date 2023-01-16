@@ -352,6 +352,9 @@ bool BlockAssembler::IsIncrementallyGood(uint64_t nExtraSize, unsigned int nExtr
 
 bool BlockAssembler::TestForBlock(CTxMemPool::TxIdIter iter)
 {
+    if (!IsFinalTx(iter->GetSharedTx(), nHeight, nLockTimeCutoff))
+        return false;
+
     if (!IsIncrementallyGood(iter->GetTxSize(), iter->GetSigOpCount()))
         return false;
 

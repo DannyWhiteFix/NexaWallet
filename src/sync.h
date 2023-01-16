@@ -628,7 +628,7 @@ protected:
     int curRegion;
     int curCount;
     int maxRequestedRegion;
-    CCriticalSection mutex;
+    CCriticalSection corral;
     CCond cond;
 
 public:
@@ -638,9 +638,9 @@ public:
     /** Enter a region.  Block until it is possible */
     void Enter(int region)
     {
-        LOCK(mutex);
         while (1)
         {
+            LOCK(corral);
             // If no region is running and I'm the biggest requested region, then run my region
             if ((curCount == 0) && (region >= maxRequestedRegion))
             {
@@ -659,7 +659,7 @@ public:
             {
                 if (region > maxRequestedRegion)
                     maxRequestedRegion = region;
-                cond.wait(mutex);
+                cond.wait(corral);
             }
         }
     }
@@ -667,7 +667,7 @@ public:
     /* Exit a region */
     void Exit(int region)
     {
-        LOCK(mutex);
+        LOCK(corral);
         assert(curRegion == region);
         curCount--;
         if (curCount == 0)

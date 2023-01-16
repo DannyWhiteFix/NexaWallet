@@ -36,6 +36,7 @@
 #include <unordered_set>
 
 extern CTweak<int> maxReorgDepth;
+extern CTweak<bool> pvtest;
 extern std::atomic<uint64_t> nTotalChainTx;
 static bool FinalizeBlockInternal(CValidationState &state, const CBlockIndex *pindex);
 static const CBlockIndex *FindBlockToFinalize(const CBlockIndex *pindexNew);
@@ -2366,6 +2367,7 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
         // a chance to process in parallel. This is crucial for parallel validation to work.
         // NOTE: the only place where cs_main is needed is if we hit PV->ChainWorkHasChanged, which
         //       internally grabs the cs_main lock when needed.
+        bool fPVtest = pvtest.Value();
         for (unsigned int i = 0; i < pblock->vtx.size(); i++)
         {
             const CTransaction &tx = *(pblock->vtx[i]);
@@ -2473,8 +2475,11 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
 
             // This is for testing PV and slowing down the validation of inputs. This makes it easier to create
             // and run python regression tests and is an testing feature.
-            if (GetArg("-pvtest", false))
+            if (fPVtest)
+            {
+                LOGA("Checked one transaction with pvtest\n");
                 MilliSleep(1000);
+            }
         }
         LOG(BENCH, "Number of CheckInputs() performed: %d  Unverified count: %d\n", nChecked, nUnVerifiedChecked);
 
@@ -2960,62 +2965,69 @@ bool DisconnectTip(CValidationState &state, const Consensus::Params &consensusPa
     AssertLockHeld(cs_main);
     AssertLockHeld(PV->cs_blockvalidationthread);
 
-    CBlockIndex *pindexDelete = chainActive.Tip();
-    assert(pindexDelete);
-    // Read block from disk.
-    const ConstCBlockRef pblock = ReadBlockFromDisk(pindexDelete, consensusParams);
-    if (!pblock)
-        return AbortNode(state, "DisconnectTip(): Failed to read block");
-    // Apply the block atomically to the chain state.
-    int64_t nStart = GetStopwatchMicros();
+    ConstCBlockRef pblock;
     {
-        CCoinsViewCache view(pcoinsTip);
-        if (DisconnectBlock(pblock, pindexDelete, view) != DISCONNECT_OK)
-            return error("DisconnectTip(): DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
-        bool result = view.Flush();
-        assert(result);
+        // Stop txadmission, and flush the commitQ, before we flush coin state
+        TxAdmissionPause txlock;
+
+        CBlockIndex *pindexDelete = chainActive.Tip();
+        assert(pindexDelete);
+        // Read block from disk.
+        pblock = ReadBlockFromDisk(pindexDelete, consensusParams);
+        if (!pblock)
+            return AbortNode(state, "DisconnectTip(): Failed to read block");
+        // Apply the block atomically to the chain state.
+        int64_t nStart = GetStopwatchMicros();
+        {
+            CCoinsViewCache view(pcoinsTip);
+            if (DisconnectBlock(pblock, pindexDelete, view) != DISCONNECT_OK)
+                return error("DisconnectTip(): DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
+            bool result = view.Flush();
+            assert(result);
+        }
+        LOG(BENCH, "- Disconnect block: %.2fms\n", (GetStopwatchMicros() - nStart) * 0.001);
+
+        // these bloom filters stop us from doing duplicate work on tx we already know about.
+        // but since we rewound, we need to do this duplicate work -- clear them so tx we have already processed
+        // can be processed again.
+        txRecentlyInBlock.reset();
+        recentRejects.reset();
+
+        // If the tip is finalized, then undo it.
+        if (pindexFinalized == pindexDelete)
+        {
+            pindexFinalized = pindexDelete->pprev;
+        }
+
+        // Update chainActive and related variables.
+        UpdateTip(pindexDelete->pprev);
+        // Let wallets know transactions went from 1-confirmed to
+        // 0-confirmed or conflicted:
+        for (const auto &ptx : pblock->vtx)
+        {
+            SyncWithWallets(ptx, nullptr, -1);
+        }
+
+        // Clear mempool if rolling back the chain using the "rollbackchain" rpc command, otherwise clear and
+        // place all tx back into the admission queue. "Rollbackchain" is used for significant manually triggered
+        // reorganizations, such as switching between forks, so it makes no sense to keep the transactions because
+        // they will likely be invalid or already confirmed on the other fork.
+        if (fRollBack)
+        {
+            WRITELOCK(mempool.cs_txmempool);
+            mempool._clear();
+            std::unique_lock<std::mutex> lock(csCommitQ);
+            txCommitQ->clear();
+        }
+        else
+        {
+            ResubmitTransactions(pblock);
+        }
     }
-    LOG(BENCH, "- Disconnect block: %.2fms\n", (GetStopwatchMicros() - nStart) * 0.001);
+
     // Write the chain state to disk, if necessary.
     if (!FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED))
         return false;
-
-    // these bloom filters stop us from doing duplicate work on tx we already know about.
-    // but since we rewound, we need to do this duplicate work -- clear them so tx we have already processed
-    // can be processed again.
-    txRecentlyInBlock.reset();
-    recentRejects.reset();
-
-    // If the tip is finalized, then undo it.
-    if (pindexFinalized == pindexDelete)
-    {
-        pindexFinalized = pindexDelete->pprev;
-    }
-
-    // Update chainActive and related variables.
-    UpdateTip(pindexDelete->pprev);
-    // Let wallets know transactions went from 1-confirmed to
-    // 0-confirmed or conflicted:
-    for (const auto &ptx : pblock->vtx)
-    {
-        SyncWithWallets(ptx, nullptr, -1);
-    }
-
-    // Clear mempool if rolling back the chain using the "rollbackchain" rpc command, otherwise clear and
-    // place all tx back into the admission queue. "Rollbackchain" is used for significant manually triggered
-    // reorganizations, such as switching between forks, so it makes no sense to keep the transactions because
-    // they will likely be invalid or already confirmed on the other fork.
-    if (fRollBack)
-    {
-        WRITELOCK(mempool.cs_txmempool);
-        mempool._clear();
-        std::unique_lock<std::mutex> lock(csCommitQ);
-        txCommitQ->clear();
-    }
-    else
-    {
-        ResubmitTransactions(pblock);
-    }
 
     return true;
 }
@@ -3062,20 +3074,26 @@ bool ConnectTip(CValidationState &state,
     nTimeReadFromDisk += nTime2 - nTime1;
     int64_t nTime3;
     LOG(BENCH, "  - Load block from disk: %.2fms [%.2fs]\n", (nTime2 - nTime1) * 0.001, nTimeReadFromDisk * 0.000001);
+
+    CCoinsViewCache view(pcoinsTip);
+    bool rv = ConnectBlock(pblock, state, pindexNew, view, chainparams, false, fParallel);
+    GetMainSignals().BlockChecked(*pblock, state);
+    if (!rv)
     {
-        CCoinsViewCache view(pcoinsTip);
-        bool rv = ConnectBlock(pblock, state, pindexNew, view, chainparams, false, fParallel);
-        GetMainSignals().BlockChecked(*pblock, state);
-        if (!rv)
+        if (state.IsInvalid())
         {
-            if (state.IsInvalid())
-            {
-                InvalidBlockFound(pindexNew, state);
-                return error("ConnectTip(): ConnectBlock %s failed", pindexNew->GetBlockHash().ToString());
-            }
-            return false;
+            InvalidBlockFound(pindexNew, state);
+            return error("ConnectTip(): ConnectBlock %s failed", pindexNew->GetBlockHash().ToString());
         }
-        int64_t nStart = GetStopwatchMicros();
+        return false;
+    }
+    int64_t nStart = GetStopwatchMicros();
+
+    {
+        // Stop txadmission, and flush the commitQ, before we flush coin state and remove txn conflicts
+        TxAdmissionPause txlock;
+
+        // Flush coin state
         bool result = view.Flush();
         assert(result);
         LOG(BENCH, "      - Update Coins %.3fms\n", GetStopwatchMicros() - nStart);
@@ -3098,89 +3116,88 @@ bool ConnectTip(CValidationState &state,
         nTime3 = GetStopwatchMicros();
         nTimeConnectTotal += nTime3 - nTime2;
         LOG(BENCH, "  - Connect total: %.2fms [%.2fs]\n", (nTime3 - nTime2) * 0.001, nTimeConnectTotal * 0.000001);
-    }
 
-    // Remove transactions from the mempool, both those confirmed in the block and conflicting transactions.
-    //
-    // If we are still in initial block download then skip this step and just clear the mempool. There should
-    // be no transactions in the mempool during initial sync, and also there is no need then to parse through each
-    // blocks transactions in removeForBlock() looking for transactions to remove.
-    std::list<CTransactionRef> txConflicted;
-    if (!IsInitialBlockDownload() && !fReindex)
-    {
-        // remove confirmed transactions are removed from the mempool and orphanpool.
-        mempool.removeForBlock(pblock->vtx, pindexNew->height(), txConflicted, !IsInitialBlockDownload());
-        orphanpool.RemoveForBlock(pblock->vtx);
 
-        // Search orphan queue for anything that is no longer an orphan due to tx in this block
-        uint64_t nOrphansRemaining = 0;
-        nOrphansRemaining = ProcessOrphans(pblock->vtx);
-
-        // Continue processing orphans only if there are any orphans remaining.
-        if (nOrphansRemaining > 0)
+        // Remove transactions from the mempool, both those confirmed in the block and conflicting transactions.
+        //
+        // If we are still in initial block download then skip this step and just clear the mempool. There should
+        // be no transactions in the mempool during initial sync, and also there is no need then to parse through each
+        // blocks transactions in removeForBlock() looking for transactions to remove.
+        std::list<CTransactionRef> txConflicted;
+        if (!IsInitialBlockDownload() && !fReindex)
         {
-            // If there are still orphans in the orphanpool then process against the previous block as well.
-            //
-            // In this case the previous block will be the current chaintip because we have not yet updated the
-            // tip for the current block being processed.
-            const ConstCBlockRef prevBlock = ReadBlockFromDisk(chainActive.Tip(), Params().GetConsensus());
-            if (prevBlock)
-            {
-                nOrphansRemaining = ProcessOrphans(prevBlock->vtx);
-            }
+            // remove confirmed transactions are removed from the mempool and orphanpool.
+            mempool.removeForBlock(pblock->vtx, pindexNew->height(), txConflicted, !IsInitialBlockDownload());
+            orphanpool.RemoveForBlock(pblock->vtx);
 
-            // Lastly, process the entire mempool against the orphanpool if there are still any orphans remaining.
-            // This should be infrequent since the orphanpool is generally empty.
+            // Search orphan queue for anything that is no longer an orphan due to tx in this block
+            uint64_t nOrphansRemaining = 0;
+            nOrphansRemaining = ProcessOrphans(pblock->vtx);
+
+            // Continue processing orphans only if there are any orphans remaining.
             if (nOrphansRemaining > 0)
             {
-                std::vector<CTransactionRef> vWhatChanged;
-                mempool.queryTxs(vWhatChanged);
-                ProcessOrphans(vWhatChanged);
+                // If there are still orphans in the orphanpool then process against the previous block as well.
+                //
+                // In this case the previous block will be the current chaintip because we have not yet updated the
+                // tip for the current block being processed.
+                const ConstCBlockRef prevBlock = ReadBlockFromDisk(chainActive.Tip(), Params().GetConsensus());
+                if (prevBlock)
+                {
+                    nOrphansRemaining = ProcessOrphans(prevBlock->vtx);
+                }
+
+                // Lastly, process the entire mempool against the orphanpool if there are still any orphans remaining.
+                // This should be infrequent since the orphanpool is generally empty.
+                if (nOrphansRemaining > 0)
+                {
+                    std::vector<CTransactionRef> vWhatChanged;
+                    mempool.queryTxs(vWhatChanged);
+                    ProcessOrphans(vWhatChanged);
+                }
             }
         }
+        else
+        {
+            mempool.clear();
+            orphanpool.clear();
+        }
+        // Update chainActive & related variables.
+        UpdateTip(pindexNew);
+
+        // Write the chain state to disk, if necessary. This should be done after UpdateTip to make sure the tip
+        // is set correctly when calling FlushStateToDisk(); this is because the automatic -dbcache adjustment
+        // mechanism gets triggered when the chain is synced completely detemined by when the best header matches
+        // the chainActive tip.
+        int64_t nTime4 = GetStopwatchMicros();
+        nTimeFlush += nTime4 - nTime3;
+        LOG(BENCH, "  - Flush: %.2fms [%.2fs]\n", (nTime4 - nTime3) * 0.001, nTimeFlush * 0.000001);
+        if (!FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED))
+            return false;
+        int64_t nTime5 = GetStopwatchMicros();
+        nTimeChainState += nTime5 - nTime4;
+        LOG(BENCH, "  - Writing chainstate: %.2fms [%.2fs]\n", (nTime5 - nTime4) * 0.001, nTimeChainState * 0.000001);
+
+        // Tell wallet about transactions that went from mempool
+        // to conflicted:
+        for (const auto &ptx : txConflicted)
+        {
+            SyncWithWallets(ptx, nullptr, -1);
+        }
+        // ... and about transactions that got confirmed:
+        int txIdx = 0;
+        for (const auto &ptx : pblock->vtx)
+        {
+            SyncWithWallets(ptx, pblock, txIdx);
+            txIdx++;
+        }
+
+        int64_t nTime6 = GetStopwatchMicros();
+        nTimePostConnect += nTime6 - nTime5;
+        nTimeTotal += nTime6 - nTime1;
+        LOG(BENCH, "  - Connect postprocess: %.2fms [%.2fs]\n", (nTime6 - nTime5) * 0.001, nTimePostConnect * 0.000001);
+        LOG(BENCH, "- Connect block: %.2fms [%.2fs]\n", (nTime6 - nTime1) * 0.001, nTimeTotal * 0.000001);
     }
-    else
-    {
-        mempool.clear();
-        orphanpool.clear();
-    }
-
-    // Update chainActive & related variables.
-    UpdateTip(pindexNew);
-
-
-    // Write the chain state to disk, if necessary. This should be done after UpdateTip to make sure the tip
-    // is set correctly when calling FlushStateToDisk(); this is because the automatic -dbcache adjustment
-    // mechanism gets triggered when the chain is synced completely detemined by when the best header matches
-    // the chainActive tip.
-    int64_t nTime4 = GetStopwatchMicros();
-    nTimeFlush += nTime4 - nTime3;
-    LOG(BENCH, "  - Flush: %.2fms [%.2fs]\n", (nTime4 - nTime3) * 0.001, nTimeFlush * 0.000001);
-    if (!FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED))
-        return false;
-    int64_t nTime5 = GetStopwatchMicros();
-    nTimeChainState += nTime5 - nTime4;
-    LOG(BENCH, "  - Writing chainstate: %.2fms [%.2fs]\n", (nTime5 - nTime4) * 0.001, nTimeChainState * 0.000001);
-
-    // Tell wallet about transactions that went from mempool
-    // to conflicted:
-    for (const auto &ptx : txConflicted)
-    {
-        SyncWithWallets(ptx, nullptr, -1);
-    }
-    // ... and about transactions that got confirmed:
-    int txIdx = 0;
-    for (const auto &ptx : pblock->vtx)
-    {
-        SyncWithWallets(ptx, pblock, txIdx);
-        txIdx++;
-    }
-
-    int64_t nTime6 = GetStopwatchMicros();
-    nTimePostConnect += nTime6 - nTime5;
-    nTimeTotal += nTime6 - nTime1;
-    LOG(BENCH, "  - Connect postprocess: %.2fms [%.2fs]\n", (nTime6 - nTime5) * 0.001, nTimePostConnect * 0.000001);
-    LOG(BENCH, "- Connect block: %.2fms [%.2fs]\n", (nTime6 - nTime1) * 0.001, nTimeTotal * 0.000001);
 
     // When we're in IBD or reindexing then once the block is connected we don't need it in the cache anymore.
     if (IsInitialBlockDownload())
@@ -3475,7 +3492,6 @@ bool ActivateBestChain(CValidationState &state,
     bool fParallel,
     CNode *pfrom)
 {
-    TxAdmissionPause txlock;
     LOCK(cs_main);
     return _ActivateBestChain(state, chainparams, pblock, fParallel, pfrom);
 }
