@@ -684,6 +684,11 @@ void CRequestManager::SendRequests()
     // Get Blocks
     while (sendBlkIter != mapBlkInfo.end())
     {
+        if (shutdown_threads.load() == true)
+        {
+            return;
+        }
+
         now = GetStopwatchMicros();
         OdMap::iterator itemIter = sendBlkIter;
         if (itemIter == mapBlkInfo.end())
@@ -811,6 +816,11 @@ void CRequestManager::SendRequests()
         {
             for (auto iter : mapBatchBlockRequests)
             {
+                if (shutdown_threads.load() == true)
+                {
+                    return;
+                }
+
                 // iterate through the second map and create the inv message
                 std::vector<CInv> vInv;
                 for (auto mi : iter.second)
@@ -834,6 +844,11 @@ void CRequestManager::SendRequests()
         sendIter = mapTxnInfo.begin();
     while ((sendIter != mapTxnInfo.end()) && requestPacer.try_leak(1))
     {
+        if (shutdown_threads.load() == true)
+        {
+            return;
+        }
+
         now = GetStopwatchMicros();
         OdMap::iterator itemIter = sendIter;
         if (itemIter == mapTxnInfo.end())
@@ -937,6 +952,11 @@ void CRequestManager::SendRequests()
         {
             for (auto iter : mapBatchTxnRequests)
             {
+                if (shutdown_threads.load() == true)
+                {
+                    return;
+                }
+
                 iter.first.get()->PushMessage(NetMsgType::GETDATA, iter.second);
                 LOG(REQ, "Sent batched request with %d transactions to node %s\n", iter.second.size(),
                     iter.first.get()->GetLogName());

@@ -490,34 +490,6 @@ CNode *ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure
     return nullptr;
 }
 
-void CNode::ClearPriorityQueues()
-{
-    // Purge any noderef's in the priority message queues relating to this peer. If we don't
-    // remove the node references here then we won't be able to complete the disconnection.
-    {
-        LOCK(cs_prioritySendQ);
-        auto it = vPrioritySendQ.begin();
-        while (it != vPrioritySendQ.end())
-        {
-            if (this == it->get())
-                it = vPrioritySendQ.erase(it);
-            else
-                it++;
-        }
-    }
-    {
-        LOCK(cs_priorityRecvQ);
-        auto it = vPriorityRecvQ.begin();
-        while (it != vPriorityRecvQ.end())
-        {
-            if (this == it->first.get())
-                it = vPriorityRecvQ.erase(it);
-            else
-                it++;
-        }
-    }
-}
-
 void CNode::CloseSocketDisconnect()
 {
     // if this is an outbound node that was not added via addenode then decrement the counter.
@@ -530,8 +502,6 @@ void CNode::CloseSocketDisconnect()
         LOG(NET, "disconnecting peer %s\n", GetLogName());
         CloseSocket(hSocket);
     }
-
-    ClearPriorityQueues();
 
     // in case this fails, we'll empty the recv buffer when the CNode is deleted
     TRY_LOCK(cs_vRecvMsg, lockRecv);
@@ -1249,6 +1219,48 @@ static void AcceptConnection(const ListenSocket &hListenSocket)
 
 char recvMsgBuf[MAX_RECV_CHUNK]; // Messages are first pulled into this buffer
 
+static void ClearPriorityQueues(CNode *pnode)
+{
+    // Purge any noderef's in the priority message queues relating to this peer. If we don't
+    // remove the node references here then we won't be able to complete the disconnection.
+    {
+        LOCK(cs_prioritySendQ);
+        if (shutdown_threads.load() == true)
+        {
+            vPrioritySendQ.clear();
+        }
+        else
+        {
+            auto it = vPrioritySendQ.begin();
+            while (it != vPrioritySendQ.end())
+            {
+                if (pnode == it->get())
+                    it = vPrioritySendQ.erase(it);
+                else
+                    it++;
+            }
+        }
+    }
+    {
+        LOCK(cs_priorityRecvQ);
+        if (shutdown_threads.load() == true)
+        {
+            vPriorityRecvQ.clear();
+        }
+        else
+        {
+            auto it = vPriorityRecvQ.begin();
+            while (it != vPriorityRecvQ.end())
+            {
+                if (pnode == it->first.get())
+                    it = vPriorityRecvQ.erase(it);
+                else
+                    it++;
+            }
+        }
+    }
+}
+
 void CleanupDisconnectedNodes()
 {
     //
@@ -1291,7 +1303,15 @@ void CleanupDisconnectedNodes()
     // Delete disconnected nodes
     for (CNode *pnode : vNodesDisconnectedCopy)
     {
-        // wait until threads are done using it
+        // Due to timing issues with locking a noderef can still be present in the priority queues
+        // even though we may have attempted to remove them before, so in the event that we still have
+        // a positive noderef count we need to clear any queued messages again.
+        if (pnode->GetRefCount() > 0)
+        {
+            ClearPriorityQueues(pnode);
+        }
+
+        // Do final node cleanup when all threads are done using it
         if (pnode->GetRefCount() <= 0)
         {
             bool fDelete = false;
@@ -1318,13 +1338,6 @@ void CleanupDisconnectedNodes()
                 // occurred prior to insertion into vNodesDisconnected
                 delete pnode;
             }
-        }
-        else
-        {
-            // Due to timing issues with locking a noderef can still be present in the priority queues
-            // even though we already attempted to remove them when we called CloseSocketDisconnect() so
-            // in the event that we still have a positive noderef count we need to purge again.
-            pnode->ClearPriorityQueues();
         }
     }
 }
@@ -1378,6 +1391,11 @@ void ThreadSocketHandler()
             LOCK(cs_vNodes);
             for (CNode *pnode : vNodes)
             {
+                if (shutdown_threads.load() == true)
+                {
+                    return;
+                }
+
                 // It is necessary to use a temporary variable to ensure that pnode->hSocket is not changed by another
                 // thread during execution.
                 // If the socket is closed and even reopened for some unrelated connection, the worst case is that we
@@ -1449,6 +1467,11 @@ void ThreadSocketHandler()
         //
         for (const ListenSocket &hListenSocket : vhListenSocket)
         {
+            if (shutdown_threads.load() == true)
+            {
+                return;
+            }
+
             if (hListenSocket.socket != INVALID_SOCKET && FD_ISSET(hListenSocket.socket, &fdsetRecv))
             {
                 AcceptConnection(hListenSocket);
@@ -1470,7 +1493,7 @@ void ThreadSocketHandler()
         {
             if (shutdown_threads.load() == true)
             {
-                break; // drop out of this loop so we can quickly release node refs and return
+                break; // break rather than return so we can release the node refs
             }
 
             //
@@ -1557,6 +1580,11 @@ void ThreadSocketHandler()
                 // taken before cs_prioritySendQ and hence the following blocks of code needed to preserve that order.
                 while (fPrioritySendMsg)
                 {
+                    if (shutdown_threads.load() == true)
+                    {
+                        break; // break rather than return so we can release the node refs
+                    }
+
                     // Check if anything is really in queue and pop the noderef. If we're empty then set the
                     // priority flag to false. Do it here so we don't have to check at the end again and take a lock
                     // twice.
@@ -1667,7 +1695,7 @@ void ThreadSocketHandler()
             pnode->Release();
         }
 
-        // BU: Nothing happened even though select did not block.  So slow us down.
+        // Nothing happened even though select did not block.  So slow us down.
         if (progress == 0 && fAquiredAllRecvLocks)
             MilliSleep(5);
     }
