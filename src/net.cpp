@@ -934,7 +934,7 @@ static bool ReverseCompareNodeTimeConnected(const CNodeRef &a, const CNodeRef &b
 }
 #endif
 
-// BU: connection slot exhaustion mitigation
+// Connection slot exhaustion mitigation
 static bool CompareNodeActivityBytes(const CNodeRef &a, const CNodeRef &b)
 {
     return a->nActivityBytes < b->nActivityBytes;
@@ -973,20 +973,45 @@ public:
     }
 };
 
-static bool AttemptToEvictConnection(bool fPreferNewConnection)
+bool AttemptToEvictConnection(const int nMaxInbound)
 {
+    // Find an eviction candidate
     std::vector<CNodeRef> vEvictionCandidates;
     std::vector<CNodeRef> vEvictionCandidatesByActivity;
     {
+        static int64_t nLastTime = GetTime();
         LOCK(cs_vNodes);
 
-        static int64_t nLastTime = GetTime();
+        // Count up all the inbound connections to determine whether to protect inbound client nodes
+        int nInbound = 0;
+        int nInboundClient = 0;
+        for (CNode *node : vNodes)
+        {
+            if (node->fInbound)
+                nInbound++;
+            if (node->fClient)
+                nInboundClient++;
+        }
+        // If the inbound slots are not taken up then nothing to do.
+        if (nInbound < nMaxInbound)
+            return true;
+
+        // At least these many inbound client connections will be protected from being bumped by network nodes.
+        bool fDropNetworkNode = false;
+        int nProtectedInboundClient = std::round((double)nMaxInbound / 10);
+        if (nInboundClient <= nProtectedInboundClient)
+        {
+            fDropNetworkNode = true;
+        }
+
+        // Look for a candidate to evict and also update activity bytes
         for (CNode *node : vNodes)
         {
             // Decay the activity bytes for each node over a period of 2 hours.  This gradually de-prioritizes
             // a connection that was once active but has gone stale for some reason and allows lower priority
             // active nodes to climb the ladder.
             int64_t nNow = GetTime();
+            int64_t nTimeConnected = nNow - node->nTimeConnected.load();
 
             while (true)
             {
@@ -1002,6 +1027,11 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection)
                 continue;
             if (node->fDisconnect)
                 continue;
+            if (fDropNetworkNode && node->fClient)
+                continue;
+            if (!fDropNetworkNode && node->fClient && nTimeConnected < DEFAULT_CLIENT_TIME_GUARANTEE)
+                continue;
+
             vEvictionCandidates.push_back(CNodeRef(node));
 
             // on occasion a node will connect but not complete it's initial ping/pong in a reasonable amount of time
@@ -1015,13 +1045,11 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection)
             }
         }
         nLastTime = GetTime();
+        vEvictionCandidatesByActivity = vEvictionCandidates;
     }
-    vEvictionCandidatesByActivity = vEvictionCandidates;
-
-
-    if (vEvictionCandidates.empty())
+    // If no candidates then nothing to do.
+    if (vEvictionCandidatesByActivity.empty())
         return false;
-
 
     // If we get here then we prioritize connections based on activity.  The least active incoming peer is
     // de-prioritized based on bytes in and bytes out.  A whitelisted peer will always get a connection and there is
@@ -1029,7 +1057,7 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection)
     std::sort(vEvictionCandidatesByActivity.begin(), vEvictionCandidatesByActivity.end(), CompareNodeActivityBytes);
     vEvictionCandidatesByActivity[0]->fDisconnect = true;
 
-    // BU - update the connection tracker
+    // Update the connection tracker
     {
         double nEvictions = 0;
         LOCK(cs_mapInboundConnectionTracker);
@@ -1050,13 +1078,13 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection)
         mapInboundConnectionTracker[ipAddress].nLastEvictionTime = GetTime();
 
         LOG(EVICT, "Number of Evictions is %f for %s\n", nEvictions, vEvictionCandidatesByActivity[0]->addr.ToString());
-        if (nEvictions > 15)
+        if (nEvictions > 3)
         {
-            int nHoursToBan = 4;
+            int nSecsToBan = 60;
             std::string userAgent = vEvictionCandidatesByActivity[0]->cleanSubVer;
-            dosMan.Ban(ipAddress, userAgent, BanReasonTooManyEvictions, nHoursToBan * 60 * 60);
-            LOGA("Banning %s for %d hours: Too many evictions - connection dropped\n",
-                vEvictionCandidatesByActivity[0]->addr.ToString(), nHoursToBan);
+            dosMan.Ban(ipAddress, userAgent, BanReasonTooManyEvictions, nSecsToBan);
+            LOGA("Banning %s for %d secs: Too many evictions - connection dropped\n",
+                vEvictionCandidatesByActivity[0]->addr.ToString(), nSecsToBan);
         }
     }
 
@@ -1133,6 +1161,7 @@ static void AcceptConnection(const ListenSocket &hListenSocket)
         LOCK(cs_vAddedNodes);
         nMaxAddNodeOutbound = std::min((int)vAddedNodes.size(), nMaxOutConnections);
     }
+    // Max inbound connections allowed of all node types.
     int nMaxInbound = nMaxConnections - (nMaxOutConnections + MAX_FEELER_CONNECTIONS) - nMaxAddNodeOutbound;
 
     // REVISIT: a. This doesn't take into account RPC "addnode <node> onetry" outbound connections as those aren't
@@ -1144,23 +1173,13 @@ static void AcceptConnection(const ListenSocket &hListenSocket)
     //         Points a. and c. can allow users to exceed "maxconnections"
     //         Point b. can cause us to waste slots holding them for invalid addnode entries that will never connect.
 
-    int nInbound = 0;
-    {
-        LOCK(cs_vNodes);
-        for (CNode *pnode : vNodes)
-            if (pnode->fInbound)
-                nInbound++;
-    }
 
-    if (nInbound >= nMaxInbound)
+    if (!AttemptToEvictConnection(nMaxInbound))
     {
-        if (!AttemptToEvictConnection(whitelisted))
-        {
-            // No connection to evict, disconnect the new connection
-            LOG(NET, "failed to find an eviction candidate - connection dropped (full)\n");
-            CloseSocket(hSocket);
-            return;
-        }
+        // No connection to evict, disconnect the new connection
+        LOG(NET | EVICT, "failed to find an eviction candidate - connection dropped (full)\n");
+        CloseSocket(hSocket);
+        return;
     }
 
     // Add connection to the ip tracker and increment counter
@@ -1196,10 +1215,10 @@ static void AcceptConnection(const ListenSocket &hListenSocket)
         mapInboundConnectionTracker[ipAddress].nConnections = nConnections;
         mapInboundConnectionTracker[ipAddress].nLastConnectionTime = GetTime();
 
-        LOG(EVICT, "Number of connection attempts is %f for %s\n", nConnections, addr.ToString());
+        LOG(NET | EVICT, "Number of connection attempts is %f for %s\n", nConnections, addr.ToString());
         if (nConnections > 4 && !whitelisted && !addr.IsLocal()) // local connections are auto-whitelisted
         {
-            LOG(EVICT, "Disconnecting %s: Too many connection attempts - connection dropped\n", addr.ToString());
+            LOG(NET | EVICT, "Disconnecting %s: Too many connection attempts - connection dropped\n", addr.ToString());
             CloseSocket(hSocket);
             return;
         }

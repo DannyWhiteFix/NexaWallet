@@ -87,12 +87,12 @@ static const bool DEFAULT_UPNP = false;
 #endif
 /** The maximum number of peer connections to maintain. */
 static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
-/** BU: The maximum number of outbound peer connections */
+/** The maximum number of outbound peer connections */
 static const unsigned int DEFAULT_MAX_OUTBOUND_CONNECTIONS = 8;
+/** The time guarantee for inbound client connections (the time, in secs, a client will be protected from eviction) */
+static const int64_t DEFAULT_CLIENT_TIME_GUARANTEE = 60;
 /** Limits number of IPs learned from a DNS seed */
 static const unsigned int MAX_DNS_SEEDED_IPS = 256;
-/** BU: The daily maximum disconnects while searching for xthin nodes to connect */
-static const unsigned int MAX_DISCONNECTS = 200;
 /** The default for -maxuploadtarget. 0 = Unlimited */
 static const uint64_t DEFAULT_MAX_UPLOAD_TARGET = 0;
 /** Default for blocks only*/
@@ -953,8 +953,14 @@ public:
      */
     void DisconnectIfBanned();
 
+    /** Clear the priority send and receive queues of any noderefs that match this node */
+    void ClearPriorityQueues();
+
     /** close the socket and do some cleanup */
     void CloseSocketDisconnect();
+
+    /** If possible, try to evict a connection to make room for a new inbound connection attempt */
+    bool AttemptToEvictConnection(const int nMaxInbound);
 
     //! returns the name of this node for logging.  Respects the user's choice to not log the node's IP
     std::string GetLogName()
