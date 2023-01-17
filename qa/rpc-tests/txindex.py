@@ -46,6 +46,7 @@ class TxIndexTest(BitcoinTestFramework):
 
         # Check node1 can find all blockchain txns in the txindex
         logging.info("Checking txindex on node1...")
+        waitFor(30, lambda: self.nodes[1].getblockcount() == 101)
         waitFor(30, lambda: self.nodes[1].getinfo()["txindex"] == "synced")
         for i in range(self.nodes[1].getblockcount()):
             blockhash = self.nodes[1].getblockhash(i)
@@ -104,6 +105,7 @@ class TxIndexTest(BitcoinTestFramework):
         self.sync_all()
 
         logging.info("Checking txindex on node1...")
+        waitFor(30, lambda: self.nodes[1].getblockcount() == 107)
         waitFor(30, lambda: self.nodes[1].getinfo()["txindex"] == "synced")
         for i in range(self.nodes[1].getblockcount()):
             blockhash = self.nodes[1].getblockhash(i)
@@ -162,6 +164,7 @@ class TxIndexTest(BitcoinTestFramework):
 
         # Check node1 can find all blockchain txns in the txindex
         logging.info("Checking txindex on node1...")
+        waitFor(30, lambda: self.nodes[1].getblockcount() == 117)
         waitFor(30, lambda: self.nodes[1].getinfo()["txindex"] == "synced")
         for i in range(self.nodes[1].getblockcount()):
             blockhash = self.nodes[1].getblockhash(i)
@@ -192,6 +195,7 @@ class TxIndexTest(BitcoinTestFramework):
 
         # Check node0 can find all blockchain txns in the txindex
         logging.info("Checking txindex on node0...")
+        waitFor(30, lambda: self.nodes[1].getblockcount() == 117)
         waitFor(30, lambda: self.nodes[0].getinfo()["txindex"] == "synced")
         for i in range(self.nodes[0].getblockcount()):
             blockhash = self.nodes[0].getblockhash(i)
