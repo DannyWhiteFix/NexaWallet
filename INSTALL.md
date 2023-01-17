@@ -123,7 +123,11 @@ There are dozens of configuration and node policy options available but the two 
 
 ### dbcache:
 
-As stated above, this setting is crucial to a fast initial sync.  You can set this value from the command line by running
+As stated above, this setting is crucial to a fast initial sync. If you don't configure any value then the system
+will automatically adjust this size for you, more or less. On windows the auto adjustment works very well and will rise and fall with your nodes needs, however, on linux/maxOS the adjustments are not as granular and so if your a power user
+you will likely want to manually configure your dbcache settings.
+
+You can set this value manually from the command line (or adding it to your nexa.conf) by running
 ```
 nexad -cache.dbcache=<your size in MB>
 ```
@@ -138,21 +142,15 @@ Similarly you can also add the setting to the nexa.conf file located in your ins
 When entering the size
 try to give it the maximum that your system can afford while still leaving enough memory for other processes.
 
-### Maximum outbound connections:
+### Getting enough network connections:
 
-It is generally fine to leave the default outbound connection settings for doing a sync, however, at times some users
-have reported issues with not being able to find enough useful connections. If that happens you can change this setting to override the default.
-For instance
+It is generally fine to leave the default inbound/outbound connection settings for doing a sync, however, at times some users have reported issues with not being able to find any useful connections. This is often a problem because too many nodes are looking for outbound connections but node operators have forgotten to configure for allowing inbound connections (if nobody allows inbound connections then there would be no network connectivity for anyone).
 
-```
-nexad -net.maxOutboundConnections=30
-```
+#### Port forwarding:
+To get inbound connections for Nexa require that port 7228 be port forwarded
 
-will give you 30 outbound connections and should be more than enough in the event that the
-node is having difficulty.
-
-This can also be added to the config file with
- > `maxoutconnections=30`
+#### UPnP:
+Port forrwarding is considered the better option, but if you don't want to setup port fowarding then you need to configure your router with UPnP turned on and then also turn on UPnP on nexad (-upnp=1), however, UPnP can be a security risk and so it is usually turned off by default on your router.
 
 
 # Getting help
