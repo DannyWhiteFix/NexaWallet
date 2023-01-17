@@ -3305,6 +3305,7 @@ bool CWallet::CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey)
     EnqueueTxForAdmission(d);
     */
 
+    auto txId = wtxNew.GetId();
     if (fBroadcastTransactions)
     {
         auto txref = MakeTransactionRef(wtxNew);
@@ -3356,9 +3357,24 @@ bool CWallet::CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey)
             LOGA("CommitTransaction(): Error: Transaction not valid\n");
             return false;
         }
+
+        // Wait for tx to be admitted. This must come before we attempt
+        // to relay the wallet transaction or the wallet txns will not propagate.
+        // TODO, put a "Promise"-like callback in CTxInputData
+        bool fSuccess = false;
+        for (int i = 0; (i < 50 && !shutdown_threads.load()); i++)
+        {
+            if (mempool.exists(txId))
+            {
+                fSuccess = true;
+                break;
+            }
+            MilliSleep(100);
+        }
+        if (!fSuccess)
+            return false; // TX was not admitted
     }
 
-    auto txId = wtxNew.GetId();
     {
         LOCK(cs_wallet);
         // This is only to keep the database open to defeat the auto-flush for the
@@ -3395,21 +3411,6 @@ bool CWallet::CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey)
         }
     }
 
-
-    if (fBroadcastTransactions)
-    {
-        // Wait for tx to be admitted
-        // TODO, put a "Promise"-like callback in CTxInputData
-        for (int i = 0; (i < 50 && !shutdown_threads.load()); i++)
-        {
-            if (mempool.exists(txId))
-            {
-                return true;
-            }
-            MilliSleep(100);
-        }
-        return false; // TX was not admitted
-    }
     return true;
 }
 
