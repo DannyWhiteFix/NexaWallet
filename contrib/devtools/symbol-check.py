@@ -46,7 +46,8 @@ MAX_VERSIONS = {
 
 # Ignore symbols that are exported as part of every executable
 IGNORE_EXPORTS = {
-'_edata', '_end', '__end__', '_init', '__bss_start', '__bss_start__', '_bss_end__', '__bss_end__', '_fini', '_IO_stdin_used', 'stdin', 'stdout', 'stderr'
+'_edata', '_end', '__end__', '_init', '__bss_start', '__bss_start__', '_bss_end__', '__bss_end__', '_fini', '_IO_stdin_used', 'stdin', 'stdout', 'stderr',
+'environ', '_environ', '__environ'
 }
 CPPFILT_CMD = os.getenv('CPPFILT', '/usr/bin/c++filt')
 OBJDUMP_CMD = os.getenv('OBJDUMP', '/usr/bin/objdump')
