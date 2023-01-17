@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# Copyright (c) 2016-2017 The Bitcoin Unlimited developers
 # output . rather than the build output, unless something interesting is printed
 # this script cleans up the travis build output
 import sys

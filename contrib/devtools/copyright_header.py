@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2016 The Bitcoin Core developers
-# Copyright (c) 2016 The Bitcoin Unlimited developers
+# Copyright (c) 2016-2019 The Bitcoin Unlimited developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -117,13 +117,18 @@ EXPECTED_HOLDER_NAMES = [
     "The Bitcoin Unlimited developers\n",
     "The Bitcoin Unlimited Developers\n",
     "Bitcoin Unlimited Developers\n",
+    "Bitcoin Unlimited\n",
     "The Bitcoin Developers\n",
     "G. Andrew Stone\n",
+    "Andrew Stone Consulting\n",
     "Amaury SÉCHET\n",
     "Stephen McCarthy\n",
     "Jeremy Rubin\n",
     "The Bitcoin ABC developers\n",
     "Gavin Andresen\n",
+    "freetrader\n",
+    "Pieter Wuille, Shammah Chancellor, Neil Booth\n",
+    "The Zcash developers\n",
 ]
 
 DOMINANT_STYLE_COMPILED = {}
