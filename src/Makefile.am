@@ -140,6 +140,7 @@ BITCOIN_CORE_H = \
   coins.h \
   compat.h \
   compat/byteswap.h \
+  compat/cpuid_compat.h \
   compat/endian.h \
   compat/sanity.h \
   compressor.h \
@@ -216,6 +217,7 @@ BITCOIN_CORE_H = \
   script/ismine.h \
   script/scripttemplate.h \
   script/stackitem.h \
+  span.h \
   streams.h \
   support/allocators/secure.h \
   support/allocators/zeroafterfree.h \
@@ -338,6 +340,7 @@ libnexa_server_a_SOURCES = \
   script/sigcache.cpp \
   script/ismine.cpp \
   script/scriptattributes.cpp \
+  span.h \
   timedata.cpp \
   torcontrol.cpp \
   txadmission.cpp \
@@ -407,6 +410,7 @@ libnexa_a_SOURCES = \
   keystore.h \
   coins.h \
   coins.cpp \
+  compat/cpuid_compat.h \
   primitives/block.cpp \
   primitives/block.h \
   primitives/transaction.cpp \
