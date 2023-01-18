@@ -619,7 +619,7 @@ static void addElectrumOptions(AllowedArgs &allowedArgs)
         .addArg("electrum", optionalBool, "Enable electrum server")
         .addArg("electrum.dir", requiredStr, "Data directory for electrum database")
         .addArg("electrum.port", requiredStr,
-            "Port electrum RPC listens on (default: mainnet 50001, testnet: 60001, testnet4: 62001, scalenet: 63001")
+            "Port electrum RPC listens on (default: mainnet 20001, testnet: 30001, regtest: 30401)")
         .addArg("electrum.host", requiredStr, "Host electrum RPC listens on (default: all interfaces)")
         .addArg("electrum.rawarg", optionalStr,
             "Raw argument to pass directly to underlying electrum daemon "
@@ -627,8 +627,8 @@ static void addElectrumOptions(AllowedArgs &allowedArgs)
             "This option can be specified multiple times.")
         .addArg("electrum.ws.host", requiredStr, "Host electrum Websocket listens on (default: all interfaces")
         .addArg("electrum.ws.port", requiredStr,
-            "Port electrum Websocket listens on (default: mainnet 50003, testnet: "
-            "60003, testnet4: 62003, scalenet: 63003")
+            "Port electrum Websocket listens on (default: mainnet 20003, testnet: "
+            "30003, regtest: 30403)")
         .addArg("electrum.shutdownonerror", optionalBool, "Shutdown if the electrum server exits unexpectedly")
         .addArg("electrum.blocknotify", optionalBool,
             "Instantly notify electrum server of new blocks. "
