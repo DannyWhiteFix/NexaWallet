@@ -79,7 +79,7 @@ static const CBlockIndex *GetASERTAnchorBlock(const CBlockIndex *const pindex, c
  * Compute the next required proof of work using an absolutely scheduled
  * exponentially weighted target (ASERT).
  *
- * With ASERT, we define an ideal schedule for block issuance (e.g. 1 block every 600 seconds), and we calculate the
+ * With ASERT, we define an ideal schedule for block issuance (e.g. 1 block every 120 seconds), and we calculate the
  * difficulty based on how far the most recent block's timestamp is ahead of or behind that schedule.
  * We set our targets (difficulty) exponentially. For every [nHalfLife] seconds ahead of or behind schedule we get, we
  * double or halve the difficulty.
