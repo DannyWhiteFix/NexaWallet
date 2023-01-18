@@ -297,8 +297,10 @@ void CapdMsg::SetPowTargetHarderThan(uint256 target)
     // Subtract 1 from the difficulty as a compact number.  By doing it this way we are certain
     // that the change isn't rounded away.
     uint32_t cInt = UintToArith256(target).GetCompact();
-    uint32_t mantissa = (cInt & ((1 << 23) - 1));
-    uint32_t randomReduction = (std::rand() % 0xfe) + 1;
+    uint32_t mantissaBits = ((1 << 23) - 1);
+    uint32_t mantissa = (cInt & mantissaBits);
+    uint32_t expBits = ~mantissaBits;
+    uint32_t randomReduction = (std::rand() % 0x7FFF) + 0x8000;
 
     if (mantissa > randomReduction) // subtract a bit from the mantissa if we won't underflow
     {
@@ -306,11 +308,14 @@ void CapdMsg::SetPowTargetHarderThan(uint256 target)
     }
     else // subtract one from the exponent and set the enough bits that its like 0x100 -> 0xff
     {
-        cInt = (cInt - (1 << 25)) | 0xff;
+        randomReduction -= mantissa;
+        uint32_t orig = cInt;
+        cInt = ((cInt - (1 << 25)) & expBits) | (mantissaBits - randomReduction);
     }
 
     arith_uint256 num;
     SetPowTarget(num.SetCompact(cInt));
+    // LOG(CAPD, "Capd: target %s > %s\n", target.GetHex(), num.GetHex());
 }
 
 void CapdMsg::SetPowTargetHarderThanPriority(PriorityType priority)
