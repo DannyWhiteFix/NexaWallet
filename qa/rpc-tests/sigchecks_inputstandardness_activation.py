@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2020 The Bitcoin Developers
-# Copyright (c) 2020 Bitcoin Unlimited
+# Copyright (c) 2020 Bitcoin Unlimited Developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
