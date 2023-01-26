@@ -58,13 +58,13 @@ class GroupTokensTest (BitcoinTestFramework):
                     assert bytes.fromhex(asm[4]).decode() == url
                     assert bytes.fromhex(asm[5])[::-1] == bytes.fromhex(sha)
 
-    def checkTokenInfo(self, node, grpId, name="", ticker="", url="", url_hash="", balance="0"):
+    def checkTokenInfo(self, node, grpId, ticker="", name="", url="", url_hash="", balance="0"):
         info = node.token("info")
         if (grpId not in info):
             raise Exception("Group Id not found")
 
-        assert_equal(info[grpId]['name'], name)
         assert_equal(info[grpId]['ticker'], ticker)
+        assert_equal(info[grpId]['name'], name)
         assert_equal(info[grpId]['url'], url)
         assert_equal(info[grpId]['hash'], url_hash)
         assert_equal(info[grpId]['balance'], balance)
@@ -75,8 +75,8 @@ class GroupTokensTest (BitcoinTestFramework):
         if (grpId not in info):
             raise Exception("Group Id not found")
 
-        assert_equal(info[grpId]['name'], name)
         assert_equal(info[grpId]['ticker'], ticker)
+        assert_equal(info[grpId]['name'], name)
         assert_equal(info[grpId]['url'], url)
         assert_equal(info[grpId]['hash'], url_hash)
         assert_equal(info[grpId]['balance'], balance)
