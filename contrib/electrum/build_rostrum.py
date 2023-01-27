@@ -6,11 +6,13 @@ import sys
 import shutil
 PROJECT_NAME = "rostrum"
 GIT_REPO = "https://gitlab.com/BitcoinUnlimited/{}.git".format(PROJECT_NAME)
-# When released put a tag here 'v2.0.0'
-# When in development, put 'master' here.
+# When changing this variable, also remember to update
+# job `test-ubuntu-qa-rostrum` in .gitlab.yml so that the correct
+# integration tests are run.
+#
+# It is also possible to set GIT_BRANCH to None to run the latest `master`
+# of Rostrum. When set to None the EXPECT_HEAD hash check is disabled)
 GIT_BRANCH = "v8.0.1"
-# When released put a hash here: "aa95d64d050c286356dadb78d19c2e687dec85cf"
-# When in development, put 'None' here
 EXPECT_HEAD = "1b28c2ab2f17da5eddd6255e789282d5b5cb8552"
 
 ROOT_DIR = os.path.realpath(
