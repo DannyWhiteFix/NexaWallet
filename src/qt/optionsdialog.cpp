@@ -17,6 +17,7 @@
 #include "main.h" // for DEFAULT_SCRIPTCHECK_THREADS and MAX_SCRIPTCHECK_THREADS
 #include "net.h" // for access to the network traffic shapers
 #include "netbase.h"
+#include "tweak.h"
 #include "txdb.h" // for -cache.dbcache defaults
 
 #ifdef ENABLE_WALLET
@@ -32,6 +33,8 @@
 #include <QLocale>
 #include <QMessageBox>
 #include <QTimer>
+
+extern CTweak<bool> instantTxns;
 
 OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet)
     : QDialog(parent), ui(new Ui::OptionsDialog), portValidator(1, 65536, this), // BU fix memory leaks
@@ -54,6 +57,15 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet)
     ui->proxyIpTor->setEnabled(false);
     ui->proxyPortTor->setEnabled(false);
     ui->proxyPortTor->setValidator(&proxyPortValidator);
+
+#ifdef ENABLE_WALLET
+    if (instantTxns.Value())
+    {
+        ui->spendZeroConfChange->setEnabled(false);
+        ui->instantTransactions->setChecked(true);
+    }
+#endif
+
 
     connect(ui->connectSocks, SIGNAL(toggled(bool)), ui->proxyIp, SLOT(setEnabled(bool)));
     connect(ui->connectSocks, SIGNAL(toggled(bool)), ui->proxyPort, SLOT(setEnabled(bool)));
@@ -151,6 +163,7 @@ void OptionsDialog::setModel(OptionsModel *_model)
     connect(ui->threadsScriptVerif, SIGNAL(valueChanged(int)), this, SLOT(showRestartWarning()));
     /* Wallet */
     connect(ui->spendZeroConfChange, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
+    connect(ui->instantTransactions, SIGNAL(clicked(bool)), this, SLOT(setInstant()));
     /* Network */
     connect(ui->allowIncoming, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     connect(ui->connectSocks, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
@@ -169,6 +182,7 @@ void OptionsDialog::setMapper()
     /* Wallet */
     mapper->addMapping(ui->spendZeroConfChange, OptionsModel::SpendZeroConfChange);
     mapper->addMapping(ui->coinControlFeatures, OptionsModel::CoinControlFeatures);
+    mapper->addMapping(ui->instantTransactions, OptionsModel::InstantTransactions);
 
     /* Network */
     mapper->addMapping(ui->mapPortUpnp, OptionsModel::MapPortUPnP);
@@ -238,6 +252,16 @@ void OptionsDialog::showRestartWarning(bool fPersistent)
         // Todo: should perhaps be a class attribute, if we extend the use of statusLabel
         QTimer::singleShot(10000, this, SLOT(clearStatusLabel()));
     }
+}
+void OptionsDialog::setInstant(bool fPersistent)
+{
+    bool fInstant = ui->instantTransactions->isChecked();
+    instantTxns.Set(fInstant);
+
+    if (!fInstant)
+        ui->spendZeroConfChange->setEnabled(true);
+    else
+        ui->spendZeroConfChange->setEnabled(false);
 }
 
 void OptionsDialog::thirdPartyTxWarning(bool fPersistent)

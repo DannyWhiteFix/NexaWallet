@@ -422,6 +422,7 @@ def initialize_datadir(dirname, n, bitcoinConfDict=None, wallet=None, bins=None)
                 "port":p2p_port(n),"rpcport":str(rpc_port(n)),"listenonion":0,"usecashaddr":1,
                 "rpcuser":rpc_u, "rpcpassword":rpc_p, "bindallorfail" : 1,
                 "wallet.payTxFee":1000,
+                "wallet.instant" : 0,
                 "relay.minRelayTxFee":0,
                 "relay.limitFreeRelay":15,
                 "electrum.port": electrum_rpc_port(n),

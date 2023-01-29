@@ -772,7 +772,7 @@ bool ParallelAcceptToMemoryPool(Snapshot &ss,
         if (debugger)
         {
             // debugger->AddInvalidReason(
-            // "tx-mempool-conflict: " + txin.prevout.hash.ToString() + ":" + std::to_string(txin.prevout.n));
+            // "tx-txpool-conflict: " + txin.prevout.hash.ToString() + ":" + std::to_string(txin.prevout.n));
             debugger->AddInvalidReason("txn-txpool-conflict");
             debugger->mineable = false;
             debugger->futureMineable = false;
@@ -1057,7 +1057,7 @@ bool ParallelAcceptToMemoryPool(Snapshot &ss,
             {
                 if (debugger)
                 {
-                    debugger->AddInvalidReason("mempool min fee not met");
+                    debugger->AddInvalidReason("txpool min fee not met");
                     // fees are not a reason to mark something as not mineable, keep current mineable and futureMineable
                     // values unchanged
                     debugger->standard = false;
@@ -1126,11 +1126,11 @@ bool ParallelAcceptToMemoryPool(Snapshot &ss,
         {
             if (debugger)
             {
-                debugger->AddInvalidReason("txn-mempool-conflict");
+                debugger->AddInvalidReason("txn-txpool-conflict");
             }
             else
             {
-                return state.Invalid(false, REJECT_CONFLICT, "txn-mempool-conflict");
+                return state.Invalid(false, REJECT_CONFLICT, "txn-txpool-conflict");
             }
         }
         else if (debugger == nullptr)

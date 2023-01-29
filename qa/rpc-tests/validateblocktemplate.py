@@ -130,7 +130,7 @@ class ValidateblocktemplateTest(BitcoinTestFramework):
         block.rehash()
         hexblk = ToHex(block)
         expectException(lambda: self.nodes[0].validateblocktemplate(hexblk),
-                        JSONRPCException, "invalid block: bad-txnmrklroot")
+                        JSONRPCException, "invalid block:")
 
         logging.info("no tx")
         block = create_block(tip, nextheight, work, None, ancHash, cur_time + 600)

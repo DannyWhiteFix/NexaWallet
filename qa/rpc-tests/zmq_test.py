@@ -198,7 +198,7 @@ class ZMQTest (BitcoinTestFramework):
             try:
                 idemtx   = self.nodes[0].sendrawtransaction(rawtx['hex'])
             except JSONRPCException as e:
-                assert("txn-mempool-conflict" in e.error['message'])
+                assert("txn-txpool-conflict" in e.error['message'])
             else:
                 assert(False)
             self.sync_all()

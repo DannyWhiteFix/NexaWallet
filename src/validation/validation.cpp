@@ -1756,16 +1756,14 @@ bool CheckBlock(const Consensus::Params &consensusParams,
         uint256 hashMerkleRoot2 = BlockMerkleRoot(*pblock, &mutated);
         if (pblock->hashMerkleRoot != hashMerkleRoot2)
         {
-            return state.DoS(
-                100, error("CheckBlock(): hashMerkleRoot mismatch"), REJECT_INVALID, "bad-txnmrklroot", true);
+            return error("CheckBlock(): bad merkleroot");
         }
         // Check for merkle tree malleability (CVE-2012-2459): repeating sequences
         // of transactions in a block without affecting the merkle root of a block,
         // while still invalidating it.
         if (mutated)
         {
-            return state.DoS(
-                100, error("CheckBlock(): duplicate transaction"), REJECT_INVALID, "bad-txns-duplicate", true);
+            return error("CheckBlock(): bad merkleroot - mutated");
         }
     }
 

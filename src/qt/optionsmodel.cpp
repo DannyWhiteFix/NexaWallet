@@ -18,6 +18,7 @@
 #include "init.h"
 #include "main.h" // For DEFAULT_SCRIPTCHECK_THREADS
 #include "net.h"
+#include "tweak.h"
 #include "txdb.h" // for -cache.dbcache defaults
 
 #ifdef ENABLE_WALLET
@@ -28,6 +29,8 @@
 #include <QNetworkProxy>
 #include <QSettings>
 #include <QStringList>
+
+extern CTweak<bool> instantTxns;
 
 OptionsModel::OptionsModel(QObject *parent, bool resetSettings) : QAbstractListModel(parent) { Init(resetSettings); }
 void OptionsModel::addOverriddenOption(const std::string &option)
@@ -88,8 +91,28 @@ void OptionsModel::Init(bool resetSettings)
 #ifdef ENABLE_WALLET
     if (!settings.contains("bSpendZeroConfChange"))
         settings.setValue("bSpendZeroConfChange", true);
-    if (!SoftSetBoolArg("-spendzeroconfchange", settings.value("bSpendZeroConfChange").toBool()))
+
+    // Turn on instant transactions for QT users only on first launch
+    if (!settings.contains("QT_instantTransactions"))
+    {
+        settings.setValue("QT_instantTransactions", true);
+    }
+    // after first launch set instant transactions to whatever QT setting was saved on shutdown
+    instantTxns.Set(settings.value("QT_instantTransactions").toBool());
+
+    // Set the spendzeroconfchange options depending on whether instant transactions is on or not.
+    if (instantTxns.Value())
+    {
+        !SoftSetBoolArg("-spendzeroconfchange", true);
+
+        // Because of instant transactions this option is automatically overridden.
         addOverriddenOption("-spendzeroconfchange");
+    }
+    else
+    {
+        if (!SoftSetBoolArg("-spendzeroconfchange", settings.value("bSpendZeroConfChange").toBool()))
+            addOverriddenOption("-spendzeroconfchange");
+    }
 #endif
 
     // Network
@@ -211,6 +234,8 @@ QVariant OptionsModel::data(const QModelIndex &index, int role) const
 #ifdef ENABLE_WALLET
         case SpendZeroConfChange:
             return settings.value("bSpendZeroConfChange");
+        case InstantTransactions:
+            return settings.value("QT_instantTransactions");
 #endif
         case DisplayUnit:
             return nDisplayUnit;
@@ -357,11 +382,25 @@ bool OptionsModel::setData(const QModelIndex &index, const QVariant &value, int 
         break;
 
 #ifdef ENABLE_WALLET
-        case SpendZeroConfChange:
-            if (settings.value("bSpendZeroConfChange") != value)
+        case InstantTransactions:
+            if (settings.value("QT_instantTransactions") != value)
             {
-                settings.setValue("bSpendZeroConfChange", value);
-                setRestartRequired(true);
+                settings.setValue("QT_instantTransactions", value);
+                instantTxns.Set(value.toBool());
+            }
+            break;
+        case SpendZeroConfChange:
+            if (instantTxns.Value())
+            {
+                settings.setValue("bSpendZeroConfChange", true);
+            }
+            else
+            {
+                if (settings.value("bSpendZeroConfChange") != value)
+                {
+                    settings.setValue("bSpendZeroConfChange", value);
+                    setRestartRequired(true);
+                }
             }
             break;
 #endif

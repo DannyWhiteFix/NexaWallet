@@ -46,6 +46,7 @@ public:
         ThreadsScriptVerif, // int
         DatabaseCache, // int
         SpendZeroConfChange, // bool
+        InstantTransactions, // bool
         Listen, // bool
         OptionIDRowCount,
     };

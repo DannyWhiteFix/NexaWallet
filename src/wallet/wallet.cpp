@@ -59,6 +59,8 @@ const uint256 CMerkleTx::ABANDON_HASH(uint256S("00000000000000000000000000000000
 
 extern CTweak<bool> useBIP69;
 extern CTweak<bool> feeEstimationTweak;
+extern CTweak<bool> instantTxns;
+extern CTweak<uint32_t> instantTxnsDelay;
 
 /** @defgroup mapWallet
  *
@@ -2031,29 +2033,61 @@ bool CWalletTx::IsTrusted() const
     if (!CheckFinalTx(MakeTransactionRef(*this)))
         return false;
     int nDepth = GetDepthInMainChain();
-    if (nDepth >= 1)
-        return true;
     if (nDepth < 0)
         return false;
-    if (!bSpendZeroConfChange || !IsFromMe(ISMINE_ALL)) // using wtx's cached debit
-        return false;
 
-    // Don't trust unconfirmed transactions from us unless they are in the txpool.
-    if (!InMempool())
-        return false;
-
-    // Trusted if all inputs are from us and are in the txpool:
-    for (const CTxIn &txin : vin)
+    // Check depth depending on whether instant transactions are turned on or not.
+    // If instant transactions are turned on then all unconfirmed transactions will
+    // show in the wallet as available to be spent.
+    bool fInstantTransactions = instantTxns.Value();
+    if (nDepth >= 1)
     {
-        // Transactions not sent by us: not trusted
-        const COutput parent = pwallet->GetWalletCoin(txin.prevout);
-        if (parent.isNull())
-            return false;
-        assert(parent.i >= 0); // Should have accessed a coin, not the tx
-        const CTxOut &parentOut = parent.tx->vout[parent.i];
-        if (pwallet->IsMine(parentOut) != ISMINE_SPENDABLE)
-            return false;
+        return true;
     }
+    else if (!fInstantTransactions)
+    {
+        if (!bSpendZeroConfChange || !IsFromMe(ISMINE_ALL)) // using wtx's cached debit
+            return false;
+
+        // Don't trust unconfirmed transactions from us unless they are in the txpool.
+        if (!InMempool())
+            return false;
+
+        // Trusted if all inputs are from us and are in the txpool:
+        for (const CTxIn &txin : vin)
+        {
+            // Transactions not sent by us: not trusted
+            const COutput parent = pwallet->GetWalletCoin(txin.prevout);
+            if (parent.isNull())
+                return false;
+            assert(parent.i >= 0); // Should have accessed a coin, not the tx
+            const CTxOut &parentOut = parent.tx->vout[parent.i];
+            if (pwallet->IsMine(parentOut) != ISMINE_SPENDABLE)
+                return false;
+        }
+    }
+    else // Instant Transactions
+    {
+        // If we are doing instant transactions we have to check for double spends.  If this
+        // transaction is double spent then we mark it as a pending transaction in the wallet (This is
+        // the only instance a transaction will be shown as pending when using instant transactions).
+        if (fDoubleSpent)
+            return false;
+
+        // If we are doing instant transactions then the tx must be in the txpool. Also, the tx must
+        // not be in the orphanpool, but if it's in the txpool then by default we know it is not in the orphanpool.
+        if (!InMempool())
+            return false;
+
+        // Time delay for when an instant transaction can be spendable. Default is a few seconds
+        // but can be modified by the tweak.  If the transaction is from ourselves or is some change
+        // then no delay is necessary.
+        if (((GetTime() - nTimeReceived) < instantTxnsDelay.Value()) && (!IsFromMe(ISMINE_ALL)))
+        {
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -4326,7 +4360,17 @@ bool CWallet::ParameterInteraction()
         }
     }
     nTxConfirmTarget = GetArg("-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET);
-    bSpendZeroConfChange = GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
+
+    // If instant transactions is turned on then we must be able to spend zero conf change as well.
+    if (instantTxns.Value())
+    {
+        bSpendZeroConfChange = GetBoolArg("-spendzeroconfchange", true);
+    }
+    else
+    {
+        bSpendZeroConfChange = GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
+    }
+
     fSendFreeTransactions = GetBoolArg("-sendfreetransactions", DEFAULT_SEND_FREE_TRANSACTIONS);
 
     return true;
