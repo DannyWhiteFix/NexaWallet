@@ -28,11 +28,11 @@ static const bool DEFAULT_TXINDEX = false;
 //! The max allowed size of the in memory UTXO cache which can also be dynamically adjusted
 //! (if it has been configured) based on the current availability of memory.
 extern std::atomic<int64_t> nCoinCacheMaxSize;
-//! -dbcache default (MiB)
+//! -cache.dbcache default (MiB)
 static const int64_t nDefaultDbCache = 500;
-//! max. -dbcache in (MiB)
+//! max. -cache.dbcache in (MiB)
 static const int64_t nMaxDbCache = sizeof(void *) > 4 ? 32736 : 2048;
-//! min. -dbcache in (MiB)
+//! min. -cache.dbcache in (MiB)
 static const int64_t nMinDbCache = 4;
 //! % of available memory to leave unused by dbcache if/when we dynamically size the dbcache.
 static const int64_t nDefaultPcntMemUnused = 10;

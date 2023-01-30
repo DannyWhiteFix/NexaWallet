@@ -664,7 +664,7 @@ CacheConfig DiscoverCacheConfiguration(bool fDefault)
     // - This half of system memory is only used as a basis for the total cache size
     // - if and only if the operator has not already set a value for -cache.dbcache. This mitigates a common problem
     // - where new operators are unaware of the importance of the cache.dbcache setting and therefore do not size their
-    // - dbcache correctly resulting in a very slow initial block sync.
+    // - cache.dbcache correctly resulting in a very slow initial block sync.
     int64_t nMemAvailable = GetTotalSystemMemory() / 2;
 #endif
 
@@ -682,7 +682,7 @@ CacheConfig DiscoverCacheConfiguration(bool fDefault)
     else if (!dbcacheTweak.Value() && (nDefaultDbCache < nMemAvailable))
     {
         // only use the dynamically calculated nMemAvailable if and only if the node operator has not set
-        // a value for dbcache!
+        // a value for cache.dbcache!
         nTotalCache = nMemAvailable << 20;
     }
     else
@@ -756,9 +756,9 @@ void AdjustCoinCacheSize()
 {
     AssertLockHeld(cs_main);
 
-    // If the operator has not set a dbcache and initial sync is complete then revert back to the default
-    // value for dbcache. This will cause the current coins cache to be immediately trimmed to size.
-    if (!IsInitialBlockDownload() && IsChainSyncd() && !GetArg("-dbcache", 0) && chainActive.Tip())
+    // If the operator has not set a cache.dbcache and initial sync is complete then revert back to the default
+    // value for cache.dbcache. This will cause the current coins cache to be immediately trimmed to size.
+    if (!IsInitialBlockDownload() && IsChainSyncd() && !dbcacheTweak.Value() && chainActive.Tip())
     {
         DiscoverCacheConfiguration(true);
         return;
