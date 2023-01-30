@@ -20,7 +20,7 @@
 #include "main.h" // For DEFAULT_SCRIPTCHECK_THREADS
 #include "net.h"
 #include "tweak.h"
-#include "txdb.h" // for -dbcache defaults
+#include "txdb.h" // for -cache.dbcache defaults
 
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"

@@ -23,6 +23,7 @@ extern CCriticalSection cs_LastBlockFile;
 extern std::set<int> setDirtyFileInfo;
 extern std::multimap<CBlockIndex *, CBlockIndex *> mapBlocksUnlinked;
 extern CTweak<uint64_t> pruneIntervalTweak;
+extern CTweak<uint64_t> dbcacheTweak;
 extern std::atomic<uint64_t> nTotalChainTx;
 
 
@@ -651,7 +652,7 @@ bool FlushStateToDiskInternal(CValidationState &state,
     bool fCacheCritical = cacheSize > (size_t)nCoinCacheMaxSize;
     // Flush more frequently when we have auto cache sizing is being used
     bool fAutoCache =
-        (!GetArg("-dbcache", 0) && (cacheSize - nSizeAfterLastFlush > (int64_t)nMaxCacheIncreaseSinceLastFlush));
+        (!dbcacheTweak.Value() && (cacheSize - nSizeAfterLastFlush > (int64_t)nMaxCacheIncreaseSinceLastFlush));
     // It's been a while since we wrote the block index to disk. Do this frequently, so we don't need to redownload
     // after a crash.
     bool fPeriodicWrite =
@@ -749,7 +750,7 @@ bool FlushStateToDiskInternal(CValidationState &state,
         {
             pcoinsTip->Trim(nCoinCacheMaxSize * .95);
         }
-        else if (!GetArg("-dbcache", 0))
+        else if (!dbcacheTweak.Value())
         {
             // When no dbcache setting is in place then we default to flushing the cache
             // more frequently to support the automatic cache sizing function. If we don't

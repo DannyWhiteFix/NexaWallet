@@ -3166,7 +3166,7 @@ bool ConnectTip(CValidationState &state,
         UpdateTip(pindexNew);
 
         // Write the chain state to disk, if necessary. This should be done after UpdateTip to make sure the tip
-        // is set correctly when calling FlushStateToDisk(); this is because the automatic -dbcache adjustment
+        // is set correctly when calling FlushStateToDisk(); this is because the automatic -cache.dbcache adjustment
         // mechanism gets triggered when the chain is synced completely detemined by when the best header matches
         // the chainActive tip.
         int64_t nTime4 = GetStopwatchMicros();

@@ -17,7 +17,7 @@
 #include "main.h" // for DEFAULT_SCRIPTCHECK_THREADS and MAX_SCRIPTCHECK_THREADS
 #include "net.h" // for access to the network traffic shapers
 #include "netbase.h"
-#include "txdb.h" // for -dbcache defaults
+#include "txdb.h" // for -cache.dbcache defaults
 
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h" // for CWallet::GetRequiredFee()
