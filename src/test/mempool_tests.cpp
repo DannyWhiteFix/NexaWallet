@@ -2181,9 +2181,9 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     // remove the priority
     pool.PrioritiseTransaction(vHashes[99], 0, -1000);
     BOOST_CHECK_EQUAL(pool.size(), 100);
-    pool.TrimToSize(pool.DynamicMemoryUsage() - 1, &vNoSpendsRemaining, false);
 
     // without the priority the chain will now be seen as just any chain and so last hash should have been removed
+    pool.TrimToSize(pool.DynamicMemoryUsage() - 1, &vNoSpendsRemaining, false);
     for (size_t i = 0; i < (vHashes.size() - 10); i++) // first 90 hashes should exist
         BOOST_CHECK(pool.exists(vHashes[i]));
     BOOST_CHECK(!pool.exists(vHashes[vHashes.size() - 1])); // at minimum the last hash should not exist
@@ -2196,20 +2196,21 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     pool.PrioritiseTransaction(vHashes[30], 0, 3000);
     pool.TrimToSize(0, &vNoSpendsRemaining, false);
     BOOST_CHECK_EQUAL(pool.size(), 51);
+    BOOST_CHECK_EQUAL(vHashes.size(), 100);
     for (size_t i = 0; i <= 50; i++) // should exist
         BOOST_CHECK(pool.exists(vHashes[i]));
     for (size_t i = 51; i < vHashes.size(); i++) // should not exist
         BOOST_CHECK(!pool.exists(vHashes[i]));
-    vHashes.erase(vHashes.begin() + 50, vHashes.end());
+    vHashes.erase(vHashes.begin() + 51, vHashes.end());
+    BOOST_CHECK_EQUAL(vHashes.size(), pool.size());
 
     // remove the priorities
     pool.PrioritiseTransaction(vHashes[50], 0, -1000);
     pool.PrioritiseTransaction(vHashes[40], 0, -5000);
     pool.PrioritiseTransaction(vHashes[30], 0, -3000);
-    BOOST_CHECK_EQUAL(pool.size(), 51);
-    pool.TrimToSize(pool.DynamicMemoryUsage() - 1, &vNoSpendsRemaining, false);
 
     // without the priority the chain will now be seen as just any chain and so last hash should have been removed
+    pool.TrimToSize(pool.DynamicMemoryUsage() - 1, &vNoSpendsRemaining, false);
     for (size_t i = 0; i < (vHashes.size() - 5); i++)
         BOOST_CHECK(pool.exists(vHashes[i]));
     BOOST_CHECK(!pool.exists(vHashes[vHashes.size() - 1])); // at minimum the last hash should not exist
@@ -2245,16 +2246,18 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
         BOOST_CHECK(pool.exists(vHashes[i]));
     for (size_t i = 96; i < vHashes.size(); i++) // should not exist
         BOOST_CHECK(!pool.exists(vHashes[i]));
-    vHashes.erase(vHashes.begin() + 95, vHashes.end());
+    vHashes.erase(vHashes.begin() + 96, vHashes.end());
+    BOOST_CHECK_EQUAL(vHashes.size(), pool.size());
 
     // remove the priorities
     pool.PrioritiseTransaction(vHashes[95], -1e10, 0);
     pool.PrioritiseTransaction(vHashes[20], -1e11, 0);
     BOOST_CHECK_EQUAL(pool.size(), 96);
+    BOOST_CHECK_EQUAL(vHashes.size(), pool.size());
     pool.TrimToSize(pool.DynamicMemoryUsage() - 1, &vNoSpendsRemaining, false);
 
     // without the priority the chain will now be seen as just any chain and so last hash should have been removed
-    vHashes.erase(vHashes.begin() + 95, vHashes.end());
+    vHashes.erase(vHashes.begin() + 96, vHashes.end());
     for (size_t i = 0; i < (vHashes.size() - 10); i++)
         BOOST_CHECK(pool.exists(vHashes[i]));
     BOOST_CHECK(!pool.exists(vHashes[vHashes.size() - 1])); // at minimum the last hash should not exist
