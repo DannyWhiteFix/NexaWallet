@@ -87,6 +87,7 @@
 
 extern CTweak<uint32_t> dataCarrierSize;
 extern CTweak<bool> dataCarrier;
+extern CTweak<int> maxConnections;
 
 using namespace std;
 
@@ -953,15 +954,15 @@ bool AppInit2(Config &config)
 
     // Make sure enough file descriptors are available
     int nBind = std::max((int)mapArgs.count("-bind") + (int)mapArgs.count("-whitebind"), 1);
-    int nUserMaxConnections = nMaxConnections;
+    int nUserMaxConnections = maxConnections.Value();
 
     // Trim requested connection counts, to fit into system limitations
-    int nFD = RaiseFileDescriptorLimit(nMaxConnections + MIN_CORE_FILEDESCRIPTORS + nBind);
+    int nFD = RaiseFileDescriptorLimit(maxConnections.Value() + MIN_CORE_FILEDESCRIPTORS + nBind);
     if (nFD < MIN_CORE_FILEDESCRIPTORS)
         return InitError(_("Not enough file descriptors available."));
 
-    nMaxConnections = std::min(nFD - MIN_CORE_FILEDESCRIPTORS - nBind, nMaxConnections);
-
+    int nMaxConnections = std::min(nFD - MIN_CORE_FILEDESCRIPTORS - nBind, maxConnections.Value());
+    maxConnections.Set(nMaxConnections);
     if (nMaxConnections < nUserMaxConnections)
         InitWarning(strprintf(_("Reducing -maxconnections from %d to %d because of file descriptor limitations (unix) "
                                 "or winsocket fd_set limitations (windows). If you are a windows user there is a hard "
@@ -1131,7 +1132,7 @@ bool AppInit2(Config &config)
     LOGA("Default data directory %s\n", GetDefaultDataDir().string());
     LOGA("Using data directory %s\n", strDataDir);
     LOGA("Using config file %s\n", GetConfigFile(GetArg("-conf", CONF_FILENAME)).string());
-    LOGA("Using at most %i connections\n", nMaxConnections);
+    LOGA("Using at most %i connections\n", maxConnections.Value());
     std::ostringstream strErrors;
 
     // bip135 begin

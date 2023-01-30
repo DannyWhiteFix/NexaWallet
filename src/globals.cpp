@@ -393,9 +393,9 @@ CTweakRef<int> maxOutConnectionsTweak("net.maxOutboundConnections",
     "Maximum number of outbound connections",
     &nMaxOutConnections,
     &OutboundConnectionValidator);
-CTweakRef<int> maxConnectionsTweak("net.maxConnections",
-    strprintf("Maximum number of connections (default: %d)", nMaxConnections),
-    &nMaxConnections);
+CTweak<int> maxConnections("net.maxConnections",
+    strprintf("Maximum number of connections (default: %d)", DEFAULT_MAX_PEER_CONNECTIONS),
+    DEFAULT_MAX_PEER_CONNECTIONS);
 CTweak<unsigned int> txRetryInterval("net.txRetryInterval",
     strprintf("How long to wait in microseconds before requesting a transaction from another source (default: %d)",
         DEFAULT_MIN_TX_REQUEST_RETRY_INTERVAL),

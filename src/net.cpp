@@ -118,7 +118,7 @@ static CNode *pnodeLocalHost = nullptr;
 uint64_t nLocalHostNonce = 0;
 static std::vector<ListenSocket> vhListenSocket;
 extern CAddrMan addrman;
-int nMaxConnections = DEFAULT_MAX_PEER_CONNECTIONS;
+extern CTweak<int> maxConnections;
 
 bool fAddressesInitialized = false;
 
@@ -1162,6 +1162,7 @@ static void AcceptConnection(const ListenSocket &hListenSocket)
         nMaxAddNodeOutbound = std::min((int)vAddedNodes.size(), nMaxOutConnections);
     }
     // Max inbound connections allowed of all node types.
+    int nMaxConnections = maxConnections.Value();
     int nMaxInbound = nMaxConnections - (nMaxOutConnections + MAX_FEELER_CONNECTIONS) - nMaxAddNodeOutbound;
 
     // REVISIT: a. This doesn't take into account RPC "addnode <node> onetry" outbound connections as those aren't
@@ -1288,11 +1289,14 @@ void CleanupDisconnectedNodes()
     list<CNode *> vNodesDisconnectedCopy;
     {
         // Disconnect unused nodes
+        uint32_t nDisconnected = 0;
         LOCK2(cs_vNodes, cs_vNodesDisconnected);
         for (CNode *pnode : vNodes)
         {
             if (pnode->fDisconnect)
             {
+                nDisconnected++;
+
                 // inform connection manager
                 connmgr->RemovedNode(pnode);
 
@@ -1317,6 +1321,24 @@ void CleanupDisconnectedNodes()
                 vNodes.erase(it);
         }
         vNodesDisconnectedCopy = vNodesDisconnected;
+
+        // If the number of connections has been reduced by the max connections tweak
+        // then disconnect nodes that are not whitelisted until the new connection settings are satisfied.
+        int nMaxConnections = maxConnections.Value();
+        if (vNodes.size() > nDisconnected && (vNodes.size() - nDisconnected) > (size_t)nMaxConnections)
+        {
+            for (auto pnode : vNodes)
+            {
+                if (!(vNodes.size() - nDisconnected > (size_t)nMaxConnections))
+                    break;
+
+                if (!pnode->fDisconnect && !pnode->fWhitelisted)
+                {
+                    pnode->fDisconnect = true;
+                    nDisconnected++;
+                }
+            }
+        }
     }
 
     // Delete disconnected nodes
@@ -2336,8 +2358,8 @@ void ThreadOpenConnections()
             }
 
             // Seeded outbound connections track against the original semaphore
-            if (OpenNetworkConnection(addrConnect, (int)setConnected.size() >= std::min(nMaxConnections - 1, 2), &grant,
-                    nullptr, false, fFeeler))
+            if (OpenNetworkConnection(addrConnect, (int)setConnected.size() >= std::min(maxConnections.Value() - 1, 2),
+                    &grant, nullptr, false, fFeeler))
             {
                 LOCK(cs_vNodes);
                 CNode *pnode = FindNode((CService)addrConnect);
@@ -2873,7 +2895,7 @@ void StartNode()
     if (semOutbound == nullptr)
     {
         // initialize semaphore
-        int nMaxOutbound = std::min((nMaxOutConnections + MAX_FEELER_CONNECTIONS), nMaxConnections);
+        int nMaxOutbound = std::min((nMaxOutConnections + MAX_FEELER_CONNECTIONS), maxConnections.Value());
         semOutbound = new CSemaphore(nMaxOutbound);
     }
 
