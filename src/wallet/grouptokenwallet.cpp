@@ -1321,8 +1321,8 @@ extern UniValue token(const UniValue &params, bool fHelp)
                 UniValue entry(UniValue::VOBJ);
                 if (desc[item.first].size() >= 4)
                 {
-                    entry.pushKV("name", desc[item.first][0]);
-                    entry.pushKV("ticker", desc[item.first][1]);
+                    entry.pushKV("ticker", desc[item.first][0]);
+                    entry.pushKV("name", desc[item.first][1]);
                     entry.pushKV("url", desc[item.first][2]);
 
                     std::string s = desc[item.first][3];
