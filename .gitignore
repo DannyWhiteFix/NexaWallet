@@ -17,6 +17,9 @@ src/nexa-miner
 src/bench/bench_nexa
 src/test/test_nexa
 src/test/test_nexa_fuzzy
+src/falcon512/speed
+src/falcon512/test_falcon
+
 
 # autoreconf
 Makefile.in
