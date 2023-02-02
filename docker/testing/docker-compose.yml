@@ -2,15 +2,15 @@ version: '3'
 
 services:
   node1:
-    image: 'img-nexa-ubu18-linux64'
+    image: 'img-nexa-ubu20-linux64'
     networks:
       - private
   node2:
-    image: 'img-nexa-ubu18-linux64'
+    image: 'img-nexa-ubu20-linux64'
     networks:
       - private
   node3:
-    image: 'img-nexa-ubu18-linux64'
+    image: 'img-nexa-ubu20-linux64'
     networks:
       - private
 
