@@ -94,9 +94,6 @@ using namespace std;
 
 namespace
 {
-// BU replaced this with a configuration option: const int MAX_OUTBOUND_CONNECTIONS = 8;
-const int MAX_FEELER_CONNECTIONS = 1;
-
 struct ListenSocket
 {
     SOCKET socket;
@@ -1163,7 +1160,7 @@ static void AcceptConnection(const ListenSocket &hListenSocket)
     }
     // Max inbound connections allowed of all node types.
     int nMaxConnections = maxConnections.Value();
-    int nMaxInbound = nMaxConnections - (nMaxOutConnections + MAX_FEELER_CONNECTIONS) - nMaxAddNodeOutbound;
+    int nMaxInbound = nMaxConnections - nMaxOutConnections - nMaxAddNodeOutbound;
 
     // REVISIT: a. This doesn't take into account RPC "addnode <node> onetry" outbound connections as those aren't
     // tracked
@@ -2895,7 +2892,7 @@ void StartNode()
     if (semOutbound == nullptr)
     {
         // initialize semaphore
-        int nMaxOutbound = std::min((nMaxOutConnections + MAX_FEELER_CONNECTIONS), maxConnections.Value());
+        int nMaxOutbound = std::min(nMaxOutConnections, maxConnections.Value());
         semOutbound = new CSemaphore(nMaxOutbound);
     }
 
@@ -2951,9 +2948,10 @@ bool StopNode()
     LOGA("StopNode()\n");
     MapPort(false);
     if (semOutbound)
-        for (int i = 0; i < (nMaxOutConnections + MAX_FEELER_CONNECTIONS); i++)
+    {
+        for (int i = 0; i < nMaxOutConnections; i++)
             semOutbound->post();
-
+    }
     if (fAddressesInitialized)
     {
         DumpData(0);
