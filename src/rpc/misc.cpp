@@ -52,6 +52,7 @@ UniValue getinfo(const UniValue &params, bool fHelp)
             "  \"walletversion\": xxxxx,     (numeric) the wallet version\n"
             "  \"balance\": xxxxxxx,         (numeric) the total  balance of the wallet\n"
             "  \"blocks\": xxxxxx,           (numeric) the current number of blocks processed in the server\n"
+            "  \"headers\": xxxxxx,          (numeric) the current number of headers processed in the server\n"
             "  \"timeoffset\": xxxxx,        (numeric) the time offset\n"
             "  \"connections\": xxxxx,       (numeric) the number of connections\n"
             "  \"peers_graphene\": xxxxx     (numeric) the number of grapheneblock peers\n"
@@ -101,6 +102,8 @@ UniValue getinfo(const UniValue &params, bool fHelp)
     }
 #endif
     obj.pushKV("blocks", (int)chainActive.Height());
+    if (pindexBestHeader)
+        obj.pushKV("headers", (int)pindexBestHeader.load()->height());
     obj.pushKV("timeoffset", GetTimeOffset());
     obj.pushKV("connections", nNodes);
     obj.pushKV("peers_graphene", (int)thinrelay.GetGraphenePeers());
