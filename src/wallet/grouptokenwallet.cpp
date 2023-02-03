@@ -534,16 +534,22 @@ void ConstructTx(CWalletTx &wtxNew,
         if (totalAvailable < totalNeeded + fee) // need to find a fee input
         {
             // find a fee input
-            std::vector<COutput> bchcoins;
-            wallet->FilterCoins(bchcoins,
-                [](const COutput &coin)
+            std::vector<COutput> nexacoins;
+            wallet->FilterCoins(nexacoins,
+                [&tx](const COutput &coin)
                 {
+                    // check we don't use a UTXO for the fee that we already added to the tx
+                    auto outpt = coin.GetOutPoint();
+                    for (auto vin : tx.vin)
+                        if (outpt == vin.prevout)
+                            return false;
+                    // Make sure this UTXO isn't in a group
                     CGroupTokenInfo tg(coin.GetScriptPubKey());
                     return NoGroup == tg.associatedGroup;
                 });
 
             COutput feeCoin;
-            if (!NearestGreaterCoin(bchcoins, fee, feeCoin))
+            if (!NearestGreaterCoin(nexacoins, fee, feeCoin))
             {
                 strError = strprintf("Not enough funds for fee of %d.", FormatMoney(fee));
                 throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strError);
