@@ -3192,7 +3192,8 @@ bool CWallet::CreateTransaction(const vector<CRecipient> &vecSend,
                     }
                     if (txNew.vin.size() > MAX_TX_NUM_VIN)
                     {
-                        strFailReason = strprintf("Transaction has %d inputs. Maximum inputs allowed is %d",
+                        strFailReason = strprintf("Transaction has %d inputs. Maximum inputs allowed is %d. Try "
+                                                  "reducing inputs by transferring a smaller amount.",
                             txNew.vin.size(), MAX_TX_NUM_VIN);
                         return false;
                     }
