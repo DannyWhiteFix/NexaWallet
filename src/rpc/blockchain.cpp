@@ -2496,15 +2496,6 @@ public:
     }
 };
 
-enum class OutputScriptType
-{
-    UNKNOWN,
-    P2PK,
-    P2PKH,
-    P2SH_P2WPKH,
-    P2WPKH
-};
-
 #ifdef ENABLE_WALLET
 
 UniValue scantokens(const UniValue &params, bool fHelp)

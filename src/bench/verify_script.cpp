@@ -51,7 +51,7 @@ static CMutableTransaction BuildSpendingTransaction(const CScript &scriptSig, co
     return txSpend;
 }
 
-// Microbenchmark for verification of a basic P2WPKH script. Can be easily
+// Microbenchmark for verification of a basic P2SH script. Can be easily
 // modified to measure performance of other types of scripts.
 static void VerifyScriptBench(benchmark::State &state)
 {
