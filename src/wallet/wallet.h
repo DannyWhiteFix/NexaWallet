@@ -752,7 +752,6 @@ public:
     mutable CCriticalSection cs_wallet;
 
     SpendableTxos available;
-    bool fOnlyConfirmed; // Only allow spending of confirmed coins
 
     bool fFileBacked;
     std::string strWalletFile;
@@ -820,7 +819,6 @@ public:
     // (it grabs and releases internally).
     const COutput GetWalletCoin(const COutPoint &prevout) const;
 
-    bool IsTxSpendable(const CWalletTxRef) const;
     void FillAvailableCoins(const CCoinControl *coinControl); // populate available COutputs.
 
     //! check whether we are allowed to upgrade (or already support) to the named feature
@@ -834,11 +832,9 @@ public:
      * populate vCoins with vector of available COutputs.
      */
     void AvailableCoins(std::vector<COutput> &vCoins,
-        bool fOnlyConfirmed = true,
         const CCoinControl *coinControl = nullptr,
         bool fIncludeZeroValue = false) const;
     void AvailableCoins(SpendableTxos &coins,
-        bool fOnlyConfirmed = true,
         const CCoinControl *coinControl = nullptr,
         bool fIncludeZeroValue = false) const;
 
