@@ -2066,12 +2066,15 @@ std::vector<uint256> CWallet::ResendWalletTransactionsBefore(int64_t nTime)
         // Sort them in chronological order
         for (MapWallet::value_type &item : mapWallet)
         {
-            CWalletTxRef wtx = item.second.tx;
+            const CWalletTxRef wtx = item.second.tx;
             assert(wtx);
             // Don't rebroadcast if newer than nTime:
             if (wtx->nTimeReceived > nTime)
                 continue;
-            mapSorted.insert(make_pair(wtx->nTimeReceived, wtx));
+            if (item.first.hash == wtx->GetId()) // If its the tx record
+            {
+                mapSorted.insert(make_pair(wtx->nTimeReceived, wtx));
+            }
         }
     }
     for (PAIRTYPE(const unsigned int, CWalletTxRef) & item : mapSorted)

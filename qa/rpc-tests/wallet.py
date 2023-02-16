@@ -269,6 +269,7 @@ class WalletTest (BitcoinTestFramework):
         sync_blocks(self.nodes)
 
         relayed = self.nodes[0].resendwallettransactions()
+        assert_equal(len(relayed), 2)
         assert_equal(set(relayed), {txid1, txid2})
         sync_mempools(self.nodes)
 
