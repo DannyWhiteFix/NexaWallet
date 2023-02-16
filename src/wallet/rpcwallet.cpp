@@ -2904,7 +2904,7 @@ UniValue listunspent(const UniValue &params, bool fHelp)
     // Nothing relies on cs_main, but by locking it here, we ensure that a chain reorg doesn't
     // cause AvailableCoins to give inconsistent results
     LOCK2(cs_main, pwalletMain->cs_wallet);
-    pwalletMain->AvailableCoins(vecOutputs, false, nullptr, true);
+    pwalletMain->AvailableCoins(vecOutputs, nullptr, true);
     for (const COutput &out : vecOutputs)
     {
         int depth = out.GetDepthInMainChain();

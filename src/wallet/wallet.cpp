@@ -2120,7 +2120,7 @@ CAmount CWallet::GetBalance() const
     CAmount nTotal = 0;
     /* TODO use alternate implementation
         vector<COutput> confirmed;
-        AvailableCoins(confirmed, true, nullptr, false);
+        AvailableCoins(confirmed, nullptr, false);
         for (const auto& output: confirmed)
         {
             nTotal += output.GetValue();
@@ -2308,23 +2308,17 @@ void CWallet::RedetermineIfMine()
     }
 }
 
-void CWallet::AvailableCoins(SpendableTxos &coins,
-    bool onlyConfirmed, // Don't shadow the fOnlyConfirmed member variable
-    const CCoinControl *coinControl,
-    bool fIncludeZeroValue) const
+void CWallet::AvailableCoins(SpendableTxos &coins, const CCoinControl *coinControl, bool fIncludeZeroValue) const
 {
     vector<COutput> sel;
-    AvailableCoins(sel, false, coinControl, false);
+    AvailableCoins(sel, coinControl, false);
     for (const auto &coin : sel)
     {
         coins.insert(SpendableTxos::value_type(coin.GetValue(), coin));
     }
 }
 
-void CWallet::AvailableCoins(vector<COutput> &vCoins,
-    bool onlyConfirmed, // Don't shadow the fOnlyConfirmed member variable
-    const CCoinControl *coinControl,
-    bool fIncludeZeroValue) const
+void CWallet::AvailableCoins(vector<COutput> &vCoins, const CCoinControl *coinControl, bool fIncludeZeroValue) const
 {
     vCoins.clear();
 
@@ -2346,7 +2340,7 @@ void CWallet::AvailableCoins(vector<COutput> &vCoins,
             if (!CheckFinalTx(std::static_pointer_cast<const CTransaction>(wtx)))
                 continue;
 
-            if (onlyConfirmed && !wtx->IsTrusted())
+            if (!wtx->IsTrusted())
                 continue;
 
             if (wtx->IsCoinBase() && wtx->GetBlocksToMaturity() > 0)
@@ -2549,36 +2543,12 @@ bool CWallet::SelectCoinsMinConf(const CAmount &nTargetValue,
     return true;
 }
 
-
-bool CWallet::IsTxSpendable(const CWalletTxRef pcoin) const
-{
-    if (!CheckFinalTx(std::static_pointer_cast<const CTransaction>(pcoin)))
-        return false;
-
-    if (fOnlyConfirmed && !pcoin->IsTrusted())
-        return false;
-
-    if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0)
-        return false;
-
-    int nDepth = pcoin->GetDepthInMainChain();
-    if (nDepth < 0)
-        return false;
-
-    // We should not consider coins which aren't in our txpool if they are not mined.
-    // It's possible for such coins to be conflicted via ancestors which we may never be able to detect
-    if (nDepth == 0 && !pcoin->InMempool())
-        return false;
-
-    return true;
-}
-
 void CWallet::FillAvailableCoins(const CCoinControl *coinControl)
 {
     LOCK(cs_wallet);
     available.clear();
     vector<COutput> sel;
-    AvailableCoins(sel, false, coinControl, false);
+    AvailableCoins(sel, coinControl, false);
     for (const auto &coin : sel)
     {
         available.insert(SpendableTxos::value_type(coin.GetValue(), coin));
@@ -2643,7 +2613,7 @@ bool CWallet::SelectCoins(const CAmount &nTargetValue,
         { // this "if" statement skips case where coincontrol is only used to supply a change address
             // flush the txns waiting to enter the txpool so we can respend them
             CommitTxToMempool();
-            AvailableCoins(customAvailable, fOnlyConfirmed, coinControl);
+            AvailableCoins(customAvailable, coinControl);
             possibleCoins = &customAvailable; // Override what coins we can select from
             filled = true;
         }
