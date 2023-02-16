@@ -549,7 +549,8 @@ void ConstructTx(CWalletTx &wtxNew,
                 });
 
             COutput feeCoin;
-            if (!NearestGreaterCoin(nexacoins, fee, feeCoin))
+            CAmount feeCoinAmountNeeded = totalNeeded + fee - totalAvailable;
+            if (!NearestGreaterCoin(nexacoins, feeCoinAmountNeeded, feeCoin))
             {
                 strError = strprintf("Not enough funds for fee of %d.", FormatMoney(fee));
                 throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strError);
