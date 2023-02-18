@@ -243,10 +243,16 @@ bool TxIndex::IsSynced() { return fSynced.load(); }
 bool TxIndex::FindTx(const uint256 &hash, uint256 &blockhash, CTransactionRef &ptx, int32_t &txTime) const
 {
     CDiskTxPos postx;
+    bool outpointQuery = false;
+
     if (!db->ReadTxIdPos(hash, postx))
     {
         if (!db->ReadTxIdemPos(hash, postx))
-            return false;
+        {
+            if (!db->ReadOutpointPos(hash, postx))
+                return false;
+            outpointQuery = true;
+        }
     }
 
     CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
@@ -264,7 +270,8 @@ bool TxIndex::FindTx(const uint256 &hash, uint256 &blockhash, CTransactionRef &p
         return error("%s: Deserialize or I/O error - %s", __func__, e.what());
     }
     blockhash = header.GetHash();
-    if (ptx->GetId() != hash && ptx->GetIdem() != hash)
+    // sanity check that we got what we were expecting.  This is expensive for an outpoint query so skip it
+    if (!outpointQuery && ptx->GetId() != hash && ptx->GetIdem() != hash)
         return error("%s: txid and idem mismatch", __func__);
     txTime = header.nTime;
 

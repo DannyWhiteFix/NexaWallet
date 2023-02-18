@@ -1314,6 +1314,7 @@ bool CTxMemPool::ReadFeeEstimates(CAutoFile &filein)
 
 const CTxMemPoolEntry *CTxMemPool::_getEntry(const uint256 &hash)
 {
+    AssertLockHeld(cs_txmempool);
     CTxMemPool::TxIdIter iter = mapTx.find(hash);
     if (iter == mapTx.end())
     {
@@ -1325,6 +1326,16 @@ const CTxMemPoolEntry *CTxMemPool::_getEntry(const uint256 &hash)
     }
     return &(*iter); // not a no-op, converts iter to object then takes pointer
 }
+
+const CTxMemPoolEntry *CTxMemPool::_getEntryByOutpoint(const COutPoint &hash)
+{
+    AssertLockHeld(cs_txmempool);
+    OutpointMap::const_iterator opm = outpointMap.find(hash);
+    if (opm == outpointMap.end())
+        return nullptr;
+    return _getEntry(opm->second.first);
+}
+
 
 CTxMemPool::TxIdIter CTxMemPool::_getIdIter(const uint256 &hash) const
 {
