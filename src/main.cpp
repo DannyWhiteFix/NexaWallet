@@ -278,6 +278,8 @@ bool GetTransaction(const uint256 &hash,
     {
         READLOCK(mempool.cs_txmempool);
         const CTxMemPoolEntry *entryPtr = mempool._getEntry(hash);
+        if (entryPtr == nullptr)
+            entryPtr = mempool._getEntryByOutpoint(COutPoint(hash));
         if (entryPtr != nullptr)
         {
             txTime = entryPtr->GetTime();

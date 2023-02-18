@@ -183,6 +183,46 @@ class TxIndexTest(BitcoinTestFramework):
             for tx in txns:
                 waitFor(30, lambda: self.get_rawtransaction(self.nodes[1], tx) == True)
 
+        # Check that node1 can find transactions by outpoint
+
+        # Make a line of transactions (node 1 has no other balance)
+        addr = self.nodes[1].getnewaddress()
+        self.nodes[0].sendtoaddress(addr, 100090)
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        ta = self.nodes[1].sendtoaddress(addr, 100080)
+        tb = self.nodes[1].sendtoaddress(addr, 100070)
+        tc = self.nodes[1].sendtoaddress(addr, 100060)
+        td = self.nodes[1].sendtoaddress(addr, 100050)
+        txIdem = self.nodes[1].sendtoaddress(addr, 100040)
+        # Trace the spend history from the last transaction to the first, verifying each tx idem as we go,
+        t1 = self.nodes[0].getrawtransaction(txIdem, 1)
+        assert t1["txidem"] == txIdem
+        t2 = self.nodes[0].getrawtransaction(t1["vin"][0]["outpoint"], 1)
+        assert t2["txidem"] == td
+        t3 = self.nodes[0].getrawtransaction(t2["vin"][0]["outpoint"], 1)
+        assert t3["txidem"] == tc
+        t4 = self.nodes[0].getrawtransaction(t3["vin"][0]["outpoint"], 1)
+        assert t4["txidem"] == tb
+        t5 = self.nodes[0].getrawtransaction(t4["vin"][0]["outpoint"], 1)
+        assert t5["txidem"] == ta
+
+        # ... while it is in the mempool
+        self.nodes[1].generate(1)
+        self.sync_blocks()
+        # ... while it is in the txindex db
+        t1 = self.nodes[0].getrawtransaction(txIdem, 1)
+        assert t1["txidem"] == txIdem
+        t2 = self.nodes[0].getrawtransaction(t1["vin"][0]["outpoint"], 1)
+        assert t2["txidem"] == td
+        t3 = self.nodes[0].getrawtransaction(t2["vin"][0]["outpoint"], 1)
+        assert t3["txidem"] == tc
+        t4 = self.nodes[0].getrawtransaction(t3["vin"][0]["outpoint"], 1)
+        assert t4["txidem"] == tb
+        t5 = self.nodes[0].getrawtransaction(t4["vin"][0]["outpoint"], 1)
+        assert t5["txidem"] == ta
+
+
 
 if __name__ == '__main__':
     TxIndexTest().main()

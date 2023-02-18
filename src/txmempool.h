@@ -548,6 +548,7 @@ public:
     std::map<uint256, std::pair<double, CAmount> > mapDeltas; // uint256 is txId or idem
 
     // Map an outpoint to the transaction that created it
+    // value is a pair of the txidem and index of the output in the transaction
     typedef std::map<COutPoint, std::pair<uint256, size_t> > OutpointMap;
 
     OutpointMap outpointMap;
@@ -805,6 +806,10 @@ public:
     // Since this returns an entry, caller must lock, so only _ version is available
     // Checks both Id and Idem
     const CTxMemPoolEntry *_getEntry(const uint256 &hash);
+
+    // Since this returns an entry, caller must lock, so only _ version is available
+    // Checks both Id and Idem
+    const CTxMemPoolEntry *_getEntryByOutpoint(const COutPoint &hash);
 
     /** Given a prevout hash, return the transaction and output offset */
     // std::tuple<CTransactionRef, size_t> _getTxIdx(const uint256 &hash) const;
