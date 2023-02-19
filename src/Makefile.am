@@ -326,6 +326,7 @@ libnexa_server_a_SOURCES = \
   policy/fees.cpp \
   policy/policy.cpp \
   pow.cpp \
+  daa.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
   rpc/client.cpp \
@@ -358,6 +359,7 @@ libnexa_server_a_SOURCES = \
   validation/forks.cpp \
   validation/parallel.cpp \
   validation/validation.cpp \
+  validation/headervalidation.cpp \
   validation/verifydb.cpp \
   validationinterface.cpp \
   versionbits.cpp \
@@ -399,10 +401,14 @@ libnexa_a_SOURCES = \
   base58.h \
   merkleblock.cpp \
   merkleblock.h \
+  config.cpp \
+  config.h \
   chainparams.cpp \
   chainparams.h \
   chainparamsbase.cpp \
   chainparamsbase.h \
+  dstencode.cpp \
+  dstencode.h \
   script/sigcommon.cpp \
   hashwrapper.cpp \
   hashwrapper.h \
@@ -421,6 +427,9 @@ libnexa_a_SOURCES = \
   primitives/satoshiblock.h \
   pubkey.cpp \
   pubkey.h \
+  pow.cpp \
+  pow.h \
+  validation/headervalidation.cpp \
   random.cpp \
   random.h \
   randomenv.h \
@@ -732,6 +741,7 @@ nexa_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 # nexa-miner binary #
 nexa_miner_SOURCES = nexa-miner.cpp \
   pow.cpp \
+  daa.cpp \
   arith_uint256.cpp \
   arith_uint256.h \
   validation/forks.cpp \

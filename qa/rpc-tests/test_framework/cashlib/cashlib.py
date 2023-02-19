@@ -55,7 +55,21 @@ def init(libbitcoincashfile=None):
         cashlib = CDLL(libbitcoincashfile)
     if cashlib is None:
         raise Error("Cannot find %s shared library", libbitcoincashfile)
-
+    cashlib.CreateNoContextScriptMachine.restype = c_void_p
+    cashlib.CreateScriptMachine.restype = c_void_p
+    cashlib.CreateScriptMachine.argtypes = [ c_int, c_int, c_char_p, c_int, c_char_p, c_int ]
+    cashlib.SmEval.argtypes = [ c_void_p, c_char_p, c_int]
+    cashlib.SmBeginStep.argtypes = [ c_void_p, c_char_p, c_int]
+    cashlib.SmClone.argtypes = [ c_void_p ]
+    cashlib.SmClone.restype = c_void_p
+    cashlib.SmRelease.argtypes = [ c_void_p ]
+    cashlib.SmReset.argtypes = [ c_void_p ]
+    cashlib.SmStep.argtypes = [ c_void_p ]
+    cashlib.SmPos.argtypes = [ c_void_p ]
+    cashlib.SmGetError.argtypes = [ c_void_p ]
+    cashlib.SmEndStep.argtypes = [ c_void_p ]
+    cashlib.SmGetStackItem.argtypes = [ c_void_p, c_int, c_int, c_char_p, c_char_p ]
+    cashlib.SmSetStackItem.argtypes = [ c_void_p, c_int, c_int, c_int, c_char_p, c_int ]
 
 # Serialization/deserialization tools
 def sha256(s):
@@ -198,10 +212,9 @@ def pubkey(key):
 
 def addrbin(pubkey):
     """Given a public key, in binary format, return its binary form address (just the bytes, no type or checksum)"""
-    h = hashlib.new('ripemd160')
-    h.update(hashlib.sha256(pubkey).digest())
-    return h.digest()
-
+    result = create_string_buffer(20)
+    cashlib.hash160(pubkey, len(pubkey), result)
+    return bytes(result)
 
 def txid(txbin):
     """Return a transaction id, given a transaction in hex, object or binary form.

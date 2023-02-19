@@ -53,7 +53,6 @@ class MyTest (BitcoinTestFramework):
         stk = sm.stack()
         assert_equal(stk[0][0], cashlib.StackItemType.BYTES)
         assert_equal(int.from_bytes(stk[0][1], byteorder='little'), 6)
-
         # Check reset
         sm.reset()
         stk = sm.stack()
@@ -85,7 +84,6 @@ class MyTest (BitcoinTestFramework):
         stk = sm.stack()
         assert_equal(int.from_bytes(stk[0][1], byteorder='little'), 2)
         sm.cleanup()
-
         worked = sm2.eval(CScript([OP_IF, OP_IF, OP_3, OP_ELSE, OP_2, OP_ENDIF, OP_ENDIF]))
         assert(worked)
         stk = sm2.stack()
@@ -124,7 +122,6 @@ class MyTest (BitcoinTestFramework):
 
     def run_test(self):
         self.runScriptMachineTests()
-
         faulted = False
         try:
             cashlib.spendscript(OP_1)
@@ -132,7 +129,6 @@ class MyTest (BitcoinTestFramework):
             faulted = True
             pass
         assert faulted, "only data in spend scripts"
-
         try:
             cashlib.signTxInput(b"", 0, 5, b"", b"", b"abc")  # bad sighashtype
         except cashlib.Error:

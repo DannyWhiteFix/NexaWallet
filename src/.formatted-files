@@ -1,3 +1,4 @@
+daa.cpp
 addrman.cpp
 addrman.h
 allowed_args.cpp
@@ -198,6 +199,7 @@ validation/parallel.cpp
 validation/parallel.h
 validation/validation.cpp
 validation/validation.h
+validation/headervalidation.cpp
 validation/verifydb.cpp
 validation/verifydb.h
 validationinterface.cpp
