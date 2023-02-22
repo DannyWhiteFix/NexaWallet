@@ -1046,10 +1046,10 @@ UniValue evicttransaction(const UniValue &params, bool fHelp)
 UniValue gettxout(const UniValue &params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 3)
-        throw runtime_error("gettxout \"txid\" n ( includetxpool )\n"
+        throw runtime_error("gettxout \"txidem\" n ( includetxpool )\n"
                             "\nReturns details about an unspent transaction output.\n"
                             "\nArguments:\n"
-                            "1. \"txid\"       (string, required) The transaction id\n"
+                            "1. \"txidem\"       (string, required) The transaction idem\n"
                             "2. n              (numeric, required) vout value\n"
                             "3. includetxpool  (boolean, optional) Whether to included the mem pool\n"
                             "\nResult:\n"
@@ -1076,8 +1076,8 @@ UniValue gettxout(const UniValue &params, bool fHelp)
                             "\nExamples:\n"
                             "\nGet unspent transactions\n" +
                             HelpExampleCli("listunspent", "") + "\nView the details\n" +
-                            HelpExampleCli("gettxout", "\"txid\" 1") + "\nAs a json rpc call\n" +
-                            HelpExampleRpc("gettxout", "\"txid\", 1"));
+                            HelpExampleCli("gettxout", "\"txidem\" 1") + "\nAs a json rpc call\n" +
+                            HelpExampleRpc("gettxout", "\"txidem\", 1"));
 
     UniValue ret(UniValue::VOBJ);
 
