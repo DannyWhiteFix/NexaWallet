@@ -196,7 +196,7 @@ UniValue getrawtransaction(const UniValue &params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 3)
         throw std::runtime_error(
-            "getrawtransaction \"tx id or idem\" ( verbose \"blockhash\" )\n"
+            "getrawtransaction \"tx id, idem or outpoint\" ( verbose \"blockhash\" )\n"
 
             "\nNOTE: By default this function only works for txpool or orphanpool transactions. If the -txindex "
             "option is enabled, it also works for blockchain transactions. If the block which contains the "
