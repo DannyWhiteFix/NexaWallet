@@ -278,9 +278,9 @@ test-ubuntu-qa-rostrum:
 
         - export NODE_PATH=`pwd`/build/src/nexad
         - export ROSTRUM_PATH=`pwd`/build/src/rostrum
-        - wget https://gitlab.com/bitcoinunlimited/rostrum/-/archive/v8.0.1/rostrum-v8.0.1.tar.gz
-        - tar -zxf rostrum-v8.0.1.tar.gz
-        - ./rostrum-v8.0.1/test/functional/test_runner.py --no-ipv6-rpc-listen --gitlab
+        - wget https://gitlab.com/bitcoinunlimited/rostrum/-/archive/master/rostrum-master.tar.gz
+        - tar -zxf rostrum-master.tar.gz
+        - ./rostrum-master/test/functional/test_runner.py --no-ipv6-rpc-listen --gitlab
     dependencies:
         - build-ubuntu
         - build-ubuntu-rostrum

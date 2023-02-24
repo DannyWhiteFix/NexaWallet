@@ -529,7 +529,7 @@ void ConstructTx(CWalletTx &wtxNew,
         approxSize += inpSize;
 
         // Now add the fee
-        CAmount fee = wallet->GetRequiredFee(approxSize) + TOKEN_EXTRA_FEE;
+        CAmount fee = wallet->GetMinimumFee(approxSize, nTxConfirmTarget, mempool) + TOKEN_EXTRA_FEE;
 
         if (totalAvailable < totalNeeded + fee) // need to find a fee input
         {
@@ -574,7 +574,7 @@ void ConstructTx(CWalletTx &wtxNew,
             CTxOut txout(totalAvailable - totalNeeded - fee, P2pktOutput(newKey));
             // figure out what the additional fee will be for the change output
             approxSize += ::GetSerializeSize(txout, SER_DISK, CLIENT_VERSION);
-            fee = wallet->GetRequiredFee(approxSize) + TOKEN_EXTRA_FEE;
+            fee = wallet->GetMinimumFee(approxSize, nTxConfirmTarget, mempool) + TOKEN_EXTRA_FEE;
             txout.nValue = totalAvailable - totalNeeded - fee; // Adjust the value based on the new fee
             tx.vout.push_back(txout);
         }
@@ -590,11 +590,9 @@ void ConstructTx(CWalletTx &wtxNew,
     *static_cast<CTransaction *>(&wtxNew) = CTransaction(tx);
     // I'll manage my own keys because I have multiple.  Passing a valid key down breaks layering.
     CReserveKey dummy(wallet);
-    if (!wallet->CommitTransaction(wtxNew, dummy))
-        throw JSONRPCError(RPC_WALLET_ERROR, "Error: The transaction was rejected! This might happen if some of the "
-                                             "coins in your wallet were already spent, such as if you used a copy of "
-                                             "wallet.dat and coins were spent in the copy but not marked as spent "
-                                             "here.");
+    std::string error;
+    if (!wallet->CommitTransaction(wtxNew, dummy, error))
+        throw JSONRPCError(RPC_WALLET_ERROR, error);
 
     feeChangeKeyReservation.KeepKey();
     groupChangeKeyReservation.KeepKey();
@@ -652,7 +650,7 @@ void GroupMelt(CWalletTx &wtxNew, const CGroupTokenID &grpID, CAmount totalNeede
     // Just pick the first one for now.
     for (auto coin : coins)
     {
-        totalBchAvailable += coin.tx->vout[coin.i].nValue; // The melt authority may have some BCH in it
+        totalBchAvailable += coin.tx->vout[coin.i].nValue; // The melt authority may have some NEXA in it
         authority = coin;
         break;
     }

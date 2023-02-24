@@ -168,7 +168,7 @@ bool CheckGroupTokens(const CTransaction &tx, CValidationState &state, const CCo
     }
 
     // Now iterate through the inputs applying them to match outputs.
-    // If any input utxo address matches a non-bitcoin group address, defer since this could be a mint or burn
+    // If any input utxo address matches a non-nexa group address, defer since this could be a mint or burn
     for (const auto &inp : tx.vin)
     {
         const COutPoint &prevout = inp.prevout;

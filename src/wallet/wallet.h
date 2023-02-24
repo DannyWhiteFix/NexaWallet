@@ -987,7 +987,7 @@ public:
         std::string &strFailReason,
         const CCoinControl *coinControl = nullptr,
         bool sign = true);
-    bool CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey);
+    bool CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey, std::string &errorString);
 
     bool AddAccountingEntry(const CAccountingEntry &, CWalletDB &pwalletdb);
 

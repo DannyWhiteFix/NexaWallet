@@ -58,6 +58,7 @@ const char *DEFAULT_WALLET_DAT = "wallet.dat";
 const uint256 CMerkleTx::ABANDON_HASH(uint256S("0000000000000000000000000000000000000000000000000000000000000001"));
 
 extern CTweak<bool> useBIP69;
+extern CTweak<bool> feeEstimationTweak;
 
 /** @defgroup mapWallet
  *
@@ -3267,7 +3268,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient> &vecSend,
 /**
  * Call after CreateTransaction unless you want to abort
  */
-bool CWallet::CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey)
+bool CWallet::CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey, std::string &errorString)
 {
     /** When the wallet is parallelized, this will higher performing, however right now its a wash.
         Enqueuing like this will not provide feedback if the the txpool doesn't accept the tx.
@@ -3326,9 +3327,14 @@ bool CWallet::CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey)
             if (!inMempool && shutdown_threads.load()) return false;
             */
         }
-        else // TODO return why tx is invalid (the debugger object)
+        else
         {
-            LOGA("CommitTransaction(): Error: Transaction not valid\n");
+            errorString = "The following errors encountered when committing the transaction:\n\n";
+            std::vector<std::string> vErrors = debugger.GetRejectReasons();
+            for (std::string e : vErrors)
+                errorString += "    : " + e + "\n";
+            LOGA("CommitTransaction(): Error: Transaction not valid: %s\n", errorString.c_str());
+
             return false;
         }
 
@@ -3346,7 +3352,11 @@ bool CWallet::CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey)
             MilliSleep(100);
         }
         if (!fSuccess)
+        {
+            errorString = "Transaction was not admitted to the txpool within the time constraints";
+            LOGA("CommitTransaction(): Error: %s\n", errorString.c_str());
             return false; // TX was not admitted
+        }
     }
 
     {
@@ -3400,29 +3410,30 @@ bool CWallet::AddAccountingEntry(const CAccountingEntry &acentry, CWalletDB &pwa
     return true;
 }
 
-CAmount CWallet::GetRequiredFee(unsigned int nTxBytes)
-{
-    return std::max(CFeeRate(minTxFeeTweak.Value()).GetFee(nTxBytes), ::minRelayTxFee.GetFee(nTxBytes));
-}
+CAmount CWallet::GetRequiredFee(unsigned int nTxBytes) { return ::minRelayTxFee.GetFee(nTxBytes); }
 
 CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool &pool)
 {
     // payTxFee is user-set "I want to pay this much"
     CAmount nFeeNeeded = CFeeRate(payTxFeeTweak.Value()).GetFee(nTxBytes);
-    // User didn't set: use -txconfirmtarget to estimate...
-    if (nFeeNeeded == 0)
+
+    // If fee estimation is turned on then get an estimate
+    CAmount nFeeEstimate = 0;
+    if (feeEstimationTweak.Value())
     {
-        nFeeNeeded = pool.estimateFee(nConfirmTarget).GetFee(nTxBytes);
-        // ... unless we don't have enough txpool data for estimatefee, then use fallbackFee
-        if (nFeeNeeded == 0)
-            nFeeNeeded = CFeeRate(fallbackFeeTweak.Value()).GetFee(nTxBytes);
+        nFeeEstimate = pool.estimateFee(nConfirmTarget).GetFee(nTxBytes);
     }
+
+    // pick the larger of the paytxfee or the fee estimate
+    nFeeNeeded = std::max(nFeeNeeded, nFeeEstimate);
 
     // prevent user from paying a fee below minRelayTxFee or minTxFee
     nFeeNeeded = std::max(nFeeNeeded, GetRequiredFee(nTxBytes));
+
     // But always obey the maximum
     if (nFeeNeeded > maxTxFeeTweak.Value())
         nFeeNeeded = maxTxFeeTweak.Value();
+
     return nFeeNeeded;
 }
 
@@ -4332,12 +4343,6 @@ bool CWallet::InitLoadWallet()
 
 bool CWallet::ParameterInteraction()
 {
-    // check fallbackFee
-    if (fallbackFeeTweak.Value() > HIGH_TX_FEE_PER_KB)
-        InitWarning(
-            _("-wallet.fallbackFee is set very high! This is the transaction fee you may pay when fee estimates "
-              "are not available."));
-
     // check payTxFee
     if (payTxFeeTweak.Value() > 0)
     {

@@ -224,7 +224,7 @@ class WalletTest (BitcoinTestFramework):
         # Send 5 BTC normal
         address = self.nodes[0].getnewaddress(addrType, "test")
         fee_per_byte = Decimal('10') / 1000
-        self.nodes[2].set("wallet.payTxFee=" + str(fee_per_byte * 1000))
+        self.nodes[2].set("wallet.payTxFee=" + str(fee_per_byte * 100000))
         txid = self.nodes[2].sendtoaddress(address, 5000000, "", "", False)
         self.nodes[2].generate(1)
         self.sync_all()

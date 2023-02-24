@@ -146,11 +146,29 @@ try to give it the maximum that your system can afford while still leaving enoug
 
 It is generally fine to leave the default inbound/outbound connection settings for doing a sync, however, at times some users have reported issues with not being able to find any useful connections. This is often a problem because too many nodes are looking for outbound connections but node operators have forgotten to configure for allowing inbound connections (if nobody allows inbound connections then there would be no network connectivity for anyone).
 
+Note that you must have connections to the network in order to send or receive coins from you wallet!
+
 #### Port forwarding:
+
 To get inbound connections for Nexa require that port 7228 be port forwarded
 
 #### UPnP:
+
 Port forrwarding is considered the better option, but if you don't want to setup port fowarding then you need to configure your router with UPnP turned on and then also turn on UPnP on nexad (-upnp=1), however, UPnP can be a security risk and so it is usually turned off by default on your router.
+
+### Wallet Options
+
+#### Paying a higher fee
+
+Generally you don't need to make any changes to the default wallet configuration but when blocks become full for long periods of time, such as when exchanges consolidate dust, it can take a while to get your transactions to confirm. But by sending your transactions with a little higher fee than the minimum you can generally get confirmed in the next block.  The minimum fee is currently set at 1000 sat/byte however you can raise that fee by using the `wallet.payTxFee=<fee per Kb>` argument in your nexa.conf, or from the command line, and set it to something higher than 1000. By doing this your transactions will be mined before any lower fee transactions and so get confirmed quickly.
+
+#### Using automatic fee estimation
+
+If you don't want to set a fee you can use the fee estimator which will automatically try to figure out what the best fee would be to get a quick confirmation. To use this feature you can set `wallet.feeEstimation=1` in your nexa.conf or `-wallet.feeEstimation=1` from the command line.
+
+#### Setting maximum fees
+
+The Nexa wallet will limit your maximum fee you can add by default 10000 sat/byte, but if you prefer to set the value much lower you can with the `wallet.maxTxFee=<your max fee>` setting. Using this can protect you from accidentally sending very large fees, particularly if you are generating your own raw transactions.
 
 
 # Getting help

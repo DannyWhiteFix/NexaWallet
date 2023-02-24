@@ -406,12 +406,9 @@ static void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtr
                     FormatMoney(nFeeRequired));
             throw JSONRPCError(RPC_WALLET_ERROR, strError);
         }
-        if (!pwalletMain->CommitTransaction(wtxNew, reservekey))
-            throw JSONRPCError(RPC_WALLET_ERROR,
-                "Error: The transaction was rejected! This might happen if some of the "
-                "coins in your wallet were already spent, such as if you used a copy of "
-                "wallet.dat and coins were spent in the copy but not marked as spent "
-                "here.");
+        std::string error;
+        if (!pwalletMain->CommitTransaction(wtxNew, reservekey, error))
+            throw JSONRPCError(RPC_WALLET_ERROR, error);
     }
 }
 
@@ -1302,8 +1299,9 @@ UniValue sendmany(const UniValue &params, bool fHelp)
             pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, nChangePosRet, strFailReason);
         if (!fCreated)
             throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
-        if (!pwalletMain->CommitTransaction(wtx, keyChange))
-            throw JSONRPCError(RPC_WALLET_ERROR, "Transaction commit failed");
+        std::string error;
+        if (!pwalletMain->CommitTransaction(wtx, keyChange, error))
+            throw JSONRPCError(RPC_WALLET_ERROR, error);
     }
     return wtx.GetIdem().GetHex();
 }
