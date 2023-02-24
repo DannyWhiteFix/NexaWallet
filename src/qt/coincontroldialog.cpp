@@ -201,8 +201,13 @@ void CoinControlDialog::buttonSelectAllClicked()
     }
     ui->treeWidget->setEnabled(false);
     for (int i = 0; i < ui->treeWidget->topLevelItemCount(); i++)
+    {
+        if (i >= MAX_TX_NUM_VIN && !ui->radioTreeMode->isChecked())
+            break;
+
         if (ui->treeWidget->topLevelItem(i)->checkState(COLUMN_CHECKBOX) != state)
             ui->treeWidget->topLevelItem(i)->setCheckState(COLUMN_CHECKBOX, state);
+    }
     ui->treeWidget->setEnabled(true);
     if (state == Qt::Unchecked)
         coinControl->UnSelectAll(); // just to be sure
@@ -625,6 +630,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog *dialog)
     dialog->findChild<QLabel *>("labelCoinControlChange")->setEnabled(nPayAmount > 0);
 
     // stats
+    l1->setStyleSheet((nQuantity > MAX_TX_NUM_VIN) ? "color:red;font:bold;" : ""); // Quantity too large?
     l1->setText(QString::number(nQuantity)); // Quantity
     l2->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nAmount)); // Amount
     l3->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nPayFee)); // Fee
