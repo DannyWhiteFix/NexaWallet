@@ -55,8 +55,8 @@ void EnsureWalletIsUnlocked()
     LOCK(pwalletMain->cs_wallet);
     if (pwalletMain->IsLocked())
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED,
-            "Error: You must first unlock the wallet by running: \"walletpassphrase "
-            "<passphrase> <timeout>\"");
+            "ACTION REQUIRED: You must first unlock the wallet by running the rpc: \"walletpassphrase "
+            "<your passphrase> <timeout in seconds>\"");
 }
 
 void WalletTxToJSON(const CWalletTx &wtx, UniValue &entry)
