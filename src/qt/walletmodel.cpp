@@ -325,7 +325,8 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
         }
 
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
-        if (!wallet->CommitTransaction(*newTx, *keyChange))
+        std::string error;
+        if (!wallet->CommitTransaction(*newTx, *keyChange, error))
             return TransactionCommitFailed;
 
         CTransaction *t = (CTransaction *)newTx;

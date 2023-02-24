@@ -484,21 +484,27 @@ CTweak<CAmount> maxTxFeeTweak("wallet.maxTxFee",
 /** Analogous to the minRelayTxFee, the minTxFee is the fee cutoff for what is considered a free transaction in the
  * wallet */
 CTweak<CAmount> minTxFeeTweak("wallet.minTxFee",
-    strprintf("Fees (in sat/KB) smaller than this are considered zero fee for transaction creation (default: %s)",
-        DEFAULT_MIN_RELAY_TX_FEE),
-    DEFAULT_MIN_RELAY_TX_FEE);
-
+    strprintf("Deprecated -NO LONGER IN USE: Fees (in sat/KB) smaller than this are considered zero fee for "
+              "transaction creation (default: %s)",
+        0),
+    0);
 
 /** A fee rate (in sat/kB) that will be used when fee estimation has insufficient data */
 CTweak<CAmount> fallbackFeeTweak("wallet.fallbackFee",
-    strprintf("A fee rate (in sat/KB) that will be used when fee estimation has insufficient data (default: %s)",
-        DEFAULT_MIN_RELAY_TX_FEE),
-    DEFAULT_MIN_RELAY_TX_FEE);
+    strprintf("Deprecated - NO LONGER IN USE - A fee rate (in sat/KB) that will be used when fee estimation has "
+              "insufficient data (default: %s)",
+        0),
+    0);
 
 // A fee you add to every transaction */
 CTweak<CAmount> payTxFeeTweak("wallet.payTxFee",
     strprintf("Fee (in sat/KB) to add to transactions you send (default: %s)", DEFAULT_TRANSACTION_FEE),
     DEFAULT_TRANSACTION_FEE);
+
+// Should we get an estimate for how much fee we need to get into the next block */
+CTweak<bool> feeEstimationTweak("wallet.feeEstimation",
+    strprintf("Is fee estimation turned on (default: %s)", false),
+    false);
 
 #endif // ENABLE_WALLET
 

@@ -30,6 +30,7 @@
 
 extern CTweak<uint32_t> dataCarrierSize;
 extern CTweak<CAmount> payTxFeeTweak;
+extern CTweak<bool> feeEstimationTweak;
 
 SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *parent)
     : QDialog(parent), ui(new Ui::SendCoinsDialog), clientModel(0), model(0), fNewRecipientAllowed(true),
@@ -91,13 +92,23 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
 
     // init transaction fee section
     QSettings settings;
+    if (!settings.contains("fQTFirstLaunchPayTxFee"))
+    {
+        // The first time QT is launched we set the payTxFee to 2000.  This helps new
+        // users to avoid getting stuck transactions when blocks are full.  Once this
+        // first launch value is set then the user is free to change their pay fee
+        // to any other value, and the new value will stick and not get overwritten when
+        // re-launching QT.
+        settings.setValue("fQTFirstLaunchPayTxFee", true);
+        payTxFeeTweak.Set(2000);
+    }
     if (!settings.contains("fFeeSectionMinimized"))
         settings.setValue("fFeeSectionMinimized", true);
     // compatibility
     if (!settings.contains("nFeeRadio") && settings.contains("nTransactionFee") &&
         settings.value("nTransactionFee").toLongLong() > 0)
         settings.setValue("nFeeRadio", 1); // custom
-    if (!settings.contains("nFeeRadio"))
+    if (!settings.contains("nFeeRadio") || feeEstimationTweak.Value())
         settings.setValue("nFeeRadio", 0); // recommended
     // compatibility
     if (!settings.contains("nCustomFeeRadio") && settings.contains("nTransactionFee") &&
@@ -180,17 +191,16 @@ void SendCoinsDialog::setModel(WalletModel *_model)
         connect(ui->groupCustomFee, SIGNAL(buttonClicked(int)), this, SLOT(coinControlUpdateLabels()));
         connect(ui->customFee, SIGNAL(valueChanged()), this, SLOT(updateGlobalFeeVariables()));
         connect(ui->customFee, SIGNAL(valueChanged()), this, SLOT(coinControlUpdateLabels()));
-        connect(ui->checkBoxMinimumFee, SIGNAL(stateChanged(int)), this, SLOT(setMinimumFee()));
-        connect(ui->checkBoxMinimumFee, SIGNAL(stateChanged(int)), this, SLOT(updateFeeSectionControls()));
         connect(ui->checkBoxMinimumFee, SIGNAL(stateChanged(int)), this, SLOT(updateGlobalFeeVariables()));
+        connect(ui->checkBoxMinimumFee, SIGNAL(stateChanged(int)), this, SLOT(updateFeeSectionControls()));
         connect(ui->checkBoxMinimumFee, SIGNAL(stateChanged(int)), this, SLOT(coinControlUpdateLabels()));
         connect(ui->checkBoxFreeTx, SIGNAL(stateChanged(int)), this, SLOT(updateGlobalFeeVariables()));
         connect(ui->checkBoxFreeTx, SIGNAL(stateChanged(int)), this, SLOT(coinControlUpdateLabels()));
         ui->customFee->setSingleStep(CWallet::GetRequiredFee(1000));
         updateFeeSectionControls();
         updateMinFeeLabel();
-        updateSmartFeeLabel();
         updateGlobalFeeVariables();
+        updateSmartFeeLabel();
     }
 }
 
@@ -634,12 +644,6 @@ void SendCoinsDialog::on_buttonMinimizeFee_clicked()
     minimizeFeeSection(true);
 }
 
-void SendCoinsDialog::setMinimumFee()
-{
-    ui->radioCustomPerKilobyte->setChecked(true);
-    ui->customFee->setValue(CWallet::GetRequiredFee(1000));
-}
-
 void SendCoinsDialog::updateFeeSectionControls()
 {
     ui->sliderSmartFee->setEnabled(ui->radioSmartFee->isChecked());
@@ -655,24 +659,40 @@ void SendCoinsDialog::updateFeeSectionControls()
     ui->radioCustomAtLeast->setEnabled(ui->radioCustomFee->isChecked() && !ui->checkBoxMinimumFee->isChecked() &&
                                        CoinControlDialog::coinControl->HasSelected());
     ui->customFee->setEnabled(ui->radioCustomFee->isChecked() && !ui->checkBoxMinimumFee->isChecked());
+
+    // disable free transactions for now. TODO: verify that they work, or remove entirely
+    ui->checkBoxFreeTx->setEnabled(false);
 }
 
 void SendCoinsDialog::updateGlobalFeeVariables()
 {
     if (ui->radioSmartFee->isChecked())
     {
-        nTxConfirmTarget = defaultConfirmTarget - ui->sliderSmartFee->value();
-        payTxFeeTweak.Set(CFeeRate(0).GetFeePerK());
-    }
-    else
-    {
-        nTxConfirmTarget = defaultConfirmTarget;
         payTxFeeTweak.Set(CFeeRate(ui->customFee->value()).GetFeePerK());
+
+        nTxConfirmTarget = defaultConfirmTarget - ui->sliderSmartFee->value();
+        feeEstimationTweak.Set(true);
+        updateSmartFeeLabel();
+    }
+    else if (ui->radioCustomFee->isChecked() && !ui->checkBoxMinimumFee->isChecked())
+    {
+        payTxFeeTweak.Set(CFeeRate(ui->customFee->value()).GetFeePerK());
+
+        feeEstimationTweak.Set(false);
+        nTxConfirmTarget = defaultConfirmTarget;
 
         // if user has selected to set a minimum absolute fee, pass the value to coincontrol
         // set nMinimumTotalFee to 0 in case of user has selected that the fee is per KB
         CoinControlDialog::coinControl->nMinimumTotalFee =
             ui->radioCustomAtLeast->isChecked() ? ui->customFee->value() : 0;
+    }
+    else if (ui->radioCustomFee->isChecked() && ui->checkBoxMinimumFee->isChecked())
+    {
+        payTxFeeTweak.Set(CWallet::GetRequiredFee(1000));
+
+        feeEstimationTweak.Set(false);
+        nTxConfirmTarget = defaultConfirmTarget;
+        ui->radioCustomPerKilobyte->setChecked(true);
     }
 
     fSendFreeTransactions = ui->checkBoxFreeTx->isChecked();
@@ -714,7 +734,7 @@ void SendCoinsDialog::updateSmartFeeLabel()
     {
         ui->labelSmartFee->setText(
             BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(),
-                std::max(CFeeRate(fallbackFeeTweak.Value()).GetFeePerK(), CWallet::GetRequiredFee(1000))) +
+                std::max(CFeeRate(payTxFeeTweak.Value()).GetFeePerK(), CWallet::GetRequiredFee(1000))) +
             "/kB");
         ui->labelSmartFee2->show(); // (Smart fee not initialized yet. This usually takes a few blocks...)
         ui->labelFeeEstimation->setText("");
@@ -722,7 +742,7 @@ void SendCoinsDialog::updateSmartFeeLabel()
     else
     {
         ui->labelSmartFee->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(),
-                                       std::max(feeRate.GetFeePerK(), CWallet::GetRequiredFee(1000))) +
+                                       std::max(feeRate.GetFeePerK(), CFeeRate(payTxFeeTweak.Value()).GetFeePerK())) +
                                    "/kB");
         ui->labelSmartFee2->hide();
         ui->labelFeeEstimation->setText(tr(""));

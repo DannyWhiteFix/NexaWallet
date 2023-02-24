@@ -935,17 +935,18 @@ bool ParallelAcceptToMemoryPool(Snapshot &ss,
         if (!CheckInputs(
                 tx, state, view, true, flags, true, &resourceTracker, chainparams, nullptr, &sighashType, debugger))
         {
+            if (state.GetDebugMessage() == "")
+                state.SetDebugMessage("CheckInputs failed");
+
             if (debugger && debugger->InputsCheck1IsValid())
             {
-                debugger->AddInvalidReason("input-script-failed");
+                debugger->AddInvalidReason(state.GetDebugMessage());
                 debugger->mineable = false;
                 debugger->futureMineable = false;
             }
             else
             {
-                LOG(MEMPOOL, "CheckInputs failed for tx: %s\n", id.ToString());
-                if (state.GetDebugMessage() == "")
-                    state.SetDebugMessage("CheckInputs failed");
+                LOG(MEMPOOL, "CheckInputs failed for tx: %s reason: %s\n", id.ToString(), state.GetDebugMessage());
                 return false;
             }
         }
