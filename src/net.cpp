@@ -2581,24 +2581,25 @@ void ThreadMessageHandler()
     while (shutdown_threads.load() == false)
     {
         // Start or Stop threads as determined by the numMsgHandlerThreads tweak
+        uint32_t numConfiguredMsgThreads = numMsgHandlerThreads.Value();
         {
             static CCriticalSection cs_threads;
-            static uint32_t numThreads GUARDED_BY(cs_threads) = numMsgHandlerThreads.Value();
+            static uint32_t numActiveThreads GUARDED_BY(cs_threads) = numConfiguredMsgThreads;
             LOCK(cs_threads);
-            if (numMsgHandlerThreads.Value() >= 1 && numThreads > numMsgHandlerThreads.Value())
+            if (numConfiguredMsgThreads >= 1 && numActiveThreads > numConfiguredMsgThreads)
             {
                 // Kill this thread
-                numThreads--;
-                LOGA("Stopping a message handler thread: Current handler threads are %d\n", numThreads);
+                numActiveThreads--;
+                LOGA("Stopping a message handler thread: Current handler threads are %d\n", numActiveThreads);
 
-                return;
+                return; // exit thread
             }
-            else if (numThreads < numMsgHandlerThreads.Value())
+            else if (numActiveThreads < numConfiguredMsgThreads)
             {
                 // Launch another thread
-                numThreads++;
+                numActiveThreads++;
                 threadGroup.create_thread(&ThreadMessageHandler);
-                LOGA("Starting a new message handler thread: Current handler threads are %d\n", numThreads);
+                LOGA("Starting a new message handler thread: Current handler threads are %d\n", numActiveThreads);
             }
         }
 
@@ -2679,11 +2680,6 @@ void ThreadMessageHandler()
             }
         }
 
-        // From the request manager, make requests for transactions and blocks. We do this before potentially
-        // sleeping in the step below so as to allow requests to return during the sleep time.
-        if (shutdown_threads.load() == false)
-            requester.SendRequests();
-
         // A cs_vNodes lock is not required here when releasing refs for two reasons: one, this only decrements
         // an atomic counter, and two, the counter will always be > 0 at this point, so we don't have to worry
         // that a pnode could be disconnected and no longer exist before the decrement takes place.
@@ -2692,14 +2688,22 @@ void ThreadMessageHandler()
             pnode->Release();
         }
 
+        // From the request manager, make requests for transactions and blocks. We do this before potentially
+        // sleeping in the step below so as to allow requests to return during the sleep time.
+        if (shutdown_threads.load() == false)
+            requester.SendRequests();
+
         // Pass any invs for any CAPD messages that have arrived to every node
         if ((shutdown_threads.load() == false) && (capdPoolSize.Value() > 0))
             capdProtocol.FlushGossipMessagesToNodes();
 
         if (fSleep)
         {
+            // Add some sleep time and make it random so the threads don't all wake up at the same time.
             std::unique_lock<std::mutex> lock(wakeableDelayMutex);
-            messageHandlerCondition.wait_until(lock, std::chrono::steady_clock::now() + std::chrono::milliseconds(10));
+            messageHandlerCondition.wait_until(
+                lock, std::chrono::steady_clock::now() +
+                          std::chrono::milliseconds(100 + GetRandInt(numConfiguredMsgThreads * 100)));
         }
     }
 }

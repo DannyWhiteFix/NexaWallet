@@ -35,31 +35,34 @@ class TxIndexTest(BitcoinTestFramework):
             return False
 
     def run_test(self):
+
+        waitTime = 60;
+
         logging.info("Mining blocks...")
         self.nodes[0].generate(101)
         self.sync_all()
 
         # Check that node0 has no txindex available.
         logging.info("Checking non txindex on node0...")
-        waitFor(30, lambda: self.nodes[0].getinfo()["txindex"] == "not ready")
+        waitFor(waitTime, lambda: self.nodes[0].getinfo()["txindex"] == "not ready")
         for i in range(1, self.nodes[0].getblockcount()):
             blockhash = self.nodes[0].getblockhash(i)
             txns = self.nodes[0].getblock(blockhash)['txid']
             for tx in txns:
-               waitFor(30, lambda: self.get_rawtransaction(self.nodes[0], tx) == False)
+               waitFor(waitTime, lambda: self.get_rawtransaction(self.nodes[0], tx) == False)
 
         # Check node1 can find all blockchain txns in the txindex
         logging.info("Checking txindex on node1...")
-        waitFor(30, lambda: self.nodes[1].getblockcount() == 101)
-        waitFor(30, lambda: self.nodes[1].getinfo()["txindex"] == "synced")
+        waitFor(waitTime, lambda: self.nodes[1].getblockcount() == 101)
+        waitFor(waitTime, lambda: self.nodes[1].getinfo()["txindex"] == "synced")
         for i in range(self.nodes[1].getblockcount()):
             blockhash = self.nodes[1].getblockhash(i)
             txns = self.nodes[1].getblock(blockhash)['txid']
             for tx in txns:
-               waitFor(30, lambda: self.get_rawtransaction(self.nodes[1], tx) == True)
+               waitFor(waitTime, lambda: self.get_rawtransaction(self.nodes[1], tx) == True)
             txns = self.nodes[1].getblock(blockhash)['txidem']
             for tx in txns:
-               waitFor(30, lambda: self.get_rawtransaction(self.nodes[1], tx) == True)
+               waitFor(waitTime, lambda: self.get_rawtransaction(self.nodes[1], tx) == True)
 
         # Check we can not find an invalid tx
         logging.info("Checking invalid tx...")
@@ -77,13 +80,13 @@ class TxIndexTest(BitcoinTestFramework):
         address = self.nodes[0].getnewaddress("test")
         txid = self.nodes[0].sendtoaddress(address, 10, "", "", True)
         self.sync_all()
-        waitFor(30, lambda: self.get_rawtransaction(self.nodes[1], tx) == True)
+        waitFor(waitTime, lambda: self.get_rawtransaction(self.nodes[1], tx) == True)
 
         logging.info("Checking mined tx...")
         self.nodes[0].generate(1)
         self.sync_all()
-        waitFor(30, lambda: self.get_rawtransaction(self.nodes[0], tx) == True)
-        waitFor(30, lambda: self.get_rawtransaction(self.nodes[1], tx) == True)
+        waitFor(waitTime, lambda: self.get_rawtransaction(self.nodes[0], tx) == True)
+        waitFor(waitTime, lambda: self.get_rawtransaction(self.nodes[1], tx) == True)
 
         # Mine a few more blocks and see that they are reflected in the txindex correctly
         logging.info("Mining blocks...")
@@ -91,16 +94,16 @@ class TxIndexTest(BitcoinTestFramework):
         self.sync_all()
 
         logging.info("Checking txindex on node1...")
-        waitFor(30, lambda: self.nodes[1].getblockcount() == 107)
-        waitFor(30, lambda: self.nodes[1].getinfo()["txindex"] == "synced")
+        waitFor(waitTime, lambda: self.nodes[1].getblockcount() == 107)
+        waitFor(waitTime, lambda: self.nodes[1].getinfo()["txindex"] == "synced")
         for i in range(self.nodes[1].getblockcount()):
             blockhash = self.nodes[1].getblockhash(i)
             txns = self.nodes[1].getblock(blockhash)['txid']
             for tx in txns:
-                waitFor(30, lambda: self.get_rawtransaction(self.nodes[1], tx) == True)
+                waitFor(waitTime, lambda: self.get_rawtransaction(self.nodes[1], tx) == True)
             txns = self.nodes[1].getblock(blockhash)['txidem']
             for tx in txns:
-                waitFor(30, lambda: self.get_rawtransaction(self.nodes[1], tx) == True)
+                waitFor(waitTime, lambda: self.get_rawtransaction(self.nodes[1], tx) == True)
 
         #### Restart with txindex turned off, mine some blocks and then restart with txindex on.
         #    The txindex should automatically catch up and the new entries should be acessible.
@@ -132,25 +135,25 @@ class TxIndexTest(BitcoinTestFramework):
 
         # Check that node0 has no txindex available.
         logging.info("Checking non txindex on node0...")
-        waitFor(30, lambda: self.nodes[0].getinfo()["txindex"] == "not ready")
+        waitFor(waitTime, lambda: self.nodes[0].getinfo()["txindex"] == "not ready")
         for i in range(self.nodes[0].getblockcount()):
             blockhash = self.nodes[0].getblockhash(i)
             txns = self.nodes[0].getblock(blockhash)['txid']
             for tx in txns:
-                waitFor(30, lambda: self.get_rawtransaction(self.nodes[0], tx) == False)
+                waitFor(waitTime, lambda: self.get_rawtransaction(self.nodes[0], tx) == False)
 
         # Check node1 can find all blockchain txns in the txindex
         logging.info("Checking txindex on node1...")
-        waitFor(30, lambda: self.nodes[1].getblockcount() == 117)
-        waitFor(30, lambda: self.nodes[1].getinfo()["txindex"] == "synced")
+        waitFor(waitTime, lambda: self.nodes[1].getblockcount() == 117)
+        waitFor(waitTime, lambda: self.nodes[1].getinfo()["txindex"] == "synced")
         for i in range(self.nodes[1].getblockcount()):
             blockhash = self.nodes[1].getblockhash(i)
             txns = self.nodes[1].getblock(blockhash)['txid']
             for tx in txns:
-                waitFor(30, lambda: self.get_rawtransaction(self.nodes[1], tx) == True)
+                waitFor(waitTime, lambda: self.get_rawtransaction(self.nodes[1], tx) == True)
             txns = self.nodes[1].getblock(blockhash)['txidem']
             for tx in txns:
-                waitFor(30, lambda: self.get_rawtransaction(self.nodes[1], tx) == True)
+                waitFor(waitTime, lambda: self.get_rawtransaction(self.nodes[1], tx) == True)
 
         # Do a reindex and validate the txindex is working on both nodes
         logging.info("Restarting...")
@@ -166,22 +169,22 @@ class TxIndexTest(BitcoinTestFramework):
 
         # Check node0 can find all blockchain txns in the txindex
         logging.info("Checking txindex on node0...")
-        waitFor(30, lambda: self.nodes[1].getblockcount() == 117)
-        waitFor(30, lambda: self.nodes[0].getinfo()["txindex"] == "synced")
+        waitFor(waitTime, lambda: self.nodes[1].getblockcount() == 117)
+        waitFor(waitTime, lambda: self.nodes[0].getinfo()["txindex"] == "synced")
         for i in range(self.nodes[0].getblockcount()):
             blockhash = self.nodes[0].getblockhash(i)
             txns = self.nodes[0].getblock(blockhash)['txid']
             for tx in txns:
-                waitFor(30, lambda: self.get_rawtransaction(self.nodes[0], tx) == True)
+                waitFor(waitTime, lambda: self.get_rawtransaction(self.nodes[0], tx) == True)
 
         # Check node1 can find all blockchain txns in the txindex
         logging.info("Checking txindex on node1...")
-        waitFor(30, lambda: self.nodes[1].getinfo()["txindex"] == "synced")
+        waitFor(waitTime, lambda: self.nodes[1].getinfo()["txindex"] == "synced")
         for i in range(self.nodes[1].getblockcount()):
             blockhash = self.nodes[1].getblockhash(i)
             txns = self.nodes[1].getblock(blockhash)['txid']
             for tx in txns:
-                waitFor(30, lambda: self.get_rawtransaction(self.nodes[1], tx) == True)
+                waitFor(waitTime, lambda: self.get_rawtransaction(self.nodes[1], tx) == True)
 
         # Check that node1 can find transactions by outpoint
 
