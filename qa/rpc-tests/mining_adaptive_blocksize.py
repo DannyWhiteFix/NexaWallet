@@ -204,9 +204,8 @@ class AdaptiveBlockSizeTest(BitcoinTestFramework):
         # This should cause node0 to reject the block and then disconnect from node1.
         assert_equal(self.nodes[0].getinfo()["connections"], 2)
         utxos = create_confirmed_utxos(self.relayfee, self.nodes[1], 300)
-        blockcount_start = 639  # Depends on the exact functioning of create_confirmed_utxos so may change
-        waitFor(30, lambda: self.nodes[0].getblockcount() == blockcount_start)
-        waitFor(30, lambda: self.nodes[1].getblockcount() == blockcount_start)
+        blockcount_start = self.nodes[1].getblockcount()
+        self.sync_blocks()
 
         # set the next max size on node1 to double what is on node0 and mine the large block which should be greater
         # than the next max on node0
