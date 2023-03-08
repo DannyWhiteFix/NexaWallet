@@ -444,7 +444,7 @@ bool VerifyMessage(const UniValue &params, std::string &error)
             error = "Address cannot be resolved to a public key";
             return false;
         }
-        if (templateHash != p2pktId)
+        if (templateHash != P2PKT_ID)
         {
             error = "Address cannot be resolved to a public key (template is not well-known)";
             return false;

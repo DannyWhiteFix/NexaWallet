@@ -247,7 +247,7 @@ ScriptTemplateError GetScriptTemplate(const CScript &script,
     if (templateHash->size() > 0 && templateHash->size() <= 2) // This may be a "well-known" template
     {
         // Check all possible well known templates here
-        if (*templateHash == p2pktId)
+        if (*templateHash == P2PKT_ID)
         {
         }
         else

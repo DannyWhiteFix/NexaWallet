@@ -79,7 +79,7 @@ CScript UngroupedScriptTemplate(const CScript &templateIn);
 /** p2pkt - pay-to-public key template script */
 extern const CScript p2pkt;
 /** p2pkt well known identifier: just a 1 byte vector containing "1" */
-extern const std::vector<unsigned char> p2pktId; // Push will convert this vector to OP_1
+extern const std::vector<unsigned char> P2PKT_ID; // Push will convert this vector to OP_1
 
 /** Create a CScript suitable for placement in a CTxOut that spends into a P2PKT */
 CScript P2pktOutput(const VchType &argsHash, const CGroupTokenID &group = NoGroup, CAmount grpQuantity = 0);
