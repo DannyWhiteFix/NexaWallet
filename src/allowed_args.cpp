@@ -666,26 +666,35 @@ static void addTweaks(AllowedArgs &allowedArgs, CTweakMap *pTweaks)
 
     for (i = pTweaks->begin(); i != pTweaks->end(); ++i)
     {
+        bool fDebugArg = false;
         CTweakBase *tweak = i->second;
         std::string optName = tweak->GetName();
 
         // Do not display the following tweaks
-        if (optName == std::string("consensus.forkMay2021Time"))
-            continue;
+        std::set<std::string> hiddenTweaks = {"mining.xval", "net.blockDownloadWindow", "net.blockRetryInterval",
+            "net.grapheneBloomFprOverride", "net.grapheneFastFilterCompatibility", "net.grapheneIbltSizeOverride",
+            "net.grapheneMaxVersionSupported", "net.grapheneMinVersionSupported", "net.ignoreTimeouts", "net.magic",
+            "net.maxBlocksInTransitPerPeer", "net.mempoolSyncMinVersionSupported", "net.mempoolSyncMaxVersionSupported",
+            "net.txRetryInterval", "test.maxSatoScriptOps", "test.maxScriptTemplateOps", "test.maxBlockSigChecks",
+            "test.parallel", "test.pvtest", "test.blockLookAheadInterval", "test.maxAllowedNetMessage",
+            "test.nextMaxBlockSize", "test.enforceMinTxSize", "test.avoidReconsiderMostWorkChain", "test.extVersion",
+            "wallet.minTxFee", "wallet.fallbackFee", "consensus.forkMay2021Time", "blockchain.maxReorgDepth"};
+        if (hiddenTweaks.count(optName))
+            fDebugArg = true;
 
         // Display the Tweak
         if (dynamic_cast<CTweak<CAmount> *>(tweak))
-            allowedArgs.addArg(optName + "=<amt>", requiredAmount, tweak->GetHelp());
+            allowedArgs.addArg(optName + "=<amt>", requiredAmount, tweak->GetHelp(), false, fDebugArg);
         else if (dynamic_cast<CTweak<double> *>(tweak))
-            allowedArgs.addArg(optName + "=<amt>", requiredAmount, tweak->GetHelp());
+            allowedArgs.addArg(optName + "=<amt>", requiredAmount, tweak->GetHelp(), false, fDebugArg);
         else if (dynamic_cast<CTweakRef<CAmount> *>(tweak))
-            allowedArgs.addArg(optName + "=<amt>", requiredAmount, tweak->GetHelp());
+            allowedArgs.addArg(optName + "=<amt>", requiredAmount, tweak->GetHelp(), false, fDebugArg);
         else if (dynamic_cast<CTweak<std::string> *>(tweak))
-            allowedArgs.addArg(optName + "=<str>", requiredStr, tweak->GetHelp());
+            allowedArgs.addArg(optName + "=<str>", requiredStr, tweak->GetHelp(), false, fDebugArg);
         else if (dynamic_cast<CTweakRef<std::string> *>(tweak))
-            allowedArgs.addArg(optName + "=<str>", requiredStr, tweak->GetHelp());
+            allowedArgs.addArg(optName + "=<str>", requiredStr, tweak->GetHelp(), false, fDebugArg);
         else
-            allowedArgs.addArg(optName + "=<n>", requiredInt, tweak->GetHelp());
+            allowedArgs.addArg(optName + "=<n>", requiredInt, tweak->GetHelp(), false, fDebugArg);
     }
 }
 
