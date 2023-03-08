@@ -16,7 +16,7 @@
 
 extern CTweak<int> maxConnections;
 
-bool AttemptToEvictConnection(const int nMaxInbound);
+bool AttemptToEvictConnection(const unsigned int nMaxInbound);
 void CleanupDisconnectedNodes();
 
 using namespace std;

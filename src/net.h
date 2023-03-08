@@ -957,7 +957,7 @@ public:
     void CloseSocketDisconnect();
 
     /** If possible, try to evict a connection to make room for a new inbound connection attempt */
-    bool AttemptToEvictConnection(const int nMaxInbound);
+    bool AttemptToEvictConnection(const unsigned int nMaxInbound);
 
     //! returns the name of this node for logging.  Respects the user's choice to not log the node's IP
     std::string GetLogName()

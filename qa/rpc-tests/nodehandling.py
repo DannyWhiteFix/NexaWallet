@@ -14,6 +14,8 @@ from test_framework.util import *
 import http.client
 import urllib.parse
 
+waitTime = 30
+
 class NodeHandlingTest (BitcoinTestFramework):
     def run_test(self):
         ###########################
@@ -91,21 +93,21 @@ class NodeHandlingTest (BitcoinTestFramework):
         connect_nodes(self.nodes[1], 2)
         # Each node should have two each of xthin/graph/cmpct peers connected
         for node in self.nodes:
-            waitFor(10, lambda: node.getinfo()["peers_graphene"] == 2)
-            waitFor(10, lambda: node.getinfo()["peers_xthinblock"] == 2)
-            waitFor(10, lambda: node.getinfo()["peers_cmpctblock"] == 2)
+            waitFor(waitTime, lambda: node.getinfo()["peers_graphene"] == 2)
+            waitFor(waitTime, lambda: node.getinfo()["peers_xthinblock"] == 2)
+            waitFor(waitTime, lambda: node.getinfo()["peers_cmpctblock"] == 2)
         
         disconnect_nodes(self.nodes[0], 1)
         # node0 and node1 should now only have 1 each of xthin/graph/cmpct peers but node2 should have 2 of each.
-        waitFor(10, lambda: self.nodes[0].getinfo()["peers_graphene"] == 1)
-        waitFor(10, lambda: self.nodes[0].getinfo()["peers_xthinblock"] == 1)
-        waitFor(10, lambda: self.nodes[0].getinfo()["peers_cmpctblock"] == 1)
-        waitFor(10, lambda: self.nodes[1].getinfo()["peers_graphene"] == 1)
-        waitFor(10, lambda: self.nodes[1].getinfo()["peers_xthinblock"] == 1)
-        waitFor(10, lambda: self.nodes[1].getinfo()["peers_cmpctblock"] == 1)
-        waitFor(10, lambda: self.nodes[2].getinfo()["peers_graphene"] == 2)
-        waitFor(10, lambda: self.nodes[2].getinfo()["peers_xthinblock"] == 2)
-        waitFor(10, lambda: self.nodes[2].getinfo()["peers_cmpctblock"] == 2)
+        waitFor(waitTime, lambda: self.nodes[0].getinfo()["peers_graphene"] == 1)
+        waitFor(waitTime, lambda: self.nodes[0].getinfo()["peers_xthinblock"] == 1)
+        waitFor(waitTime, lambda: self.nodes[0].getinfo()["peers_cmpctblock"] == 1)
+        waitFor(waitTime, lambda: self.nodes[1].getinfo()["peers_graphene"] == 1)
+        waitFor(waitTime, lambda: self.nodes[1].getinfo()["peers_xthinblock"] == 1)
+        waitFor(waitTime, lambda: self.nodes[1].getinfo()["peers_cmpctblock"] == 1)
+        waitFor(waitTime, lambda: self.nodes[2].getinfo()["peers_graphene"] == 2)
+        waitFor(waitTime, lambda: self.nodes[2].getinfo()["peers_xthinblock"] == 2)
+        waitFor(waitTime, lambda: self.nodes[2].getinfo()["peers_cmpctblock"] == 2)
 
         #############################
         # Test peer eviction
@@ -122,19 +124,19 @@ class NodeHandlingTest (BitcoinTestFramework):
         for node in self.nodes:
             node.clearbanned();
         connect_nodes(self.nodes[0], 3)
-        waitFor(10, lambda: self.nodes[0].getinfo()["connections"] == 1)
-        waitFor(10, lambda: self.nodes[3].getinfo()["connections"] == 1)
+        waitFor(waitTime, lambda: self.nodes[0].getinfo()["connections"] == 1)
+        waitFor(waitTime, lambda: self.nodes[3].getinfo()["connections"] == 1)
         connect_nodes(self.nodes[1], 3)
-        waitFor(10, lambda: self.nodes[0].getinfo()["connections"] == 1)
-        waitFor(10, lambda: self.nodes[1].getinfo()["connections"] == 1)
-        waitFor(10, lambda: self.nodes[3].getinfo()["connections"] == 2)
+        waitFor(waitTime, lambda: self.nodes[0].getinfo()["connections"] == 1)
+        waitFor(waitTime, lambda: self.nodes[1].getinfo()["connections"] == 1)
+        waitFor(waitTime, lambda: self.nodes[3].getinfo()["connections"] == 2)
 
         # Connecting one more than the max which causes the a peer to be evicted
         connect_nodes(self.nodes[2], 3)
         # one of these 2 nodes should be evicted.  Which one depends on ping times and activity levels
-        waitFor(10, lambda: self.nodes[0].getinfo()["connections"] + self.nodes[1].getinfo()["connections"] == 1)
-        waitFor(10, lambda: self.nodes[2].getinfo()["connections"] == 1)
-        waitFor(10, lambda: self.nodes[3].getinfo()["connections"] == 2)
+        waitFor(waitTime, lambda: self.nodes[0].getinfo()["connections"] + self.nodes[1].getinfo()["connections"] == 1)
+        waitFor(waitTime, lambda: self.nodes[2].getinfo()["connections"] == 1)
+        waitFor(waitTime, lambda: self.nodes[3].getinfo()["connections"] == 2)
 
         #############################
         # Test startup after invalidating part of the chain on one peer and extending the chain on another

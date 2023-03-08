@@ -163,14 +163,18 @@ class TxIndexTest(BitcoinTestFramework):
         self.nodes = []
         self.nodes.append(start_node(0, self.options.tmpdir, ["-debug", "-txindex=1", "-reindex=1"]))
         self.nodes.append(start_node(1, self.options.tmpdir, ["-debug", "-txindex=1", "-reindex=1"]))
+
+        # must wait for reindex to finsish otherwise we can not accept inbound connections.
+        waitFor(30, lambda: self.nodes[0].getblockcount() == 117)
+        waitFor(30, lambda: self.nodes[1].getblockcount() == 117)
+        waitFor(30, lambda: self.nodes[0].getinfo()["txindex"] == "synced")
+        waitFor(30, lambda: self.nodes[1].getinfo()["txindex"] == "synced")
         connect_nodes(self.nodes[0], 1)
         self.is_network_split = False
         self.sync_all()
 
         # Check node0 can find all blockchain txns in the txindex
         logging.info("Checking txindex on node0...")
-        waitFor(waitTime, lambda: self.nodes[1].getblockcount() == 117)
-        waitFor(waitTime, lambda: self.nodes[0].getinfo()["txindex"] == "synced")
         for i in range(self.nodes[0].getblockcount()):
             blockhash = self.nodes[0].getblockhash(i)
             txns = self.nodes[0].getblock(blockhash)['txid']

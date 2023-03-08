@@ -862,8 +862,8 @@ int SocketSendData(CNode *pnode, bool fSendTwo = false) EXCLUSIVE_LOCKS_REQUIRED
         int nBytes = send(hSocket, &data[pnode->nSendOffset], amt2Send, MSG_NOSIGNAL | MSG_DONTWAIT);
         if (nBytes > 0)
         {
-            progress++; // BU
-            pnode->bytesSent += nBytes; // BU stats
+            progress++;
+            pnode->bytesSent += nBytes;
             int64_t tmp = GetTime();
             pnode->sendGap << (tmp - pnode->nLastSend);
             pnode->nLastSend = tmp;
@@ -970,7 +970,7 @@ public:
     }
 };
 
-bool AttemptToEvictConnection(const int nMaxInbound)
+bool AttemptToEvictConnection(const unsigned int nMaxInbound)
 {
     // Find an eviction candidate
     std::vector<CNodeRef> vEvictionCandidates;
@@ -980,8 +980,8 @@ bool AttemptToEvictConnection(const int nMaxInbound)
         LOCK(cs_vNodes);
 
         // Count up all the inbound connections to determine whether to protect inbound client nodes
-        int nInbound = 0;
-        int nInboundClient = 0;
+        unsigned int nInbound = 0;
+        unsigned int nInboundClient = 0;
         for (CNode *node : vNodes)
         {
             if (node->fInbound)
@@ -989,13 +989,19 @@ bool AttemptToEvictConnection(const int nMaxInbound)
             if (node->fClient)
                 nInboundClient++;
         }
+        // To improve performance during initial sync only allow a small number of inbound connections
+        // but enough that we can find a few good performers.  If reindexing or rescanning then no need
+        // to allow any inbound connections at all.
+        if ((nInbound >= DEFAULT_MAX_OUTBOUND_CONNECTIONS * 2 && IsInitialBlockDownload()) || fReindex || fRescan)
+            return false;
+
         // If the inbound slots are not taken up then nothing to do.
         if (nInbound < nMaxInbound)
             return true;
 
         // At least these many inbound client connections will be protected from being bumped by network nodes.
         bool fDropNetworkNode = false;
-        int nProtectedInboundClient = std::round((double)nMaxInbound / 10);
+        unsigned int nProtectedInboundClient = std::round((double)nMaxInbound / 10);
         if (nInboundClient <= nProtectedInboundClient)
         {
             fDropNetworkNode = true;
@@ -1153,14 +1159,14 @@ static void AcceptConnection(const ListenSocket &hListenSocket)
     // 2. BUT, if less than nMaxOutConnections in vAddedNodes, open up any of the unreserved
     //   "-addnode" connection slots to the inbound pool to prevent holding presently unneeded outbound connection
     //   slots.
-    int nMaxAddNodeOutbound = 0;
+    unsigned int nMaxAddNodeOutbound = 0;
     {
         LOCK(cs_vAddedNodes);
         nMaxAddNodeOutbound = std::min((int)vAddedNodes.size(), nMaxOutConnections);
     }
     // Max inbound connections allowed of all node types.
-    int nMaxConnections = maxConnections.Value();
-    int nMaxInbound = nMaxConnections - nMaxOutConnections - nMaxAddNodeOutbound;
+    unsigned int nMaxConnections = maxConnections.Value();
+    unsigned int nMaxInbound = nMaxConnections - nMaxOutConnections - nMaxAddNodeOutbound;
 
     // REVISIT: a. This doesn't take into account RPC "addnode <node> onetry" outbound connections as those aren't
     // tracked
