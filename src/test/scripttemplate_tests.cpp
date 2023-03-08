@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(verifywellknown)
         CScript satisfier = CScript() << fakeSig;
 
         CScript txin = (CScript() << vch(hashedArgs)) + satisfier;
-        CScript txout = (CScript(ScriptType::TEMPLATE) << nogroup << p2pktId << hash256(hashedArgs));
+        CScript txout = (CScript(ScriptType::TEMPLATE) << nogroup << P2PKT_ID << hash256(hashedArgs));
         ret = VerifyScript(txin, txout, flags, sis, &error, &tracker);
         BOOST_CHECK(ret);
         // make sure that the expect script ran by checking the number of sigchecks it should have done,

@@ -62,7 +62,7 @@ void ScriptPubKeyToJSON(const CScript &scriptPubKey, UniValue &out, bool fInclud
         if (err == ScriptTemplateError::OK)
         {
             out.pushKV("type", "scripttemplate");
-            if (templateHash == p2pktId)
+            if (templateHash == P2PKT_ID)
                 out.pushKV("scriptHash", "pay2pubkeytemplate");
             else
                 out.pushKV("scriptHash", GetHex(templateHash));

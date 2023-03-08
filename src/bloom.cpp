@@ -232,7 +232,7 @@ bool CBloomFilter::MatchAndInsertOutpoints(const CTransactionRef &tx)
                         if (type == TX_PUBKEY || type == TX_MULTISIG || type == TX_CLTV)
                             insert(COutPoint(idem, i));
                         // Also add if its the script template variety of p2pubkey
-                        else if (type == TX_SCRIPT_TEMPLATE && vSolutions[0] == p2pktId)
+                        else if (type == TX_SCRIPT_TEMPLATE && vSolutions[0] == P2PKT_ID)
                             insert(COutPoint(idem, i));
                     }
                 }

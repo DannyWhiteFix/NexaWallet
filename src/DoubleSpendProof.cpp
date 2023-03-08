@@ -35,20 +35,32 @@ enum Scripts
     P2PKH
 };
 
-static bool IsPayToPubKeyHash(const CScript &script)
+static bool IsValidType(const CScript &script)
 {
     txnouttype outtype = TX_NONSTANDARD;
     std::vector<CTxDestination> dests;
     int nReq = 0;
     if (!ExtractDestinations(script, outtype, dests, nReq))
         return false;
-    if (outtype != TX_PUBKEYHASH || dests.size() != 1 || nReq != 1)
+    if ((outtype != TX_PUBKEYHASH && outtype != TX_SCRIPT_TEMPLATE) || dests.size() != 1 || nReq != 1)
         return false;
+
+    // If we have a template then find out what type of template
+    // we have, and if it's a valid one we're looking for.
+    if (outtype == TX_SCRIPT_TEMPLATE)
+    {
+        CGroupTokenInfo groupInfo;
+        std::vector<unsigned char> templateHash;
+        if (ScriptTemplateError::OK != GetScriptTemplate(script, &groupInfo, &templateHash))
+            return false;
+        if (templateHash != P2PKT_ID)
+            return false;
+    }
 
     return true;
 }
 
-void getP2PKHSignature(const CScript &script, std::vector<uint8_t> &vchRet)
+void getSignature(const CScript &script, std::vector<uint8_t> &vchRet)
 {
     auto scriptIter = script.begin();
     opcodetype type;
@@ -134,9 +146,9 @@ DoubleSpendProof DoubleSpendProof::create(const CTransaction &t1, const CTransac
                     throw std::runtime_error(
                         strprintf("Coin was not found for double spend %s", in1.prevout.hash.ToString()));
 
-                // Currently we only allow P2PKH
-                if (!IsPayToPubKeyHash(coin.out.scriptPubKey))
-                    throw std::runtime_error("Can not create dsproof: Transaction was not P2PKH");
+                // Currently we only allow P2PKH or P2PKT
+                if (!IsValidType(coin.out.scriptPubKey))
+                    throw std::runtime_error("Can not create dsproof: Transaction was not a valid type");
 
                 answer.m_prevOutpoint = in1.prevout;
 
@@ -144,9 +156,9 @@ DoubleSpendProof DoubleSpendProof::create(const CTransaction &t1, const CTransac
                 s2.outSequence = in2.nSequence;
 
                 s1.pushData.resize(1);
-                getP2PKHSignature(in1.scriptSig, s1.pushData.front());
+                getSignature(in1.scriptSig, s1.pushData.front());
                 s2.pushData.resize(1);
-                getP2PKHSignature(in2.scriptSig, s2.pushData.front());
+                getSignature(in2.scriptSig, s2.pushData.front());
 
                 assert(!s1.pushData.empty()); // we resized it
                 assert(!s2.pushData.empty()); // we resized it
@@ -259,7 +271,7 @@ DoubleSpendProof::Validity DoubleSpendProof::validate(const CTxMemPool &pool, co
         tx = *ptx;
 
     /*
-     * TomZ: At this point (2019-07) we only support P2PKH payments.
+     * We currently only support P2PKH or P2PKT payments.
      *
      * Since we have an actually spending tx, we could trivially support various other
      * types of scripts because all we need to do is replace the signature from our 'tx'
@@ -276,7 +288,7 @@ DoubleSpendProof::Validity DoubleSpendProof::validate(const CTxMemPool &pool, co
             CScript inScript = tx.vin[i].scriptSig;
             auto scriptIter = inScript.begin();
             opcodetype type;
-            if (!inScript.GetOp(scriptIter, type)) // P2PKH: first signature
+            if (!inScript.GetOp(scriptIter, type)) // P2PKH or P2PKT: first signature
             {
                 LOG(DSPROOF, "WARNING: dsproof is invalid because GetOp() for signature failed\n");
                 return Invalid;
@@ -311,9 +323,9 @@ DoubleSpendProof::Validity DoubleSpendProof::validate(const CTxMemPool &pool, co
         inScript << pubkey;
     }
 
-    // DS proofs won't work for complex scripts (non P2PKH), which is good because we aren't storing the tx associated
-    // with the Spender right now anyway.  So giving an empty tx and invalid input index to the verifier is ok,
-    // since OP_PUSH_TX_DATA won't be used.
+    // DS proofs won't work for complex scripts (non P2PKH/P2PKT), which is good because we aren't storing the tx
+    // associated with the Spender right now anyway.  So giving an empty tx and invalid input index to the verifier is
+    // ok, since OP_PUSH_TX_DATA won't be used.
     CTransaction noTx;
     CTransactionRef noTxRef = MakeTransactionRef(noTx);
 

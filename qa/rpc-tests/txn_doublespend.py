@@ -34,7 +34,7 @@ class TxnDoubleSpendTest(BitcoinTestFramework):
         # Coins are sent to node1_address
         node1_address = self.nodes[1].getnewaddress("p2pkh", "from0")
 
-        # First: use raw transaction API to send 1240 BTC to node1_address,
+        # First: use raw transaction API to send NEXA to node1_address,
         # but don't broadcast:
 
         unspent = self.nodes[0].listunspent()

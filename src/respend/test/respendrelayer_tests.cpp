@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(is_interesting)
     BOOST_CHECK(r.IsInteresting());
 }
 
-BOOST_FIXTURE_TEST_CASE(triggers_correctly, TestChain100Setup)
+BOOST_FIXTURE_TEST_CASE(triggers_correctly_p2pkh, TestChain100Setup)
 {
     CTxMemPool pool;
     TestMemPoolEntryHelper entry;
@@ -107,6 +107,7 @@ BOOST_FIXTURE_TEST_CASE(triggers_correctly, TestChain100Setup)
     key.MakeNewKey(true);
     keystore.AddKey(key);
     t1.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
+    t1.vout[0].SetScript(t1.vout[0].scriptPubKey);
     CTransaction tx1(t1);
     {
         TransactionSignatureCreator tsc(&keystore, &tx1, 0, defaultSigHashType);
@@ -125,6 +126,7 @@ BOOST_FIXTURE_TEST_CASE(triggers_correctly, TestChain100Setup)
     key.MakeNewKey(true);
     keystore.AddKey(key);
     t2.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
+    t2.vout[0].SetScript(t2.vout[0].scriptPubKey);
     CTransaction tx2(t2);
     {
         TransactionSignatureCreator tsc(&keystore, &tx2, 0, defaultSigHashType);
@@ -147,6 +149,7 @@ BOOST_FIXTURE_TEST_CASE(triggers_correctly, TestChain100Setup)
     key1.MakeNewKey(true);
     keystore.AddKey(key1);
     s1.vout[0].scriptPubKey = GetScriptForDestination(key1.GetPubKey().GetID());
+    s1.vout[0].SetScript(s1.vout[0].scriptPubKey);
 
     CTransaction spend1(s1);
     {
@@ -185,6 +188,7 @@ BOOST_FIXTURE_TEST_CASE(triggers_correctly, TestChain100Setup)
     key.MakeNewKey(true);
     keystore.AddKey(key);
     s2.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
+    s2.vout[0].SetScript(s2.vout[0].scriptPubKey);
 
     CTransaction spend2(s2);
     {
@@ -339,6 +343,7 @@ BOOST_FIXTURE_TEST_CASE(triggers_correctly, TestChain100Setup)
     key.MakeNewKey(true);
     keystore.AddKey(key);
     t3.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
+    t3.vout[0].SetScript(t3.vout[0].scriptPubKey);
     CTransaction tx3(t3);
     {
         TransactionSignatureCreator tsc(&keystore, &tx3, 0, defaultSigHashType);
@@ -365,7 +370,359 @@ BOOST_FIXTURE_TEST_CASE(triggers_correctly, TestChain100Setup)
     }
     catch (const std::runtime_error &e)
     {
-        BOOST_CHECK_EQUAL(e.what(), "Can not create dsproof: Transaction was not P2PKH");
+        BOOST_CHECK_EQUAL(e.what(), "Can not create dsproof: Transaction was not a valid type");
+    }
+
+    // Cleanup
+    vNodes.erase(vNodes.end() - 1);
+}
+
+BOOST_FIXTURE_TEST_CASE(triggers_correctly_p2pkt, TestChain100Setup)
+{
+    CTxMemPool pool;
+    TestMemPoolEntryHelper entry;
+    CBasicKeyStore keystore;
+    CCoinsView coinsDummy;
+    CCoinsViewCache coins(pcoinsTip);
+    std::vector<CMutableTransaction> dummyTransactions = SetupDummyInputs(keystore, *pcoinsTip);
+
+    // Create a basic signed transactions and add them to the pool. We will use these transactions
+    // to create the spend and respend transactions.
+    CMutableTransaction t1;
+    t1.vin.resize(1);
+    t1.vin[0] = dummyTransactions[0].SpendOutput(0);
+    t1.vout.resize(1);
+    t1.vout[0].nValue = 50 * CENT;
+    CKey key;
+    key.MakeNewKey(true);
+    keystore.AddKey(key);
+    t1.vout[0].scriptPubKey = GetScriptForDestination(ScriptTemplateDestination(P2pktOutput(key.GetPubKey())));
+    t1.vout[0].SetScript(t1.vout[0].scriptPubKey);
+    CTransaction tx1(t1);
+    {
+        TransactionSignatureCreator tsc(&keystore, &tx1, 0, defaultSigHashType);
+        const CScript &scriptPubKey = dummyTransactions[0].vout[0].scriptPubKey;
+        CScript &scriptSigRes = t1.vin[0].scriptSig;
+        bool worked = ProduceSignature(tsc, scriptPubKey, scriptSigRes);
+        BOOST_CHECK(worked);
+    }
+    pool.addUnchecked(entry.FromTx(tx1));
+
+    CMutableTransaction t2;
+    t2.vin.resize(1);
+    t2.vin[0] = dummyTransactions[0].SpendOutput(1);
+    t2.vout.resize(1);
+    t2.vout[0].nValue = 50 * CENT;
+    key.MakeNewKey(true);
+    keystore.AddKey(key);
+    t2.vout[0].scriptPubKey = GetScriptForDestination(ScriptTemplateDestination(P2pktOutput(key.GetPubKey())));
+    t2.vout[0].SetScript(t2.vout[0].scriptPubKey);
+    CTransaction tx2(t2);
+    {
+        TransactionSignatureCreator tsc(&keystore, &tx2, 0, defaultSigHashType);
+        const CScript &scriptPubKey = dummyTransactions[0].vout[1].scriptPubKey;
+        CScript &scriptSigRes = t2.vin[0].scriptSig;
+        bool worked = ProduceSignature(tsc, scriptPubKey, scriptSigRes);
+        BOOST_CHECK(worked);
+    }
+    pool.addUnchecked(entry.FromTx(tx2));
+
+
+    // Create a spend of tx1 and tx2's output.
+    CMutableTransaction s1;
+    s1.vin.resize(2);
+    s1.vin[0] = tx1.SpendOutput(0);
+    s1.vin[1] = tx2.SpendOutput(0);
+    s1.vout.resize(1);
+    s1.vout[0].nValue = 100 * CENT;
+    CKey key1;
+    key1.MakeNewKey(true);
+    keystore.AddKey(key1);
+    s1.vout[0].scriptPubKey = GetScriptForDestination(ScriptTemplateDestination(P2pktOutput(key1.GetPubKey())));
+    s1.vout[0].SetScript(s1.vout[0].scriptPubKey);
+
+    CTransaction spend1(s1);
+    {
+        {
+            TransactionSignatureCreator tsc(&keystore, &spend1, 0, defaultSigHashType);
+            const CScript &scriptPubKey = tx1.vout[0].scriptPubKey;
+            CScript &scriptSigRes = s1.vin[0].scriptSig;
+            bool worked = ProduceSignature(tsc, scriptPubKey, scriptSigRes);
+            BOOST_CHECK(worked);
+        }
+
+        {
+            TransactionSignatureCreator tsc(&keystore, &spend1, 1, defaultSigHashType);
+            const CScript &scriptPubKey2 = tx2.vout[0].scriptPubKey;
+            CScript &scriptSigRes2 = s1.vin[1].scriptSig;
+            bool worked = ProduceSignature(tsc, scriptPubKey2, scriptSigRes2);
+            BOOST_CHECK(worked);
+        }
+    }
+    CTransaction spend1a(s1);
+    pool.addUnchecked(entry.FromTx(spend1a));
+    CTxMemPool::TxIdIter iter;
+
+    { // Cheating because iter lasts beyond the lock, but this is a single threaded test
+        READLOCK(pool.cs_txmempool);
+        iter = pool._getIdIter(spend1a.GetIdem());
+    }
+
+
+    // Create a respend s1's output.
+    CMutableTransaction s2;
+    s2.vin.resize(1);
+    s2.vin[0] = tx1.SpendOutput(0);
+    s2.vout.resize(1);
+    s2.vout[0].nValue = 50 * CENT;
+    key.MakeNewKey(true);
+    keystore.AddKey(key);
+    s2.vout[0].scriptPubKey = GetScriptForDestination(ScriptTemplateDestination(P2pktOutput(key.GetPubKey())));
+    s2.vout[0].SetScript(s2.vout[0].scriptPubKey);
+
+    CTransaction spend2(s2);
+    {
+        TransactionSignatureCreator tsc(&keystore, &spend2, 0, defaultSigHashType);
+        const CScript &scriptPubKey = tx1.vout[0].scriptPubKey;
+        CScript &scriptSigRes = s2.vin[0].scriptSig;
+        bool worked = ProduceSignature(tsc, scriptPubKey, scriptSigRes);
+        BOOST_CHECK(worked);
+    }
+    CTransaction spend2a(s2);
+
+
+    CNode node(INVALID_SOCKET, CAddress());
+    node.fRelayTxes = true;
+    LOCK(cs_vNodes);
+    vNodes.push_back(&node);
+    // Create a "not interesting" respend
+    RespendRelayer r;
+    ClearInventory(&node);
+    r.AddOutpointConflict(COutPoint{}, iter->GetSharedTx()->GetId(), MakeTransactionRef(spend2a), true, false);
+    r.Trigger(pool);
+    BOOST_CHECK_EQUAL(size_t(0), node.GetInventoryToSendSize());
+    r.SetValid(true);
+    r.Trigger(pool);
+    BOOST_CHECK_EQUAL(size_t(0), node.GetInventoryToSendSize());
+
+
+    // Create an interesting, but invalid respend
+    ClearInventory(&node);
+    r.AddOutpointConflict(COutPoint{}, iter->GetSharedTx()->GetId(), MakeTransactionRef(spend2a), false, false);
+    BOOST_CHECK(r.IsInteresting());
+    r.SetValid(false);
+    r.Trigger(pool);
+    BOOST_CHECK_EQUAL(size_t(0), node.GetInventoryToSendSize());
+    // make valid
+    r.SetValid(true);
+    r.Trigger(pool);
+    BOOST_CHECK_EQUAL(size_t(1), node.GetInventoryToSendSize());
+    {
+        // Check that a dsproof was created and then inventory message was sent.
+        LOCK(node.cs_inventory);
+        BOOST_CHECK(pool.doubleSpendProofStorage()->exists(node.vInventoryToSend.at(0).hash) == true);
+        BOOST_CHECK(7 == node.vInventoryToSend.at(0).type);
+    }
+
+    // Create another dsproof for against the same original first tx...it should not be possible
+    {
+        TransactionSignatureCreator tsc(&keystore, &spend2, 0, defaultSigHashType);
+        const CScript &scriptPubKey = tx1.vout[0].scriptPubKey;
+        CScript &scriptSigRes = s2.vin[0].scriptSig;
+        bool worked = ProduceSignature(tsc, scriptPubKey, scriptSigRes);
+        BOOST_CHECK(worked);
+    }
+    CTransaction spend2b(s2);
+    ClearInventory(&node);
+    r.AddOutpointConflict(COutPoint{}, iter->GetSharedTx()->GetId(), MakeTransactionRef(spend2b), false, false);
+    // make valid
+    r.SetValid(true);
+    r.Trigger(pool);
+    BOOST_CHECK_EQUAL(size_t(0), node.GetInventoryToSendSize());
+
+
+    // Make sure dsproof is the same regardless of the order of txns
+    {
+        READLOCK(pool.cs_txmempool);
+        const auto dsp_first = DoubleSpendProof::create(iter->GetTx(), spend2b, pool);
+        const auto dsp_second = DoubleSpendProof::create(spend2b, iter->GetTx(), pool);
+        BOOST_CHECK_EQUAL(dsp_first.GetHash(), dsp_second.GetHash());
+    }
+
+    // Cleanup
+    vNodes.erase(vNodes.end() - 1);
+}
+
+BOOST_FIXTURE_TEST_CASE(triggers_correctly_p2pkt_with_p2pkh, TestChain100Setup)
+{
+    CTxMemPool pool;
+    TestMemPoolEntryHelper entry;
+    CBasicKeyStore keystore;
+    CCoinsView coinsDummy;
+    CCoinsViewCache coins(pcoinsTip);
+    std::vector<CMutableTransaction> dummyTransactions = SetupDummyInputs(keystore, *pcoinsTip);
+
+    // Create a basic signed transactions and add them to the pool. We will use these transactions
+    // to create the spend and respend transactions.
+    CMutableTransaction t1;
+    t1.vin.resize(1);
+    t1.vin[0] = dummyTransactions[0].SpendOutput(0);
+    t1.vout.resize(1);
+    t1.vout[0].nValue = 50 * CENT;
+    CKey key;
+    key.MakeNewKey(true);
+    keystore.AddKey(key);
+    t1.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
+    t1.vout[0].SetScript(t1.vout[0].scriptPubKey);
+    CTransaction tx1(t1);
+    {
+        TransactionSignatureCreator tsc(&keystore, &tx1, 0, defaultSigHashType);
+        const CScript &scriptPubKey = dummyTransactions[0].vout[0].scriptPubKey;
+        CScript &scriptSigRes = t1.vin[0].scriptSig;
+        bool worked = ProduceSignature(tsc, scriptPubKey, scriptSigRes);
+        BOOST_CHECK(worked);
+    }
+    pool.addUnchecked(entry.FromTx(tx1));
+
+    CMutableTransaction t2;
+    t2.vin.resize(1);
+    t2.vin[0] = dummyTransactions[0].SpendOutput(1);
+    t2.vout.resize(1);
+    t2.vout[0].nValue = 50 * CENT;
+    key.MakeNewKey(true);
+    keystore.AddKey(key);
+    t2.vout[0].scriptPubKey = GetScriptForDestination(ScriptTemplateDestination(P2pktOutput(key.GetPubKey())));
+    t2.vout[0].SetScript(t2.vout[0].scriptPubKey);
+    CTransaction tx2(t2);
+    {
+        TransactionSignatureCreator tsc(&keystore, &tx2, 0, defaultSigHashType);
+        const CScript &scriptPubKey = dummyTransactions[0].vout[1].scriptPubKey;
+        CScript &scriptSigRes = t2.vin[0].scriptSig;
+        bool worked = ProduceSignature(tsc, scriptPubKey, scriptSigRes);
+        BOOST_CHECK(worked);
+    }
+    pool.addUnchecked(entry.FromTx(tx2));
+
+
+    // Create a spend of tx1 and tx2's output.
+    CMutableTransaction s1;
+    s1.vin.resize(2);
+    s1.vin[0] = tx1.SpendOutput(0);
+    s1.vin[1] = tx2.SpendOutput(0);
+    s1.vout.resize(1);
+    s1.vout[0].nValue = 100 * CENT;
+    CKey key1;
+    key1.MakeNewKey(true);
+    keystore.AddKey(key1);
+    s1.vout[0].scriptPubKey = GetScriptForDestination(ScriptTemplateDestination(P2pktOutput(key1.GetPubKey())));
+    s1.vout[0].SetScript(s1.vout[0].scriptPubKey);
+
+    CTransaction spend1(s1);
+    {
+        {
+            TransactionSignatureCreator tsc(&keystore, &spend1, 0, defaultSigHashType);
+            const CScript &scriptPubKey = tx1.vout[0].scriptPubKey;
+            CScript &scriptSigRes = s1.vin[0].scriptSig;
+            bool worked = ProduceSignature(tsc, scriptPubKey, scriptSigRes);
+            BOOST_CHECK(worked);
+        }
+
+        {
+            TransactionSignatureCreator tsc(&keystore, &spend1, 1, defaultSigHashType);
+            const CScript &scriptPubKey2 = tx2.vout[0].scriptPubKey;
+            CScript &scriptSigRes2 = s1.vin[1].scriptSig;
+            bool worked = ProduceSignature(tsc, scriptPubKey2, scriptSigRes2);
+            BOOST_CHECK(worked);
+        }
+    }
+    CTransaction spend1a(s1);
+    pool.addUnchecked(entry.FromTx(spend1a));
+    CTxMemPool::TxIdIter iter;
+
+    { // Cheating because iter lasts beyond the lock, but this is a single threaded test
+        READLOCK(pool.cs_txmempool);
+        iter = pool._getIdIter(spend1a.GetIdem());
+    }
+
+
+    // Create a respend s1's output.
+    CMutableTransaction s2;
+    s2.vin.resize(1);
+    s2.vin[0] = tx1.SpendOutput(0);
+    s2.vout.resize(1);
+    s2.vout[0].nValue = 50 * CENT;
+    key.MakeNewKey(true);
+    keystore.AddKey(key);
+    s2.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
+    s2.vout[0].SetScript(s2.vout[0].scriptPubKey);
+
+    CTransaction spend2(s2);
+    {
+        TransactionSignatureCreator tsc(&keystore, &spend2, 0, defaultSigHashType);
+        const CScript &scriptPubKey = tx1.vout[0].scriptPubKey;
+        CScript &scriptSigRes = s2.vin[0].scriptSig;
+        bool worked = ProduceSignature(tsc, scriptPubKey, scriptSigRes);
+        BOOST_CHECK(worked);
+    }
+    CTransaction spend2a(s2);
+
+
+    CNode node(INVALID_SOCKET, CAddress());
+    node.fRelayTxes = true;
+    LOCK(cs_vNodes);
+    vNodes.push_back(&node);
+    // Create a "not interesting" respend
+    RespendRelayer r;
+    ClearInventory(&node);
+    r.AddOutpointConflict(COutPoint{}, iter->GetSharedTx()->GetId(), MakeTransactionRef(spend2a), true, false);
+    r.Trigger(pool);
+    BOOST_CHECK_EQUAL(size_t(0), node.GetInventoryToSendSize());
+    r.SetValid(true);
+    r.Trigger(pool);
+    BOOST_CHECK_EQUAL(size_t(0), node.GetInventoryToSendSize());
+
+
+    // Create an interesting, but invalid respend
+    ClearInventory(&node);
+    r.AddOutpointConflict(COutPoint{}, iter->GetSharedTx()->GetId(), MakeTransactionRef(spend2a), false, false);
+    BOOST_CHECK(r.IsInteresting());
+    r.SetValid(false);
+    r.Trigger(pool);
+    BOOST_CHECK_EQUAL(size_t(0), node.GetInventoryToSendSize());
+    // make valid
+    r.SetValid(true);
+    r.Trigger(pool);
+    BOOST_CHECK_EQUAL(size_t(1), node.GetInventoryToSendSize());
+    {
+        // Check that a dsproof was created and then inventory message was sent.
+        LOCK(node.cs_inventory);
+        BOOST_CHECK(pool.doubleSpendProofStorage()->exists(node.vInventoryToSend.at(0).hash) == true);
+        BOOST_CHECK(7 == node.vInventoryToSend.at(0).type);
+    }
+
+    // Create another dsproof for against the same original first tx...it should not be possible
+    {
+        TransactionSignatureCreator tsc(&keystore, &spend2, 0, defaultSigHashType);
+        const CScript &scriptPubKey = tx1.vout[0].scriptPubKey;
+        CScript &scriptSigRes = s2.vin[0].scriptSig;
+        bool worked = ProduceSignature(tsc, scriptPubKey, scriptSigRes);
+        BOOST_CHECK(worked);
+    }
+    CTransaction spend2b(s2);
+    ClearInventory(&node);
+    r.AddOutpointConflict(COutPoint{}, iter->GetSharedTx()->GetId(), MakeTransactionRef(spend2b), false, false);
+    // make valid
+    r.SetValid(true);
+    r.Trigger(pool);
+    BOOST_CHECK_EQUAL(size_t(0), node.GetInventoryToSendSize());
+
+
+    // Make sure dsproof is the same regardless of the order of txns
+    {
+        READLOCK(pool.cs_txmempool);
+        const auto dsp_first = DoubleSpendProof::create(iter->GetTx(), spend2b, pool);
+        const auto dsp_second = DoubleSpendProof::create(spend2b, iter->GetTx(), pool);
+        BOOST_CHECK_EQUAL(dsp_first.GetHash(), dsp_second.GetHash());
     }
 
     // Cleanup

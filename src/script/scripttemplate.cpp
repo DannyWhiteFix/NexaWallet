@@ -23,8 +23,8 @@
 #include "consensus/grouptokens.h"
 
 const CScript p2pkt(CScript() << OP_FROMALTSTACK << OP_CHECKSIGVERIFY);
-const std::vector<unsigned char> p2pktId = { 1 };
-const std::vector<unsigned char> p2pktHash = VchHash160(p2pkt.begin(), p2pkt.end());
+const std::vector<unsigned char> P2PKT_ID = { 1 };
+const std::vector<unsigned char> P2PKT_HASH = VchHash160(p2pkt.begin(), p2pkt.end());
 
 typedef std::vector<unsigned char> valtype;
 extern bool CastToBool(const StackItem &vch);
@@ -133,9 +133,9 @@ ScriptError ConvertWellKnownTemplateHash(VchType &templateHash, CScript &templat
     // But in release mode the best we can do is report no known conversion.
     DbgAssert(templateHash.size() <= 2, return SCRIPT_ERR_TEMPLATE);
 
-    if (templateHash == p2pktId)
+    if (templateHash == P2PKT_ID)
     {
-        templateHash = p2pktHash;
+        templateHash = P2PKT_HASH;
         templateScript = p2pkt;
         return SCRIPT_ERR_OK;
     }
@@ -228,13 +228,13 @@ CScript ScriptTemplateOutput(const VchType& scriptHash, const VchType &argsHash,
 
 CScript P2pktOutput(const VchType &argsHash, const CGroupTokenID& group, CAmount grpQuantity)
 {
-    return ScriptTemplateOutput(p2pktId, argsHash, VchType(), group, grpQuantity);
+    return ScriptTemplateOutput(P2PKT_ID, argsHash, VchType(), group, grpQuantity);
 }
 
 CScript P2pktOutput(const CPubKey &pubkey, const CGroupTokenID& group, CAmount grpQuantity)
 {
     CScript tArgs = CScript() << ToByteVector(pubkey);
-    return ScriptTemplateOutput(p2pktId, VchHash160(tArgs), VchType(), group, grpQuantity);
+    return ScriptTemplateOutput(P2PKT_ID, VchHash160(tArgs), VchType(), group, grpQuantity);
 }
 
 
