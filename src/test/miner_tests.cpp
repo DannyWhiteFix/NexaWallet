@@ -484,7 +484,7 @@ void GenerateBlocks(const CChainParams &chainparams,
 
     printf("mempool size : %ld\n", mempool.size());
     printf("mempool mapTx size : %ld\n", mempool.mapTx.size());
-    printf("Avg Block Size %lu Expected Avg Block Size %lu\n", nTotalBlockSize / (uint64_t)nBlockCount,
+    printf("Avg Block Size %llu Expected Avg Block Size %llu\n", nTotalBlockSize / (uint64_t)nBlockCount,
         (nTotalExpectedBlockSize / (uint64_t)nBlockCount));
     printf("Block fill ratio %5.2f\n",
         (double)(nTotalBlockSize / nBlockCount) * 100 / (nTotalExpectedBlockSize / nBlockCount));
@@ -1126,16 +1126,16 @@ BOOST_AUTO_TEST_CASE(AdaptiveBlockSize)
         std::shuffle(vData.begin(), vData.end(), std::default_random_engine(seed.rand32()));
         for (uint64_t i : vData)
             InsertInSortedOrder(i, vSizes1);
-        BOOST_CHECK_EQUAL(CalculateMedian(vSizes1), 8);
+        BOOST_CHECK_EQUAL(CalculateMedian(vSizes1), 8UL);
     }
 
     // Add data items to the front and back of the data range
     InsertInSortedOrder(12345678900, vSizes1);
     InsertInSortedOrder(12, vSizes1);
-    BOOST_CHECK_EQUAL(CalculateMedian(vSizes1), 8);
+    BOOST_CHECK_EQUAL(CalculateMedian(vSizes1), 8UL);
     InsertInSortedOrder(0, vSizes1);
     InsertInSortedOrder(1, vSizes1);
-    BOOST_CHECK_EQUAL(CalculateMedian(vSizes1), 8);
+    BOOST_CHECK_EQUAL(CalculateMedian(vSizes1), 8UL);
 
     vData.clear();
     for (int j = 0; j <= 1000; j++)
@@ -1146,7 +1146,7 @@ BOOST_AUTO_TEST_CASE(AdaptiveBlockSize)
         std::vector<uint64_t> vSizes;
         for (auto &i : vData)
             InsertInSortedOrder(i, vSizes);
-        BOOST_CHECK_EQUAL(CalculateMedian(vSizes), 500);
+        BOOST_CHECK_EQUAL(CalculateMedian(vSizes), 500ULL);
         /* Good bit of debugging code if ever its needed to debug the InsertInSortedOrder() function
         if (CalculateMedian(vSizes) != 500)
         {
@@ -1162,7 +1162,7 @@ BOOST_AUTO_TEST_CASE(AdaptiveBlockSize)
 
     // Check Single element
     std::vector<uint64_t> vSizes1a = {1};
-    BOOST_CHECK_EQUAL(CalculateMedian(vSizes1a), 1);
+    BOOST_CHECK_EQUAL(CalculateMedian(vSizes1a), 1ULL);
 
     // Check we have an odd number of elements
     std::vector<uint64_t> vSizes2;

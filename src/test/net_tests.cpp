@@ -466,7 +466,7 @@ BOOST_AUTO_TEST_CASE(test_attemptToEvict)
     int nMaxInbound = 8;
     maxConnections.Set(11);
     BOOST_CHECK_EQUAL(AttemptToEvictConnection(nMaxInbound), true);
-    BOOST_CHECK_EQUAL(vNodes.size(), 10); // vnodes will not change yet, only the fDisconnect flag will be set.
+    BOOST_CHECK_EQUAL(vNodes.size(), 10UL); // vnodes will not change yet, only the fDisconnect flag will be set.
     BOOST_CHECK_EQUAL(node1->fDisconnect, false); // peer with lowest activity should not be disconnected
 
     // Network slots full: basic check - all network nodes
@@ -478,7 +478,7 @@ BOOST_AUTO_TEST_CASE(test_attemptToEvict)
     nMaxInbound = 7;
     maxConnections.Set(11);
     BOOST_CHECK_EQUAL(AttemptToEvictConnection(nMaxInbound), true);
-    BOOST_CHECK_EQUAL(vNodes.size(), 10); // vnodes will not change yet, only the fDisconnect flag will be set.
+    BOOST_CHECK_EQUAL(vNodes.size(), 10UL); // vnodes will not change yet, only the fDisconnect flag will be set.
     BOOST_CHECK_EQUAL(node1->fDisconnect, true); // the peer with lowest activity should be disconnected
     node1->fDisconnect = false; // reset the flag
 
@@ -488,7 +488,7 @@ BOOST_AUTO_TEST_CASE(test_attemptToEvict)
     nMaxInbound = 7;
     maxConnections.Set(10);
     BOOST_CHECK_EQUAL(AttemptToEvictConnection(nMaxInbound), true);
-    BOOST_CHECK_EQUAL(vNodes.size(), 10); // vnodes will not change yet, only the fDisconnect flag will be set.
+    BOOST_CHECK_EQUAL(vNodes.size(), 10UL); // vnodes will not change yet, only the fDisconnect flag will be set.
     BOOST_CHECK_EQUAL(node1->fDisconnect, true); // the peer with lowest activity should be disconnected
     node1->fDisconnect = false; // reset the flag
 
@@ -498,7 +498,7 @@ BOOST_AUTO_TEST_CASE(test_attemptToEvict)
     maxConnections.Set(11);
     vNodes.push_back(node16); // add client
     BOOST_CHECK_EQUAL(AttemptToEvictConnection(nMaxInbound), true);
-    BOOST_CHECK_EQUAL(vNodes.size(), 11); // vnodes will not change yet, only the fDisconnect flag will be set.
+    BOOST_CHECK_EQUAL(vNodes.size(), 11UL); // vnodes will not change yet, only the fDisconnect flag will be set.
     BOOST_CHECK_EQUAL(node1->fDisconnect, true); // the peer with lowest activity should be disconnected
     BOOST_CHECK_EQUAL(node16->fDisconnect, false); // the client has lowest activity but should NOT be disconnected
     node1->fDisconnect = false; // reset the flag
@@ -508,7 +508,7 @@ BOOST_AUTO_TEST_CASE(test_attemptToEvict)
     maxConnections.Set(11);
     node1->fWhitelisted = true;
     BOOST_CHECK_EQUAL(AttemptToEvictConnection(nMaxInbound), true);
-    BOOST_CHECK_EQUAL(vNodes.size(), 11); // vnodes will not change yet, only the fDisconnect flag will be set.
+    BOOST_CHECK_EQUAL(vNodes.size(), 11UL); // vnodes will not change yet, only the fDisconnect flag will be set.
     BOOST_CHECK_EQUAL(node2->fDisconnect, true); // the lowest activity "non-whitelisted" peer should be disconnected
     BOOST_CHECK_EQUAL(node16->fDisconnect, false); // the client has lowest activity but should NOT be disconnected
     node2->fDisconnect = false; // reset the flag
@@ -521,7 +521,7 @@ BOOST_AUTO_TEST_CASE(test_attemptToEvict)
     maxConnections.Set(12);
     vNodes.push_back(node17); // add client
     BOOST_CHECK_EQUAL(AttemptToEvictConnection(nMaxInbound), true);
-    BOOST_CHECK_EQUAL(vNodes.size(), 12); // vnodes will not change yet, only the fDisconnect flag will be set.
+    BOOST_CHECK_EQUAL(vNodes.size(), 12UL); // vnodes will not change yet, only the fDisconnect flag will be set.
     BOOST_CHECK_EQUAL(node1->fDisconnect, false); // the network peer with lowest activity will not be disconnected
     BOOST_CHECK_EQUAL(node16->fDisconnect, true); // the client has lowest activity will be disconnected
     node16->fDisconnect = false; // reset the flag
@@ -536,7 +536,7 @@ BOOST_AUTO_TEST_CASE(test_attemptToEvict)
     node17->nActivityBytes = 2000;
     node18->nActivityBytes = 100000;
     BOOST_CHECK_EQUAL(AttemptToEvictConnection(nMaxInbound), true);
-    BOOST_CHECK_EQUAL(vNodes.size(), 13); // vnodes will not change yet, only the fDisconnect flag will be set.
+    BOOST_CHECK_EQUAL(vNodes.size(), 13UL); // vnodes will not change yet, only the fDisconnect flag will be set.
     BOOST_CHECK_EQUAL(node1->fDisconnect, true); // the network peer with lowest activity will not be disconnected
     BOOST_CHECK_EQUAL(node16->fDisconnect, false); // the client has highest activity will not be disconnected
     BOOST_CHECK_EQUAL(node17->fDisconnect, false); // the client has highest activity will not be disconnected
@@ -571,7 +571,7 @@ BOOST_AUTO_TEST_CASE(test_attemptToEvict)
     node19->nTimeConnected = nStartTime - 59;
     node20->nTimeConnected = nStartTime - 59;
     BOOST_CHECK_EQUAL(AttemptToEvictConnection(nMaxInbound), true);
-    BOOST_CHECK_EQUAL(vNodes.size(), 20); // vnodes will not change yet, only the fDisconnect flag will be set->
+    BOOST_CHECK_EQUAL(vNodes.size(), 20UL); // vnodes will not change yet, only the fDisconnect flag will be set->
     BOOST_CHECK_EQUAL(node16->fDisconnect, true);
     node16->fDisconnect = false;
 
@@ -583,7 +583,7 @@ BOOST_AUTO_TEST_CASE(test_attemptToEvict)
     node19->nTimeConnected = nStartTime - 59;
     node20->nTimeConnected = nStartTime - 59;
     BOOST_CHECK_EQUAL(AttemptToEvictConnection(nMaxInbound), true);
-    BOOST_CHECK_EQUAL(vNodes.size(), 20); // vnodes will not change yet, only the fDisconnect flag will be set.
+    BOOST_CHECK_EQUAL(vNodes.size(), 20UL); // vnodes will not change yet, only the fDisconnect flag will be set.
     BOOST_CHECK_EQUAL(node17->fDisconnect, true);
     node17->fDisconnect = false;
 
@@ -595,7 +595,7 @@ BOOST_AUTO_TEST_CASE(test_attemptToEvict)
     node19->nTimeConnected = nStartTime - 59;
     node20->nTimeConnected = nStartTime - 59;
     BOOST_CHECK_EQUAL(AttemptToEvictConnection(nMaxInbound), true);
-    BOOST_CHECK_EQUAL(vNodes.size(), 20); // vnodes will not change yet, only the fDisconnect flag will be set.
+    BOOST_CHECK_EQUAL(vNodes.size(), 20UL); // vnodes will not change yet, only the fDisconnect flag will be set.
     BOOST_CHECK_EQUAL(node17->fDisconnect, true);
     node17->fDisconnect = false;
 
@@ -607,7 +607,7 @@ BOOST_AUTO_TEST_CASE(test_attemptToEvict)
     node19->nTimeConnected = nStartTime - 59;
     node20->nTimeConnected = nStartTime - 59;
     BOOST_CHECK_EQUAL(AttemptToEvictConnection(nMaxInbound), true);
-    BOOST_CHECK_EQUAL(vNodes.size(), 20); // vnodes will not change yet, only the fDisconnect flag will be set.
+    BOOST_CHECK_EQUAL(vNodes.size(), 20UL); // vnodes will not change yet, only the fDisconnect flag will be set.
     BOOST_CHECK_EQUAL(node16->fDisconnect, true);
     node16->fDisconnect = false;
 
@@ -624,7 +624,7 @@ BOOST_AUTO_TEST_CASE(test_attemptToEvict)
     node19->nTimeConnected = nStartTime - 59;
     node20->nTimeConnected = nStartTime - 59;
     BOOST_CHECK_EQUAL(AttemptToEvictConnection(nMaxInbound), true);
-    BOOST_CHECK_EQUAL(vNodes.size(), 20); // vnodes will not change yet, only the fDisconnect flag will be set.
+    BOOST_CHECK_EQUAL(vNodes.size(), 20UL); // vnodes will not change yet, only the fDisconnect flag will be set.
     BOOST_CHECK_EQUAL(node1->fDisconnect, true);
     node1->fDisconnect = false;
 
@@ -636,33 +636,33 @@ BOOST_AUTO_TEST_CASE(test_attemptToEvict)
     for (auto pnode : vNodes)
         pnode->AddRef();
 
-    BOOST_CHECK_EQUAL(vNodes.size(), 20);
+    BOOST_CHECK_EQUAL(vNodes.size(), 20UL);
     maxConnections.Set(19);
     CleanupDisconnectedNodes();
-    BOOST_CHECK_EQUAL(vNodes.size(), 20);
+    BOOST_CHECK_EQUAL(vNodes.size(), 20UL);
     CleanupDisconnectedNodes();
-    BOOST_CHECK_EQUAL(vNodes.size(), 19);
+    BOOST_CHECK_EQUAL(vNodes.size(), 19UL);
 
     maxConnections.Set(10);
-    BOOST_CHECK_EQUAL(vNodes.size(), 19);
+    BOOST_CHECK_EQUAL(vNodes.size(), 19UL);
     CleanupDisconnectedNodes();
-    BOOST_CHECK_EQUAL(vNodes.size(), 19);
+    BOOST_CHECK_EQUAL(vNodes.size(), 19UL);
     CleanupDisconnectedNodes();
-    BOOST_CHECK_EQUAL(vNodes.size(), 10);
+    BOOST_CHECK_EQUAL(vNodes.size(), 10UL);
 
     maxConnections.Set(1);
-    BOOST_CHECK_EQUAL(vNodes.size(), 10);
+    BOOST_CHECK_EQUAL(vNodes.size(), 10UL);
     CleanupDisconnectedNodes();
-    BOOST_CHECK_EQUAL(vNodes.size(), 10);
+    BOOST_CHECK_EQUAL(vNodes.size(), 10UL);
     CleanupDisconnectedNodes();
-    BOOST_CHECK_EQUAL(vNodes.size(), 1);
+    BOOST_CHECK_EQUAL(vNodes.size(), 1UL);
 
     maxConnections.Set(0);
-    BOOST_CHECK_EQUAL(vNodes.size(), 1);
+    BOOST_CHECK_EQUAL(vNodes.size(), 1UL);
     CleanupDisconnectedNodes();
-    BOOST_CHECK_EQUAL(vNodes.size(), 1);
+    BOOST_CHECK_EQUAL(vNodes.size(), 1UL);
     CleanupDisconnectedNodes();
-    BOOST_CHECK_EQUAL(vNodes.size(), 0);
+    BOOST_CHECK_EQUAL(vNodes.size(), 0UL);
 
     // restore vNodes.
     vNodes = vNodesCopy;
