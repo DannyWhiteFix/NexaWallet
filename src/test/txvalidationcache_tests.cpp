@@ -255,7 +255,7 @@ BOOST_FIXTURE_TEST_CASE(uncache_coins, TestChain100Setup)
     {
         WRITELOCK(orphanpool.cs_orphanpool);
         BOOST_CHECK(orphanpool.AddOrphanTx(MakeTransactionRef(spends[2]), 1));
-        BOOST_CHECK_EQUAL(orphanpool.mapOrphanTransactions.size(), 1);
+        BOOST_CHECK_EQUAL(orphanpool.mapOrphanTransactions.size(), 1UL);
     }
     BOOST_CHECK(pcoinsTip->HaveCoinInCache(spends[0].vin[0].prevout, fSpent)); // valid coin from previous txn
     BOOST_CHECK(fSpent == false);
@@ -271,7 +271,7 @@ BOOST_FIXTURE_TEST_CASE(uncache_coins, TestChain100Setup)
         ProcessOrphans(vWorkQueue);
 
         WRITELOCK(orphanpool.cs_orphanpool);
-        BOOST_CHECK_EQUAL(orphanpool.mapOrphanTransactions.size(), 0);
+        BOOST_CHECK_EQUAL(orphanpool.mapOrphanTransactions.size(), 0UL);
     }
 
     BOOST_CHECK(pcoinsTip->HaveCoinInCache(spends[0].vin[0].prevout, fSpent)); // valid coin from previous txn

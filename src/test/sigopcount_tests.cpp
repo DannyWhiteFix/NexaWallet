@@ -225,22 +225,22 @@ BOOST_AUTO_TEST_CASE(test_consensus_sigops_limit)
     // Set and unset the tweak (which is only used in testing) and perform a few tests.  This allows
     // us to check that we can avoid hitting the assert() in GetMaxBlockSigChecks().
     nextMaxBlockSize.Set(1);
-    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(0), 0);
-    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(1), 0);
-    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(141), 1);
-    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(211), 1);
-    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(212), 1);
-    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(281), 1);
-    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(282), 2);
-    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(14240), 100);
-    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(14241), 101);
-    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(21200), 150);
-    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(28100), 199);
+    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(0), 0ULL);
+    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(1), 0ULL);
+    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(141), 1ULL);
+    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(211), 1ULL);
+    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(212), 1ULL);
+    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(281), 1ULL);
+    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(282), 2ULL);
+    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(14240), 100ULL);
+    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(14241), 101ULL);
+    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(21200), 150ULL);
+    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(28100), 199ULL);
     nextMaxBlockSize.Set(0);
-    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(DEFAULT_NEXT_MAX_BLOCK_SIZE), 709);
-    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(123456), 875);
-    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(1000000), 7092);
-    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(1000001), 7092);
+    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(DEFAULT_NEXT_MAX_BLOCK_SIZE), 709ULL);
+    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(123456), 875ULL);
+    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(1000000), 7092ULL);
+    BOOST_CHECK_EQUAL(GetMaxBlockSigChecks(1000001), 7092ULL);
 }
 
 

@@ -309,7 +309,6 @@ void CapdMsg::SetPowTargetHarderThan(uint256 target)
     else // subtract one from the exponent and set the enough bits that its like 0x100 -> 0xff
     {
         randomReduction -= mantissa;
-        uint32_t orig = cInt;
         cInt = ((cInt - (1 << 25)) & expBits) | (mantissaBits - randomReduction);
     }
 

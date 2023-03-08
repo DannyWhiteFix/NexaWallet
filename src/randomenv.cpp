@@ -116,21 +116,6 @@ CSHA512& operator<<(CSHA512& hasher, const T& data) {
 }
 
 #ifndef WIN32
-void AddSockaddr(CSHA512& hasher, const struct sockaddr *addr)
-{
-    if (addr == nullptr) return;
-    switch (addr->sa_family) {
-    case AF_INET:
-        hasher.Write((const unsigned char*)addr, sizeof(sockaddr_in));
-        break;
-    case AF_INET6:
-        hasher.Write((const unsigned char*)addr, sizeof(sockaddr_in6));
-        break;
-    default:
-        hasher.Write((const unsigned char*)&addr->sa_family, sizeof(addr->sa_family));
-    }
-}
-
 void AddFile(CSHA512& hasher, const char *path)
 {
     struct stat sb = {};

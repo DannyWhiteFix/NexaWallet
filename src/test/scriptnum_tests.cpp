@@ -726,11 +726,6 @@ void testScript(const CScript &s, bool expectedRet, bool expectedStackTF, Script
         fprintf(DumpScriptHex, "%s\n", s.GetHex().c_str());
     }
     bool ret = sm.Eval(s);
-    if (ret != expectedRet)
-    {
-        ScriptMachine sm2(MANDATORY_SCRIPT_VERIFY_FLAGS, ScriptImportedState(), 0xffffffff, 0xffffffff);
-        bool ret2 = sm2.Eval(s);
-    }
     BOOST_CHECK(ret == expectedRet);
     if (expectedRet)
     {

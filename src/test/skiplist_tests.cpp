@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(getlocator_test)
         // Entries 1 through 11 (inclusive) go back one step each.
         for (unsigned int i = 1; i < 12 && i < locator.vHave.size() - 1; i++)
         {
-            BOOST_CHECK_EQUAL(UintToArith256(locator.vHave[i]).GetLow64(), tip->height() - i);
+            BOOST_CHECK_EQUAL(UintToArith256(locator.vHave[i]).GetLow64(), uint64_t(tip->height() - i));
         }
 
         // The further ones (excluding the last one) go back with exponential steps.

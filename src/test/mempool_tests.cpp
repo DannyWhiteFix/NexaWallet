@@ -2170,17 +2170,17 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     // prioritise the last transaction so that no transactions will be removed when trimmed
     pool.PrioritiseTransaction(vHashes[99], 0, 1000);
 
-    BOOST_CHECK_EQUAL(pool.size(), 100);
+    BOOST_CHECK_EQUAL(pool.size(), 100UL);
     pool.TrimToSize(0, &vNoSpendsRemaining, false);
 
     // nothing should have been removed
-    BOOST_CHECK_EQUAL(pool.size(), 100);
+    BOOST_CHECK_EQUAL(pool.size(), 100UL);
     for (size_t i = 0; i < vHashes.size(); i++) // all hashes should exist
         BOOST_CHECK(pool.exists(vHashes[i]));
 
     // remove the priority
     pool.PrioritiseTransaction(vHashes[99], 0, -1000);
-    BOOST_CHECK_EQUAL(pool.size(), 100);
+    BOOST_CHECK_EQUAL(pool.size(), 100UL);
 
     // without the priority the chain will now be seen as just any chain and so last hash should have been removed
     pool.TrimToSize(pool.DynamicMemoryUsage() - 1, &vNoSpendsRemaining, false);
@@ -2195,8 +2195,8 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     pool.PrioritiseTransaction(vHashes[40], 0, 5000);
     pool.PrioritiseTransaction(vHashes[30], 0, 3000);
     pool.TrimToSize(0, &vNoSpendsRemaining, false);
-    BOOST_CHECK_EQUAL(pool.size(), 51);
-    BOOST_CHECK_EQUAL(vHashes.size(), 100);
+    BOOST_CHECK_EQUAL(pool.size(), 51UL);
+    BOOST_CHECK_EQUAL(vHashes.size(), 100UL);
     for (size_t i = 0; i <= 50; i++) // should exist
         BOOST_CHECK(pool.exists(vHashes[i]));
     for (size_t i = 51; i < vHashes.size(); i++) // should not exist
@@ -2241,7 +2241,7 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     pool.PrioritiseTransaction(vHashes[95], 1e10, 0);
     pool.PrioritiseTransaction(vHashes[20], 1e11, 0);
     pool.TrimToSize(0, &vNoSpendsRemaining, false);
-    BOOST_CHECK_EQUAL(pool.size(), 96);
+    BOOST_CHECK_EQUAL(pool.size(), 96UL);
     for (size_t i = 0; i <= 95; i++) // should exist
         BOOST_CHECK(pool.exists(vHashes[i]));
     for (size_t i = 96; i < vHashes.size(); i++) // should not exist
@@ -2252,7 +2252,7 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     // remove the priorities
     pool.PrioritiseTransaction(vHashes[95], -1e10, 0);
     pool.PrioritiseTransaction(vHashes[20], -1e11, 0);
-    BOOST_CHECK_EQUAL(pool.size(), 96);
+    BOOST_CHECK_EQUAL(pool.size(), 96UL);
     BOOST_CHECK_EQUAL(vHashes.size(), pool.size());
     pool.TrimToSize(pool.DynamicMemoryUsage() - 1, &vNoSpendsRemaining, false);
 
