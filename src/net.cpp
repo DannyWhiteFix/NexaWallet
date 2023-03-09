@@ -1337,7 +1337,7 @@ void CleanupDisconnectedNodes()
 
                 if (!pnode->fDisconnect && !pnode->fWhitelisted)
                 {
-                    pnode->fDisconnect = true;
+                    pnode->InitiateGracefulDisconnect();
                     nDisconnected++;
                 }
             }
