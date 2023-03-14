@@ -517,6 +517,7 @@ falcon512_libnexa_falcon512_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_CONFIG_INCLUDE
 falcon512_libnexa_falcon512_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 falcon512_libnexa_falcon512_a_SOURCES = \
   falcon512/codec.c \
+  falcon512/config.h \
   falcon512/common.c \
   falcon512/falcon.c \
   falcon512/falcon.h \
