@@ -1524,7 +1524,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Wal
             return jbyteArray();
         }
         // We cannot figure out the pubkeyhash of a template type that we do not understand
-        if (templateHash != p2pktId)
+        if (templateHash != P2PKT_ID)
         {
             return jbyteArray();
         }

@@ -59,7 +59,7 @@ class TxIndexTest(BitcoinTestFramework):
             blockhash = self.nodes[1].getblockhash(i)
             txns = self.nodes[1].getblock(blockhash)['txid']
             for tx in txns:
-               waitFor(waitTime, lambda: self.get_rawtransaction(self.nodes[1], tx) == True)
+                waitFor(waitTime, lambda: self.get_rawtransaction(self.nodes[1], tx) == True)
             txns = self.nodes[1].getblock(blockhash)['txidem']
             for tx in txns:
                waitFor(waitTime, lambda: self.get_rawtransaction(self.nodes[1], tx) == True)

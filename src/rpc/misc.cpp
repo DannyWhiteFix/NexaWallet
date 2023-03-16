@@ -71,6 +71,7 @@ UniValue getinfo(const UniValue &params, bool fHelp)
             "  \"relayfee\": xxxx,           (numeric) minimum relay fee for non-free transactions in "
             "sat/KB\n"
             "  \"status\":\"...\"            (string) long running operations are indicated here (rescan).\n"
+            "  \"txindex\":\"synced|trailing|not ready\" (string) indicate the current state of the txindex.\n"
             "  \"errors\": \"...\"           (string) any error messages\n"
             "}\n"
             "\nExamples:\n" +
@@ -101,7 +102,8 @@ UniValue getinfo(const UniValue &params, bool fHelp)
         obj.pushKV("balance", ValueFromAmount(pwalletMain->GetBalance()));
     }
 #endif
-    obj.pushKV("blocks", (int)chainActive.Height());
+    uint64_t curHeight = chainActive.Height();
+    obj.pushKV("blocks", (int)curHeight);
     if (pindexBestHeader)
         obj.pushKV("headers", (int)pindexBestHeader.load()->height());
     obj.pushKV("timeoffset", GetTimeOffset());
@@ -124,7 +126,7 @@ UniValue getinfo(const UniValue &params, bool fHelp)
 #endif
     obj.pushKV("relayfee", ::minRelayTxFee.GetFeePerK());
     obj.pushKV("status", statusStrings.GetPrintable());
-    obj.pushKV("txindex", IsTxIndexReady() ? "synced" : "not ready");
+    obj.pushKV("txindex", IsTxIndexReady() ? (curHeight == TxIndexSyncHeight() ? "synced" : "trailing") : "not ready");
     obj.pushKV("errors", GetWarnings("statusbar"));
 
     return obj;
