@@ -12,7 +12,14 @@
 
 class CBlockIndex;
 
+/** Returns true once the txindex has caught up with the blockchain.  Note that this will continue to return true
+    through the temporary condition where a block arrives and so the txindex is briefly trailing by 1 block.
+*/
 bool IsTxIndexReady();
+
+/** Return the block height at which txindex is synced */
+uint64_t TxIndexSyncHeight();
+
 
 /**
  * TxIndex is used to look up transactions included in the blockchain by hash.
@@ -76,6 +83,9 @@ public:
 
     /// Stops the instance from staying in sync with blockchain updates.
     void Stop();
+
+    /// The last block in the chain that the TxIndex is in sync with.
+    CBlockIndex *getSyncedHeader() { return pbestindex; }
 };
 
 /// The global transaction index, used in GetTransaction. May be null.

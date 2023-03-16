@@ -140,48 +140,6 @@ static int64_t nTimePostConnect = 0;
 // Protected by cs_main
 static ThresholdConditionCache warningcache[Consensus::MAX_VERSION_BITS_DEPLOYMENTS];
 
-//////////////////////////////////////////////////////////////////
-//
-// Header
-//
-
-bool CheckBlockHeader(const Consensus::Params &consensusParams,
-    const CBlockHeader &block,
-    CValidationState &state,
-    bool fCheckPOW)
-{
-    // Block size can not be zero
-    if (block.size == 0)
-    {
-        return state.DoS(100, error("%s: block size can not be zero", __func__), REJECT_INVALID, "bad-size");
-    }
-    // Must be above GetMiningHash which asserts if nonce is too big
-    if (block.nonce.size() > CBlockHeader::MAX_NONCE_SIZE)
-    {
-        return state.DoS(100, error("%s: nonce too large", __func__), REJECT_INVALID, "bad-nonce");
-    }
-    // Check proof of work matches claimed amount
-    uint256 miningHash = block.GetMiningHash();
-    if (fCheckPOW && !CheckProofOfWork(miningHash, block.nBits, consensusParams))
-        return state.DoS(50, error("CheckBlockHeader(): proof of work failed"), REJECT_INVALID, "high-hash");
-
-    // Check timestamp
-    if (block.GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60)
-        return state.Invalid(
-            error("CheckBlockHeader(): block timestamp too far in the future"), REJECT_INVALID, "time-too-new");
-
-    if (block.minerData.size() != 0)
-    {
-        return state.DoS(100, error("%s: premature miner data use", __func__), REJECT_INVALID, "bad-miner-data");
-    }
-    if (block.utxoCommitment.size() != 0)
-    {
-        return state.DoS(
-            100, error("%s: premature utxo commitment use", __func__), REJECT_INVALID, "bad-utxo-commitment");
-    }
-    return true;
-}
-
 
 bool ContextualCheckBlockHeader(const CChainParams &chainparams,
     const CBlockHeader &block,

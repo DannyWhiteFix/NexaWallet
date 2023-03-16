@@ -10,6 +10,8 @@
 #define SECP256K1_INLINE inline
 #endif
 
+#include <ctime>
+
 #include "arith_uint256.h"
 #include "base58.h"
 #include "bloom.h"
@@ -17,6 +19,7 @@
 #include "chainparams.h"
 #include "coins.h"
 #include "consensus/validation.h"
+#include "dstencode.h"
 #include "merkleblock.h"
 #include "policy/policy.h"
 #include "random.h"
@@ -26,6 +29,21 @@
 #include "uint256.h"
 #include "util.h"
 #include "utilstrencodings.h"
+
+bool CheckBlockHeader(const Consensus::Params &consensusParams,
+    const CBlockHeader &block,
+    CValidationState &state,
+    bool fCheckPOW);
+
+
+// This section of this file provides simple or NO-OP implementations of functions used by the larger codebase
+
+int64_t GetAdjustedTime()
+{
+    time_t now = time(nullptr);
+    return now;
+}
+
 
 // DER-encoded ECDSA is more like 72 but better to be safe
 // Schnorr is only 64, but this must also include a few extra bytes for the sighashtype
@@ -1061,7 +1079,7 @@ jbyteArray makeJByteArray(JNIEnv *env, const uint8_t *buf, const size_t size)
     return bArray;
 }
 
-jbyteArray makeJByteArray(JNIEnv *env, std::string &buf)
+jbyteArray makeJByteArray(JNIEnv *env, const std::string &buf)
 {
     jbyteArray bArray = env->NewByteArray(buf.size());
     jbyte *dest = env->GetByteArrayElements(bArray, 0);
@@ -1432,8 +1450,47 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Wal
     ByteArrayAccessor message(env, jmessage);
     ByteArrayAccessor addr(env, addrBytes);
     ByteArrayAccessor sig(env, sigBytes);
-    if (addr.size != 20)
-        return jbyteArray();
+    CTxDestination destination;
+
+    // There are only a few script types that we can extract a pubkey from.  If the data size is
+    // 24, its a binary format script template address
+    if (addr.size == 24)
+    {
+        ScriptTemplateDestination st;
+        std::vector<unsigned char> vec(addr.data, addr.data + addr.size);
+        CDataStream ssData(vec, SER_NETWORK, PROTOCOL_VERSION);
+        ssData >> st;
+        destination = st;
+    }
+    // If the data size is 20 its a raw pubkeyhash
+    else if (addr.size == 20)
+    {
+        destination = CKeyID(uint160(addr.data));
+    }
+    // If it was neither of those or they didn't decode, try string decoding of any blockchain
+    if (!IsValidDestination(destination))
+    {
+        // decode this address as if it was a string
+        auto s = std::string(addr.data, addr.data + addr.size);
+        destination = DecodeDestination(s, Params(CBaseChainParams::NEXA));
+        if (!IsValidDestination(destination))
+        {
+            destination = DecodeDestination(s, Params(CBaseChainParams::TESTNET));
+            if (!IsValidDestination(destination))
+            {
+                destination = DecodeDestination(s, Params(CBaseChainParams::REGTEST));
+                if (!IsValidDestination(destination))
+                {
+                    destination = DecodeDestination(s, Params(CBaseChainParams::LEGACY_UNIT_TESTS));
+                    if (!IsValidDestination(destination))
+                    {
+                        return makeJByteArray(env, s);
+                        return jbyteArray();
+                    }
+                }
+            }
+        }
+    }
 
     checkSigInit();
 
@@ -1441,25 +1498,51 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Wal
     ss << strMessageMagic << message.vec();
 
     uint256 msgHash = ss.GetHash();
-    //__android_log_print(ANDROID_LOG_INFO, APPNAME, "verifying msgHash %s\n", msgHash.GetHex().c_str());
-    //__android_log_print(ANDROID_LOG_INFO, APPNAME, "verifying sigSize %d data %s\n", sig.size, GetHex(sig.data,
-    // sig.size).c_str());
-
     CPubKey pubkey;
     if (!pubkey.RecoverCompact(msgHash, sig.vec()))
-        return jbyteArray();
-
-    CKeyID pkAddr = pubkey.GetID();
-    CKeyID passedAddr = CKeyID(uint160(addr.data));
-    //__android_log_print(ANDROID_LOG_INFO, APPNAME, "pkAddr %s\n", pkAddr.GetHex().c_str());
-    //__android_log_print(ANDROID_LOG_INFO, APPNAME, "passedAddr %s\n", passedAddr.GetHex().c_str());
-    if (pkAddr == passedAddr)
     {
-        auto pkv = std::vector<unsigned char>(pubkey.begin(), pubkey.end());
-        return makeJByteArray(env, pkv);
+        return jbyteArray();
     }
 
-    return jbyteArray();
+    ScriptTemplateDestination *st = nullptr;
+    const CKeyID *keyID = std::get_if<CKeyID>(&destination);
+    if (keyID)
+    {
+        if (pubkey.GetID() != *keyID)
+        {
+            return jbyteArray();
+        }
+    }
+    else if ((st = std::get_if<ScriptTemplateDestination>(&destination)) != nullptr)
+    {
+        CGroupTokenInfo groupInfo;
+        std::vector<unsigned char> templateHash;
+
+        // We do not understand this address as a script template so cannot verify this
+        if (ScriptTemplateError::OK != GetScriptTemplate(st->toScript(), &groupInfo, &templateHash))
+        {
+            return jbyteArray();
+        }
+        // We cannot figure out the pubkeyhash of a template type that we do not understand
+        if (templateHash != P2PKT_ID)
+        {
+            return jbyteArray();
+        }
+        // ok see if this pubkey makes the same p2pkt script as was given to us
+        ScriptTemplateDestination signedBy(P2pktOutput(pubkey));
+        if (!(*st == signedBy))
+        {
+            return jbyteArray();
+        }
+    }
+    else // We don't know this destination type
+    {
+        return jbyteArray();
+    }
+
+    // checks succeeded, this is a good sig
+    auto pkv = std::vector<unsigned char>(pubkey.begin(), pubkey.end());
+    return makeJByteArray(env, pkv);
 }
 
 
@@ -2005,6 +2088,34 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Nex
     env->ReleaseByteArrayElements(bArray, dest, 0);
     return bArray;
 }
+
+extern "C" JNIEXPORT jboolean JNICALL Java_bitcoinunlimited_libbitcoincash_NexaBlockHeader_verifyBlockHeader(
+    JNIEnv *env,
+    jobject ths,
+    jbyte chainSelector,
+    jbyteArray arg)
+{
+    const CChainParams *cp = GetChainParams(static_cast<ChainSelector>(chainSelector));
+    if (cp == nullptr)
+    {
+        triggerJavaIllegalStateException(env, "Unknown blockchain selection");
+        return false;
+    }
+    size_t len = env->GetArrayLength(arg);
+    jbyte *data = env->GetByteArrayElements(arg, 0);
+
+    CDataStream dataStrm((char *)data, (char *)data + len, SER_NETWORK, PROTOCOL_VERSION);
+    CBlockHeader blkHeader;
+    dataStrm >> blkHeader;
+
+    CValidationState state;
+    bool result = CheckBlockHeader(cp->GetConsensus(), blkHeader, state, true);
+
+    // unpins the java objects
+    env->ReleaseByteArrayElements(arg, data, 0);
+    return result;
+}
+
 
 extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_NexaTransaction_txid(JNIEnv *env,
     jobject ths,

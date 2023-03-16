@@ -27,6 +27,17 @@ bool IsTxIndexReady()
     return fReady;
 }
 
+uint64_t TxIndexSyncHeight()
+{
+    if (g_txindex)
+    {
+        CBlockIndex *idx = g_txindex->getSyncedHeader();
+        if (idx)
+            return idx->height();
+    }
+    return 0;
+}
+
 template <typename... Args>
 static void FatalError(const char *fmt, const Args &...args)
 {
@@ -107,6 +118,7 @@ static const CBlockIndex *NextSyncBlock(const CBlockIndex *pindex_prev)
 
 void TxIndex::ThreadSync()
 {
+    // Wait for blockchain sync, and quit if the program quits
     while (fReindex || fImporting || IsInitialBlockDownload())
     {
         MilliSleep(1000);
@@ -117,7 +129,7 @@ void TxIndex::ThreadSync()
     }
 
     CBlockIndex *pindex = pbestindex.load();
-    if (!fSynced.load())
+    if (!fSynced.load()) // fSynced always begins as false, and is only set to true within this thread
     {
         auto &consensus_params = Params().GetConsensus();
 
@@ -158,15 +170,17 @@ void TxIndex::ThreadSync()
             const ConstCBlockRef pblock = ReadBlockFromDisk(pindex, consensus_params);
             if (!pblock)
             {
-                FatalError("%s: Failed to read block %s from disk", __func__, pindex->GetBlockHash().ToString());
+                FatalError("%s: Txindex halted: Failed to read block %s from disk", __func__,
+                    pindex->GetBlockHash().ToString());
                 return;
             }
             if (!WriteBlock(*pblock, pindex))
             {
-                FatalError(
-                    "%s: Failed to write block %s to tx index database", __func__, pindex->GetBlockHash().ToString());
+                FatalError("%s: Txindex halted: Failed to write block %s to tx index database", __func__,
+                    pindex->GetBlockHash().ToString());
                 return;
             }
+            pbestindex = pindex;
         }
     }
 

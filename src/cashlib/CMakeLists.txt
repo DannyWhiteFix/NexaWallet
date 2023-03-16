@@ -46,6 +46,7 @@ add_library( # Sets the name of the library.
              ../crypto/ripemd160.h
              ../crypto/sha1.cpp
              ../crypto/sha1.h
+             ../pow.cpp
              ../hashwrapper.cpp
              ../hashwrapper.h
              ../key.cpp
