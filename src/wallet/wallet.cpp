@@ -3302,30 +3302,6 @@ bool CWallet::CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey, std:
             d.whitelisted = true;
             d.nodeName = "wallet";
             EnqueueTxForAdmission(d);
-
-            /* Handled below in fBroadcastTransactions
-            // wait for the tx to enter the txpool because wallet txes are traditionally synchronous
-            bool inMempool = false;
-            while(!shutdown_threads.load() && !inMempool)
-            {
-                boost::unique_lock<boost::mutex> lock(csCommitQ);
-                cvCommitted.wait();
-                if (mempool.exists(wtxNew.GetHash())) inMempool = true;
-                else
-                {
-                    // If its gone from the admission system, and not in the txpool return false.
-                    // This would mean that somehow the tx was valid during the parallelAccept, but now is not
-                    // which could happen only in a doublespend race condition.
-                    // Really, apps MUST look not at this return value but the blockchain to ensure committed,
-                    // even if true is returned...
-                    if ((txInQ.size() == 0)&&(txDeferQ.size() ==
-            0)&&(txCommitQ.find(wtxNew.GetHash())==txCommitQ.end()))
-                    {
-                        return false;
-                    }
-            }
-            if (!inMempool && shutdown_threads.load()) return false;
-            */
         }
         else
         {
@@ -3336,26 +3312,6 @@ bool CWallet::CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey, std:
             LOGA("CommitTransaction(): Error: Transaction not valid: %s\n", errorString.c_str());
 
             return false;
-        }
-
-        // Wait for tx to be admitted. This must come before we attempt
-        // to relay the wallet transaction or the wallet txns will not propagate.
-        // TODO, put a "Promise"-like callback in CTxInputData
-        bool fSuccess = false;
-        for (int i = 0; (i < 50 && !shutdown_threads.load()); i++)
-        {
-            if (mempool.exists(txId))
-            {
-                fSuccess = true;
-                break;
-            }
-            MilliSleep(100);
-        }
-        if (!fSuccess)
-        {
-            errorString = "Transaction was not admitted to the txpool within the time constraints";
-            LOGA("CommitTransaction(): Error: %s\n", errorString.c_str());
-            return false; // TX was not admitted
         }
     }
 
@@ -3369,8 +3325,9 @@ bool CWallet::CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey, std:
         // Take key pair from key pool so it won't be used again
         reservekey.KeepKey();
 
-        // Add tx to wallet, because if it has change it's also ours,
-        // otherwise just for transaction history.
+        // Add tx to wallet because if it has change it is also ours
+        // otherwise for transaction history in the event we are not
+        // broadcasting right away.
         CWalletTxRef storedTx = MakeWalletTxRef(wtxNew);
         AddToWallet(storedTx, false, pwalletdb);
 
@@ -3391,7 +3348,6 @@ bool CWallet::CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey, std:
         if (fBroadcastTransactions)
         {
             SyncWithWallets(std::static_pointer_cast<const CTransaction>(storedTx), nullptr, -1);
-            storedTx->RelayWalletTransaction();
         }
     }
 
