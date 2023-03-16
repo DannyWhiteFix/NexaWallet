@@ -19,6 +19,18 @@ extern CTweak<int> maxConnections;
 bool AttemptToEvictConnection(const unsigned int nMaxInbound);
 void CleanupDisconnectedNodes();
 
+// Simulate a graceful disconnect has occurred
+static void GracefulDisconnect(std::vector<CNode *> &_vNodes)
+{
+    for (auto pnode : _vNodes)
+    {
+        if (pnode->fDisconnectRequest)
+        {
+            pnode->fDisconnect = true;
+        }
+    }
+}
+
 using namespace std;
 
 class CAddrManSerializationMock : public CAddrMan
@@ -638,29 +650,37 @@ BOOST_AUTO_TEST_CASE(test_attemptToEvict)
 
     BOOST_CHECK_EQUAL(vNodes.size(), 20UL);
     maxConnections.Set(19);
+    GracefulDisconnect(vNodes);
     CleanupDisconnectedNodes();
     BOOST_CHECK_EQUAL(vNodes.size(), 20UL);
+    GracefulDisconnect(vNodes);
     CleanupDisconnectedNodes();
     BOOST_CHECK_EQUAL(vNodes.size(), 19UL);
 
     maxConnections.Set(10);
     BOOST_CHECK_EQUAL(vNodes.size(), 19UL);
+    GracefulDisconnect(vNodes);
     CleanupDisconnectedNodes();
     BOOST_CHECK_EQUAL(vNodes.size(), 19UL);
+    GracefulDisconnect(vNodes);
     CleanupDisconnectedNodes();
     BOOST_CHECK_EQUAL(vNodes.size(), 10UL);
 
     maxConnections.Set(1);
     BOOST_CHECK_EQUAL(vNodes.size(), 10UL);
+    GracefulDisconnect(vNodes);
     CleanupDisconnectedNodes();
     BOOST_CHECK_EQUAL(vNodes.size(), 10UL);
+    GracefulDisconnect(vNodes);
     CleanupDisconnectedNodes();
     BOOST_CHECK_EQUAL(vNodes.size(), 1UL);
 
     maxConnections.Set(0);
     BOOST_CHECK_EQUAL(vNodes.size(), 1UL);
+    GracefulDisconnect(vNodes);
     CleanupDisconnectedNodes();
     BOOST_CHECK_EQUAL(vNodes.size(), 1UL);
+    GracefulDisconnect(vNodes);
     CleanupDisconnectedNodes();
     BOOST_CHECK_EQUAL(vNodes.size(), 0UL);
 
