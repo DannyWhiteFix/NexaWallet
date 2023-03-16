@@ -192,7 +192,7 @@ class TxIndexTest(BitcoinTestFramework):
 
         # Check that node1 can find transactions by outpoint
 
-        # Make a line of transactions (node 1 has no other balance)
+        # Make a chain of transactions (node 1 has no other balance)
         addr = self.nodes[1].getnewaddress()
         self.nodes[0].sendtoaddress(addr, 100090)
         self.nodes[0].generate(1)
@@ -202,6 +202,9 @@ class TxIndexTest(BitcoinTestFramework):
         tc = self.nodes[1].sendtoaddress(addr, 100060)
         td = self.nodes[1].sendtoaddress(addr, 100050)
         txIdem = self.nodes[1].sendtoaddress(addr, 100040)
+        waitFor(waitTime, lambda: self.nodes[0].gettxpoolinfo()["size"] == 5)
+        waitFor(waitTime, lambda: self.nodes[1].gettxpoolinfo()["size"] == 5)
+
         # Trace the spend history from the last transaction to the first, verifying each tx idem as we go,
         t1 = self.nodes[0].getrawtransaction(txIdem, 1)
         assert t1["txidem"] == txIdem
