@@ -194,7 +194,7 @@ void CRequestManager::AskFor(const CInv &obj, CNode *from, unsigned int priority
     }
     else
     {
-        DbgAssert(!"Request manager does not handle objects of this type", return );
+        DbgAssert(!"Request manager does not handle objects of this type", return);
     }
 }
 
@@ -1004,7 +1004,7 @@ bool CRequestManager::CheckForRequestDOS(CNode *pfrom, const CChainParams &chain
 void CRequestManager::ProcessBlockAvailability(NodeId nodeid)
 {
     CNodeStateAccessor state(nodestate, nodeid);
-    DbgAssert(state != nullptr, return );
+    DbgAssert(state != nullptr, return);
 
     if (!state->hashLastUnknownBlock.IsNull())
     {
@@ -1027,7 +1027,7 @@ void CRequestManager::UpdateBlockAvailability(NodeId nodeid, const uint256 &hash
     auto *pindex = LookupBlockIndex(hash);
 
     CNodeStateAccessor state(nodestate, nodeid);
-    DbgAssert(state != nullptr, return );
+    DbgAssert(state != nullptr, return);
 
     ProcessBlockAvailability(nodeid);
 
@@ -1121,7 +1121,7 @@ void CRequestManager::FindNextBlocksToDownload(CNode *node, size_t count, std::v
     ProcessBlockAvailability(nodeid);
 
     CNodeStateAccessor state(nodestate, nodeid);
-    DbgAssert(state != nullptr, return );
+    DbgAssert(state != nullptr, return);
 
     if (state->pindexBestKnownBlock == nullptr ||
         state->pindexBestKnownBlock->chainWork() < chainActive.Tip()->chainWork())
@@ -1272,7 +1272,7 @@ void CRequestManager::MarkBlockAsInFlight(NodeId nodeid, const uint256 &hash)
     {
         // Get a request manager nodestate pointer.
         std::map<NodeId, CRequestManagerNodeState>::iterator it = mapRequestManagerNodeState.find(nodeid);
-        DbgAssert(it != mapRequestManagerNodeState.end(), return );
+        DbgAssert(it != mapRequestManagerNodeState.end(), return);
         CRequestManagerNodeState *state = &it->second;
 
         // Add queued block to nodestate and add iterator for queued block to mapBlocksInFlight

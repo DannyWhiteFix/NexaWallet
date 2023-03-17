@@ -18,7 +18,7 @@ import pdb
 import tempfile
 
 # A set of versions known to produce the same output
-tested_versions = ['12.0.1','12.0.0']
+tested_versions = ['15.0.7','15.0.3']
 accepted_file_extensions = ('.h', '.cpp') # Files to format
 trailing_comment_exe = "trailing-comment.py"
 max_col_len = 120
@@ -29,7 +29,7 @@ def check_clang_format_version(clang_format_exe):
         for ver in tested_versions:
             if ver in output.decode('utf8'):
                 return
-        raise RuntimeError("Untested version: " + str(output))
+        raise RuntimeError("Untested version: " + output.decode('utf-8'))
     except Exception as e:
         print('Could not verify version of ' + str(clang_format_exe) + '.')
         raise e

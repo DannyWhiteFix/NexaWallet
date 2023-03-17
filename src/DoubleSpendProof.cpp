@@ -69,8 +69,8 @@ void getSignature(const CScript &script, std::vector<uint8_t> &vchRet)
 
 void hashTx(DoubleSpendProof::Spender &spender, const CTransaction &tx, int inputIndex)
 {
-    DbgAssert(!spender.pushData.empty(), return );
-    DbgAssert(!spender.pushData.front().empty(), return );
+    DbgAssert(!spender.pushData.empty(), return);
+    DbgAssert(!spender.pushData.front().empty(), return);
     auto sigHashType = SigHashType(spender.pushData.front());
 
     SignatureHashNexaComponents(tx, inputIndex, sigHashType, spender.hashPrevOutputs, spender.hashSequence,

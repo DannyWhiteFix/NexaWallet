@@ -65,6 +65,12 @@ check-formatting:
     extends: .ubuntu_cache-linting
     needs: []
     script:
+        - apt-get install -y wget gpg-agent
+        - wget https://apt.llvm.org/llvm.sh
+        - chmod +x llvm.sh
+        - ./llvm.sh 15
+        - apt-get update
+        - apt-get install -y clang-format-15
         - ./autogen.sh
         - ./configure --enable-glibc-back-compat --enable-reduce-exports
         - make check-formatting

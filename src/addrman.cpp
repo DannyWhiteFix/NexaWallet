@@ -129,7 +129,7 @@ void CAddrMan::Delete(int nId)
 {
     LOCK(cs_addrman);
 
-    DbgAssert(mapInfo.count(nId) != 0, return ); // already deleted so no-op
+    DbgAssert(mapInfo.count(nId) != 0, return); // already deleted so no-op
     CAddrInfo &info = mapInfo[nId];
     assert(!info.fInTried);
     assert(info.nRefCount == 0);
