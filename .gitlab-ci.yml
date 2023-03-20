@@ -505,10 +505,11 @@ build-osx:
     dependencies:
         - build-osx-depends
     artifacts:
-        when: on_failure
+        when: always
         paths:
-            - ./build/config.log
-            - ./depends/x86_64-apple-darwin19/share/config.site
+            - ./build/src/.libs/libnexa.*
+            - ./build/config.log # on failure
+            - ./depends/x86_64-apple-darwin19/share/config.site # on failure
 
 ######################################################
 ######## Debian base settings
