@@ -94,8 +94,13 @@ void OptionsModel::Init(bool resetSettings)
 
     // Network
 
-    if (!settings.contains("fUseUPnP"))
-        settings.setValue("fUseUPnP", DEFAULT_UPNP);
+    // Turn UPnP on the very first time a user launches the QT wallet
+    if (!settings.contains("fUseUPnP") || !settings.contains("fUseUPnP_QT"))
+    {
+        // settings.setValue("fUseUPnP", DEFAULT_UPNP);
+        settings.setValue("fUseUPnP", true);
+        settings.setValue("fUseUPnP_QT", true);
+    }
     if (!SoftSetBoolArg("-upnp", settings.value("fUseUPnP").toBool()))
         addOverriddenOption("-upnp");
 
