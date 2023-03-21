@@ -304,7 +304,7 @@ class GroupTokensTest (BitcoinTestFramework):
         txjson = self.nodes[2].decoderawtransaction(self.nodes[2].getrawtransaction(tx))
 
         tx = self.nodes[2].token("mint", grp2Id, mint0_0, 100)
-        assert(self.nodes[2].token("balance", grp2Id) == 1000)  # check proper token balance
+        waitFor(30, lambda: self.nodes[2].token("balance", grp2Id) == 1000) # check proper token balance
         self.checkTokenInfo(self.nodes[2], grp2Id, "","","","", 1000)
         self.sync_all()  # node 0 has to be able to see the mint tx that node 2 made
         assert(self.nodes[0].token("balance", grp2Id) == 100)   # on both nodes
@@ -347,7 +347,7 @@ class GroupTokensTest (BitcoinTestFramework):
             assert("Not enough tokens in the wallet." in e.error["message"])
 
         self.nodes[2].token("melt", grp2Id, 100)
-        assert(self.nodes[2].token("balance", grp2Id) == 900)
+        waitFor(30, lambda: self.nodes[2].token("balance", grp2Id) == 900)
 
         try:  # send too much
             self.nodes[2].token("send", grp2Id, mint0_0, 1000)
@@ -355,7 +355,7 @@ class GroupTokensTest (BitcoinTestFramework):
         except JSONRPCException as e:
             assert("Not enough tokens in the wallet." in e.error["message"])
 
-        assert(self.nodes[2].token("balance", grp2Id) == 900)
+        waitFor(30, lambda: self.nodes[2].token("balance", grp2Id) == 900)
         tx = self.nodes[2].token("send", grp2Id, mint0_0, 100)
         self.examineTx(tx, self.nodes[2])
         self.sync_all()
@@ -432,8 +432,7 @@ class GroupTokensTest (BitcoinTestFramework):
         # melt some of my tokens
         logging.info("melt")
         self.nodes[2].token("melt", grp0Id, 100)
-        assert(self.nodes[2].token("balance", grp0Id) == 130)
-
+        waitFor(30, lambda: self.nodes[2].token("balance", grp0Id) == 130)
         try:  # test that the NOCHILD authority worked -- I should only have the opportunity to melt once
             self.nodes[2].token("melt", grp0Id, 10)
         except JSONRPCException as e:
