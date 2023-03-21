@@ -7,6 +7,7 @@
 #define NEXA_CAPD_H
 
 // Counterparty and protocol discovery
+#include <array>
 #include <limits>
 #include <queue>
 
