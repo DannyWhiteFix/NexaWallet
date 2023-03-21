@@ -691,6 +691,22 @@ void ThreadImport(std::vector<fs::path> vImportFiles, uint64_t nTxIndexCache)
     // is ready.
     uiInterface.InitMessage(_("Done loading"));
     SetRPCWarmupFinished();
+
+#ifdef ENABLE_WALLET
+    if (pwalletMain)
+    {
+        // Check if wallet is encrypted
+        if (!pwalletMain->IsCrypted() && Params().NetworkIDString() == CBaseChainParams::NEXA)
+        {
+            if (pwalletMain->GetBalance() > 0 || pwalletMain->GetImmatureBalance() > 0 ||
+                pwalletMain->GetUnconfirmedBalance() > 0 || chainActive.Tip()->height() == 0)
+            {
+                InitWarning(_("Wallet is not password protected. Your funds may be at risk! Goto \"Settings\" "
+                              "and then select \"Encrypt Wallet\" to create a password."));
+            }
+        }
+    }
+#endif
 }
 
 /** Sanity checks
