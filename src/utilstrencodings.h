@@ -10,6 +10,7 @@
 #ifndef NEXA_UTILSTRENCODINGS_H
 #define NEXA_UTILSTRENCODINGS_H
 
+#include <numeric>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -176,5 +177,11 @@ bool ConvertBits(O &out, I it, I end)
 
     return true;
 }
+
+/**
+ * Join the elements of a string vector into a singular std:string
+ * 4 separated by a given delimiter string
+ */
+std::string concatenateVector(std::vector<std::string> &strings, std::string separator);
 
 #endif // NEXA_UTILSTRENCODINGS_H

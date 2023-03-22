@@ -990,6 +990,123 @@ static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
     return true;
 }
 
+//! Dumpm Utxo sets into debug.log
+static bool DumpUTXOSet(CCoinsView *view, std::ofstream &file)
+{
+    std::unique_ptr<CCoinsViewCursor> pcursor(view->Cursor());
+    DbgAssert(pcursor, throw std::runtime_error(__func__));
+
+    COutPoint prevkey;
+    while (pcursor->Valid())
+    {
+        if (shutdown_threads.load() == true)
+        {
+            file << strprintf("WARNING, INCOMPLETE DUMP!\n");
+            return error("%s: rpc call has been interrupted", __func__);
+        }
+        COutPoint key;
+        Coin coin;
+        if (pcursor->GetKey(key) && pcursor->GetValue(coin))
+        {
+            std::vector<CTxDestination> addresses;
+            int nRequired;
+            txnouttype type;
+            CGroupTokenInfo groupInfo;
+            std::vector<unsigned char> templateHash;
+            std::vector<unsigned char> argsHash;
+
+            const CScript scriptPubKey = coin.GetConstraintScript();
+            if (scriptPubKey.type == ScriptType::TEMPLATE)
+            {
+                CScript::const_iterator rest = scriptPubKey.begin();
+                ScriptTemplateError err = GetScriptTemplate(scriptPubKey, &groupInfo, &templateHash, &argsHash, &rest);
+                if (err == ScriptTemplateError::OK)
+                {
+                    VchType restOfScript(rest, scriptPubKey.end());
+                    ScriptTemplateDestination addr(ScriptTemplateOutput(templateHash, argsHash, restOfScript));
+                    addresses.push_back(addr);
+                }
+            }
+            else
+            {
+                ExtractDestinations(scriptPubKey, type, addresses, nRequired);
+            }
+
+            if (addresses.size() > 0)
+            {
+                std::vector<std::string> a;
+                for (const CTxDestination &addr : addresses)
+                {
+                    a.push_back(EncodeDestination(addr));
+                }
+                std::string b = concatenateVector(a, std::string("-"));
+                if (groupInfo.associatedGroup != NoGroup)
+                {
+                    if (groupInfo.quantity > 0)
+                    {
+                        file << strprintf("%s,%d,%d,%d,%d,%s,%d\n", b, coin.GetValue(), coin.height(),
+                            HexStr(templateHash), HexStr(argsHash), EncodeGroupToken(groupInfo.associatedGroup),
+                            groupInfo.quantity);
+                    }
+                    else
+                    {
+                        file << strprintf("%s,%d,%d,%d,%d,%s,0x%x\n", b, coin.GetValue(), coin.height(),
+                            HexStr(templateHash), HexStr(argsHash), EncodeGroupToken(groupInfo.associatedGroup),
+                            groupInfo.quantity);
+                    }
+                }
+                else
+                {
+                    file << strprintf("%s,%d,%d,NaN,NaN,NaN,NaN\n", b, coin.GetValue(), coin.height());
+                }
+            }
+        }
+        else
+        {
+            file << strprintf("WARNING, INCOMPLETE DUMP!\n");
+            return error("%s: unable to read value", __func__);
+        }
+        pcursor->Next();
+    }
+    return true;
+}
+
+
+UniValue dumputxoset(const UniValue &params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw std::runtime_error(
+            "dumputxoset \"filename\"\n"
+            "Dumps all utxoset destination address and amount, one per line using a comma separetad format, "
+            "overwriting "
+            "existing files is not permitted.\n"
+            "\nArguments:\n"
+            "1. \"filename\"    (string, required) The filename with path (either absolute or relative to nexad)\n"
+            "\nResult:\n"
+            "{                           (json object)\n"
+            "  \"filename\" : {        (string) The filename with full absolute path\n"
+            "}\n"
+            "\nExamples:\n" +
+            HelpExampleCli("dumputxoset", "\"test\"") + HelpExampleRpc("dumputxset", "\"test\""));
+
+    fs::path filepath = params[0].get_str();
+    filepath = fs::absolute(filepath);
+
+    if (fs::exists(filepath))
+    {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+            filepath.string() + " already exists. if you are sure this is what you want, move it out of the way first");
+    }
+    std::ofstream file;
+    file.open(filepath.string().c_str());
+    if (!file.is_open())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open utxo dump file");
+
+    DumpUTXOSet(pcoinsdbview, file);
+    file.close();
+    return NullUniValue;
+}
+
 
 UniValue gettxoutsetinfo(const UniValue &params, bool fHelp)
 {
@@ -2653,6 +2770,7 @@ static const CRPCCommand commands[] = {
     {"blockchain", "getraworphanpool", &getraworphanpool, true},
     {"blockchain", "gettxout", &gettxout, true},
     {"blockchain", "gettxoutsetinfo", &gettxoutsetinfo, true},
+    {"blockchain", "dumputxoset", &dumputxoset, true},
     {"blockchain", "savetxpool", &savetxpool, true},
     {"blockchain", "saveorphanpool", &saveorphanpool, true},
     {"blockchain", "verifychain", &verifychain, true},
