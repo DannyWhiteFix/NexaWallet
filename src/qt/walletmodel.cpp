@@ -28,6 +28,11 @@
 
 extern CTweak<uint32_t> dataCarrierSize;
 extern CTweak<bool> dataCarrier;
+extern CTweak<bool> instantTxns;
+extern CTweak<uint32_t> instantTxnsDelay;
+
+// Used for instant transactions balance update
+int64_t nStartCheck = GetTime();
 
 WalletModel::WalletModel(const PlatformStyle *platformStyle,
     CWallet *_wallet,
@@ -53,23 +58,7 @@ WalletModel::WalletModel(const PlatformStyle *platformStyle,
 }
 
 WalletModel::~WalletModel() { unsubscribeFromCoreSignals(); }
-CAmount WalletModel::getBalance(const CCoinControl *coinControl) const
-{
-    if (coinControl)
-    {
-        CAmount nBalance = 0;
-        std::vector<COutput> vCoins;
-        wallet->AvailableCoins(vCoins, coinControl);
-        for (const COutput &out : vCoins)
-            if (out.spendable())
-                nBalance += out.tx->vout[out.i].nValue;
-
-        return nBalance;
-    }
-
-    return wallet->GetBalance();
-}
-
+CAmount WalletModel::getBalance(const CCoinControl *coinControl) const { return wallet->GetBalance(); }
 CAmount WalletModel::getUnconfirmedBalance() const { return wallet->GetUnconfirmedBalance(); }
 CAmount WalletModel::getImmatureBalance() const { return wallet->GetImmatureBalance(); }
 bool WalletModel::haveWatchOnly() const { return fHaveWatchOnly; }
@@ -89,12 +78,20 @@ void WalletModel::pollBalanceChanged()
     // Get required locks upfront. This avoids the GUI from getting stuck on
     // periodical polls if the core is holding the locks for a longer time -
     // for example, during a wallet rescan.
-    TRY_LOCK(cs_main, lockMain);
-    if (!lockMain)
-        return;
     TRY_LOCK(wallet->cs_wallet, lockWallet);
     if (!lockWallet)
         return;
+
+    // If instant transactions is turned on then every few seconds force a balance check
+    if (instantTxns.Value())
+    {
+        int64_t nNow = GetTime();
+        if ((nNow - nStartCheck) > instantTxnsDelay.Value())
+        {
+            fForceCheckBalanceChanged = true;
+            nStartCheck = nNow;
+        }
+    }
 
     if (fForceCheckBalanceChanged || chainActive.Height() != cachedNumBlocks)
     {

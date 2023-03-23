@@ -474,6 +474,14 @@ CTweak<bool> useBIP69("wallet.useBIP69",
     strprintf("sort input and outputs of created transactions in lexicographical order (default: true)"),
     true);
 
+CTweak<bool> instantTxns("wallet.instant",
+    strprintf("Are coins from unconfirmed transactions instantly spendable from the wallet (default: false)"),
+    false);
+CTweak<uint32_t> instantTxnsDelay("wallet.instantDelay",
+    strprintf("Time in seconds to wait before making an instant transaction spendable (default: %d)",
+        DEFAULT_INSTANT_TRANSACTION_DELAY),
+    DEFAULT_INSTANT_TRANSACTION_DELAY);
+
 /** The maximum fee that can be applied to any one transaction */
 CTweak<CAmount> maxTxFeeTweak("wallet.maxTxFee",
     strprintf("Maximum total fees (in satoshis) to use in a single wallet transaction or raw transaction; setting "

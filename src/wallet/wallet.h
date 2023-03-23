@@ -60,6 +60,8 @@ static const CAmount MIN_CHANGE = COIN;
 static const bool DEFAULT_SPEND_ZEROCONF_CHANGE = true;
 //! Default for -sendfreetransactions
 static const bool DEFAULT_SEND_FREE_TRANSACTIONS = false;
+//! Default number of seconds to wait for an instant transaction to be spendable
+static const uint32_t DEFAULT_INSTANT_TRANSACTION_DELAY = 5;
 //! -txconfirmtarget default
 static const unsigned int DEFAULT_TX_CONFIRM_TARGET = 2;
 //! Largest (in bytes) free transaction we're willing to creat

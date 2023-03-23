@@ -280,11 +280,11 @@ class MyTest (BitcoinTestFramework):
                 stdout_data1, stderr_data1 = p1.communicate(timeout=5)
                 stdout_data2, stderr_data2 = p2.communicate(timeout=5)
 
-                if (stderr_data1.find("txn-mempool-conflict") >= 0):
+                if (stderr_data1.find("txn-txpool-conflict") >= 0):
                     conflict_count += 1;
-                if (stderr_data2.find("txn-mempool-conflict") >= 0):
+                if (stderr_data2.find("txn-txpool-conflict") >= 0):
                     conflict_count += 1;
-            waitFor(1, lambda: True if conflict_count == NTX else logging.info("num conflicts found:" + str(conflict_count) + ", node0 txpool size:" + str(self.nodes[0].gettxpoolinfo()["size"]) + ", node1 txpool size:" + str(self.nodes[1].gettxpoolinfo()["size"])))
+            waitFor(5, lambda: True if conflict_count == NTX else logging.info("num conflicts found:" + str(conflict_count) + ", node0 txpool size:" + str(self.nodes[0].gettxpoolinfo()["size"]) + ", node1 txpool size:" + str(self.nodes[1].gettxpoolinfo()["size"])))
 
             waitFor(30, lambda: True if self.nodes[0].gettxpoolinfo()["size"] == NTX else None)
             waitFor(30, lambda: True if self.nodes[1].gettxpoolinfo()["size"] == NTX else None)

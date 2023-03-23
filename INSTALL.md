@@ -170,6 +170,16 @@ If you don't want to set a fee you can use the fee estimator which will automati
 
 The Nexa wallet will limit your maximum fee you can add by default 10000 sat/byte, but if you prefer to set the value much lower you can with the `wallet.maxTxFee=<your max fee>` setting. Using this can protect you from accidentally sending very large fees, particularly if you are generating your own raw transactions.
 
+#### Instant Transactions
+
+When instant transactions is enabled the user can spend funds almost immediately upon receiving them in the wallet.  There is a default
+five second delay to wait for potential double spend notifications but after that the user is free to spend their coins which are no yet
+confirmed on the blockchain.  This feature also allows the user to do a "Child Pays for Parent" transaction, where an unconfirmed coin can
+be spent to oneself with a higher fee and thus get quicker inclusion in a block if desired.
+
+By default QT wallet users have instant transactions turned on whereas users running `nexad` will have it turned off by default. In order
+to turn on instant transactions you can add  `-wallet.instant=true` as one of your startup options.
+
 
 # Getting help
 
