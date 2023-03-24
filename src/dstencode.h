@@ -24,5 +24,6 @@ bool IsValidDestinationString(const std::string &addr, const CChainParams &param
 std::string EncodeDestination(const CTxDestination &);
 CTxDestination DecodeDestination(const std::string &addr);
 bool IsValidDestinationString(const std::string &addr);
+bool IsValidDestination(const CTxDestination &dest);
 
 #endif // NEXA_DSTENCODE_H

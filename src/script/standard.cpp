@@ -519,5 +519,3 @@ CScript GetScriptLabelPublic(const string &labelPublic)
     }
     return scriptDataPublic;
 }
-
-bool IsValidDestination(const CTxDestination &dest) { return dest.index() != 0; }

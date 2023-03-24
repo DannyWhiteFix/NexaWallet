@@ -20,6 +20,8 @@ add_library( # Sets the name of the library.
 
              # Provides a relative path to your source file(s).
              cashlib.cpp
+             ../config.cpp
+             ../config.h
              ../base58.cpp
              ../script/interpreter.cpp
              ../script/script.cpp
@@ -46,6 +48,8 @@ add_library( # Sets the name of the library.
              ../crypto/ripemd160.h
              ../crypto/sha1.cpp
              ../crypto/sha1.h
+             ../dstencode.cpp
+             ../dstencode.h
              ../pow.cpp
              ../hashwrapper.cpp
              ../hashwrapper.h
@@ -76,6 +80,7 @@ add_library( # Sets the name of the library.
              ../merkleblock.h
              ../streams.h
              ../rsm/include/recursive_shared_mutex.h
+             ../validation/headervalidation.cpp
              )
 
 
