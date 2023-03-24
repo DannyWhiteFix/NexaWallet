@@ -44,6 +44,7 @@ WalletModel::WalletModel(const PlatformStyle *platformStyle,
 {
     fHaveWatchOnly = wallet->HaveWatchOnly() || getWatchBalance() > 0;
     fForceCheckBalanceChanged = false;
+    fInstantTransactions = instantTxns.Value();
 
     addressTableModel = new AddressTableModel(wallet, this);
     transactionTableModel = new TransactionTableModel(platformStyle, wallet, this);
@@ -82,8 +83,18 @@ void WalletModel::pollBalanceChanged()
     if (!lockWallet)
         return;
 
+    // If instant transactions was modified then force a balance update. Although
+    // we force a balance check again if instant txns is on, we need this switch here
+    // for when instant txns is turned off.
+    bool temp = instantTxns.Value();
+    if (temp != fInstantTransactions)
+    {
+        fForceCheckBalanceChanged = true;
+        fInstantTransactions = temp;
+    }
+
     // If instant transactions is turned on then every few seconds force a balance check
-    if (instantTxns.Value())
+    if (fInstantTransactions)
     {
         int64_t nNow = GetTime();
         if ((nNow - nStartCheck) > instantTxnsDelay.Value())
