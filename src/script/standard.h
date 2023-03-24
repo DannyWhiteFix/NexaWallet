@@ -173,7 +173,6 @@ bool ExtractDestinations(const CScript &scriptPubKey,
     int &nRequiredRet);
 
 const char *GetTxnOutputType(txnouttype t);
-bool IsValidDestination(const CTxDestination &dest);
 
 CScript GetScriptForDestination(const CTxDestination &dest);
 CScript GetScriptForRawPubKey(const CPubKey &pubkey);

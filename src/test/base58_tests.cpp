@@ -9,6 +9,7 @@
 #include "data/base58_keys_invalid.json.h"
 #include "data/base58_keys_valid.json.h"
 
+#include "dstencode.h"
 #include "key.h"
 #include "script/script.h"
 #include "test/test_nexa.h"

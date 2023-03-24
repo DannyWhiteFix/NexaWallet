@@ -484,8 +484,9 @@ void GenerateBlocks(const CChainParams &chainparams,
 
     printf("mempool size : %ld\n", mempool.size());
     printf("mempool mapTx size : %ld\n", mempool.mapTx.size());
-    printf("Avg Block Size %llu Expected Avg Block Size %llu\n", nTotalBlockSize / (uint64_t)nBlockCount,
-        (nTotalExpectedBlockSize / (uint64_t)nBlockCount));
+    printf("Avg Block Size %lu Expected Avg Block Size %llu\n",
+        (long unsigned int)(nTotalBlockSize / (uint64_t)nBlockCount),
+        (long unsigned int)(nTotalExpectedBlockSize / (uint64_t)nBlockCount));
     printf("Block fill ratio %5.2f\n",
         (double)(nTotalBlockSize / nBlockCount) * 100 / (nTotalExpectedBlockSize / nBlockCount));
     printf("Total mining time: %5.2f\n", (double)nTotalMine / 1000000);

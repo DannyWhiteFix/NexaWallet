@@ -1899,7 +1899,7 @@ void dbgDumpStack(const Stack &stack)
             try
             {
                 CScriptNum itemAsInt(item, false, CScriptNum::MAXIMUM_ELEMENT_SIZE_64_BIT);
-                printf("%u (top%d) Num: %lld Hex: %s Script: %s\n", i, (int)i - (int)sz, itemAsInt.getint64(),
+                printf("%u (top%d) Num: %ld Hex: %s Script: %s\n", i, (int)i - (int)sz, (long int)itemAsInt.getint64(),
                     item.hex().c_str(), ScriptToAsmStr(CScript(item), false).c_str());
             }
             catch (scriptnum_error const &)

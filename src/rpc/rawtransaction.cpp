@@ -42,6 +42,61 @@
 
 using namespace std;
 
+static const std::string docTxToJSON =
+    "{\n"
+    "  \"in_active_chain\": b,            (bool) Whether specified block is in the active chain or not (only present "
+    "with "
+    "explicit \"blockhash\" argument)\n"
+    "  \"hex\" : \"data\",                  (string) The serialized, hex-encoded data for 'txid'\n"
+    "  \"txid\" : \"id\",                   (string) The transaction id (identifier for this exact transaction)\n"
+    "  \"txidem\" : \"idem\",               (string) The transaction idem (malleability resistant identifier)\n"
+    "  \"size\" : n,                      (numeric) The transaction size\n"
+    "  \"version\" : n,                   (numeric) The version\n"
+    "  \"locktime\" : ttt,                (numeric) The lock time\n"
+    "  \"spends\" : n,                    (numeric) The total quantity of NEX input into this transaction\n"
+    "  \"sends\" : n,                     (numeric) The total quantity of NEX in this transaction's outputs\n"
+    "  \"fee\" : n,                       (numeric) The fee paid to miners (fee = spends - sends)\n"
+    "  \"vin\" : [                        (array of json objects)\n"
+    "     {\n"
+    "       \"outpoint\": \"id\",           (string) The outpoint hash\n"
+    "       \"amount\": n,                (numeric) \n"
+    "       \"scriptSig\": {              (json object) The script\n"
+    "         \"asm\": \"asm\",             (string) asm\n"
+    "         \"hex\": \"hex\"              (string) hex\n"
+    "       },\n"
+    "       \"sequence\": n               (numeric) The script sequence number\n"
+    "     }\n"
+    "     ,...\n"
+    "  ],\n"
+    "  \"vout\" : [                       (array of json objects)\n"
+    "     {\n"
+    "       \"outpoint\": \"id\",           (string) The outpoint hash\n"
+    "       \"value\" : x.xxx,            (numeric) The value in " +
+    CURRENCY_UNIT +
+    "\n"
+    "       \"n\" : n,                    (numeric) index\n"
+    "       \"scriptPubKey\" : {          (json object)\n"
+    "         \"asm\" : \"asm\",            (string) the asm\n"
+    "         \"hex\" : \"hex\",            (string) the hex\n"
+    "         \"reqSigs\" : n,            (numeric) The required sigs\n"
+    "         \"type\" : \"pubkeyhash\",    (string) The type, eg 'pubkeyhash'\n"
+    "         \"group\" : \"groupID\",      (string, optional) If grouped, the group identity\n"
+    "         \"groupQuantity\": n,       (numeric, optional) If grouped, the amount of tokens\n"
+    "         \"groupAuthority\": n,      (numeric, optional) If an authority, the authority flags\n"
+    "         \"addresses\" : [           (json array of string)\n"
+    "           \"nexaaddress\"           (string) nexa address\n"
+    "           ,...\n"
+    "         ]\n"
+    "       }\n"
+    "     }\n"
+    "     ,...\n"
+    "  ],\n"
+    "  \"blockhash\" : \"hash\",            (string) the block hash\n"
+    "  \"confirmations\" : n,             (numeric) The confirmations\n"
+    "  \"time\" : ttt,                    (numeric) The transaction time in seconds since epoch (Jan 1 1970 GMT)\n"
+    "  \"blocktime\" : ttt                (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
+    "}\n";
+
 void ScriptPubKeyToJSON(const CScript &scriptPubKey, UniValue &out, bool fIncludeHex)
 {
     txnouttype type;
@@ -217,55 +272,9 @@ UniValue getrawtransaction(const UniValue &params, bool fHelp)
             "\nResult (if verbose is not set or set to 0):\n"
             "\"data\"      (string) The serialized, hex-encoded data for 'txid'\n"
 
-            "\nResult (if verbose > 0):\n"
-            "{\n"
-            "  \"in_active_chain\": b, (bool) Whether specified block is in the active chain or not (only present with "
-            "explicit \"blockhash\" argument)\n"
-            "  \"hex\" : \"data\",       (string) The serialized, hex-encoded data for 'txid'\n"
-            "  \"txid\" : \"id\",        (string) The transaction id (same as provided)\n"
-            "  \"size\" : n,             (numeric) The transaction size\n"
-            "  \"version\" : n,          (numeric) The version\n"
-            "  \"locktime\" : ttt,       (numeric) The lock time\n"
-            "  \"vin\" : [               (array of json objects)\n"
-            "     {\n"
-            "       \"outpoint\": \"id\",    (string) The outpoint hash\n"
-            "       \"amount\": n,         (numeric) \n"
-            "       \"scriptSig\": {     (json object) The script\n"
-            "         \"asm\": \"asm\",  (string) asm\n"
-            "         \"hex\": \"hex\"   (string) hex\n"
-            "       },\n"
-            "       \"sequence\": n      (numeric) The script sequence number\n"
-            "     }\n"
-            "     ,...\n"
-            "  ],\n"
-            "  \"vout\" : [              (array of json objects)\n"
-            "     {\n"
-            "       \"outpoint\": \"id\",    (string) The outpoint hash\n"
-            "       \"value\" : x.xxx,            (numeric) The value in " +
-            CURRENCY_UNIT +
-            "\n"
-            "       \"n\" : n,                    (numeric) index\n"
-            "       \"scriptPubKey\" : {          (json object)\n"
-            "         \"asm\" : \"asm\",          (string) the asm\n"
-            "         \"hex\" : \"hex\",          (string) the hex\n"
-            "         \"reqSigs\" : n,            (numeric) The required sigs\n"
-            "         \"type\" : \"pubkeyhash\",  (string) The type, eg 'pubkeyhash'\n"
-            "         \"addresses\" : [           (json array of string)\n"
-            "           \"nexaaddress\"           (string) nexa address\n"
-            "           ,...\n"
-            "         ]\n"
-            "       }\n"
-            "     }\n"
-            "     ,...\n"
-            "  ],\n"
-            "  \"blockhash\" : \"hash\",   (string) the block hash\n"
-            "  \"confirmations\" : n,      (numeric) The confirmations\n"
-            "  \"time\" : ttt,             (numeric) The transaction time in seconds since epoch (Jan 1 1970 GMT)\n"
-            "  \"blocktime\" : ttt         (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
-            "}\n"
-
-            "\nExamples:\n" +
-            HelpExampleCli("getrawtransaction", "\"mytxid\"") + HelpExampleCli("getrawtransaction", "\"mytxid\" true") +
+            "\nResult (if verbose > 0):\n" +
+            docTxToJSON + "\nExamples:\n" + HelpExampleCli("getrawtransaction", "\"mytxid\"") +
+            HelpExampleCli("getrawtransaction", "\"mytxid\" true") +
             HelpExampleRpc("getrawtransaction", "\"mytxid\", true") +
             HelpExampleCli("getrawtransaction", "\"mytxid\" false \"myblockhash\"") +
             HelpExampleCli("getrawtransaction", "\"mytxid\" true \"myblockhash\""));
@@ -349,6 +358,7 @@ bool is_digits(const std::string &str)
     return std::all_of(str.begin(), str.end(), ::isdigit); // C++11
 }
 
+
 UniValue getrawblocktransactions(const UniValue &params, bool fHelp)
 {
     bool fVerbose = false;
@@ -379,60 +389,13 @@ UniValue getrawblocktransactions(const UniValue &params, bool fHelp)
 
             "\nResult (if verbose is not set):\n"
             "{\n"
-            "  \"txidem\" : \"data\",      (string) The serialized, hex-encoded data for 'txidem'\n"
+            "  \"txidem\" : \"data\",      (string) 'txidem': the idem of a transaction in the block,\n"
+            "                              (string) 'data': The serialized, hex-encoded transaction contents\n"
             "  ...\n"
             "}\n"
 
-            "\nResult (if verbose is set):\n"
-            "{\n"
-            "  \"txid\" : {                (string) The transaction id (same as provided)\n"
-            "    \"hex\" : \"data\",       (string) The serialized, hex-encoded data for 'txid'\n"
-            "    \"txid\" : \"id\",        (string) The transaction id (same as provided)\n"
-            "    \"txidem\" : \"idem\",    (string) The transaction idem\n"
-            "    \"size\" : n,             (numeric) The transaction size\n"
-            "    \"version\" : n,          (numeric) The version\n"
-            "    \"locktime\" : ttt,       (numeric) The lock time\n"
-            "    \"vin\" : [               (array of json objects)\n"
-            "       {\n"
-            "         \"outpoint\": \"id\",    (string) The outpoint hash\n"
-            "         \"amount\": n,         (numeric) \n"
-            "         \"scriptSig\": {     (json object) The script\n"
-            "           \"asm\": \"asm\",  (string) asm\n"
-            "           \"hex\": \"hex\"   (string) hex\n"
-            "         },\n"
-            "         \"sequence\": n      (numeric) The script sequence number\n"
-            "       }\n"
-            "       ,...\n"
-            "      ],\n"
-            "    \"vout\" : [              (array of json objects)\n"
-            "       {\n"
-            "         \"outpoint\": \"id\",    (string) The outpoint hash\n"
-            "         \"value\" : x.xxx,            (numeric) The value in " +
-            CURRENCY_UNIT +
-            "\n"
-            "         \"n\" : n,                    (numeric) index\n"
-            "         \"scriptPubKey\" : {          (json object)\n"
-            "           \"asm\" : \"asm\",          (string) the asm\n"
-            "           \"hex\" : \"hex\",          (string) the hex\n"
-            "           \"reqSigs\" : n,            (numeric) The required sigs\n"
-            "           \"type\" : \"pubkeyhash\",  (string) The type, eg 'pubkeyhash'\n"
-            "           \"addresses\" : [           (json array of string)\n"
-            "             \"nexaaddress\"           (string) nexa address\n"
-            "             ,...\n"
-            "           ]\n"
-            "         }\n"
-            "       }\n"
-            "      ,...\n"
-            "      ],\n"
-            "    \"blockhash\" : \"hash\",   (string) the block hash\n"
-            "    \"confirmations\" : n,      (numeric) The confirmations\n"
-            "    \"time\" : ttt,             (numeric) The transaction time in seconds since epoch (Jan 1 1970 GMT)\n"
-            "    \"blocktime\" : ttt         (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
-            "  },\n"
-            "  ...\n"
-            "}\n"
-            "\nExamples:\n" +
-            HelpExampleCli("getrawblocktransactions", "\"hashblock\"") +
+            "\nResult (if verbose is set):\n" +
+            docTxToJSON + "\nExamples:\n" + HelpExampleCli("getrawblocktransactions", "\"hashblock\"") +
             HelpExampleCli("getrawblocktransactions", "\"hashblock\" 1") +
             HelpExampleRpc("getrawblocktransactions", "\"hashblock\", 1"));
 
@@ -530,65 +493,15 @@ UniValue getrawtransactionssince(const UniValue &params, bool fHelp)
             "\nResult (if verbose is not set or set to 0):\n"
             "{\n"
             "  \"hash\" : {    (string) the block hash\n"
-            "        \"txidem\" : \"data\",      (string) The serialized, hex-encoded data for this transaction\n"
+            "  \"txidem\" : \"data\",      (string) 'txidem': the idem of a transaction in the block,\n"
+            "                              (string) 'data': The serialized, hex-encoded transaction contents\n"
             "        ...\n"
             "  },\n"
             "  ...\n"
             "}\n"
 
-            "\nResult (if verbose > 0):\n"
-            "{\n"
-            "  \"hash\" : {   (string) the block hash\n"
-            "    \"txidem\" : {                (string) The transaction id (same as provided)\n"
-            "      \"hex\" : \"data\",       (string) The serialized, hex-encoded data for 'txid'\n"
-            "      \"txid\" : \"id\",        (string) The transaction id (same as provided)\n"
-            "      \"txidem\" : \"id\",        (string) The transaction idem (same as provided)\n"
-            "      \"size\" : n,             (numeric) The transaction size\n"
-            "      \"version\" : n,          (numeric) The version\n"
-            "      \"locktime\" : ttt,       (numeric) The lock time\n"
-            "      \"vin\" : [               (array of json objects)\n"
-            "         {\n"
-            "           \"outpoint\": \"id\",    (string) The outpoint hash\n"
-            "           \"amount\": n,         (numeric) \n"
-            "           \"scriptSig\": {     (json object) The script\n"
-            "             \"asm\": \"asm\",  (string) asm\n"
-            "             \"hex\": \"hex\"   (string) hex\n"
-            "           },\n"
-            "           \"sequence\": n      (numeric) The script sequence number\n"
-            "         }\n"
-            "         ,...\n"
-            "        ],\n"
-            "      \"vout\" : [              (array of json objects)\n"
-            "         {\n"
-            "           \"outpoint\": \"id\",    (string) The outpoint hash\n"
-            "           \"value\" : x.xxx,            (numeric) The value in " +
-            CURRENCY_UNIT +
-            "\n"
-            "           \"n\" : n,                    (numeric) index\n"
-            "           \"scriptPubKey\" : {          (json object)\n"
-            "             \"asm\" : \"asm\",          (string) the asm\n"
-            "             \"hex\" : \"hex\",          (string) the hex\n"
-            "             \"reqSigs\" : n,            (numeric) The required sigs\n"
-            "             \"type\" : \"pubkeyhash\",  (string) The type, eg 'pubkeyhash'\n"
-            "             \"addresses\" : [           (json array of string)\n"
-            "               \"nexaaddress\"           (string) nexa address\n"
-            "               ,...\n"
-            "             ]\n"
-            "           }\n"
-            "         }\n"
-            "         ,...\n"
-            "        ],\n"
-            "      \"blockhash\" : \"hash\",   (string) the block hash\n"
-            "      \"confirmations\" : n,      (numeric) The confirmations\n"
-            "      \"time\" : ttt,             (numeric) The transaction time in seconds since epoch (Jan 1 1970 GMT)\n"
-            "      \"blocktime\" : ttt         (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
-            "    },\n"
-            "    ...\n"
-            "  },\n"
-            "  ...\n"
-            "}\n"
-            "\nExamples:\n" +
-            HelpExampleCli("getrawtransactionssince", "\"hashblock\"") +
+            "\nResult (if verbose > 0):\n" +
+            docTxToJSON + "\nExamples:\n" + HelpExampleCli("getrawtransactionssince", "\"hashblock\"") +
             HelpExampleCli("getrawtransactionssince", "-v \"hashblock\"") +
             HelpExampleCli("getrawtransactionssince", "-v \"hashblock\" 10") +
             HelpExampleRpc("getrawtransactionssince", "-v \"hashblock\", 10"));
@@ -1049,49 +962,8 @@ UniValue decoderawtransaction(const UniValue &params, bool fHelp)
 
                             "\nArguments:\n"
                             "1. \"hex\"      (string, required) The transaction hex string\n"
-
-                            "\nResult:\n"
-                            "{\n"
-                            "  \"txid\" : \"id\",        (string) The transaction id\n"
-                            "  \"size\" : n,             (numeric) The transaction size\n"
-                            "  \"version\" : n,          (numeric) The version\n"
-                            "  \"locktime\" : ttt,       (numeric) The lock time\n"
-                            "  \"vin\" : [               (array of json objects)\n"
-                            "     {\n"
-                            "       \"outpoint\": \"id\",    (string) The outpoint hash\n"
-                            "       \"amount\": n,         (numeric) The amount of coins being spent by this utxo\n"
-                            "       \"scriptSig\": {     (json object) The script\n"
-                            "         \"asm\": \"asm\",  (string) asm\n"
-                            "         \"hex\": \"hex\"   (string) hex\n"
-                            "       },\n"
-                            "       \"sequence\": n     (numeric) The script sequence number\n"
-                            "     }\n"
-                            "     ,...\n"
-                            "  ],\n"
-                            "  \"vout\" : [             (array of json objects)\n"
-                            "     {\n"
-                            "       \"outpoint\": \"id\",    (string) The outpoint hash\n"
-                            "       \"value\" : x.xxx,            (numeric) The value in " +
-                            CURRENCY_UNIT +
-                            "\n"
-                            "       \"n\" : n,                    (numeric) index\n"
-                            "       \"scriptPubKey\" : {          (json object)\n"
-                            "         \"asm\" : \"asm\",          (string) the asm\n"
-                            "         \"hex\" : \"hex\",          (string) the hex\n"
-                            "         \"reqSigs\" : n,            (numeric) The required sigs\n"
-                            "         \"type\" : \"pubkeyhash\",  (string) The type, eg 'pubkeyhash'\n"
-                            "         \"addresses\" : [           (json array of string)\n"
-                            "           \"12tvKAXCxZjSmdNbao16dKXC8tRWfcF5oc\"   (string) nexa address\n"
-                            "           ,...\n"
-                            "         ]\n"
-                            "       }\n"
-                            "     }\n"
-                            "     ,...\n"
-                            "  ],\n"
-                            "}\n"
-
-                            "\nExamples:\n" +
-                            HelpExampleCli("decoderawtransaction", "\"hexstring\"") +
+                            "\nResult:\n" +
+                            docTxToJSON + "\nExamples:\n" + HelpExampleCli("decoderawtransaction", "\"hexstring\"") +
                             HelpExampleRpc("decoderawtransaction", "\"hexstring\""));
 
     RPCTypeCheck(params, {UniValue::VSTR});
@@ -1219,8 +1091,8 @@ UniValue signrawtransaction(const UniValue &params, bool fHelp)
             "\nResult:\n"
             "{\n"
             "  \"hex\" : \"value\",           (string) The hex-encoded raw transaction with signature(s)\n"
-            "  \"txid\" : \"value\",           (string) The hex-encoded transaction id\n"
-            "  \"txidem\" : \"value\",           (string) The hex-encoded transaction idem\n"
+            "  \"txid\" : \"id\",             (string) The transaction id (identifier for this exact transaction)\n"
+            "  \"txidem\" : \"idem\",         (string) The transaction idem (malleability resistant identifier)\n"
             "  \"complete\" : true|false,   (boolean) If the transaction has a complete set of signatures\n"
             "  \"errors\" : [                 (json array of objects) Script verification errors (if there are any)\n"
             "    {\n"
