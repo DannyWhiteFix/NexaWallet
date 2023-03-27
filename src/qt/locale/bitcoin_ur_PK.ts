@@ -376,7 +376,7 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>nexa</name>
     <message>
         <source>This help message</source>
         <translation>یہ مدد کا پیغام</translation>

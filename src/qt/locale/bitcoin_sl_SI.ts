@@ -578,7 +578,7 @@
         <translation>Vračilo:</translation>
     </message>
     <message>
-        <source>(un)select all</source>
+        <source>(un)select max inputs</source>
         <translation>izberi vse/nič</translation>
     </message>
     <message>
@@ -2758,7 +2758,7 @@
     </message>
 </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>nexa</name>
     <message>
         <source>Options:</source>
         <translation>Možnosti:</translation>

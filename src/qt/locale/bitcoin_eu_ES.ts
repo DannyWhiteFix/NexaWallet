@@ -816,7 +816,7 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>nexa</name>
     <message>
         <source>Options:</source>
         <translation>Aukerak</translation>

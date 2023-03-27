@@ -586,8 +586,8 @@
         <translation>Change:</translation>
     </message>
     <message>
-        <source>(un)select all</source>
-        <translation>(un)select all</translation>
+        <source>(un)select max inputs</source>
+        <translation>(un)select max inputs</translation>
     </message>
     <message>
         <source>Tree mode</source>
@@ -2902,7 +2902,7 @@
     </message>
 </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>nexa</name>
     <message>
         <source>Options:</source>
         <translation>Options:</translation>

@@ -590,7 +590,7 @@
         <translation>找零金額:</translation>
     </message>
     <message>
-        <source>(un)select all</source>
+        <source>(un)select max inputs</source>
         <translation>全選或全不選</translation>
     </message>
     <message>
@@ -2910,7 +2910,7 @@
     </message>
 </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>nexa</name>
     <message>
         <source>Options:</source>
         <translation>選項:</translation>

@@ -555,7 +555,7 @@ Réessayez.</translation>
         <translation>Change:</translation>
     </message>
     <message>
-        <source>(un)select all</source>
+        <source>(un)select max inputs</source>
         <translation>(dé)sélectionné tout:</translation>
     </message>
     <message>
@@ -2283,7 +2283,7 @@ Réessayez.</translation>
     </message>
 </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>nexa</name>
     <message>
         <source>Options:</source>
         <translation>Options :</translation>

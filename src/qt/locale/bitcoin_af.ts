@@ -544,7 +544,7 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>nexa</name>
     <message>
         <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
         <translation>WAARSKUWING:  toets die status van u netwerk, %d blokke ontvang in die laaste %d ure (%d verwag)</translation>

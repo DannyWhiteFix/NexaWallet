@@ -456,7 +456,7 @@
         <translation>Graža:</translation>
     </message>
     <message>
-        <source>(un)select all</source>
+        <source>(un)select max inputs</source>
         <translation>(ne)pasirinkti viską</translation>
     </message>
     <message>
@@ -1724,7 +1724,7 @@
     </message>
 </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>nexa</name>
     <message>
         <source>Options:</source>
         <translation>Parinktys:</translation>

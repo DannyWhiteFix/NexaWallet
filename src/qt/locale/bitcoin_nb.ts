@@ -586,7 +586,7 @@
         <translation>Veksel:</translation>
     </message>
     <message>
-        <source>(un)select all</source>
+        <source>(un)select max inputs</source>
         <translation>velg (fjern) alle</translation>
     </message>
     <message>
@@ -2906,7 +2906,7 @@
     </message>
 </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>nexa</name>
     <message>
         <source>Options:</source>
         <translation>Innstillinger:</translation>
