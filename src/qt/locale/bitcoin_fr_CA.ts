@@ -80,7 +80,7 @@
 <context>
     <name>CoinControlDialog</name>
     <message>
-        <source>(un)select all</source>
+        <source>(un)select max inputs</source>
         <translation>Toute sélectionner </translation>
     </message>
     <message>
@@ -232,6 +232,6 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>nexa</name>
     </context>
 </TS>

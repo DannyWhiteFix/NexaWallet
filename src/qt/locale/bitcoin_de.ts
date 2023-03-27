@@ -586,7 +586,7 @@
         <translation>Wechselgeld:</translation>
     </message>
     <message>
-        <source>(un)select all</source>
+        <source>(un)select max inputs</source>
         <translation>Alles (de)selektieren</translation>
     </message>
     <message>
@@ -1070,6 +1070,14 @@
     <message>
         <source>&amp;Spend unconfirmed change</source>
         <translation>&amp;Unbestätigtes Wechselgeld darf ausgegeben werden</translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When Instant Transactions is enabled you can spend unconfirmed transactions immediately.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Wenn Soforttransaktionen aktiviert sind, können Sie unbestätigte Transaktionen sofort ausgeben.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <source>&amp;Instant Transactions</source>
+        <translation>Sofortige Transaktionen</translation>
     </message>
     <message>
         <source>Automatically open the Nexa client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -2902,7 +2910,7 @@
     </message>
 </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>nexa</name>
     <message>
         <source>Options:</source>
         <translation>Optionen:</translation>
@@ -3698,6 +3706,10 @@
     <message>
         <source>Error</source>
         <translation>Fehler</translation>
+    </message>
+    <message>
+        <source>Wallet is not password protected. Your funds may be at risk! Goto &quot;Settings&quot; and then select &quot;Encrypt Wallet&quot; to create a password.</source>
+        <translation>Wallet ist nicht passwortgeschützt. Ihre Gelder könnten gefährdet sein! Gehen Sie zu &quot;Einstellungen&quot; und wählen Sie dann &quot;Wallet verschlüsseln&quot; um ein Passwort zu erstellen.</translation>
     </message>
 </context>
 </TS>

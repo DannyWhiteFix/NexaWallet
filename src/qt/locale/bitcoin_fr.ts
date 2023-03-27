@@ -1,9 +1,11 @@
-<TS language="fr" version="2.1">
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.1" language="fr">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Cliquer à droite pour modifier l'adresse ou l'étiquette</translation>
+        <translation>Cliquer à droite pour modifier l&apos;adresse ou l&apos;étiquette</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -15,7 +17,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Copier l'adresse courante sélectionnée dans le presse-papiers</translation>
+        <translation>Copier l&apos;adresse courante sélectionnée dans le presse-papiers</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,15 +29,15 @@
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>&amp;Copier l'adresse</translation>
+        <translation>&amp;Copier l&apos;adresse</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Supprimer l'adresse actuellement sélectionnée de la liste</translation>
+        <translation>Supprimer l&apos;adresse actuellement sélectionnée de la liste</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Exporter les données de l'onglet courant vers un fichier</translation>
+        <translation>Exporter les données de l&apos;onglet courant vers un fichier</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -47,11 +49,11 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>Choisir l'adresse à laquelle envoyer des pièces</translation>
+        <translation>Choisir l&apos;adresse à laquelle envoyer des pièces</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>Choisir l'adresse avec laquelle recevoir des pièces</translation>
+        <translation>Choisir l&apos;adresse avec laquelle recevoir des pièces</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -59,7 +61,7 @@
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation>Adresses d'envoi</translation>
+        <translation>Adresses d&apos;envoi</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
@@ -67,15 +69,15 @@
     </message>
     <message>
         <source>These are your Nexa addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Voici vos adresses Nexa pour envoyer des paiements. Vérifiez toujours le montant et l'adresse du destinataire avant d'envoyer des pièces.</translation>
+        <translation>Voici vos adresses Nexa pour envoyer des paiements. Vérifiez toujours le montant et l&apos;adresse du destinataire avant d&apos;envoyer des pièces.</translation>
     </message>
     <message>
         <source>These are your Nexa addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Voici vos adresses Nexa pour recevoir des paiements. Il est recommandé d'utiliser une nouvelle adresse de réception pour chaque transaction.</translation>
+        <translation>Voici vos adresses Nexa pour recevoir des paiements. Il est recommandé d&apos;utiliser une nouvelle adresse de réception pour chaque transaction.</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation>Copier l'é&amp;tiquette</translation>
+        <translation>Copier l&apos;é&amp;tiquette</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
@@ -83,7 +85,7 @@
     </message>
     <message>
         <source>Export Address List</source>
-        <translation>Exporter la liste d'adresses</translation>
+        <translation>Exporter la liste d&apos;adresses</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
@@ -91,11 +93,11 @@
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>L'exportation a échoué</translation>
+        <translation>L&apos;exportation a échoué</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>Une erreur est survenue lors de l'enregistrement de la liste d'adresses vers %1. Veuillez ressayer plus tard.</translation>
+        <translation>Une erreur est survenue lors de l&apos;enregistrement de la liste d&apos;adresses vers %1. Veuillez ressayer plus tard.</translation>
     </message>
 </context>
 <context>
@@ -189,7 +191,7 @@
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Saisir l'ancienne phrase de passe puis la nouvelle phrase de passe du portefeuille.</translation>
+        <translation>Saisir l&apos;ancienne phrase de passe puis la nouvelle phrase de passe du portefeuille.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -197,7 +199,7 @@
     </message>
     <message>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>Le chiffrement du portefeuille a échoué en raison d'une erreur interne. Votre portefeuille n'a pas été chiffré.</translation>
+        <translation>Le chiffrement du portefeuille a échoué en raison d&apos;une erreur interne. Votre portefeuille n&apos;a pas été chiffré.</translation>
     </message>
     <message>
         <source>The supplied passphrases do not match.</source>
@@ -228,7 +230,7 @@
     </message>
     <message>
         <source>Banned Until</source>
-        <translation>Banni jusqu'au</translation>
+        <translation>Banni jusqu&apos;au</translation>
     </message>
 </context>
 <context>
@@ -243,7 +245,7 @@
     </message>
     <message>
         <source>&amp;Overview</source>
-        <translation>&amp;Vue d'ensemble</translation>
+        <translation>&amp;Vue d&apos;ensemble</translation>
     </message>
     <message>
         <source>Node</source>
@@ -259,7 +261,7 @@
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation>Parcourir l'historique des transactions</translation>
+        <translation>Parcourir l&apos;historique des transactions</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
@@ -295,7 +297,7 @@
     </message>
     <message>
         <source>&amp;Sending addresses...</source>
-        <translation>Adresses d'&amp;envoi...</translation>
+        <translation>Adresses d&apos;&amp;envoi...</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses...</source>
@@ -379,7 +381,7 @@
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Nexa addresses</source>
-        <translation>Vérifier les messages pour vous assurer qu'ils ont été signés avec les adresses Nexa spécifiées</translation>
+        <translation>Vérifier les messages pour vous assurer qu&apos;ils ont été signés avec les adresses Nexa spécifiées</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -395,7 +397,7 @@
     </message>
     <message>
         <source>Tabs toolbar</source>
-        <translation>Barre d'outils des onglets</translation>
+        <translation>Barre d&apos;outils des onglets</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and %1 URIs)</source>
@@ -411,11 +413,11 @@
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
-        <translation>Afficher la liste d'adresses d'envoi et d'étiquettes utilisées</translation>
+        <translation>Afficher la liste d&apos;adresses d&apos;envoi et d&apos;étiquettes utilisées</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation>Afficher la liste d'adresses de réception et d'étiquettes utilisées</translation>
+        <translation>Afficher la liste d&apos;adresses de réception et d&apos;étiquettes utilisées</translation>
     </message>
     <message>
         <source>Open a %1 URI or payment request</source>
@@ -427,11 +429,14 @@
     </message>
     <message>
         <source>Show the Nexa help message to get a list with possible Nexa command-line options</source>
-        <translation>Afficher le message d'aide de Nexa pour obtenir une liste des options de ligne de commande Nexa possibles.</translation>
+        <translation>Afficher le message d&apos;aide de Nexa pour obtenir une liste des options de ligne de commande Nexa possibles.</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Nexa network</source>
-        <translation><numerusform>%n connexion active avec le réseau Nexa</numerusform><numerusform>%n connexions actives avec le réseau Nexa</numerusform></translation>
+        <translation>
+            <numerusform>%n connexion active avec le réseau Nexa</numerusform>
+            <numerusform>%n connexions actives avec le réseau Nexa</numerusform>
+        </translation>
     </message>
     <message>
         <source>No block source available...</source>
@@ -439,19 +444,31 @@
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation><numerusform>%n bloc d'historique transactionnel a été traité</numerusform><numerusform>%n blocs d'historique transactionnel ont été traités</numerusform></translation>
+        <translation>
+            <numerusform>%n bloc d&apos;historique transactionnel a été traité</numerusform>
+            <numerusform>%n blocs d&apos;historique transactionnel ont été traités</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
-        <translation><numerusform>%n heure</numerusform><numerusform>%n heures</numerusform></translation>
+        <translation>
+            <numerusform>%n heure</numerusform>
+            <numerusform>%n heures</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
-        <translation><numerusform>%n jour</numerusform><numerusform>%n jours</numerusform></translation>
+        <translation>
+            <numerusform>%n jour</numerusform>
+            <numerusform>%n jours</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
-        <translation><numerusform>%n semaine</numerusform><numerusform>%n semaines</numerusform></translation>
+        <translation>
+            <numerusform>%n semaine</numerusform>
+            <numerusform>%n semaines</numerusform>
+        </translation>
     </message>
     <message>
         <source>%1 and %2</source>
@@ -459,7 +476,10 @@
     </message>
     <message numerus="yes">
         <source>%n year(s)</source>
-        <translation><numerusform>%n an</numerusform><numerusform>%n ans</numerusform></translation>
+        <translation>
+            <numerusform>%n an</numerusform>
+            <numerusform>%n ans</numerusform>
+        </translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -563,7 +583,7 @@
     </message>
     <message>
         <source>Amount:</source>
-        <translation>Montant :</translation>
+        <translation>Montant&#xa0;:</translation>
     </message>
     <message>
         <source>Priority:</source>
@@ -586,7 +606,7 @@
         <translation>Monnaie :</translation>
     </message>
     <message>
-        <source>(un)select all</source>
+        <source>(un)select max inputs</source>
         <translation>Tout (dé)sélectionner</translation>
     </message>
     <message>
@@ -639,15 +659,15 @@
     </message>
     <message>
         <source>Copy transaction ID</source>
-        <translation>Copier l'ID de la transaction</translation>
+        <translation>Copier l&apos;ID de la transaction</translation>
     </message>
     <message>
         <source>Lock unspent</source>
-        <translation>Verrouiller ce qui n'est pas dépensé</translation>
+        <translation>Verrouiller ce qui n&apos;est pas dépensé</translation>
     </message>
     <message>
         <source>Unlock unspent</source>
-        <translation>Déverrouiller ce qui n'est pas dépensé</translation>
+        <translation>Déverrouiller ce qui n&apos;est pas dépensé</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -726,7 +746,7 @@
         <translation>Cette étiquette devient rouge si la taille de la transaction est plus grande que 1 000 octets.</translation>
     </message>
     <message>
-        <source>This label turns red if the priority is smaller than "medium".</source>
+        <source>This label turns red if the priority is smaller than &quot;medium&quot;.</source>
         <translation>Cette étiquette devient rouge si la priorité est plus basse que « moyenne ».</translation>
     </message>
     <message>
@@ -747,7 +767,7 @@
     </message>
     <message>
         <source>This means a fee of at least %1 per kB is required.</source>
-        <translation>Ceci signifie que des frais d'au moins %1 par ko sont exigés.</translation>
+        <translation>Ceci signifie que des frais d&apos;au moins %1 par ko sont exigés.</translation>
     </message>
     <message>
         <source>Can vary +/- 1 byte per input.</source>
@@ -755,7 +775,7 @@
     </message>
     <message>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
-        <translation>Les transactions à priorité plus haute sont plus à même d'être incluses dans un bloc.</translation>
+        <translation>Les transactions à priorité plus haute sont plus à même d&apos;être incluses dans un bloc.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -774,7 +794,7 @@
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
-        <translation>Modifier l'adresse</translation>
+        <translation>Modifier l&apos;adresse</translation>
     </message>
     <message>
         <source>&amp;Label</source>
@@ -782,11 +802,11 @@
     </message>
     <message>
         <source>The label associated with this address list entry</source>
-        <translation>L'étiquette associée à cette entrée de la liste d'adresses</translation>
+        <translation>L&apos;étiquette associée à cette entrée de la liste d&apos;adresses</translation>
     </message>
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation>L'adresse associée à cette entrée de la liste d'adresses. Ceci ne peut être modifié que pour les adresses d'envoi.</translation>
+        <translation>L&apos;adresse associée à cette entrée de la liste d&apos;adresses. Ceci ne peut être modifié que pour les adresses d&apos;envoi.</translation>
     </message>
     <message>
         <source>&amp;Address</source>
@@ -806,15 +826,15 @@
     </message>
     <message>
         <source>Edit sending address</source>
-        <translation>Modifier l’adresse d'envoi</translation>
+        <translation>Modifier l’adresse d&apos;envoi</translation>
     </message>
     <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>L’adresse fournie « %1 » est déjà présente dans le carnet d'adresses.</translation>
+        <source>The entered address &quot;%1&quot; is already in the address book.</source>
+        <translation>L’adresse fournie «&#xa0;%1&#xa0;» est déjà présente dans le carnet d&apos;adresses.</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Nexa address.</source>
-        <translation>L'adresse fournie « %1 » n'est pas une adresse Nexa valide.</translation>
+        <source>The entered address &quot;%1&quot; is not a valid Nexa address.</source>
+        <translation>L&apos;adresse fournie «&#xa0;%1&#xa0;» n&apos;est pas une adresse Nexa valide.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -841,7 +861,7 @@
     </message>
     <message>
         <source>Path already exists, and is not a directory.</source>
-        <translation>Le chemin existe déjà et n'est pas un répertoire.</translation>
+        <translation>Le chemin existe déjà et n&apos;est pas un répertoire.</translation>
     </message>
     <message>
         <source>Cannot create data directory here.</source>
@@ -872,7 +892,7 @@
     </message>
     <message>
         <source>Usage:</source>
-        <translation>Utilisation :</translation>
+        <translation>Utilisation&#xa0;:</translation>
     </message>
     <message>
         <source>command-line options</source>
@@ -880,15 +900,15 @@
     </message>
     <message>
         <source>UI Options:</source>
-        <translation>Options de l'IU :</translation>
+        <translation>Options de l&apos;IU :</translation>
     </message>
     <message>
         <source>Choose data directory on startup (default: %u)</source>
         <translation>Choisir un répertoire de données au démarrage (par défaut : %u)</translation>
     </message>
     <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Définir la langue, par exemple « fr_CA » (par défaut : la langue du système)</translation>
+        <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
+        <translation>Définir la langue, par exemple «&#xa0;fr_CA&#xa0;» (par défaut&#xa0;: la langue du système)</translation>
     </message>
     <message>
         <source>Start minimized</source>
@@ -900,11 +920,11 @@
     </message>
     <message>
         <source>Show splash screen on startup (default: %u)</source>
-        <translation>Afficher l'écran d'accueil au démarrage (par défaut : %u)</translation>
+        <translation>Afficher l&apos;écran d&apos;accueil au démarrage (par défaut&#xa0;: %u)</translation>
     </message>
     <message>
         <source>Reset all settings changes made over the GUI</source>
-        <translation>Réinitialiser tous les changements de paramètres appliqués à l'IUG</translation>
+        <translation>Réinitialiser tous les changements de paramètres appliqués à l&apos;IUG</translation>
     </message>
 </context>
 <context>
@@ -919,7 +939,7 @@
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where Nexa will store its data.</source>
-        <translation>Comme c'est la première fois que le logiciel est lancé, vous pouvez choisir où Nexa stockera ses données.</translation>
+        <translation>Comme c&apos;est la première fois que le logiciel est lancé, vous pouvez choisir où Nexa stockera ses données.</translation>
     </message>
     <message>
         <source>Nexa will download and store a copy of the Nexa block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
@@ -938,7 +958,7 @@
         <translation>Nexa</translation>
     </message>
     <message>
-        <source>Error: Specified data directory "%1" cannot be created.</source>
+        <source>Error: Specified data directory &quot;%1&quot; cannot be created.</source>
         <translation>Erreur : le répertoire de données spécifié « %1 » ne peut pas être créé.</translation>
     </message>
     <message>
@@ -947,11 +967,17 @@
     </message>
     <message numerus="yes">
         <source>%n GB of free space available</source>
-        <translation><numerusform>%n Go d'espace libre disponible</numerusform><numerusform>%n Go d'espace libre disponibles</numerusform></translation>
+        <translation>
+            <numerusform>%n Go d&apos;espace libre disponible</numerusform>
+            <numerusform>%n Go d&apos;espace libre disponibles</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
-        <translation><numerusform>(sur %n Go nécessaire)</numerusform><numerusform>(sur %n Go nécessaires)</numerusform></translation>
+        <translation>
+            <numerusform>(sur %n Go nécessaire)</numerusform>
+            <numerusform>(sur %n Go nécessaires)</numerusform>
+        </translation>
     </message>
 </context>
 <context>
@@ -962,7 +988,7 @@
     </message>
     <message>
         <source>Open payment request from URI or file</source>
-        <translation>Ouvrir une demande de paiement à partir d'un URI ou d'un fichier</translation>
+        <translation>Ouvrir une demande de paiement à partir d&apos;un URI ou d&apos;un fichier</translation>
     </message>
     <message>
         <source>URI:</source>
@@ -997,11 +1023,11 @@
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
-        <translation>Nombre d'exétrons de &amp;vérification de script</translation>
+        <translation>Nombre d&apos;exétrons de &amp;vérification de script</translation>
     </message>
     <message>
         <source>Accept connections from outside</source>
-        <translation>Accepter les connexions provenant de l'extérieur</translation>
+        <translation>Accepter les connexions provenant de l&apos;extérieur</translation>
     </message>
     <message>
         <source>Allow incoming connections</source>
@@ -1013,19 +1039,19 @@
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
-        <translation>Minimiser au lieu de quitter l'application lorsque la fenêtre est fermée. Si cette option est activée, l'application ne sera fermée qu'en sélectionnant Quitter dans le menu.</translation>
+        <translation>Minimiser au lieu de quitter l&apos;application lorsque la fenêtre est fermée. Si cette option est activée, l&apos;application ne sera fermée qu&apos;en sélectionnant Quitter dans le menu.</translation>
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting Nexa.</source>
-        <translation>La langue de l'interface utilisateur peut être définie ici. Ce réglage sera pris en compte après redémarrage de Nexa.</translation>
+        <translation>La langue de l&apos;interface utilisateur peut être définie ici. Ce réglage sera pris en compte après redémarrage de Nexa.</translation>
     </message>
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>URL de tiers (par ex. un explorateur de blocs) apparaissant dans l'onglet des transactions comme éléments du menu contextuel. %s dans l'URL est remplacé par le hachage de la transaction. Les URL multiples sont séparées par une barre verticale |.</translation>
+        <translation>URL de tiers (par ex. un explorateur de blocs) apparaissant dans l&apos;onglet des transactions comme éléments du menu contextuel. %s dans l&apos;URL est remplacé par le hachage de la transaction. Les URL multiples sont séparées par une barre verticale |.</translation>
     </message>
     <message>
         <source>Third party transaction URLs</source>
-        <translation>URL de transaction d'un tiers</translation>
+        <translation>URL de transaction d&apos;un tiers</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
@@ -1049,7 +1075,7 @@
     </message>
     <message>
         <source>&amp;Start Nexa on system login</source>
-        <translation>&amp;Démarrer Nexa lors de l'ouverture d'une session</translation>
+        <translation>&amp;Démarrer Nexa lors de l&apos;ouverture d&apos;une session</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1069,19 +1095,27 @@
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation>Si vous désactivé la dépense de la monnaie non confirmée, la monnaie d'une transaction ne peut pas être utilisée tant que cette transaction n'a pas reçu au moins une confirmation. Ceci affecte aussi comment votre solde est calculé.</translation>
+        <translation>Si vous désactivé la dépense de la monnaie non confirmée, la monnaie d&apos;une transaction ne peut pas être utilisée tant que cette transaction n&apos;a pas reçu au moins une confirmation. Ceci affecte aussi comment votre solde est calculé.</translation>
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
         <translation>&amp;Dépenser la monnaie non confirmée</translation>
     </message>
     <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When Instant Transactions is enabled you can spend unconfirmed transactions immediately.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Lorsque les transactions instantanées sont activées, vous pouvez dépenser immédiatement des transactions non confirmées.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <source>&amp;Instant Transactions</source>
+        <translation>&amp;Transactions instantanées</translation>
+    </message>
+    <message>
         <source>Automatically open the Nexa client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Ouvrir le port du client Nexa automatiquement sur le routeur. Ceci ne fonctionne que si votre routeur supporte l'UPnP et si la fonctionnalité est activée.</translation>
+        <translation>Ouvrir le port du client Nexa automatiquement sur le routeur. Ceci ne fonctionne que si votre routeur supporte l&apos;UPnP et si la fonctionnalité est activée.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
-        <translation>Mapper le port avec l'&amp;UPnP</translation>
+        <translation>Mapper le port avec l&apos;&amp;UPnP</translation>
     </message>
     <message>
         <source>Connect to the Nexa network through a SOCKS5 proxy.</source>
@@ -1093,11 +1127,11 @@
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
-        <translation>&amp;IP du serveur mandataire :</translation>
+        <translation>&amp;IP du serveur mandataire&#xa0;:</translation>
     </message>
     <message>
         <source>&amp;Port:</source>
-        <translation>&amp;Port :</translation>
+        <translation>&amp;Port&#xa0;:</translation>
     </message>
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
@@ -1109,7 +1143,7 @@
     </message>
     <message>
         <source>Shows, if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
-        <translation>S'affiche, si le mandataire SOCKS5 par défaut fourni est utilisé pour atteindre les pairs par ce type de réseau.</translation>
+        <translation>S&apos;affiche, si le mandataire SOCKS5 par défaut fourni est utilisé pour atteindre les pairs par ce type de réseau.</translation>
     </message>
     <message>
         <source>IPv4</source>
@@ -1125,7 +1159,7 @@
     </message>
     <message>
         <source>Connect to the Nexa network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Se connecter au réseau Nexa au travers d'un mandataire SOCKS5 séparé pour les services cachés de Tor.</translation>
+        <translation>Se connecter au réseau Nexa au travers d&apos;un mandataire SOCKS5 séparé pour les services cachés de Tor.</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
@@ -1153,15 +1187,15 @@
     </message>
     <message>
         <source>User Interface &amp;language:</source>
-        <translation>&amp;Langue de l'interface utilisateur :</translation>
+        <translation>&amp;Langue de l&apos;interface utilisateur&#xa0;:</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>&amp;Unité d'affichage des montants :</translation>
+        <translation>&amp;Unité d&apos;affichage des montants&#xa0;:</translation>
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Choisissez la sous-unité par défaut pour l'affichage dans l'interface et lors de l'envoi de pièces.</translation>
+        <translation>Choisissez la sous-unité par défaut pour l&apos;affichage dans l&apos;interface et lors de l&apos;envoi de pièces.</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1201,7 +1235,7 @@
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
-        <translation>L'adresse de serveur mandataire fournie est invalide.</translation>
+        <translation>L&apos;adresse de serveur mandataire fournie est invalide.</translation>
     </message>
 </context>
 <context>
@@ -1212,7 +1246,7 @@
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Nexa network after a connection is established, but this process has not completed yet.</source>
-        <translation>Les informations affichées peuvent être obsolètes. Votre portefeuille est automatiquement synchronisé avec le réseau Nexa lorsque la connexion s'établit, or ce processus n'est pas encore terminé.</translation>
+        <translation>Les informations affichées peuvent être obsolètes. Votre portefeuille est automatiquement synchronisé avec le réseau Nexa lorsque la connexion s&apos;établit, or ce processus n&apos;est pas encore terminé.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1232,7 +1266,7 @@
     </message>
     <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>Total des transactions qui doivent encore être confirmées et qu'il n'est pas encore possible de dépenser</translation>
+        <translation>Total des transactions qui doivent encore être confirmées et qu&apos;il n&apos;est pas encore possible de dépenser</translation>
     </message>
     <message>
         <source>Immature:</source>
@@ -1240,7 +1274,7 @@
     </message>
     <message>
         <source>Mined balance that has not yet matured</source>
-        <translation>Le solde généré n'est pas encore mûr</translation>
+        <translation>Le solde généré n&apos;est pas encore mûr</translation>
     </message>
     <message>
         <source>Balances</source>
@@ -1272,7 +1306,7 @@
     </message>
     <message>
         <source>Mined balance in watch-only addresses that has not yet matured</source>
-        <translation>Le solde miné dans des adresses juste-regarder, qui n'est pas encore mûr</translation>
+        <translation>Le solde miné dans des adresses juste-regarder, qui n&apos;est pas encore mûr</translation>
     </message>
     <message>
         <source>Current total balance in watch-only addresses</source>
@@ -1298,16 +1332,16 @@
         <translation>La demande de paiement est rejetée</translation>
     </message>
     <message>
-        <source>Payment request network doesn't match client network.</source>
+        <source>Payment request network doesn&apos;t match client network.</source>
         <translation>Le réseau de la demande de paiement ne correspond pas au réseau du client.</translation>
     </message>
     <message>
         <source>Payment request is not initialized.</source>
-        <translation>La demande de paiement n'est pas initialisée.</translation>
+        <translation>La demande de paiement n&apos;est pas initialisée.</translation>
     </message>
     <message>
         <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>Le paiement demandé d'un montant de %1 est trop faible (considéré comme de la poussière).</translation>
+        <translation>Le paiement demandé d&apos;un montant de %1 est trop faible (considéré comme de la poussière).</translation>
     </message>
     <message>
         <source>Payment request error</source>
@@ -1319,11 +1353,11 @@
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
-        <translation>L'URL de récupération de la demande de paiement est invalide : %1</translation>
+        <translation>L&apos;URL de récupération de la demande de paiement est invalide : %1</translation>
     </message>
     <message>
         <source>URI cannot be parsed! This can be caused by an invalid Nexa address or malformed URI parameters.</source>
-        <translation>L'URI ne peut pas être analysé ! Ceci peut être causé par une adresse Nexa invalide ou par des paramètres d'URI mal formés.</translation>
+        <translation>L&apos;URI ne peut pas être analysé&#xa0;! Ceci peut être causé par une adresse Nexa invalide ou par des paramètres d&apos;URI mal formés.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1432,11 +1466,11 @@
     <name>QRImageWidget</name>
     <message>
         <source>&amp;Save Image...</source>
-        <translation>&amp;Sauvegarder l'image...</translation>
+        <translation>&amp;Sauvegarder l&apos;image...</translation>
     </message>
     <message>
         <source>&amp;Copy Image</source>
-        <translation>&amp;Copier l'image</translation>
+        <translation>&amp;Copier l&apos;image</translation>
     </message>
     <message>
         <source>Save QR Code</source>
@@ -1475,7 +1509,7 @@
     </message>
     <message>
         <source>Using OpenSSL version</source>
-        <translation>Version d'OpenSSL utilisée</translation>
+        <translation>Version d&apos;OpenSSL utilisée</translation>
     </message>
     <message>
         <source>Using BerkeleyDB version</source>
@@ -1539,7 +1573,7 @@
     </message>
     <message>
         <source>Select a peer to view detailed information.</source>
-        <translation>Choisir un pair pour voir l'information détaillée.</translation>
+        <translation>Choisir un pair pour voir l&apos;information détaillée.</translation>
     </message>
     <message>
         <source>Whitelisted</source>
@@ -1595,7 +1629,7 @@
     </message>
     <message>
         <source>The duration of a currently outstanding ping.</source>
-        <translation>La durée d'un ping actuellement en cours.</translation>
+        <translation>La durée d&apos;un ping actuellement en cours.</translation>
     </message>
     <message>
         <source>Ping Wait</source>
@@ -1683,7 +1717,7 @@
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
-        <translation>Utiliser les touches de curseur pour naviguer dans l'historique et &lt;b&gt;Ctrl-L&lt;/b&gt; pour effacer l'écran.</translation>
+        <translation>Utiliser les touches de curseur pour naviguer dans l&apos;historique et &lt;b&gt;Ctrl-L&lt;/b&gt; pour effacer l&apos;écran.</translation>
     </message>
     <message>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
@@ -1746,7 +1780,7 @@
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation>&amp;Étiquette :</translation>
+        <translation>&amp;Étiquette&#xa0;:</translation>
     </message>
     <message>
         <source>&amp;Message:</source>
@@ -1754,7 +1788,7 @@
     </message>
     <message>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
-        <translation>Réutilise une adresse de réception précédemment utilisée. Réutiliser une adresse pose des problèmes de sécurité et de vie privée. N'utilisez pas cette option sauf si vous générez à nouveau une demande de paiement déjà faite.</translation>
+        <translation>Réutilise une adresse de réception précédemment utilisée. Réutiliser une adresse pose des problèmes de sécurité et de vie privée. N&apos;utilisez pas cette option sauf si vous générez à nouveau une demande de paiement déjà faite.</translation>
     </message>
     <message>
         <source>R&amp;euse an existing receiving address (not recommended)</source>
@@ -1762,7 +1796,7 @@
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Nexa network.</source>
-        <translation>Un message optionnel à joindre à la demande de paiement qui sera affiché à l'ouverture de celle-ci. Note : le message ne sera pas envoyé avec le paiement par le réseau Nexa.</translation>
+        <translation>Un message optionnel à joindre à la demande de paiement qui sera affiché à l&apos;ouverture de celle-ci. Note : le message ne sera pas envoyé avec le paiement par le réseau Nexa.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -1829,15 +1863,15 @@
     </message>
     <message>
         <source>Copy &amp;URI</source>
-        <translation>Copier l'&amp;URI</translation>
+        <translation>Copier l&apos;&amp;URI</translation>
     </message>
     <message>
         <source>Copy &amp;Address</source>
-        <translation>Copier l'&amp;adresse</translation>
+        <translation>Copier l&apos;&amp;adresse</translation>
     </message>
     <message>
         <source>&amp;Save Image...</source>
-        <translation>&amp;Sauvegarder l'image...</translation>
+        <translation>&amp;Sauvegarder l&apos;image...</translation>
     </message>
     <message>
         <source>Request payment to %1</source>
@@ -1869,11 +1903,11 @@
     </message>
     <message>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>L'URI résultant est trop long, essayez de réduire le texte d'étiquette / de message.</translation>
+        <translation>L&apos;URI résultant est trop long, essayez de réduire le texte d&apos;étiquette / de message.</translation>
     </message>
     <message>
         <source>Error encoding URI into QR Code.</source>
-        <translation>Erreur d'encodage de l'URI en code QR.</translation>
+        <translation>Erreur d&apos;encodage de l&apos;URI en code QR.</translation>
     </message>
 </context>
 <context>
@@ -1896,7 +1930,7 @@
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(pas d'étiquette)</translation>
+        <translation>(pas d&apos;étiquette)</translation>
     </message>
     <message>
         <source>(no message)</source>
@@ -1939,7 +1973,7 @@
     </message>
     <message>
         <source>Amount:</source>
-        <translation>Montant :</translation>
+        <translation>Montant&#xa0;:</translation>
     </message>
     <message>
         <source>Priority:</source>
@@ -1959,7 +1993,7 @@
     </message>
     <message>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation>Si ceci est actif mais l'adresse de monnaie rendue est vide ou invalide, la monnaie sera envoyée vers une adresse nouvellement générée.</translation>
+        <translation>Si ceci est actif mais l&apos;adresse de monnaie rendue est vide ou invalide, la monnaie sera envoyée vers une adresse nouvellement générée.</translation>
     </message>
     <message>
         <source>Custom change address</source>
@@ -1982,7 +2016,7 @@
         <translation>par kilo-octet</translation>
     </message>
     <message>
-        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "total at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 satoshis in fee, while &quot;total at least&quot; pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
         <translation>Si les frais personnalisés sont définis à 1 000 satoshis et que la transaction est seulement de 250 octets, donc le « par kilo-octet » ne paiera que 250 satoshis de frais, alors que le « total au moins » paiera 1 000 satoshis. Pour des transactions supérieures à un kilo-octet, les deux paieront par kilo-octets.</translation>
     </message>
     <message>
@@ -1995,11 +2029,11 @@
     </message>
     <message>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for nexa transactions than the network can process.</source>
-        <translation>Il est correct de payer les frais minimum tant que le volume transactionnel est inférieur à l'espace dans les blocs. Mais soyez conscient que ceci pourrait résulter en une transaction n'étant jamais confirmée une fois qu'il y aura plus de transactions que le réseau ne pourra en traiter.</translation>
+        <translation>Il est correct de payer les frais minimum tant que le volume transactionnel est inférieur à l&apos;espace dans les blocs. Mais soyez conscient que ceci pourrait résulter en une transaction n&apos;étant jamais confirmée une fois qu&apos;il y aura plus de transactions que le réseau ne pourra en traiter.</translation>
     </message>
     <message>
         <source>(read the tooltip)</source>
-        <translation>(lire l'infobulle)</translation>
+        <translation>(lire l&apos;infobulle)</translation>
     </message>
     <message>
         <source>Recommended:</source>
@@ -2055,11 +2089,11 @@
     </message>
     <message>
         <source>Balance:</source>
-        <translation>Solde :</translation>
+        <translation>Solde&#xa0;:</translation>
     </message>
     <message>
         <source>Confirm the send action</source>
-        <translation>Confirmer l’action d'envoi</translation>
+        <translation>Confirmer l’action d&apos;envoi</translation>
     </message>
     <message>
         <source>S&amp;end</source>
@@ -2143,15 +2177,18 @@
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation><numerusform>Il est estimé que la confirmation commencera dans %n bloc.</numerusform><numerusform>Il est estimé que la confirmation commencera dans %n blocs.</numerusform></translation>
+        <translation>
+            <numerusform>Il est estimé que la confirmation commencera dans %n bloc.</numerusform>
+            <numerusform>Il est estimé que la confirmation commencera dans %n blocs.</numerusform>
+        </translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
-        <translation>L'adresse du destinataire est invalide. Veuillez la vérifier.</translation>
+        <translation>L&apos;adresse du destinataire est invalide. Veuillez la vérifier.</translation>
     </message>
     <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation>Adresse identique trouvée : chaque adresse ne devrait être utilisée qu'une fois.</translation>
+        <translation>Adresse identique trouvée : chaque adresse ne devrait être utilisée qu&apos;une fois.</translation>
     </message>
     <message>
         <source>Warning: Invalid Nexa address</source>
@@ -2159,7 +2196,7 @@
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(pas d'étiquette)</translation>
+        <translation>(pas d&apos;étiquette)</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2182,11 +2219,11 @@
     <name>SendCoinsEntry</name>
     <message>
         <source>A&amp;mount:</source>
-        <translation>&amp;Montant :</translation>
+        <translation>&amp;Montant&#xa0;:</translation>
     </message>
     <message>
         <source>Pay &amp;To:</source>
-        <translation>&amp;Payer à :</translation>
+        <translation>&amp;Payer à&#xa0;:</translation>
     </message>
     <message>
         <source>Enter a label for this address to add it to your address book</source>
@@ -2194,7 +2231,7 @@
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation>É&amp;tiquette :</translation>
+        <translation>É&amp;tiquette&#xa0;:</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2206,7 +2243,7 @@
     </message>
     <message>
         <source>The Nexa address to send the payment to</source>
-        <translation>L'adresse Nexa à laquelle envoyer le paiement</translation>
+        <translation>L&apos;adresse Nexa à laquelle envoyer le paiement</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -2214,7 +2251,7 @@
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Coller l'adresse depuis le presse-papiers</translation>
+        <translation>Coller l&apos;adresse depuis le presse-papiers</translation>
     </message>
     <message>
         <source>Alt+P</source>
@@ -2234,11 +2271,11 @@
     </message>
     <message>
         <source>Message:</source>
-        <translation>Message :</translation>
+        <translation>Message&#xa0;:</translation>
     </message>
     <message>
         <source>This is an unauthenticated payment request.</source>
-        <translation>Cette demande de paiement n'est pas authentifiée.</translation>
+        <translation>Cette demande de paiement n&apos;est pas authentifiée.</translation>
     </message>
     <message>
         <source>This is an authenticated payment request.</source>
@@ -2246,11 +2283,11 @@
     </message>
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation>Saisir une étiquette pour cette adresse afin de l'ajouter à la liste d'adresses utilisées</translation>
+        <translation>Saisir une étiquette pour cette adresse afin de l&apos;ajouter à la liste d&apos;adresses utilisées</translation>
     </message>
     <message>
         <source>A message that was attached to the %1 URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Nexa network.</source>
-        <translation>Un message qui était joint à l'URI %1 et qui sera stocké avec la transaction pour référence. Note : ce message ne sera pas envoyé par le réseau Nexa.</translation>
+        <translation>Un message qui était joint à l&apos;URI %1 et qui sera stocké avec la transaction pour référence. Note : ce message ne sera pas envoyé par le réseau Nexa.</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -2269,7 +2306,7 @@
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
-        <translation>Ne pas fermer l'ordinateur jusqu'à la disparition de cette fenêtre.</translation>
+        <translation>Ne pas fermer l&apos;ordinateur jusqu&apos;à la disparition de cette fenêtre.</translation>
     </message>
 </context>
 <context>
@@ -2284,11 +2321,11 @@
     </message>
     <message>
         <source>You can sign messages/agreements with your addresses to prove you can receive coins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Vous pouvez signer des messages/accords avec vos adresses pour prouver que vous pouvez recevoir des coins à ces dernières. Faites attention de ne rien signer de vague ou au hasard, car des attaques d'hameçonnage pourraient essayer de vous faire signer avec votre identité afin de l'usurper. Ne signez que des déclarations entièrement détaillées et avec lesquelles vous êtes d'accord.</translation>
+        <translation>Vous pouvez signer des messages/accords avec vos adresses pour prouver que vous pouvez recevoir des coins à ces dernières. Faites attention de ne rien signer de vague ou au hasard, car des attaques d&apos;hameçonnage pourraient essayer de vous faire signer avec votre identité afin de l&apos;usurper. Ne signez que des déclarations entièrement détaillées et avec lesquelles vous êtes d&apos;accord.</translation>
     </message>
     <message>
         <source>The Nexa address to sign the message with</source>
-        <translation>L'adresse Nexa avec laquelle signer le message</translation>
+        <translation>L&apos;adresse Nexa avec laquelle signer le message</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2339,16 +2376,16 @@
         <translation>&amp;Vérifier un message</translation>
     </message>
     <message>
-        <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
-        <translation>Saisissez ci-dessous l'adresse de destinataire, le message (assurez-vous de copier exactement les retours à la ligne, les espaces, les tabulations, etc.) et la signature pour vérifier le message. Faites attention à ne pas déduire davantage de la signature que ce qui est contenu dans le message signé même, pour éviter d'être trompé par une attaque d'homme du milieu. Notez que ceci ne fait que prouver que le signataire reçoit l'adresse et ne peut pas prouver la provenance d'une transaction.</translation>
+        <source>Enter the receiver&apos;s address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
+        <translation>Saisissez ci-dessous l&apos;adresse de destinataire, le message (assurez-vous de copier exactement les retours à la ligne, les espaces, les tabulations, etc.) et la signature pour vérifier le message. Faites attention à ne pas déduire davantage de la signature que ce qui est contenu dans le message signé même, pour éviter d&apos;être trompé par une attaque d&apos;homme du milieu. Notez que ceci ne fait que prouver que le signataire reçoit l&apos;adresse et ne peut pas prouver la provenance d&apos;une transaction.</translation>
     </message>
     <message>
         <source>The Nexa address the message was signed with</source>
-        <translation>L'adresse Nexa avec laquelle le message a été signé</translation>
+        <translation>L&apos;adresse Nexa avec laquelle le message a été signé</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Nexa address</source>
-        <translation>Vérifier le message pour vous assurer qu'il a bien été signé par l'adresse Nexa spécifiée</translation>
+        <translation>Vérifier le message pour vous assurer qu&apos;il a bien été signé par l&apos;adresse Nexa spécifiée</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -2359,20 +2396,20 @@
         <translation>Réinitialiser tous les champs de vérification de message</translation>
     </message>
     <message>
-        <source>Click "Sign Message" to generate signature</source>
-        <translation>Cliquez sur « Signer le message » pour générer la signature</translation>
+        <source>Click &quot;Sign Message&quot; to generate signature</source>
+        <translation>Cliquez sur «&#xa0;Signer le message&#xa0;» pour générer la signature</translation>
     </message>
     <message>
         <source>The entered address is invalid.</source>
-        <translation>L'adresse saisie est invalide.</translation>
+        <translation>L&apos;adresse saisie est invalide.</translation>
     </message>
     <message>
         <source>Please check the address and try again.</source>
-        <translation>Veuillez vérifier l'adresse et réessayer.</translation>
+        <translation>Veuillez vérifier l&apos;adresse et réessayer.</translation>
     </message>
     <message>
         <source>The entered address does not refer to a key.</source>
-        <translation>L'adresse saisie ne fait pas référence à une clef.</translation>
+        <translation>L&apos;adresse saisie ne fait pas référence à une clef.</translation>
     </message>
     <message>
         <source>Wallet unlock was cancelled.</source>
@@ -2380,7 +2417,7 @@
     </message>
     <message>
         <source>Private key for the entered address is not available.</source>
-        <translation>La clef privée n'est pas disponible pour l'adresse indiquée.</translation>
+        <translation>La clef privée n&apos;est pas disponible pour l&apos;adresse indiquée.</translation>
     </message>
     <message>
         <source>Message signing failed.</source>
@@ -2392,7 +2429,7 @@
     </message>
     <message>
         <source>The signature could not be decoded.</source>
-        <translation>La signature n'a pu être décodée.</translation>
+        <translation>La signature n&apos;a pu être décodée.</translation>
     </message>
     <message>
         <source>Please check the signature and try again.</source>
@@ -2400,7 +2437,7 @@
     </message>
     <message>
         <source>The signature did not match the message digest.</source>
-        <translation>La signature ne correspond pas à l'empreinte du message.</translation>
+        <translation>La signature ne correspond pas à l&apos;empreinte du message.</translation>
     </message>
     <message>
         <source>Message verification failed.</source>
@@ -2437,7 +2474,7 @@
     <name>TransactionDesc</name>
     <message>
         <source>Open until %1</source>
-        <translation>Ouvert jusqu'à %1</translation>
+        <translation>Ouvert jusqu&apos;à %1</translation>
     </message>
     <message>
         <source>conflicted</source>
@@ -2461,7 +2498,10 @@
     </message>
     <message numerus="yes">
         <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>, diffusée à travers %n nœud</numerusform><numerusform>, diffusée à travers %n nœuds</numerusform></translation>
+        <translation>
+            <numerusform>, diffusée à travers %n nœud</numerusform>
+            <numerusform>, diffusée à travers %n nœuds</numerusform>
+        </translation>
     </message>
     <message>
         <source>Date</source>
@@ -2501,7 +2541,10 @@
     </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation><numerusform>arrive à maturité dans %n bloc de plus</numerusform><numerusform>arrive à maturité dans %n blocs de plus</numerusform></translation>
+        <translation>
+            <numerusform>arrive à maturité dans %n bloc de plus</numerusform>
+            <numerusform>arrive à maturité dans %n blocs de plus</numerusform>
+        </translation>
     </message>
     <message>
         <source>not accepted</source>
@@ -2544,7 +2587,7 @@
         <translation>Marchand</translation>
     </message>
     <message>
-        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
+        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
         <translation>Les pièces générées doivent mûrir pendant %1 blocs avant de pouvoir être dépensées. Lorsque vous avez généré ce bloc, il a été diffusé sur le réseau pour être ajouté à la chaîne de blocs. S’il échoue a intégrer la chaîne, son état sera modifié en « non accepté » et il ne sera pas possible de le dépenser. Ceci peut arriver occasionnellement si un autre nœud génère un bloc à quelques secondes du votre.</translation>
     </message>
     <message>
@@ -2577,7 +2620,10 @@
     </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
-        <translation><numerusform>Ouvert pour %n bloc de plus</numerusform><numerusform>Ouvert pour %n blocs de plus</numerusform></translation>
+        <translation>
+            <numerusform>Ouvert pour %n bloc de plus</numerusform>
+            <numerusform>Ouvert pour %n blocs de plus</numerusform>
+        </translation>
     </message>
     <message>
         <source>unknown</source>
@@ -2611,11 +2657,14 @@
     </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
-        <translation><numerusform>Ouvert pour %n bloc de plus</numerusform><numerusform>Ouvert pour %n blocs de plus</numerusform></translation>
+        <translation>
+            <numerusform>Ouvert pour %n bloc de plus</numerusform>
+            <numerusform>Ouvert pour %n blocs de plus</numerusform>
+        </translation>
     </message>
     <message>
         <source>Open until %1</source>
-        <translation>Ouvert jusqu'à %1</translation>
+        <translation>Ouvert jusqu&apos;à %1</translation>
     </message>
     <message>
         <source>Confirmed (%1 confirmations)</source>
@@ -2623,7 +2672,7 @@
     </message>
     <message>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>Ce bloc n’a été reçu par aucun autre nœud et ne sera probablement pas accepté !</translation>
+        <translation>Ce bloc n’a été reçu par aucun autre nœud et ne sera probablement pas accepté&#xa0;!</translation>
     </message>
     <message>
         <source>Generated but not accepted</source>
@@ -2695,7 +2744,7 @@
     </message>
     <message>
         <source>User-defined intent/purpose of the transaction.</source>
-        <translation>Intention/but de la transaction défini par l'utilisateur.</translation>
+        <translation>Intention/but de la transaction défini par l&apos;utilisateur.</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
@@ -2774,7 +2823,7 @@
     </message>
     <message>
         <source>Copy transaction ID</source>
-        <translation>Copier l'ID de la transaction</translation>
+        <translation>Copier l&apos;ID de la transaction</translation>
     </message>
     <message>
         <source>Copy raw transaction</source>
@@ -2790,7 +2839,7 @@
     </message>
     <message>
         <source>Export Transaction History</source>
-        <translation>Exporter l'historique des transactions</translation>
+        <translation>Exporter l&apos;historique des transactions</translation>
     </message>
     <message>
         <source>Watch-only</source>
@@ -2798,11 +2847,11 @@
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>L'exportation a échoué</translation>
+        <translation>L&apos;exportation a échoué</translation>
     </message>
     <message>
         <source>There was an error trying to save the transaction history to %1.</source>
-        <translation>Une erreur est survenue lors de l'enregistrement de l'historique des transactions vers %1.</translation>
+        <translation>Une erreur est survenue lors de l&apos;enregistrement de l&apos;historique des transactions vers %1.</translation>
     </message>
     <message>
         <source>Exporting Successful</source>
@@ -2810,7 +2859,7 @@
     </message>
     <message>
         <source>The transaction history was successfully saved to %1.</source>
-        <translation>L'historique des transactions a été sauvegardée avec succès vers %1.</translation>
+        <translation>L&apos;historique des transactions a été sauvegardée avec succès vers %1.</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
@@ -2842,7 +2891,7 @@
     </message>
     <message>
         <source>Range:</source>
-        <translation>Intervalle :</translation>
+        <translation>Intervalle&#xa0;:</translation>
     </message>
     <message>
         <source>to</source>
@@ -2853,7 +2902,7 @@
     <name>UnitDisplayStatusBarControl</name>
     <message>
         <source>Unit to show amounts in. Click to select another unit.</source>
-        <translation>Unité d'affichage des montants. Cliquer pour choisir une autre unité.</translation>
+        <translation>Unité d&apos;affichage des montants. Cliquer pour choisir une autre unité.</translation>
     </message>
 </context>
 <context>
@@ -2878,7 +2927,7 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Exporter les données de l'onglet courant vers un fichier</translation>
+        <translation>Exporter les données de l&apos;onglet courant vers un fichier</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
@@ -2894,7 +2943,7 @@
     </message>
     <message>
         <source>There was an error trying to save the wallet data to %1.</source>
-        <translation>Une erreur est survenue lors de l'enregistrement des données de portefeuille vers %1.</translation>
+        <translation>Une erreur est survenue lors de l&apos;enregistrement des données de portefeuille vers %1.</translation>
     </message>
     <message>
         <source>The wallet data was successfully saved to %1.</source>
@@ -2906,10 +2955,10 @@
     </message>
 </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>nexa</name>
     <message>
         <source>Options:</source>
-        <translation>Options :</translation>
+        <translation>Options&#xa0;:</translation>
     </message>
     <message>
         <source>Specify data directory</source>
@@ -2929,19 +2978,19 @@
     </message>
     <message>
         <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
-        <translation>Si &lt;category&gt; n'est pas indiqué ou si &lt;category&gt; = 1, extraire toutes les données de débogage.</translation>
+        <translation>Si &lt;category&gt; n&apos;est pas indiqué ou si &lt;category&gt; = 1, extraire toutes les données de débogage.</translation>
     </message>
     <message>
         <source>Maximum total fees (in %s) to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</source>
         <translation>Frais totaux maximaux (en %s) à utiliser en une seule transaction de portefeuille. Les définir trop bas pourrait interrompre les grosses transactions (par défaut : %s)</translation>
     </message>
     <message>
-        <source>Please check that your computer's date and time are correct! If your clock is wrong Nexa will not work properly.</source>
-        <translation>Veuillez vérifier que l'heure et la date de votre ordinateur sont justes ! Si votre horloge n'est pas à l'heure, Nexa ne fonctionnera pas correctement.</translation>
+        <source>Please check that your computer&apos;s date and time are correct! If your clock is wrong Nexa will not work properly.</source>
+        <translation>Veuillez vérifier que l&apos;heure et la date de votre ordinateur sont justes ! Si votre horloge n&apos;est pas à l&apos;heure, Nexa ne fonctionnera pas correctement.</translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
-        <translation>L'élagage est configuré au-dessous du minimum de %d Mio. Veuillez utiliser un nombre plus élevé.</translation>
+        <translation>L&apos;élagage est configuré au-dessous du minimum de %d Mio. Veuillez utiliser un nombre plus élevé.</translation>
     </message>
     <message>
         <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
@@ -2949,7 +2998,7 @@
     </message>
     <message>
         <source>Reduce storage requirements by pruning (deleting) old blocks. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
-        <translation>Réduire les exigences de stockage en élaguant (supprimant) les anciens blocs. Ce mode est incompatible avec -txindex et -rescan. Avertissement : ramener ce paramètre à sa valeur antérieure exige un nouveau téléchargement de la chaîne de blocs en entier (par défaut : 0 = désactiver l'élagage des blocs, &gt;%u = taille cible en Mio à utiliser pour les fichiers de blocs).</translation>
+        <translation>Réduire les exigences de stockage en élaguant (supprimant) les anciens blocs. Ce mode est incompatible avec -txindex et -rescan. Avertissement : ramener ce paramètre à sa valeur antérieure exige un nouveau téléchargement de la chaîne de blocs en entier (par défaut : 0 = désactiver l&apos;élagage des blocs, &gt;%u = taille cible en Mio à utiliser pour les fichiers de blocs).</translation>
     </message>
     <message>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
@@ -2957,7 +3006,7 @@
     </message>
     <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>Erreur : une erreur interne fatale s'est produite. Voir debug.log pour plus de détails</translation>
+        <translation>Erreur : une erreur interne fatale s&apos;est produite. Voir debug.log pour plus de détails</translation>
     </message>
     <message>
         <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
@@ -2977,11 +3026,11 @@
     </message>
     <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Accepter les connexions entrantes (par défaut : 1 si aucun -proxy ou -connect )</translation>
+        <translation>Accepter les connexions entrantes (par défaut&#xa0;: 1 si aucun -proxy ou -connect )</translation>
     </message>
     <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation>Se lier à l'adresse donnée et toujours l'écouter. Utilisez la notation [host]:port pour l'IPv6</translation>
+        <translation>Se lier à l&apos;adresse donnée et toujours l&apos;écouter. Utilisez la notation [host]:port pour l&apos;IPv6</translation>
     </message>
     <message>
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
@@ -2989,23 +3038,23 @@
     </message>
     <message>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
-        <translation>Distribué sous la licence MIT d'utilisation d'un logiciel. Consultez le fichier joint COPYING ou &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
+        <translation>Distribué sous la licence MIT d&apos;utilisation d&apos;un logiciel. Consultez le fichier joint COPYING ou &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>Exécuter la commande lorsqu'une transaction de portefeuille change (%s dans la commande est remplacée par TxID)</translation>
+        <translation>Exécuter la commande lorsqu&apos;une transaction de portefeuille change (%s dans la commande est remplacée par TxID)</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation>Définir le nombre d'exétrons de vérification des scripts (%u à %d, 0 = auto, &lt; 0 = laisser ce nombre de cœurs inutilisés, par défaut : %d)</translation>
+        <translation>Définir le nombre d&apos;exétrons de vérification des scripts (%u à %d, 0 = auto, &lt; 0 = laisser ce nombre de cœurs inutilisés, par défaut : %d)</translation>
     </message>
     <message>
-        <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
-        <translation>La base de données de blocs contient un bloc qui semble provenir du futur. Cela pourrait être causé par la date et l'heure erronées de votre ordinateur. Ne reconstruisez la base de données de blocs que si vous êtes certain que la date et l'heure de votre ordinateur sont justes.</translation>
+        <source>The block database contains a block which appears to be from the future. This may be due to your computer&apos;s date and time being set incorrectly. Only rebuild the block database if you are sure that your computer&apos;s date and time are correct</source>
+        <translation>La base de données de blocs contient un bloc qui semble provenir du futur. Cela pourrait être causé par la date et l&apos;heure erronées de votre ordinateur. Ne reconstruisez la base de données de blocs que si vous êtes certain que la date et l&apos;heure de votre ordinateur sont justes.</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation>Ceci est une pré-version de test - l'utiliser à vos risques et périls - ne pas l'utiliser pour miner ou pour des applications marchandes</translation>
+        <translation>Ceci est une pré-version de test - l&apos;utiliser à vos risques et périls - ne pas l&apos;utiliser pour miner ou pour des applications marchandes</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer. Nexa is probably already running.</source>
@@ -3013,7 +3062,7 @@
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
-        <translation>Utiliser l'UPnP pour mapper le port d'écoute (par défaut : 1 lors de l'écoute et pas de mandataire -proxy)</translation>
+        <translation>Utiliser l&apos;UPnP pour mapper le port d&apos;écoute (par défaut&#xa0;: 1 lors de l&apos;écoute et pas de mandataire -proxy)</translation>
     </message>
     <message>
         <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
@@ -3025,11 +3074,11 @@
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>Avertissement : le réseau ne semble pas totalement d'accord ! Quelques mineurs semblent éprouver des difficultés.</translation>
+        <translation>Avertissement : le réseau ne semble pas totalement d&apos;accord ! Quelques mineurs semblent éprouver des difficultés.</translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation>Avertissement : nous ne semblons pas être en accord complet avec nos pairs ! Vous pourriez avoir besoin d'effectuer une mise à niveau, ou d'autres nœuds du réseau pourraient avoir besoin d'effectuer une mise à niveau.</translation>
+        <translation>Avertissement : nous ne semblons pas être en accord complet avec nos pairs ! Vous pourriez avoir besoin d&apos;effectuer une mise à niveau, ou d&apos;autres nœuds du réseau pourraient avoir besoin d&apos;effectuer une mise à niveau.</translation>
     </message>
     <message>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
@@ -3037,11 +3086,11 @@
     </message>
     <message>
         <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
-        <translation>Pairs de la liste blanche se connectant à partir du masque réseau ou de l'IP donné. Peut être spécifié plusieurs fois.</translation>
+        <translation>Pairs de la liste blanche se connectant à partir du masque réseau ou de l&apos;IP donné. Peut être spécifié plusieurs fois.</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
-        <translation>-maxmempool doit être d'au moins %d Mo</translation>
+        <translation>-maxmempool doit être d&apos;au moins %d Mo</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
@@ -3053,7 +3102,7 @@
     </message>
     <message>
         <source>Connect only to the specified node(s)</source>
-        <translation>Ne se connecter qu'au(x) nœud(s) spécifié(s)</translation>
+        <translation>Ne se connecter qu&apos;au(x) nœud(s) spécifié(s)</translation>
     </message>
     <message>
         <source>Connection options:</source>
@@ -3093,11 +3142,11 @@
     </message>
     <message>
         <source>Error initializing block database</source>
-        <translation>Erreur lors de l'initialisation de la base de données des blocs</translation>
+        <translation>Erreur lors de l&apos;initialisation de la base de données des blocs</translation>
     </message>
     <message>
         <source>Error initializing wallet database environment %s!</source>
-        <translation>Erreur lors de l'initialisation de l'environnement de la base de données du portefeuille %s !</translation>
+        <translation>Erreur lors de l&apos;initialisation de l&apos;environnement de la base de données du portefeuille %s !</translation>
     </message>
     <message>
         <source>Error loading block database</source>
@@ -3105,15 +3154,15 @@
     </message>
     <message>
         <source>Error opening block database</source>
-        <translation>Erreur lors de l'ouverture de la base de données des blocs</translation>
+        <translation>Erreur lors de l&apos;ouverture de la base de données des blocs</translation>
     </message>
     <message>
         <source>Error: Disk space is low!</source>
-        <translation>Erreur : l'espace disque est faible !</translation>
+        <translation>Erreur : l&apos;espace disque est faible !</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation>Échec de l'écoute sur un port quelconque. Utilisez -listen=0 si vous voulez ceci.</translation>
+        <translation>Échec de l&apos;écoute sur un port quelconque. Utilisez -listen=0 si vous voulez ceci.</translation>
     </message>
     <message>
         <source>Importing...</source>
@@ -3124,7 +3173,7 @@
         <translation>Bloc de genèse incorrect ou introuvable. Mauvais répertoire de données pour le réseau ?</translation>
     </message>
     <message>
-        <source>Invalid -onion address: '%s'</source>
+        <source>Invalid -onion address: &apos;%s&apos;</source>
         <translation>Adresse -onion invalide : « %s »</translation>
     </message>
     <message>
@@ -3141,11 +3190,11 @@
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
-        <translation>L'élagage ne peut pas être configuré avec une valeur négative.</translation>
+        <translation>L&apos;élagage ne peut pas être configuré avec une valeur négative.</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -txindex.</source>
-        <translation>Le mode élagage n'est pas compatible avec -txindex.</translation>
+        <translation>Le mode élagage n&apos;est pas compatible avec -txindex.</translation>
     </message>
     <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
@@ -3173,11 +3222,11 @@
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
-        <translation>Utiliser l'UPnP pour mapper le port d'écoute (par défaut : %u)</translation>
+        <translation>Utiliser l&apos;UPnP pour mapper le port d&apos;écoute (par défaut : %u)</translation>
     </message>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
-        <translation>Le commentaire d'agent utilisateur (%s) contient des caractères dangereux.</translation>
+        <translation>Le commentaire d&apos;agent utilisateur (%s) contient des caractères dangereux.</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
@@ -3209,11 +3258,11 @@
     </message>
     <message>
         <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
-        <translation>Se lier à l'adresse donnée et aux pairs s'y connectant. Utiliser la notation [host]:port pour l'IPv6</translation>
+        <translation>Se lier à l&apos;adresse donnée et aux pairs s&apos;y connectant. Utiliser la notation [host]:port pour l&apos;IPv6</translation>
     </message>
     <message>
         <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
-        <translation>Se lier à l'adresse donnée pour écouter des connexions JSON-RPC. Utiliser la notation [host]:port pour l'IPv6. Cette option peut être spécifiée plusieurs fois (par défaut : se lier à toutes les interfaces)</translation>
+        <translation>Se lier à l&apos;adresse donnée pour écouter des connexions JSON-RPC. Utiliser la notation [host]:port pour l&apos;IPv6. Cette option peut être spécifiée plusieurs fois (par défaut : se lier à toutes les interfaces)</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. Nexa is probably already running.</source>
@@ -3229,11 +3278,11 @@
     </message>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation>Erreur : l'écoute des connexions entrantes a échoué (l'écoute a retourné l'erreur %s)</translation>
+        <translation>Erreur : l&apos;écoute des connexions entrantes a échoué (l&apos;écoute a retourné l&apos;erreur %s)</translation>
     </message>
     <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation>Exécuter une commande lorsqu'une alerte pertinente est reçue ou si nous voyons une bifurcation vraiment étendue (%s dans la commande est remplacé par le message)</translation>
+        <translation>Exécuter une commande lorsqu&apos;une alerte pertinente est reçue ou si nous voyons une bifurcation vraiment étendue (%s dans la commande est remplacé par le message)</translation>
     </message>
     <message>
         <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)</source>
@@ -3241,10 +3290,10 @@
     </message>
     <message>
         <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
-        <translation>Si paytxfee n'est pas défini, inclure suffisamment de frais afin que les transactions commencent la confirmation en moyenne avant n blocs (par défaut : %u)</translation>
+        <translation>Si paytxfee n&apos;est pas défini, inclure suffisamment de frais afin que les transactions commencent la confirmation en moyenne avant n blocs (par défaut : %u)</translation>
     </message>
     <message>
-        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: &apos;%s&apos; (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation>Montant invalide pour -maxtxfee=&lt;amount&gt; : « %s » (doit être au moins les frais minrelay de %s pour prévenir le blocage des transactions)</translation>
     </message>
     <message>
@@ -3253,11 +3302,11 @@
     </message>
     <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
-        <translation>Demander les adresses des pairs par recherche DNS si l'on manque d'adresses (par défaut : 1 sauf si -connect)</translation>
+        <translation>Demander les adresses des pairs par recherche DNS si l&apos;on manque d&apos;adresses (par défaut : 1 sauf si -connect)</translation>
     </message>
     <message>
         <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
-        <translation>Aléer les authentifiants pour chaque connexion mandataire. Ceci active l'isolement de flux de Tor (par défaut : %u) </translation>
+        <translation>Aléer les authentifiants pour chaque connexion mandataire. Ceci active l&apos;isolement de flux de Tor (par défaut : %u) </translation>
     </message>
     <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
@@ -3273,7 +3322,7 @@
     </message>
     <message>
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>Ce produit comprend des logiciels développés par le projet OpenSSL pour être utilisés dans la boîte à outils OpenSSL &lt;https://www.openssl.org/&gt; et un logiciel cryptographique écrit par Eric Young, ainsi qu'un logiciel UPnP écrit par Thomas Bernard.</translation>
+        <translation>Ce produit comprend des logiciels développés par le projet OpenSSL pour être utilisés dans la boîte à outils OpenSSL &lt;https://www.openssl.org/&gt; et un logiciel cryptographique écrit par Eric Young, ainsi qu&apos;un logiciel UPnP écrit par Thomas Bernard.</translation>
     </message>
     <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
@@ -3301,15 +3350,15 @@
     </message>
     <message>
         <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>
-        <translation>Tenter de récupérer les clefs privées d'un wallet.dat corrompu lors du démarrage</translation>
+        <translation>Tenter de récupérer les clefs privées d&apos;un wallet.dat corrompu lors du démarrage</translation>
     </message>
     <message>
         <source>Automatically create Tor hidden service (default: %d)</source>
-        <translation>Créer automatiquement un service caché Tor (par défaut : %d)</translation>
+        <translation>Créer automatiquement un service caché Tor (par défaut&#xa0;: %d)</translation>
     </message>
     <message>
-        <source>Cannot resolve -whitebind address: '%s'</source>
-        <translation>Impossible de résoudre l'adresse -whitebind : « %s »</translation>
+        <source>Cannot resolve -whitebind address: &apos;%s&apos;</source>
+        <translation>Impossible de résoudre l&apos;adresse -whitebind : «&#xa0;%s&#xa0;»</translation>
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
@@ -3337,26 +3386,26 @@
     </message>
     <message>
         <source>Initialization sanity check failed. Nexa is shutting down.</source>
-        <translation>L'initialisation du test de cohérence a échoué. Nexa est en cours de fermeture. </translation>
+        <translation>L&apos;initialisation du test de cohérence a échoué. Nexa est en cours de fermeture. </translation>
     </message>
     <message>
-        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>Montant invalide pour -maxtxfee=&lt;amount&gt; : « %s »</translation>
     </message>
     <message>
-        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Montant invalide pour -minrelayfee=&lt;montant&gt; : « %s »</translation>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation>Montant invalide pour -minrelayfee=&lt;montant&gt; : «&#xa0;%s&#xa0;»</translation>
     </message>
     <message>
-        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Montant invalide pour -mintxfee=&lt;montant&gt; : « %s »</translation>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation>Montant invalide pour -mintxfee=&lt;montant&gt; : «&#xa0;%s&#xa0;»</translation>
     </message>
     <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation>Montant invalide pour -paytxfee=&lt;montant&gt; : « %s » (doit être au moins %s)</translation>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos; (must be at least %s)</source>
+        <translation>Montant invalide pour -paytxfee=&lt;montant&gt; : «&#xa0;%s&#xa0;» (doit être au moins %s)</translation>
     </message>
     <message>
-        <source>Invalid netmask specified in -whitelist: '%s'</source>
+        <source>Invalid netmask specified in -whitelist: &apos;%s&apos;</source>
         <translation>Masque réseau invalide spécifié dans -whitelist : « %s »</translation>
     </message>
     <message>
@@ -3364,7 +3413,7 @@
         <translation>Garder au plus &lt;n&gt; transactions non connectables en mémoire (par défaut : %u)</translation>
     </message>
     <message>
-        <source>Need to specify a port with -whitebind: '%s'</source>
+        <source>Need to specify a port with -whitebind: &apos;%s&apos;</source>
         <translation>Un port doit être spécifié avec -whitebind : « %s »</translation>
     </message>
     <message>
@@ -3377,7 +3426,7 @@
     </message>
     <message>
         <source>Rebuild block chain index from current blk000??.dat files on startup</source>
-        <translation>Reconstruire au démarrage l'index de la chaîne de blocs à partir des fichiers blk000??.dat actuels</translation>
+        <translation>Reconstruire au démarrage l&apos;index de la chaîne de blocs à partir des fichiers blk000??.dat actuels</translation>
     </message>
     <message>
         <source>Receive and display P2P network alerts (default: %u)</source>
@@ -3405,7 +3454,7 @@
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation>Réduire le fichier debug.log lors du démarrage du client (par défaut : 1 lorsque -debug n'est pas présent)</translation>
+        <translation>Réduire le fichier debug.log lors du démarrage du client (par défaut : 1 lorsque -debug n&apos;est pas présent)</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
@@ -3425,7 +3474,7 @@
     </message>
     <message>
         <source>Tor control port to use if onion listening enabled (default: %s)</source>
-        <translation>Port de contrôle Tor à utiliser si l'écoute onion est activée (par défaut :%s)</translation>
+        <translation>Port de contrôle Tor à utiliser si l&apos;écoute onion est activée (par défaut :%s)</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -3445,7 +3494,7 @@
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation>Impossible de se lier à %s sur cet ordinateur (bind a retourné l'erreur %s)</translation>
+        <translation>Impossible de se lier à %s sur cet ordinateur (bind a retourné l&apos;erreur %s)</translation>
     </message>
     <message>
         <source>Upgrade wallet to latest format on startup</source>
@@ -3453,11 +3502,11 @@
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>
-        <translation>Nom d'utilisateur pour les connexions JSON-RPC</translation>
+        <translation>Nom d&apos;utilisateur pour les connexions JSON-RPC</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart Nexa to complete</source>
-        <translation>Le portefeuille avait besoin d'être réécrit : veuillez redémarrer Nexa pour terminer</translation>
+        <translation>Le portefeuille avait besoin d&apos;être réécrit&#xa0;: veuillez redémarrer Nexa pour terminer</translation>
     </message>
     <message>
         <source>Warning</source>
@@ -3489,7 +3538,7 @@
     </message>
     <message>
         <source>This help message</source>
-        <translation>Ce message d'aide</translation>
+        <translation>Ce message d&apos;aide</translation>
     </message>
     <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
@@ -3501,7 +3550,7 @@
     </message>
     <message>
         <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>Erreur lors du chargement de wallet.dat : portefeuille corrompu</translation>
+        <translation>Erreur lors du chargement de wallet.dat&#xa0;: portefeuille corrompu</translation>
     </message>
     <message>
         <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
@@ -3513,7 +3562,7 @@
     </message>
     <message>
         <source>-paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>-paytxfee est réglé sur un montant très élevé ! Il s'agit des frais de transaction que vous payerez si vous envoyez une transaction.</translation>
+        <translation>-paytxfee est réglé sur un montant très élevé ! Il s&apos;agit des frais de transaction que vous payerez si vous envoyez une transaction.</translation>
     </message>
     <message>
         <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
@@ -3521,7 +3570,7 @@
     </message>
     <message>
         <source>Error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>Une erreur est survenue lors de la lecture de wallet.dat ! Toutes les clefs ont été lues correctement, mais les données transactionnelles ou les entrées du carnet d'adresses sont peut-être manquantes ou incorrectes.</translation>
+        <translation>Une erreur est survenue lors de la lecture de wallet.dat ! Toutes les clefs ont été lues correctement, mais les données transactionnelles ou les entrées du carnet d&apos;adresses sont peut-être manquantes ou incorrectes.</translation>
     </message>
     <message>
         <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
@@ -3533,7 +3582,7 @@
     </message>
     <message>
         <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
-        <translation>Maintenir un index complet des transactions, utilisé par l'appel RPC getrawtransaction (obtenir la transaction brute) (par défaut : %u)</translation>
+        <translation>Maintenir un index complet des transactions, utilisé par l&apos;appel RPC getrawtransaction (obtenir la transaction brute) (par défaut : %u)</translation>
     </message>
     <message>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</source>
@@ -3552,12 +3601,16 @@
         <translation>La taille totale de la chaîne de version de réseau (%i) dépasse la longueur maximale (%i). Réduire le nombre ou la taille des commentaires uacomments.</translation>
     </message>
     <message>
+        <source>Wallet is not password protected. Your funds may be at risk! Goto &quot;Settings&quot; and then select &quot;Encrypt Wallet&quot; to create a password.</source>
+        <translation>Wallet n'est pas protégé par mot de passe. Vos fonds sont peut-être à risque! Allez dans « Règlages », puis sélectionnez « Chiffrere le portefeuille » pour créer un mot de passe.</translation>
+    </message>
+    <message>
         <source>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</source>
         <translation>Tente de garder le trafic sortant sous la cible donnée (en Mio par 24 h), 0 = sans limite (par défaut : %d)</translation>
     </message>
     <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>L'argument non pris en charge -socks a été trouvé. Il n'est plus possible de définir la version de SOCKS, seuls les mandataires SOCKS5 sont pris en charge.</translation>
+        <source>Unsupported argument -socks found. Setting SOCKS version isn&apos;t possible anymore, only SOCKS5 proxies are supported.</source>
+        <translation>L&apos;argument non pris en charge -socks a été trouvé. Il n&apos;est plus possible de définir la version de SOCKS, seuls les mandataires SOCKS5 sont pris en charge.</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
@@ -3565,7 +3618,7 @@
     </message>
     <message>
         <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. This option can be specified multiple times</source>
-        <translation>Nom d'utilisateur et mot de passe haché pour les connexions JSON-RPC. Le champ &lt;userpw&gt; vient au format : &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. Un script python canonique est inclus dans share/rpcuser. Cette option peut être spécifiée plusieurs fois.</translation>
+        <translation>Nom d&apos;utilisateur et mot de passe haché pour les connexions JSON-RPC. Le champ &lt;userpw&gt; vient au format : &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. Un script python canonique est inclus dans share/rpcuser. Cette option peut être spécifiée plusieurs fois.</translation>
     </message>
     <message>
         <source>(default: %s)</source>
@@ -3592,8 +3645,8 @@
         <translation>Inclure les adresses IP à la sortie de débogage (par défaut : %u)</translation>
     </message>
     <message>
-        <source>Invalid -proxy address: '%s'</source>
-        <translation>Adresse -proxy invalide : « %s »</translation>
+        <source>Invalid -proxy address: &apos;%s&apos;</source>
+        <translation>Adresse -proxy invalide&#xa0;: «&#xa0;%s&#xa0;»</translation>
     </message>
     <message>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
@@ -3617,11 +3670,11 @@
     </message>
     <message>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
-        <translation>Tampon maximal d'envoi par connexion », &lt;n&gt;*1000 octets (par défaut : %u)</translation>
+        <translation>Tampon maximal d&apos;envoi par connexion », &lt;n&gt;*1000 octets (par défaut : %u)</translation>
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
-        <translation>Ajouter l'horodatage au début de la sortie de débogage (par défaut : %u)</translation>
+        <translation>Ajouter l&apos;horodatage au début de la sortie de débogage (par défaut : %u)</translation>
     </message>
     <message>
         <source>Relay and mine data carrier transactions (default: %u)</source>
@@ -3641,7 +3694,7 @@
     </message>
     <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
-        <translation>Définir le nombre d'exétrons pour desservir les appels RPC (par défaut : %d)</translation>
+        <translation>Définir le nombre d&apos;exétrons pour desservir les appels RPC (par défaut : %d)</translation>
     </message>
     <message>
         <source>Specify configuration file (default: %s)</source>
@@ -3649,7 +3702,7 @@
     </message>
     <message>
         <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
-        <translation>Spécifier le délai d'expiration de la connexion en millisecondes (minimum : 1, par défaut : %d)</translation>
+        <translation>Spécifier le délai d&apos;expiration de la connexion en millisecondes (minimum : 1, par défaut : %d)</translation>
     </message>
     <message>
         <source>Specify pid file (default: %s)</source>
@@ -3657,27 +3710,27 @@
     </message>
     <message>
         <source>Spend unconfirmed change when sending transactions (default: %u)</source>
-        <translation>Dépenser la monnaie non confirmée lors de l'envoi de transactions (par défaut : %u)</translation>
+        <translation>Dépenser la monnaie non confirmée lors de l&apos;envoi de transactions (par défaut : %u)</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
         <translation>Seuil de déconnexion des pairs présentant un mauvais comportement (par défaut : %u)</translation>
     </message>
     <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation>Réseau inconnu spécifié sur -onlynet : « %s »</translation>
+        <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
+        <translation>Réseau inconnu spécifié sur -onlynet&#xa0;: «&#xa0;%s&#xa0;»</translation>
     </message>
     <message>
-        <source>Cannot resolve -bind address: '%s'</source>
-        <translation>Impossible de résoudre l'adresse -bind : « %s »</translation>
+        <source>Cannot resolve -bind address: &apos;%s&apos;</source>
+        <translation>Impossible de résoudre l&apos;adresse -bind&#xa0;: «&#xa0;%s&#xa0;»</translation>
     </message>
     <message>
-        <source>Cannot resolve -externalip address: '%s'</source>
-        <translation>Impossible de résoudre l'adresse -externalip : « %s »</translation>
+        <source>Cannot resolve -externalip address: &apos;%s&apos;</source>
+        <translation>Impossible de résoudre l&apos;adresse -externalip&#xa0;: «&#xa0;%s&#xa0;»</translation>
     </message>
     <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Montant invalide pour -paytxfee=&lt;montant&gt; : « %s »</translation>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation>Montant invalide pour -paytxfee=&lt;montant&gt;&#xa0;: «&#xa0;%s&#xa0;»</translation>
     </message>
     <message>
         <source>Insufficient funds</source>
@@ -3701,7 +3754,7 @@
     </message>
     <message>
         <source>Cannot write default address</source>
-        <translation>Impossible d'écrire l'adresse par défaut</translation>
+        <translation>Impossible d&apos;écrire l&apos;adresse par défaut</translation>
     </message>
     <message>
         <source>Rescanning...</source>

@@ -586,7 +586,7 @@
         <translation>Сдача:</translation>
     </message>
     <message>
-        <source>(un)select all</source>
+        <source>(un)select max inputs</source>
         <translation>Отменить выбор всего</translation>
     </message>
     <message>
@@ -1074,6 +1074,14 @@
     <message>
         <source>&amp;Spend unconfirmed change</source>
         <translation>&amp;Тратить неподтверждённую сдачу</translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When Instant Transactions is enabled you can spend unconfirmed transactions immediately.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Когда Мгновенные транзакции включены, вы можете немедленно тратить неподтвержденные транзакции.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <source>&amp;Instant Transactions</source>
+        <translation>&amp;Мгновенные транзакции</translation>
     </message>
     <message>
         <source>Automatically open the Nexa client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -2902,7 +2910,7 @@
     </message>
 </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>nexa</name>
     <message>
         <source>Options:</source>
         <translation>Параметры:</translation>
@@ -3710,6 +3718,10 @@
     <message>
         <source>Error</source>
         <translation>Ошибка</translation>
+    </message>
+    <message>
+        <source>Wallet is not password protected. Your funds may be at risk! Goto &quot;Settings&quot; and then select &quot;Encrypt Wallet&quot; to create a password.</source>
+        <translation>IКошелек не защищен паролем. Ваши средства могут быть в опасности! Перейти к &quot;Настройки&quot; а затем выберите «Зашифровать бумажник». для создания пароля.</translation>
     </message>
 </context>
 </TS>

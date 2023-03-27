@@ -509,7 +509,7 @@ Estas son las direcciones de Nexa para enviar pagos . Siempre verifique la canti
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>nexa</name>
     <message>
         <source>Insufficient funds</source>
         <translation>Fondos Insuficientes</translation>

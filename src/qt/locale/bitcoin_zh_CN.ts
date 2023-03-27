@@ -586,7 +586,7 @@
         <translation>变更 : </translation>
     </message>
     <message>
-        <source>(un)select all</source>
+        <source>(un)select max inputs</source>
         <translation>(不)全选</translation>
     </message>
     <message>
@@ -2902,7 +2902,7 @@
     </message>
 </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>nexa</name>
     <message>
         <source>Options:</source>
         <translation>选项：

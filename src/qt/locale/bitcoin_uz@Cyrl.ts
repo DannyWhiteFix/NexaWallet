@@ -528,7 +528,7 @@
         <translation>Ўзгартириш:</translation>
     </message>
     <message>
-        <source>(un)select all</source>
+        <source>(un)select max inputs</source>
         <translation>барчасини танаш (бекор қилиш)</translation>
     </message>
     <message>
@@ -2104,7 +2104,7 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>nexa</name>
     <message>
         <source>Options:</source>
         <translation>Танламалар:</translation>

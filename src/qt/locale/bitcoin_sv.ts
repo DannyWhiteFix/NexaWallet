@@ -587,7 +587,7 @@ Var vänlig och försök igen.</translation>
         <translation>Växel:</translation>
     </message>
     <message>
-        <source>(un)select all</source>
+        <source>(un)select max inputs</source>
         <translation>(av)markera allt</translation>
     </message>
     <message>
@@ -2903,7 +2903,7 @@ Var vänlig och försök igen.</translation>
     </message>
 </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>nexa</name>
     <message>
         <source>Options:</source>
         <translation>Inställningar:</translation>

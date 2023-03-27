@@ -1000,7 +1000,7 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>nexa</name>
     <message>
         <source>(default: %u)</source>
         <translation>(default: %u)</translation>
