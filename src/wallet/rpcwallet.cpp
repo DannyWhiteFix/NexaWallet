@@ -2762,6 +2762,18 @@ UniValue getwalletinfo(const UniValue &params, bool fHelp)
             "  \"immature_balance\": xxxxxx, (numeric) the total immature balance of the wallet in " +
             CURRENCY_UNIT +
             "\n"
+            "  \"watchonly_balance\": xxxxxxx,         (numeric) the total watchonly confirmed balance of the wallet "
+            "in " +
+            CURRENCY_UNIT +
+            "\n"
+            "  \"unconfirmed_watchonly_balance\": xxx, (numeric) the total watchonly unconfirmed balance of the wallet "
+            "in " +
+            CURRENCY_UNIT +
+            "\n"
+            "  \"immature_watchonly_balance\": xxxxxx, (numeric) the total watchonly immature balance of the wallet "
+            "in " +
+            CURRENCY_UNIT +
+            "\n"
             "  \"txcount\": xxxxxxx,         (numeric) the total number of transactions in the wallet\n"
             "  \"keypoololdest\": xxxxxx,    (numeric) the timestamp (seconds since GMT epoch) of the "
             "oldest pre-generated key in the key pool\n"
@@ -2785,6 +2797,9 @@ UniValue getwalletinfo(const UniValue &params, bool fHelp)
     obj.pushKV("balance", ValueFromAmount(pwalletMain->GetBalance()));
     obj.pushKV("unconfirmed_balance", ValueFromAmount(pwalletMain->GetUnconfirmedBalance()));
     obj.pushKV("immature_balance", ValueFromAmount(pwalletMain->GetImmatureBalance()));
+    obj.pushKV("watchonly_balance", ValueFromAmount(pwalletMain->GetWatchOnlyBalance()));
+    obj.pushKV("unconfirmed_watchonly_balance", ValueFromAmount(pwalletMain->GetUnconfirmedWatchOnlyBalance()));
+    obj.pushKV("immature_watchonly_balance", ValueFromAmount(pwalletMain->GetImmatureWatchOnlyBalance()));
     obj.pushKV("txcount", (int)pwalletMain->mapWallet.size() / 3);
     obj.pushKV("keypoololdest", pwalletMain->GetOldestKeyPoolTime());
     obj.pushKV("keypoolsize", (int)pwalletMain->GetKeyPoolSize());
