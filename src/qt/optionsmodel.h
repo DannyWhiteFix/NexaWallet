@@ -30,6 +30,7 @@ public:
     enum OptionID
     {
         StartAtStartup, // bool
+        ReindexOnStartup, // bool
         MinimizeToTray, // bool
         MapPortUPnP, // bool
         MinimizeOnClose, // bool
