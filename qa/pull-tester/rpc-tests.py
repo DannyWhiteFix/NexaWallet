@@ -216,6 +216,7 @@ testScripts = [ RpcTest(t) for t in [
     'parallel',
     'wallet --addrType=p2pkt',
     'wallet --addrType=p2pkh',
+    'wallet_watchonly',
     'wallet_hd',
     'wallet_dump',
     'listtransactions',
