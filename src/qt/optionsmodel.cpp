@@ -87,6 +87,13 @@ void OptionsModel::Init(bool resetSettings)
     if (!SoftSetArg("-par", settings.value("nThreadsScriptVerif").toString().toStdString()))
         addOverriddenOption("-par");
 
+    // Start reindex and then turn off the reindex checkbox so that we do it only one time
+    if (!settings.contains("fReindexOnStartup"))
+        settings.setValue("fReindexOnStartup", false);
+    if (!SoftSetArg("-reindex", settings.value("fReindexOnStartup").toString().toStdString()))
+        addOverriddenOption("-reindex");
+    settings.setValue("fReindexOnStartup", false);
+
 // Wallet
 #ifdef ENABLE_WALLET
     if (!settings.contains("bSpendZeroConfChange"))
@@ -186,6 +193,8 @@ QVariant OptionsModel::data(const QModelIndex &index, int role) const
         {
         case StartAtStartup:
             return GUIUtil::GetStartOnSystemStartup();
+        case ReindexOnStartup:
+            return settings.value("fReindexOnStartup");
         case MinimizeToTray:
             return fMinimizeToTray;
         case MapPortUPnP:
@@ -291,6 +300,10 @@ bool OptionsModel::setData(const QModelIndex &index, const QVariant &value, int 
         {
         case StartAtStartup:
             successful = GUIUtil::SetStartOnSystemStartup(value.toBool());
+            break;
+        case ReindexOnStartup:
+            settings.setValue("fReindexOnStartup", value);
+            setRestartRequired(true);
             break;
         case MinimizeToTray:
             fMinimizeToTray = value.toBool();

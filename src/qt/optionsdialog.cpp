@@ -37,13 +37,14 @@
 extern CTweak<bool> instantTxns;
 
 OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet)
-    : QDialog(parent), ui(new Ui::OptionsDialog), portValidator(1, 65536, this), // BU fix memory leaks
+    : QDialog(parent), ui(new Ui::OptionsDialog), portValidator(1, 65536, this), // fix memory leaks
       proxyPortValidator(1, 65536, this), model(0), mapper(0)
 {
     ui->setupUi(this);
     /* Main elements init */
     ui->threadsScriptVerif->setMinimum(-GetNumCores());
     ui->threadsScriptVerif->setMaximum(MAX_SCRIPTCHECK_THREADS);
+    ui->reindexOnStartup->setEnabled(true);
 
 /* Network elements init */
 #ifndef USE_UPNP
@@ -161,6 +162,7 @@ void OptionsDialog::setModel(OptionsModel *_model)
 
     /* Main */
     connect(ui->threadsScriptVerif, SIGNAL(valueChanged(int)), this, SLOT(showRestartWarning()));
+    connect(ui->reindexOnStartup, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     /* Wallet */
     connect(ui->spendZeroConfChange, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     connect(ui->instantTransactions, SIGNAL(clicked(bool)), this, SLOT(setInstant()));
@@ -178,6 +180,7 @@ void OptionsDialog::setMapper()
     /* Main */
     mapper->addMapping(ui->bitcoinAtStartup, OptionsModel::StartAtStartup);
     mapper->addMapping(ui->threadsScriptVerif, OptionsModel::ThreadsScriptVerif);
+    mapper->addMapping(ui->reindexOnStartup, OptionsModel::ReindexOnStartup);
 
     /* Wallet */
     mapper->addMapping(ui->spendZeroConfChange, OptionsModel::SpendZeroConfChange);
