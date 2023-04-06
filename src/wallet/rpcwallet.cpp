@@ -6,6 +6,7 @@
 
 #include "amount.h"
 #include "chain.h"
+#include "coincontrol.h"
 #include "core_io.h"
 #include "dstencode.h"
 #include "grouptokenwallet.h"
@@ -14,6 +15,7 @@
 #include "net.h"
 #include "rpc/server.h"
 #include "script/sign.h"
+
 #include "timedata.h"
 #include "txadmission.h"
 #include "util.h"
@@ -30,6 +32,7 @@ using namespace std;
 int64_t nWalletUnlockTime;
 static CCriticalSection cs_nWalletUnlockTime;
 static CCriticalSection serializeCreateTx;
+
 
 std::string HelpRequiringPassphrase()
 {
@@ -100,6 +103,122 @@ string AccountFromValue(const UniValue &value)
     if (strAccount == "*")
         throw JSONRPCError(RPC_WALLET_INVALID_ACCOUNT_NAME, "Invalid account name");
     return strAccount;
+}
+
+// Sort fee from lower to higher
+class CompareCoinValue
+{
+public:
+    bool operator()(const COutput &a, const COutput &b) const { return a.GetValue() < b.GetValue(); }
+};
+UniValue consolidate(const UniValue &params, bool fHelp)
+{
+    if (!EnsureWalletIsAvailable(fHelp))
+        return NullUniValue;
+
+    if (fHelp || params.size() > 2)
+        throw runtime_error("consolidate (\"num\" \"toleave\")\n"
+                            "\nConsolidates spendable utxos in the wallet.\n"
+                            "\nArguments:\n"
+                            "1. \"num\" (number, optional) number of coins to consolidate)\n"
+                            "2. \"toleave\" (number, optional) minimum number of coins to leave)\n"
+                            "\nResult:\n"
+                            "\"success\"    (string) consolidated successfully with <toleave> coins remaining\n"
+                            "\nExamples:\n" +
+                            HelpExampleCli("consolidate", "") + HelpExampleRpc("consolidate", ""));
+
+    LOCK(pwalletMain->cs_wallet);
+
+    if (!pwalletMain->IsLocked())
+        pwalletMain->TopUpKeyPool();
+
+    CReserveKey reservekey(pwalletMain);
+    CPubKey vchPubKey;
+    if (!reservekey.GetReservedKey(vchPubKey))
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+
+    uint32_t numUtxos = UINT32_MAX;
+    uint32_t numUtxosToLeave = 1;
+    if (params.size() > 0)
+    {
+        if (params[0].isStr())
+        {
+            numUtxos = std::stoi(params[0].get_str());
+        }
+        else if (params[0].isNum())
+        {
+            numUtxos = params[0].get_int();
+        }
+        if (numUtxos <= 0)
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error: number of coins to consolidate must be a positive number");
+    }
+
+    if (params.size() > 1)
+    {
+        if (params[1].isStr())
+        {
+            numUtxosToLeave = std::stoi(params[1].get_str());
+        }
+        else if (params[1].isNum())
+        {
+            numUtxosToLeave = params[1].get_int();
+        }
+        if (numUtxosToLeave <= 0)
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error: number of coins to leave must be a positive number");
+    }
+
+    LOCK(serializeCreateTx);
+    uint32_t nTotalCoinsChosen = 0;
+    while (nTotalCoinsChosen < numUtxos)
+    {
+        // Get a list of available coins and select up to the max vin allowed
+        CCoinControl coinControl;
+        coinControl.fAllowOtherInputs = false;
+        coinControl.fAllowWatchOnly = false;
+        vector<COutput> sel;
+        CAmount nValue = 0;
+        uint32_t count = 0;
+        pwalletMain->AvailableCoins(sel, &coinControl, false);
+        std::sort(sel.begin(), sel.end(), CompareCoinValue());
+        if (sel.size() <= 1 || sel.size() <= numUtxosToLeave || nTotalCoinsChosen >= numUtxos)
+            break;
+        for (const auto &coin : sel)
+        {
+            coinControl.Select(coin.GetOutPoint());
+            nValue += coin.GetValue();
+            count++;
+            nTotalCoinsChosen++;
+            if (count >= MAX_TX_NUM_VIN || nTotalCoinsChosen >= numUtxos || (sel.size() - count) < numUtxosToLeave)
+                break;
+        }
+
+        CScript scriptPubKey = P2pktOutput(vchPubKey);
+
+        // Create and send the transaction
+        {
+            CWalletTx wtxNew;
+            CAmount nFeeRequired = 0;
+            std::string strError;
+            vector<CRecipient> vecSend;
+            int nChangePosRet = -1;
+            bool fSubtractFeeFromAmount = true;
+            CRecipient recipient = {scriptPubKey, nValue, fSubtractFeeFromAmount};
+            vecSend.push_back(recipient);
+            if (!pwalletMain->CreateTransaction(
+                    vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strError, &coinControl))
+            {
+                throw JSONRPCError(RPC_WALLET_ERROR, "Error: failed to create transaction during consolidation");
+            }
+            std::string error;
+            if (!pwalletMain->CommitTransaction(wtxNew, reservekey, error))
+                throw JSONRPCError(RPC_WALLET_ERROR, error);
+        }
+    }
+
+    vector<COutput> coins;
+    pwalletMain->AvailableCoins(coins, nullptr, false);
+    return strprintf(
+        "consolidated successfully with %d %s remaining", coins.size(), coins.size() == 1 ? "coin" : "coins");
 }
 
 UniValue getnewaddress(const UniValue &params, bool fHelp)
@@ -3063,6 +3182,7 @@ static const CRPCCommand commands[] = {
     {"wallet",                "abandontransaction",       &abandontransaction,       false},
     {"wallet",                "addmultisigaddress",       &addmultisigaddress,       true},
     {"wallet",                "backupwallet",             &backupwallet,             true},
+    {"wallet",                "consolidate",              &consolidate,              true},
     {"wallet",                "dumpprivkey",              &dumpprivkey,              true},
     {"wallet",                "dumpwallet",               &dumpwallet,               true},
     {"wallet",                "encryptwallet",            &encryptwallet,            true},

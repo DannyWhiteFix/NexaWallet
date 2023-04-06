@@ -7,6 +7,7 @@
 #define NEXA_COINCONTROL_H
 
 #include "primitives/transaction.h"
+#include "script/standard.h"
 
 /** Coin Control Features. */
 class CCoinControl

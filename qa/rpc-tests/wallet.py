@@ -569,6 +569,44 @@ class WalletTest (BitcoinTestFramework):
         assert_equal(len(self.nodes[0].listsinceblock(blocks[1])["transactions"]), 0)
 
 
+        ### Check coin consolidation
+        # Note: Every time we consolidate we also create 1 coin, so if we consolidate 10 coins
+        # we'll end up with only 9 less.
+        disconnect_all(self.nodes[0])
+        coins_before = len(self.nodes[0].listunspent(0))
+        self.nodes[0].consolidate(2)
+        waitFor(30, lambda: coins_before == len(self.nodes[0].listunspent(0)) + 1)
+
+        self.nodes[0].generate(115)
+        coins_before = len(self.nodes[0].listunspent(0))
+        self.nodes[0].consolidate(10)
+        waitFor(30, lambda: coins_before == len(self.nodes[0].listunspent(0)) + 9)
+ 
+        # try to consolidate more coins than are in the wallet
+        self.nodes[0].consolidate(100)
+        waitFor(30, lambda: len(self.nodes[0].listunspent(0)) == 1)
+
+        # generate more utxos
+        self.nodes[0].generate(500);
+        coins_before = len(self.nodes[0].listunspent(0));
+        assert_greater_than(coins_before, 500);
+
+        # do a partial consolidation using the second parameter which
+        # leaves at least that many utxos
+        self.nodes[0].consolidate(200, 400)
+        waitFor(30, lambda: len(self.nodes[0].listunspent(0)) == 400)
+        self.nodes[0].consolidate(200, 400)
+        waitFor(30, lambda: len(self.nodes[0].listunspent(0)) == 400)
+        self.nodes[0].consolidate(10, 300)
+        waitFor(30, lambda: len(self.nodes[0].listunspent(0)) == 391)
+        self.nodes[0].consolidate(10, 300)
+        waitFor(30, lambda: len(self.nodes[0].listunspent(0)) == 382)
+
+        # do a full consolidation
+        self.nodes[0].consolidate()
+        waitFor(30, lambda: len(self.nodes[0].listunspent(0)) == 1)
+
+
 if __name__ == '__main__':
     WalletTest ().main ()
 
