@@ -259,7 +259,9 @@ void OptionsDialog::showRestartWarning(bool fPersistent)
 void OptionsDialog::setInstant(bool fPersistent)
 {
     bool fInstant = ui->instantTransactions->isChecked();
+#ifdef ENABLE_WALLET
     instantTxns.Set(fInstant);
+#endif
 
     if (!fInstant)
         ui->spendZeroConfChange->setEnabled(true);
