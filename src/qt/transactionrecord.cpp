@@ -277,6 +277,8 @@ void TransactionRecord::updateStatus(const CWalletTxRef &wtx)
         {
             if (wtx->fDoubleSpent)
                 status.status = TransactionStatus::DoubleSpent;
+            else if (wtx->isAbandoned())
+                status.status = TransactionStatus::Abandoned;
             else
                 status.status = TransactionStatus::Unconfirmed;
         }

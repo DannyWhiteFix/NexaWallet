@@ -2356,7 +2356,7 @@ UniValue gettransaction(const UniValue &params, bool fHelp)
 
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "gettransaction \"txid\" ( includeWatchonly )\n"
+            "gettransaction \"txid or txidem\" ( includeWatchonly )\n"
             "\nGet detailed information about in-wallet transaction <txid/txidem>\n"
             "\nArguments:\n"
             "1. \"txid or txidem\"    (string, required) The transaction id or transaction idem\n"
@@ -2449,14 +2449,14 @@ UniValue abandontransaction(const UniValue &params, bool fHelp)
 
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "abandontransaction \"txid\"\n"
-            "\nMark in-wallet transaction <txid> as abandoned\n"
+            "abandontransaction \"txid\" or \"txidem\"\n"
+            "\nMark in-wallet transaction as abandoned\n"
             "This will mark this transaction and all its in-wallet descendants as abandoned which will allow\n"
             "for their inputs to be respent.  It can be used to replace \"stuck\" or evicted transactions.\n"
             "It only works on transactions which are not included in a block.  It removes transactions currently\n"
             "in the txpool.  It has no effect on transactions which are already conflicted or abandoned.\n"
             "\nArguments:\n"
-            "1. \"txid\"    (string, required) The transaction id\n"
+            "1. \"txid or txidem\"    (string, required) The transaction id or idem\n"
             "\nResult:\n"
             "\nExamples:\n" +
             HelpExampleCli(

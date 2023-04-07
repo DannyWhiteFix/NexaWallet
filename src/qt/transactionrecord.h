@@ -42,6 +42,7 @@ public:
         Confirming, /**< Confirmed, but waiting for the recommended number of confirmations **/
         Conflicted, /**< Conflicts with other transaction or mempool **/
         DoubleSpent, /** Transaction has been double spent */
+        Abandoned, /** Transaction has been abandoned and removed from the mempool */
         /// Generated (mined) transactions
         Immature, /**< Mined but waiting for maturity */
         MaturesWarning, /**< Transaction will likely not mature because no nodes have confirmed */

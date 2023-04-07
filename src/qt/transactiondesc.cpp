@@ -38,6 +38,8 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx &wtx)
         int nDepth = wtx.GetDepthInMainChain();
         if (nDepth == 0 && wtx.fDoubleSpent)
             return tr("double spent");
+        else if (wtx.isAbandoned())
+            return tr("abandoned");
         else if (nDepth < 0)
             return tr("conflicted");
         else if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
