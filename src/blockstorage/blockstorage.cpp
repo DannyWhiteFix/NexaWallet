@@ -52,10 +52,16 @@ void InitializeBlockStorage(const int64_t &_nBlockTreeDBCache,
     blockcache.Init();
     if (BLOCK_DB_MODE == SEQUENTIAL_BLOCK_FILES) // BLOCK_DB_MODE 0
     {
+        // Check if we had scheduled a reindex on last shutdown
+        pblocktree = new CBlockTreeDB(_nBlockTreeDBCache, "blocks", false, false);
+        bool fScheduledReindex = false;
+        bool fRead = pblocktree->ReadReindexing(fScheduledReindex);
+        if (fRead && fScheduledReindex)
+            fReindex = true;
+
         if (fReindex)
         {
             // Startup the database with the reindex (wipe database) flag set to false and get the value of nChainTx
-            pblocktree = new CBlockTreeDB(_nBlockTreeDBCache, "blocks", false, false);
             const uint64_t nChainTx = pblocktree->GetBestBlockHeaderChainTx();
             delete pblocktree;
 
@@ -64,15 +70,21 @@ void InitializeBlockStorage(const int64_t &_nBlockTreeDBCache,
             pblocktree->WriteBestBlockHeaderChainTx(nChainTx);
             nTotalChainTx.store(nChainTx);
         }
-        else
-        {
-            pblocktree = new CBlockTreeDB(_nBlockTreeDBCache, "blocks", false, false);
-        }
+
         delete pblockdb;
         pblockdb = nullptr;
     }
     else if (BLOCK_DB_MODE == LEVELDB_BLOCK_STORAGE) // BLOCK_DB_MODE 1
     {
+        // Check if we had scheduled a reindex on last shutdown
+        pblocktree = new CBlockTreeDB(_nBlockTreeDBCache, "blockdb", false, false);
+        bool fScheduledReindex = false;
+        bool fRead = pblocktree->ReadReindexing(fScheduledReindex);
+        delete pblocktree;
+        if (fRead && fScheduledReindex)
+            fReindex = true;
+
+        // Create the db with the appropriate fReindex flag set.
         pblocktree = new CBlockTreeDB(_nBlockTreeDBCache, "blockdb", false, fReindex);
         if (fs::exists(GetDataDir() / "blockdb" / "blocks"))
         {
