@@ -33,6 +33,8 @@ int64_t nWalletUnlockTime;
 static CCriticalSection cs_nWalletUnlockTime;
 static CCriticalSection serializeCreateTx;
 
+extern CTweak<bool> instantTxns;
+
 
 std::string HelpRequiringPassphrase()
 {
@@ -116,17 +118,24 @@ UniValue consolidate(const UniValue &params, bool fHelp)
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
 
-    if (fHelp || params.size() > 2)
+    if (fHelp || params.size() != 2)
         throw runtime_error("consolidate (\"num\" \"toleave\")\n"
-                            "\nConsolidates spendable utxos in the wallet.\n"
+                            "\nConsolidates spendable utxos in the wallet. (-spendzeroconfchange or -wallet.instant\n"
+                            "must be enabled)\n"
                             "\nArguments:\n"
-                            "1. \"num\" (number, optional) number of coins to consolidate)\n"
-                            "2. \"toleave\" (number, optional) minimum number of coins to leave)\n"
+                            "1. \"num\"     (number, required) number of coins to consolidate)\n"
+                            "2. \"toleave\" (number, required) minimum number of coins to leave)\n"
                             "\nResult:\n"
                             "\"success\"    (string) consolidated successfully with <toleave> coins remaining\n"
                             "\nExamples:\n" +
                             HelpExampleCli("consolidate", "") + HelpExampleRpc("consolidate", ""));
 
+    // Check that spend zero conf change or instant transactions are turned on
+    if (!instantTxns.Value() && !GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE))
+        throw runtime_error("You must have either -spendzeroconfchange and/or -wallet.instant enabled");
+
+    // Begin consolidation process
+    LOCK(serializeCreateTx);
     LOCK(pwalletMain->cs_wallet);
 
     if (!pwalletMain->IsLocked())
@@ -139,7 +148,7 @@ UniValue consolidate(const UniValue &params, bool fHelp)
 
     uint32_t numUtxos = UINT32_MAX;
     uint32_t numUtxosToLeave = 1;
-    if (params.size() > 0)
+    if (params.size() == 2)
     {
         if (params[0].isStr())
         {
@@ -151,10 +160,8 @@ UniValue consolidate(const UniValue &params, bool fHelp)
         }
         if (numUtxos <= 0)
             throw JSONRPCError(RPC_WALLET_ERROR, "Error: number of coins to consolidate must be a positive number");
-    }
 
-    if (params.size() > 1)
-    {
+
         if (params[1].isStr())
         {
             numUtxosToLeave = std::stoi(params[1].get_str());
@@ -167,7 +174,6 @@ UniValue consolidate(const UniValue &params, bool fHelp)
             throw JSONRPCError(RPC_WALLET_ERROR, "Error: number of coins to leave must be a positive number");
     }
 
-    LOCK(serializeCreateTx);
     uint32_t nTotalCoinsChosen = 0;
     while (nTotalCoinsChosen < numUtxos)
     {
@@ -180,39 +186,68 @@ UniValue consolidate(const UniValue &params, bool fHelp)
         uint32_t count = 0;
         pwalletMain->AvailableCoins(sel, &coinControl, false);
         std::sort(sel.begin(), sel.end(), CompareCoinValue());
+        uint32_t nTotalAvailable = sel.size();
         if (sel.size() <= 1 || sel.size() <= numUtxosToLeave || nTotalCoinsChosen >= numUtxos)
             break;
-        for (const auto &coin : sel)
-        {
-            coinControl.Select(coin.GetOutPoint());
-            nValue += coin.GetValue();
-            count++;
-            nTotalCoinsChosen++;
-            if (count >= MAX_TX_NUM_VIN || nTotalCoinsChosen >= numUtxos || (sel.size() - count) < numUtxosToLeave)
-                break;
-        }
 
-        CScript scriptPubKey = P2pktOutput(vchPubKey);
-
-        // Create and send the transaction
+        bool fTxCreated = false;
+        std::string strError;
+        CWalletTx wtxNew;
+        while (sel.size() >= 2)
         {
-            CWalletTx wtxNew;
+            bool fDone = false;
+            for (const auto &coin : sel)
+            {
+                coinControl.Select(coin.GetOutPoint());
+                nValue += coin.GetValue();
+                count++;
+                nTotalCoinsChosen++;
+                if (count >= MAX_TX_NUM_VIN || nTotalCoinsChosen >= numUtxos ||
+                    (nTotalAvailable - count) < numUtxosToLeave)
+                {
+                    fDone = true;
+                    break;
+                }
+            }
+
             CAmount nFeeRequired = 0;
-            std::string strError;
             vector<CRecipient> vecSend;
             int nChangePosRet = -1;
             bool fSubtractFeeFromAmount = true;
+            CScript scriptPubKey = P2pktOutput(vchPubKey);
             CRecipient recipient = {scriptPubKey, nValue, fSubtractFeeFromAmount};
             vecSend.push_back(recipient);
+
+            // Create transaction
             if (!pwalletMain->CreateTransaction(
                     vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strError, &coinControl))
             {
-                throw JSONRPCError(RPC_WALLET_ERROR, "Error: failed to create transaction during consolidation");
+                // reset counters
+                fDone = false;
+                nValue = 0;
+                count = 0;
+                nTotalCoinsChosen = 0;
+                coinControl.UnSelectAll();
+                sel.erase(sel.begin());
+
+                fTxCreated = false;
             }
-            std::string error;
-            if (!pwalletMain->CommitTransaction(wtxNew, reservekey, error))
-                throw JSONRPCError(RPC_WALLET_ERROR, error);
+            else
+            {
+                fTxCreated = true;
+            }
+
+            if (fDone && fTxCreated)
+                break;
         }
+        if (!fTxCreated)
+            throw JSONRPCError(
+                RPC_WALLET_ERROR, "Error: failed to create transaction during consolidation: " + strError);
+
+        // Commit the transaction
+        std::string error;
+        if (!pwalletMain->CommitTransaction(wtxNew, reservekey, error))
+            throw JSONRPCError(RPC_WALLET_ERROR, error);
     }
 
     vector<COutput> coins;
