@@ -1534,7 +1534,6 @@ BOOST_FIXTURE_TEST_CASE(grouptoken_blockchain, TestChain100Setup)
     ret = tryBlock(txns, p2pkh(a2), tipblk, state);
     BOOST_CHECK(ret);
 }
-#endif
 
 BOOST_AUTO_TEST_CASE(grouptoken_descriptions)
 {
@@ -1593,5 +1592,6 @@ BOOST_AUTO_TEST_CASE(grouptoken_descriptions)
     vLabels = GetTokenDescription(ret3);
     BOOST_CHECK(vLabels.empty());
 }
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()
