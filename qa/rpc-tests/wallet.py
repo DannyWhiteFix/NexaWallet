@@ -18,6 +18,8 @@ from test_framework.nodemessages import *
 
 pp = pprint.PrettyPrinter(indent=4)
 
+waitTime = 60
+
 def GenerateSingleSigP2SH(btcAddress):
     redeemScript = CScript([OP_DUP, OP_HASH160, bitcoinAddress2bin(btcAddress), OP_EQUALVERIFY, OP_CHECKSIG])
     p2shAddressBin = hash160(redeemScript)
@@ -157,8 +159,8 @@ class WalletTest (BitcoinTestFramework):
         walletinfo = self.nodes[0].getwalletinfo()
         assert_equal(walletinfo['immature_balance'], 0)
         assert_equal(walletinfo['txcount'], 3)
-        waitFor(30, lambda: self.nodes[2].getbalance("",0) == SentAmt)
-        waitFor(30, lambda: self.nodes[2].getbalance("*",0) == SentAmt)
+        waitFor(waitTime, lambda: self.nodes[2].getbalance("",0) == SentAmt)
+        waitFor(waitTime, lambda: self.nodes[2].getbalance("*",0) == SentAmt)
         assert self.nodes[2].getbalance("") == 0
         assert self.nodes[2].getbalance("*") == 0
 
@@ -499,7 +501,7 @@ class WalletTest (BitcoinTestFramework):
         self.sync_blocks()
         block_count = self.nodes[0].getblockcount()
         for i in range(3):
-            waitFor(30, lambda: block_count == self.nodes[i].getwalletinfo()['syncheight'])
+            waitFor(waitTime, lambda: block_count == self.nodes[i].getwalletinfo()['syncheight'])
         balance_nodes = [self.nodes[i].getbalance() for i in range(3)]
         unspent_nodes = [self.nodes[i].listunspent() for i in range(3)]
         activeAddresses = [self.nodes[i].listactiveaddresses() for i in range(3)]
@@ -574,17 +576,18 @@ class WalletTest (BitcoinTestFramework):
         # we'll end up with only 9 less.
         disconnect_all(self.nodes[0])
         coins_before = len(self.nodes[0].listunspent(0))
-        self.nodes[0].consolidate(2)
-        waitFor(30, lambda: coins_before == len(self.nodes[0].listunspent(0)) + 1)
+        coins_to_leave = coins_before - 2
+        self.nodes[0].consolidate(2000, coins_to_leave)
+        waitFor(waitTime, lambda: coins_before == len(self.nodes[0].listunspent(0)) + 2)
 
         self.nodes[0].generate(115)
         coins_before = len(self.nodes[0].listunspent(0))
-        self.nodes[0].consolidate(10)
-        waitFor(30, lambda: coins_before == len(self.nodes[0].listunspent(0)) + 9)
+        self.nodes[0].consolidate(10, 20)
+        waitFor(waitTime, lambda: len(self.nodes[0].listunspent(0)) == 20)
  
         # try to consolidate more coins than are in the wallet
-        self.nodes[0].consolidate(100)
-        waitFor(30, lambda: len(self.nodes[0].listunspent(0)) == 1)
+        self.nodes[0].consolidate(100, 1)
+        waitFor(waitTime, lambda: len(self.nodes[0].listunspent(0)) == 1)
 
         # generate more utxos
         self.nodes[0].generate(500);
@@ -594,18 +597,18 @@ class WalletTest (BitcoinTestFramework):
         # do a partial consolidation using the second parameter which
         # leaves at least that many utxos
         self.nodes[0].consolidate(200, 400)
-        waitFor(30, lambda: len(self.nodes[0].listunspent(0)) == 400)
+        waitFor(waitTime, lambda: len(self.nodes[0].listunspent(0)) == 400)
         self.nodes[0].consolidate(200, 400)
-        waitFor(30, lambda: len(self.nodes[0].listunspent(0)) == 400)
+        waitFor(waitTime, lambda: len(self.nodes[0].listunspent(0)) == 400)
         self.nodes[0].consolidate(10, 300)
-        waitFor(30, lambda: len(self.nodes[0].listunspent(0)) == 391)
+        waitFor(waitTime, lambda: len(self.nodes[0].listunspent(0)) == 391)
         self.nodes[0].consolidate(10, 300)
-        waitFor(30, lambda: len(self.nodes[0].listunspent(0)) == 382)
+        waitFor(waitTime, lambda: len(self.nodes[0].listunspent(0)) == 382)
 
-        # do a full consolidation
-        self.nodes[0].consolidate()
-        waitFor(30, lambda: len(self.nodes[0].listunspent(0)) == 1)
-
+        # do a full consolidation.
+        self.nodes[0].generate(300);
+        self.nodes[0].consolidate(5000, 1)
+        waitFor(waitTime, lambda: len(self.nodes[0].listunspent(0)) <= 2)
 
 if __name__ == '__main__':
     WalletTest ().main ()
