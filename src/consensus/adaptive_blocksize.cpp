@@ -178,12 +178,16 @@ uint64_t CalculateNextMaxBlockSize(CBlockIndex *pindexPrev, uint64_t nBlockSize)
     // of the new chain we may not yet have either the short window or both short and long window median values.
     if (fLongWindow && fShortWindow)
     {
+        LOG(VALIDATION, "Validation: 90/365 days median block size: %" PRIu64 "/%" PRIu64, nMedianShortWindow,
+            nMedianLongWindow);
         nNextMaxBlockSize = std::max(nMedianShortWindow, nMedianLongWindow) * nBlockSizeMultiplier;
     }
     else if (fShortWindow)
     {
+        LOG(VALIDATION, "Validation: 90 days median block size: %" PRIu64, nMedianShortWindow);
         nNextMaxBlockSize = nMedianShortWindow * nBlockSizeMultiplier;
     }
+    LOG(VALIDATION, "Validation: Next maximum block size candidate (bytes): %" PRIu64, nNextMaxBlockSize);
 
     // use the default value if next max size is too small.
     nNextMaxBlockSize = std::max(nNextMaxBlockSize, DEFAULT_NEXT_MAX_BLOCK_SIZE);
