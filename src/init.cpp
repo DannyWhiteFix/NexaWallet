@@ -153,24 +153,49 @@ void StartShutdown() { fRequestShutdown = true; }
 bool ShutdownRequested() { return fRequestShutdown; }
 class CCoinsViewErrorCatcher : public CCoinsViewBacked
 {
+private:
+    CBlockTreeDB *_pblocktree = nullptr;
+
 public:
-    CCoinsViewErrorCatcher(CCoinsView *view) : CCoinsViewBacked(view) {}
+    CCoinsViewErrorCatcher(CCoinsView *view, CBlockTreeDB *p) : CCoinsViewBacked(view), _pblocktree(p) {}
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override
     {
         try
         {
+            // NOTE: Uncomment the following throw() if you want to test the reindex on restart feature.
+            // throw std::runtime_error("failed to get coin");
+
             return CCoinsViewBacked::GetCoin(outpoint, coin);
         }
         catch (const std::runtime_error &e)
         {
-            uiInterface.ThreadSafeMessageBox(
-                _("Error reading from database, shutting down."), "", CClientUIInterface::MSG_ERROR);
-            LOGA("Error reading from database: %s\n", e.what());
-            // Starting the shutdown sequence and returning false to the caller would be
-            // interpreted as 'entry not found' (as opposed to unable to read data), and
-            // could lead to invalid interpretation. Just exit immediately, as we can't
-            // continue anyway, and all writes should be atomic.
-            abort();
+            bool fRet =
+                uiInterface.ThreadSafeMessageBox(strprintf(_("Error reading from the coin database.\nDetails: %s\n\nDo "
+                                                             "you want to reindex on the next restart?"),
+                                                     e.what()),
+                    "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
+            if (fRet)
+            {
+                // Schedule a -reindex on the next restart
+                if (_pblocktree)
+                {
+                    _pblocktree->WriteReindexing(true);
+                }
+                fRequestShutdown = true;
+                return false;
+            }
+            else
+            {
+                // Starting the shutdown sequence and returning false to the caller would be
+                // interpreted as 'entry not found' (as opposed to unable to read data), and
+                // could lead to invalid interpretation. Just exit immediately, as we can't
+                // continue anyway, and all writes should be atomic.
+                if (_pblocktree)
+                {
+                    _pblocktree->WriteReindexing(false);
+                }
+                abort();
+            }
         }
     }
     // Writes do not need similar protection, as failure to write is handled by the caller.
@@ -1351,7 +1376,7 @@ bool AppInit2(Config &config)
                 overridecache.block_size = 4096;
                 pcoinsdbview = new CCoinsViewDB(cacheConfig.nCoinDBCache, false, fReindex, true, &overridecache);
 
-                pcoinscatcher = new CCoinsViewErrorCatcher(pcoinsdbview);
+                pcoinscatcher = new CCoinsViewErrorCatcher(pcoinsdbview, pblocktree);
                 uiInterface.InitMessage(_("Opening Coins Cache database..."));
                 pcoinsTip = new CCoinsViewCache(pcoinscatcher);
                 InitTxAdmission();
