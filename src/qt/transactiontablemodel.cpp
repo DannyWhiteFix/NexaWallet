@@ -197,7 +197,7 @@ public:
                 CWalletTxRef wtx = wallet->GetWalletTx(rec->hash);
                 if (wtx)
                 {
-                    if (rec->statusUpdateNeeded() || wtx->fDoubleSpent == true)
+                    if (rec->statusUpdateNeeded() || wtx->fDoubleSpent == true || wtx->isAbandoned())
                         rec->updateStatus(wtx);
                 }
             }
@@ -320,6 +320,9 @@ QString TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) cons
         break;
     case TransactionStatus::DoubleSpent:
         status = tr("Double Spent");
+        break;
+    case TransactionStatus::Abandoned:
+        status = tr("Abandoned");
         break;
     case TransactionStatus::Immature:
         status = tr("Immature (%1 confirmations, will be available after %2)")
@@ -510,6 +513,8 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
         return QIcon(":/icons/transaction_conflicted");
     case TransactionStatus::DoubleSpent:
         return QIcon(":/icons/warning");
+    case TransactionStatus::Abandoned:
+        return QIcon(":/icons/remove");
     case TransactionStatus::Immature:
     {
         int total = wtx->status.depth + wtx->status.matures_in;
