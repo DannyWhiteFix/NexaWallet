@@ -29,6 +29,9 @@ uint64_t TxIndexSyncHeight();
 class TxIndex final : public CValidationInterface
 {
 private:
+    std::mutex cs_txindex;
+    std::condition_variable cv_txindex;
+
     const std::unique_ptr<TxIndexDB> db;
 
     /// Whether the index is in sync with the main chain. The flag is flipped
@@ -58,8 +61,8 @@ private:
     bool WriteBlock(const CBlock &block, const CBlockIndex *pindex);
 
 public:
-    /// Update the txindex with this newly connected block data
-    void BlockConnected(const CBlock &block, CBlockIndex *pindex);
+    /// Indicate that a new block was connected and notify the sync thread
+    void BlockConnected();
 
     /// Write the current chain block locator to the DB.
     bool WriteBestBlock(CBlockIndex *block_index);

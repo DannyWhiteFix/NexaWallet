@@ -119,7 +119,7 @@ static const CBlockIndex *NextSyncBlock(const CBlockIndex *pindex_prev)
 void TxIndex::ThreadSync()
 {
     // Wait for blockchain sync, and quit if the program quits
-    while (fReindex || fImporting || IsInitialBlockDownload())
+    while (fReindex || fImporting || (IsInitialBlockDownload() && !IsChainSyncd()))
     {
         MilliSleep(1000);
         if (shutdown_threads.load() == true)
@@ -128,70 +128,78 @@ void TxIndex::ThreadSync()
         }
     }
 
-    CBlockIndex *pindex = pbestindex.load();
-    if (!fSynced.load()) // fSynced always begins as false, and is only set to true within this thread
+    std::unique_lock<std::mutex> lock(cs_txindex);
+    do
     {
-        auto &consensus_params = Params().GetConsensus();
-
-        int64_t last_log_time = 0;
-        int64_t last_locator_write_time = 0;
-        while (true)
+        CBlockIndex *pindex = pbestindex.load();
+        if (!fSynced.load()) // fSynced always begins as false, and is only set to true within this thread
         {
-            if (shutdown_threads.load() == true)
-            {
-                return;
-            }
+            auto &consensus_params = Params().GetConsensus();
 
+            int64_t last_log_time = 0;
+            int64_t last_locator_write_time = 0;
+            while (true)
             {
-                const CBlockIndex *pindex_next = NextSyncBlock(pindex);
-                if (!pindex_next)
+                if (shutdown_threads.load() == true)
+                {
+                    return;
+                }
+
+                {
+                    const CBlockIndex *pindex_next = NextSyncBlock(pindex);
+                    if (!pindex_next)
+                    {
+                        WriteBestBlock(pindex);
+                        pbestindex = pindex;
+                        fSynced = true;
+                        break;
+                    }
+                    pindex = const_cast<CBlockIndex *>(pindex_next);
+                }
+
+                int64_t current_time = GetTime();
+                if (last_log_time + SYNC_LOG_INTERVAL < current_time)
+                {
+                    LOG(IBD, "Syncing txindex with block chain from height %d\n", pindex->height());
+                    last_log_time = current_time;
+                }
+
+                if (last_locator_write_time + SYNC_LOCATOR_WRITE_INTERVAL < current_time)
                 {
                     WriteBestBlock(pindex);
-                    pbestindex = pindex;
-                    fSynced = true;
-                    break;
+                    last_locator_write_time = current_time;
                 }
-                pindex = const_cast<CBlockIndex *>(pindex_next);
-            }
 
-            int64_t current_time = GetTime();
-            if (last_log_time + SYNC_LOG_INTERVAL < current_time)
-            {
-                LOGA("Syncing txindex with block chain from height %d\n", pindex->height());
-                last_log_time = current_time;
+                const ConstCBlockRef pblock = ReadBlockFromDisk(pindex, consensus_params);
+                if (!pblock)
+                {
+                    FatalError("%s: Txindex halted: Failed to read block %s from disk", __func__,
+                        pindex->GetBlockHash().ToString());
+                    return;
+                }
+                if (!WriteBlock(*pblock, pindex))
+                {
+                    FatalError("%s: Txindex halted: Failed to write block %s to tx index database", __func__,
+                        pindex->GetBlockHash().ToString());
+                    return;
+                }
+                pbestindex = pindex;
             }
-
-            if (last_locator_write_time + SYNC_LOCATOR_WRITE_INTERVAL < current_time)
-            {
-                WriteBestBlock(pindex);
-                last_locator_write_time = current_time;
-            }
-
-            const ConstCBlockRef pblock = ReadBlockFromDisk(pindex, consensus_params);
-            if (!pblock)
-            {
-                FatalError("%s: Txindex halted: Failed to read block %s from disk", __func__,
-                    pindex->GetBlockHash().ToString());
-                return;
-            }
-            if (!WriteBlock(*pblock, pindex))
-            {
-                FatalError("%s: Txindex halted: Failed to write block %s to tx index database", __func__,
-                    pindex->GetBlockHash().ToString());
-                return;
-            }
-            pbestindex = pindex;
         }
-    }
 
-    if (pindex)
-    {
-        LOGA("txindex is enabled at height %d\n", pindex->height());
-    }
-    else
-    {
-        LOGA("txindex is enabled\n");
-    }
+        if (pindex)
+        {
+            LOG(IBD, "txindex is enabled at height %d\n", pindex->height());
+        }
+        else
+        {
+            LOG(IBD, "txindex is enabled\n");
+        }
+
+        // wait until given a notification or wait time has expired
+        cv_txindex.wait_for(lock, std::chrono::milliseconds(2000));
+
+    } while (shutdown_threads.load() != true);
 }
 
 bool TxIndex::WriteBlock(const CBlock &block, const CBlockIndex *pindex)
@@ -228,29 +236,10 @@ bool TxIndex::WriteBestBlock(CBlockIndex *block_index)
     return true;
 }
 
-void TxIndex::BlockConnected(const CBlock &block, CBlockIndex *pindex)
+void TxIndex::BlockConnected()
 {
-    if (!fSynced.load())
-        return;
-
-    // If we're reindexing we need to write the transaction from the genesis block here
-    if (fReindex && pindex->height() == 1)
-        WriteGenesisTransaction();
-
-    if (WriteBlock(block, pindex))
-    {
-        pbestindex = pindex;
-
-        if (!WriteBestBlock(pindex))
-        {
-            error("%s: Failed to write locator to disk", __func__);
-        }
-    }
-    else
-    {
-        FatalError("%s: Failed to write block %s to txindex", __func__, pindex->GetBlockHash().ToString());
-        return;
-    }
+    fSynced.store(false);
+    cv_txindex.notify_all();
 }
 
 bool TxIndex::IsSynced() { return fSynced.load(); }
