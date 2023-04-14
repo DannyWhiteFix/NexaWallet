@@ -2622,12 +2622,6 @@ bool ConnectBlock(ConstCBlockRef pblock,
         }
     }
 
-    // Write transaction data to the txindex
-    if (IsTxIndexReady())
-    {
-        g_txindex->BlockConnected(*pblock, pindex);
-    }
-
     // add this block to the view's block chain (the main UTXO in memory cache)
     view.SetBestBlock(pindex->GetBlockHash());
 
@@ -3130,6 +3124,12 @@ bool ConnectTip(CValidationState &state,
         }
         // Update chainActive & related variables.
         UpdateTip(pindexNew);
+
+        // Notify txindex thread that a new block has arrived.
+        if (g_txindex)
+        {
+            g_txindex->BlockConnected();
+        }
 
         // Write the chain state to disk, if necessary. This should be done after UpdateTip to make sure the tip
         // is set correctly when calling FlushStateToDisk(); this is because the automatic -cache.dbcache adjustment
