@@ -53,7 +53,10 @@
 #include "validationinterface.h"
 #include "version.h"
 #include "versionbits.h"
+
+#ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
+#endif
 
 #include <atomic>
 #include <boost/lexical_cast.hpp>
