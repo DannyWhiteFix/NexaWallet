@@ -11,7 +11,6 @@ AC_DEFUN([BITCOIN_FIND_BDB53],[
     AC_MSG_CHECKING([for Berkeley DB C++ headers])
     BDB_CPPFLAGS=
     bdbpath=X
-    bdb53path=X
     bdbdirlist=
     for _vn in 5 5.3 ''; do
       for _pfx in b lib ''; do
@@ -33,29 +32,19 @@ AC_DEFUN([BITCOIN_FIND_BDB53],[
       ],[
         continue
       ])
-      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-        #include <${searchpath}db_cxx.h>
-      ]],[[
-        #if !(DB_VERSION_MAJOR == 5 && DB_VERSION_MINOR == 3)
-          #error "failed to find bdb 5.3"
-        #endif
-      ]])],[
-        bdb53path="${searchpath}"
-        break
-      ],[])
     done
     if test "x$bdbpath" = "xX"; then
       AC_MSG_RESULT([no])
       AC_MSG_ERROR([libdb_cxx headers missing, ]AC_PACKAGE_NAME[ requires this library version 5.3 or higher for wallet functionality (--disable-wallet to disable wallet functionality)])
     else
-      BITCOIN_SUBDIR_TO_INCLUDE(BDB_CPPFLAGS,[${bdb53path}],db_cxx)
+      BITCOIN_SUBDIR_TO_INCLUDE(BDB_CPPFLAGS,[${bdbpath}],db_cxx)
       bdbpath="${bdb53path}"
     fi
   else
     BDB_CPPFLAGS=${BDB_CFLAGS}
   fi
   AC_SUBST(BDB_CPPFLAGS)
-  
+
   if test "x$BDB_LIBS" = "x"; then
     # TODO: Ideally this could find the library version and make sure it matches the headers being used
     for searchlib in db_cxx-5.3 db_cxx db5_cxx; do
