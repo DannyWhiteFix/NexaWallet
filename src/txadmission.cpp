@@ -27,7 +27,10 @@
 #include "utiltime.h"
 #include "validation/validation.h"
 #include "validationinterface.h"
+
+#ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
+#endif
 
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/thread/thread.hpp>
