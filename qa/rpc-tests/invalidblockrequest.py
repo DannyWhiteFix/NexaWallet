@@ -44,26 +44,39 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
         Create a new block with an anyone-can-spend coinbase
         '''
         height = 1
-        block = create_block(self.tip, create_coinbase(height), self.block_time)
+        #block = create_block(self.tip, create_coinbase(height), self.block_time)
+        tipblock = self.nodes[0].getblock(self.nodes[0].getbestblockhash())
+        last_time = tipblock['time']
+        last_work = int(tipblock["chainwork"], 16)
+        block_time = last_time + 1
+        block = create_block(self.tip, height, last_work + 2, create_coinbase(height), getAncHash(height, self.nodes[0]), block_time)
         self.block_time += 1
         block.solve()
         # Save the coinbase for later
         self.block1 = block
-        self.tip = block.sha256
+        self.tip = block.gethash()
         height += 1
         yield TestInstance([[block, True]])
 
         '''
         Now we need that block to mature so we can spend the coinbase.
         '''
-        test = TestInstance(sync_every_block=False)
+        test = TestInstance(sync_every_block=True)
+        height = self.nodes[0].getblockcount()
         for i in range(100):
-            block = create_block(self.tip, create_coinbase(height), self.block_time)
+            print("### " + str(height) + " blockcount " + str(self.nodes[0].getblockcount() ))
+         #   block = create_block(self.tip, create_coinbase(height), self.block_time)
+            waitFor(3, lambda: self.nodes[0].getblockcount() == height)
+            tipblock = self.nodes[0].getblock(self.nodes[0].getbestblockhash())
+            last_time = tipblock['time']
+            last_work = int(tipblock["chainwork"], 16)
+            block_time = last_time + 1
+            height += 1
+            block = create_block(self.tip, height, last_work + 2, create_coinbase(height), getAncHash(height, self.nodes[0]), block_time)
             block.solve()
-            self.tip = block.sha256
+            self.tip = block.gethash()
             self.block_time += 1
             test.blocks_and_transactions.append([block, True])
-            height += 1
         yield test
 
         '''
