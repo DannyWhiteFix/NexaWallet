@@ -1749,10 +1749,12 @@ bool CheckBlock(const Consensus::Params &consensusParams,
     {
         return false;
     }
-    // Check the merkle root.
+    // Check the merkle root.  If this check fails we must return false, rather than an invalid
+    // state, otherwise we could end up invalidating the chain which would open up a possible DOS attack
+    // since it's relatively trivial to malleate a block's vtx[] and get the merkleroot check to fail.
     if (fCheckMerkleRoot)
     {
-        bool mutated;
+        bool mutated = false;
         uint256 hashMerkleRoot2 = BlockMerkleRoot(*pblock, &mutated);
         if (pblock->hashMerkleRoot != hashMerkleRoot2)
         {
@@ -1790,10 +1792,6 @@ bool CheckBlock(const Consensus::Params &consensusParams,
     }
 
     // Check transactions
-    if (pblock->vtx.empty())
-    {
-        return state.DoS(100, error("CheckBlock(): no coinbase"), REJECT_INVALID, "bad-cb-missing");
-    }
     for (unsigned int i = 0; i < pblock->vtx.size(); i++)
     {
         // First transaction must be coinbase, the rest must not be
