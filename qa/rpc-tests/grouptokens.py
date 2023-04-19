@@ -6,6 +6,7 @@
 # This is a template to make creating new QA tests easy.
 # You can also use this template to quickly start and connect a few regtest nodes.
 
+import test_framework.loginit
 import pdb
 from test_framework.util import *
 from test_framework.test_framework import BitcoinTestFramework
@@ -243,6 +244,11 @@ class GroupTokensTest (BitcoinTestFramework):
         except JSONRPCException as e:
             pass
 
+        # In this python test we periodically consolidate all txns in the main wallet which should have
+        # no effect on any tokens in the wallet
+        logging.info("Consolidating " + str(len(self.nodes[0].listunspent(0))))
+        self.nodes[0].consolidate(5000, 1)
+
         # Create a group on behalf of a different node (with an authority address I don't control)
         t = self.nodes[0].token("new", auth1Addr)
         self.checkGroupNew(self.nodes[0].decoderawtransaction(self.nodes[0].gettransaction(t["transaction"])["hex"]))
@@ -296,6 +302,11 @@ class GroupTokensTest (BitcoinTestFramework):
             self.nodes[1].token("mint", grp1Id, mint0_0, 1000)
         except JSONRPCException as e:
             assert("Not enough funds for fee" in e.error["message"])
+
+        # In this python test we periodically consolidate all txns in the main wallet which should have
+        # no effect on any tokens in the wallet
+        logging.info("Consolidating " + str(len(self.nodes[0].listunspent(0))))
+        self.nodes[0].consolidate(5000, 1)
 
         # mint from node 2 of group created by node 0 on behalf of node 2
         self.sync_all()  # node 2 has to be able to see the group new tx that node 0 made
@@ -369,6 +380,11 @@ class GroupTokensTest (BitcoinTestFramework):
             pass
         self.checkTokenInfo(self.nodes[2], grp2Id, "","","","", 800)
 
+        # In this python test we periodically consolidate all txns in the main wallet which should have
+        # no effect on any tokens in the wallet
+        logging.info("Consolidating " + str(len(self.nodes[0].listunspent(0))))
+        self.nodes[0].consolidate(5000, 1)
+
         self.nodes[0].generate(1)
         self.sync_blocks()
         # no balances should change after generating a block
@@ -428,6 +444,11 @@ class GroupTokensTest (BitcoinTestFramework):
             self.nodes[2].token("mint", grp0Id, n2addr, 1000)
         except JSONRPCException as e:
             assert("To mint coins, an authority output with mint capability is needed." in e.error["message"])
+
+        # In this python test we periodically consolidate all txns in the main wallet which should have
+        # no effect on any tokens in the wallet
+        logging.info("Consolidating " + str(len(self.nodes[0].listunspent(0))))
+        self.nodes[0].consolidate(5000, 1)
 
         # melt some of my tokens
         logging.info("melt")
