@@ -96,9 +96,23 @@ class WalletWatchonlyTest (BitcoinTestFramework):
         assert_equal(walletinfo['immature_watchonly_balance'], COINBASE_REWARD * 100)
         assert_equal(walletinfo['unconfirmed_watchonly_balance'], watch_sent)
 
+        # Send small coins from node1 to node2. This should work but in the past
+        # would trigger an error becasue watchonly coins were being used as available coins
+        self.nodes[1].sendtoaddress(self.nodes[2].getnewaddress(), 100, "", "", True)
+        self.nodes[1].sendtoaddress(self.nodes[2].getnewaddress(), 100, "", "", True)
+        self.nodes[1].sendtoaddress(self.nodes[2].getnewaddress(), 100, "", "", True)
+        self.nodes[1].sendtoaddress(self.nodes[2].getnewaddress(), 200, "", "", True)
+        self.nodes[1].sendtoaddress(self.nodes[2].getnewaddress(), 300, "", "", True)
+        self.nodes[1].generate(1)
+        self.sync_blocks()
 
-
-
+        self.nodes[2].sendtoaddress(self.nodes[0].getnewaddress(), 100, "", "", False)
+        self.nodes[2].sendtoaddress(self.nodes[0].getnewaddress(), 100, "", "", False)
+        self.nodes[2].sendtoaddress(self.nodes[0].getnewaddress(), 100, "", "", False)
+        self.nodes[2].sendtoaddress(self.nodes[0].getnewaddress(), 50, "", "", False)
+        self.nodes[2].sendtoaddress(self.nodes[0].getnewaddress(), 100, "", "", False)
+        self.nodes[2].sendtoaddress(self.nodes[0].getnewaddress(), 70, "", "", False)
+ 
 
 if __name__ == '__main__':
     WalletWatchonlyTest ().main ()

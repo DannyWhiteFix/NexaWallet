@@ -2405,6 +2405,13 @@ void CWallet::AvailableCoins(vector<COutput> &vCoins, const CCoinControl *coinCo
                 continue;
             if ((wtx->vout[coin.i].nValue == 0) && !fIncludeZeroValue)
                 continue;
+            if (coinControl && !coinControl->fAllowWatchOnly && coin.mine != ISMINE_SPENDABLE)
+                continue;
+            // Must not be a token otherwise we could end up spending all group
+            // authorities and tokens by accident.
+            CGroupTokenInfo tg(coin.GetScriptPubKey());
+            if (tg.associatedGroup != NoGroup)
+                continue;
             if (!coinControl || !coinControl->HasSelected() || coinControl->fAllowOtherInputs ||
                 coinControl->IsSelected(outpoint))
             {
@@ -2589,7 +2596,8 @@ void CWallet::FillAvailableCoins(const CCoinControl *coinControl)
     AvailableCoins(sel, coinControl, false);
     for (const auto &coin : sel)
     {
-        available.insert(SpendableTxos::value_type(coin.GetValue(), coin));
+        if (coin.mine == ISMINE_SPENDABLE)
+            available.insert(SpendableTxos::value_type(coin.GetValue(), coin));
     }
 }
 
