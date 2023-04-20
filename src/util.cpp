@@ -380,11 +380,33 @@ void ClearDatadirCache()
     pathCachedNetSpecific = fs::path();
 }
 
+// Check if the config file is readable (exists) and if not then create it.
+static void CreateConfigFile(const fs::path &path)
+{
+    FILE *file = fsbridge::fopen(path, "r");
+    if (file)
+    {
+        fclose(file);
+        return;
+    }
+
+    FILE *file2 = fsbridge::fopen(path, "w");
+    if (file2)
+    {
+        fprintf(file2, "## NEXA run-time configuration settings.\n");
+        fprintf(file2, "## Use GUI->Help->command-line options or spec.nexa.org for available settings.\n");
+        fclose(file2);
+    }
+    return;
+}
+
 fs::path GetConfigFile(const std::string &confPath)
 {
     fs::path pathConfigFile(confPath);
     if (pathConfigFile.is_relative())
         pathConfigFile = GetDataDir(false) / pathConfigFile;
+
+    CreateConfigFile(pathConfigFile);
 
     return pathConfigFile;
 }
