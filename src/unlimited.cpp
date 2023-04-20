@@ -250,8 +250,8 @@ UniValue expedited(const UniValue &params, bool fHelp)
                             "getpeerinfo for nodes)\n"
                             "3. \"on | off\"     (string, required) Turn expedited service on or off\n"
                             "\nExamples:\n" +
-                            HelpExampleCli("expedited", "block \"192.168.0.6:8333\" on") +
-                            HelpExampleRpc("expedited", "\"block\", \"192.168.0.6:8333\", \"on\""));
+                            HelpExampleCli("expedited", "block \"192.168.0.6:7228\" on") +
+                            HelpExampleRpc("expedited", "\"block\", \"192.168.0.6:7228\", \"on\""));
 
     std::string obj = params[0].get_str();
     std::string strNode = params[1].get_str();
@@ -298,8 +298,8 @@ UniValue pushtx(const UniValue &params, bool fHelp)
                             "\nArguments:\n"
                             "1. \"node\"     (string, required) The node (see getpeerinfo for nodes)\n"
                             "\nExamples:\n" +
-                            HelpExampleCli("pushtx", "\"192.168.0.6:8333\" ") +
-                            HelpExampleRpc("pushtx", "\"192.168.0.6:8333\", "));
+                            HelpExampleCli("pushtx", "\"192.168.0.6:7228\" ") +
+                            HelpExampleRpc("pushtx", "\"192.168.0.6:7228\", "));
 
     string strNode = params[0].get_str();
 
