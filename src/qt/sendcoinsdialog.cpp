@@ -124,8 +124,6 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
         settings.setValue("nTransactionFee", (qint64)payTxFeeTweak.Value());
     if (!settings.contains("fPayOnlyMinFee"))
         settings.setValue("fPayOnlyMinFee", false);
-    if (!settings.contains("fSendFreeTransactions"))
-        settings.setValue("fSendFreeTransactions", false);
     ui->groupFee->setId(ui->radioSmartFee, 0);
     ui->groupFee->setId(ui->radioCustomFee, 1);
     ui->groupFee->button((int)std::max(0, std::min(1, settings.value("nFeeRadio").toInt())))->setChecked(true);
@@ -136,8 +134,16 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
     ui->sliderSmartFee->setValue(settings.value("nSmartFeeSliderPosition").toInt());
     ui->customFee->setValue(settings.value("nTransactionFee").toLongLong());
     ui->checkBoxMinimumFee->setChecked(settings.value("fPayOnlyMinFee").toBool());
-    ui->checkBoxFreeTx->setChecked(settings.value("fSendFreeTransactions").toBool());
     minimizeFeeSection(settings.value("fFeeSectionMinimized").toBool());
+
+    // By default, disable free transactions QT users
+    //
+    // This is a feature only solo miners would really be able to make use of and so we still allow
+    // it to be enabled from the command line.
+    bool fFree = GetBoolArg("-sendfreetransactions", false);
+    settings.setValue("fSendFreeTransactions", fFree);
+    ui->checkBoxFreeTx->setChecked(fFree);
+    ui->checkBoxFreeTx->setEnabled(fFree);
 }
 
 void SendCoinsDialog::setClientModel(ClientModel *_clientModel)
@@ -659,9 +665,6 @@ void SendCoinsDialog::updateFeeSectionControls()
     ui->radioCustomAtLeast->setEnabled(ui->radioCustomFee->isChecked() && !ui->checkBoxMinimumFee->isChecked() &&
                                        CoinControlDialog::coinControl->HasSelected());
     ui->customFee->setEnabled(ui->radioCustomFee->isChecked() && !ui->checkBoxMinimumFee->isChecked());
-
-    // disable free transactions for now. TODO: verify that they work, or remove entirely
-    ui->checkBoxFreeTx->setEnabled(false);
 }
 
 void SendCoinsDialog::updateGlobalFeeVariables()
