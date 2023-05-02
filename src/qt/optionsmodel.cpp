@@ -31,6 +31,7 @@
 #include <QStringList>
 
 extern CTweak<bool> instantTxns;
+extern CTweak<bool> autoTxns;
 
 OptionsModel::OptionsModel(QObject *parent, bool resetSettings) : QAbstractListModel(parent) { Init(resetSettings); }
 void OptionsModel::addOverriddenOption(const std::string &option)
@@ -107,10 +108,16 @@ void OptionsModel::Init(bool resetSettings)
     // after first launch set instant transactions to whatever QT setting was saved on shutdown
     instantTxns.Set(settings.value("QT_instantTransactions").toBool());
 
+    // Set default value of auto consoldation to be the QT instant transactions value
+    if (!settings.contains("fAutoConsolidation"))
+    {
+        settings.setValue("fAutoConsolidation", settings.value("QT_instantTransactions").toBool());
+    }
+
     // Set the spendzeroconfchange options depending on whether instant transactions is on or not.
     if (instantTxns.Value())
     {
-        !SoftSetBoolArg("-spendzeroconfchange", true);
+        SoftSetBoolArg("-spendzeroconfchange", true);
 
         // Because of instant transactions this option is automatically overridden.
         addOverriddenOption("-spendzeroconfchange");
@@ -119,6 +126,17 @@ void OptionsModel::Init(bool resetSettings)
     {
         if (!SoftSetBoolArg("-spendzeroconfchange", settings.value("bSpendZeroConfChange").toBool()))
             addOverriddenOption("-spendzeroconfchange");
+    }
+
+    // Set Auto Consolidation options depending on whether Instant Transactions or Spend Zero Conf are turned on
+    if (instantTxns.Value() || settings.value("bSpendZeroConfChange").toBool())
+    {
+        if (settings.value("fAutoConsolidation").toBool())
+            autoTxns.Set(true);
+    }
+    else
+    {
+        autoTxns.Set(false);
     }
 #endif
 
@@ -245,6 +263,8 @@ QVariant OptionsModel::data(const QModelIndex &index, int role) const
             return settings.value("bSpendZeroConfChange");
         case InstantTransactions:
             return settings.value("QT_instantTransactions");
+        case AutoConsolidation:
+            return settings.value("fAutoConsolidation");
 #endif
         case DisplayUnit:
             return nDisplayUnit;
@@ -414,6 +434,13 @@ bool OptionsModel::setData(const QModelIndex &index, const QVariant &value, int 
                     settings.setValue("bSpendZeroConfChange", value);
                     setRestartRequired(true);
                 }
+            }
+            break;
+        case AutoConsolidation:
+            if (settings.value("fAutoConsolidation") != value)
+            {
+                settings.setValue("fAutoConsolidation", value);
+                autoTxns.Set(value.toBool());
             }
             break;
 #endif

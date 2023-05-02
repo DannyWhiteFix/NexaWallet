@@ -48,6 +48,7 @@ public:
         DatabaseCache, // int
         SpendZeroConfChange, // bool
         InstantTransactions, // bool
+        AutoConsolidation, // bool
         Listen, // bool
         OptionIDRowCount,
     };

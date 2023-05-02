@@ -484,6 +484,11 @@ CTweak<uint32_t> instantTxnsDelay("wallet.instantDelay",
     strprintf("Time in seconds to wait before making an instant transaction spendable (default: %d)",
         DEFAULT_INSTANT_TRANSACTION_DELAY),
     DEFAULT_INSTANT_TRANSACTION_DELAY);
+CTweak<bool> autoTxns("wallet.auto",
+    strprintf("Auto consolidate utxos by creating a valid chain of transactions during transaction creation, with"
+              " each transaction not exceeding  the consensus input limit of %d  (default: false)",
+        MAX_TX_NUM_VIN),
+    false);
 
 /** The maximum fee that can be applied to any one transaction */
 CTweak<CAmount> maxTxFeeTweak("wallet.maxTxFee",

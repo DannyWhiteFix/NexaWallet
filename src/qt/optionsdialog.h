@@ -56,7 +56,9 @@ private Q_SLOTS:
     void on_cancelButton_clicked();
 
     void showRestartWarning(bool fPersistent = false);
+    void setZeroConf(bool fPersisten = false);
     void setInstant(bool fPersistent = false);
+    void setAuto(bool fPersistent = false);
     void thirdPartyTxWarning(bool fPersistent = false);
     void clearStatusLabel();
     void updateProxyValidationState();

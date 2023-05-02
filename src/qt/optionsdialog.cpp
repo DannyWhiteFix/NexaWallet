@@ -35,6 +35,7 @@
 #include <QTimer>
 
 extern CTweak<bool> instantTxns;
+extern CTweak<bool> autoTxns;
 
 OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet)
     : QDialog(parent), ui(new Ui::OptionsDialog), portValidator(1, 65536, this), // fix memory leaks
@@ -65,6 +66,25 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet)
         ui->spendZeroConfChange->setEnabled(false);
         ui->instantTransactions->setChecked(true);
     }
+
+    if (instantTxns.Value() || GetBoolArg("-spendzeroconfchange", false))
+    {
+        ui->autoConsolidation->setEnabled(true);
+    }
+    else
+    {
+        ui->autoConsolidation->setEnabled(false);
+    }
+
+    if (autoTxns.Value())
+    {
+        ui->autoConsolidation->setChecked(true);
+    }
+    else
+    {
+        ui->autoConsolidation->setChecked(false);
+    }
+
 #endif
 
 
@@ -164,8 +184,9 @@ void OptionsDialog::setModel(OptionsModel *_model)
     connect(ui->threadsScriptVerif, SIGNAL(valueChanged(int)), this, SLOT(showRestartWarning()));
     connect(ui->reindexOnStartup, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     /* Wallet */
-    connect(ui->spendZeroConfChange, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
+    connect(ui->spendZeroConfChange, SIGNAL(clicked(bool)), this, SLOT(setZeroConf()));
     connect(ui->instantTransactions, SIGNAL(clicked(bool)), this, SLOT(setInstant()));
+    connect(ui->autoConsolidation, SIGNAL(clicked(bool)), this, SLOT(setAuto()));
     /* Network */
     connect(ui->allowIncoming, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     connect(ui->connectSocks, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
@@ -186,6 +207,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->spendZeroConfChange, OptionsModel::SpendZeroConfChange);
     mapper->addMapping(ui->coinControlFeatures, OptionsModel::CoinControlFeatures);
     mapper->addMapping(ui->instantTransactions, OptionsModel::InstantTransactions);
+    mapper->addMapping(ui->autoConsolidation, OptionsModel::AutoConsolidation);
 
     /* Network */
     mapper->addMapping(ui->mapPortUpnp, OptionsModel::MapPortUPnP);
@@ -256,17 +278,48 @@ void OptionsDialog::showRestartWarning(bool fPersistent)
         QTimer::singleShot(10000, this, SLOT(clearStatusLabel()));
     }
 }
+
+void OptionsDialog::setZeroConf(bool fPersistent)
+{
+    showRestartWarning(fPersistent);
+    setAuto();
+}
 void OptionsDialog::setInstant(bool fPersistent)
 {
-    bool fInstant = ui->instantTransactions->isChecked();
 #ifdef ENABLE_WALLET
+    bool fInstant = (ui->instantTransactions->isEnabled() && ui->instantTransactions->isChecked());
     instantTxns.Set(fInstant);
-#endif
 
     if (!fInstant)
         ui->spendZeroConfChange->setEnabled(true);
     else
         ui->spendZeroConfChange->setEnabled(false);
+
+    setAuto();
+#endif
+}
+
+void OptionsDialog::setAuto(bool fPersistent)
+{
+#ifdef ENABLE_WALLET
+    bool fInstant = (ui->instantTransactions->isEnabled() && ui->instantTransactions->isChecked());
+    bool fZeroConf = (ui->spendZeroConfChange->isEnabled() && ui->spendZeroConfChange->isChecked());
+    bool fAuto = ui->autoConsolidation->isChecked();
+
+    if (fInstant || fZeroConf)
+    {
+        ui->autoConsolidation->setEnabled(true);
+        if (fAuto)
+            autoTxns.Set(true);
+        else
+            autoTxns.Set(false);
+    }
+    else
+    {
+        ui->autoConsolidation->setEnabled(false);
+        autoTxns.Set(false);
+    }
+#endif
 }
 
 void OptionsDialog::thirdPartyTxWarning(bool fPersistent)

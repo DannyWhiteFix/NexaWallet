@@ -989,6 +989,14 @@ public:
         std::string &strFailReason,
         const CCoinControl *coinControl = nullptr,
         bool sign = true);
+    bool CreateOneTransaction(const std::vector<CRecipient> &vecSend,
+        CWalletTx &wtxNew,
+        CReserveKey &reservekey,
+        CAmount &nFeeRet,
+        int &nChangePosRet,
+        std::string &strFailReason,
+        const CCoinControl *coinControl = nullptr,
+        bool sign = true);
     bool CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey, std::string &errorString);
 
     bool AddAccountingEntry(const CAccountingEntry &, CWalletDB &pwalletdb);
