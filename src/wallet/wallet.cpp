@@ -3195,21 +3195,21 @@ bool CWallet::CreateTransaction(const vector<CRecipient> &vecSend,
                     // Check input and output limits
                     if ((txNew.vout.size() > MAX_TX_NUM_VOUT) && (txNew.vin.size() > MAX_TX_NUM_VIN))
                     {
-                        strFailReason = strprintf("Transaction has %d inputs and %d outputs. Maximum inputs allowed "
-                                                  "are %d and maximum outputs are %d",
+                        strFailReason = strprintf(_("Transaction has %d inputs and %d outputs. Maximum inputs allowed "
+                                                    "are %d and maximum outputs are %d"),
                             txNew.vin.size(), txNew.vout.size(), MAX_TX_NUM_VIN, MAX_TX_NUM_VOUT);
                         return false;
                     }
                     if (txNew.vout.size() > MAX_TX_NUM_VOUT)
                     {
-                        strFailReason = strprintf("Transaction has %d outputs. Maximum outputs allowed is %d",
+                        strFailReason = strprintf(_("Transaction has %d outputs. Maximum outputs allowed is %d"),
                             txNew.vout.size(), MAX_TX_NUM_VOUT);
                         return false;
                     }
                     if (txNew.vin.size() > MAX_TX_NUM_VIN)
                     {
-                        strFailReason = strprintf("Transaction has %d inputs. Maximum inputs allowed is %d. Try "
-                                                  "reducing inputs by transferring a smaller amount.",
+                        strFailReason = strprintf(_("Transaction has %d inputs. Maximum inputs allowed is %d. Try "
+                                                    "reducing inputs by transferring a smaller amount."),
                             txNew.vin.size(), MAX_TX_NUM_VIN);
                         return false;
                     }
@@ -3220,8 +3220,9 @@ bool CWallet::CreateTransaction(const vector<CRecipient> &vecSend,
                     // Limit size
                     if (nBytes > MAX_STANDARD_TX_SIZE)
                     {
-                        strFailReason = strprintf("Transaction of %d bytes is too large. Maximum allowed is %d bytes",
-                            nBytes, MAX_STANDARD_TX_SIZE);
+                        strFailReason =
+                            strprintf(_("Transaction of %d bytes is too large. Maximum allowed is %d bytes"), nBytes,
+                                MAX_STANDARD_TX_SIZE);
                         return false;
                     }
 

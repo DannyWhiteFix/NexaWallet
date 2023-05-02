@@ -1284,17 +1284,17 @@
         <translation>Options</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+22"/>
         <source>&amp;Main</source>
         <translation>&amp;Main</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+56"/>
         <source>Number of script &amp;verification threads</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+149"/>
+        <location line="+195"/>
         <source>Allow incoming connections</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1326,7 +1326,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+46"/>
         <source>Reset all client options to default.</source>
         <translation>Reset all client options to default.</translation>
     </message>
@@ -1336,17 +1336,27 @@
         <translation>&amp;Reset Options</translation>
     </message>
     <message>
-        <location line="-501"/>
+        <location line="-504"/>
         <source>&amp;Network</source>
         <translation>&amp;Network</translation>
     </message>
     <message>
-        <location line="-117"/>
+        <location line="-204"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Automatically initiate a, one time only, full database reindex on the next startup.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Reindex on startup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+56"/>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+22"/>
         <source>W&amp;allet</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1381,7 +1391,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+13"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When creating and sending transactions, auto consolidate will, if required, automatically create a chain of transactions which have inputs no greater than the consensus input limit.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Auto Consolidate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+54"/>
         <source>Automatically open the Nexa client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Automatically open the Nexa client port on the router. This only works when your router supports UPnP and it is enabled.</translation>
     </message>
@@ -1499,12 +1519,12 @@
         <translation>Choose the default subdivision unit to show in the interface and when sending coins.</translation>
     </message>
     <message>
-        <location line="-460"/>
+        <location line="-502"/>
         <source>Whether to show coin control features or not.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-85"/>
+        <location line="-121"/>
         <source>Automatically start %1 after logging in to the system.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1514,14 +1534,14 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+271"/>
+        <location line="+349"/>
         <location line="+23"/>
         <location line="+23"/>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+384"/>
+        <location line="+387"/>
         <source>&amp;OK</source>
         <translation>&amp;OK</translation>
     </message>
@@ -1531,7 +1551,7 @@
         <translation>&amp;Cancel</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+97"/>
+        <location filename="../optionsdialog.cpp" line="+118"/>
         <source>default</source>
         <translation>default</translation>
     </message>
@@ -1541,7 +1561,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+69"/>
+        <location line="+73"/>
         <source>Confirm options reset</source>
         <translation>Confirm options reset</translation>
     </message>
@@ -1562,7 +1582,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+82"/>
         <source>The supplied proxy address is invalid.</source>
         <translation>The supplied proxy address is invalid.</translation>
     </message>
@@ -3410,7 +3430,7 @@
         <translation>Open until %1</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+10"/>
         <source>conflicted</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3473,8 +3493,13 @@
         <translation>To</translation>
     </message>
     <message>
-        <location line="-213"/>
+        <location line="-215"/>
         <source>double spent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>abandoned</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3631,7 +3656,7 @@
         <translation>, has not been successfully broadcast yet</translation>
     </message>
     <message numerus="yes">
-        <location line="-38"/>
+        <location line="-40"/>
         <source>Open for %n more block(s)</source>
         <translation>
             <numerusform>Open for %n more block</numerusform>
@@ -3639,7 +3664,7 @@
         </translation>
     </message>
     <message>
-        <location line="+71"/>
+        <location line="+73"/>
         <source>unknown</source>
         <translation>unknown</translation>
     </message>
@@ -3678,12 +3703,12 @@
         <translation>Type</translation>
     </message>
     <message>
-        <location line="+86"/>
+        <location line="+89"/>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location line="-26"/>
+        <location line="-29"/>
         <source>Open for %n more block(s)</source>
         <translation>
             <numerusform>Open for %n more block</numerusform>
@@ -3706,7 +3731,7 @@
         <translation>Confirmed (%1 confirmations)</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+17"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
         <translation>This block was not received by any other nodes and will probably not be accepted!</translation>
     </message>
@@ -3716,7 +3741,7 @@
         <translation>Generated but not accepted</translation>
     </message>
     <message>
-        <location line="-28"/>
+        <location line="-31"/>
         <source>Offline</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3738,6 +3763,11 @@
     <message>
         <location line="+3"/>
         <source>Double Spent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Abandoned</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3781,7 +3811,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+274"/>
+        <location line="+276"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Transaction status. Hover over this field to show number of confirmations.</translation>
     </message>
@@ -4016,111 +4046,9 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="+46"/>
-        <source>&amp;Export</source>
-        <translation>&amp;Export</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Export the data in the current tab to a file</source>
-        <translation>Export the data in the current tab to a file</translation>
-    </message>
-    <message>
-        <location line="+194"/>
-        <source>Backup Wallet</source>
-        <translation>Backup Wallet</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Wallet Data (*.dat)</source>
-        <translation>Wallet Data (*.dat)</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>Backup Failed</source>
-        <translation>Backup Failed</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>There was an error trying to save the wallet data to %1.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>The wallet data was successfully saved to %1.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>Backup Successful</source>
-        <translation>Backup Successful</translation>
-    </message>
-</context>
-<context>
-    <name>nexa</name>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="+289"/>
-        <source>Options:</source>
-        <translation>Options:</translation>
-    </message>
-    <message>
-        <location line="+28"/>
-        <source>Specify data directory</source>
-        <translation>Specify data directory</translation>
-    </message>
-    <message>
-        <location line="-89"/>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>Connect to a node to retrieve peer addresses, and disconnect</translation>
-    </message>
-    <message>
-        <location line="+92"/>
-        <source>Specify your own public address</source>
-        <translation>Specify your own public address</translation>
-    </message>
-    <message>
-        <location line="-110"/>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Accept command line and JSON-RPC commands</translation>
-    </message>
-    <message>
-        <location line="-124"/>
-        <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+15"/>
-        <source>Maximum total fees (in %s) to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>Please check that your computer&apos;s date and time are correct! If your clock is wrong Bitcoin will not work properly.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+9"/>
-        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+123"/>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <location line="+8"/>
+        <location line="+10"/>
+        <source>The largest block that will be mined</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4233,7 +4161,7 @@
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+276"/>
+        <location filename="../walletmodel.cpp" line="+287"/>
         <source>Send Coins</source>
         <translation>Send Coins</translation>
     </message>
@@ -4284,7 +4212,27 @@
 <context>
     <name>nexa</name>
     <message>
-        <location filename="../nexastrings.cpp" line="+12"/>
+        <location filename="../nexastrings.cpp" line="+56"/>
+        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+90"/>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-144"/>
         <source>Nexa</source>
         <translation type="unfinished">Nexa</translation>
     </message>
@@ -4340,6 +4288,14 @@
     </message>
     <message>
         <location line="+3"/>
+        <source>Error reading from the coin database.
+Details: %s
+
+Do you want to reindex on the next restart?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4369,27 +4325,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+8"/>
         <source>Reducing -maxconnections from %d to %d because of file descriptor limitations (unix) or winsocket fd_set limitations (windows). If you are a windows user there is a hard upper limit of 1024 which cannot be changed by adjusting the node&apos;s configuration.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+5"/>
-        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+8"/>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer&apos;s date and time being set incorrectly. Only rebuild the block database if you are sure that your computer&apos;s date and time are correct</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4415,6 +4356,16 @@
     </message>
     <message>
         <location line="+4"/>
+        <source>Transaction has %d inputs and %d outputs. Maximum inputs allowed are %d and maximum outputs are %d</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Transaction has %d inputs. Maximum inputs allowed is %d. Try reducing inputs by transferring a smaller amount.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4452,6 +4403,11 @@
         <location line="+4"/>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation type="unfinished">Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>You are trying to use -wallet.auto but neither -spendzeroconfchange nor -wallet.instant is turned on</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+3"/>
@@ -4525,6 +4481,11 @@
     </message>
     <message>
         <location line="+1"/>
+        <source>CommitTransaction failed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Copyright (C) 2015-%i The Bitcoin Unlimited Developers</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4585,21 +4546,11 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Error reading from database, shutting down.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Error</source>
         <translation type="unfinished">Error</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Error: Disk space is low!</source>
         <translation type="unfinished">Error: Disk space is low!</translation>
     </message>
@@ -4775,7 +4726,22 @@
     </message>
     <message>
         <location line="+1"/>
+        <source>Transaction has %d outputs. Maximum outputs allowed is %d</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transaction of %d bytes is too large. Maximum allowed is %d bytes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Transaction too large for fee policy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Turn off auto consolidate and try sending again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

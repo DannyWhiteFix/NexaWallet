@@ -43,6 +43,12 @@ static const char UNUSED *bitcoin_strings[] = {
         "book entries might be missing or incorrect."),
     QT_TRANSLATE_NOOP("nexa",
         ""
+        "Error reading from the coin database.\n"
+        "Details: %s\n"
+        "\n"
+        "Do you want to reindex on the next restart?"),
+    QT_TRANSLATE_NOOP("nexa",
+        ""
         "Error: Listening for incoming connections failed (listen returned error %s)"),
     QT_TRANSLATE_NOOP("nexa",
         ""
@@ -104,6 +110,14 @@ static const char UNUSED *bitcoin_strings[] = {
         "uacomments to avoid truncation."),
     QT_TRANSLATE_NOOP("nexa",
         ""
+        "Transaction has %d inputs and %d outputs. Maximum inputs allowed are %d and "
+        "maximum outputs are %d"),
+    QT_TRANSLATE_NOOP("nexa",
+        ""
+        "Transaction has %d inputs. Maximum inputs allowed is %d. Try reducing inputs "
+        "by transferring a smaller amount."),
+    QT_TRANSLATE_NOOP("nexa",
+        ""
         "WARNING: abnormally high number of blocks generated, %d blocks received in "
         "the last %d hours (%d expected)"),
     QT_TRANSLATE_NOOP("nexa",
@@ -136,6 +150,10 @@ static const char UNUSED *bitcoin_strings[] = {
         "upgrade, or other nodes may need to upgrade."),
     QT_TRANSLATE_NOOP("nexa",
         ""
+        "You are trying to use -wallet.auto but neither -spendzeroconfchange nor -"
+        "wallet.instant is turned on"),
+    QT_TRANSLATE_NOOP("nexa",
+        ""
         "You are trying to use wallet.fallbackFee which has been deprecated an no "
         "longer in  use - use wallet.payTxFee instead "),
     QT_TRANSLATE_NOOP("nexa",
@@ -160,6 +178,7 @@ static const char UNUSED *bitcoin_strings[] = {
     QT_TRANSLATE_NOOP("nexa", "Cannot resolve -externalip address: '%s'"),
     QT_TRANSLATE_NOOP("nexa", "Cannot resolve -whitebind address: '%s'"),
     QT_TRANSLATE_NOOP("nexa", "Cannot write default address"),
+    QT_TRANSLATE_NOOP("nexa", "CommitTransaction failed."),
     QT_TRANSLATE_NOOP("nexa", "Copyright (C) 2015-%i The Bitcoin Unlimited Developers"),
     QT_TRANSLATE_NOOP("nexa", "Corrupted block database detected"),
     QT_TRANSLATE_NOOP("nexa", "Deployment configuration file '%s' not found"),
@@ -172,7 +191,6 @@ static const char UNUSED *bitcoin_strings[] = {
     QT_TRANSLATE_NOOP("nexa", "Error loading %s: Wallet requires newer version of %s"),
     QT_TRANSLATE_NOOP("nexa", "Error loading %s: You can't disable HD on a already existing HD wallet"),
     QT_TRANSLATE_NOOP("nexa", "Error opening block database"),
-    QT_TRANSLATE_NOOP("nexa", "Error reading from database, shutting down."),
     QT_TRANSLATE_NOOP("nexa", "Error"),
     QT_TRANSLATE_NOOP("nexa", "Error: A fatal internal error occurred, see debug.log for details"),
     QT_TRANSLATE_NOOP("nexa", "Error: Disk space is low!"),
@@ -210,7 +228,10 @@ static const char UNUSED *bitcoin_strings[] = {
     QT_TRANSLATE_NOOP("nexa", "This is experimental software."),
     QT_TRANSLATE_NOOP("nexa", "Transaction amount too small"),
     QT_TRANSLATE_NOOP("nexa", "Transaction amounts must be positive"),
+    QT_TRANSLATE_NOOP("nexa", "Transaction has %d outputs. Maximum outputs allowed is %d"),
+    QT_TRANSLATE_NOOP("nexa", "Transaction of %d bytes is too large. Maximum allowed is %d bytes"),
     QT_TRANSLATE_NOOP("nexa", "Transaction too large for fee policy"),
+    QT_TRANSLATE_NOOP("nexa", "Turn off auto consolidate and try sending again."),
     QT_TRANSLATE_NOOP("nexa", "Unable to bind to %s on this computer (bind returned error %s)"),
     QT_TRANSLATE_NOOP("nexa", "Unable to bind to %s on this computer. %s is probably already running."),
     QT_TRANSLATE_NOOP("nexa", "Unable to start RPC services. See debug log for details."),
