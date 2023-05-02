@@ -316,7 +316,7 @@ static bool rest_chaininfo(HTTPRequest *req, const std::string &strURIPart)
     return true; // continue to process further HTTP reqs on this cxn
 }
 
-static bool rest_mempool_info(HTTPRequest *req, const std::string &strURIPart)
+static bool rest_txpool_info(HTTPRequest *req, const std::string &strURIPart)
 {
     if (!CheckWarmup(req))
         return false;
@@ -344,7 +344,7 @@ static bool rest_mempool_info(HTTPRequest *req, const std::string &strURIPart)
     return true; // continue to process further HTTP reqs on this cxn
 }
 
-static bool rest_mempool_contents(HTTPRequest *req, const std::string &strURIPart)
+static bool rest_txpool_contents(HTTPRequest *req, const std::string &strURIPart)
 {
     if (!CheckWarmup(req))
         return false;
@@ -451,7 +451,7 @@ static bool rest_getutxos(HTTPRequest *req, const std::string &strURIPart)
         return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, "Error: empty request");
 
     bool fInputParsed = false;
-    bool fCheckMemPool = false;
+    bool fCheckTxPool = false;
     vector<COutPoint> vOutPoints;
 
     // parse/deserialize input
@@ -459,32 +459,32 @@ static bool rest_getutxos(HTTPRequest *req, const std::string &strURIPart)
 
     if (uriParts.size() > 0)
     {
-        // inputs is sent over URI scheme (/rest/getutxos/checkmempool/txid1-n/txid2-n/...)
-        if (uriParts[0] == "checkmempool")
-            fCheckMemPool = true;
+        // inputs is sent over URI scheme (/rest/getutxos/checktxpool/txid1-n/txid2-n/...)
+        if (uriParts[0] == "checktxpool")
+            fCheckTxPool = true;
 
-        for (size_t i = (fCheckMemPool) ? 1 : 0; i < uriParts.size(); i++)
+        for (size_t i = (fCheckTxPool) ? 1 : 0; i < uriParts.size(); i++)
         {
-            uint256 txid;
+            uint256 txidem;
             int32_t nOutput;
             // Accept either outpoint or txidem-index format
             auto dashpt = uriParts[i].find("-");
             if (dashpt == string::npos)
             {
                 std::string outpoint = uriParts[i];
-                txid.SetHex(outpoint);
-                vOutPoints.push_back(COutPoint(txid));
+                txidem.SetHex(outpoint);
+                vOutPoints.push_back(COutPoint(txidem));
             }
             else
             {
-                std::string strTxid = uriParts[i].substr(0, dashpt);
+                std::string strTxidem = uriParts[i].substr(0, dashpt);
                 std::string strOutput = uriParts[i].substr(dashpt + 1);
 
-                if (!ParseInt32(strOutput, &nOutput) || !IsHex(strTxid))
+                if (!ParseInt32(strOutput, &nOutput) || !IsHex(strTxidem))
                     return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, "Parse error");
 
-                txid.SetHex(strTxid);
-                vOutPoints.push_back(COutPoint(txid, (uint32_t)nOutput));
+                txidem.SetHex(strTxidem);
+                vOutPoints.push_back(COutPoint(txidem, (uint32_t)nOutput));
             }
         }
 
@@ -516,7 +516,7 @@ static bool rest_getutxos(HTTPRequest *req, const std::string &strURIPart)
 
                 CDataStream oss(SER_NETWORK, PROTOCOL_VERSION);
                 oss << strRequestMutable;
-                oss >> fCheckMemPool;
+                oss >> fCheckTxPool;
                 oss >> vOutPoints;
             }
         }
@@ -561,7 +561,7 @@ static bool rest_getutxos(HTTPRequest *req, const std::string &strURIPart)
         CCoinsViewCache &viewChain = *pcoinsTip;
         CCoinsViewMemPool viewMempool(&viewChain, mempool);
 
-        if (fCheckMemPool)
+        if (fCheckTxPool)
             view.SetBackend(viewMempool); // switch cache backend to db+mempool in case user likes to query mempool
 
         for (size_t i = 0; i < vOutPoints.size(); i++)
@@ -658,8 +658,8 @@ static const struct
     {"/rest/block/notxdetails/", rest_block_notxdetails},
     {"/rest/block/", rest_block_extended},
     {"/rest/chaininfo", rest_chaininfo},
-    {"/rest/mempool/info", rest_mempool_info},
-    {"/rest/mempool/contents", rest_mempool_contents},
+    {"/rest/txpool/info", rest_txpool_info},
+    {"/rest/txpool/contents", rest_txpool_contents},
     {"/rest/headers/", rest_headers},
     {"/rest/getutxos", rest_getutxos},
 };
