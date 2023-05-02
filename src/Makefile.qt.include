@@ -426,7 +426,7 @@ qt/nexastrings.cpp: $(libnexa_server_a_SOURCES) $(libnexa_wallet_a_SOURCES)
 
 translate: qt/nexastrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(NEXA_QT_CPP) $(NEXA_QT_H) $(NEXA_MM)
 	@test -n $(LUPDATE) || echo "lupdate is required for updating translations"
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(LUPDATE) $^ -locations relative -no-obsolete -ts qt/locale/bitcoin_en.ts
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(LUPDATE) $^ -locations relative -no-obsolete -ts $(QT_TS)
 
 $(QT_QRC_LOCALE_CPP): $(QT_QRC_LOCALE) $(QT_QM)
 	@test -f $(RCC)

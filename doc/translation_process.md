@@ -22,6 +22,8 @@ cd src/
 make translate
 ```
 
+Once `make translate` is run it will not only update bitcoin_en.ts but it will update all *.ts files with any new translation strings and remove any old one while at the same time preserving any current translations.
+
 `contrib/bitcoin-qt.pro` takes care of generating `.qm` (binary compiled) files from `.ts` (source files) files. It’s mostly automated, and you shouldn’t need to worry about it.
 
 **Example Qt translation**
