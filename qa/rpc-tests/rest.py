@@ -92,7 +92,7 @@ class RESTTest (BitcoinTestFramework):
         ######################################
         # GETUTXOS: query a unspent outpoint #
         ######################################
-        json_request = '/checkmempool/'+txid+'-'+str(n)
+        json_request = '/checktxpool/'+txid+'-'+str(n)
         json_string = http_get_call(url.hostname, url.port, '/rest/getutxos'+json_request+self.FORMAT_SEPARATOR+'json')
         json_obj = json.loads(json_string)
 
@@ -107,7 +107,7 @@ class RESTTest (BitcoinTestFramework):
         ################################################
         # GETUTXOS: now query a already spent outpoint #
         ################################################
-        json_request = '/checkmempool/'+outpoint
+        json_request = '/checktxpool/'+outpoint
         json_string = http_get_call(url.hostname, url.port, '/rest/getutxos'+json_request+self.FORMAT_SEPARATOR+'json')
         json_obj = json.loads(json_string)
 
@@ -124,7 +124,7 @@ class RESTTest (BitcoinTestFramework):
         ##################################################
         # GETUTXOS: now check both with the same request #
         ##################################################
-        json_request = '/checkmempool/'+txid+'-'+str(n)+'/'+outpoint
+        json_request = '/checktxpool/'+txid+'-'+str(n)+'/'+outpoint
         json_string = http_get_call(url.hostname, url.port, '/rest/getutxos'+json_request+self.FORMAT_SEPARATOR+'json')
         json_obj = json.loads(json_string)
         assert_equal(len(json_obj['utxos']), 1)
@@ -170,32 +170,32 @@ class RESTTest (BitcoinTestFramework):
         json_obj = json.loads(json_string)
         assert_equal(len(json_obj['utxos']), 0) #there should be a outpoint because it has just added to the mempool
 
-        json_request = '/checkmempool/'+txid+'-'+str(n)
+        json_request = '/checktxpool/'+txid+'-'+str(n)
         json_string = http_get_call(url.hostname, url.port, '/rest/getutxos'+json_request+self.FORMAT_SEPARATOR+'json')
         json_obj = json.loads(json_string)
         assert_equal(len(json_obj['utxos']), 1) #there should be a outpoint because it has just added to the mempool
 
         #do some invalid requests
-        json_request = '{"checkmempool'
+        json_request = '{"checktxpool'
         response = http_post_call(url.hostname, url.port, '/rest/getutxos'+self.FORMAT_SEPARATOR+'json', json_request, True)
         assert_equal(response.status, 500) #must be a 500 because we send a invalid json request
 
-        json_request = '{"checkmempool'
+        json_request = '{"checktxpool'
         response = http_post_call(url.hostname, url.port, '/rest/getutxos'+self.FORMAT_SEPARATOR+'bin', json_request, True)
         assert_equal(response.status, 500) #must be a 500 because we send a invalid bin request
 
-        response = http_post_call(url.hostname, url.port, '/rest/getutxos/checkmempool'+self.FORMAT_SEPARATOR+'bin', '', True)
+        response = http_post_call(url.hostname, url.port, '/rest/getutxos/checktxpool'+self.FORMAT_SEPARATOR+'bin', '', True)
         assert_equal(response.status, 500) #must be a 500 because we send a invalid bin request
 
         #test limits
-        json_request = '/checkmempool/'
+        json_request = '/checktxpool/'
         for x in range(0, 20):
             json_request += txid+'-'+str(n)+'/'
         json_request = json_request.rstrip("/")
         response = http_post_call(url.hostname, url.port, '/rest/getutxos'+json_request+self.FORMAT_SEPARATOR+'json', '', True)
         assert_equal(response.status, 500) #must be a 500 because we exceeding the limits
 
-        json_request = '/checkmempool/'
+        json_request = '/checktxpool/'
         for x in range(0, 15):
             json_request += txid+'-'+str(n)+'/'
         json_request = json_request.rstrip("/")
@@ -302,14 +302,14 @@ class RESTTest (BitcoinTestFramework):
         self.sync_all()
 
         # check that there are exactly 3 transactions in the TX memory pool before generating the block
-        json_string = http_get_call(url.hostname, url.port, '/rest/mempool/info'+self.FORMAT_SEPARATOR+'json')
+        json_string = http_get_call(url.hostname, url.port, '/rest/txpool/info'+self.FORMAT_SEPARATOR+'json')
         json_obj = json.loads(json_string)
         assert_equal(json_obj['size'], 3)
         # the size of the memory pool should be greater than 3x ~100 bytes
         assert_greater_than(json_obj['bytes'], 300)
 
         # check that there are our submitted transactions in the TX memory pool
-        json_string = http_get_call(url.hostname, url.port, '/rest/mempool/contents'+self.FORMAT_SEPARATOR+'json')
+        json_string = http_get_call(url.hostname, url.port, '/rest/txpool/contents'+self.FORMAT_SEPARATOR+'json')
         json_obj = json.loads(json_string)
         for i, tx in enumerate(txs):
             assert_equal(tx in json_obj, True)
