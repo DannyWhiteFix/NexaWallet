@@ -133,6 +133,48 @@ class GroupTokensTest (BitcoinTestFramework):
 
         return True
 
+    def decimalDescTest(self):
+        anyhash = "9241565005f6647e8a521801e72c6d66b6cf01ff85df89e238f24b02878d3b40"
+        n = self.nodes[0]
+        addr = n.getnewaddress()
+        n.generate(5) # clear out anything and get coins
+
+        g0 = n.token("new", "tkr", "name","http://nothing.com/", anyhash, 4)
+        tx0 = waitFor(60, lambda: n.getrawtransaction(g0["transaction"], True))
+        assert(tx0['vout'][0]['scriptPubKey']['asm'].split()[-1] == '4')
+        ti = n.token("info", g0["groupIdentifier"])
+        assert(ti[g0["groupIdentifier"]]["decimals"] == "4")
+
+        try:
+            g0 = n.token("new", "tkr", "name","http://nothing.com/", anyhash, 19)
+            assert(0) # too many decimals
+        except JSONRPCException as e:
+            pass  # worked
+
+        try:
+            g0 = n.token("new", "tkr", "name","http://nothing.com/", anyhash, -1)
+            assert(0) # negative doesn't work
+        except JSONRPCException as e:
+            pass  # worked
+
+        n.generate(1)
+        # no arg means 0 decimals
+        g0 = n.token("new", "tkr", "name","http://nothing.com/", anyhash)
+        tx0 = waitFor(60, lambda: n.getrawtransaction(g0["transaction"], True))
+        assert(tx0['vout'][0]['scriptPubKey']['asm'].split()[-1] == '0')
+        ti = n.token("info", g0["groupIdentifier"])
+        assert(ti[g0["groupIdentifier"]]["decimals"] == "0")
+
+        n.generate(1)
+        # try max decimals and string
+        g0 = n.token("new", "tkr", "name","http://nothing.com/", anyhash, "18")
+        tx0 = waitFor(60, lambda: n.getrawtransaction(g0["transaction"], True))
+        assert(tx0['vout'][0]['scriptPubKey']['asm'].split()[-1] == '18')
+        ti = n.token("info", g0["groupIdentifier"])
+        assert(ti[g0["groupIdentifier"]]["decimals"] == "18")
+
+        # done
+
 
     def descDocTest(self):
         logging.info("description doc test")
@@ -461,6 +503,8 @@ class GroupTokensTest (BitcoinTestFramework):
 
         self.subgroupTest()
         self.descDocTest()
+        self.decimalDescTest()
+
         logging.info("test complete")
 
 

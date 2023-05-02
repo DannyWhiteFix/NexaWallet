@@ -170,8 +170,11 @@ def waitFor(timeout, fn, onError="timeout in waitFor", sleepAmt=1.0):
     timeout = float(timeout)
     while 1:
         result = fn()
-        if not (result is None or result is False):
+        try:
+          if not (result is None or result is False):
             return result
+        except JSONRPCException:
+          pass # ignore as long as timeout is not hit
         if timeout <= 0:
             if callable(onError):
                 onError = onError()

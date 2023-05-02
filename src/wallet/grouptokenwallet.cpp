@@ -174,15 +174,33 @@ std::vector<std::string> GetTokenDescription(const CScript &script)
         return {};
 
     // Get labels
+    int count = 0;
     while (script.GetOp(pc, op, vchRet))
     {
         if (op != OP_0)
         {
-            std::string s(vchRet.begin(), vchRet.end());
-            vTokenDesc.push_back(s);
+            if (count != 4)
+            {
+                std::string s(vchRet.begin(), vchRet.end());
+                vTokenDesc.push_back(s);
+            }
+            else // 5th parameter in op return is the number of decimals
+            {
+                uint8_t amt;
+                if (0 <= op && op <= OP_PUSHDATA4)
+                {
+                    amt = CScriptNum(vchRet, false, CScriptNum::MAXIMUM_ELEMENT_SIZE_64_BIT).getint64();
+                }
+                else if (op == 0)
+                    amt = 0;
+                else
+                    amt = op - OP_1 + 1;
+                vTokenDesc.push_back(std::to_string(amt));
+            }
         }
         else
             vTokenDesc.push_back("");
+        count++;
     }
 
     return vTokenDesc;
@@ -245,7 +263,7 @@ void GetAllGroupDescriptions(const CWallet *wallet,
         // If there is no OP_RETURN then just return empty strings for the token descriptions
         if (!fOpReturn)
         {
-            desc[tg.associatedGroup] = std::vector<std::string>({"", "", "", ""});
+            desc[tg.associatedGroup] = std::vector<std::string>({"", "", "", "", ""});
         }
     }
 }
@@ -730,6 +748,9 @@ std::vector<std::vector<unsigned char> > ParseGroupDescParams(const UniValue &pa
 {
     std::vector<std::vector<unsigned char> > ret;
     std::string tickerStr = params[curparam].get_str();
+    std::vector<unsigned char> decimals(1);
+    decimals[0] = 0;
+
     if (tickerStr.size() > 8)
     {
         std::string strError = strprintf("Ticker %s has too many characters (8 max)", tickerStr);
@@ -751,6 +772,7 @@ std::vector<std::vector<unsigned char> > ParseGroupDescParams(const UniValue &pa
     {
         ret.push_back(std::vector<unsigned char>());
         ret.push_back(std::vector<unsigned char>());
+        ret.push_back(decimals);
         return ret;
     }
 
@@ -775,6 +797,27 @@ std::vector<std::vector<unsigned char> > ParseGroupDescParams(const UniValue &pa
     uint256 docHash;
     docHash.SetHex(hexDocHash);
     ret.push_back(std::vector<unsigned char>(docHash.begin(), docHash.end()));
+
+    curparam++;
+    if (curparam < params.size())
+    {
+        int i = 0;
+        if (params[curparam].isNum())
+            i = params[curparam].get_int();
+        else
+            i = stoi(params[curparam].get_str());
+        if (i > 18)
+        {
+            throw JSONRPCError(
+                RPC_INVALID_PARAMS, "token description decimal is too large: max is quintillionths (18)");
+        }
+        if (i < 0)
+        {
+            throw JSONRPCError(RPC_INVALID_PARAMS, "token description decimal is too small: min is 0");
+        }
+        decimals[0] = i;
+    }
+    ret.push_back(decimals);
     return ret;
 }
 
@@ -819,13 +862,15 @@ extern UniValue token(const UniValue &params, bool fHelp)
             "\nToken functions.\n"
             "'info' returns a list of all tokens with their groupId and associated token-name token-ticker "
             "and descUrl or descHash, but only for tokens created for addresses in this wallet\n"
-            "'new' creates a new token type. args: [address] [token-ticker token-name [descUrl descHash]]\n"
+            "'new' creates a new token type. args: [address] [token-ticker token-name [descUrl descHash decimals]]\n"
             "'mint' creates new tokens. args: groupId address quantity\n"
             "'melt' removes tokens from circulation. args: groupId quantity\n"
-            "'balance' reports quantity of this token. args: groupId [address]\n"
+            "'balance' reports quantity of this token, in the finest unit. args: groupId [address]\n"
             "'send' sends tokens to a new address. args: groupId address quantity [address quantity...]\n"
             "'authority create' creates a new authority args: groupId address [mint melt nochild rescript]\n"
             "'subgroup' translates a group and additional data into a subgroup identifier. args: groupId data\n"
+            "Note: As this interface is often used for scripting, all balances are accepted and reported as integers\n"
+            "      specified in the token's finest unit (the 'decimals' field in the token information is ignored).\n"
             "\nArguments:\n"
             "1. \"groupId\"           (string, required) the group identifier\n"
             "2. \"address\"           (string, required) the destination address\n"
@@ -835,9 +880,12 @@ extern UniValue token(const UniValue &params, bool fHelp)
             "6. \"token-name\"        (string, optional) the name of the token\n"
             "7. \"descUrl\"           (string, optional) the url of the token description json document\n"
             "8. \"descHash\"          (string, optional) the hash of the token description json document\n"
-            "9. \"nochild\"           (string, optional) do not allow this authority to create child authorities\n"
-            "10.\"rescript\"          (string, optional) for covenanted groups, this authority can change the\n"
+            "9. \"decimals\"          (numeric, optional) suggest number of decimal places to display\n"
+            "10. \"nochild\"          (string, optional) do not allow this authority to create child authorities\n"
+            "11. \"rescript\"         (string, optional) for covenanted groups, this authority can change the\n"
             "                         constraint script hash\n"
+            "12. \"mint\"             (string, optional) allow this authority to mint (create) new tokens\n"
+            "13. \"melt\"             (string, optional) allow this authority to melt (destroy) new tokens\n"
             "\nResult:\n"
             "\n"
             "\nExamples:\n"
@@ -1169,26 +1217,6 @@ extern UniValue token(const UniValue &params, bool fHelp)
         UniValue ret(UniValue::VOBJ);
         ret.pushKV("groupIdentifier", EncodeGroupToken(grpID));
         ret.pushKV("transaction", wtx.GetIdem().GetHex());
-        auto spentScript = chosenCoins[0].GetScriptPubKey();
-        txnouttype whichType;
-        std::vector<std::vector<unsigned char> > solutionsRet;
-        // Need to solve for the coin I used to extract the pubkey so I can tell the creator what address to
-        // use to sign coins
-        std::string addr;
-        if (Solver(spentScript, whichType, solutionsRet))
-        {
-            if (whichType == TX_PUBKEYHASH)
-            {
-                addr = EncodeCashAddr(solutionsRet[0], CashAddrType::PUBKEY_TYPE, Params());
-            }
-            else if (whichType == TX_SCRIPT_TEMPLATE)
-            {
-                CScript ug = UngroupedScriptTemplate(spentScript);
-                ScriptTemplateDestination d(ug);
-                addr = EncodeDestination(d);
-            }
-            ret.pushKV("tokenDescriptorSigningAddress", addr);
-        }
         return ret;
     }
 
@@ -1324,13 +1352,14 @@ extern UniValue token(const UniValue &params, bool fHelp)
             for (const auto &item : desc)
             {
                 UniValue entry(UniValue::VOBJ);
-                if (desc[item.first].size() >= 4)
+                auto &info = desc[item.first];
+                if (info.size() >= 4)
                 {
-                    entry.pushKV("ticker", desc[item.first][0]);
-                    entry.pushKV("name", desc[item.first][1]);
-                    entry.pushKV("url", desc[item.first][2]);
+                    entry.pushKV("ticker", info[0]);
+                    entry.pushKV("name", info[1]);
+                    entry.pushKV("url", info[2]);
 
-                    std::string s = desc[item.first][3];
+                    std::string s = info[3];
                     if (s.size() != 32)
                     {
                         entry.pushKV("hash", "");
@@ -1342,6 +1371,11 @@ extern UniValue token(const UniValue &params, bool fHelp)
                         if (!dochash.IsNull())
                             entry.pushKV("hash", dochash.ToString());
                     }
+                }
+
+                if (info.size() >= 5)
+                {
+                    entry.pushKV("decimals", info[4]);
                 }
 
                 if (balances.count(item.first))
