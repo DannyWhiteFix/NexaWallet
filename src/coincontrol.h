@@ -32,6 +32,7 @@ public:
     }
 
     bool HasSelected() const { return (setSelected.size() > 0); }
+    size_t NumSelected() const { return setSelected.size(); }
     /* TODO: reenable this API once we are sure its not called with any outpoint hashes
     bool IsSelected(const uint256 &hash, unsigned int n) const
     {

@@ -610,6 +610,26 @@ class WalletTest (BitcoinTestFramework):
         self.nodes[0].consolidate(5000, 1)
         waitFor(waitTime, lambda: len(self.nodes[0].listunspent(0)) <= 2)
 
+        # Stop and restart node with automatic consolidation turned on
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+        self.node_args = [['-usehd=0', '-wallet.auto=1']]
+        self.nodes = start_nodes(1, self.options.tmpdir, self.node_args)
+        connect_nodes_full(self.nodes)
+        sync_blocks(self.nodes)
+
+        # generate more blocks so that there are more than 256 utxos.  Then send
+        # all coins to one address which will trigger an auto consolidation.
+        self.nodes[0].generate(300);
+        coins_before = len(self.nodes[0].listunspent(0));
+        waitFor(waitTime, lambda: len(self.nodes[0].listunspent(0)) == 302)
+        balance = self.nodes[0].getbalance()
+        addr = self.nodes[0].getnewaddress()
+        self.nodes[0].sendtoaddress(addr, balance - 1000, "", "", True)
+        waitFor(waitTime, lambda: len(self.nodes[0].listunspent(0)) == 2)
+
+
+
 if __name__ == '__main__':
     WalletTest ().main ()
 

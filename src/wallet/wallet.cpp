@@ -61,6 +61,7 @@ extern CTweak<bool> useBIP69;
 extern CTweak<bool> feeEstimationTweak;
 extern CTweak<bool> instantTxns;
 extern CTweak<uint32_t> instantTxnsDelay;
+extern CTweak<bool> autoTxns;
 
 /** @defgroup mapWallet
  *
@@ -2703,7 +2704,7 @@ bool CWallet::SelectCoins(const CAmount &nTargetValue,
             available.erase(j->first);
         }
     }
-    assert(nValueRet >= nTargetValue);
+    DbgAssert(nValueRet >= nTargetValue, return false);
     return true;
 }
 
@@ -2838,7 +2839,145 @@ void sortOutputsBIP69(std::vector<CTxOut> &vout, int *pChangePosRet)
     }
 }
 
+class CompareCoinValue
+{
+public:
+    bool operator()(const COutput &a, const COutput &b) const { return a.GetValue() < b.GetValue(); }
+};
 bool CWallet::CreateTransaction(const vector<CRecipient> &vecSend,
+    CWalletTx &wtxNew,
+    CReserveKey &reservekey,
+    CAmount &nFeeRet,
+    int &nChangePosRet,
+    std::string &strFailReason,
+    const CCoinControl *coinControl,
+    bool sign)
+{
+    // If automatic consolidation is turned on then create a chain of as many transactions that are
+    // required to satisfy the send amount. Either -spendzeroconfchange or instant transactions must be
+    // turned on and we must not be using coin control or have any cointrol items selected.
+    bool fCoinControl = (coinControl && coinControl->HasSelected());
+    if (autoTxns.Value() && !fCoinControl && (instantTxns.Value() || bSpendZeroConfChange))
+    {
+        // Get an address we can spend to ourselves if we need to
+        CReserveKey myReservekey(pwalletMain);
+        CPubKey vchPubKey;
+        if (!myReservekey.GetReservedKey(vchPubKey))
+        {
+            strFailReason = "Error: could not get an address";
+            return false;
+        }
+
+        // Get a list of available coins and select up to the max vin allowed
+        CCoinControl _coinControl;
+        _coinControl.fAllowOtherInputs = true; // must be true because we might add an output to create a txn chain
+        _coinControl.fAllowWatchOnly = false;
+
+        do
+        {
+            vector<COutput> coins;
+            CAmount _nValue = 0;
+            uint32_t count = _coinControl.NumSelected();
+            pwalletMain->AvailableCoins(coins, &_coinControl, false);
+            std::sort(coins.begin(), coins.end(), CompareCoinValue()); // sort from smallest to largest value
+
+            bool fMaxVin = false;
+            bool fDone = false;
+            uint32_t nSubtractFeeFromAmount = 0;
+            CAmount nToSend = 0;
+            CAmount nFeeNeeded = 0;
+            if (nFeeRet)
+                nFeeNeeded = nFeeRet;
+            else
+                nFeeNeeded = maxTxFeeTweak.Value(); // assume the highest fee possible
+            for (auto &recipient : vecSend)
+            {
+                nToSend += recipient.nAmount;
+                if (recipient.fSubtractFeeFromAmount)
+                    nSubtractFeeFromAmount++;
+            }
+
+            for (const auto &coin : coins)
+            {
+                _coinControl.Select(coin.GetOutPoint());
+                _nValue += coin.GetValue();
+                count++;
+                if (count >= MAX_TX_NUM_VIN)
+                {
+                    fMaxVin = true;
+                    break;
+                }
+                if (_nValue >= nFeeNeeded + nToSend)
+                {
+                    fDone = true;
+                    break;
+                }
+            }
+            // If don't have max vin then we need to account for fees.  If max vin then
+            // we don't because in the case of max vin we are paying fees subtracted from our total.
+            if (!fMaxVin && !fDone && !nSubtractFeeFromAmount)
+            {
+                strFailReason += _("The transaction amount is too small to send after the fee has been deducted");
+                return false;
+            }
+
+            // Check if this is the final transaction.  If so then send to the final address
+            // but if not, then spend to ourselves and chain this transaction to the next one
+            // we create.
+            //
+            // Create the final transaction
+            if (!fMaxVin || fDone)
+            {
+                if (!pwalletMain->CreateOneTransaction(
+                        vecSend, wtxNew, reservekey, nFeeRet, nChangePosRet, strFailReason, &_coinControl, sign))
+                {
+                    strFailReason += _("Turn off auto consolidate and try sending again.");
+                    return false;
+                }
+                return true;
+            }
+            else
+            {
+                // Prepare the recepient vector which will be a spend to ourselves if needed.
+                vector<CRecipient> vecSendToMe;
+                CScript scriptPubKey = P2pktOutput(vchPubKey);
+                CRecipient me = {scriptPubKey, _nValue, true};
+                vecSendToMe.push_back(me);
+
+                // Create a transaction which spends to ourselves and which will be then chained to the next one
+                // we create.
+                if (!pwalletMain->CreateOneTransaction(
+                        vecSendToMe, wtxNew, reservekey, nFeeRet, nChangePosRet, strFailReason, &_coinControl, sign))
+                {
+                    strFailReason += _("Turn off auto consolidate and try sending again.");
+                    return false;
+                }
+
+                // Commit the transaction
+                std::string error;
+                if (!pwalletMain->CommitTransaction(wtxNew, reservekey, error))
+                {
+                    strFailReason += _("CommitTransaction failed.");
+                    return false;
+                }
+
+                // Add the new outputs to coincontrol
+                _coinControl.UnSelectAll();
+                for (size_t i = 0; i < wtxNew.vout.size(); i++)
+                {
+                    _coinControl.Select(COutPoint(wtxNew.GetIdem(), i));
+                }
+            }
+        } while (true);
+    }
+    else
+    {
+        return CreateOneTransaction(
+            vecSend, wtxNew, reservekey, nFeeRet, nChangePosRet, strFailReason, coinControl, sign);
+    }
+}
+
+bool CWallet::CreateOneTransaction(const vector<CRecipient> &vecSend,
     CWalletTx &wtxNew,
     CReserveKey &reservekey,
     CAmount &nFeeRet,
@@ -4369,6 +4508,17 @@ bool CWallet::ParameterInteraction()
     else
     {
         bSpendZeroConfChange = GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
+    }
+
+    // If auto consolidation is on then we must have at least spendzeroconfchange
+    if (autoTxns.Value())
+    {
+        bSpendZeroConfChange = GetBoolArg("-spendzeroconfchange", true);
+        if (!bSpendZeroConfChange && !instantTxns.Value())
+        {
+            InitWarning(_("You are trying to use -wallet.auto but neither -spendzeroconfchange nor -wallet.instant is "
+                          "turned on"));
+        }
     }
 
     fSendFreeTransactions = GetBoolArg("-sendfreetransactions", DEFAULT_SEND_FREE_TRANSACTIONS);
