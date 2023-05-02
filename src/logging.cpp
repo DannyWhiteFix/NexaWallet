@@ -116,7 +116,7 @@ void MonitorLogfile()
     static fs::path fileName = pathDebugLog;
     existcounter++;
     // if we are to print
-    if (pathDebugLog.empty())
+    if (!pathDebugLog.empty())
     {
         if (existcounter % 63 == 0) // Check every 64 log msgs
         {
