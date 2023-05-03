@@ -59,8 +59,8 @@
         <file alias="nl">locale/bitcoin_nl.qm</file>
         <file alias="pam">locale/bitcoin_pam.qm</file>
         <file alias="pl">locale/bitcoin_pl.qm</file>
+        <file alias="pt">locale/bitcoin_pt.qm</file>
         <file alias="pt_BR">locale/bitcoin_pt_BR.qm</file>
-        <file alias="pt_PT">locale/bitcoin_pt_PT.qm</file>
         <file alias="ro_RO">locale/bitcoin_ro_RO.qm</file>
         <file alias="ro">locale/bitcoin_ro.qm</file>
         <file alias="ru_RU">locale/bitcoin_ru_RU.qm</file>
