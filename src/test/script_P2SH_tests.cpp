@@ -95,7 +95,8 @@ BOOST_AUTO_TEST_CASE(sign)
         txFrom.vout[i + 4].scriptPubKey = standardScripts[i];
         txFrom.vout[i + 4].nValue = 10 * COIN;
     }
-    BOOST_CHECK(IsStandardTx(MakeTransactionRef(CTransaction(txFrom)), reason));
+    // All P2SH-like outputs are non-standard in Nexa (since P2SH is removed in main net)
+    BOOST_CHECK(!IsStandardTx(MakeTransactionRef(CTransaction(txFrom)), reason));
 
     CMutableTransaction txTo[8]; // Spending transactions
     for (int i = 0; i < 8; i++)
@@ -203,7 +204,8 @@ BOOST_AUTO_TEST_CASE(set)
         txFrom.vout[i].scriptPubKey = outer[i];
         txFrom.vout[i].nValue = 10 * COIN;
     }
-    BOOST_CHECK(IsStandardTx(MakeTransactionRef(CTransaction(txFrom)), reason));
+    // All P2SH-like outputs are non-standard in Nexa (since P2SH is removed in main net)
+    BOOST_CHECK(!IsStandardTx(MakeTransactionRef(CTransaction(txFrom)), reason));
 
     CMutableTransaction txTo[4]; // Spending transactions
     for (int i = 0; i < 4; i++)

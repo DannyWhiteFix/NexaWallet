@@ -42,6 +42,10 @@ bool IsStandard(const CScript &scriptPubKey, txnouttype &whichType)
     if (!Solver(scriptPubKey, whichType, vSolutions))
         return false;
 
+    // P2SH is disabled on Nexa, so mark this type of output nonstandard
+    if (whichType == TX_SCRIPTHASH)
+        return false;
+
     if (whichType == TX_MULTISIG)
     {
         unsigned char m = vSolutions.front()[0];
