@@ -462,8 +462,6 @@ libnexa_a_SOURCES = \
   support/cleanse.h \
   uint256.cpp \
   uint256.h \
-  utilstrencodings.cpp \
-  utilstrencodings.h \
   cashaddrenc.cpp \
   cashaddrenc.h \
   cashaddr.cpp \
@@ -475,6 +473,8 @@ libnexa_a_SOURCES = \
   arith_uint256.h \
   bloom.cpp \
   bloom.h \
+  utilstrencodings.cpp \
+  utilstrencodings.h \
   streams.h
 endif
 
