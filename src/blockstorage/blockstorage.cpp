@@ -53,19 +53,30 @@ void InitializeBlockStorage(const int64_t &_nBlockTreeDBCache,
     if (BLOCK_DB_MODE == SEQUENTIAL_BLOCK_FILES) // BLOCK_DB_MODE 0
     {
         // Check if we had scheduled a reindex on last shutdown
-        pblocktree = new CBlockTreeDB(_nBlockTreeDBCache, "blocks", false, false);
-        bool fScheduledReindex = false;
-        bool fRead = pblocktree->ReadReindexing(fScheduledReindex);
-        if (fRead && fScheduledReindex)
-            fReindex = true;
-
-        if (fReindex)
+        uint64_t nChainTx = 0;
+        try
         {
             // Startup the database with the reindex (wipe database) flag set to false and get the value of nChainTx
-            const uint64_t nChainTx = pblocktree->GetBestBlockHeaderChainTx();
+            pblocktree = new CBlockTreeDB(_nBlockTreeDBCache, "blocks", false, false);
+            bool fScheduledReindex = false;
+            bool fRead = pblocktree->ReadReindexing(fScheduledReindex);
+            if (fRead && fScheduledReindex)
+            {
+                nChainTx = pblocktree->GetBestBlockHeaderChainTx();
+                fReindex = true;
+            }
+        }
+        catch (...)
+        {
+            LOGA("Block index is corrupt.  Automatically initiating a reindex\n");
+            fReindex = true;
+        }
+        if (fReindex)
+        {
             delete pblocktree;
+            pblocktree = nullptr;
 
-            // now restart the database and wipe the data but re-add the nChainTx after restart.
+            // Restart the database and wipe the data but re-add the nChainTx after restart.
             pblocktree = new CBlockTreeDB(_nBlockTreeDBCache, "blocks", false, true);
             pblocktree->WriteBestBlockHeaderChainTx(nChainTx);
             nTotalChainTx.store(nChainTx);
@@ -77,12 +88,20 @@ void InitializeBlockStorage(const int64_t &_nBlockTreeDBCache,
     else if (BLOCK_DB_MODE == LEVELDB_BLOCK_STORAGE) // BLOCK_DB_MODE 1
     {
         // Check if we had scheduled a reindex on last shutdown
-        pblocktree = new CBlockTreeDB(_nBlockTreeDBCache, "blockdb", false, false);
-        bool fScheduledReindex = false;
-        bool fRead = pblocktree->ReadReindexing(fScheduledReindex);
-        delete pblocktree;
-        if (fRead && fScheduledReindex)
+        try
+        {
+            pblocktree = new CBlockTreeDB(_nBlockTreeDBCache, "blockdb", false, false);
+            bool fScheduledReindex = false;
+            bool fRead = pblocktree->ReadReindexing(fScheduledReindex);
+            delete pblocktree;
+            if (fRead && fScheduledReindex)
+                fReindex = true;
+        }
+        catch (...)
+        {
+            LOGA("Block index is corrupt.  Automatically initiating a reindex\n");
             fReindex = true;
+        }
 
         // Create the db with the appropriate fReindex flag set.
         pblocktree = new CBlockTreeDB(_nBlockTreeDBCache, "blockdb", false, fReindex);
