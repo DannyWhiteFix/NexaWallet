@@ -242,24 +242,11 @@ ScriptTemplateError GetScriptTemplate(const CScript &script,
     }
     if (!IsPushOpcode(opcode))
         return ScriptTemplateError::INVALID;
-    size_t argsHashSize = templateHash->size();
-    if (templateHash->size() > 0 && templateHash->size() <= 2) // This may be a "well-known" template
+    size_t argsHashSize = argsHash->size();
+    // allow 2 different hash types, or no hashed args
+    if ((argsHashSize != CHash160::OUTPUT_SIZE) && (argsHashSize != CHash256::OUTPUT_SIZE) && (argsHashSize != 0))
     {
-        // Check all possible well known templates here
-        if (*templateHash == P2PKT_ID)
-        {
-        }
-        else
-        {
-            return ScriptTemplateError::INVALID;
-        }
-    }
-    else // allow 2 different hash types, or no hashed args
-    {
-        if ((argsHashSize != CHash160::OUTPUT_SIZE) && (argsHashSize != CHash256::OUTPUT_SIZE) && (argsHashSize != 0))
-        {
-            return ScriptTemplateError::INVALID;
-        }
+        return ScriptTemplateError::INVALID;
     }
 
     // Additional stuff is valid (visible script args)
