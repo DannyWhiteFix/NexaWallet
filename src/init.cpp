@@ -706,10 +706,27 @@ void ThreadImport(std::vector<fs::path> vImportFiles, uint64_t nTxIndexCache)
         // node startup that the reindex is already completed (in the case of a very small reindex) and
         // therefore fReindex would already be false and the txindex would not get rebuilt.
         bool fWipeDatabase = GetBoolArg("-reindex", DEFAULT_REINDEX);
-        auto txindex_db = new TxIndexDB(nTxIndexCache, false, fWipeDatabase);
-
-        g_txindex = std::make_unique<TxIndex>(txindex_db);
-        g_txindex->Start();
+        TxIndexDB *txindex_db = nullptr;
+        try
+        {
+            txindex_db = new TxIndexDB(nTxIndexCache, false, fWipeDatabase);
+        }
+        catch (...)
+        {
+            // Startup with a database wipe if the txindex is likely corrupted.
+            LOGA("WARNING: txindex was likely corrupted. Database will be wiped and rebuilt...\n");
+            fWipeDatabase = true;
+            txindex_db = new TxIndexDB(nTxIndexCache, false, fWipeDatabase);
+        }
+        if (txindex_db)
+        {
+            g_txindex = std::make_unique<TxIndex>(txindex_db);
+            g_txindex->Start();
+        }
+        else
+        {
+            LOGA("ERROR: txindex failed to start\n");
+        }
     }
 
     // This should be done last in init. If not, then RPC's could be allowed before the wallet
