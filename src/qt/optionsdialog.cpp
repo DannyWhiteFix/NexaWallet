@@ -37,6 +37,10 @@
 extern CTweak<bool> instantTxns;
 extern CTweak<bool> autoTxns;
 
+// Contains native language names that are missing from the QT database.  The key is the language code
+// whereas the value is the language name as written in the native tounge.
+std::map<QString, QString> mapNativeLanguageNames{{"pam", "Pilipino"}, {"la", "Latin"}, {"eo", "Esperanto"}};
+
 OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet)
     : QDialog(parent), ui(new Ui::OptionsDialog), portValidator(1, 65536, this), // fix memory leaks
       proxyPortValidator(1, 65536, this), model(0), mapper(0)
@@ -119,20 +123,25 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet)
     Q_FOREACH (const QString &langStr, translations.entryList())
     {
         QLocale locale(langStr);
+        QString languageName = locale.nativeLanguageName();
+        if (languageName.isEmpty() && mapNativeLanguageNames.count(langStr))
+        {
+            languageName = mapNativeLanguageNames[langStr];
+        }
+        QString countryName = locale.nativeCountryName();
 
         /** check if the locale name consists of 2 parts (language_country) */
         if (langStr.contains("_"))
         {
             /** display language strings as "native language - native country (locale name)", e.g. "Deutsch -
              * Deutschland (de)" */
-            ui->lang->addItem(locale.nativeLanguageName() + QString(" - ") + locale.nativeCountryName() +
-                                  QString(" (") + langStr + QString(")"),
+            ui->lang->addItem(languageName + QString(" - ") + countryName + QString(" (") + langStr + QString(")"),
                 QVariant(langStr));
         }
         else
         {
             /** display language strings as "native language (locale name)", e.g. "Deutsch (de)" */
-            ui->lang->addItem(locale.nativeLanguageName() + QString(" (") + langStr + QString(")"), QVariant(langStr));
+            ui->lang->addItem(languageName + QString(" (") + langStr + QString(")"), QVariant(langStr));
         }
     }
     ui->thirdPartyTxUrls->setPlaceholderText("https://example.com/tx/%s");
