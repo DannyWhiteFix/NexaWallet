@@ -412,8 +412,8 @@ class GroupTokensTest (BitcoinTestFramework):
         tx = self.nodes[2].token("send", grp2Id, mint0_0, 100)
         self.examineTx(tx, self.nodes[2])
         self.sync_all()
-        assert(self.nodes[0].token("balance", grp2Id, mint0_0) == 300)
-        assert(self.nodes[2].token("balance", grp2Id) == 800)
+        waitFor(30, lambda: self.nodes[0].token("balance", grp2Id, mint0_0) == 300)
+        waitFor(30, lambda: self.nodes[2].token("balance", grp2Id) == 800)
         # This should fail because the grp2Id was created for an address on node[2]
         try:
             self.checkTokenInfo(self.nodes[0], grp2Id, "","","","", 300)

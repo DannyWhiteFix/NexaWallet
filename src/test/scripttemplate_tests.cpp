@@ -1,6 +1,7 @@
 #include "core_io.h"
 #include "key.h"
 #include "keystore.h"
+#include "policy/policy.h"
 #include "rpc/server.h"
 #include "script/script.h"
 #include "script/script_error.h"
@@ -136,6 +137,37 @@ BOOST_AUTO_TEST_CASE(verifywellknown)
         BOOST_CHECK(ck.lastSig == fakeSig);
         BOOST_CHECK(ck.lastPubKey == fakeAddr.pubkey);
 
+        txnouttype whichType;
+        ret = IsStandard(txout, whichType);
+        BOOST_CHECK(ret == true);
+
+        {
+            // These are unspendable so nonstandard
+            VchType fakeArgsHash19(19);
+            fakeArgsHash19[0] = 1; // if the vec was 0, it would not be minimally encoded
+            fakeArgsHash19[18] = 1;
+            CScript txoutNonStd = (CScript(ScriptType::TEMPLATE) << nogroup << P2PKT_ID << fakeArgsHash19);
+            ret = IsStandard(txoutNonStd, whichType);
+            BOOST_CHECK(!ret);
+        }
+
+        {
+            VchType fakeArgsHash(21);
+            fakeArgsHash[0] = 1; // if the vec was 0, it would not be minimally encoded
+            fakeArgsHash[20] = 1;
+            CScript txoutNonStd = (CScript(ScriptType::TEMPLATE) << nogroup << P2PKT_ID << fakeArgsHash);
+            ret = IsStandard(txoutNonStd, whichType);
+            BOOST_CHECK(!ret);
+        }
+        {
+            VchType fakeArgsHash(33);
+            fakeArgsHash[0] = 1; // if the vec was 0, it would not be minimally encoded
+            fakeArgsHash[32] = 1;
+            CScript txoutNonStd = (CScript(ScriptType::TEMPLATE) << nogroup << P2PKT_ID << fakeArgsHash);
+            ret = IsStandard(txoutNonStd, whichType);
+            BOOST_CHECK(!ret);
+        }
+
         // Incorrect txin script (contains preimage, even though well-known)
         // Since the preimage is well-known the param is ignored, throwing off all the params (so vch(p2pkt) will
         // be seen as the hash of the args causing a failure
@@ -155,6 +187,7 @@ BOOST_AUTO_TEST_CASE(verifytemplate)
 
     auto nogroup = OP_0;
     bool ret;
+    txnouttype whichtype;
 
     {
         CScript templat = CScript() << OP_FROMALTSTACK << OP_SUB << OP_VERIFY;
@@ -189,7 +222,12 @@ BOOST_AUTO_TEST_CASE(verifytemplate)
 
         ret = VerifyScript(scriptSigVisArgs, tmplVisArgs, flags, sis, &error, &tracker);
         BOOST_CHECK(ret == true);
+        ret = IsStandard(tmplVisArgs, whichtype);
+        BOOST_CHECK(ret == true);
+
         ret = VerifyScript(scriptSigCmtArgs, tmplCmtArgs, flags, sis, &error, &tracker);
+        BOOST_CHECK(ret == true);
+        ret = IsStandard(tmplCmtArgs, whichtype);
         BOOST_CHECK(ret == true);
 
         ret = VerifyScript(badScriptSig, tmplVisArgs, flags, sis, &error, &tracker);
@@ -211,6 +249,9 @@ BOOST_AUTO_TEST_CASE(verifytemplate)
         CScript txout = (CScript(ScriptType::TEMPLATE) << nogroup << hash256(templat) << hash256(hashedArgs)) + visArgs;
         ret = VerifyScript(txin, txout, flags, sis, &error, &tracker);
         BOOST_CHECK(ret);
+        ret = IsStandard(txout, whichtype);
+        BOOST_CHECK(ret == true);
+
         // random incorrect txin script (doesn't contain the preimages)
         ret = VerifyScript(satisfier, txout, flags, sis, &error, &tracker);
         BOOST_CHECK(!ret);
@@ -308,6 +349,7 @@ BOOST_AUTO_TEST_CASE(opexectemplate)
     ScriptMachineResourceTracker tracker;
     auto nogroup = OP_0;
     bool ret;
+    txnouttype whichtype;
 
     {
         // template compares 2 numbers (from constraint and satisfier) and if equal,
@@ -327,6 +369,8 @@ BOOST_AUTO_TEST_CASE(opexectemplate)
                 (CScript(ScriptType::TEMPLATE) << nogroup << hash256(templat) << hash256(hashedArgs)) + visArgs;
             ret = VerifyScript(txin, txout, flags, sis, &error, &tracker);
             BOOST_CHECK(ret);
+            ret = IsStandard(txout, whichtype);
+            BOOST_CHECK(ret == true);
         }
 
         // Tests that a VERIFY operation inside an op_exec-ed constraint script arg fails the entire script
@@ -336,6 +380,8 @@ BOOST_AUTO_TEST_CASE(opexectemplate)
                 (CScript(ScriptType::TEMPLATE) << nogroup << hash256(templat) << hash256(hashedArgs)) + visArgs;
             ret = VerifyScript(satisfier, txout, flags, sis, &error, &tracker);
             BOOST_CHECK(!ret);
+            ret = IsStandard(txout, whichtype);
+            BOOST_CHECK(ret == true);
         }
     }
 }
