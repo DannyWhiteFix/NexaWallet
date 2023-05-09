@@ -257,7 +257,16 @@ bool ExtendedSolver(const CScript &scriptPubKey,
         vSolutionsRet.resize(2);
         ScriptTemplateError err = GetScriptTemplate(scriptPubKey, &grp, &vSolutionsRet[0], &vSolutionsRet[1], nullptr);
         if (err == ScriptTemplateError::OK)
+        {
+            size_t argsHashSize = vSolutionsRet[1].size();
+            // allow 2 different hash types, or no hashed args
+            if ((argsHashSize != CHash160::OUTPUT_SIZE) && (argsHashSize != CHash256::OUTPUT_SIZE) &&
+                (argsHashSize != 0))
+            {
+                return false;
+            }
             return true;
+        }
         return false;
     }
 

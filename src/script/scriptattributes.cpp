@@ -240,14 +240,18 @@ ScriptTemplateError GetScriptTemplate(const CScript &script,
     {
         return ScriptTemplateError::INVALID;
     }
+
     if (!IsPushOpcode(opcode))
         return ScriptTemplateError::INVALID;
+
+    /*  TODO: move into consensus in next HF
     size_t argsHashSize = argsHash->size();
     // allow 2 different hash types, or no hashed args
     if ((argsHashSize != CHash160::OUTPUT_SIZE) && (argsHashSize != CHash256::OUTPUT_SIZE) && (argsHashSize != 0))
     {
         return ScriptTemplateError::INVALID;
     }
+    */
 
     // Additional stuff is valid (visible script args)
     // For example, contract state data
