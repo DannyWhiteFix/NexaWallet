@@ -304,7 +304,6 @@ void BitcoinGUI::createActions()
     // BU
     unlimitedAction = new QAction(platformStyle->TextColorIcon(":/icons/options"), tr("&Unlimited..."), this);
     unlimitedAction->setStatusTip(tr("Modify Bitcoin Unlimited Options"));
-    unlimitedAction->setMenuRole(QAction::PreferencesRole);
 
     encryptWalletAction =
         new QAction(platformStyle->TextColorIcon(":/icons/lock_closed"), tr("&Encrypt Wallet..."), this);
