@@ -1,6 +1,6 @@
 # UNIX BUILD NOTES
 
-Some notes on how to build Nexa in Unix. Mostly with at Ubuntu / Debian focus. 
+Some notes on how to build Nexa in Unix. Mostly with at Ubuntu / Debian focus.
 
 For RPM based distros, see [build-unix-rpm.md](build-unix-rpm.md).
 For OpenBSD specific instructions, see [build-openbsd.md](build-openbsd.md).
@@ -260,7 +260,7 @@ cd nexa/depends
 make HOST=x86_64-pc-linux-gnu NO_QT=1 -j4
 cd ..
 ./autogen.sh
-./configure --prefix=$PWD/depends/x86_64-pc-linux-gnu --without-gui
+./configure --prefix=$PWD/depends/x86_64-pc-linux-gnu --without-gui --disable-shared
 make -j4
 ```
 
