@@ -10,7 +10,10 @@
 #define SECP256K1_INLINE inline
 #endif
 
+#include <algorithm>
 #include <ctime>
+#include <string>
+#include <vector>
 
 #include "arith_uint256.h"
 #include "base58.h"
@@ -30,6 +33,31 @@
 #include "util.h"
 #include "utilstrencodings.h"
 
+#if defined(ANDROID) // log sighash calculations
+#include <android/log.h>
+#define p(...) __android_log_print(ANDROID_LOG_DEBUG, "BU.sig", __VA_ARGS__)
+#elif defined(JAVA)
+#define __android_log_print(x, y, z, ...) \
+    do                                    \
+    {                                     \
+    } while (0)
+#include <jni.h>
+#define p(...)
+// tinyformat::format(std::cout, __VA_ARGS__)
+#endif
+
+// DER-encoded ECDSA is more like 72 but better to be safe
+// Schnorr is only 64, but this must also include a few extra bytes for the sighashtype
+#define MAX_SIG_LEN 100
+
+
+static bool sigInited = false;
+ECCVerifyHandle *verifyContext = nullptr;
+CChainParams *cashlibParams = nullptr;
+
+const int CLIENT_VERSION = 0; // 0 because app should report its version, not this lib
+// TODO - this lib needs versioning
+
 bool CheckBlockHeader(const Consensus::Params &consensusParams,
     const CBlockHeader &block,
     CValidationState &state,
@@ -37,17 +65,11 @@ bool CheckBlockHeader(const Consensus::Params &consensusParams,
 
 
 // This section of this file provides simple or NO-OP implementations of functions used by the larger codebase
-
 int64_t GetAdjustedTime()
 {
     time_t now = time(nullptr);
     return now;
 }
-
-
-// DER-encoded ECDSA is more like 72 but better to be safe
-// Schnorr is only 64, but this must also include a few extra bytes for the sighashtype
-#define MAX_SIG_LEN 100
 
 #ifdef DEBUG_LOCKORDER // Not debugging the lockorder in cashlib even if its defined
 void AssertLockHeldInternal(const char *pszName, const char *pszFile, unsigned int nLine, void *cs) {}
@@ -83,16 +105,8 @@ CSharedCriticalSection::~CSharedCriticalSection() {}
 CRecursiveSharedCriticalSection::CRecursiveSharedCriticalSection() : name(nullptr) {}
 CRecursiveSharedCriticalSection::CRecursiveSharedCriticalSection(const char *n) : name(n) {}
 CRecursiveSharedCriticalSection::~CRecursiveSharedCriticalSection() {}
-#endif
+#endif // DEBUG_LOCKORDER
 
-#include <algorithm>
-#include <string>
-#include <vector>
-
-static bool sigInited = false;
-
-ECCVerifyHandle *verifyContext = nullptr;
-CChainParams *cashlibParams = nullptr;
 #ifdef DEBUG_PAUSE
 bool pauseOnDbgAssert = false;
 std::mutex dbgPauseMutex;
@@ -107,18 +121,8 @@ void DbgPause()
     std::unique_lock<std::mutex> lk(dbgPauseMutex);
     dbgPauseCond.wait(lk);
 }
-
 extern "C" void DbgResume() { dbgPauseCond.notify_all(); }
-#endif
-#ifdef ANDROID // log sighash calculations
-#include <android/log.h>
-#define p(...) __android_log_print(ANDROID_LOG_DEBUG, "BU.sig", __VA_ARGS__)
-#else
-#define p(...)
-// tinyformat::format(std::cout, __VA_ARGS__)
-#endif
-
-const int CLIENT_VERSION = 0; // 0 because app should report its version, not this lib
+#endif // DEBUG_PAUSE
 
 // Stop the logging.  TODO we can offer an API that lets the app install a log callback function and then call it
 // here so that the app can get our logs and do whatever it wants with them.
@@ -649,6 +653,32 @@ SLAPI int SignHashSchnorr(const unsigned char *hash,
     return sigSize;
 }
 
+// result must be 32 bytes
+SLAPI void sha256(const unsigned char *data, unsigned int len, unsigned char *result)
+{
+    CSHA256 sha;
+    sha.Write(data, len);
+    sha.Finalize(result);
+}
+
+
+// result must be 32 bytes
+SLAPI void hash256(const unsigned char *data, unsigned int len, unsigned char *result)
+{
+    CHash256 hash;
+    hash.Write(data, len);
+    hash.Finalize(result);
+}
+
+
+// result must be 20 bytes
+SLAPI void hash160(const unsigned char *data, unsigned int len, unsigned char *result)
+{
+    CHash160 hash;
+    hash.Write(data, len);
+    hash.Finalize(result);
+}
+
 #ifndef ANDROID
 /*
 Since the ScriptMachine is often going to be initialized, called and destructed within a single stack frame, it
@@ -944,50 +974,9 @@ SLAPI unsigned int SmGetError(void *smId)
     ScriptMachineData *smd = (ScriptMachineData *)smId;
     return (unsigned int)smd->sm->getError();
 }
-#endif
-
-// result must be 32 bytes
-SLAPI void sha256(const unsigned char *data, unsigned int len, unsigned char *result)
-{
-    CSHA256 sha;
-    sha.Write(data, len);
-    sha.Finalize(result);
-}
-
-
-// result must be 32 bytes
-SLAPI void hash256(const unsigned char *data, unsigned int len, unsigned char *result)
-{
-    CHash256 hash;
-    hash.Write(data, len);
-    hash.Finalize(result);
-}
-
-
-// result must be 20 bytes
-SLAPI void hash160(const unsigned char *data, unsigned int len, unsigned char *result)
-{
-    CHash160 hash;
-    hash.Write(data, len);
-    hash.Finalize(result);
-}
-
-
-#ifdef ANDROID
-#include <android/log.h>
-#else
+#endif // ifndef ANDROID
 
 #ifdef JAVA
-#define __android_log_print(x, y, z, ...) \
-    do                                    \
-    {                                     \
-    } while (0)
-#endif
-
-#endif
-
-#ifdef JAVA
-#include <jni.h>
 
 #define APPNAME "BU.wallet.cashlib"
 
@@ -1407,7 +1396,7 @@ extern "C" JNIEXPORT jboolean JNICALL Java_bitcoinunlimited_libbitcoincash_Scrip
 }
 
 
-#endif
+#endif // ifndef ANDROID
 
 extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Wallet_signMessage(JNIEnv *env,
     jobject ths,
@@ -2295,7 +2284,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_bitcoinunlimited_libbitcoincash_Initia
         secRandom = env->GetStaticMethodID(c, "SecRandom", "([B)V");
         //__android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "method ID: %x", secRandom);
     }
-#endif
+#endif // ANDROID
 
     // must be below the random number generator hookup
     checkSigInit();
@@ -2322,16 +2311,15 @@ SLAPI int RandomBytes(unsigned char *buf, int num)
 // Implement APIs normally provided by random.cpp calling openssl
 void GetRandBytes(unsigned char *buf, int num) { RandomBytes(buf, num); }
 void GetStrongRandBytes(unsigned char *buf, int num) { RandomBytes(buf, num); }
-#define JAVA_ANDROID
 
-#endif
-#endif
+#endif // ANDROID
+#endif // JAVA
 
-#ifndef JAVA_ANDROID
+#if !defined(JAVA) && !defined(ANDROID)
 /** Return random bytes from cryptographically acceptable random sources */
 SLAPI int RandomBytes(unsigned char *buf, int num)
 {
     GetStrongRandBytes(buf, num);
     return num;
 }
-#endif
+#endif // JAVA_ANDROID
