@@ -21,6 +21,7 @@ workflow:
         - if: $CI_MERGE_REQUEST_IID
         - if: $CI_COMMIT_TAG
         - if: $CI_COMMIT_BRANCH == "dev"
+        - if: $CI_PIPELINE_SOURCE == "schedule"
 
 stages:
     - static_checks
@@ -29,10 +30,56 @@ stages:
     - build_tests
     - qa_tests
     - benchmark_tests
+    - gitian
 
 cache: &global_cache_settings
     paths:
         - ccache/
+
+###################
+# Gitian binaries #
+###################
+.docker_common:
+    stage: gitian
+    # Environment based on workarounds in this issue:
+    # https://gitlab.com/gitlab-org/gitlab-runner/-/issues/27300
+    image: bchunlimited/nexa:ubuntu20.04
+    cache: {}
+    variables:
+        DOCKER_HOST: tcp://docker:2375
+        DOCKER_DRIVER: overlay2
+        DOCKER_TLS_CERTDIR: ""
+        DEBIAN_FRONTEND: noninteractive
+    services:
+        - name: docker:dind
+          alias: docker
+          command: ["--tls=false"]
+    rules:
+        - if: $CI_PIPELINE_SOURCE == "schedule"
+
+
+gitian-binaries:
+    stage: gitian
+    extends: .docker_common
+    script:
+        - apt-get update && apt-get -y --no-install-recommends --no-upgrade -qq install openssh-client apt-cacher-ng ruby docker.io
+        - git clone https://github.com/devrandom/gitian-builder.git
+        - cd gitian-builder
+        - bin/make-base-vm --suite focal --arch amd64 --docker > make-base-vm.log  2>&1
+        - export USE_DOCKER=1
+        - mkdir result
+        - bin/gbuild -j `nproc` -m 6000 --url nexa=$CI_REPOSITORY_URL --commit nexa=$CI_DEFAULT_BRANCH $CI_PROJECT_DIR/contrib/gitian-descriptors/gitian-linux-x86.yml > gbuild.log  2>&1
+    artifacts:
+        when: always
+        paths:
+            - ./gitian-builder/build/out/*
+            - ./gitian-builder/result/*.yaml
+            - ./gitian-builder/var/build.log
+            - ./gitian-builder/var/build-script
+    tags:
+      - gitian
+    rules:
+      - if: $CI_PIPELINE_SOURCE == "schedule"
 
 ######################################################
 ######## Ubuntu base settings
@@ -74,6 +121,8 @@ check-formatting:
         - ./autogen.sh
         - ./configure --enable-glibc-back-compat --enable-reduce-exports
         - make check-formatting
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
 
 ######################################################
 ######## x86_64 Linux + deps as via system lib
@@ -104,6 +153,9 @@ build-ubuntu-nodeps:
             - ./build/src/test/test_nexa
             - ./build/src/bench/bench_nexa
             - ./build/config.log #in case of configure failure
+    # to remove before merge so that we can only execute the gitian task
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
 
 build-ubuntu-nodeps-qt:
     stage: build
@@ -119,6 +171,9 @@ build-ubuntu-nodeps-qt:
         when: on_failure
         paths:
             - ./build/config.log
+    # to remove before merge so that we can only execute the gitian task
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
 
 build-ubuntu-tests-nodeps:
     stage: build_tests
@@ -129,6 +184,9 @@ build-ubuntu-tests-nodeps:
         - (cd build/src; ./test/test_nexa)
     dependencies:
         - build-ubuntu-nodeps
+    # to remove before merge so that we can only execute the gitian task
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
 
 
 ######################################################
@@ -155,6 +213,8 @@ build-ubuntu-deps:
     artifacts:
         paths:
             - depends/x86_64-unknown-linux-gnu
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
 
 build-ubuntu:
     stage: build
@@ -183,6 +243,8 @@ build-ubuntu:
             - ./src/test/*.log
             - ./src/test-suite.log
             - ./build/src/.libs/libnexa.*
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
 
 build-ubuntu-rostrum:
     extends: .ubuntu_base
@@ -221,6 +283,8 @@ build-ubuntu-rostrum:
     artifacts:
         paths:
             - ./build/src/rostrum
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
 
 build-ubuntu-tests:
     stage: build_tests
@@ -235,6 +299,10 @@ build-ubuntu-tests:
             - ./build/src/test/
     dependencies:
         - build-ubuntu
+    # to remove before merge so that we can only execute the gitian task
+    rules:
+      - if: $CI_PIPELINE_SOURCE == "schedule"
+        when: never
 
 test-ubuntu-qa:
     stage: qa_tests
@@ -255,6 +323,8 @@ test-ubuntu-qa:
             - $CI_PROJECT_DIR/saved-cores
             - ./build/src/nexad
             - ./build/ctorout.txt
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
 
 test-ubuntu-benchmarks:
     extends: .ubuntu_base
@@ -264,6 +334,8 @@ test-ubuntu-benchmarks:
         - (./build/src/bench/bench_nexa -evals=1)
     dependencies:
         - build-ubuntu-nodeps
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
 
 test-ubuntu-qa-rostrum:
     stage: qa_tests
@@ -298,6 +370,8 @@ test-ubuntu-qa-rostrum:
             - ./build/src/nexad
             - ./build/src/rostrum
             - ./build/ctorout.txt
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
 
 ######################################################
 ######## nexad clang (no depend, only system lib installed via apt)
@@ -335,6 +409,8 @@ build-ubuntu-clang:
             - ./build/src/test/*.log
             - ./src/test/*.log
             - ./src/test-suite.log
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
 
 build-ubuntu-tests-clang:
     stage: build_tests
@@ -349,6 +425,8 @@ build-ubuntu-tests-clang:
             - ./build/src/test/
     dependencies:
         - build-ubuntu-clang
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
 
 ######################################################
 ######## ARM64
@@ -373,6 +451,8 @@ build-arm-depends-64:
     artifacts:
         paths:
             - depends/aarch64-linux-gnu
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
 
 build-arm-64:
     stage: build
@@ -390,6 +470,8 @@ build-arm-64:
         when: on_failure
         paths:
             - ./build/config.log
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
 
 ######################################################
 ######## ARM32
@@ -414,6 +496,8 @@ build-arm-depends-32:
     artifacts:
         paths:
             - depends/arm-linux-gnueabihf
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
 
 build-arm-32:
     stage: build
@@ -431,6 +515,8 @@ build-arm-32:
         when: on_failure
         paths:
             - ./build/config.log
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
 
 ######################################################
 ######## Win64
@@ -455,6 +541,8 @@ build-win-64-depends:
     artifacts:
         paths:
             - depends/x86_64-w64-mingw32
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
 
 build-win-64:
     stage: build
@@ -468,6 +556,8 @@ build-win-64:
         - ccache --show-stats
     dependencies:
         - build-win-64-depends
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
 
 ######################################################
 ######## OSX
@@ -482,6 +572,8 @@ build-win-64:
             - depends/sources
             - depends/built
             - depends/x86_64-apple-darwin19
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
 
 build-osx-depends:
     stage: build_depends
@@ -497,6 +589,8 @@ build-osx-depends:
         paths:
             - depends/x86_64-apple-darwin19
             - depends/SDKs
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
 
 build-osx:
     stage: build
@@ -516,6 +610,8 @@ build-osx:
             - ./build/src/.libs/libnexa.*
             - ./build/config.log # on failure
             - ./depends/x86_64-apple-darwin19/share/config.site # on failure
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
 
 ######################################################
 ######## Debian base settings
@@ -555,6 +651,8 @@ build-debian-nodeps:
         when: on_failure
         paths:
             - ./build/config.log
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
 
 build-debian-nodeps-qt:
     stage: build
@@ -570,3 +668,5 @@ build-debian-nodeps-qt:
         when: on_failure
         paths:
             - build/config.log
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
