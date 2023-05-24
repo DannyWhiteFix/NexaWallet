@@ -407,7 +407,7 @@ void CTxMemPool::CalculateTxnChainTips(TxIdIter it, mapEntryHistory &mapTxnChain
 
 void CTxMemPool::UpdateTxnChainState(TxIdIter it)
 {
-    AssertLockHeld(cs_txmempool);
+    AssertWriteLockHeld(cs_txmempool);
     if (it->IsDirty())
     {
         CTxMemPool::mapEntryHistory mapTxnChainTips;
