@@ -525,18 +525,20 @@ crypto_libnexa_crypto_avx2_a_SOURCES = crypto/sha256_avx2.cpp
 falcon512_libnexa_falcon512_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_CONFIG_INCLUDES)
 falcon512_libnexa_falcon512_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 falcon512_libnexa_falcon512_a_SOURCES = \
+  falcon512/api.h \
   falcon512/codec.c \
-  falcon512/config.h \
   falcon512/common.c \
-  falcon512/falcon.c \
-  falcon512/falcon.h \
+  falcon512/fips202.h \
+  falcon512/fips202.c \
   falcon512/fft.c \
   falcon512/fpr.c \
   falcon512/fpr.h \
   falcon512/inner.h \
   falcon512/keygen.c \
+  falcon512/pqclean.c \
+  falcon512/randombytes.h \
+  falcon512/randombytes.c \
   falcon512/rng.c \
-  falcon512/shake.c \
   falcon512/sign.c \
   falcon512/vrfy.c
 
