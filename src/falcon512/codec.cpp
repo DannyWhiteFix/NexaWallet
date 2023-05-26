@@ -54,7 +54,7 @@ PQCLEAN_FALCON512_CLEAN_modq_encode(
     if (out_len > max_out_len) {
         return 0;
     }
-    buf = out;
+    buf = (uint8_t *)out;
     acc = 0;
     acc_len = 0;
     for (u = 0; u < n; u ++) {
@@ -86,7 +86,7 @@ PQCLEAN_FALCON512_CLEAN_modq_decode(
     if (in_len > max_in_len) {
         return 0;
     }
-    buf = in;
+    buf = (uint8_t *)in;
     acc = 0;
     acc_len = 0;
     u = 0;
@@ -136,7 +136,7 @@ PQCLEAN_FALCON512_CLEAN_trim_i16_encode(
     if (out_len > max_out_len) {
         return 0;
     }
-    buf = out;
+    buf = (uint8_t *)out;
     acc = 0;
     acc_len = 0;
     mask = ((uint32_t)1 << bits) - 1;
@@ -170,7 +170,7 @@ PQCLEAN_FALCON512_CLEAN_trim_i16_decode(
     if (in_len > max_in_len) {
         return 0;
     }
-    buf = in;
+    buf = (uint8_t *)in;
     u = 0;
     acc = 0;
     acc_len = 0;
@@ -230,7 +230,7 @@ PQCLEAN_FALCON512_CLEAN_trim_i8_encode(
     if (out_len > max_out_len) {
         return 0;
     }
-    buf = out;
+    buf = (uint8_t *)out;
     acc = 0;
     acc_len = 0;
     mask = ((uint32_t)1 << bits) - 1;
@@ -264,7 +264,7 @@ PQCLEAN_FALCON512_CLEAN_trim_i8_decode(
     if (in_len > max_in_len) {
         return 0;
     }
-    buf = in;
+    buf = (uint8_t *)in;
     u = 0;
     acc = 0;
     acc_len = 0;
@@ -308,7 +308,7 @@ PQCLEAN_FALCON512_CLEAN_comp_encode(
     unsigned acc_len;
 
     n = (size_t)1 << logn;
-    buf = out;
+    buf = (uint8_t *)out;
 
     /*
      * Make sure that all values are within the -2047..+2047 range.
@@ -404,7 +404,7 @@ PQCLEAN_FALCON512_CLEAN_comp_decode(
     unsigned acc_len;
 
     n = (size_t)1 << logn;
-    buf = in;
+    buf = (uint8_t *)in;
     acc = 0;
     acc_len = 0;
     v = 0;

@@ -171,7 +171,7 @@ void
 PQCLEAN_FALCON512_CLEAN_prng_get_bytes(prng *p, void *dst, size_t len) {
     uint8_t *buf;
 
-    buf = dst;
+    buf = (uint8_t *)dst;
     while (len > 0) {
         size_t clen;
 
