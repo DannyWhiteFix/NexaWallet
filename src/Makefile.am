@@ -526,21 +526,21 @@ falcon512_libnexa_falcon512_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_CONFIG_INCLUDE
 falcon512_libnexa_falcon512_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 falcon512_libnexa_falcon512_a_SOURCES = \
   falcon512/api.h \
-  falcon512/codec.c \
-  falcon512/common.c \
+  falcon512/codec.cpp \
+  falcon512/common.cpp \
   falcon512/fips202.h \
-  falcon512/fips202.c \
-  falcon512/fft.c \
-  falcon512/fpr.c \
+  falcon512/fips202.cpp \
+  falcon512/fft.cpp \
+  falcon512/fpr.cpp \
   falcon512/fpr.h \
   falcon512/inner.h \
-  falcon512/keygen.c \
-  falcon512/pqclean.c \
+  falcon512/keygen.cpp \
+  falcon512/pqclean.cpp \
   falcon512/randombytes.h \
-  falcon512/randombytes.c \
-  falcon512/rng.c \
-  falcon512/sign.c \
-  falcon512/vrfy.c
+  falcon512/randombytes.cpp \
+  falcon512/rng.cpp \
+  falcon512/sign.cpp \
+  falcon512/vrfy.cpp
 
 # common: shared between nexad, and nexa-qt and non-server tools
 libnexa_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(NEXA_INCLUDES)
