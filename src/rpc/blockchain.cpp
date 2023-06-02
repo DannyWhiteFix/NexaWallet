@@ -609,6 +609,7 @@ UniValue gettxpoolentry(const UniValue &params, bool fHelp)
 
     uint256 hash = ParseHashV(params[0], "parameter 1");
 
+    UniValue info(UniValue::VOBJ);
     bool fUpdateChainState = false;
     {
         READLOCK(mempool.cs_txmempool);
@@ -624,9 +625,7 @@ UniValue gettxpoolentry(const UniValue &params, bool fHelp)
         else
         {
             const CTxMemPoolEntry &e = *it;
-            UniValue info(UniValue::VOBJ);
             entryToJSON(info, e);
-            return info;
         }
     }
 
@@ -646,10 +645,10 @@ UniValue gettxpoolentry(const UniValue &params, bool fHelp)
         mempool.UpdateTxnChainState(it);
 
         const CTxMemPoolEntry &e = *it;
-        UniValue info(UniValue::VOBJ);
         entryToJSON(info, e);
-        return info;
     }
+
+    return info;
 }
 
 UniValue getblockhash(const UniValue &params, bool fHelp)
