@@ -2357,11 +2357,15 @@ void CWallet::AvailableCoins(SpendableTxos &coins, const CCoinControl *coinContr
     }
 }
 
-void CWallet::AvailableCoins(vector<COutput> &vCoins, const CCoinControl *coinControl, bool fIncludeZeroValue) const
+void CWallet::AvailableCoins(vector<COutput> &vCoins,
+    const CCoinControl *coinControl,
+    bool fIncludeZeroValue,
+    uint32_t *pNumUtxos) const
 {
     vCoins.clear();
 
     {
+        uint32_t nCount = 0;
         LOCK(cs_wallet);
         for (MapWallet::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
@@ -2418,6 +2422,11 @@ void CWallet::AvailableCoins(vector<COutput> &vCoins, const CCoinControl *coinCo
             {
                 // The UTXO is available
                 vCoins.push_back(coin);
+
+                // Break early if requested. This is needed for extremely large wallets.
+                nCount++;
+                if (pNumUtxos && (nCount > *pNumUtxos))
+                    break;
             }
         }
     }
