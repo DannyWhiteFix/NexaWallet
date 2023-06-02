@@ -123,16 +123,18 @@ UniValue consolidate(const UniValue &params, bool fHelp)
                             "\nConsolidates spendable utxos in the wallet. (-spendzeroconfchange or -wallet.instant\n"
                             "must be enabled)\n"
                             "\nArguments:\n"
-                            "1. \"num\"     (number, required) number of coins to consolidate)\n"
+                            "1. \"num\"     (number, required) number of coins to select for consolidation)\n"
                             "2. \"toleave\" (number, required) minimum number of coins to leave)\n"
                             "\nResult:\n"
                             "\"success\"    (string) consolidated successfully with <toleave> coins remaining\n"
                             "\nExamples:\n" +
-                            HelpExampleCli("consolidate", "") + HelpExampleRpc("consolidate", ""));
+                            HelpExampleCli("consolidate", "500 50") + HelpExampleRpc("consolidate", "500, 50"));
 
     // Check that spend zero conf change or instant transactions are turned on
     if (!instantTxns.Value() && !GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE))
         throw runtime_error("You must have either -spendzeroconfchange and/or -wallet.instant enabled");
+
+    EnsureWalletIsUnlocked();
 
     // Begin consolidation process
     LOCK(serializeCreateTx);
@@ -160,7 +162,9 @@ UniValue consolidate(const UniValue &params, bool fHelp)
         }
         if (numUtxos <= 0)
             throw JSONRPCError(RPC_WALLET_ERROR, "Error: number of coins to consolidate must be a positive number");
-
+        if (numUtxos > 20000)
+            throw JSONRPCError(
+                RPC_WALLET_ERROR, "Error: number of coins to consolidate must be less than or equal to 20000");
 
         if (params[1].isStr())
         {
@@ -172,9 +176,12 @@ UniValue consolidate(const UniValue &params, bool fHelp)
         }
         if (numUtxosToLeave <= 0)
             throw JSONRPCError(RPC_WALLET_ERROR, "Error: number of coins to leave must be a positive number");
+        if (numUtxosToLeave > 20000)
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error: number of coins to leave must be less than or equal to 20000");
     }
 
     uint32_t nTotalCoinsChosen = 0;
+    uint32_t numToFetch = numUtxos + numUtxosToLeave;
     while (nTotalCoinsChosen < numUtxos)
     {
         // Get a list of available coins and select up to the max vin allowed
@@ -184,8 +191,7 @@ UniValue consolidate(const UniValue &params, bool fHelp)
         vector<COutput> sel;
         CAmount nValue = 0;
         uint32_t count = 0;
-        pwalletMain->AvailableCoins(sel, &coinControl, false);
-        std::sort(sel.begin(), sel.end(), CompareCoinValue());
+        pwalletMain->AvailableCoins(sel, &coinControl, false, &numToFetch);
         uint32_t nTotalAvailable = sel.size();
         if (sel.size() <= 1 || sel.size() <= numUtxosToLeave || nTotalCoinsChosen >= numUtxos)
             break;
@@ -250,10 +256,7 @@ UniValue consolidate(const UniValue &params, bool fHelp)
             throw JSONRPCError(RPC_WALLET_ERROR, error);
     }
 
-    vector<COutput> coins;
-    pwalletMain->AvailableCoins(coins, nullptr, false);
-    return strprintf(
-        "consolidated successfully with %d %s remaining", coins.size(), coins.size() == 1 ? "coin" : "coins");
+    return strprintf("consolidated successfully");
 }
 
 UniValue getnewaddress(const UniValue &params, bool fHelp)

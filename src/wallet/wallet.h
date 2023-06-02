@@ -835,7 +835,8 @@ public:
      */
     void AvailableCoins(std::vector<COutput> &vCoins,
         const CCoinControl *coinControl = nullptr,
-        bool fIncludeZeroValue = false) const;
+        bool fIncludeZeroValue = false,
+        uint32_t *pNumUtxos = nullptr) const;
     void AvailableCoins(SpendableTxos &coins,
         const CCoinControl *coinControl = nullptr,
         bool fIncludeZeroValue = false) const;
