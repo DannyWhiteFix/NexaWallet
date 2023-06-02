@@ -582,7 +582,7 @@ void CTxMemPoolEntry::ReplaceAncestorState(int64_t modifySize,
 
 CTxMemPool::CTxMemPool() : nTransactionsUpdated(0), m_dspStorage(new DoubleSpendProofStorage())
 {
-    _clear(); // lock free clear
+    clear();
 
     // Sanity checks off by default for performance, because otherwise
     // accepting transactions becomes O(N^2) where N is the number
@@ -1040,6 +1040,8 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef> &vtx,
 
 void CTxMemPool::_clear()
 {
+    AssertWriteLockHeld(cs_txmempool);
+
     mapLinks.clear();
     mapTx.clear();
     mapNextTx.clear();
@@ -1526,6 +1528,8 @@ CCoinsViewMemPool::CCoinsViewMemPool(CCoinsView *baseIn, const CTxMemPool &mempo
 
 bool CCoinsViewMemPool::GetCoin(const COutPoint &outpoint, Coin &coin) const
 {
+    AssertLockHeld(mempool.cs_txmempool);
+
     // If an entry in the mempool exists, always return that one, as it's guaranteed to never
     // conflict with the underlying cache, and it cannot have pruned entries (as it contains full)
     // transactions. First checking the underlying cache risks returning a pruned entry instead.
@@ -1627,7 +1631,7 @@ int CTxMemPool::Remove(const uint256 &txhash, std::vector<COutPoint> *vCoinsToUn
 void CTxMemPool::_UpdateChild(TxIdIter entry, TxIdIter child, bool add)
 {
     setEntries s;
-    AssertLockHeld(cs_txmempool);
+    AssertWriteLockHeld(cs_txmempool);
     if (add && mapLinks[entry].children.insert(child).second)
     {
         cachedInnerUsage += memusage::IncrementalDynamicUsage(s);
@@ -1641,7 +1645,7 @@ void CTxMemPool::_UpdateChild(TxIdIter entry, TxIdIter child, bool add)
 void CTxMemPool::_UpdateParent(TxIdIter entry, TxIdIter parent, bool add)
 {
     setEntries s;
-    AssertLockHeld(cs_txmempool);
+    AssertWriteLockHeld(cs_txmempool);
     if (add && mapLinks[entry].parents.insert(parent).second)
     {
         cachedInnerUsage += memusage::IncrementalDynamicUsage(s);
