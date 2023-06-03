@@ -189,6 +189,7 @@ class AdaptiveBlockSizeTest(BitcoinTestFramework):
             assert_greater_than(self.nodes[0].getblockstats(self.nodes[0].getbestblockhash())["nextmaxblocksize"], 121300)
             assert_greater_than(122600, self.nodes[0].getblockstats(self.nodes[0].getbestblockhash())["nextmaxblocksize"])
             self.MineBlock(self.nodes[0], 10000, 1, 11000)
+        self.sync_blocks()
         assert_greater_than(self.nodes[0].getblockstats(self.nodes[0].getbestblockhash())["nextmaxblocksize"], 116300)
         assert_greater_than(117500, self.nodes[0].getblockstats(self.nodes[0].getbestblockhash())["nextmaxblocksize"])
 
@@ -198,6 +199,7 @@ class AdaptiveBlockSizeTest(BitcoinTestFramework):
             assert_greater_than(self.nodes[0].getblockstats(self.nodes[0].getbestblockhash())["nextmaxblocksize"], 116300)
             assert_greater_than(117500, self.nodes[0].getblockstats(self.nodes[0].getbestblockhash())["nextmaxblocksize"])
             self.nodes[0].generate(1)
+        self.sync_blocks()
         assert_equal(self.nodes[0].getblockstats(self.nodes[0].getbestblockhash())["nextmaxblocksize"], 100000)
 
         # Increase the next max block size on node1 and mine a larger block than would be allowed on node0.
@@ -205,7 +207,6 @@ class AdaptiveBlockSizeTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getinfo()["connections"], 2)
         utxos = create_confirmed_utxos(self.relayfee, self.nodes[1], 300)
         blockcount_start = self.nodes[1].getblockcount()
-        self.sync_blocks()
 
         # set the next max size on node1 to double what is on node0 and mine the large block which should be greater
         # than the next max on node0
@@ -231,6 +232,7 @@ class AdaptiveBlockSizeTest(BitcoinTestFramework):
         # the block size was too large and therefore it should not show up as a chaintip on node0.
         tips0 = self.nodes[0].getchaintips()
         tips1 = self.nodes[1].getchaintips()
+
         assert_equal (len (tips0), 1)
         assert_equal (tips0[0]['branchlen'], 0)
         assert_equal (tips0[0]['height'], blockcount_start)
