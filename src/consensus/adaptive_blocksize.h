@@ -9,6 +9,7 @@
 #include "chainparams.h"
 #include "consensus/consensus.h"
 #include "uint256.h"
+#include <deque>
 
 /** Add an element to an already sorted list such that the list remains sorted after the insert of new data.
  *  This sorting mechanism will not maintain the order of equivalents and so can not be used if a "stable sort"
