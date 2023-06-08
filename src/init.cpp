@@ -1027,16 +1027,6 @@ bool AppInit2(Config &config)
                                 "upper limit of 1024 which cannot be changed by adjusting the node's configuration."),
             nUserMaxConnections, nMaxConnections));
 
-#ifdef ENABLE_WALLET
-    if (fallbackFeeTweak.Value() > 0)
-        InitWarning(_("You are trying to use wallet.fallbackFee which has been deprecated an no longer in "
-                      " use - use wallet.payTxFee instead "));
-
-    if (minTxFeeTweak.Value() > 0)
-        InitWarning(_("You are trying to use wallet.minTxFee which has been deprecated an no longer in "
-                      " use - use wallet.payTxFee instead "));
-#endif
-
     // ********************************************************* Step 3: parameter-to-internal-flags
 
     fDebug = !mapMultiArgs["-debug"].empty();

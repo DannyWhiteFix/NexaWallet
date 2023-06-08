@@ -497,21 +497,6 @@ CTweak<CAmount> maxTxFeeTweak("wallet.maxTxFee",
         DEFAULT_TRANSACTION_MAXFEE),
     DEFAULT_TRANSACTION_MAXFEE);
 
-/** Analogous to the minRelayTxFee, the minTxFee is the fee cutoff for what is considered a free transaction in the
- * wallet */
-CTweak<CAmount> minTxFeeTweak("wallet.minTxFee",
-    strprintf("Deprecated -NO LONGER IN USE: Fees (in sat/KB) smaller than this are considered zero fee for "
-              "transaction creation (default: %s)",
-        0),
-    0);
-
-/** A fee rate (in sat/kB) that will be used when fee estimation has insufficient data */
-CTweak<CAmount> fallbackFeeTweak("wallet.fallbackFee",
-    strprintf("Deprecated - NO LONGER IN USE - A fee rate (in sat/KB) that will be used when fee estimation has "
-              "insufficient data (default: %s)",
-        0),
-    0);
-
 // A fee you add to every transaction */
 CTweak<CAmount> payTxFeeTweak("wallet.payTxFee",
     strprintf("Fee (in sat/KB) to add to transactions you send (default: %s)", DEFAULT_TRANSACTION_FEE),

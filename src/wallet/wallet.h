@@ -45,9 +45,7 @@ extern bool fSendFreeTransactions;
 
 extern std::atomic<bool> fRescan;
 
-extern CTweak<CAmount> minTxFeeTweak;
 extern CTweak<CAmount> maxTxFeeTweak;
-extern CTweak<CAmount> fallbackFeeTweak;
 extern CTweak<CAmount> payTxFeeTweak;
 
 
