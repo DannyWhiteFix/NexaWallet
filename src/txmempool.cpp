@@ -1911,7 +1911,7 @@ SaltedTxidHasher::SaltedTxidHasher()
 static const uint64_t TXPOOL_DUMP_VERSION = 1;
 bool LoadTxPool(void)
 {
-    int64_t nExpiryTimeout = txPoolExpiry.Value();
+    int64_t nExpiryTimeout = txPoolExpiry.Value() * 60 * 60;
     FILE *fileTxpool = fopen((GetDataDir() / "txpool.dat").string().c_str(), "rb");
     if (!fileTxpool)
     {
