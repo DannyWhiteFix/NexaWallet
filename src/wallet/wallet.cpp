@@ -2896,7 +2896,10 @@ bool CWallet::CreateTransaction(const vector<CRecipient> &vecSend,
             CAmount _nValue = 0;
             uint32_t count = _coinControl.NumSelected();
             pwalletMain->AvailableCoins(coins, &_coinControl, false);
-            std::sort(coins.begin(), coins.end(), CompareCoinValue()); // sort from smallest to largest value
+            // Sort entries from smallest to largest if the wallet is not too big. This
+            // helps to remove the smallest dust from the wallet first.
+            if (coins.size() < 10000)
+                std::sort(coins.begin(), coins.end(), CompareCoinValue());
 
             bool fMaxVin = false;
             bool fDone = false;
