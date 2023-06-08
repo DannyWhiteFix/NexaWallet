@@ -20,7 +20,7 @@ BOOST_FIXTURE_TEST_SUITE(rostrum_tests, BasicTestingSetup)
 
 static bool rostrum_args_has(const std::string &arg, const std::string &network = "nexa")
 {
-    const std::vector<std::string> args = rostrum_args(42, network);
+    const std::vector<std::string> args = rostrum_args(42, 24, network);
     return std::find(begin(args), end(args), arg) != end(args);
 }
 
@@ -43,6 +43,9 @@ BOOST_AUTO_TEST_CASE(issue_1700)
     UnsetArg("-electrum.port");
     BOOST_CHECK(rostrum_args_has("--electrum-rpc-addr=0.0.0.0:20001"));
     BOOST_CHECK(rostrum_args_has("--electrum-rpc-addr=0.0.0.0:30001", "testnet"));
+
+    SetArg("-port", "11");
+    BOOST_CHECK(rostrum_args_has("--daemon-p2p-addr=127.0.0.1:11"));
 }
 
 BOOST_AUTO_TEST_CASE(rawargs)
