@@ -477,8 +477,6 @@ static inline CWalletTxRef dup(CWalletTxRef wtx) { return std::make_shared<CWall
 class COutput
 {
 public:
-    uint256 txid; // debugging do not use
-public:
     CWalletTxRef tx = nullptr; //*< transaction
     int i = -1; //*< index of this output in transaction's vout
     isminetype mine = isminetype::ISMINE_NO;
@@ -490,7 +488,6 @@ public:
         tx = txIn;
         i = iIn;
         mine = mineIn;
-        txid = tx->GetId();
     }
 
     std::string ToString() const;
