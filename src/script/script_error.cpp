@@ -114,6 +114,15 @@ const char *ScriptErrorString(const ScriptError serror)
         return "Bad operation on type";
     case SCRIPT_ERR_TEMPLATE:
         return "Bad template operation";
+
+    case SCRIPT_ERR_EXEC_DEPTH_EXCEEDED:
+        return "EXEC recursion depth exceeded";
+    case SCRIPT_ERR_EXEC_COUNT_EXCEEDED:
+        return "EXEC count exceeded";
+    case SCRIPT_ERR_STACK_LIMIT_EXCEEDED:
+        return "Stack limit exceeded";
+    case SCRIPT_ERR_INVALID_STATE_SPECIFIER:
+        return "Invalid state specifier";
     case SCRIPT_ERR_INITIAL_STATE:
         return "Initialized";
 
