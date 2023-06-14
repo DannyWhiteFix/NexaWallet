@@ -41,9 +41,12 @@
     do                                    \
     {                                     \
     } while (0)
-#include <jni.h>
 #define p(...)
 // tinyformat::format(std::cout, __VA_ARGS__)
+#endif
+
+#if defined(JAVA)
+#include <jni.h>
 #endif
 
 // DER-encoded ECDSA is more like 72 but better to be safe
@@ -720,12 +723,13 @@ SLAPI void *CreateNoContextScriptMachine(unsigned int flags)
 // Create a ScriptMachine operating in the context of a particular transaction and input.
 // The transaction, input index, and input amount are used in CHECKSIG and CHECKSIGVERIFY to generate the hash that
 // the signature validates.
-SLAPI void *CreateScriptMachine(unsigned int flags,
+void *CreateScriptMachine(unsigned int flags,
     unsigned int inputIdx,
     unsigned char *txData,
     int txbuflen,
     unsigned char *coinData,
-    int coinbuflen)
+    int coinbuflen,
+    std::string *errorDetails)
 {
     checkSigInit();
 
@@ -741,6 +745,8 @@ SLAPI void *CreateScriptMachine(unsigned int flags,
         }
         catch (const std::exception &)
         {
+            if (errorDetails)
+                *errorDetails = "Error deserializing transaction";
             delete smd;
             return 0;
         }
@@ -754,6 +760,8 @@ SLAPI void *CreateScriptMachine(unsigned int flags,
         }
         catch (const std::exception &)
         {
+            if (errorDetails)
+                *errorDetails = "Error deserializing UTXO list";
             delete smd;
             return 0;
         }
@@ -762,6 +770,8 @@ SLAPI void *CreateScriptMachine(unsigned int flags,
     // The passed coins vector needs to be the txout for each vin, so the sizes must be the same
     if (coins.size() != txref->vin.size())
     {
+        if (errorDetails)
+            *errorDetails = "Error: UTXO list length does not match tx vin length";
         delete smd;
         return 0;
     }
@@ -806,6 +816,8 @@ SLAPI void *CreateScriptMachine(unsigned int flags,
         state.fee = amountIn - amountOut;
         if (!CheckGroupTokens(*txref, state, prevouts))
         {
+            if (errorDetails)
+                *errorDetails = std::string("Error: ") + state.GetRejectReason() + " " + state.GetDebugMessage();
             delete smd;
             return 0;
         }
@@ -821,6 +833,20 @@ SLAPI void *CreateScriptMachine(unsigned int flags,
     smd->sm = new ScriptMachine(flags, *smd->sis, 0xffffffff, 0xffffffff);
     return (void *)smd;
 }
+
+// Create a ScriptMachine operating in the context of a particular transaction and input.
+// The transaction, input index, and input amount are used in CHECKSIG and CHECKSIGVERIFY to generate the hash that
+// the signature validates.
+SLAPI void *CreateScriptMachine(unsigned int flags,
+    unsigned int inputIdx,
+    unsigned char *txData,
+    int txbuflen,
+    unsigned char *coinData,
+    int coinbuflen)
+{
+    return CreateScriptMachine(flags, inputIdx, txData, txbuflen, coinData, coinbuflen, nullptr);
+}
+
 
 // Release a ScriptMachine context
 SLAPI void SmRelease(void *smId)
@@ -1099,7 +1125,12 @@ extern "C" JNIEXPORT jlong JNICALL Java_bitcoinunlimited_libbitcoincash_ScriptMa
 
     if (flags == -1)
         flags = STANDARD_SCRIPT_VERIFY_FLAGS;
-    void *sm = CreateScriptMachine(flags, inputIdx, txb.data, txb.size, outpointb.data, outpointb.size);
+    std::string error;
+    void *sm = CreateScriptMachine(flags, inputIdx, txb.data, txb.size, outpointb.data, outpointb.size, &error);
+    if (sm == nullptr)
+    {
+        triggerJavaIllegalStateException(env, error.c_str());
+    }
     return ((jlong)sm);
 }
 
@@ -1149,7 +1180,8 @@ extern "C" JNIEXPORT jlong JNICALL Java_bitcoinunlimited_libbitcoincash_ScriptMa
         return 0;
     }
 
-    void *smh = CreateScriptMachine(flags, inputIdx, txb.data, txb.size, outpointb.data, outpointb.size);
+    std::string error;
+    void *smh = CreateScriptMachine(flags, inputIdx, txb.data, txb.size, outpointb.data, outpointb.size, &error);
 
     if (smh)
     {
@@ -1157,6 +1189,11 @@ extern "C" JNIEXPORT jlong JNICALL Java_bitcoinunlimited_libbitcoincash_ScriptMa
         ScriptMachineData *smd = (ScriptMachineData *)smh;
         smd->sm->setAltStack(csm.getStack());
         smd->sm->setStack(ssm.getStack());
+    }
+    else
+    {
+        triggerJavaIllegalStateException(env, error.c_str());
+        return 0;
     }
     return ((jlong)smh);
 }
