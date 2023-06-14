@@ -40,7 +40,10 @@
 std::atomic<int64_t> nTotalPackage{0};
 
 /** Maximum number of failed attempts to insert a package into a block */
-static const unsigned int MAX_PACKAGE_FAILURES = 5;
+static const unsigned int MAX_PACKAGE_FAILURES = 1000;
+/** The point at which we start triggering for package failures when filling a block */
+static const float MAX_BLOCKSIZE_RATIO = 0.95;
+
 extern CTweak<unsigned int> xvalTweak;
 extern CTweak<uint32_t> dataCarrierSize;
 extern CTweak<uint64_t> miningPrioritySize;
@@ -476,13 +479,13 @@ void BlockAssembler::addPackageTxs(std::vector<const CTxMemPoolEntry *> *vtxe, b
         // Test if package fits in the block
         if (nBlockSize + packageSize > nBlockMaxSize)
         {
-            if (nBlockSize > nBlockMaxSize * .50)
+            if (nBlockSize > nBlockMaxSize * MAX_BLOCKSIZE_RATIO)
             {
                 nPackageFailures++;
             }
 
             // If we keep failing then the block must be almost full so bail out here.
-            if (nPackageFailures >= MAX_PACKAGE_FAILURES)
+            if ((nPackageFailures >= MAX_PACKAGE_FAILURES) || (nBlockMaxSize - nBlockSize < MIN_TX_SIZE))
                 return;
             else
                 continue;

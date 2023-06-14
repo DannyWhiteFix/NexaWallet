@@ -49,8 +49,6 @@ uint64_t GetShortID(const uint64_t &shorttxidk0, const uint64_t &shorttxidk1, co
     return SipHashUint256(shorttxidk0, shorttxidk1, txhash) & 0xffffffffffffL;
 }
 
-#define MIN_TRANSACTION_SIZE (::GetSerializeSize(CTransaction(), SER_NETWORK, PROTOCOL_VERSION))
-
 CompactBlock::CompactBlock(const CBlock &block, const CRollingFastFilter<4 * 1024 * 1024> *inventoryKnown)
     : nSize(0), nonce(GetRand(std::numeric_limits<uint64_t>::max())), nWaitingFor(0), header(block)
 {
