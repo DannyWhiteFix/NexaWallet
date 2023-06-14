@@ -831,7 +831,8 @@ AC_SUBST(LIBMEMENV)
 
 if test x$enable_wallet != xno; then
     dnl Check for libdb_cxx only if wallet enabled
-    BITCOIN_FIND_BDB53
+    # checks for 4.8 and 5.3, compiling with 4.8 requires --with-incompatible-bdb
+    BITCOIN_FIND_BDB
 fi
 
 dnl Check for libminiupnpc (optional)
