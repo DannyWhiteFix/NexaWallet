@@ -673,7 +673,6 @@ private:
     std::vector<char> _ssExtra;
 };
 
-
 typedef std::map<COutPoint, COutput> MapWallet;
 
 /**
@@ -793,6 +792,11 @@ public:
     // Also stores the transaction by its id and idem in separate entries
     MapWallet mapWallet;
 
+    // All unspent outputs are in this map, but some entries MAY be spent, because entries are
+    // not removed atomically with transaction processing. Use "IsSpent()" to verify the status
+    // of entries in this map.
+    MapWallet mapWalletUnspent;
+
     std::list<CAccountingEntry> laccentries;
 
     typedef std::pair<CWalletTxRef, CAccountingEntry *> TxPair;
@@ -831,10 +835,10 @@ public:
     void AvailableCoins(std::vector<COutput> &vCoins,
         const CCoinControl *coinControl = nullptr,
         bool fIncludeZeroValue = false,
-        uint32_t *pNumUtxos = nullptr) const;
+        uint32_t *pNumUtxos = nullptr);
     void AvailableCoins(SpendableTxos &coins,
         const CCoinControl *coinControl = nullptr,
-        bool fIncludeZeroValue = false) const;
+        bool fIncludeZeroValue = false);
 
     /**
      * populate vCoins with vector of available COutputs, filtered by the passed lambda function.
@@ -856,6 +860,9 @@ public:
         CAmount &nValueRet) const;
 
     bool IsSpent(const COutPoint &outpoint) const;
+
+    // Clear any spent entries that are in mapWalletUnspent
+    void ClearAllSpent();
 
     bool IsLockedCoin(const COutPoint &outpoint) const;
     void LockCoin(const COutPoint &output);
@@ -951,7 +958,7 @@ public:
     void ResendWalletTransactions(int64_t nBestBlockTime);
     // Returns a vector of transaction Idems for all transactions that were resent (which is passed to the user via RPC)
     std::vector<uint256> ResendWalletTransactionsBefore(int64_t nTime);
-    CAmount GetBalance() const;
+    CAmount GetBalance();
     CAmount GetUnconfirmedBalance() const;
     CAmount GetImmatureBalance() const;
     CAmount GetWatchOnlyBalance() const;
