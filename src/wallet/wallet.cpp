@@ -844,7 +844,15 @@ bool CWallet::AddToWallet(CWalletTxRef wtx, bool fFromLoadWallet, CWalletDB *pwa
         {
             isminetype mine = IsMine(wtx->vout[i]);
             if (mine != ISMINE_NO)
-                mapWallet[wtx->OutpointAt(i)] = COutput(wtx, i, mine);
+            {
+                const auto &outpoint = wtx->OutpointAt(i);
+                COutput output = COutput(wtx, i, mine);
+                mapWallet[outpoint] = output;
+
+                // Add to unspent map
+                if (!IsSpent(outpoint))
+                    mapWalletUnspent[outpoint] = output;
+            }
         }
         // Add id and idem for easy lookup
         mapWallet[COutPoint(wtx->GetId())] = COutput(wtx, -1, isminetype::ISMINE_NO);
@@ -886,6 +894,19 @@ bool CWallet::AddToWallet(CWalletTxRef wtx, bool fFromLoadWallet, CWalletDB *pwa
         // Add idem for easy lookup (id was added in first insert). We will alway overwrite the idem entry
         // with the last notified transaction.  This will mean that a tx confirmed in a block gets the idem entry.
         mapWallet[COutPoint(wtx->GetIdem())] = dummyout;
+
+
+        // Always add coins to the unspent wallet
+        for (size_t i = 0; i < wtx->vout.size(); i++)
+        {
+            isminetype mine = IsMine(wtx->vout[i]);
+            // Add to unspent map
+            const auto &outpoint = wtx->OutpointAt(i);
+            if (!IsSpent(outpoint) && mine != ISMINE_NO)
+            {
+                mapWalletUnspent[outpoint] = COutput(wtx, i, mine);
+            }
+        }
 
         if (fInsertedNew)
         {
@@ -1113,6 +1134,7 @@ bool CWallet::AbandonTransaction(const uint256 &hashTx)
         todo.erase(now);
         done.insert(now);
         CWalletTxRef wtx = GetWalletTx(now);
+
         assert(wtx);
         int currentconfirm = wtx->GetDepthInMainChain();
         // If the orig tx was not in block, none of its spends can be
@@ -1145,7 +1167,10 @@ bool CWallet::AbandonTransaction(const uint256 &hashTx)
             {
                 auto access = mapWallet.find(txin.prevout);
                 if (access != mapWallet.end())
+                {
                     access->second.tx->MarkDirty();
+                    AddToWallet(access->second.tx, false, &walletdb);
+                }
             }
         }
     }
@@ -1225,7 +1250,10 @@ void CWallet::MarkConflicted(const uint256 &hashBlock, const uint256 &hashTx)
             {
                 auto prev = mapWallet.find(txin.prevout);
                 if (prev != mapWallet.end())
+                {
                     prev->second.tx->MarkDirty();
+                    AddToWallet(prev->second.tx, false, &walletdb);
+                }
             }
         }
     }
@@ -2154,21 +2182,27 @@ void CWallet::ResendWalletTransactions(int64_t nBestBlockTime)
  */
 
 
-CAmount CWallet::GetBalance() const
+CAmount CWallet::GetBalance()
 {
     CAmount nTotal = 0;
-    /* TODO use alternate implementation
-        vector<COutput> confirmed;
-        AvailableCoins(confirmed, nullptr, false);
-        for (const auto& output: confirmed)
-        {
-            nTotal += output.GetValue();
-        }
-    */
+
+    // Getting coins from AvailableCoins() is typically much faster since we don't parse through the entire
+    // wallet but rather only through the unspent coins map.
+
+
+    vector<COutput> confirmed;
+    CCoinControl coinControl;
+    coinControl.fAllowWatchOnly = false;
+    coinControl.fAllowOtherInputs = false;
+    AvailableCoins(confirmed, &coinControl, false);
+    for (auto &output : confirmed)
+    {
+        nTotal += output.GetValue();
+    }
+
+    /*
     {
         LOCK(cs_wallet);
-        // TODO: this entire function would be more efficiently rewritten to just
-        // iterate through MapWallet accessing all coins.
         for (MapWallet::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTxRef pcoin = it->second.tx;
@@ -2182,6 +2216,9 @@ CAmount CWallet::GetBalance() const
             }
         }
     }
+
+    */
+
     return nTotal;
 }
 
@@ -2347,7 +2384,7 @@ void CWallet::RedetermineIfMine()
     }
 }
 
-void CWallet::AvailableCoins(SpendableTxos &coins, const CCoinControl *coinControl, bool fIncludeZeroValue) const
+void CWallet::AvailableCoins(SpendableTxos &coins, const CCoinControl *coinControl, bool fIncludeZeroValue)
 {
     vector<COutput> sel;
     AvailableCoins(sel, coinControl, false);
@@ -2360,19 +2397,28 @@ void CWallet::AvailableCoins(SpendableTxos &coins, const CCoinControl *coinContr
 void CWallet::AvailableCoins(vector<COutput> &vCoins,
     const CCoinControl *coinControl,
     bool fIncludeZeroValue,
-    uint32_t *pNumUtxos) const
+    uint32_t *pNumUtxos)
 {
     vCoins.clear();
 
     {
         uint32_t nCount = 0;
         LOCK(cs_wallet);
-        for (MapWallet::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        auto it = mapWalletUnspent.begin();
+        while (it != mapWalletUnspent.end())
         {
             const COutPoint &outpoint = it->first;
             const COutput &coin = it->second;
             auto wtx = coin.tx;
             assert(wtx);
+
+            // Remove spent coins from the map.
+            if (IsSpent(outpoint))
+            {
+                it = mapWalletUnspent.erase(it);
+                continue;
+            }
+            it++;
 
             if (coin.txOnly())
                 continue; // Only look for output coins.
@@ -2399,8 +2445,6 @@ void CWallet::AvailableCoins(vector<COutput> &vCoins,
             if (depth == 0 && !wtx->InMempool())
                 continue;
 
-            if (IsSpent(outpoint))
-                continue;
             if (coin.mine == ISMINE_NO)
             {
                 DbgAssert(false, ); // No coin that is not mine should be added to the wallet as an outpoint
@@ -3509,6 +3553,14 @@ bool CWallet::CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey, std:
         }
     }
 
+    // tx must be in mempool or we can end up getting AvailableCoins() that are not really available.
+    int count = 0;
+    while (!mempool.exists(txId) && count < 100)
+    {
+        count++;
+        MilliSleep(50);
+    }
+
     {
         LOCK(cs_wallet);
         // This is only to keep the database open to defeat the auto-flush for the
@@ -3587,6 +3639,21 @@ CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarge
     return nFeeNeeded;
 }
 
+void CWallet::ClearAllSpent()
+{
+    LOCK(cs_wallet);
+    auto iter = mapWalletUnspent.begin();
+    while (iter != mapWalletUnspent.end())
+    {
+        if (IsSpent(iter->first))
+        {
+            iter = mapWalletUnspent.erase(iter);
+            continue;
+        }
+        else
+            iter++;
+    }
+}
 
 DBErrors CWallet::LoadWallet(bool &fFirstRunRet)
 {
@@ -3609,6 +3676,9 @@ DBErrors CWallet::LoadWallet(bool &fFirstRunRet)
     if (nLoadWalletRet != DB_LOAD_OK)
         return nLoadWalletRet;
     fFirstRunRet = !vchDefaultKey.IsValid();
+
+    // Make sure to clear all spent items from the unspent map
+    ClearAllSpent();
 
     uiInterface.LoadWallet(this);
 

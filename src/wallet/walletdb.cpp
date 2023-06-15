@@ -621,9 +621,18 @@ DBErrors CWalletDB::LoadWallet(CWallet *pwallet)
     // Now that all keys and P2SH addresses are loaded, we can accurately determine
     // every output in these transactions that this wallet controls.  These are added individually
     // into mapWallet
+    int count = 0;
     for (const CWalletTxRef &wtx : wss.tx)
     {
         pwallet->AddToWallet(wtx, true, nullptr);
+
+        // For very large wallets occassionaly clear the any spent items from the unspent map
+        if (count > 50000)
+        {
+            pwallet->ClearAllSpent();
+            count = 0;
+        }
+        count++;
     }
 
     if (fNoncriticalErrors && result == DB_LOAD_OK)
