@@ -584,7 +584,7 @@ class WalletTest (BitcoinTestFramework):
         coins_before = len(self.nodes[0].listunspent(0))
         self.nodes[0].consolidate(10, 20)
         waitFor(waitTime, lambda: len(self.nodes[0].listunspent(0)) == 20)
- 
+
         # try to consolidate more coins than are in the wallet
         self.nodes[0].consolidate(100, 1)
         waitFor(waitTime, lambda: len(self.nodes[0].listunspent(0)) == 1)
@@ -605,10 +605,26 @@ class WalletTest (BitcoinTestFramework):
         self.nodes[0].consolidate(10, 300)
         waitFor(waitTime, lambda: len(self.nodes[0].listunspent(0)) == 382)
 
-        # do a full consolidation.
+        # verify the functionality of the third optional paramete: destination address
         self.nodes[0].generate(300);
-        self.nodes[0].consolidate(5000, 1)
-        waitFor(waitTime, lambda: len(self.nodes[0].listunspent(0)) <= 2)
+        # check current amount
+        walletinfo = self.nodes[0].getwalletinfo()
+        balance = walletinfo['balance']
+        coins_before = len(self.nodes[0].listunspent(0))
+        assert_equal(coins_before, 682)
+        address = self.nodes[0].getnewaddress()
+        a = self.nodes[0].consolidate(600, 10, False, address)
+        # we should have 85 utxos left, 600 - 82 + #of txs needed to consilidate (which should be 3 in this case)
+        # because we are consolidating to an address the belong to node 0
+        waitFor(waitTime, lambda: len(self.nodes[0].listunspent(0)) == 85)
+        assert_equal(a['destination'], address)
+        assert_greater_than(len(a['txids']), 0)
+        assert_equal(len(a['txids']), len(a['txidems']))
+        logging.info("Output of the consolidate command with address destination specified:\n" + str(a))
+
+        # do a full consolidation.
+        self.nodes[0].consolidate(5000,1)
+
 
         # Stop and restart node with automatic consolidation turned on
         stop_nodes(self.nodes)
@@ -622,7 +638,7 @@ class WalletTest (BitcoinTestFramework):
         # all coins to one address which will trigger an auto consolidation.
         self.nodes[0].generate(300);
         coins_before = len(self.nodes[0].listunspent(0));
-        waitFor(waitTime, lambda: len(self.nodes[0].listunspent(0)) == 302)
+        waitFor(waitTime, lambda: len(self.nodes[0].listunspent(0)) == 301)
         balance = self.nodes[0].getbalance()
         addr = self.nodes[0].getnewaddress()
         self.nodes[0].sendtoaddress(addr, balance - 1000, "", "", True)
