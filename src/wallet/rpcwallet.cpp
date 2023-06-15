@@ -5,6 +5,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "amount.h"
+#include "cashaddrenc.h"
 #include "chain.h"
 #include "coincontrol.h"
 #include "core_io.h"
@@ -118,17 +119,37 @@ UniValue consolidate(const UniValue &params, bool fHelp)
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
 
-    if (fHelp || params.size() != 2)
-        throw runtime_error("consolidate (\"num\" \"toleave\")\n"
-                            "\nConsolidates spendable utxos in the wallet. (-spendzeroconfchange or -wallet.instant\n"
-                            "must be enabled)\n"
-                            "\nArguments:\n"
-                            "1. \"num\"     (number, required) number of coins to select for consolidation)\n"
-                            "2. \"toleave\" (number, required) minimum number of coins to leave)\n"
-                            "\nResult:\n"
-                            "\"success\"    (string) consolidated successfully with <toleave> coins remaining\n"
-                            "\nExamples:\n" +
-                            HelpExampleCli("consolidate", "500 50") + HelpExampleRpc("consolidate", "500, 50"));
+    if (fHelp || params.size() < 2 || params.size() > 4)
+        throw runtime_error(
+            "consolidate (\"num\" \"toleave\")\n"
+            "\nConsolidates spendable utxos in the wallet. (-spendzeroconfchange or -wallet.instant\n"
+            "must be enabled)\n"
+            "\nArguments:\n"
+            "1. \"num\"       (number, required) number of coins to select for consolidation)\n"
+            "2. \"toleave\"   (number, required) minimum number of coins to leave)\n"
+            "3. \"verbosity\" (boolean, optional, default: false) show also the outpoint of every consolidated utxos "
+            "(default: false)\n"
+            "4. \"address\"   (string, optional, default: freshly generated addr from your wallet) address destination "
+            "where to send coins to\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"amount\"       :     (numeric) Amount on NEX consolidated into the destination address\n"
+            "  \"destination\"  :     \"xxxxx\" Address used as consolidation destinations\n"
+            "  \"txids\"        : [   (array of string) The transaction ids\n"
+            "     \"transactionid\"   (string) The transaction id\n"
+            "     ,...\n"
+            "  ],\n"
+            "  \"txidems\"      : [    (array of string) The transaction idems\n"
+            "     \"transactionidem\"  (string) The transaction idem\n"
+            "     ,...\n"
+            "  ],\n"
+            "\"outpoints\"  : [ (array od string) the outpoints of all consolidated utxos (showed only if verbosity is "
+            "true)\n"
+            "  \"outpoint\"     (string) outpoint\n"
+            "     ,...\n"
+            "  ],\n"
+            "\nExamples:\n" +
+            HelpExampleCli("consolidate", "500 50") + HelpExampleRpc("consolidate", "500, 50"));
 
     // Check that spend zero conf change or instant transactions are turned on
     if (!instantTxns.Value() && !GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE))
@@ -144,44 +165,77 @@ UniValue consolidate(const UniValue &params, bool fHelp)
         pwalletMain->TopUpKeyPool();
 
     CReserveKey reservekey(pwalletMain);
-    CPubKey vchPubKey;
-    if (!reservekey.GetReservedKey(vchPubKey))
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+    CScript scriptPubKey;
+    CTxDestination dest;
+    if (params.size() >= 4)
+    {
+        dest = DecodeDestination(params[3].get_str());
+        if (!IsValidDestination(dest))
+        {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid coin address");
+        }
+        // Parse address
+        scriptPubKey = GetScriptForDestination(dest);
+    }
+    else
+    {
+        CPubKey vchPubKey;
+        if (!reservekey.GetReservedKey(vchPubKey))
+        {
+            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+        }
+        scriptPubKey = P2pktOutput(vchPubKey);
+        ExtractDestination(scriptPubKey, dest);
+    }
+
+    bool fVerbose = false;
+    if (params.size() >= 3)
+    {
+        if (params[2].isStr())
+            fVerbose = InterpretBool(params[2].get_str());
+        else if (params[2].isNum())
+            fVerbose = (params[2].get_int() != 0);
+        else
+            fVerbose = params[2].get_bool();
+    }
 
     uint32_t numUtxos = UINT32_MAX;
     uint32_t numUtxosToLeave = 1;
-    if (params.size() == 2)
+    if (params[0].isStr())
     {
-        if (params[0].isStr())
-        {
-            numUtxos = std::stoi(params[0].get_str());
-        }
-        else if (params[0].isNum())
-        {
-            numUtxos = params[0].get_int();
-        }
-        if (numUtxos <= 0)
-            throw JSONRPCError(RPC_WALLET_ERROR, "Error: number of coins to consolidate must be a positive number");
-        if (numUtxos > 20000)
-            throw JSONRPCError(
-                RPC_WALLET_ERROR, "Error: number of coins to consolidate must be less than or equal to 20000");
-
-        if (params[1].isStr())
-        {
-            numUtxosToLeave = std::stoi(params[1].get_str());
-        }
-        else if (params[1].isNum())
-        {
-            numUtxosToLeave = params[1].get_int();
-        }
-        if (numUtxosToLeave <= 0)
-            throw JSONRPCError(RPC_WALLET_ERROR, "Error: number of coins to leave must be a positive number");
-        if (numUtxosToLeave > 20000)
-            throw JSONRPCError(RPC_WALLET_ERROR, "Error: number of coins to leave must be less than or equal to 20000");
+        numUtxos = std::stoi(params[0].get_str());
     }
+    else if (params[0].isNum())
+    {
+        numUtxos = params[0].get_int();
+    }
+    if (numUtxos <= 0)
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: number of coins to consolidate must be a positive number");
+    if (numUtxos > 20000)
+        throw JSONRPCError(
+            RPC_WALLET_ERROR, "Error: number of coins to consolidate must be less than or equal to 20000");
+
+    if (params[1].isStr())
+    {
+        numUtxosToLeave = std::stoi(params[1].get_str());
+    }
+    else if (params[1].isNum())
+    {
+        numUtxosToLeave = params[1].get_int();
+    }
+    if (numUtxosToLeave <= 0)
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: number of coins to leave must be a positive number");
+    if (numUtxosToLeave > 20000)
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: number of coins to leave must be less than or equal to 20000");
 
     uint32_t nTotalCoinsChosen = 0;
     uint32_t numToFetch = numUtxos + numUtxosToLeave;
+    CAmount nValueExt = 0;
+    uint32_t nInputs = 0;
+    uint32_t neededTxs = 0;
+    UniValue txIds(UniValue::VARR);
+    UniValue txIdems(UniValue::VARR);
+    UniValue outPts(UniValue::VARR);
     while (nTotalCoinsChosen < numUtxos)
     {
         // Get a list of available coins and select up to the max vin allowed
@@ -202,9 +256,12 @@ UniValue consolidate(const UniValue &params, bool fHelp)
         while (sel.size() >= 2)
         {
             bool fDone = false;
+            // select the input to consolidate
             for (const auto &coin : sel)
             {
                 coinControl.Select(coin.GetOutPoint());
+                if (fVerbose)
+                    outPts.push_back(coin.GetOutPoint().ToString());
                 nValue += coin.GetValue();
                 count++;
                 nTotalCoinsChosen++;
@@ -216,11 +273,11 @@ UniValue consolidate(const UniValue &params, bool fHelp)
                 }
             }
 
+            // prepare to create a tx
             CAmount nFeeRequired = 0;
             vector<CRecipient> vecSend;
             int nChangePosRet = -1;
             bool fSubtractFeeFromAmount = true;
-            CScript scriptPubKey = P2pktOutput(vchPubKey);
             CRecipient recipient = {scriptPubKey, nValue, fSubtractFeeFromAmount};
             vecSend.push_back(recipient);
 
@@ -240,6 +297,8 @@ UniValue consolidate(const UniValue &params, bool fHelp)
             }
             else
             {
+                nValueExt += nValue;
+                nInputs += count;
                 fTxCreated = true;
             }
 
@@ -253,10 +312,25 @@ UniValue consolidate(const UniValue &params, bool fHelp)
         // Commit the transaction
         std::string error;
         if (!pwalletMain->CommitTransaction(wtxNew, reservekey, error))
+        {
             throw JSONRPCError(RPC_WALLET_ERROR, error);
+        }
+        else
+        {
+            txIds.push_back(wtxNew.GetId().ToString());
+            txIdems.push_back(wtxNew.GetIdem().ToString());
+            neededTxs++;
+        }
     }
 
-    return strprintf("consolidated successfully");
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("total_amount", FormatMoney(nValueExt));
+    result.pushKV("destination", EncodeCashAddr(dest, Params()));
+    result.pushKV("txids", txIds);
+    result.pushKV("txidems", txIdems);
+    if (fVerbose)
+        result.pushKV("outpoints", outPts);
+    return result;
 }
 
 UniValue getnewaddress(const UniValue &params, bool fHelp)
