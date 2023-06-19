@@ -2663,6 +2663,8 @@ bool CWallet::SelectCoins(const CAmount &nTargetValue,
     CAmount &nValueRet,
     const CCoinControl *coinControl)
 {
+    AssertLockHeld(cs_wallet);
+
     setCoinsRet.clear();
     assert(nValueRet == 0);
     CAmount tgtValue = nTargetValue;
@@ -2694,6 +2696,9 @@ bool CWallet::SelectCoins(const CAmount &nTargetValue,
                     // decrease the value we will auto-find by what the user hand-selected.
                     tgtValue -= coin.GetValue();
                     setCoinsRet.push_back(coin);
+
+                    if (nValueRet >= nTargetValue)
+                        return true;
                 }
                 else // TODO: Allow non-wallet inputs
                 {
@@ -2718,8 +2723,27 @@ bool CWallet::SelectCoins(const CAmount &nTargetValue,
             filled = true;
         }
     }
-    else if (available.size() < 100) // If there are very few TXOs, then regenerate them.  If the wallet HAS few TXOs
+
+    // Cleanup the available map of entries that has already been spent.
+    //
+    // TODO: This is not the most performant but is a quick fix for a bug.  Ultimately
+    // we should just directly use mapWalletUnspent when doing CoinSelection() however
+    // that would require a fairly invasive refactor.
+    {
+        for (auto i = available.begin(); i != available.end();)
+        {
+            if (!mapWalletUnspent.count(i->second.GetOutPoint()))
+            {
+                i = available.erase(i);
+                continue;
+            }
+            i++;
+        }
+    }
+
+    // If there are very few TXOs, then regenerate them.  If the wallet HAS few TXOs
     // then regenerate every time -- its fast for few.
+    if (available.size() < MAX_TX_NUM_VIN)
     {
         // flush the txns waiting to enter the txpool so we can respend them
         CommitTxToMempool();
@@ -2731,9 +2755,9 @@ bool CWallet::SelectCoins(const CAmount &nTargetValue,
     if (tgtValue <= 0)
         return true;
 
+    // 100 is about half of a normal transaction, so overpay the fee by about half to avoid change
     TxoGroup g;
     CAmount dust = minRelayTxFee.GetDust();
-    // 100 is about half of a normal transaction, so overpay the fee by about half to avoid change
     g = CoinSelection(*possibleCoins, tgtValue, dust, fee, changeLen);
     if ((!filled) && (g.first == 0)) // Ok no solution was found.  So let's regenerate the TXOs and try again.
     {
@@ -2750,11 +2774,14 @@ bool CWallet::SelectCoins(const CAmount &nTargetValue,
         return false; // no solution found
     }
 
+    // Calculate the value and set of coins to return.
+    // And cleanup the set of available coins as well.
     for (TxoItVec::iterator i = g.second.begin(); i != g.second.end();)
     {
         SpendableTxos::iterator j = *i; // i is and iterator over iterators
-        ++i;
         const COutput &out = j->second;
+        ++i;
+
         nValueRet += j->first;
         setCoinsRet.push_back(out);
         // remove this txo from the list so it is not used next time.  TODO: if the wallet does not
