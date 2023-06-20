@@ -344,8 +344,6 @@ static void addConnectionOptions(AllowedArgs &allowedArgs)
         .addArg("onion=<ip:port>", requiredStr,
             strprintf(_("Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)"), "-proxy"))
         .addArg("onlynet=<net>", requiredStr, _("Only connect to nodes in network <net> (ipv4, ipv6 or onion)"))
-        .addArg("permitbaremultisig", optionalBool,
-            strprintf(_("Relay non-P2SH multisig (default: %u)"), DEFAULT_PERMIT_BAREMULTISIG))
         .addArg("peerbloomfilters", optionalBool,
             strprintf(_("Support filtering of blocks and transaction with bloom filters (default: %u)"),
                 DEFAULT_PEERBLOOMFILTERS))
