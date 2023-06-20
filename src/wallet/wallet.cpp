@@ -2185,39 +2185,41 @@ void CWallet::ResendWalletTransactions(int64_t nBestBlockTime)
 CAmount CWallet::GetBalance()
 {
     CAmount nTotal = 0;
-
-    // Getting coins from AvailableCoins() is typically much faster since we don't parse through the entire
-    // wallet but rather only through the unspent coins map.
-
-
-    vector<COutput> confirmed;
-    CCoinControl coinControl;
-    coinControl.fAllowWatchOnly = false;
-    coinControl.fAllowOtherInputs = false;
-    AvailableCoins(confirmed, &coinControl, false);
-    for (auto &output : confirmed)
-    {
-        nTotal += output.GetValue();
-    }
-
-    /*
     {
         LOCK(cs_wallet);
-        for (MapWallet::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        for (MapWallet::const_iterator it = mapWalletUnspent.begin(); it != mapWalletUnspent.end(); ++it)
         {
-            const CWalletTxRef pcoin = it->second.tx;
-            if (it->first.hash == pcoin->GetId()) // If its the tx record
+            const CWalletTxRef ptx = it->second.tx;
+            if (ptx->IsCoinBase() && ptx->GetBlocksToMaturity() > 0)
+                continue;
+
+            if (ptx->IsTrusted())
             {
-                if (pcoin->IsTrusted())
+                if (!IsSpent(it->first) && (GetGroupToken(it->second.GetScriptPubKey()) == NoGroup))
                 {
-                    CAmount tmp = pcoin->GetAvailableCredit(false);
-                    nTotal += tmp;
+                    nTotal += GetCredit(it->second.GetTxOut(), ISMINE_SPENDABLE);
                 }
             }
         }
-    }
 
-    */
+#ifdef DEBUG
+        // Make sure the new and old method have matching totals
+        CAmount nTotal2 = 0;
+        for (MapWallet::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        {
+            const CWalletTxRef ptx = it->second.tx;
+            if (it->first.hash == ptx->GetId()) // If its the tx record
+            {
+                if (ptx->IsTrusted())
+                {
+                    CAmount tmp = ptx->GetAvailableCredit(false);
+                    nTotal2 += tmp;
+                }
+            }
+        }
+        assert(nTotal == nTotal2);
+#endif
+    }
 
     return nTotal;
 }
@@ -2227,18 +2229,40 @@ CAmount CWallet::GetUnconfirmedBalance() const
     CAmount nTotal = 0;
     {
         LOCK(cs_wallet);
-        // TODO: this entire function would be more efficiently rewritten to just
-        // iterate through MapWallet accessing all coins.
-        for (MapWallet::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        for (MapWallet::const_iterator it = mapWalletUnspent.begin(); it != mapWalletUnspent.end(); ++it)
         {
-            const CWalletTxRef pcoin = it->second.tx;
-            if (it->first.hash == pcoin->GetId()) // If its the tx record
+            const CWalletTxRef ptx = it->second.tx;
+            if (ptx->IsCoinBase() && ptx->GetBlocksToMaturity() > 0)
+                continue;
+
+            if (!ptx->IsTrusted() && ptx->GetDepthInMainChain() == 0 && ptx->InMempool())
             {
-                if (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain() == 0 && pcoin->InMempool())
-                    nTotal += pcoin->GetAvailableCredit(false);
+                if (!IsSpent(it->first) && (GetGroupToken(it->second.GetScriptPubKey()) == NoGroup))
+                {
+                    nTotal += GetCredit(it->second.GetTxOut(), ISMINE_SPENDABLE);
+                }
             }
         }
+
+#ifdef DEBUG
+        // Make sure the new and old method have matching totals
+        CAmount nTotal2 = 0;
+        for (MapWallet::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        {
+            const CWalletTxRef ptx = it->second.tx;
+            if (it->first.hash == ptx->GetId()) // If its the tx record
+            {
+                if (!ptx->IsTrusted() && ptx->GetDepthInMainChain() == 0 && ptx->InMempool())
+                {
+                    CAmount tmp = ptx->GetAvailableCredit(false);
+                    nTotal2 += tmp;
+                }
+            }
+        }
+        assert(nTotal == nTotal2);
+#endif
     }
+
     return nTotal;
 }
 
@@ -2247,32 +2271,70 @@ CAmount CWallet::GetImmatureBalance() const
     CAmount nTotal = 0;
     {
         LOCK(cs_wallet);
-        for (MapWallet::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        for (MapWallet::const_iterator it = mapWalletUnspent.begin(); it != mapWalletUnspent.end(); ++it)
         {
-            const CWalletTxRef pcoin = it->second.tx;
-            if (it->first.hash == pcoin->GetId()) // If its the tx record
+            const CWalletTxRef ptx = it->second.tx;
+            if (ptx->IsCoinBase() && ptx->GetBlocksToMaturity() > 0 && ptx->IsInMainChain())
             {
-                nTotal += pcoin->GetImmatureCredit(false);
+                nTotal += GetCredit(it->second.GetTxOut(), ISMINE_SPENDABLE);
             }
         }
+
+#ifdef DEBUG
+        // Make sure the new and old method have matching totals
+        CAmount nTotal2 = 0;
+        for (MapWallet::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        {
+            const CWalletTxRef ptx = it->second.tx;
+            if (it->first.hash == ptx->GetId()) // If its the tx record
+            {
+                nTotal2 += ptx->GetImmatureCredit(false);
+            }
+        }
+        assert(nTotal == nTotal2);
+#endif
     }
+
     return nTotal;
 }
 
 CAmount CWallet::GetWatchOnlyBalance() const
 {
+    if (!HaveWatchOnly())
+        return 0;
+
     CAmount nTotal = 0;
     {
         LOCK(cs_wallet);
-        for (MapWallet::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        for (MapWallet::const_iterator it = mapWalletUnspent.begin(); it != mapWalletUnspent.end(); ++it)
         {
-            const CWalletTxRef pcoin = it->second.tx;
-            if (it->first.hash == pcoin->GetId()) // If its the tx record
+            const CWalletTxRef ptx = it->second.tx;
+            if (ptx->IsCoinBase() && ptx->GetBlocksToMaturity() > 0)
+                continue;
+
+            if (ptx->IsTrusted())
             {
-                if (pcoin->IsTrusted())
-                    nTotal += pcoin->GetAvailableWatchOnlyCredit(false);
+                if (!IsSpent(it->first) && (GetGroupToken(it->second.GetScriptPubKey()) == NoGroup))
+                {
+                    nTotal += GetCredit(it->second.GetTxOut(), ISMINE_WATCH_ONLY);
+                }
             }
         }
+
+#ifdef DEBUG
+        // Make sure the new and old method have matching totals
+        CAmount nTotal2 = 0;
+        for (MapWallet::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        {
+            const CWalletTxRef ptx = it->second.tx;
+            if (it->first.hash == ptx->GetId()) // If its the tx record
+            {
+                if (ptx->IsTrusted())
+                    nTotal2 += ptx->GetAvailableWatchOnlyCredit(false);
+            }
+        }
+        assert(nTotal == nTotal2);
+#endif
     }
 
     return nTotal;
@@ -2280,36 +2342,78 @@ CAmount CWallet::GetWatchOnlyBalance() const
 
 CAmount CWallet::GetUnconfirmedWatchOnlyBalance() const
 {
+    if (!HaveWatchOnly())
+        return 0;
+
     CAmount nTotal = 0;
     {
         LOCK(cs_wallet);
-        for (MapWallet::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        for (MapWallet::const_iterator it = mapWalletUnspent.begin(); it != mapWalletUnspent.end(); ++it)
         {
-            const CWalletTxRef pcoin = it->second.tx;
-            if (it->first.hash == pcoin->GetId()) // If its the tx record
+            const CWalletTxRef ptx = it->second.tx;
+            if (ptx->IsCoinBase() && ptx->GetBlocksToMaturity() > 0)
+                continue;
+
+            if (!ptx->IsTrusted() && ptx->GetDepthInMainChain() == 0 && ptx->InMempool())
             {
-                if (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain() == 0 && pcoin->InMempool())
-                    nTotal += pcoin->GetAvailableWatchOnlyCredit(false);
+                if (!IsSpent(it->first) && (GetGroupToken(it->second.GetScriptPubKey()) == NoGroup))
+                {
+                    nTotal += GetCredit(it->second.GetTxOut(), ISMINE_WATCH_ONLY);
+                }
             }
         }
+
+#ifdef DEBUG
+        // Make sure the new and old method have matching totals
+        CAmount nTotal2 = 0;
+        for (MapWallet::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        {
+            const CWalletTxRef ptx = it->second.tx;
+            if (it->first.hash == ptx->GetId()) // If its the tx record
+            {
+                if (!ptx->IsTrusted() && ptx->GetDepthInMainChain() == 0 && ptx->InMempool())
+                    nTotal2 += ptx->GetAvailableWatchOnlyCredit(false);
+            }
+        }
+        assert(nTotal == nTotal2);
+#endif
     }
+
     return nTotal;
 }
 
 CAmount CWallet::GetImmatureWatchOnlyBalance() const
 {
+    if (!HaveWatchOnly())
+        return 0;
+
     CAmount nTotal = 0;
     {
         LOCK(cs_wallet);
-        for (MapWallet::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        for (MapWallet::const_iterator it = mapWalletUnspent.begin(); it != mapWalletUnspent.end(); ++it)
         {
-            const CWalletTxRef pcoin = it->second.tx;
-            if (it->first.hash == pcoin->GetId()) // If its the tx record
+            const CWalletTxRef ptx = it->second.tx;
+            if (ptx->IsCoinBase() && ptx->GetBlocksToMaturity() > 0 && ptx->IsInMainChain())
             {
-                nTotal += pcoin->GetImmatureWatchOnlyCredit(false);
+                nTotal += GetCredit(it->second.GetTxOut(), ISMINE_WATCH_ONLY);
             }
         }
+
+#ifdef DEBUG
+        // Make sure the new and old method have matching totals
+        CAmount nTotal2 = 0;
+        for (MapWallet::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        {
+            const CWalletTxRef ptx = it->second.tx;
+            if (it->first.hash == ptx->GetId()) // If its the tx record
+            {
+                nTotal2 += ptx->GetImmatureWatchOnlyCredit(false);
+            }
+        }
+        assert(nTotal == nTotal2);
+#endif
     }
+
     return nTotal;
 }
 
@@ -2320,7 +2424,7 @@ unsigned int CWallet::FilterCoins(vector<COutput> &vCoins, std::function<bool(co
 
     {
         LOCK(cs_wallet);
-        for (MapWallet::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        for (MapWallet::const_iterator it = mapWalletUnspent.begin(); it != mapWalletUnspent.end(); ++it)
         {
             const COutPoint &outpoint = it->first;
             const COutput &pcoin = it->second;
