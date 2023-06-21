@@ -3753,10 +3753,10 @@ DBErrors CWallet::ZapWalletTx(std::vector<CWalletTxRef> &vWtx)
             // that requires a new key.
         }
     }
-
     if (nZapWalletTxRet != DB_LOAD_OK)
+    {
         return nZapWalletTxRet;
-
+    }
     return DB_LOAD_OK;
 }
 
@@ -4409,28 +4409,21 @@ bool CWallet::InitLoadWallet()
 {
     std::string walletFile = GetArg("-wallet", DEFAULT_WALLET_DAT);
 
-
-    /* Removed, barely used
     // needed to restore wallet transaction meta data after -zapwallettxes
-    std::vector<COutput> vWtx;
+    std::vector<CWalletTxRef> vWtx;
     if (GetBoolArg("-zapwallettxes", false))
     {
         uiInterface.InitMessage(_("Zapping all transactions from wallet..."));
-
         CWallet *tempWallet = new CWallet(walletFile);
         DBErrors nZapWalletRet = tempWallet->ZapWalletTx(vWtx);
         if (nZapWalletRet != DB_LOAD_OK)
         {
             return InitError(strprintf(_("Error loading %s: Wallet corrupted"), walletFile));
         }
-
         delete tempWallet;
         tempWallet = nullptr;
     }
-    */
-
     uiInterface.InitMessage(_("Loading wallet..."));
-
     int64_t nStart = GetTimeMillis();
     bool fFirstRun = true;
     CWallet *walletInstance = new CWallet(walletFile);
@@ -4438,7 +4431,9 @@ bool CWallet::InitLoadWallet()
     if (nLoadWalletRet != DB_LOAD_OK)
     {
         if (nLoadWalletRet == DB_CORRUPT)
+        {
             return InitError(strprintf(_("Error loading %s: Wallet corrupted"), walletFile));
+        }
         else if (nLoadWalletRet == DB_NONCRITICAL_ERROR)
         {
             InitWarning(strprintf(_("Error reading %s! All keys read correctly, but transaction data"
@@ -4446,16 +4441,19 @@ bool CWallet::InitLoadWallet()
                 walletFile));
         }
         else if (nLoadWalletRet == DB_TOO_NEW)
+        {
             return InitError(
                 strprintf(_("Error loading %s: Wallet requires newer version of %s"), walletFile, _(PACKAGE_NAME)));
+        }
         else if (nLoadWalletRet == DB_NEED_REWRITE)
         {
             return InitError(strprintf(_("Wallet needed to be rewritten: restart %s to complete"), _(PACKAGE_NAME)));
         }
         else
+        {
             return InitError(strprintf(_("Error loading %s"), walletFile));
+        }
     }
-
     if (GetBoolArg("-upgradewallet", fFirstRun))
     {
         int nMaxVersion = GetArg("-upgradewallet", 0);
@@ -4466,26 +4464,27 @@ bool CWallet::InitLoadWallet()
             walletInstance->SetMinVersion(FEATURE_LATEST); // permanently upgrade the wallet immediately
         }
         else
+        {
             LOGA("Allowing wallet upgrade up to %i\n", nMaxVersion);
+        }
         if (nMaxVersion < walletInstance->GetVersion())
         {
             return InitError(_("Cannot downgrade wallet"));
         }
         walletInstance->SetMaxVersion(nMaxVersion);
     }
-
     if (fFirstRun)
     {
         // Create new keyUser and set as default key
-
         if (GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && !walletInstance->IsHDEnabled())
         {
             // generate a new master key
             CKey key;
             CPubKey masterPubKey = walletInstance->GenerateNewHDMasterKey();
             if (!walletInstance->SetHDMasterKey(masterPubKey))
+            {
                 throw std::runtime_error("CWallet::GenerateNewKey(): Storing master key failed");
-
+            }
             // ensure this wallet.dat can only be opened by clients supporting HD
             walletInstance->SetMinVersion(FEATURE_HD);
         }
@@ -4495,29 +4494,33 @@ bool CWallet::InitLoadWallet()
             walletInstance->SetDefaultKey(newDefaultKey);
             ScriptTemplateDestination dest(P2pktOutput(newDefaultKey));
             if (!walletInstance->SetAddressBook(dest, "", "receive"))
+            {
                 return InitError(_("Cannot write default address") += "\n");
+            }
         }
-
         walletInstance->SetBestChain(chainActive.GetLocator());
     }
     else if (mapArgs.count("-usehd"))
     {
         bool useHD = GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET);
         if (walletInstance->IsHDEnabled() && !useHD)
+        {
             return InitError(
                 strprintf(_("Error loading %s: You can't disable HD on a already existing HD wallet"), walletFile));
+        }
         if (!walletInstance->IsHDEnabled() && useHD)
+        {
             return InitError(
                 strprintf(_("Error loading %s: You can't enable HD on a already existing non-HD wallet"), walletFile));
+        }
     }
-
     LOGA(" wallet      %15dms\n", GetTimeMillis() - nStart);
-
     RegisterValidationInterface(walletInstance);
-
     CBlockIndex *pindexRescan = nullptr;
     if (GetBoolArg("-rescan", false))
+    {
         pindexRescan = chainActive.Genesis();
+    }
     else
     {
         CWalletDB walletdb(walletFile);
@@ -4527,7 +4530,9 @@ bool CWallet::InitLoadWallet()
             pindexRescan = FindForkInGlobalIndex(chainActive, locator);
         }
         else
+        {
             pindexRescan = chainActive.Genesis();
+        }
     }
     if (chainActive.Tip() && chainActive.Tip() != pindexRescan)
     {
@@ -4539,13 +4544,15 @@ bool CWallet::InitLoadWallet()
             CBlockIndex *block = chainActive.Tip();
             while (block && block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA) && block->pprev->processed() &&
                    pindexRescan != block)
+            {
                 block = block->pprev;
-
+            }
             if (pindexRescan != block)
+            {
                 return InitError(_("Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex "
                                    "(download the whole blockchain again in case of pruned node)"));
+            }
         }
-
         uiInterface.InitMessage(_("Rescanning..."));
         LOGA("Rescanning last %i blocks (from block %i)...\n", chainActive.Height() - pindexRescan->height(),
             pindexRescan->height());
@@ -4554,21 +4561,19 @@ bool CWallet::InitLoadWallet()
         LOGA(" rescan      %15dms\n", GetTimeMillis() - nStart);
         walletInstance->SetBestChain(chainActive.GetLocator());
         nWalletDBUpdated++;
-
-        /* Removed, barely used -- just rm wallet.dat
         // Restore wallet transaction metadata after -zapwallettxes=1
         if (GetBoolArg("-zapwallettxes", false) && GetArg("-zapwallettxes", "1") != "2")
         {
             CWalletDB walletdb(walletFile);
 
-            for (const CWalletTx &wtxOld : vWtx)
+            for (const CWalletTxRef &wtxOld : vWtx)
             {
-                uint256 hash = wtxOld.GetHash();
-                MapWallet::iterator mi = walletInstance->mapWallet.find(hash);
+                // can use idem or id here, mapWallet contains both
+                MapWallet::iterator mi = walletInstance->mapWallet.find(COutPoint(wtxOld->GetIdem()));
                 if (mi != walletInstance->mapWallet.end())
                 {
-                    const CWalletTx *copyFrom = &wtxOld;
-                    CWalletTx *copyTo = &mi->second.tx;
+                    const CWalletTxRef copyFrom = wtxOld;
+                    std::shared_ptr<CWalletTx> copyTo = mi->second.tx;
                     copyTo->mapValue = copyFrom->mapValue;
                     copyTo->vOrderForm = copyFrom->vOrderForm;
                     copyTo->nTimeReceived = copyFrom->nTimeReceived;
@@ -4580,10 +4585,8 @@ bool CWallet::InitLoadWallet()
                 }
             }
         }
-        */
     }
     walletInstance->SetBroadcastTransactions(GetBoolArg("-walletbroadcast", DEFAULT_WALLETBROADCAST));
-
     pwalletMain = walletInstance;
     return true;
 }
