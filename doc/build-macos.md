@@ -16,8 +16,31 @@ Then install [Homebrew](http://brew.sh).
 ## Dependencies
 
 ```bash
-brew install automake berkeley-db libtool boost miniupnpc openssl pkg-config protobuf qt5 libevent gmp
+brew install automake libtool boost miniupnpc openssl pkg-config protobuf qt5 libevent gmp
 ```
+
+If you plane to run nexa linked to berkeley-db 4.8.3 (ie use `--with-incompatible-bdb`) you
+need to execute:
+
+```bash
+brew install berkeley-db@4
+```
+
+In the default `configure` setting nexa expect for berkeley-db 5.3 to be installed on your system,
+hence you need to execute:
+
+```bash
+brew install berkeley-db@5
+```
+
+in advance.
+
+If you are planning not to use the wallet functionality of nexa (ie `--disable-wallet`) you
+don't need to install berkeley db on your system.
+
+One final note, `brew install berkeley-db` without specifying a version (eg `@5`) install
+the most recent version which is 18.1.40 at the time of this writing. This version is not
+supported and tested so `configure` won't complete and fail.
 
 See [dependencies.md](dependencies.md) for a complete overview.
 
