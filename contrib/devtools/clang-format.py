@@ -75,7 +75,8 @@ def run_clang_check(clang_format_exe, files):
         print("\nNonexistent files: " + ",".join(nonexistent))
     if changed:
         print("\nImproper formatting found in: " + ",".join(list(changed)))
-        print("To properly format these files run: " + sys.argv[0] + " format " + clang_format_exe + " " + " ".join(list(changed)))
+        print("To properly format these files run in the src directory: " + sys.argv[0] + " format " + clang_format_exe + " " + " ".join(list(changed)))
+        print("Or run: make run-formatting")
         return 1
     else:
         print("All existing files are properly formatted")
