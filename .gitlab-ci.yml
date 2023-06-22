@@ -30,7 +30,6 @@ stages:
     - build_tests
     - qa_tests
     - benchmark_tests
-    - gitian
 
 cache: &global_cache_settings
     paths:
@@ -40,7 +39,7 @@ cache: &global_cache_settings
 # Gitian binaries #
 ###################
 .docker_common:
-    stage: gitian
+    stage: build
     # Environment based on workarounds in this issue:
     # https://gitlab.com/gitlab-org/gitlab-runner/-/issues/27300
     image: bchunlimited/nexa:ubuntu20.04
@@ -55,11 +54,11 @@ cache: &global_cache_settings
           alias: docker
           command: ["--tls=false"]
     rules:
-        - if: $CI_PIPELINE_SOURCE == "schedule"
+        - if: ($CI_PIPELINE_SOURCE == "schedule" && $GITIAN == "True")
 
 
 gitian-binaries:
-    stage: gitian
+    stage: build
     extends: .docker_common
     script:
         - apt-get update && apt-get -y --no-install-recommends --no-upgrade -qq install openssh-client apt-cacher-ng ruby docker.io
@@ -77,9 +76,9 @@ gitian-binaries:
             - ./gitian-builder/var/build.log
             - ./gitian-builder/var/build-script
     tags:
-      - gitian
+        - scheduled
     rules:
-      - if: $CI_PIPELINE_SOURCE == "schedule"
+        - if: ($CI_PIPELINE_SOURCE == "schedule" && $GITIAN == "True")
 
 ######################################################
 ######## Ubuntu base settings
@@ -153,7 +152,6 @@ build-ubuntu-nodeps:
             - ./build/src/test/test_nexa
             - ./build/src/bench/bench_nexa
             - ./build/config.log #in case of configure failure
-    # to remove before merge so that we can only execute the gitian task
     rules:
       - if: $CI_PIPELINE_SOURCE != "schedule"
 
@@ -171,7 +169,6 @@ build-ubuntu-nodeps-qt:
         when: on_failure
         paths:
             - ./build/config.log
-    # to remove before merge so that we can only execute the gitian task
     rules:
       - if: $CI_PIPELINE_SOURCE != "schedule"
 
@@ -184,7 +181,6 @@ build-ubuntu-tests-nodeps:
         - (cd build/src; ./test/test_nexa)
     dependencies:
         - build-ubuntu-nodeps
-    # to remove before merge so that we can only execute the gitian task
     rules:
       - if: $CI_PIPELINE_SOURCE != "schedule"
 
@@ -214,7 +210,7 @@ build-ubuntu-deps:
         paths:
             - depends/x86_64-unknown-linux-gnu
     rules:
-      - if: $CI_PIPELINE_SOURCE != "schedule"
+      - if: ($CI_PIPELINE_SOURCE != "schedule" || $EXTENDED_TESTS == "True")
 
 build-ubuntu:
     stage: build
@@ -244,7 +240,7 @@ build-ubuntu:
             - ./src/test-suite.log
             - ./build/src/.libs/libnexa.*
     rules:
-      - if: $CI_PIPELINE_SOURCE != "schedule"
+      - if: ($CI_PIPELINE_SOURCE != "schedule" || $EXTENDED_TESTS == "True")
 
 build-ubuntu-rostrum:
     extends: .ubuntu_base
@@ -299,10 +295,8 @@ build-ubuntu-tests:
             - ./build/src/test/
     dependencies:
         - build-ubuntu
-    # to remove before merge so that we can only execute the gitian task
     rules:
-      - if: $CI_PIPELINE_SOURCE == "schedule"
-        when: never
+      - if: $CI_PIPELINE_SOURCE != "schedule"
 
 test-ubuntu-qa:
     stage: qa_tests
@@ -325,6 +319,31 @@ test-ubuntu-qa:
             - ./build/ctorout.txt
     rules:
       - if: $CI_PIPELINE_SOURCE != "schedule"
+
+test-ubuntu-qa-extended:
+    stage: qa_tests
+    extends: .cache-ubuntu
+    needs: ["build-ubuntu"]
+    script:
+        - mkdir -p $CI_PROJECT_DIR/cores
+        - mkdir -p $CI_PROJECT_DIR/saved-cores
+        - echo $CI_PROJECT_DIR/cores/core.%e.%p.%h.%t | tee /proc/sys/kernel/core_pattern
+        - cd build;
+        - ./qa/pull-tester/rpc-tests.py --coverage --no-ipv6-rpc-listen --gitlab --extended-only
+    dependencies:
+        - build-ubuntu
+    artifacts:
+        when: on_failure
+        paths:
+            - ./qa/qa_tests/
+            - $CI_PROJECT_DIR/saved-cores
+            - ./build/src/nexad
+            - ./build/ctorout.txt
+    tags:
+        - scheduled
+    rules:
+        - if: ($CI_PIPELINE_SOURCE == "schedule" && $EXTENDED_TESTS == "True")
+
 
 test-ubuntu-benchmarks:
     extends: .ubuntu_base
