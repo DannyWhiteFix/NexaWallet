@@ -3639,16 +3639,6 @@ bool CWallet::CreateOneTransaction(const vector<CRecipient> &vecSend,
  */
 bool CWallet::CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey, std::string &errorString)
 {
-    /** When the wallet is parallelized, this will higher performing, however right now its a wash.
-        Enqueuing like this will not provide feedback if the the txpool doesn't accept the tx.
-        And for RPC calls, you must FlushTxAdmission before returning
-    CTxInputData d;
-    d.tx = MakeTransactionRef(wtxNew);
-    d.whitelisted = true;
-    d.nodeName = "wallet";
-    EnqueueTxForAdmission(d);
-    */
-
     auto txId = wtxNew.GetId();
     if (fBroadcastTransactions)
     {
@@ -3664,7 +3654,7 @@ bool CWallet::CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey, std:
         // setting ignoreFee to false -- it should be a power-user option only to create unrelayable tx
         ParallelAcceptToMemoryPool(txHandlerSnap, mempool, state, txref, AreFreeTxnsAllowed(), &fMissingInputs,
             rejectAbsurdFee, TransactionClass::NONSTANDARD, vCoinsToUncache, &isRespend, &debugger);
-        if (debugger.IsValid())
+        if (debugger.IsValid() || fMissingInputs)
         {
             CTxInputData d;
             d.tx = MakeTransactionRef(wtxNew);
@@ -3682,14 +3672,6 @@ bool CWallet::CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey, std:
 
             return false;
         }
-    }
-
-    // tx must be in mempool or we can end up getting AvailableCoins() that are not really available.
-    int count = 0;
-    while (!mempool.exists(txId) && count < 100)
-    {
-        count++;
-        MilliSleep(50);
     }
 
     {
