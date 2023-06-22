@@ -175,7 +175,9 @@ class WalletTest (BitcoinTestFramework):
         unspent_0 = self.nodes[2].listunspent()[0]
         tmp = {"txidem": unspent_0["txidem"], "vout": unspent_0["vout"]}
         tmp1 = unspent_0["outpoint"]
+        bal_before = self.nodes[2].getbalance()
         self.nodes[2].lockunspent(False, [tmp])
+        assert_equal(bal_before, self.nodes[2].getbalance()) # balance before locking coins should be the same as after
         assert_raises(JSONRPCException, self.nodes[2].sendtoaddress, self.nodes[2].getnewaddress(addrType), 20000000)
         assert_equal([{'outpoint': unspent_0['outpoint']}], self.nodes[2].listlockunspent())
         self.nodes[2].lockunspent(True, [tmp1])
