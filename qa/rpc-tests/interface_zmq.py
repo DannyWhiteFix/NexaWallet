@@ -6,6 +6,7 @@
 import sys
 if sys.version_info[0] < 3:
     raise "Use Python 3"
+import test_framework.loginit
 import logging
 import struct
 from io import BytesIO
@@ -108,9 +109,12 @@ class ZMQTest (BitcoinTestFramework):
         logging.info(
             "Generate {0} blocks (and {0} coinbase txes)".format(num_blocks))
 
+        logging.info("Send basic transactions and mine blocks")
+
         # DS does not support P2PK so make sure there's a P2PKH in the wallet
         addr = self.nodes[0].getnewaddress("p2pkh")
         fundTx = self.nodes[0].sendtoaddress(addr, 10)
+
         # Notify of new tx
         zmqNotif = self.hashtx.receive().hex()
         assert fundTx == zmqNotif
@@ -118,18 +122,14 @@ class ZMQTest (BitcoinTestFramework):
 
         self.nodes[0].setminercomment("got one")
         genhashes = self.nodes[0].generate(1)
-        # notify tx 1
-        zmqNotif1 = self.hashtx.receive().hex()
-        assert fundTx == zmqNotif1
-        zmqNotif1r = self.rawtx.receive()
         # notify coinbase
         zmqNotif2 = self.hashtx.receive().hex()
         zmqNotif2r = self.rawtx.receive()
         assert b"got one" in zmqNotif2r
-        # notify tx 1 again
-        zmqNotif = self.hashtx.receive().hex()
-        assert fundTx == zmqNotif
-        zmqNotif = self.rawtx.receive()
+        # notify tx 1
+        zmqNotif1 = self.hashtx.receive().hex()
+        assert fundTx == zmqNotif1
+        zmqNotif1r = self.rawtx.receive()
 
         # notify the block
         h = self.hashblock.receive().hex()
@@ -178,6 +178,8 @@ class ZMQTest (BitcoinTestFramework):
         assert_equal(payment_txid, uint256ToRpcHex(tx.GetIdem()))
 
         if 1: # Send 2 transactions that double spend each other
+
+            logging.info("Send two transactions that double spend each other")
 
             # If these unsubscribes fail, then you will get an assertion that a zmq topic is not correct
             self.hashtx.unsubscribe()

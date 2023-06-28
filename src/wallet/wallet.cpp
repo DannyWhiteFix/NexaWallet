@@ -3704,11 +3704,6 @@ bool CWallet::CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey, std:
 
         // Track how many getdata requests our transaction gets
         mapRequestCount[txId] = 0;
-
-        if (fBroadcastTransactions)
-        {
-            SyncWithWallets(std::static_pointer_cast<const CTransaction>(storedTx), nullptr, -1);
-        }
     }
 
     return true;
