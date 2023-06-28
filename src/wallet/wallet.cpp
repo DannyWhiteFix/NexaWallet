@@ -2836,7 +2836,8 @@ bool CWallet::SelectCoins(const CAmount &nTargetValue,
     {
         for (auto i = available.begin(); i != available.end();)
         {
-            if (!mapWalletUnspent.count(i->second.GetOutPoint()))
+            if (!mapWalletUnspent.count(i->second.GetOutPoint()) || IsSpent(i->second.GetOutPoint()) ||
+                IsLockedCoin(i->second.GetOutPoint()))
             {
                 i = available.erase(i);
                 continue;
