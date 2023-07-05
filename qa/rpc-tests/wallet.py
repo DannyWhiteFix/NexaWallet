@@ -643,8 +643,8 @@ class WalletTest (BitcoinTestFramework):
         waitFor(waitTime, lambda: len(self.nodes[0].listunspent(0)) == 301)
         balance = self.nodes[0].getbalance()
         addr = self.nodes[0].getnewaddress()
-        self.nodes[0].sendtoaddress(addr, balance - 1000, "", "", True)
-        waitFor(waitTime, lambda: len(self.nodes[0].listunspent(0)) == 2)
+        self.nodes[0].sendtoaddress(addr, balance, "", "", True)
+        waitFor(waitTime, lambda: len(self.nodes[0].listunspent(0)) == 1)
 
 
 
