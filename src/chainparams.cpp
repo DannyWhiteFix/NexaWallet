@@ -15,7 +15,6 @@
 #include "utilstrencodings.h"
 
 #include <assert.h>
-#include <boost/assign/list_of.hpp>
 
 #include "chainparamsseeds.h"
 
@@ -581,10 +580,8 @@ public:
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 25); // P2PKH addresses begin with B
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 68); // P2SH  addresses begin with U
         base58Prefixes[SECRET_KEY] = std::vector<unsigned char>(1, 35); // WIF   format begins with 2B or 2C
-        base58Prefixes[EXT_PUBLIC_KEY] =
-            boost::assign::list_of(0x42)(0x69)(0x67)(0x20).convert_to_container<std::vector<unsigned char> >();
-        base58Prefixes[EXT_SECRET_KEY] =
-            boost::assign::list_of(0x42)(0x6c)(0x6b)(0x73).convert_to_container<std::vector<unsigned char> >();
+        base58Prefixes[EXT_PUBLIC_KEY] = {0x42, 0x69, 0x67, 0x20};
+        base58Prefixes[EXT_SECRET_KEY] = {0x42, 0x6c, 0x6b, 0x73};
         cashaddrPrefix = strNetworkID;
 
         // use 8 for prefix of N in base58
