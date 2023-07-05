@@ -847,6 +847,10 @@ BOOST_AUTO_TEST_CASE(grouptoken_basicfunctions)
         CGroupTokenInfo ret(script);
         BOOST_CHECK(!ret.isInvalid());
         BOOST_CHECK(ret == CGroupTokenInfo(CGroupTokenID(fakeGrp), GroupAuthorityFlags::NONE));
+
+        // check correct group to string encoding
+        std::string addrAsStr(EncodeGroupToken(ret.associatedGroup, Params()));
+        BOOST_CHECK(addrAsStr == "nexa:tqqqqqqqqqqqqqqqqqqsqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqf0xf9lp4");
     }
 
     { // check CGroupTokenID handling of subgroups

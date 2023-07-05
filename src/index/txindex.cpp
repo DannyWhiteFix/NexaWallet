@@ -129,6 +129,7 @@ void TxIndex::ThreadSync()
     }
 
     std::unique_lock<std::mutex> lock(cs_txindex);
+    CBlockIndex *prevAt = nullptr;
     do
     {
         CBlockIndex *pindex = pbestindex.load();
@@ -187,13 +188,17 @@ void TxIndex::ThreadSync()
             }
         }
 
-        if (pindex)
+        if (prevAt != pindex)
         {
-            LOG(IBD, "txindex is enabled at height %d\n", pindex->height());
-        }
-        else
-        {
-            LOG(IBD, "txindex is enabled\n");
+            if (pindex)
+            {
+                LOG(IBD, "txindex is enabled at height %d\n", pindex->height());
+            }
+            else
+            {
+                LOG(IBD, "txindex is enabled\n");
+            }
+            prevAt = pindex;
         }
 
         // wait until given a notification or wait time has expired
