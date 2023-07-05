@@ -3037,7 +3037,7 @@ class CompareCoinValue
 public:
     bool operator()(const COutput &a, const COutput &b) const { return a.GetValue() < b.GetValue(); }
 };
-bool CWallet::CreateTransaction(const vector<CRecipient> &vecSend,
+bool CWallet::CreateTransaction(vector<CRecipient> &vecSend,
     CWalletTx &wtxNew,
     CReserveKey &reservekey,
     CAmount &nFeeRet,
@@ -3066,8 +3066,37 @@ bool CWallet::CreateTransaction(const vector<CRecipient> &vecSend,
         _coinControl.fAllowOtherInputs = true; // must be true because we might add an output to create a txn chain
         _coinControl.fAllowWatchOnly = false;
 
+        // This value is used to reduce the size of the coin amount to send for every chained transaction
+        // we have to create.
+        CAmount nFeesForLastChainedTxn = 0;
+
         do
         {
+            // Adjust the size of the amount of coins we're sending if we have chained txns.
+            if (nFeesForLastChainedTxn > 0)
+            {
+                // Count up how many recipients can subtract fees from the amount being sent
+                auto nSubtractFees = 0;
+                for (auto i = 0; i < vecSend.size(); i++)
+                {
+                    if (vecSend[i].fSubtractFeeFromAmount)
+                        nSubtractFees++;
+                }
+                // Adjust the send amount for any recipients that we can subtract from
+                for (auto i = 0; i < vecSend.size(); i++)
+                {
+                    // subtract each portion from the recipient amount
+                    if (vecSend[i].fSubtractFeeFromAmount)
+                    {
+                        // Subtract the remainder for the first nAmount.
+                        if (i == 0)
+                            vecSend[i].nAmount -= std::ceil(nFeesForLastChainedTxn / nSubtractFees);
+                        else
+                            vecSend[i].nAmount -= std::tolower(nFeesForLastChainedTxn / nSubtractFees);
+                    }
+                }
+            }
+
             vector<COutput> coins;
             CAmount _nValue = 0;
             uint32_t count = _coinControl.NumSelected();
@@ -3142,8 +3171,8 @@ bool CWallet::CreateTransaction(const vector<CRecipient> &vecSend,
 
                 // Create a transaction which spends to ourselves and which will be then chained to the next one
                 // we create.
-                if (!pwalletMain->CreateOneTransaction(
-                        vecSendToMe, wtxNew, reservekey, nFeeRet, nChangePosRet, strFailReason, &_coinControl, sign))
+                if (!pwalletMain->CreateOneTransaction(vecSendToMe, wtxNew, reservekey, nFeesForLastChainedTxn,
+                        nChangePosRet, strFailReason, &_coinControl, sign))
                 {
                     strFailReason += _("Turn off auto consolidate and try sending again.");
                     return false;
@@ -3156,6 +3185,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient> &vecSend,
                     strFailReason += _("CommitTransaction failed.");
                     return false;
                 }
+
 
                 // Add the new outputs to coincontrol
                 _coinControl.UnSelectAll();

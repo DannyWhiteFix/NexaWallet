@@ -984,7 +984,7 @@ public:
      * selected by SelectCoins(); Also create the change output, when needed
      * Does not sign inputs.
      */
-    bool CreateTransaction(const std::vector<CRecipient> &vecSend,
+    bool CreateTransaction(std::vector<CRecipient> &vecSend,
         CWalletTx &wtxNew,
         CReserveKey &reservekey,
         CAmount &nFeeRet,
