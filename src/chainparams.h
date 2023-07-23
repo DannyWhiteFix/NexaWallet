@@ -63,17 +63,6 @@ struct CCheckpointData
     int64_t nTimeLastCheckpoint;
 };
 
-enum
-{
-    NEXA_PORT = 7228,
-    NEXA_TESTNET_PORT = 7230,
-    BTCBCH_DEFAULT_MAINNET_PORT = 8333,
-    BTCBCH_TESTNET_PORT = 18333,
-    DEFAULT_REGTESTNET_PORT = 18444,
-    BTCBCH_TESTNET4_PORT = 28333,
-    BTCBCH_SCALENET_PORT = 38333,
-};
-
 /**
  * CChainParams defines various tweakable parameters of a given instance of the
  * Nexa system. There are three: the main network on which people trade goods
@@ -81,43 +70,15 @@ enum
  * a regression test mode which is intended for private networks only. It has
  * minimal difficulty to ensure that blocks can be found instantly.
  */
-class CChainParams
+class CChainParams : public CBaseChainParams
 {
 public:
-    enum Base58Type
-    {
-        PUBKEY_ADDRESS,
-        SCRIPT_ADDRESS,
-        SECRET_KEY,
-        EXT_PUBLIC_KEY,
-        EXT_SECRET_KEY,
-        SCRIPT_TEMPLATE_ADDRESS,
-
-        MAX_BASE58_TYPES
-    };
-
     const Consensus::Params &GetConsensus() const { return consensus; }
     /** Modifiable consensus parameters added by bip135, is not threadsafe, only use during initializtion */
     Consensus::Params &GetModifiableConsensus() { return consensus; }
     const CMessageHeader::MessageStartChars &MessageStart() const { return pchMessageStart; }
-    int GetDefaultPort() const { return nDefaultPort; }
     const CBlock &GenesisBlock() const { return genesis; }
-    /** Make miner wait to have peers to avoid wasting work */
-    bool MiningRequiresPeers() const { return fMiningRequiresPeers; }
-    /** Default value for -checkmempool and -checkblockindex argument and checkwallet */
-    bool DefaultConsistencyChecks() const { return fDefaultConsistencyChecks; }
-    /** Policy: Filter transactions that do not match well-defined patterns */
-    bool RequireStandard() const;
-    uint64_t PruneAfterHeight() const { return nPruneAfterHeight; }
-    /** Make miner stop after a block is found. In RPC, don't return until nGenProcLimit blocks are generated */
-    bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
-    /** In the future use NetworkIDString() for RPC fields */
-    bool TestnetToBeDeprecatedFieldRPC() const { return fTestnetToBeDeprecatedFieldRPC; }
-    /** Return the BIP70 network string (main, test or regtest) */
-    std::string NetworkIDString() const { return strNetworkID; }
     const std::vector<CDNSSeedData> &DNSSeeds() const { return vSeeds; }
-    const std::vector<uint8_t> &Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
-    const std::string &CashAddrPrefix() const { return cashaddrPrefix; }
     const std::vector<SeedSpec6> &FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData &Checkpoints() const { return checkpointData; }
     /** The pre-allocation chunk size for blk?????.dat files */
@@ -129,19 +90,9 @@ protected:
     CChainParams() {}
     Consensus::Params consensus;
     CMessageHeader::MessageStartChars pchMessageStart;
-    int nDefaultPort;
-    uint64_t nPruneAfterHeight;
     std::vector<CDNSSeedData> vSeeds;
-    std::vector<uint8_t> base58Prefixes[MAX_BASE58_TYPES];
-    std::string cashaddrPrefix;
-    std::string strNetworkID;
-    CBlock genesis;
     std::vector<SeedSpec6> vFixedSeeds;
-    bool fMiningRequiresPeers;
-    bool fDefaultConsistencyChecks;
-    bool fRequireStandard;
-    bool fMineBlocksOnDemand;
-    bool fTestnetToBeDeprecatedFieldRPC;
+    CBlock genesis;
     CCheckpointData checkpointData;
 };
 

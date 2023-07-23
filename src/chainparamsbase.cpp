@@ -17,69 +17,19 @@ const std::string CBaseChainParams::SCALENET = "scale";
 const std::string CBaseChainParams::REGTEST = "regtest";
 const std::string CBaseChainParams::NEXA = "nexa";
 
-/**
- * Main network
- */
-class CBaseMainParams : public CBaseChainParams
+bool CBaseChainParams::RequireStandard() const
 {
-public:
-    CBaseMainParams() { nRPCPort = 7227; }
-};
+    // the acceptnonstdtxn flag can only be used to narrow the behavior.
+    // A blockchain whose default is to allow nonstandard txns can be configured to disallow them.
+    return fRequireStandard || !GetBoolArg("-acceptnonstdtxn", true);
+}
+
 static CBaseMainParams mainParams;
-
-
-/**
- * Testnet (v3)
- */
-class CBaseTestNetParams : public CBaseChainParams
-{
-public:
-    CBaseTestNetParams()
-    {
-        nRPCPort = 7229;
-        strDataDir = "testnet";
-    }
-};
 static CBaseTestNetParams testNetParams;
-
-
-/**
- * Scaling Network
- */
-class CBaseScaleNetParams : public CBaseChainParams
-{
-public:
-    CBaseScaleNetParams()
-    {
-        nRPCPort = 38332;
-        strDataDir = "scalenet";
-    }
-};
 static CBaseScaleNetParams scaleNetParams;
-
-/*
- * Regression test
- */
-class CBaseRegTestParams : public CBaseChainParams
-{
-public:
-    CBaseRegTestParams()
-    {
-        nRPCPort = 18332;
-        strDataDir = "regtest";
-    }
-};
 static CBaseRegTestParams regTestParams;
-
-/**
- * Nexa
- */
-class CBaseNexaParams : public CBaseChainParams
-{
-public:
-    CBaseNexaParams() { nRPCPort = 7227; }
-};
 static CBaseNexaParams nexaParams;
+
 
 static CBaseChainParams *pCurrentBaseParams = 0;
 
