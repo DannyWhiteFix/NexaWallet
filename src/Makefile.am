@@ -554,6 +554,7 @@ libnexa_common_a_SOURCES = \
   cashaddr.cpp \
   cashaddrenc.cpp \
   chain.cpp \
+  chainparamsbase.cpp \
   chainparams.cpp \
   coins.cpp \
   compressor.cpp \

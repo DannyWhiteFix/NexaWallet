@@ -5,6 +5,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chainparams.h"
+#include "chainparamsbase.h"
 #include "consensus/merkle.h"
 #include "policy/policy.h"
 #include "unlimited.h"
@@ -111,13 +112,6 @@ static SatoshiBlock CreateSatoshiGenesisBlock(uint32_t nTime,
 }
 #endif
 
-bool CChainParams::RequireStandard() const
-{
-    // the acceptnonstdtxn flag can only be used to narrow the behavior.
-    // A blockchain whose default is to allow nonstandard txns can be configured to disallow them.
-    return fRequireStandard || !GetBoolArg("-acceptnonstdtxn", true);
-}
-
 
 // Temporarily here until we settle on the Genesis blocks
 #include "key.h"
@@ -216,8 +210,24 @@ class CLegacyParams : public CChainParams
 public:
     CLegacyParams()
     {
-        // this network is going to be deleted soon, still here to get some unit tests passing
+        nRPCPort = 7227;
+
         strNetworkID = "main"; // Do not use the const string because of ctor execution order issues
+        nDefaultPort = BTCBCH_DEFAULT_MAINNET_PORT;
+        nPruneAfterHeight = 100000;
+        fMiningRequiresPeers = true;
+        fDefaultConsistencyChecks = false;
+        fRequireStandard = true;
+        fMineBlocksOnDemand = false;
+        fTestnetToBeDeprecatedFieldRPC = false;
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 0);
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 5);
+        base58Prefixes[SECRET_KEY] = std::vector<unsigned char>(1, 128);
+        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
+        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};
+        cashaddrPrefix = "bitcoincash";
+
+        // this network is going to be deleted soon, still here to get some unit tests passing
         consensus.nSubsidyHalvingInterval = 210000;
         // 00000000000000ce80a7e057163a4db1d5ad7b20fb6f598c9597b9665c8fb0d4 - April 1, 2012
 
@@ -256,8 +266,6 @@ public:
         pchMessageStart[1] = 0xbe;
         pchMessageStart[2] = 0xb4;
         pchMessageStart[3] = 0xd9;
-        nDefaultPort = BTCBCH_DEFAULT_MAINNET_PORT;
-        nPruneAfterHeight = 100000;
         consensus.nShortBlockWindow = SHORT_BLOCK_WINDOW;
         consensus.nLongBlockWindow = LONG_BLOCK_WINDOW;
         consensus.nBlockSizeMultiplier = BLOCK_SIZE_MULTIPLIER;
@@ -281,22 +289,9 @@ public:
         vSeeds.push_back(CDNSSeedData("electroncash.de", "dnsseed.electroncash.de", true));
         vSeeds.push_back(CDNSSeedData("flowee.cash", "seed.flowee.cash", true));
 
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 0);
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 5);
-        base58Prefixes[SECRET_KEY] = std::vector<unsigned char>(1, 128);
-        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
-        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};
-        cashaddrPrefix = "bitcoincash";
-
         // BITCOINUNLIMITED START
         vFixedSeeds = std::vector<SeedSpec6>();
         // BITCOINUNLIMITED END
-
-        fMiningRequiresPeers = true;
-        fDefaultConsistencyChecks = false;
-        fRequireStandard = true;
-        fMineBlocksOnDemand = false;
-        fTestnetToBeDeprecatedFieldRPC = false;
 
         // clang-format off
         // checkpoint related to various network upgrades need to be the first block
@@ -324,7 +319,25 @@ class CRegTestParams : public CChainParams
 public:
     CRegTestParams()
     {
+        nRPCPort = 18332;
+        strDataDir = "regtest";
+
         strNetworkID = "regtest"; // Do not use the const string because of ctor execution order issues
+        nDefaultPort = DEFAULT_REGTESTNET_PORT;
+        nPruneAfterHeight = 1000;
+        fMiningRequiresPeers = false;
+        fDefaultConsistencyChecks = true;
+        fRequireStandard = false;
+        fMineBlocksOnDemand = true;
+        fTestnetToBeDeprecatedFieldRPC = false;
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<uint8_t>(1, 111);
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<uint8_t>(1, 196);
+        base58Prefixes[SECRET_KEY] = std::vector<uint8_t>(1, 239);
+        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
+        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
+        base58Prefixes[SCRIPT_TEMPLATE_ADDRESS] = std::vector<unsigned char>(1, 8);
+        cashaddrPrefix = "nexareg";
+
         consensus.nSubsidyHalvingInterval = 150;
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetSpacing = 10 * 60;
@@ -349,8 +362,6 @@ public:
         pchMessageStart[1] = 0xe5;
         pchMessageStart[2] = 0xef;
         pchMessageStart[3] = 0xea;
-        nDefaultPort = DEFAULT_REGTESTNET_PORT;
-        nPruneAfterHeight = 1000;
         consensus.nShortBlockWindow = SHORT_BLOCK_WINDOW_REGTEST;
         consensus.nLongBlockWindow = LONG_BLOCK_WINDOW_REGTEST;
         consensus.nBlockSizeMultiplier = BLOCK_SIZE_MULTIPLIER;
@@ -379,21 +390,7 @@ public:
         vFixedSeeds.clear(); //! Regtest mode doesn't have any fixed seeds.
         vSeeds.clear(); //! Regtest mode doesn't have any DNS seeds.
 
-        fMiningRequiresPeers = false;
-        fDefaultConsistencyChecks = true;
-        fRequireStandard = false;
-        fMineBlocksOnDemand = true;
-        fTestnetToBeDeprecatedFieldRPC = false;
-
         checkpointData = (CCheckpointData){{{0, consensus.hashGenesisBlock}}, 0};
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<uint8_t>(1, 111);
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<uint8_t>(1, 196);
-        base58Prefixes[SECRET_KEY] = std::vector<uint8_t>(1, 239);
-        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
-        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
-        base58Prefixes[SCRIPT_TEMPLATE_ADDRESS] = std::vector<unsigned char>(1, 8);
-
-        cashaddrPrefix = "nexareg";
 
         nBlockFileSize = 0x20000ULL; // 128KiB
         nUndoFileSize = 0x2000ULL; // 8KiB
@@ -406,7 +403,24 @@ class CTestNetParams : public CChainParams
 public:
     CTestNetParams()
     {
+        nRPCPort = 7229;
+        strDataDir = "testnet";
+
         strNetworkID = "testnet"; // Do not use the const string because of ctor execution order issues
+        nDefaultPort = NEXA_TESTNET_PORT;
+        nPruneAfterHeight = 100000;
+        fMiningRequiresPeers = true;
+        fDefaultConsistencyChecks = false;
+        fRequireStandard = true;
+        fMineBlocksOnDemand = false;
+        fTestnetToBeDeprecatedFieldRPC = true;
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<uint8_t>(1, 111);
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<uint8_t>(1, 196);
+        base58Prefixes[SECRET_KEY] = std::vector<uint8_t>(1, 239);
+        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
+        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
+        base58Prefixes[SCRIPT_TEMPLATE_ADDRESS] = std::vector<unsigned char>(1, 8);
+        cashaddrPrefix = "nexatest";
 
         consensus.nSubsidyHalvingInterval = 210000 * 5; // 2 minute blocks rather than 10 min -> * 5
         uint32_t tgtBits = 0x1e0fffff;
@@ -457,8 +471,6 @@ public:
         pchMessageStart[1] = 0x27;
         pchMessageStart[2] = 0x12;
         pchMessageStart[3] = 0x22;
-        nDefaultPort = NEXA_TESTNET_PORT;
-        nPruneAfterHeight = 100000;
 
         consensus.nShortBlockWindow = SHORT_BLOCK_WINDOW_TESTNET;
         consensus.nLongBlockWindow = LONG_BLOCK_WINDOW_TESTNET;
@@ -468,23 +480,7 @@ public:
         vSeeds.clear();
         vSeeds.push_back(CDNSSeedData("bitcoinunlimited.info", "nexa-testnet-seeder.bitcoinunlimited.info", true));
         vSeeds.push_back(CDNSSeedData("nexa.org", "testnetseeder.nexa.org", true));
-
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<uint8_t>(1, 111);
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<uint8_t>(1, 196);
-        base58Prefixes[SECRET_KEY] = std::vector<uint8_t>(1, 239);
-        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
-        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
-        base58Prefixes[SCRIPT_TEMPLATE_ADDRESS] = std::vector<unsigned char>(1, 8);
-
-        cashaddrPrefix = "nexatest";
-
         vFixedSeeds = std::vector<SeedSpec6>();
-
-        fMiningRequiresPeers = true;
-        fDefaultConsistencyChecks = false;
-        fRequireStandard = true;
-        fMineBlocksOnDemand = false;
-        fTestnetToBeDeprecatedFieldRPC = true;
 
         // clang-format off
         // checkpoint related to various network upgrades need to be the first block
@@ -511,7 +507,25 @@ class CNexaParams : public CChainParams
 public:
     CNexaParams()
     {
+        nRPCPort = 7227;
+
         strNetworkID = "nexa"; // Do not use the const string because of ctor execution order issues
+        nDefaultPort = NEXA_PORT;
+        nPruneAfterHeight = 100000;
+        fMiningRequiresPeers = true;
+        fDefaultConsistencyChecks = false;
+        fRequireStandard = true;
+        fMineBlocksOnDemand = false;
+        fTestnetToBeDeprecatedFieldRPC = false;
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 25); // P2PKH addresses begin with B
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 68); // P2SH  addresses begin with U
+        base58Prefixes[SECRET_KEY] = std::vector<unsigned char>(1, 35); // WIF   format begins with 2B or 2C
+        base58Prefixes[EXT_PUBLIC_KEY] = {0x42, 0x69, 0x67, 0x20};
+        base58Prefixes[EXT_SECRET_KEY] = {0x42, 0x6c, 0x6b, 0x73};
+        // use 8 for prefix of N in base58
+        // 19 for n in bech32
+        base58Prefixes[SCRIPT_TEMPLATE_ADDRESS] = std::vector<unsigned char>(1, 8);
+        cashaddrPrefix = strNetworkID;
 
         consensus.nSubsidyHalvingInterval = 210000 * 5; // 2 minute blocks rather than 10 min -> * 5
         uint32_t tgtBits = 503382016;
@@ -564,8 +578,6 @@ public:
         pchMessageStart[1] = 0x27;
         pchMessageStart[2] = 0x12;
         pchMessageStart[3] = 0x21;
-        nDefaultPort = NEXA_PORT;
-        nPruneAfterHeight = 100000;
 
         consensus.nShortBlockWindow = SHORT_BLOCK_WINDOW;
         consensus.nLongBlockWindow = LONG_BLOCK_WINDOW;
@@ -577,24 +589,7 @@ public:
         vSeeds.push_back(CDNSSeedData("nexa.org", "seeder.nexa.org", true));
         vSeeds.push_back(CDNSSeedData("bitcoinunlimited.info", "nexa-seeder.bitcoinunlimited.info", true));
 
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 25); // P2PKH addresses begin with B
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 68); // P2SH  addresses begin with U
-        base58Prefixes[SECRET_KEY] = std::vector<unsigned char>(1, 35); // WIF   format begins with 2B or 2C
-        base58Prefixes[EXT_PUBLIC_KEY] = {0x42, 0x69, 0x67, 0x20};
-        base58Prefixes[EXT_SECRET_KEY] = {0x42, 0x6c, 0x6b, 0x73};
-        cashaddrPrefix = strNetworkID;
-
-        // use 8 for prefix of N in base58
-        // 19 for n in bech32
-        base58Prefixes[SCRIPT_TEMPLATE_ADDRESS] = std::vector<unsigned char>(1, 8);
-
         vFixedSeeds = std::vector<SeedSpec6>();
-
-        fMiningRequiresPeers = true;
-        fDefaultConsistencyChecks = false;
-        fRequireStandard = true;
-        fMineBlocksOnDemand = false;
-        fTestnetToBeDeprecatedFieldRPC = false;
 
         // clang-format off
         // checkpoint related to various network upgrades need to be the first block
