@@ -74,9 +74,6 @@ std::atomic<bool> lockdataDestructed{false};
 LockData lockdata;
 #endif
 
-//! Maximum fee as a percentage of the value input into the transaction
-extern int MAX_FEE_PERCENT_OF_VALUE;
-
 // this flag is set to true when a wallet rescan has been invoked.
 std::atomic<bool> fRescan{false};
 
