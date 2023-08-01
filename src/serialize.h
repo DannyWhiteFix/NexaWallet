@@ -26,7 +26,7 @@
 
 // BU Allow a maximum message size of 256MB
 // BU does not use this value for json encoding size calculations
-static const unsigned int MAX_SIZE = 0x02000000 * 8;
+static constexpr uint64_t MAX_SIZE = 0x02000000 * 8;
 
 /**
  * Dummy data type to identify deserializing constructors.

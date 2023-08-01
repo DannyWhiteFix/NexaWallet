@@ -93,6 +93,12 @@ extern const char *VERACK;
  */
 extern const char *ADDR;
 /**
+ * The addrv2 message relays connection information for peers on the network just
+ * like the addr message, but is extended to allow gossiping of longer node
+ * addresses (see BIP155).
+ */
+extern const char *ADDRV2;
+/**
  * The inv message (inventory message) transmits one or more inventories of
  * objects known to the transmitting peer.
  * @see https://bitcoin.org/en/developer-reference#inv
@@ -406,6 +412,8 @@ const std::vector<std::string> &getAllNetMessageTypes();
 /** nServices flags */
 enum
 {
+    // Nothing
+    NODE_NONE = 0,
     // NODE_NETWORK means that the node is capable of serving the complete block chain. It is currently
     // set by all Bitcoin Unlimited nodes, and is unset by SPV clients or other peers that just want
     // network services but don't provide them.
@@ -456,7 +464,8 @@ class CAddress : public CService
 {
 public:
     CAddress();
-    explicit CAddress(CService ipIn, uint64_t nServicesIn = NODE_NETWORK);
+    CAddress(CService ipIn, uint64_t nServicesIn = NODE_NETWORK);
+    CAddress(CService ipIn, uint64_t nServicesIn, uint32_t nTimeIn);
 
     void Init();
 
@@ -466,13 +475,45 @@ public:
     inline void SerializationOp(Stream &s, Operation ser_action)
     {
         if (ser_action.ForRead())
+        {
             Init();
+        }
         int nVersion = s.GetVersion();
         if (s.GetType() & SER_DISK)
+        {
             READWRITE(nVersion);
-        if (s.GetType() & SER_DISK)
+        }
+        if (s.GetType() & SER_DISK || ((nVersion & ADDRV2_FORMAT) && !(s.GetType() & SER_GETHASH)))
+        {
+            // The only time we serialize a CAddress object without nTime is in
+            // the initial VERSION messages which contain two CAddress records.
+            // At that point, the serialization version is INIT_PROTO_VERSION.
+            // After the version handshake, serialization version is >=
+            // MIN_PEER_PROTO_VERSION and all ADDR messages are serialized with
+            // nTime.
+            // Note: The extversion phase (optional) of protocol negotiation
+            // uses INIT_PROTO_VERSION. Currently extversion in BCHN does not
+            // send CAddress instances in the extversion message, but if it
+            // were to do so in some hypothetical future change, then it should
+            // take into account the behavior here, and be sure not to use
+            // INIT_PROTO_VERSION if it wished to serialize nTime.
             READWRITE(nTime);
-        READWRITE(nServices);
+        }
+        if (nVersion & ADDRV2_FORMAT)
+        {
+            if (ser_action.ForRead()) // reading
+            {
+                nServices = ReadCompactSizeWithLimit(s, std::numeric_limits<uint64_t>::max());
+            }
+            else // writing
+            {
+                WriteCompactSize(s, nServices);
+            }
+        }
+        else
+        {
+            READWRITE(nServices);
+        }
         READWRITE(*(CService *)this);
     }
 

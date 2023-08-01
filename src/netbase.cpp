@@ -54,8 +54,10 @@ enum Network ParseNetwork(std::string net)
         return NET_IPV4;
     if (net == "ipv6")
         return NET_IPV6;
-    if (net == "tor" || net == "onion")
-        return NET_TOR;
+    if (net == "tor2")
+        return NET_TOR2;
+    if (net == "tor" || net == "onion" || net == "tor3")
+        return NET_TOR3;
     return NET_UNROUTABLE;
 }
 
@@ -67,7 +69,9 @@ std::string GetNetworkName(enum Network net)
         return "ipv4";
     case NET_IPV6:
         return "ipv6";
-    case NET_TOR:
+    case NET_TOR2:
+        return "tor2";
+    case NET_TOR3:
         return "onion";
     default:
         return "";

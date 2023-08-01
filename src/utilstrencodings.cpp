@@ -470,7 +470,7 @@ string DecodeBase64(const string &str)
     return (vchRet.size() == 0) ? string() : string((const char *)&vchRet[0], vchRet.size());
 }
 
-string EncodeBase32(const unsigned char *pch, size_t len)
+string EncodeBase32(const unsigned char *pch, size_t len, bool pad)
 {
     static const char *pbase32 = "abcdefghijklmnopqrstuvwxyz234567";
 
@@ -523,13 +523,21 @@ string EncodeBase32(const unsigned char *pch, size_t len)
     {
         strRet += pbase32[left];
         for (int n = 0; n < nPadding[mode]; n++)
-            strRet += '=';
+        {
+            if (pad)
+            {
+                strRet += '=';
+            }
+        }
     }
 
     return strRet;
 }
 
-string EncodeBase32(const string &str) { return EncodeBase32((const unsigned char *)str.c_str(), str.size()); }
+string EncodeBase32(const string &str, bool pad)
+{
+    return EncodeBase32((const unsigned char *)str.c_str(), str.size(), pad);
+}
 vector<unsigned char> DecodeBase32(const char *p, bool *pfInvalid)
 {
     static const int decode32_table[256] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,

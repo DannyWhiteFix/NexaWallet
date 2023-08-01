@@ -440,6 +440,13 @@ public:
     /** after BIP159 */
     bool m_limited_node;
 
+    /**
+        Whether the peer has signaled support for receiving ADDRv2 (BIP155)
+        messages, implying a preference to receive ADDRv2 instead of ADDR ones.
+    */
+    std::atomic_bool m_wants_addrv2{false};
+
+
     /** If true a remote node initiated the connection.  If false, we initiated.
         The protocol is slightly asymmetric:
         initial version exchange
@@ -682,10 +689,15 @@ public:
     void PushAddress(const CAddress &_addr, FastRandomContext &insecure_rand)
     {
         LOCK(cs_vSend);
+        // Whether the peer supports the address in `_addr`. For example,
+        // nodes that do not implement BIP155 cannot receive Tor v3 addresses
+        // because they require ADDRv2 (BIP155) encoding.
+        const bool addr_format_supported = m_wants_addrv2 || _addr.IsAddrV1Compatible();
+
         // Known checking here is only to save space from duplicates.
         // SendMessages will filter it again for knowns that were added
         // after addresses were pushed.
-        if (_addr.IsValid() && !addrKnown.contains(_addr.GetKey()))
+        if (_addr.IsValid() && !addrKnown.contains(_addr.GetKey()) && addr_format_supported)
         {
             if (vAddrToSend.size() >= MAX_ADDR_TO_SEND)
             {
