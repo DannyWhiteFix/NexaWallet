@@ -3576,6 +3576,7 @@ void CNode::ReadConfigFromExtversion()
     txConcat = extversion.as_u64c(XVer::BU_TXN_CONCATENATION);
     minGrapheneVersion = extversion.as_u64c(XVer::BU_GRAPHENE_MIN_VERSION_SUPPORTED);
     maxGrapheneVersion = extversion.as_u64c(XVer::BU_GRAPHENE_MAX_VERSION_SUPPORTED);
+    m_wants_addrv2 = (extversion.as_u64c(XVer::BU_ADDRV2_SUPPORT) == 1);
 
     {
         uint64_t selfMax = grapheneMaxVersionSupported.Value();

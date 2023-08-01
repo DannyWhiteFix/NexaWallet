@@ -40,6 +40,7 @@ enum {
     BU_MEMPOOL_SYNC_MAX_VERSION_SUPPORTED   = MAKE_KEY_BU(00000008),
     BU_TXN_CONCATENATION                    = MAKE_KEY_BU(0000000d),
     BU_CAPD_VERSION                         = MAKE_KEY_BU(0000000e),
+    BU_ADDRV2_SUPPORT                       = MAKE_KEY_BU(0000000f),
     // there is a gap here from 000d to f00d
     BU_ELECTRUM_SERVER_PORT_TCP             = MAKE_KEY_BU(0000f00d),
     BU_ELECTRUM_SERVER_PROTOCOL_VERSION     = MAKE_KEY_BU(0000f00e),

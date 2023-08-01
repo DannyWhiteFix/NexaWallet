@@ -501,13 +501,24 @@ void TorController::auth_cb(TorControlConnection &_conn, const TorControlReply &
         if (GetArg("-onion", "") == "")
         {
             proxyType addrOnion = proxyType(CService("127.0.0.1", 9050), true);
-            SetProxy(NET_TOR, addrOnion);
-            SetLimited(NET_TOR, false);
+            if (addrOnion.proxy.IsTor2())
+            {
+                SetProxy(NET_TOR2, addrOnion);
+                SetLimited(NET_TOR2, false);
+            }
+            if (addrOnion.proxy.IsTor3())
+            {
+                SetProxy(NET_TOR2, addrOnion);
+                SetLimited(NET_TOR3, false);
+            }
         }
 
         // Finally - now create the service
         if (private_key.empty()) // No private key, generate one
-            private_key = "NEW:RSA1024"; // Explicitly request RSA1024 - see issue #9214
+        {
+            // Explicitly request key type - see issue #9214
+            private_key = "NEW:ED25519-V3";
+        }
         // Request hidden service, redirect port.
         // Note that the 'virtual' port doesn't have to be the same as our internal port, but this is just a convenient
         // choice.  TODO; refactor the shutdown sequence some day.
@@ -733,7 +744,7 @@ void TorController::Reconnect()
     }
 }
 
-fs::path TorController::GetPrivateKeyFile() { return GetDataDir() / "onion_private_key"; }
+fs::path TorController::GetPrivateKeyFile() { return GetDataDir() / "onion_v3_private_key"; }
 void TorController::reconnect_cb(evutil_socket_t fd, short what, void *arg)
 {
     TorController *self = (TorController *)arg;

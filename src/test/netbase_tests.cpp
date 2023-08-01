@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(netbase_networks)
     BOOST_CHECK(CNetAddr("::1").GetNetwork() == NET_UNROUTABLE);
     BOOST_CHECK(CNetAddr("8.8.8.8").GetNetwork() == NET_IPV4);
     BOOST_CHECK(CNetAddr("2001::8888").GetNetwork() == NET_IPV6);
-    BOOST_CHECK(CNetAddr("FD87:D87E:EB43:edb1:8e4:3588:e546:35ca").GetNetwork() == NET_TOR);
+    BOOST_CHECK(CNetAddr("FD87:D87E:EB43:edb1:8e4:3588:e546:35ca").GetNetwork() == NET_TOR2);
 }
 
 BOOST_AUTO_TEST_CASE(netbase_properties)
@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(netbase_properties)
     BOOST_CHECK(CNetAddr("2001:10::").IsRFC4843());
     BOOST_CHECK(CNetAddr("FE80::").IsRFC4862());
     BOOST_CHECK(CNetAddr("64:FF9B::").IsRFC6052());
-    BOOST_CHECK(CNetAddr("FD87:D87E:EB43:edb1:8e4:3588:e546:35ca").IsTor());
+    BOOST_CHECK(CNetAddr("FD87:D87E:EB43:edb1:8e4:3588:e546:35ca").IsTor2());
     BOOST_CHECK(CNetAddr("127.0.0.1").IsLocal());
     BOOST_CHECK(CNetAddr("::1").IsLocal());
     BOOST_CHECK(CNetAddr("8.8.8.8").IsRoutable());
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(onioncat_test)
     CNetAddr addr1("5wyqrzbvrdsumnok.onion");
     CNetAddr addr2("FD87:D87E:EB43:edb1:8e4:3588:e546:35ca");
     BOOST_CHECK(addr1 == addr2);
-    BOOST_CHECK(addr1.IsTor());
+    BOOST_CHECK(addr1.IsTor2());
     BOOST_CHECK(addr1.ToStringIP() == "5wyqrzbvrdsumnok.onion");
     BOOST_CHECK(addr1.IsRoutable());
 }
@@ -126,7 +126,8 @@ BOOST_AUTO_TEST_CASE(subnet_test)
     BOOST_CHECK(CSubNet("1.2.2.20/26").Match(CNetAddr("1.2.2.63")));
     // All-Matching IPv6 Matches arbitrary IPv4 and IPv6
     BOOST_CHECK(CSubNet("::/0").Match(CNetAddr("1:2:3:4:5:6:7:1234")));
-    BOOST_CHECK(CSubNet("::/0").Match(CNetAddr("1.2.3.4")));
+    // Can not match from one network type to another (IPV6 to IPV4)
+    BOOST_CHECK(!CSubNet("::/0").Match(CNetAddr("1.2.3.4")));
     // All-Matching IPv4 does not Match IPv6
     BOOST_CHECK(!CSubNet("0.0.0.0/0").Match(CNetAddr("1:2:3:4:5:6:7:1234")));
     // Invalid subnets Match nothing (not even invalid addresses)
@@ -253,15 +254,116 @@ BOOST_AUTO_TEST_CASE(netbase_getgroup)
     // RFC4380
     BOOST_CHECK(
         CNetAddr("2001:0:9999:9999:9999:9999:FEFD:FCFB").GetGroup() == (std::vector<unsigned char>{NET_IPV4, 1, 2}));
-    // Tor
+    // Tor2
     BOOST_CHECK(
-        CNetAddr("FD87:D87E:EB43:edb1:8e4:3588:e546:35ca").GetGroup() == (std::vector<unsigned char>{NET_TOR, 239}));
+        CNetAddr("FD87:D87E:EB43:edb1:8e4:3588:e546:35ca").GetGroup() == (std::vector<unsigned char>{NET_TOR2, 239}));
     // he.net
     BOOST_CHECK(CNetAddr("2001:470:abcd:9999:9999:9999:9999:9999").GetGroup() ==
                 (std::vector<unsigned char>{NET_IPV6, 32, 1, 4, 112, 175}));
     // IPv6
     BOOST_CHECK(CNetAddr("2001:2001:9999:9999:9999:9999:9999:9999").GetGroup() ==
                 (std::vector<unsigned char>{NET_IPV6, 32, 1, 32, 1}));
+}
+
+// Since CNetAddr (un)ser is tested separately in net_tests.cpp here we only
+// try a few edge cases for port, service flags and time.
+
+static const std::vector<CAddress> fixture_addresses({CAddress(CService(CNetAddr(in6addr_loopback), 0 /* port */),
+                                                          NODE_NONE,
+                                                          0x4966bc61U /* Fri Jan  9 02:54:25 UTC 2009 */
+                                                          ),
+    CAddress(CService(CNetAddr(in6addr_loopback), 0x00f1 /* port */),
+        NODE_NETWORK,
+        0x83766279U /* Tue Nov 22 11:22:33 UTC 2039 */
+        ),
+    CAddress(CService(CNetAddr(in6addr_loopback), 0xf1f2 /* port */),
+        NODE_NETWORK_LIMITED,
+        0xffffffffU /* Sun Feb  7 06:28:15 UTC 2106 */
+        )});
+
+/* clang-format off */
+
+// fixture_addresses should equal to this when serialized in V1 format.
+// When this is unserialized from V1 format it should equal to fixture_addresses.
+// note that time is not serialized in addrv1
+static constexpr const char *stream_addrv1_hex =
+    "03" // number of entries
+
+    //"61bc6649" // time, Fri Jan  9 02:54:25 UTC 2009
+    "0000000000000000" // service flags, NODE_NONE
+    "00000000000000000000000000000001" // address, fixed 16 bytes (IPv4 embedded in IPv6)
+    "0000" // port
+
+    //"79627683" // time, Tue Nov 22 11:22:33 UTC 2039
+    "0100000000000000" // service flags, NODE_NETWORK
+    "00000000000000000000000000000001" // address, fixed 16 bytes (IPv6)
+    "00f1" // port
+
+    //"ffffffff" // time, Sun Feb  7 06:28:15 UTC 2106
+    "0004000000000000" // service flags, NODE_NETWORK_LIMITED
+    "00000000000000000000000000000001" // address, fixed 16 bytes (IPv6)
+    "f1f2"; // port
+
+// fixture_addresses should equal to this when serialized in V2 format.
+// When this is unserialized from V2 format it should equal to fixture_addresses.
+static constexpr const char *stream_addrv2_hex =
+    "03" // number of entries
+
+    "61bc6649" // time, Fri Jan  9 02:54:25 UTC 2009
+    "00" // service flags, COMPACTSIZE(NODE_NONE)
+    "02" // network id, IPv6
+    "10" // address length, COMPACTSIZE(16)
+    "00000000000000000000000000000001" // address
+    "0000" // port
+
+    "79627683" // time, Tue Nov 22 11:22:33 UTC 2039
+    "01" // service flags, COMPACTSIZE(NODE_NETWORK)
+    "02" // network id, IPv6
+    "10" // address length, COMPACTSIZE(16)
+    "00000000000000000000000000000001" // address
+    "00f1" // port
+
+    "ffffffff" // time, Sun Feb  7 06:28:15 UTC 2106
+    "fd0004" // service flags, COMPACTSIZE(NODE_NETWORK_LIMITED)
+    "02" // network id, IPv6
+    "10" // address length, COMPACTSIZE(16)
+    "00000000000000000000000000000001" // address
+    "f1f2"; // port
+
+/* clang-format on */
+
+BOOST_AUTO_TEST_CASE(caddress_serialize_v1)
+{
+    CDataStream s(SER_NETWORK, PROTOCOL_VERSION);
+
+    s << fixture_addresses;
+    BOOST_CHECK_EQUAL(HexStr(s), stream_addrv1_hex);
+}
+
+BOOST_AUTO_TEST_CASE(caddress_unserialize_v1)
+{
+    CDataStream s(ParseHex(stream_addrv1_hex), SER_NETWORK, PROTOCOL_VERSION);
+    std::vector<CAddress> addresses_unserialized;
+
+    s >> addresses_unserialized;
+    BOOST_CHECK(fixture_addresses == addresses_unserialized);
+}
+
+BOOST_AUTO_TEST_CASE(caddress_serialize_v2)
+{
+    CDataStream s(SER_NETWORK, PROTOCOL_VERSION | ADDRV2_FORMAT);
+
+    s << fixture_addresses;
+    BOOST_CHECK_EQUAL(HexStr(s), stream_addrv2_hex);
+}
+
+BOOST_AUTO_TEST_CASE(caddress_unserialize_v2)
+{
+    CDataStream s(ParseHex(stream_addrv2_hex), SER_NETWORK, PROTOCOL_VERSION | ADDRV2_FORMAT);
+    std::vector<CAddress> addresses_unserialized;
+
+    s >> addresses_unserialized;
+    BOOST_CHECK(fixture_addresses == addresses_unserialized);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

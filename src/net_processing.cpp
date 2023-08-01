@@ -544,6 +544,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
             xver.set_u64c(XVer::BU_TXN_CONCATENATION, 1);
             if (capdPoolSize.Value() != 0)
                 xver.set_u64c(XVer::BU_CAPD_VERSION, 1); // capd version
+            xver.set_u64c(XVer::BU_ADDRV2_SUPPORT, 1); // signal support for ADDRV2 messages
 
             electrum::set_extversion_flags(xver, chainparams.NetworkIDString());
 
@@ -615,6 +616,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
 
         pfrom->ReadConfigFromExtversion();
 
+        // Send VERACK handshake message
         pfrom->PushMessage(NetMsgType::VERACK);
     }
 
@@ -654,6 +656,8 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
             // if we expected extversion but got a verack it is possible there is a service bit
             // mismatch so we should send a verack response because the peer might not
             // support extversion
+
+            // Send VERACK handshake message
             pfrom->PushMessage(NetMsgType::VERACK);
         }
 
@@ -754,7 +758,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
         // Ignore any other commands early in the handshake
         return false;
     }
-    else if (strCommand == NetMsgType::ADDR)
+    else if (strCommand == NetMsgType::ADDR || strCommand == NetMsgType::ADDRV2)
     {
         std::vector<CAddress> vAddr;
         vRecv >> vAddr;
@@ -762,7 +766,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
         if (vAddr.size() > 1000)
         {
             dosMan.Misbehaving(pfrom, 20);
-            return error("message addr size() = %u", vAddr.size());
+            return error("%s message size() = %u", strCommand, vAddr.size());
         }
 
         // To avoid malicious flooding of our address table, only allow unsolicited ADDR messages to
@@ -2505,6 +2509,17 @@ bool SendMessages(CNode *pto)
             pto->nNextAddrSend = PoissonNextSend(nNow, AVG_ADDRESS_BROADCAST_INTERVAL);
             std::vector<CAddress> vAddr;
             vAddr.reserve(pto->vAddrToSend.size());
+
+            const char *msg_type;
+            if (pto->m_wants_addrv2)
+            {
+                msg_type = NetMsgType::ADDRV2;
+            }
+            else
+            {
+                msg_type = NetMsgType::ADDR;
+            }
+
             for (const CAddress &addr : pto->vAddrToSend)
             {
                 if (!pto->addrKnown.contains(addr.GetKey()))
@@ -2514,13 +2529,15 @@ bool SendMessages(CNode *pto)
                     // receiver rejects addr messages larger than 1000
                     if (vAddr.size() >= 1000)
                     {
-                        pto->PushMessage(NetMsgType::ADDR, vAddr);
+                        pto->PushMessage(msg_type, vAddr);
                         vAddr.clear();
                     }
                 }
             }
             if (!vAddr.empty())
-                pto->PushMessage(NetMsgType::ADDR, vAddr);
+            {
+                pto->PushMessage(msg_type, vAddr);
+            }
             pto->vAddrToSend.clear();
         }
 
