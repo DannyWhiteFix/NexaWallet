@@ -3077,13 +3077,13 @@ bool CWallet::CreateTransaction(vector<CRecipient> &vecSend,
             {
                 // Count up how many recipients can subtract fees from the amount being sent
                 auto nSubtractFees = 0;
-                for (auto i = 0; i < vecSend.size(); i++)
+                for (size_t i = 0; i < vecSend.size(); i++)
                 {
                     if (vecSend[i].fSubtractFeeFromAmount)
                         nSubtractFees++;
                 }
                 // Adjust the send amount for any recipients that we can subtract from
-                for (auto i = 0; i < vecSend.size(); i++)
+                for (size_t i = 0; i < vecSend.size(); i++)
                 {
                     // subtract each portion from the recipient amount
                     if (vecSend[i].fSubtractFeeFromAmount)
