@@ -25,7 +25,9 @@ THE SOFTWARE.
 // *before* randombytes.h is included. Otherwise SYS_getrandom will not be
 // declared.
 #if defined(__linux__)
-# define _GNU_SOURCE
+#ifndef _GNU_SOURCE // prevent redefinition on linux systems
+#define _GNU_SOURCE
+#endif
 #endif /* defined(__linux__) */
 
 #include "randombytes.h"

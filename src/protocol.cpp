@@ -7,6 +7,7 @@
 
 #include "protocol.h"
 
+#include "compat.h"
 #include "util.h"
 #include "utilstrencodings.h"
 
@@ -180,8 +181,12 @@ CMessageHeader::CMessageHeader(const MessageStartChars &pchMessageStartIn,
     unsigned int nMessageSizeIn)
 {
     memcpy(pchMessageStart, pchMessageStartIn, MESSAGE_START_SIZE);
-    memset(pchCommand, 0, sizeof(pchCommand));
-    strncpy(pchCommand, pszCommand, COMMAND_SIZE);
+    const size_t size = strnlen(pszCommand, COMMAND_SIZE);
+    if (size != COMMAND_SIZE)
+    {
+        memset(pchCommand + size, '\0', COMMAND_SIZE - size);
+    }
+    memcpy(pchCommand, pszCommand, size);
     nMessageSize = nMessageSizeIn;
     nChecksum = 0;
 }
