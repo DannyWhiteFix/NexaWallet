@@ -16,6 +16,8 @@
 
 #include <vector>
 
+#include "utilstrencodings.h"
+
 typedef uint256 ChainCode;
 
 /** A hasher class for Bitcoin's 256-bit hash (double SHA-256). */
@@ -32,6 +34,9 @@ public:
         unsigned char buf[CSHA256::OUTPUT_SIZE];
         sha.Finalize(buf);
         sha.Reset().Write(buf, CSHA256::OUTPUT_SIZE).Finalize(hash);
+        // Useful to debug hash mismatches but too time consuming to even have as a conditional log
+        // printf("CHash256 Finalized size %ld hash: %s\n", sha.GetNumBytesHashed(),
+        // HexStr(hash,hash+OUTPUT_SIZE).c_str());
     }
 
     CHash256 &Write(const unsigned char *data, size_t len)

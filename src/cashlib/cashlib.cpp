@@ -1467,6 +1467,25 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Wal
     return makeJByteArray(env, vchSig);
 }
 
+extern "C" JNIEXPORT jboolean JNICALL Java_bitcoinunlimited_libbitcoincash_Wallet_verifyDataSchnorr(JNIEnv *env,
+    jobject ths,
+    jbyteArray jmessage,
+    jbyteArray jpubkey,
+    jbyteArray jsig)
+{
+    ByteArrayAccessor message(env, jmessage);
+    ByteArrayAccessor pubkeybytes(env, jpubkey);
+    ByteArrayAccessor sig(env, jsig);
+    message.vec();
+    std::vector<unsigned char> vchHash(32);
+    CSHA256().Write(message.data, message.size).Finalize(vchHash.data());
+    uint256 messageHash(vchHash);
+    CPubKey pubkey(pubkeybytes.vec());
+    if (sig.size != 64)
+        return false;
+    return pubkey.VerifySchnorr(messageHash, sig.vec());
+}
+
 extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Wallet_verifyMessage(JNIEnv *env,
     jobject ths,
     jbyteArray jmessage,
