@@ -14,13 +14,11 @@
 
 #include <string_view>
 
+// do not remove this clang format toggle, formatting Checksum() breaks compilation
 /* clang-format off */
 namespace torv3
 {
 // https://gitweb.torproject.org/torspec.git/tree/rend-spec-v3.txt#n2135
-
-// use hardcoded values, no constexpr, no inline for now to fix macos compilation
-/*
 inline constexpr size_t CHECKSUM_LEN = 2;
 inline constexpr std::array<uint8_t, 1> VERSION = {{3}};
 inline constexpr size_t TOTAL_LEN = ADDR_TORV3_SIZE + CHECKSUM_LEN + VERSION.size();
@@ -44,32 +42,6 @@ std::array<uint8_t, CHECKSUM_LEN> static Checksum(const uint8_t *addr_pubkey, co
     std::array<uint8_t, CHECKSUM_LEN> ret;
     static_assert(SHA3_256::OUTPUT_SIZE >= ret.size());
     std::copy_n(&checksum_full[0], ret.size(), ret.begin());
-    return ret;
-}
-*/
-static const size_t CHECKSUM_LEN = 2;
-static const uint8_t VERSION[1] = {3};
-static const size_t TOTAL_LEN = ADDR_TORV3_SIZE + CHECKSUM_LEN + 1;
-static const size_t onion_checksum_size = 15;
-static uint8_t* Checksum(const uint8_t *addr_pubkey, const size_t &addr_pubkey_size)
-{
-    using namespace std::string_view_literals;
-    // TORv3 CHECKSUM = H(".onion checksum" | PUBKEY | VERSION)[:2]
-    SHA3_256 hasher;
-
-    auto strChecksum = ".onion checksum"sv;
-    const uint8_t *onion_checksum = reinterpret_cast<const uint8_t *>(strChecksum.data());
-
-    hasher.Write(onion_checksum, onion_checksum_size);
-    hasher.Write(addr_pubkey, addr_pubkey_size);
-    hasher.Write(VERSION, 1);
-
-    uint8_t checksum_full[SHA3_256::OUTPUT_SIZE];
-    hasher.Finalize(checksum_full);
-
-    uint8_t* ret = (uint8_t*)std::malloc(sizeof(uint8_t) * CHECKSUM_LEN);
-    // static_assert(SHA3_256::OUTPUT_SIZE >= ret.size());
-    std::copy_n(&checksum_full[0], CHECKSUM_LEN, ret);
     return ret;
 }
 }; // namespace torv3
@@ -163,7 +135,7 @@ CNetAddr::CNetAddr(const struct in_addr &ipv4Addr)
 {
     Init();
     static_assert(sizeof(ipv4Addr) == ADDR_IPV4_SIZE, "struct in_addr must be exactly ADDR_IPV4_SIZE bytes (4)");
-    std::memcpy(ip, (const uint8_t *)&ipv4Addr, ADDR_IPV4_SIZE);
+    ip.assign((const uint8_t *)&ipv4Addr, (const uint8_t *)&ipv4Addr + ADDR_IPV4_SIZE);
     _net_type = NET_IPV4;
 }
 
@@ -181,9 +153,7 @@ CNetAddr::CNetAddr(const char *pszIp)
     std::vector<CNetAddr> vIP;
     if (LookupHost(pszIp, vIP, 1, false))
     {
-        std::memcpy(ip, vIP[0].ip, LARGEST_ADDR_SIZE);
-        this->_net_type = vIP[0]._net_type;
-        this->scopeId = vIP[0].scopeId;
+        SetIP(vIP[0]);
     }
 }
 
@@ -193,16 +163,14 @@ CNetAddr::CNetAddr(const std::string &strIp)
     std::vector<CNetAddr> vIP;
     if (LookupHost(strIp.c_str(), vIP, 1, false))
     {
-        std::memcpy(ip, vIP[0].ip, LARGEST_ADDR_SIZE);
-        this->_net_type = vIP[0]._net_type;
-        this->scopeId = vIP[0].scopeId;
+        SetIP(vIP[0]);
     }
 }
 
 void CNetAddr::Init()
 {
     // set ip to all 0s
-    std::memset(ip, 0, LARGEST_ADDR_SIZE);
+    ip.assign(ADDR_IPV6_SIZE, 0);
     // TODO : change this to NET_UNROUTABLE, requires test edits
     _net_type = NET_IPV6;
     scopeId = 0;
@@ -210,7 +178,7 @@ void CNetAddr::Init()
 
 void CNetAddr::SetIP(const CNetAddr &ipIn)
 {
-    memcpy(ip, ipIn.ip, LARGEST_ADDR_SIZE);
+    ip.assign(ipIn.ip.begin(), ipIn.ip.end());
     _net_type = ipIn._net_type;
     scopeId = ipIn.scopeId;
 }
@@ -219,26 +187,25 @@ void CNetAddr::SetLegacy(const uint8_t *ip_in)
 {
     // on the network v1 format has addresses in ipv6 but in memory storage we no longer do this
     // for simplicity with v2
-    std::memset(ip, 0, LARGEST_ADDR_SIZE);
-    if (std::memcmp(ip_in, IPV4_IN_IPV6_PREFIX, sizeof(IPV4_IN_IPV6_PREFIX)) == 0)
+    if (std::memcmp(ip_in, IPV4_IN_IPV6_PREFIX.data(), IPV4_IN_IPV6_PREFIX.size()) == 0)
     {
         _net_type = NET_IPV4;
-        std::memcpy(ip, ip_in + sizeof(IPV4_IN_IPV6_PREFIX), ADDR_IPV4_SIZE);
+        ip.assign(ip_in + IPV4_IN_IPV6_PREFIX.size(), ip_in + IPV4_IN_IPV6_PREFIX.size() + ADDR_IPV4_SIZE);
     }
-    else if (std::memcmp(ip_in, TORV2_IN_IPV6_PREFIX, sizeof(TORV2_IN_IPV6_PREFIX)) == 0)
+    else if (std::memcmp(ip_in, TORV2_IN_IPV6_PREFIX.data(), TORV2_IN_IPV6_PREFIX.size()) == 0)
     {
         _net_type = NET_TOR2;
-        std::memcpy(ip, ip_in + sizeof(TORV2_IN_IPV6_PREFIX), ADDR_TORV2_SIZE);
+        ip.assign(ip_in + TORV2_IN_IPV6_PREFIX.size(), ip_in + TORV2_IN_IPV6_PREFIX.size() + ADDR_TORV2_SIZE);
     }
-    else if (std::memcmp(ip_in, INTERNAL_IN_IPV6_PREFIX, sizeof(INTERNAL_IN_IPV6_PREFIX)) == 0)
+    else if (std::memcmp(ip_in, INTERNAL_IN_IPV6_PREFIX.data(), INTERNAL_IN_IPV6_PREFIX.size()) == 0)
     {
         _net_type = NET_INTERNAL;
-        std::memcpy(ip, ip_in + sizeof(INTERNAL_IN_IPV6_PREFIX), ADDR_INTERNAL_SIZE);
+        ip.assign(ip_in + INTERNAL_IN_IPV6_PREFIX.size(), ip_in + INTERNAL_IN_IPV6_PREFIX.size() + ADDR_INTERNAL_SIZE);
     }
     else // IPV6
     {
         _net_type = NET_IPV6;
-        std::memcpy(ip, ip_in, V1_SERIALIZATION_SIZE);
+        ip.assign(ip_in, ip_in + V1_SERIALIZATION_SIZE);
     }
 }
 
@@ -259,16 +226,13 @@ bool CNetAddr::SetSpecial(const std::string &strName)
         }
         if (vchAddr.size() == ADDR_TORV2_SIZE) // torv2
         {
-            if (vchAddr.size() != 16 - sizeof(TORV2_IN_IPV6_PREFIX))
+            if (vchAddr.size() != 16 - TORV2_IN_IPV6_PREFIX.size())
             {
                 return false;
             }
-            std::memset(ip, 0, LARGEST_ADDR_SIZE);
             static_assert(ADDR_TORV2_SIZE <= LARGEST_ADDR_SIZE);
-            for (size_t i = 0; i < vchAddr.size(); ++i)
-            {
-                ip[i] = vchAddr[i];
-            }
+            ip.clear();
+            ip.assign(vchAddr.begin(), vchAddr.end());
             _net_type = NET_TOR2;
             return true;
         }
@@ -279,22 +243,19 @@ bool CNetAddr::SetSpecial(const std::string &strName)
             // input_version has length torv3::VERSION.size() (1)
             uint8_t *input_version = vchAddr.data() + ADDR_TORV3_SIZE + torv3::CHECKSUM_LEN;
             // validate version
-            // macos fix
-            // if (std::memcmp(input_version, torv3::VERSION.data(), torv3::VERSION.size()) != 0)
-            if (std::memcmp(input_version, &torv3::VERSION, 1) != 0)
+            if (std::memcmp(input_version, torv3::VERSION.data(), torv3::VERSION.size()) != 0)
             {
                 return false;
             }
-            uint8_t *calculated_checksum = torv3::Checksum(vchAddr.data(), ADDR_TORV3_SIZE);
+            auto calculated_checksum = torv3::Checksum(vchAddr.data(), ADDR_TORV3_SIZE);
             // validate checksum
-            if (std::memcmp(input_checksum, calculated_checksum, torv3::CHECKSUM_LEN) != 0)
+            if (std::memcmp(input_checksum, calculated_checksum.data(), torv3::CHECKSUM_LEN) != 0)
             {
-                std::free(calculated_checksum);
                 return false;
             }
-            std::free(calculated_checksum);
-            std::memset(ip, 0, LARGEST_ADDR_SIZE);
-            std::memcpy(ip, vchAddr.data(), ADDR_TORV3_SIZE);
+            ip.clear();
+            // when we set the ip, chop off the checksum and version bytes
+            ip.assign(vchAddr.begin(), vchAddr.begin() + ADDR_TORV3_SIZE);
             _net_type = NET_TOR3;
             return true;
         }
@@ -313,7 +274,7 @@ bool CNetAddr::SetInternal(const std::string &name)
     uint8_t hash[32] = {};
     CSHA256().Write(reinterpret_cast<const uint8_t *>(name.data()), name.size()).Finalize(hash);
     static_assert(ADDR_INTERNAL_SIZE <= LARGEST_ADDR_SIZE);
-    std::memcpy(ip, hash, ADDR_INTERNAL_SIZE);
+    ip.assign(hash, hash + ADDR_INTERNAL_SIZE);
     return true;
 }
 
@@ -370,7 +331,7 @@ bool CNetAddr::IsRFC3964() const { return IsIPv6() && (ip[0] == 0x20 && ip[1] ==
 bool CNetAddr::IsRFC6052() const
 {
     static const unsigned char pchRFC6052[] = {0, 0x64, 0xFF, 0x9B, 0, 0, 0, 0, 0, 0, 0, 0};
-    return IsIPv6() && (std::memcmp(ip, pchRFC6052, sizeof(pchRFC6052)) == 0);
+    return IsIPv6() && (std::memcmp(ip.data(), pchRFC6052, sizeof(pchRFC6052)) == 0);
 }
 
 bool CNetAddr::IsRFC4380() const { return IsIPv6() && (ip[0] == 0x20 && ip[1] == 0x01 && ip[2] == 0 && ip[3] == 0); }
@@ -378,14 +339,14 @@ bool CNetAddr::IsRFC4380() const { return IsIPv6() && (ip[0] == 0x20 && ip[1] ==
 bool CNetAddr::IsRFC4862() const
 {
     static const unsigned char pchRFC4862[] = {0xFE, 0x80, 0, 0, 0, 0, 0, 0};
-    return IsIPv6() && (memcmp(ip, pchRFC4862, sizeof(pchRFC4862)) == 0);
+    return IsIPv6() && (memcmp(ip.data(), pchRFC4862, sizeof(pchRFC4862)) == 0);
 }
 
 bool CNetAddr::IsRFC4193() const { return IsIPv6() && ((ip[0] & 0xFE) == 0xFC); }
 bool CNetAddr::IsRFC6145() const
 {
     static const unsigned char pchRFC6145[] = {0, 0, 0, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0, 0};
-    return IsIPv6() && (memcmp(ip, pchRFC6145, sizeof(pchRFC6145)) == 0);
+    return IsIPv6() && (memcmp(ip.data(), pchRFC6145, sizeof(pchRFC6145)) == 0);
 }
 
 bool CNetAddr::IsRFC4843() const
@@ -424,7 +385,7 @@ bool CNetAddr::IsValid() const
 {
     // unspecified IPv6 address (::/128)
     unsigned char _ipNone[16] = {};
-    if (IsIPv6() && memcmp(ip, _ipNone, 16) == 0)
+    if (IsIPv6() && memcmp(ip.data(), _ipNone, 16) == 0)
     {
         return false;
     }
@@ -439,7 +400,7 @@ bool CNetAddr::IsValid() const
     }
     if (IsIPv4())
     {
-        const uint32_t addr = ReadBE32(ip);
+        const uint32_t addr = ReadBE32(ip.data());
         if (addr == INADDR_ANY || addr == INADDR_NONE)
         {
             return false;
@@ -510,42 +471,40 @@ std::string CNetAddr::ToStringIP() const
     }
     if (IsTor2())
     {
-        return EncodeBase32(ip, ADDR_TORV2_SIZE) + ".onion";
+        return EncodeBase32(ip.data(), ADDR_TORV2_SIZE) + ".onion";
     }
     if (IsTor3())
     {
-        uint8_t *checksum = torv3::Checksum(ip, ADDR_TORV3_SIZE);
+        auto checksum = torv3::Checksum(ip.data(), ADDR_TORV3_SIZE);
         // TORv3 onion_address = base32(PUBKEY | CHECKSUM | VERSION) + ".onion"
-        prevector<torv3::TOTAL_LEN, uint8_t> address{ip, ip + ADDR_TORV3_SIZE};
-        address.insert(address.end(), checksum, checksum + torv3::CHECKSUM_LEN);
-        // macos fix
-        // address.insert(address.end(), torv3::VERSION.begin(), torv3::VERSION.end());
-        address.push_back(torv3::VERSION[0]);
-        std::free(checksum);
+        std::array<uint8_t, torv3::TOTAL_LEN> address;
+        std::memcpy(address.data(), ip.data(), ADDR_TORV3_SIZE);
+        std::memcpy(address.data() + ADDR_TORV3_SIZE, checksum.data(), checksum.size());
+        std::memcpy(address.data() + ADDR_TORV3_SIZE + checksum.size(), torv3::VERSION.data(), torv3::VERSION.size());
         return EncodeBase32(address.data(), torv3::TOTAL_LEN) + ".onion";
     }
     if (IsInternal())
     {
-        return EncodeBase32(ip, ADDR_INTERNAL_SIZE) + ".internal";
+        return EncodeBase32(ip.data(), ADDR_INTERNAL_SIZE) + ".internal";
     }
     if (IsI2P())
     {
-        return EncodeBase32(ip, ADDR_I2P_SIZE, false) + ".b32.i2p";
+        return EncodeBase32(ip.data(), ADDR_I2P_SIZE, false) + ".b32.i2p";
     }
     return {};
 }
 
 std::string CNetAddr::ToString() const { return ToStringIP(); }
-bool operator==(const CNetAddr &a, const CNetAddr &b) { return (memcmp(a.ip, b.ip, LARGEST_ADDR_SIZE) == 0); }
-bool operator!=(const CNetAddr &a, const CNetAddr &b) { return (memcmp(a.ip, b.ip, LARGEST_ADDR_SIZE) != 0); }
-bool operator<(const CNetAddr &a, const CNetAddr &b) { return (memcmp(a.ip, b.ip, LARGEST_ADDR_SIZE) < 0); }
+bool operator==(const CNetAddr &a, const CNetAddr &b) { return a.ip == b.ip; }
+bool operator!=(const CNetAddr &a, const CNetAddr &b) { return a.ip != b.ip; }
+bool operator<(const CNetAddr &a, const CNetAddr &b) { return a.ip < b.ip; }
 bool CNetAddr::GetInAddr(struct in_addr *pipv4Addr) const
 {
     if (!IsIPv4())
     {
         return false;
     }
-    memcpy(pipv4Addr, ip, 4);
+    std::memcpy(pipv4Addr, ip.data(), ADDR_IPV4_SIZE);
     return true;
 }
 
@@ -555,7 +514,7 @@ bool CNetAddr::GetIn6Addr(struct in6_addr *pipv6Addr) const
     {
         return false;
     }
-    memcpy(pipv6Addr, ip, ADDR_IPV6_SIZE);
+    std::memcpy(pipv6Addr, ip.data(), ADDR_IPV6_SIZE);
     return true;
 }
 
@@ -658,7 +617,7 @@ uint64_t CNetAddr::GetHash() const
 {
     uint256 hash = Hash(&ip[0], &ip[16]);
     uint64_t nRet;
-    memcpy(&nRet, &hash, sizeof(nRet));
+    std::memcpy(&nRet, &hash, sizeof(nRet));
     return nRet;
 }
 
@@ -869,8 +828,8 @@ std::vector<unsigned char> CService::GetKey() const
         vKey.resize(18);
         if (IsIPv4())
         {
-            std::memcpy(&vKey[0], IPV4_IN_IPV6_PREFIX, sizeof(IPV4_IN_IPV6_PREFIX));
-            std::memcpy(&vKey[0] + sizeof(IPV4_IN_IPV6_PREFIX), ip, ADDR_IPV4_SIZE);
+            std::memcpy(&vKey[0], IPV4_IN_IPV6_PREFIX.data(), IPV4_IN_IPV6_PREFIX.size());
+            std::memcpy(&vKey[0] + IPV4_IN_IPV6_PREFIX.size(), ip.data(), ADDR_IPV4_SIZE);
         }
         else if (IsIPv6())
         {
@@ -878,20 +837,20 @@ std::vector<unsigned char> CService::GetKey() const
         }
         else if (IsInternal())
         {
-            std::memcpy(&vKey[0], INTERNAL_IN_IPV6_PREFIX, sizeof(INTERNAL_IN_IPV6_PREFIX));
-            std::memcpy(&vKey[0] + sizeof(INTERNAL_IN_IPV6_PREFIX), ip, ADDR_INTERNAL_SIZE);
+            std::memcpy(&vKey[0], INTERNAL_IN_IPV6_PREFIX.data(), INTERNAL_IN_IPV6_PREFIX.size());
+            std::memcpy(&vKey[0] + INTERNAL_IN_IPV6_PREFIX.size(), ip.data(), ADDR_INTERNAL_SIZE);
         }
         else if (IsTor2())
         {
-            std::memcpy(&vKey[0], TORV2_IN_IPV6_PREFIX, sizeof(TORV2_IN_IPV6_PREFIX));
-            std::memcpy(&vKey[0] + sizeof(TORV2_IN_IPV6_PREFIX), ip, ADDR_TORV2_SIZE);
+            std::memcpy(&vKey[0], TORV2_IN_IPV6_PREFIX.data(), TORV2_IN_IPV6_PREFIX.size());
+            std::memcpy(&vKey[0] + TORV2_IN_IPV6_PREFIX.size(), ip.data(), ADDR_TORV2_SIZE);
         }
         vKey[16] = port / 0x100;
         vKey[17] = port & 0x0FF;
     }
     else
     {
-        std::memcpy(&vKey[0], ip, GetNetAddrSize(*((CNetAddr *)this)));
+        std::memcpy(&vKey[0], ip.data(), GetNetAddrSize(*((CNetAddr *)this)));
     }
     return vKey;
 }
