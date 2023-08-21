@@ -8,6 +8,7 @@
 #define NEXA_PUBKEY_H
 
 #include "hashwrapper.h"
+#include "keyid.h"
 #include "serialize.h"
 #include "uint256.h"
 
@@ -17,14 +18,6 @@
 enum
 {
     BIP32_EXTKEY_SIZE = 74
-};
-
-/** A reference to a CKey: the Hash160 of its serialized public key */
-class CKeyID : public uint160
-{
-public:
-    CKeyID() : uint160() {}
-    CKeyID(const uint160 &in) : uint160(in) {}
 };
 
 typedef uint256 ChainCode;

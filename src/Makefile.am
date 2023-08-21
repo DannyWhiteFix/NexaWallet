@@ -154,6 +154,7 @@ BITCOIN_CORE_H = \
   core_io.h \
   core_memusage.h \
   cuckoocache.h \
+  datastream.h \
   DoubleSpendProof.h \
   DoubleSpendProofStorage.h \
   deadlock-detection/locklocation.h \
@@ -414,6 +415,7 @@ libnexa_a_SOURCES = \
   hashwrapper.h \
   key.cpp \
   key.h \
+  keyid.h \
   keystore.cpp \
   keystore.h \
   coins.h \
@@ -450,6 +452,7 @@ libnexa_a_SOURCES = \
   script/script.h \
   script/script_error.h \
   script/script_error.cpp \
+  script/script_flags.h \
   script/scriptattributes.cpp \
   script/scripttemplate.cpp \
   script/sign.cpp \
@@ -475,6 +478,7 @@ libnexa_a_SOURCES = \
   bloom.h \
   utilstrencodings.cpp \
   utilstrencodings.h \
+  datastream.h \
   streams.h
 endif
 
@@ -488,6 +492,7 @@ crypto_libnexa_crypto_a_SOURCES = \
   crypto/chacha20.h \
   crypto/chacha20.cpp \
   crypto/common.h \
+  crypto/hash160.h \
   crypto/hmac_sha256.cpp \
   crypto/hmac_sha256.h \
   crypto/hmac_sha512.cpp \
@@ -576,6 +581,7 @@ libnexa_common_a_SOURCES = \
   hashwrapper.h \
   logging.h \
   key.cpp \
+  keyid.h \
   keystore.cpp \
   netaddress.cpp \
   netbase.cpp \
@@ -600,6 +606,7 @@ libnexa_common_a_SOURCES = \
   script/pushtxstate.h \
   script/interpreter.cpp \
   script/interpreter.h \
+  script/script_flags.h \
   script/stackitem.cpp \
   script/stackitem.h \
   script/sigcommon.cpp \
