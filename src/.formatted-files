@@ -74,6 +74,7 @@ core_memusage.h
 core_read.cpp
 core_write.cpp
 cuckoocache.h
+datastream.h
 dbwrapper.cpp
 dbwrapper.h
 deadlock-detection/locklocation.cpp
@@ -117,6 +118,7 @@ init.cpp
 init.h
 key.cpp
 key.h
+keyid.h
 keystore.cpp
 keystore.h
 leakybucket.h
@@ -445,6 +447,7 @@ script/script.cpp
 script/scriptattributes.cpp
 script/script_error.cpp
 script/script_error.h
+script/script_flags.h
 script/script.h
 script/sigcache.cpp
 script/sigcache.h
