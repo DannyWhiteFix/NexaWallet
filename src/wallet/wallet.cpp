@@ -543,6 +543,10 @@ bool CWallet::Verify()
 
     if (GetBoolArg("-salvagewallet", false))
     {
+        if (GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET))
+            return InitError(
+                _("You can not run \"-salvagewallet\" as an HD wallet.\n\nPlease relaunch Nexa with \"-usehd=0\"."));
+
         // Recover readable keypairs:
         if (!CWalletDB::Recover(bitdb, walletFile, true))
             return false;
