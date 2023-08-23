@@ -885,5 +885,6 @@ UniValue dumpwallet(const UniValue &params, bool fHelp)
     file << "\n";
     file << "# End of dump\n";
     file.close();
-    return NullUniValue;
+
+    return "wallet was dumped successfully to: " + filepath.string();
 }

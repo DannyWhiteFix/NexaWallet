@@ -113,7 +113,9 @@ class WalletDumpTest(BitcoinTestFramework):
         except JSONRPCException as e:
             assert "Keypool is already full: 90 keys" in str(e)
 
-        self.nodes[0].dumpwallet(tmpdir + "/node0/wallet.encrypted.dump")
+        
+        ret = self.nodes[0].dumpwallet(tmpdir + "/node0/wallet.encrypted.dump")
+        assert_equal("wallet was dumped successfully to: " + tmpdir + "/node0/wallet.encrypted.dump", str(ret))
 
         found_addr, found_addr_chg, found_addr_rsv, hd_master_addr_enc = read_dump(tmpdir + "/node0/wallet.encrypted.dump", addrs, hd_master_addr_unenc)
         assert_equal(found_addr, test_addr_count)
