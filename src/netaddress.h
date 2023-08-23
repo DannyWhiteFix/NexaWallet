@@ -41,7 +41,6 @@ enum Network
     NET_UNROUTABLE = 0,
     NET_IPV4,
     NET_IPV6,
-    NET_TOR2,
     NET_TOR3,
     NET_I2P,
     NET_CJDNS,
@@ -57,9 +56,6 @@ inline constexpr size_t ADDR_IPV4_SIZE = 4;
 
 /// Size of IPv6 address (in bytes).
 inline constexpr size_t ADDR_IPV6_SIZE = 16;
-
-/// Size of TORv2 address (in bytes).
-inline constexpr size_t ADDR_TORV2_SIZE = 10;
 
 /// Size of TORv3 address (in bytes). This is the length of just the address
 /// as used in BIP155, without the checksum and the version byte.
@@ -80,13 +76,6 @@ inline constexpr size_t LARGEST_ADDR_SIZE = 32;
 /// Prefix of an IPv6 address when it contains an embedded IPv4 address.
 /// Used when (un)serializing addresses in ADDRv1 format (pre-BIP155).
 inline constexpr std::array<uint8_t, 12> IPV4_IN_IPV6_PREFIX = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff};
-
-/// Prefix of an IPv6 address when it contains an embedded TORv2 address.
-/// Used when (un)serializing addresses in ADDRv1 format (pre-BIP155).
-/// Such dummy IPv6 addresses are guaranteed to not be publicly routable as they
-/// fall under RFC4193's fc00::/7 subnet allocated to unique-local addresses.
-// 0xFD + sha256("bitcoin")[0:5].
-inline constexpr std::array<uint8_t, 6> TORV2_IN_IPV6_PREFIX = {0xFD, 0x87, 0xD8, 0x7E, 0xEB, 0x43};
 
 /// Prefix of an IPv6 address when it contains an embedded "internal" address.
 /// Used when (un)serializing addresses in ADDRv1 format (pre-BIP155).
@@ -162,7 +151,6 @@ public:
     bool IsRFC4862() const; // IPv6 autoconfig (FE80::/64)
     bool IsRFC6052() const; // IPv6 well-known prefix (64:FF9B::/96)
     bool IsRFC6145() const; // IPv6 IPv4-translated address (::FFFF:0:0:0/96)
-    bool IsTor2() const;
     bool IsTor3() const;
     bool IsI2P() const;
     bool IsCJDNS() const;
@@ -255,12 +243,11 @@ public:
                         ip.erase(ip.begin(), ip.begin() + INTERNAL_IN_IPV6_PREFIX.size());
                         return;
                     }
-                    if (std::memcmp(ip.data(), IPV4_IN_IPV6_PREFIX.data(), IPV4_IN_IPV6_PREFIX.size()) != 0 &&
-                        std::memcmp(ip.data(), TORV2_IN_IPV6_PREFIX.data(), TORV2_IN_IPV6_PREFIX.size()) != 0)
+                    if (std::memcmp(ip.data(), IPV4_IN_IPV6_PREFIX.data(), IPV4_IN_IPV6_PREFIX.size()) != 0)
                     {
                         return;
                     }
-                    // IPv4 and TORv2 are not supposed to be embedded in IPv6 (like in V1
+                    // IPv4 is not supposed to be embedded in IPv6 (like in V1
                     // encoding). Unserialize as !IsValid(), thus ignoring them.
                 }
                 else
@@ -316,12 +303,6 @@ public:
                 {
                     std::memcpy(data, IPV4_IN_IPV6_PREFIX.data(), IPV4_IN_IPV6_PREFIX.size());
                     std::memcpy(data + IPV4_IN_IPV6_PREFIX.size(), ip.data(), ADDR_IPV4_SIZE);
-                    break;
-                }
-                case NET_TOR2:
-                {
-                    std::memcpy(data, TORV2_IN_IPV6_PREFIX.data(), TORV2_IN_IPV6_PREFIX.size());
-                    std::memcpy(data + TORV2_IN_IPV6_PREFIX.size(), ip.data(), ADDR_TORV2_SIZE);
                     break;
                 }
                 case NET_IPV6:

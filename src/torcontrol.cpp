@@ -501,14 +501,8 @@ void TorController::auth_cb(TorControlConnection &_conn, const TorControlReply &
         if (GetArg("-onion", "") == "")
         {
             proxyType addrOnion = proxyType(CService("127.0.0.1", 9050), true);
-            if (addrOnion.proxy.IsTor2())
-            {
-                SetProxy(NET_TOR2, addrOnion);
-                SetLimited(NET_TOR2, false);
-            }
             if (addrOnion.proxy.IsTor3())
             {
-                SetProxy(NET_TOR2, addrOnion);
                 SetLimited(NET_TOR3, false);
             }
         }
