@@ -296,23 +296,11 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     BOOST_CHECK_EQUAL(vAddr[0].ToString(), "1122:3344:5566:7788:9900:aabb:ccdd:eeff");
     vAddr.clear();
 
-    // TORv2
-
-    CNetAddr addr_tor2;
-    BOOST_REQUIRE(addr_tor2.SetSpecial("6hzph5hv6337r6p2.onion"));
-    BOOST_REQUIRE(addr_tor2.IsValid());
-    BOOST_REQUIRE(addr_tor2.IsTor2());
-    BOOST_REQUIRE(!addr_tor2.IsTor3());
-
-    BOOST_CHECK(addr_tor2.IsAddrV1Compatible());
-    BOOST_CHECK_EQUAL(addr_tor2.ToString(), "6hzph5hv6337r6p2.onion");
-
     // TORv3
     CNetAddr addr_tor3;
     const char *torv3_addr = "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion";
     BOOST_REQUIRE(addr_tor3.SetSpecial(torv3_addr));
     BOOST_REQUIRE(addr_tor3.IsValid());
-    BOOST_REQUIRE(!addr_tor3.IsTor2());
     BOOST_REQUIRE(addr_tor3.IsTor3());
 
     BOOST_CHECK(!addr_tor3.IsAddrV1Compatible());
@@ -369,10 +357,7 @@ BOOST_AUTO_TEST_CASE(cnetaddr_serialize_v1)
     BOOST_CHECK_EQUAL(HexStr(s), "1a1b2a2b3a3b4a4b5a5b6a6b7a7b8a8b");
     s.clear();
 
-    BOOST_REQUIRE(addr.SetSpecial("6hzph5hv6337r6p2.onion"));
-    s << addr;
-    BOOST_CHECK_EQUAL(HexStr(s), "fd87d87eeb43f1f2f3f4f5f6f7f8f9fa");
-    s.clear();
+    BOOST_CHECK_EQUAL(addr.SetSpecial("6hzph5hv6337r6p2.onion"), false);
 
     BOOST_REQUIRE(addr.SetSpecial("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion"));
     s << addr;
@@ -413,10 +398,7 @@ BOOST_AUTO_TEST_CASE(cnetaddr_serialize_v2)
     BOOST_CHECK_EQUAL(HexStr(s), "02101a1b2a2b3a3b4a4b5a5b6a6b7a7b8a8b");
     s.clear();
 
-    BOOST_REQUIRE(addr.SetSpecial("6hzph5hv6337r6p2.onion"));
-    s << addr;
-    BOOST_CHECK_EQUAL(HexStr(s), "030af1f2f3f4f5f6f7f8f9fa");
-    s.clear();
+    BOOST_CHECK_EQUAL(addr.SetSpecial("6hzph5hv6337r6p2.onion"), false);
 
     BOOST_REQUIRE(addr.SetSpecial("kpgvmscirrdqpekbqjsvw5teanhatztpp2gl6eee4zkowvwfxwenqaid.onion"));
     s << addr;
@@ -520,38 +502,6 @@ BOOST_AUTO_TEST_CASE(cnetaddr_unserialize_v2)
     BOOST_CHECK(!addr.IsValid());
     BOOST_REQUIRE(s.empty());
 
-    // Invalid IPv6, contains embedded TORv2.
-    vHex = ParseHex("02" // network type (IPv6)
-                    "10" // address length
-                    "fd87d87eeb430102030405060708090a"); // address
-    s << CFlatData(vHex);
-    s >> addr;
-    BOOST_CHECK(!addr.IsValid());
-    BOOST_REQUIRE(s.empty());
-
-    // Valid TORv2.
-    vHex = ParseHex("03" // network type (TORv2)
-                    "0a" // address length
-                    "f1f2f3f4f5f6f7f8f9fa"); // address
-    s << CFlatData(vHex);
-    s >> addr;
-    BOOST_CHECK(addr.IsValid());
-    BOOST_CHECK(addr.IsTor2());
-    BOOST_CHECK(!addr.IsTor3());
-    BOOST_CHECK(addr.IsAddrV1Compatible());
-    BOOST_CHECK_EQUAL(addr.ToString(), "6hzph5hv6337r6p2.onion");
-    BOOST_REQUIRE(s.empty());
-
-    // Invalid TORv2, with bogus length.
-    vHex = ParseHex("03" // network type (TORv2)
-                    "07" // address length
-                    "00"); // address
-    s << CFlatData(vHex);
-    BOOST_CHECK_EXCEPTION(
-        s >> addr, std::ios_base::failure, HasReason("BIP155 TORv2 address with length 7 (should be 10)"));
-    BOOST_REQUIRE(!s.empty()); // The stream is not consumed on invalid input.
-    s.clear();
-
     // Valid TORv3.
     vHex = ParseHex("04" // network type (TORv3)
                     "20" // address length
@@ -560,7 +510,6 @@ BOOST_AUTO_TEST_CASE(cnetaddr_unserialize_v2)
     s << CFlatData(vHex);
     s >> addr;
     BOOST_CHECK(addr.IsValid());
-    BOOST_CHECK(!addr.IsTor2());
     BOOST_CHECK(addr.IsTor3());
     BOOST_CHECK(!addr.IsAddrV1Compatible());
     BOOST_CHECK_EQUAL(addr.ToString(), "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion");

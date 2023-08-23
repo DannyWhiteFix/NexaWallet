@@ -55,8 +55,6 @@ CNetAddr::BIP155Network CNetAddr::GetBIP155Network() const
         return BIP155Network::IPV4;
     case NET_IPV6:
         return BIP155Network::IPV6;
-    case NET_TOR2:
-        return BIP155Network::TORV2;
     case NET_TOR3:
         return BIP155Network::TORV3;
     case NET_I2P:
@@ -91,14 +89,6 @@ bool CNetAddr::SetNetFromBIP155Network(uint8_t possible_bip155_net, uint64_t add
         }
         throw std::ios_base::failure(
             strprintf("BIP155 IPv6 address with length %u (should be %u)", address_size, ADDR_IPV6_SIZE));
-    case BIP155Network::TORV2:
-        if (address_size == ADDR_TORV2_SIZE)
-        {
-            _net_type = NET_TOR2;
-            return true;
-        }
-        throw std::ios_base::failure(
-            strprintf("BIP155 TORv2 address with length %u (should be %u)", address_size, ADDR_TORV2_SIZE));
     case BIP155Network::TORV3:
         if (address_size == ADDR_TORV3_SIZE)
         {
@@ -192,11 +182,6 @@ void CNetAddr::SetLegacy(const uint8_t *ip_in)
         _net_type = NET_IPV4;
         ip.assign(ip_in + IPV4_IN_IPV6_PREFIX.size(), ip_in + IPV4_IN_IPV6_PREFIX.size() + ADDR_IPV4_SIZE);
     }
-    else if (std::memcmp(ip_in, TORV2_IN_IPV6_PREFIX.data(), TORV2_IN_IPV6_PREFIX.size()) == 0)
-    {
-        _net_type = NET_TOR2;
-        ip.assign(ip_in + TORV2_IN_IPV6_PREFIX.size(), ip_in + TORV2_IN_IPV6_PREFIX.size() + ADDR_TORV2_SIZE);
-    }
     else if (std::memcmp(ip_in, INTERNAL_IN_IPV6_PREFIX.data(), INTERNAL_IN_IPV6_PREFIX.size()) == 0)
     {
         _net_type = NET_INTERNAL;
@@ -224,19 +209,7 @@ bool CNetAddr::SetSpecial(const std::string &strName)
         {
             return false;
         }
-        if (vchAddr.size() == ADDR_TORV2_SIZE) // torv2
-        {
-            if (vchAddr.size() != 16 - TORV2_IN_IPV6_PREFIX.size())
-            {
-                return false;
-            }
-            static_assert(ADDR_TORV2_SIZE <= LARGEST_ADDR_SIZE);
-            ip.clear();
-            ip.assign(vchAddr.begin(), vchAddr.end());
-            _net_type = NET_TOR2;
-            return true;
-        }
-        else if (vchAddr.size() == torv3::TOTAL_LEN) // torv3
+        if (vchAddr.size() == torv3::TOTAL_LEN) // torv3
         {
             // input_checksum has length torv3::CHECKSUM_LEN (2)
             uint8_t *input_checksum = vchAddr.data() + ADDR_TORV3_SIZE;
@@ -286,8 +259,6 @@ size_t CNetAddr::GetAddrSize()
         return ADDR_IPV4_SIZE;
     case NET_IPV6:
         return ADDR_IPV6_SIZE;
-    case NET_TOR2:
-        return ADDR_TORV2_SIZE;
     case NET_TOR3:
         return ADDR_TORV3_SIZE;
     case NET_I2P:
@@ -354,12 +325,6 @@ bool CNetAddr::IsRFC4843() const
     return IsIPv6() && (ip[0] == 0x20 && ip[1] == 0x01 && ip[2] == 0x00 && (ip[3] & 0xF0) == 0x10);
 }
 
-bool CNetAddr::IsTor2() const
-{
-    // return (memcmp(&ip[0], TORV2_IN_IPV6_PREFIX, sizeof(TORV2_IN_IPV6_PREFIX)) == 0);
-    return _net_type == NET_TOR2;
-}
-
 bool CNetAddr::IsTor3() const { return _net_type == NET_TOR3; }
 
 bool CNetAddr::IsI2P() const { return _net_type == NET_I2P; }
@@ -412,7 +377,7 @@ bool CNetAddr::IsValid() const
 bool CNetAddr::IsRoutable() const
 {
     return IsValid() && !(IsRFC1918() || IsRFC2544() || IsRFC3927() || IsRFC4862() || IsRFC6598() || IsRFC5737() ||
-                            (IsRFC4193() && (!IsTor2() && !IsTor3())) || IsRFC4843() || IsLocal() || IsInternal());
+                            (IsRFC4193() && !IsTor3()) || IsRFC4843() || IsLocal() || IsInternal());
 }
 
 bool CNetAddr::IsInternal() const { return _net_type == NET_INTERNAL; }
@@ -420,10 +385,6 @@ bool CNetAddr::IsInternal() const { return _net_type == NET_INTERNAL; }
 bool CNetAddr::IsAddrV1Compatible() const
 {
     if (IsIPv4() || IsIPv6() || IsInternal())
-    {
-        return true;
-    }
-    else if (IsTor2())
     {
         return true;
     }
@@ -468,10 +429,6 @@ std::string CNetAddr::ToStringIP() const
         }
         return strprintf("%x:%x:%x:%x:%x:%x:%x:%x", ip[0] << 8 | ip[1], ip[2] << 8 | ip[3], ip[4] << 8 | ip[5],
             ip[6] << 8 | ip[7], ip[8] << 8 | ip[9], ip[10] << 8 | ip[11], ip[12] << 8 | ip[13], ip[14] << 8 | ip[15]);
-    }
-    if (IsTor2())
-    {
-        return EncodeBase32(ip.data(), ADDR_TORV2_SIZE) + ".onion";
     }
     if (IsTor3())
     {
@@ -564,12 +521,6 @@ std::vector<unsigned char> CNetAddr::GetGroup() const
         vchRet.push_back(ip[12] ^ 0xFF);
         vchRet.push_back(ip[13] ^ 0xFF);
         return vchRet;
-    }
-    else if (IsTor2())
-    {
-        nClass = NET_TOR2;
-        nStartByte = 0;
-        nBits = 4;
     }
     else if (IsTor3())
     {
@@ -678,7 +629,6 @@ int CNetAddr::GetReachabilityFrom(const CNetAddr *paddrPartner) const
             return fTunnel ? REACH_IPV6_WEAK :
                              REACH_IPV6_STRONG; // only prefer giving our IPv6 address if it's not tunnelled
         }
-    case NET_TOR2:
     case NET_TOR3:
         switch (ourNet)
         {
@@ -686,7 +636,6 @@ int CNetAddr::GetReachabilityFrom(const CNetAddr *paddrPartner) const
             return REACH_DEFAULT;
         case NET_IPV4:
             return REACH_IPV4; // Tor users can connect to IPv4 as well
-        case NET_TOR2:
         case NET_TOR3:
             return REACH_PRIVATE;
         }
@@ -715,7 +664,6 @@ int CNetAddr::GetReachabilityFrom(const CNetAddr *paddrPartner) const
             return REACH_IPV6_WEAK;
         case NET_IPV4:
             return REACH_IPV4;
-        case NET_TOR2:
         case NET_TOR3:
             return REACH_PRIVATE; // either from Tor, or don't care about our address
         }
@@ -823,7 +771,7 @@ bool CService::GetSockAddr(struct sockaddr *paddr, socklen_t *addrlen) const
 std::vector<unsigned char> CService::GetKey() const
 {
     std::vector<uint8_t> vKey;
-    if (IsIPv4() || IsIPv6() || IsInternal() || IsTor2())
+    if (IsIPv4() || IsIPv6() || IsInternal())
     {
         vKey.resize(18);
         if (IsIPv4())
@@ -840,11 +788,6 @@ std::vector<unsigned char> CService::GetKey() const
             std::memcpy(&vKey[0], INTERNAL_IN_IPV6_PREFIX.data(), INTERNAL_IN_IPV6_PREFIX.size());
             std::memcpy(&vKey[0] + INTERNAL_IN_IPV6_PREFIX.size(), ip.data(), ADDR_INTERNAL_SIZE);
         }
-        else if (IsTor2())
-        {
-            std::memcpy(&vKey[0], TORV2_IN_IPV6_PREFIX.data(), TORV2_IN_IPV6_PREFIX.size());
-            std::memcpy(&vKey[0] + TORV2_IN_IPV6_PREFIX.size(), ip.data(), ADDR_TORV2_SIZE);
-        }
         vKey[16] = port / 0x100;
         vKey[17] = port & 0x0FF;
     }
@@ -858,7 +801,7 @@ std::vector<unsigned char> CService::GetKey() const
 std::string CService::ToStringPort() const { return strprintf("%u", port); }
 std::string CService::ToStringIPPort() const
 {
-    if (IsIPv4() || IsTor2())
+    if (IsIPv4())
     {
         return ToStringIP() + ":" + ToStringPort();
     }
@@ -1070,10 +1013,6 @@ size_t GetNetAddrSize(const CNetAddr &addr)
     else if (addr.IsIPv6())
     {
         return ADDR_IPV6_SIZE;
-    }
-    else if (addr.IsTor2())
-    {
-        return ADDR_TORV2_SIZE;
     }
     else if (addr.IsTor3())
     {

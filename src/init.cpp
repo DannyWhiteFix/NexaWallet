@@ -1605,7 +1605,6 @@ bool AppInit2(Config &config)
     // -proxy sets a proxy for all outgoing network traffic
     // -noproxy (or -proxy=0) as well as the empty string can be used to not set a proxy, this is the default
     std::string proxyArg = GetArg("-proxy", "");
-    SetLimited(NET_TOR2);
     SetLimited(NET_TOR3);
     if (proxyArg != "" && proxyArg != "0")
     {
@@ -1615,10 +1614,8 @@ bool AppInit2(Config &config)
 
         SetProxy(NET_IPV4, addrProxy);
         SetProxy(NET_IPV6, addrProxy);
-        SetProxy(NET_TOR2, addrProxy);
         SetProxy(NET_TOR3, addrProxy);
         SetNameProxy(addrProxy);
-        SetLimited(NET_TOR2, false); // by default, -proxy sets onion as reachable, unless -noonion later
         SetLimited(NET_TOR3, false); // by default, -proxy sets onion as reachable, unless -noonion later
     }
 
@@ -1630,7 +1627,6 @@ bool AppInit2(Config &config)
     {
         if (onionArg == "0")
         { // Handle -noonion/-onion=0
-            SetLimited(NET_TOR2); // set onions as unreachable
             SetLimited(NET_TOR3); // set onions as unreachable
         }
         else
@@ -1640,9 +1636,7 @@ bool AppInit2(Config &config)
             {
                 return InitError(strprintf(_("Invalid -onion address: '%s'"), onionArg));
             }
-            SetProxy(NET_TOR2, addrOnion);
             SetProxy(NET_TOR3, addrOnion);
-            SetLimited(NET_TOR2, false);
             SetLimited(NET_TOR3, false);
         }
     }

@@ -21,7 +21,6 @@ BOOST_AUTO_TEST_CASE(netbase_networks)
     BOOST_CHECK(CNetAddr("::1").GetNetwork() == NET_UNROUTABLE);
     BOOST_CHECK(CNetAddr("8.8.8.8").GetNetwork() == NET_IPV4);
     BOOST_CHECK(CNetAddr("2001::8888").GetNetwork() == NET_IPV6);
-    BOOST_CHECK(CNetAddr("FD87:D87E:EB43:edb1:8e4:3588:e546:35ca").GetNetwork() == NET_TOR2);
 }
 
 BOOST_AUTO_TEST_CASE(netbase_properties)
@@ -40,7 +39,6 @@ BOOST_AUTO_TEST_CASE(netbase_properties)
     BOOST_CHECK(CNetAddr("2001:10::").IsRFC4843());
     BOOST_CHECK(CNetAddr("FE80::").IsRFC4862());
     BOOST_CHECK(CNetAddr("64:FF9B::").IsRFC6052());
-    BOOST_CHECK(CNetAddr("FD87:D87E:EB43:edb1:8e4:3588:e546:35ca").IsTor2());
     BOOST_CHECK(CNetAddr("127.0.0.1").IsLocal());
     BOOST_CHECK(CNetAddr("::1").IsLocal());
     BOOST_CHECK(CNetAddr("8.8.8.8").IsRoutable());
@@ -92,17 +90,6 @@ BOOST_AUTO_TEST_CASE(netbase_lookupnumeric)
     BOOST_CHECK(TestParse("[::]:7228", "[::]:7228"));
     BOOST_CHECK(TestParse("[127.0.0.1]", "127.0.0.1:65535"));
     BOOST_CHECK(TestParse(":::", ""));
-}
-
-BOOST_AUTO_TEST_CASE(onioncat_test)
-{
-    // values from https://web.archive.org/web/20121122003543/http://www.cypherpunk.at/onioncat/wiki/OnionCat
-    CNetAddr addr1("5wyqrzbvrdsumnok.onion");
-    CNetAddr addr2("FD87:D87E:EB43:edb1:8e4:3588:e546:35ca");
-    BOOST_CHECK(addr1 == addr2);
-    BOOST_CHECK(addr1.IsTor2());
-    BOOST_CHECK(addr1.ToStringIP() == "5wyqrzbvrdsumnok.onion");
-    BOOST_CHECK(addr1.IsRoutable());
 }
 
 BOOST_AUTO_TEST_CASE(subnet_test)
@@ -254,9 +241,6 @@ BOOST_AUTO_TEST_CASE(netbase_getgroup)
     // RFC4380
     BOOST_CHECK(
         CNetAddr("2001:0:9999:9999:9999:9999:FEFD:FCFB").GetGroup() == (std::vector<unsigned char>{NET_IPV4, 1, 2}));
-    // Tor2
-    BOOST_CHECK(
-        CNetAddr("FD87:D87E:EB43:edb1:8e4:3588:e546:35ca").GetGroup() == (std::vector<unsigned char>{NET_TOR2, 239}));
     // he.net
     BOOST_CHECK(CNetAddr("2001:470:abcd:9999:9999:9999:9999:9999").GetGroup() ==
                 (std::vector<unsigned char>{NET_IPV6, 32, 1, 4, 112, 175}));
