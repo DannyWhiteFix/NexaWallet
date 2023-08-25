@@ -213,6 +213,7 @@ BITCOIN_CORE_H = \
   respend/respendrelayer.h \
   respend/respenddetector.h \
   script/bignum.h \
+  script/destinations.h \
   script/pushtxstate.h \
   script/sigcache.h \
   script/sign.h \
@@ -444,12 +445,14 @@ libnexa_a_SOURCES = \
   script/interpreter.h \
   script/bignum.cpp \
   script/bignum.h \
+  script/destinations.h \
   script/standard.cpp \
   script/standard.h \
   script/stackitem.cpp \
   script/stackitem.h \
   script/script.cpp \
   script/script.h \
+  script/script_asm.cpp \
   script/script_error.h \
   script/script_error.cpp \
   script/script_flags.h \
@@ -612,6 +615,7 @@ libnexa_common_a_SOURCES = \
   script/sigcommon.cpp \
   script/script.cpp \
   script/script.h \
+  script/script_asm.cpp \
   script/script_error.cpp \
   script/script_error.h \
   script/scripttemplate.cpp \

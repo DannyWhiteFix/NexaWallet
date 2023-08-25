@@ -80,7 +80,7 @@ public:
     CGroupTokenID operator()(const CKeyID &id) const { return CGroupTokenID(id); }
     CGroupTokenID operator()(const CScriptID &id) const { return CGroupTokenID(id); }
     CGroupTokenID operator()(const CNoDestination &) const { return CGroupTokenID(); }
-    CGroupTokenID operator()(const ScriptTemplateDestination &id) const { return id.Group(); }
+    CGroupTokenID operator()(const ScriptTemplateDestination &id) const { return GetGroupToken(id.output); }
 };
 
 CGroupTokenID GetGroupToken(const CTxDestination &id) { return std::visit(CTxDestinationGroupTokenExtractor(), id); }
@@ -143,7 +143,7 @@ public:
 
     bool operator()(const ScriptTemplateDestination &id) const
     {
-        *script = id.toScript(group, quantity);
+        *script = ScriptTemplateOutput(id.toScript(), group, quantity);
         if (script->IsInvalid())
             return false;
         return true;

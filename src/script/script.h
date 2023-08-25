@@ -921,7 +921,6 @@ public:
     }
 
     std::string GetHex() const;
-    std::string GetAsm() const;
 };
 
 class CReserveScript

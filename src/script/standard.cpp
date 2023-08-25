@@ -16,7 +16,6 @@ using namespace std;
 
 typedef vector<uint8_t> valtype;
 
-CScriptID::CScriptID(const CScript &in) : uint160(Hash160(in.begin(), in.end())) {}
 const char *GetTxnOutputType(txnouttype t)
 {
     switch (t)

@@ -25,7 +25,6 @@ ScriptTemplateError GetScriptTemplate(const CScript &script,
     std::vector<unsigned char> *argsHash = nullptr,
     CScript::const_iterator *pcout = nullptr);
 
-
 /** Convert well-known templates value to a hash, and get the actual script it refers to.
     The templateHash argument MUST be within the correct size range for well-known templates (1 or 2 bytes), unless
     ignored due to an numeric opcode.
@@ -55,14 +54,14 @@ ScriptError LoadCheckTemplateHash(const CScript &satisfier,
 
 void NumericOpcodeToVector(opcodetype opcode, VchType &templateHash);
 
-/** Create a CScript suitable for placement in a CTxOut that spends to a script template with args and group 
+/** Create a CScript suitable for placement in a CTxOut that spends to a script template with args and group
     @param[in] scriptHash  Hash160 or Hash256 of the script template
     @param[in] argsHash  Hash160 or Hash256 of the template's arguments in CScript format.
     @param[in] visibleArgs  Arguments (in CScript format) that you want to be visible in the output.
     @param[in] group  Group Identifier (if output should be grouped, otherwise use NoGroup)
-    @param[in] grpQuantity  Quantity of tokens (if any).  If -1 is passed, the resulting CScript will place OP_0 
-    where the group quantity should be, provided that a group is specified. This is an illegal value so the script 
-    will not validate.  This is used to pass information around (as addresses), without needing to specify a token 
+    @param[in] grpQuantity  Quantity of tokens (if any).  If -1 is passed, the resulting CScript will place OP_0
+    where the group quantity should be, provided that a group is specified. This is an illegal value so the script
+    will not validate.  This is used to pass information around (as addresses), without needing to specify a token
     quantity.
 */
 CScript ScriptTemplateOutput(const VchType &scriptHash,
@@ -70,6 +69,14 @@ CScript ScriptTemplateOutput(const VchType &scriptHash,
     const VchType &visibleArgs = VchType(),
     const CGroupTokenID &group = NoGroup,
     CAmount grpQuantity = -1);
+
+/**
+    The same as ScriptTemplateOutput above but pass in an existing script as the first arg rather than
+    in parts (scriptHash, argsHash, and visibleArgs). The existing script template will be deconstructed
+    into those parts internally before replacing the group and amount in the returned script
+ */
+CScript ScriptTemplateOutput(const CScript &templateIn, const CGroupTokenID& group, CAmount grpQuantity = -1);
+
 
 CScript UngroupedScriptTemplate(const CScript &templateIn);
 

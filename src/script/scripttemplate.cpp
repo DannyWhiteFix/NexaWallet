@@ -226,6 +226,28 @@ CScript ScriptTemplateOutput(const VchType& scriptHash, const VchType &argsHash,
     return ret;
 }
 
+CScript ScriptTemplateOutput(const CScript &templateIn, const CGroupTokenID& group, CAmount grpQuantity)
+{
+    CGroupTokenInfo currentGroupInfo;
+    VchType scriptHash;
+    VchType argsHash;
+    CScript::const_iterator rest = templateIn.begin();
+
+    // Pull this output apart and then recombine with the new group and grpQuantity info.
+    ScriptTemplateError error = GetScriptTemplate(templateIn, &currentGroupInfo, &scriptHash, &argsHash, &rest);
+    if (error == ScriptTemplateError::OK)
+    {
+        VchType restOfScript(rest, templateIn.end());
+        return ScriptTemplateOutput(scriptHash, argsHash, restOfScript, group, grpQuantity);
+    }
+    else
+    {
+        // All of these destinations should be templates, but if not return a script that won't work so money isnt
+        // lost if used.
+        return CScript().SetInvalid();
+    }
+}
+
 CScript P2pktOutput(const VchType &argsHash, const CGroupTokenID& group, CAmount grpQuantity)
 {
     return ScriptTemplateOutput(P2PKT_ID, argsHash, VchType(), group, grpQuantity);
