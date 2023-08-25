@@ -165,7 +165,8 @@ const Spendable *CBasicKeyStore::_GetTemplate(const CScript &output) const
 bool CBasicKeyStore::GetPubKey(const ScriptTemplateDestination &address, CPubKey &pubKeyOut) const
 {
     LOCK(cs_KeyStore);
-    const Spendable *sp = _GetTemplate(address.toScript(NoGroup));
+    // any group is stripped from address inside _GetTemplate
+    const Spendable *sp = _GetTemplate(address.toScript());
     if (!sp)
         return false;
 

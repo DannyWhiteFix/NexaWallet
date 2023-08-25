@@ -437,6 +437,7 @@ script/bitcoinconsensus.cpp
 script/bitcoinconsensus.h
 script/bitfield.cpp
 script/bitfield.h
+script/destinations.h
 script/pushtxstate.cpp
 script/pushtxstate.h
 script/interpreter.cpp

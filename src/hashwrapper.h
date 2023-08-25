@@ -108,7 +108,7 @@ inline std::vector<unsigned char> VchHash(const T1 pbegin, const T1 pend)
 {
     static unsigned char pblank[1] = {};
     std::vector<unsigned char> result(32);
-    CHash160()
+    CHash256()
         .Write(pbegin == pend ? pblank : (const unsigned char *)&pbegin[0], (pend - pbegin) * sizeof(pbegin[0]))
         .Finalize(&result[0]);
     return result;

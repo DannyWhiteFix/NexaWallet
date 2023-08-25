@@ -1831,7 +1831,7 @@ UniValue getaddressforms(const UniValue &params, bool fHelp)
     const ScriptTemplateDestination *st = std::get_if<ScriptTemplateDestination>(&dest);
     if (st)
     {
-        node.pushKV("outScript", st->toScript().GetAsm());
+        node.pushKV("outScript", ScriptToAsmStr(st->toScript(), true));
         node.pushKV("outScriptHex", st->toScript().GetHex());
     }
     return node;

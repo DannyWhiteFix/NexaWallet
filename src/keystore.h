@@ -82,7 +82,9 @@ public:
         bool operator()(const CNoDestination &) const { return false; }
         bool operator()(const ScriptTemplateDestination &id) const
         {
-            CScript output = id.toScript(NoGroup); // Whether grouped or not does not affect spendability
+            // Whether grouped or not does not affect spendability
+            CScript output = id.toScript();
+            // any group is stripped from output inside HaveTemplate (_GetTemplate)
             return keystore->HaveTemplate(output);
         }
     };
