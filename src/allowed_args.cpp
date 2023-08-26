@@ -440,8 +440,7 @@ static void addWalletOptions(AllowedArgs &allowedArgs)
                 " " +
                 _("(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)"),
             walletParamOptional)
-        .addArg("usecashaddr", optionalBool,
-            _("Use Nexa Cash Address for destination encoding (Activates by default Jan 14, 2017)"),
+        .addArg("usecashaddr", optionalBool, _("Use Nexa Cash Address for destination encoding (default: true"),
             walletParamOptional);
 }
 #endif
