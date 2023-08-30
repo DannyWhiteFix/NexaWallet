@@ -342,12 +342,11 @@ CTweak<uint64_t> miningPrioritySize("mining.prioritySize",
         DEFAULT_BLOCK_PRIORITY_SIZE),
     DEFAULT_BLOCK_PRIORITY_SIZE);
 
-// Not used but kept as a temnplate
-CTweakRef<uint64_t> miningForkTime("consensus.forkMay2021Time",
-    "Time in seconds since the epoch to initiate the Bitcoin Cash protocol upgraded scheduled on 15th May 2021.  A "
+CTweakRef<uint64_t> miningForkTime("consensus.fork1Time",
+    "Time in seconds since the epoch to initiate the Nexa Fork1 protocol upgrade.  A "
     "setting of 1 will turn on the fork at the appropriate time.",
     &nMiningForkTime,
-    &ForkTimeValidator); // Saturday May 15 12:00:00 UTC 2022
+    &ForkTimeValidator);
 
 // needs to be declared independently with CTweakRef so libraries can use without tweaks.
 extern uint64_t maxSatoScriptOps;

@@ -1401,6 +1401,9 @@ UniValue getblockchaininfo(const UniValue &params, bool fHelp)
             "  \"bestblockhash\": \"...\", (string) the hash of the currently best block\n"
             "  \"difficulty\": xxxxxx,     (numeric) the current difficulty\n"
             "  \"mediantime\": xxxxxx,     (numeric) median time for the current best block\n"
+            "  \"forktime\": xxxxxx,       (numeric)  time when the fork becomes active on the next block\n"
+            "  \"forkactive\": xxxxxx,     (bool) is the fork active\n"
+            "  \"forkactivenextblock\": xxxxxx,(bool) will the fork be active on the next block mined\n"
             "  \"verificationprogress\": xxxx, (numeric) estimate of verification progress [0..1]\n"
             "  \"initialblockdownload\": xxxx, (bool) (debug information) estimate of whether this node is in Initial "
             "Block Download mode.\n"
@@ -1469,6 +1472,19 @@ UniValue getblockchaininfo(const UniValue &params, bool fHelp)
     obj.pushKV("bestblockhash", tip->GetBlockHash().GetHex());
     obj.pushKV("difficulty", (double)GetDifficulty(tip));
     obj.pushKV("mediantime", (int64_t)tip->GetMedianTimePast());
+    bool forking = nMiningForkTime > 0;
+    if (forking)
+    {
+        obj.pushKV("forktime", (int64_t)nMiningForkTime);
+        obj.pushKV("forkactive", IsFork1Enabled(tip));
+        obj.pushKV("forkactivenextblock", IsFork1Next(tip));
+    }
+    else
+    {
+        obj.pushKV("forktime", "N/A");
+        obj.pushKV("forkactive", "N/A");
+        obj.pushKV("forkactivenextblock", "N/A");
+    }
     obj.pushKV("verificationprogress", Checkpoints::GuessVerificationProgress(tip, !fCheckpointsEnabled));
     obj.pushKV("initialblockdownload", IsInitialBlockDownload());
     obj.pushKV("chainwork", tip->chainWork().GetHex());

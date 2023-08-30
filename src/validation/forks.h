@@ -5,26 +5,13 @@
 #ifndef NEXA_FORKS_H
 #define NEXA_FORKS_H
 
-#include "amount.h"
-#include "arith_uint256.h"
 #include "chain.h"
-#include "consensus/params.h"
-#include "tweak.h"
-#include "univalue/include/univalue.h"
+#include "chainparams.h"
 
-#include <vector>
+/** Check if fork1 is activated at a specific block */
+bool IsFork1Enabled(const CBlockIndex *pindexTip);
 
-class CValidationState;
-class CBlock;
-class CTransaction;
-class CBlockIndex;
-class CScript;
-class CTxMemPoolEntry;
-
-/** Test if Nov 15th 2020 fork has activated */
-// bool IsMay2022Enabled(const Consensus::Params &consensusparams, const CBlockIndex *pindexTip);
-
-/** Check if the next will be the first block where the new set of rules will be enforced */
-// bool IsMay2022Next(const Consensus::Params &consensusparams, const CBlockIndex *pindexTip);
+/** Check if the next block will be the first block, where the new set of rules for fork1 will be enforced */
+bool IsFork1Next(const CBlockIndex *pindexTip);
 
 #endif

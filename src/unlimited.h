@@ -68,10 +68,6 @@ extern CStatusString statusStrings;
 extern std::set<CBlockIndex *> setDirtyBlockIndex;
 extern uint32_t blockVersion; // Overrides the mined block version if non-zero
 
-// Fork configuration
-/** This specifies the MTP time of the next fork */
-extern uint64_t nMiningForkTime;
-
 /** BU Default maximum number of Outbound connections to simultaneously allow*/
 extern int nMaxOutConnections;
 
