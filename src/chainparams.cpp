@@ -6,6 +6,7 @@
 
 #include "chainparams.h"
 #include "chainparamsbase.h"
+#include "chainparamsseeds.h"
 #include "consensus/merkle.h"
 #include "policy/policy.h"
 #include "unlimited.h"
@@ -17,7 +18,6 @@
 
 #include <assert.h>
 
-#include "chainparamsseeds.h"
 
 uint64_t nMiningForkTime = NEXT_FORK_ACTIVATION_TIME;
 

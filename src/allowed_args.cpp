@@ -676,7 +676,7 @@ static void addTweaks(AllowedArgs &allowedArgs, CTweakMap *pTweaks)
             "net.txRetryInterval", "test.maxSatoScriptOps", "test.maxScriptTemplateOps", "test.maxBlockSigChecks",
             "test.parallel", "test.pvtest", "test.blockLookAheadInterval", "test.maxAllowedNetMessage",
             "test.nextMaxBlockSize", "test.enforceMinTxSize", "test.avoidReconsiderMostWorkChain", "test.extVersion",
-            "consensus.forkMay2021Time", "blockchain.maxReorgDepth"};
+            "consensus.fork1Time", "blockchain.maxReorgDepth"};
         if (hiddenTweaks.count(optName))
             fDebugArg = true;
 

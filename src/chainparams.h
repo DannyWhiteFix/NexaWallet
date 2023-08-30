@@ -14,8 +14,12 @@
 
 #include <vector>
 
-// Next protocol upgrade will be activated once MTP >= (date)
+// Fork configuration
+/** This specifies the MTP time of the next fork */
+extern uint64_t nMiningForkTime;
+/** Next protocol upgrade will be activated once MTP >= (date) */
 const uint64_t NEXT_FORK_ACTIVATION_TIME = 0;
+
 /** Default for -minrelaytxfee, minimum relay fee for transactions */
 static const unsigned int DEFAULT_MIN_RELAY_TX_FEE = 1000;
 //! -wallet.maxTxFee default
