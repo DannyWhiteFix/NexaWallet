@@ -83,6 +83,7 @@ class BIP69Test (BitcoinTestFramework):
         addr6 = self.nodes[1].getnewaddress()
         # make a large transaction with multiple inputs and outputs
         txid1 = self.nodes[0].sendmany("", {addr1:"7.34", addr2:"8.23", addr3:55, addr4:23.47, addr5:60, addr6:55})
+        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()["size"] == 1)
 
         # check that the transaction is BIP69 sorted
         tx1 = self.nodes[0].getrawtransaction(txid1, True)
