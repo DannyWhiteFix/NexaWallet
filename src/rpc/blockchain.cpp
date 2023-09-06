@@ -243,6 +243,7 @@ std::string EntryDescriptionString()
            "    \"time\" : n,             (numeric) local time transaction entered pool in seconds since 1 Jan 1970 "
            "GMT\n"
            "    \"height\" : n,           (numeric) block height when transaction entered pool\n"
+           "    \"doublespent\" : true|false   (boolean) has the transaction been double spent\n"
            "    \"startingpriority\" : n, (numeric) priority when transaction entered pool\n"
            "    \"currentpriority\" : n,  (numeric) transaction priority now (including manual adjustments)\n"
            "    \"ancestorcount\" : n,    (numeric) number of in-txpool ancestor transactions (including this one)\n"
