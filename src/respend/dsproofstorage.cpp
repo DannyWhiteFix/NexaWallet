@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "DoubleSpendProofStorage.h"
+#include "respend/dsproofstorage.h"
 #include "dosman.h"
 #include "hashwrapper.h"
 #include "util.h"

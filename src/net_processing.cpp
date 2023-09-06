@@ -7,8 +7,6 @@
 
 #include "net_processing.h"
 
-#include "DoubleSpendProof.h"
-#include "DoubleSpendProofStorage.h"
 #include "addrman.h"
 #include "blockrelay/blockrelay_common.h"
 #include "blockrelay/compactblock.h"
@@ -27,6 +25,8 @@
 #include "merkleblock.h"
 #include "nodestate.h"
 #include "requestManager.h"
+#include "respend/dsproof.h"
+#include "respend/dsproofstorage.h"
 #include "timedata.h"
 #include "txadmission.h"
 #include "validation/validation.h"

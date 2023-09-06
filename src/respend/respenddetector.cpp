@@ -4,10 +4,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "respend/respenddetector.h"
-#include "DoubleSpendProof.h"
-#include "DoubleSpendProofStorage.h"
 #include "bloom.h"
 #include "dosman.h"
+#include "respend/dsproof.h"
+#include "respend/dsproofstorage.h"
 #include "respend/respendaction.h"
 #include "respend/respendlogger.h"
 #include "respend/respendrelayer.h"

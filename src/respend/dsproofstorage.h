@@ -4,9 +4,9 @@
 #ifndef NEXA_DOUBLESPENDPROOFSTORAGE_H
 #define NEXA_DOUBLESPENDPROOFSTORAGE_H
 
-#include "DoubleSpendProof.h"
 #include "bloom.h"
 #include "net.h"
+#include "respend/dsproof.h"
 
 #include <boost/asio.hpp>
 

@@ -4,8 +4,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "txadmission.h"
-#include "DoubleSpendProof.h"
-#include "DoubleSpendProofStorage.h"
 #include "blockstorage/blockstorage.h"
 #include "connmgr.h"
 #include "consensus/tx_verify.h"
@@ -17,6 +15,8 @@
 #include "net.h"
 #include "policy/mempool.h"
 #include "requestManager.h"
+#include "respend/dsproof.h"
+#include "respend/dsproofstorage.h"
 #include "respend/respenddetector.h"
 #include "threadgroup.h"
 #include "timedata.h"

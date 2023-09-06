@@ -85,10 +85,6 @@ deadlock-detection/threaddeadlock.cpp
 deadlock-detection/threaddeadlock.h
 dosman.cpp
 dosman.h
-DoubleSpendProof.h
-DoubleSpendProof.cpp
-DoubleSpendProofStorage.h
-DoubleSpendProofStorage.cpp
 dstencode.cpp
 dstencode.h
 electrum/rostrum.cpp
@@ -460,6 +456,10 @@ script/stackitem.h
 script/standard.cpp
 script/standard.h
 script/sighashtype.h
+respend/dsproof.h
+respend/dsproof.cpp
+respend/dsproofstorage.h
+respend/dsproofstorage.cpp
 respend/respendaction.h
 respend/respenddetector.cpp
 respend/respenddetector.h
