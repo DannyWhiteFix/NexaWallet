@@ -4,10 +4,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "respend/respendrelayer.h"
-#include "DoubleSpendProof.h"
-#include "DoubleSpendProofStorage.h"
 #include "primitives/transaction.h"
 #include "protocol.h"
+#include "respend/dsproof.h"
+#include "respend/dsproofstorage.h"
 #include "streams.h"
 #include "util.h"
 #include <mutex>

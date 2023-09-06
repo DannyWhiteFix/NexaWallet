@@ -7,8 +7,6 @@
 
 #include "txmempool.h"
 
-#include "DoubleSpendProof.h"
-#include "DoubleSpendProofStorage.h"
 #include "consensus/consensus.h"
 #include "consensus/tx_verify.h"
 #include "consensus/validation.h"
@@ -16,6 +14,8 @@
 #include "init.h"
 #include "main.h"
 #include "policy/fees.h"
+#include "respend/dsproof.h"
+#include "respend/dsproofstorage.h"
 #include "streams.h"
 #include "timedata.h"
 #include "txadmission.h"

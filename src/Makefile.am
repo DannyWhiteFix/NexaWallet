@@ -155,8 +155,6 @@ BITCOIN_CORE_H = \
   core_memusage.h \
   cuckoocache.h \
   datastream.h \
-  DoubleSpendProof.h \
-  DoubleSpendProofStorage.h \
   deadlock-detection/locklocation.h \
   deadlock-detection/lockorder.h \
   deadlock-detection/threaddeadlock.h \
@@ -208,6 +206,8 @@ BITCOIN_CORE_H = \
   rpc/protocol.h \
   rpc/server.h \
   rpc/register.h \
+  respend/dsproof.h \
+  respend/dsproofstorage.h \
   respend/respendaction.h \
   respend/respendlogger.h \
   respend/respendrelayer.h \
@@ -302,8 +302,6 @@ libnexa_server_a_SOURCES = \
   consensus/adaptive_blocksize.cpp \
   consensus/grouptokens.cpp \
   consensus/tx_verify.cpp \
-  DoubleSpendProof.cpp \
-  DoubleSpendProofStorage.cpp \
   dosman.cpp \
   expedited.cpp \
   electrum/electrumrpcinfo.cpp \
@@ -339,6 +337,8 @@ libnexa_server_a_SOURCES = \
   rpc/nexa.cpp \
   rpc/rawtransaction.cpp \
   rpc/server.cpp \
+  respend/dsproof.cpp \
+  respend/dsproofstorage.cpp \
   respend/respendlogger.cpp \
   respend/respendrelayer.cpp \
   respend/respenddetector.cpp \

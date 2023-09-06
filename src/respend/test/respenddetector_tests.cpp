@@ -2,11 +2,11 @@
 // Copyright (c) 2018-2022 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#include "DoubleSpendProofStorage.h"
 #include "key.h"
 #include "keystore.h"
 #include "policy/policy.h"
 #include "primitives/transaction.h"
+#include "respend/dsproofstorage.h"
 #include "respend/respendaction.h"
 #include "respend/respenddetector.h"
 #include "script/script.h"
