@@ -38,24 +38,6 @@ bool CheckTxInputs(const CTransactionRef tx,
     const CChainParams &chainparams);
 } // namespace Consensus
 
-/** Auxiliary functions for transaction validation (ideally should not be exposed) */
-
-/**
- * Count ECDSA signature operations the old-fashioned (pre-0.6) way
- * @return number of sigops this transaction's outputs will produce when spent
- * @see CTransaction::FetchInputs
- */
-unsigned int GetLegacySigOpCount(const CTransactionRef tx, const uint32_t flags);
-
-/**
- * Count ECDSA signature operations in pay-to-script-hash inputs.
- *
- * @param[in] mapInputs Map of previous transactions that have outputs we're spending
- * @return maximum number of sigops required to validate this transaction's inputs
- * @see CTransaction::FetchInputs
- */
-unsigned int GetP2SHSigOpCount(const CTransactionRef tx, const CCoinsViewCache &mapInputs, const uint32_t flags);
-
 /**
  * Check if transaction is final and can be included in a block with the
  * specified height and time. Consensus critical.
@@ -80,7 +62,5 @@ bool EvaluateSequenceLocks(const CBlockIndex &block, std::pair<int, int64_t> loc
  * Consensus critical. Takes as input a list of heights at which tx's inputs (in order) confirmed.
  */
 bool SequenceLocks(const CTransactionRef tx, int flags, std::vector<int> *prevHeights, const CBlockIndex &block);
-
-uint64_t GetTransactionSigOpCount(const CTransactionRef ptx, const CCoinsViewCache &coins, const uint32_t flags);
 
 #endif // NEXA_CONSENSUS_TX_VERIFY_H

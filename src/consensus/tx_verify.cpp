@@ -118,42 +118,6 @@ bool SequenceLocks(const CTransactionRef tx, int flags, std::vector<int> *prevHe
     return EvaluateSequenceLocks(block, CalculateSequenceLocks(tx, flags, prevHeights, block));
 }
 
-// BU: This code is completely inaccurate if its used to determine the approximate time of transaction
-// validation!!!  The sigop count in the output transactions are irrelevant, and the sigop count of the
-// previous outputs are the most relevant, but not actually checked.
-// The purpose of this is to limit the outputs of transactions so that other transactions' "prevout"
-// is reasonably sized.
-unsigned int GetLegacySigOpCount(const CTransactionRef tx, const uint32_t flags)
-{
-    unsigned int nSigOps = 0;
-    for (const auto &txin : tx->vin)
-    {
-        nSigOps += txin.scriptSig.GetSigOpCount(flags, false);
-    }
-    for (const auto &txout : tx->vout)
-    {
-        nSigOps += txout.scriptPubKey.GetSigOpCount(flags, false);
-    }
-    return nSigOps;
-}
-
-unsigned int GetP2SHSigOpCount(const CTransactionRef tx, const CCoinsViewCache &inputs, const uint32_t flags)
-{
-    if ((flags & SCRIPT_VERIFY_P2SH) == 0 || tx->IsCoinBase())
-        return 0;
-
-    unsigned int nSigOps = 0;
-    {
-        for (unsigned int i = 0; i < tx->vin.size(); i++)
-        {
-            CoinAccessor coin(inputs, tx->vin[i].prevout);
-            if (coin && coin->out.scriptPubKey.IsPayToScriptHash())
-                nSigOps += coin->out.scriptPubKey.GetSigOpCount(flags, tx->vin[i].scriptSig);
-        }
-    }
-    return nSigOps;
-}
-
 bool ContextualCheckTransaction(const CTransactionRef tx,
     CValidationState &state,
     CBlockIndex *const pindexPrev,
@@ -371,9 +335,4 @@ bool Consensus::CheckTxInputs(const CTransactionRef tx,
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
     state.SetAmounts(nValueIn, outAmount, nTxFee);
     return true;
-}
-
-uint64_t GetTransactionSigOpCount(const CTransactionRef ptx, const CCoinsViewCache &coins, const uint32_t flags)
-{
-    return GetLegacySigOpCount(ptx, flags) + GetP2SHSigOpCount(ptx, coins, flags);
 }
