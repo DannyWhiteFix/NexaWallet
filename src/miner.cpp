@@ -87,7 +87,7 @@ void BlockAssembler::resetBlock(const CScript &scriptPubKeyIn, int64_t coinbaseS
     inBlock.clear();
 
     nBlockSize = reserveBlockSize(scriptPubKeyIn, coinbaseSize);
-    nBlockSigOps = COINBASE_RESERVED_SIGOPS;
+    nBlockSigOps = 0;
 
     // These counters do not include coinbase tx
     nBlockTx = 0;
