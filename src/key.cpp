@@ -50,7 +50,7 @@ int Hd32DeriveChildKey(CKey key, int externalChainCounter, CKey &secret, std::st
     return externalChainCounter + 1;
 }
 
-int Hd44DeriveChildKey(unsigned char *secretSeed,
+int Hd44DeriveChildKey(const unsigned char *secretSeed,
     unsigned int secretSeedLen,
     unsigned int purpose,
     unsigned int coinType,

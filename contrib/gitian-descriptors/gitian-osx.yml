@@ -27,6 +27,7 @@ packages:
 - "python-dev"
 - "python-setuptools"
 - "fonts-tuffy"
+- "openjdk-17-jdk-headless"
 - "ca-certificates"
 reference_datetime: "2020-08-20 00:00:00"
 remotes:
@@ -39,7 +40,7 @@ script: |
 
   WRAP_DIR=$HOME/wrapped
   HOSTS="x86_64-apple-darwin19"
-  CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-tests GENISOIMAGE=$WRAP_DIR/genisoimage"
+  CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-tests --enable-shared --enable-javacashlib GENISOIMAGE=$WRAP_DIR/genisoimage"
   FAKETIME_HOST_PROGS=""
   FAKETIME_PROGS="ar ranlib date dmg genisoimage"
 
@@ -80,7 +81,7 @@ script: |
 
   cd nexa
   BASEPREFIX=`pwd`/depends
-
+  export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
   mkdir -p ${BASEPREFIX}/SDKs
   tar -C ${BASEPREFIX}/SDKs -xf ${BUILD_DIR}/MacOSX10.15.sdk.tar.xz
 

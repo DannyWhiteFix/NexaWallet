@@ -18,7 +18,8 @@ typedef std::vector<uint8_t> valtype;
 
 #ifdef ANDROID // log sighash calculations
 #include <android/log.h>
-#define p(...) __android_log_print(ANDROID_LOG_DEBUG, "BU.sig", __VA_ARGS__)
+#define p(...)
+// __android_log_print(ANDROID_LOG_DEBUG, "BU.sig", __VA_ARGS__)
 #else
 #define p(...)
 // tinyformat::format(std::cout, __VA_ARGS__)

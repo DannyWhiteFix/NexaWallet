@@ -19,10 +19,11 @@ std::string EncodeDestination(const CTxDestination &, const CChainParams &, cons
 CTxDestination DecodeDestination(const std::string &addr, const CChainParams &);
 bool IsValidDestinationString(const std::string &addr, const CChainParams &params);
 
-// Temporary workaround. Don't rely on global state, pass all parameters in new
-// code.
+#ifndef LIGHT // Use the fully parameterized version in light libraries defined above
+// Temporary workaround. Don't rely on global state, pass all parameters in new code.
 std::string EncodeDestination(const CTxDestination &);
 CTxDestination DecodeDestination(const std::string &addr);
+#endif
 bool IsValidDestinationString(const std::string &addr);
 bool IsValidDestination(const CTxDestination &dest);
 

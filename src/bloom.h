@@ -141,7 +141,9 @@ public:
     //! (catch a filter which was just deserialized which was too big)
     bool IsWithinSizeConstraints() const;
 
-#ifndef ANDROID // limit dependencies
+#ifndef LIGHT // limit dependencies -- we do not need these functions in light clients because they support the server
+    // side of the filter protocol.
+
     //! Scans output scripts for matches and adds those outpoints to the filter
     //! for spend detection. Returns true if any output matched, or the txid
     //! matches.

@@ -182,7 +182,7 @@ bool CBloomFilter::IsWithinSizeConstraints() const
     return vData.size() <= SMALLEST_MAX_BLOOM_FILTER_SIZE && nHashFuncs <= MAX_HASH_FUNCS;
 }
 
-#ifndef ANDROID // We do not want to pull "Solver" into the Android cashlib compile
+#ifndef LIGHT // We do not want to pull "Solver" into light wallets (and don't need these functions)
 bool CBloomFilter::MatchAndInsertOutpoints(const CTransactionRef &tx)
 {
     bool fFound = false;
@@ -385,7 +385,7 @@ bool CRollingBloomFilter::contains(const uint256 &hash) const
 bool CRollingBloomFilter::contains(const COutPoint &outpoint) const { return contains(ToVector(outpoint)); }
 void CRollingBloomFilter::reset()
 {
-#ifndef ANDROID // On Android don't pick a new tweak value because we don't have GetRand
+#ifndef LIGHT // On iOS/Android don't pick a new tweak value because we don't have GetRand
     nTweak = GetRand(std::numeric_limits<unsigned int>::max());
 #endif
     nEntriesThisGeneration = 0;

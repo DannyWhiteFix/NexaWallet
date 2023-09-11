@@ -393,7 +393,6 @@ libnexa_wallet_a_SOURCES = \
   wallet/walletdb.cpp \
   $(BITCOIN_CORE_H)
 
-if !TARGET_WINDOWS
 libnexa_a_CPPFLAGS = $(AM_CPPFLAGS) $(NEXA_INCLUDES)
 libnexa_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
@@ -483,7 +482,6 @@ libnexa_a_SOURCES = \
   utilstrencodings.h \
   datastream.h \
   streams.h
-endif
 
 
 # crypto primitives library
@@ -799,8 +797,9 @@ endif
 
 libnexa_la_LDFLAGS = $(AM_LDFLAGS) $(CRYPTO_LIBS) $(BOOST_LIBS) -no-undefined $(RELDFLAGS) $(PTHREAD_FLAGS)
 libnexa_la_LIBADD = $(LIBSECP256K1)
-libnexa_la_CPPFLAGS = $(AM_CPPFLAGS) $(NEXA_INCLUDES) -I$(BOOST_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include $(JNI_CXXFLAGS) -DBUILD_BITCOIN_INTERNAL
-libnexa_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libnexa_la_CPPFLAGS = $(AM_CPPFLAGS) $(NEXA_INCLUDES) $(BOOST_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include $(JNI_CXXFLAGS) -DBUILD_BITCOIN_INTERNAL
+libnexa_la_CXXFLAGS = $(AM_CXXFLAGS) -DPIC
+# $(PIE_FLAGS)
 endif
 #
 

@@ -6,7 +6,7 @@
 
 #ifndef NEXA_COINS_H
 #define NEXA_COINS_H
-#ifndef ANDROID // limit dependencies
+#ifndef LIGHT // limit dependencies -- the UTXO is not available in light wallets
 #include "compressor.h"
 #include "core_memusage.h"
 #include "hashwrapper.h"

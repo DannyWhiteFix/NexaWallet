@@ -47,7 +47,25 @@
 
 #if defined(JAVA)
 #include <jni.h>
+
+// On windows we need to set JNI calls to be exported from the DLL
+#ifdef __MINGW32__
+#undef JNIEXPORT
+#define JNIEXPORT __declspec(dllexport)
+#else
+#ifdef __MINGW64__
+#undef JNIEXPORT
+#define JNIEXPORT __declspec(dllexport)
 #endif
+#endif
+
+#endif
+
+// in headervalidation.cpp
+bool CheckBlockHeader(const Consensus::Params &consensusParams,
+    const CBlockHeader &block,
+    CValidationState &state,
+    bool fCheckPOW = true);
 
 // DER-encoded ECDSA is more like 72 but better to be safe
 // Schnorr is only 64, but this must also include a few extra bytes for the sighashtype
@@ -125,6 +143,7 @@ void DbgPause()
     dbgPauseCond.wait(lk);
 }
 extern "C" void DbgResume() { dbgPauseCond.notify_all(); }
+
 #endif // DEBUG_PAUSE
 
 // Stop the logging.  TODO we can offer an API that lets the app install a log callback function and then call it
@@ -170,6 +189,41 @@ typedef enum
     AddrBlockchainBchTestnet = 5,
     AddrBlockchainBchRegtest = 6
 } ChainSelector;
+
+class PubkeyExtractor
+{
+protected:
+    const CChainParams &params;
+    std::vector<unsigned char> &dest;
+
+public:
+    PubkeyExtractor(std::vector<unsigned char> &destination, const CChainParams &p) : params(p), dest(destination) {}
+    void operator()(const CKeyID &id) const
+    {
+        dest.resize(21);
+        dest[0] = PayAddressTypeP2PKH;
+        memcpy(&dest[1], id.begin(), 20); // pubkey is 20 bytes
+    }
+    void operator()(const CScriptID &id) const
+    {
+        dest.resize(21);
+        dest[0] = PayAddressTypeP2SH;
+        memcpy(&dest[1], id.begin(), 20); // pubkey is 20 bytes
+    }
+    void operator()(const CNoDestination &) const
+    {
+        dest.resize(1);
+        dest[0] = PayAddressTypeNONE;
+    }
+    void operator()(const ScriptTemplateDestination &id) const
+    {
+        // There may be no pubkey here or we can't find it anyway... extract and return the script
+        dest.resize(1);
+        dest[0] = PayAddressTypeTEMPLATE;
+        dest = id.appendTo(dest);
+    }
+};
+
 
 /**  Subset of BCH chainparams so we can convert addresses and do other light-client operations
  */
@@ -315,6 +369,22 @@ CChainParams *GetChainParams(ChainSelector chainSelector)
         return nullptr;
 }
 
+
+class CDecodablePartialMerkleTree : public CPartialMerkleTree
+{
+public:
+    std::vector<uint256> &accessHashes() { return vHash; }
+    CDecodablePartialMerkleTree(unsigned int ntx, const unsigned char *bitField, int bitFieldLen)
+    {
+        nTransactions = ntx;
+        vBits.resize(bitFieldLen * 8);
+        for (unsigned int p = 0; p < vBits.size(); p++)
+            vBits[p] = (bitField[p / 8] & (1 << (p % 8))) != 0;
+        fBad = false;
+    }
+};
+
+
 // No-op this RPC function that is unused in .so context
 extern UniValue token(const UniValue &params, bool fHelp) { return UniValue(); }
 // helper functions
@@ -331,7 +401,7 @@ void checkSigInit()
     }
 }
 
-CKey LoadKey(unsigned char *src)
+CKey LoadKey(const unsigned char *src)
 {
     CKey secret;
     checkSigInit();
@@ -365,9 +435,34 @@ CKey LoadKey(unsigned char *src)
 #endif
 } // namespace
 
+SLAPI int encode64(const unsigned char *data, int size, char *result, int resultMaxLen)
+{
+    auto dataAsStr = EncodeBase64(data, size);
+    int outsz = dataAsStr.size();
+    if (outsz >= resultMaxLen)
+        return -outsz;
+    strncpy(result, dataAsStr.c_str(), resultMaxLen);
+    return outsz;
+}
+
+SLAPI int decode64(const char *data, unsigned char *result, int resultMaxLen)
+{
+    bool invalid = true;
+    auto dataBytes = DecodeBase64(data, &invalid);
+    if (invalid)
+    {
+        return 0;
+    }
+    int outsz = dataBytes.size();
+    if (outsz > resultMaxLen)
+        return -outsz;
+    memcpy(result, &dataBytes[0], outsz);
+    return outsz;
+}
+
 /** Convert binary data to a hex string.  The provided result buffer must be 2*length+1 bytes.
  */
-SLAPI int Bin2Hex(unsigned char *val, int length, char *result, unsigned int resultLen)
+SLAPI int Bin2Hex(const unsigned char *val, int length, char *result, unsigned int resultLen)
 {
     std::string s = GetHex(val, length);
     if (s.size() >= resultLen)
@@ -376,11 +471,42 @@ SLAPI int Bin2Hex(unsigned char *val, int length, char *result, unsigned int res
     return 1;
 }
 
+/** Derive a BIP-0044 heirarchial deterministic wallet key */
+SLAPI int hd44DeriveChildKey(const unsigned char *secretSeed,
+    unsigned int secretSeedLen,
+    unsigned int purpose,
+    unsigned int coinType,
+    unsigned int account,
+    bool change,
+    unsigned int index,
+    unsigned char *secret,
+    char *keypath)
+{
+    CKey derivedSecret;
+    if ((secretSeedLen < 16) || (secretSeedLen > 64))
+    {
+        return -1;
+    }
+    checkSigInit();
+    std::string derivPath;
+    int ret = Hd44DeriveChildKey(
+        secretSeed, secretSeedLen, purpose, coinType, account, change, index, derivedSecret, nullptr);
+    memcpy(secret, derivedSecret.begin(), 32);
+    // if (keypath != nullptr) keypath[0] = 0;
+    // strcpy(keypath, derivPath.c_str());
+    return ret;
+}
+
+
 /** Given a private key, return its corresponding public key */
-SLAPI int GetPubKey(unsigned char *keyData, unsigned char *result, unsigned int resultLen)
+SLAPI int GetPubKey(const unsigned char *keyData, unsigned char *result, unsigned int resultLen)
 {
     checkSigInit();
     CKey key = LoadKey(keyData);
+    if (key.IsValid() == false)
+    {
+        return 0;
+    }
     CPubKey pubkey = key.GetPubKey();
     unsigned int size = pubkey.size();
     if (size > resultLen)
@@ -389,10 +515,10 @@ SLAPI int GetPubKey(unsigned char *keyData, unsigned char *result, unsigned int 
     return size;
 }
 
-/** Sign data (compatible with OP_CHECKDATASIG) */
-SLAPI int SignHashEDCSA(unsigned char *data,
+/** Sign data (compatible with BCH OP_CHECKDATASIG) */
+SLAPI int SignHashEDCSA(const unsigned char *data,
     int datalen,
-    unsigned char *secret,
+    const unsigned char *secret,
     unsigned char *result,
     unsigned int resultLen)
 {
@@ -412,7 +538,7 @@ SLAPI int SignHashEDCSA(unsigned char *data,
     return sigSize;
 }
 
-SLAPI int txid(unsigned char *txData, int txbuflen, unsigned char *result)
+SLAPI int txid(const unsigned char *txData, int txbuflen, unsigned char *result)
 {
     CTransaction tx;
     CDataStream ssData((char *)txData, (char *)txData + txbuflen, SER_NETWORK, PROTOCOL_VERSION);
@@ -425,11 +551,12 @@ SLAPI int txid(unsigned char *txData, int txbuflen, unsigned char *result)
         return 0;
     }
     uint256 ret = tx.GetId();
-    memcpy(result, ret.begin(), ret.size());
-    return 1;
+    int retlen = ret.size();
+    memcpy(result, ret.begin(), retlen);
+    return retlen;
 }
 
-SLAPI int txidem(unsigned char *txData, int txbuflen, unsigned char *result)
+SLAPI int txidem(const unsigned char *txData, int txbuflen, unsigned char *result)
 {
     CTransaction tx;
     CDataStream ssData((char *)txData, (char *)txData + txbuflen, SER_NETWORK, PROTOCOL_VERSION);
@@ -442,9 +569,30 @@ SLAPI int txidem(unsigned char *txData, int txbuflen, unsigned char *result)
         return 0;
     }
     uint256 ret = tx.GetIdem();
-    memcpy(result, ret.begin(), ret.size());
-    return 1;
+    int retlen = ret.size();
+    memcpy(result, ret.begin(), retlen);
+    return retlen;
 }
+
+SLAPI int blockHash(const unsigned char *data, int len, unsigned char *result)
+{
+    CDataStream dataStrm((char *)data, (char *)data + len, SER_NETWORK, PROTOCOL_VERSION);
+    CBlockHeader blkHeader;
+    try
+    {
+        dataStrm >> blkHeader;
+    }
+    catch (const std::exception &)
+    {
+        return 0;
+    }
+
+    uint256 hash = blkHeader.GetHash();
+    int hashlen = hash.size();
+    memcpy(result, hash.begin(), hashlen);
+    return hashlen;
+}
+
 
 /** Sign one input of a transaction
     All buffer arguments should be in binary-serialized data.
@@ -452,14 +600,14 @@ SLAPI int txidem(unsigned char *txData, int txbuflen, unsigned char *result)
     however, it is not necessary to provide the spend script.
     Returns length of returned signature.
 */
-SLAPI int SignTxECDSA(unsigned char *txData,
+SLAPI int SignTxECDSA(const unsigned char *txData,
     int txbuflen,
     unsigned int inputIdx,
     int64_t inputAmount,
-    unsigned char *prevoutScript,
+    const unsigned char *prevoutScript,
     uint32_t priorScriptLen,
     uint32_t nHashType,
-    unsigned char *keyData,
+    const unsigned char *keyData,
     unsigned char *result,
     unsigned int resultLen)
 {
@@ -504,15 +652,16 @@ SLAPI int SignTxECDSA(unsigned char *txData,
     All buffer arguments should be in binary-serialized data.
     The transaction (txData) must contain the COutPoint (tx hash and vout) of all relevant inputs,
     however, it is not necessary to provide the spend script.
+    Since the sighashtype is appended to the signature, more than 64 bytes should be alloced for the result.
 */
-SLAPI int SignBchTxSchnorr(unsigned char *txData,
+SLAPI int signBchTxOneInputUsingSchnorr(const unsigned char *txData,
     int txbuflen,
     unsigned int inputIdx,
     int64_t inputAmount,
-    unsigned char *prevoutScript,
+    const unsigned char *prevoutScript,
     uint32_t priorScriptLen,
     uint32_t nHashType,
-    unsigned char *keyData,
+    const unsigned char *keyData,
     unsigned char *result,
     unsigned int resultLen)
 {
@@ -565,15 +714,16 @@ SLAPI int SignBchTxSchnorr(unsigned char *txData,
     The transaction (txData) must contain the COutPoint (tx hash and vout) of all relevant inputs,
     however, it is not necessary to provide the spend script.
 */
-SLAPI int SignTxSchnorr(unsigned char *txData,
+
+SLAPI int signTxOneInputUsingSchnorr(const unsigned char *txData,
     int txbuflen,
     unsigned int inputIdx,
     int64_t inputAmount,
-    unsigned char *prevoutScript,
+    const unsigned char *prevoutScript,
     uint32_t priorScriptLen,
-    unsigned char *hashType,
+    const unsigned char *hashType,
     unsigned int hashTypeLen,
-    unsigned char *keyData,
+    const unsigned char *keyData,
     unsigned char *result,
     unsigned int resultLen)
 {
@@ -627,6 +777,23 @@ SLAPI int SignTxSchnorr(unsigned char *txData,
     return sigSize;
 }
 
+SLAPI int SignTxSchnorr(const unsigned char *txData,
+    int txbuflen,
+    unsigned int inputIdx,
+    int64_t inputAmount,
+    const unsigned char *prevoutScript,
+    uint32_t priorScriptLen,
+    const unsigned char *hashType,
+    unsigned int hashTypeLen,
+    const unsigned char *keyData,
+    unsigned char *result,
+    unsigned int resultLen)
+{
+    return signTxOneInputUsingSchnorr(txData, txbuflen, inputIdx, inputAmount, prevoutScript, priorScriptLen, hashType,
+        hashTypeLen, keyData, result, resultLen);
+}
+
+
 /** Sign data via the Schnorr signature algorithm.  hash must be 32 bytes.
     All buffer arguments should be in binary-serialized data.
     The transaction (txData) must contain the COutPoint (tx hash and vout) of all relevant inputs,
@@ -634,10 +801,7 @@ SLAPI int SignTxSchnorr(unsigned char *txData,
 
     The returned signature will not have a sighashtype byte.
 */
-SLAPI int SignHashSchnorr(const unsigned char *hash,
-    unsigned char *keyData,
-    unsigned char *result,
-    unsigned int resultLen)
+SLAPI int SignHashSchnorr(const unsigned char *hash, const unsigned char *keyData, unsigned char *result)
 {
     uint256 sighash(hash);
     std::vector<unsigned char> sig;
@@ -650,39 +814,263 @@ SLAPI int SignHashSchnorr(const unsigned char *hash,
         return 0;
     }
     unsigned int sigSize = sig.size();
-    if (sigSize > resultLen)
+    if (sigSize > MAX_SIG_LEN) // should never happen for the constant-sized schnorr signatures
         return 0;
     std::copy(sig.begin(), sig.end(), result);
     return sigSize;
 }
 
-// result must be 32 bytes
-SLAPI void sha256(const unsigned char *data, unsigned int len, unsigned char *result)
-{
-    CSHA256 sha;
-    sha.Write(data, len);
-    sha.Finalize(result);
-}
 
-
-// result must be 32 bytes
-SLAPI void hash256(const unsigned char *data, unsigned int len, unsigned char *result)
-{
-    CHash256 hash;
-    hash.Write(data, len);
-    hash.Finalize(result);
-}
-
-
-// result must be 20 bytes
-SLAPI void hash160(const unsigned char *data, unsigned int len, unsigned char *result)
-{
-    CHash160 hash;
-    hash.Write(data, len);
-    hash.Finalize(result);
-}
-
+// These "C" functions are not needed in android, since java-naming-convention equivalents are defined
 #ifndef ANDROID
+
+SLAPI int signMessage(const unsigned char *message,
+    unsigned int msgLen,
+    const unsigned char *secret,
+    unsigned int secretLen,
+    unsigned char *result,
+    unsigned int resultLen)
+{
+    if (secretLen != 32)
+        return 0;
+
+    checkSigInit();
+
+    CKey key = LoadKey((const unsigned char *)secret);
+
+    CHashWriter ss(SER_GETHASH, 0);
+    ss << strMessageMagic << std::vector<unsigned char>(message, message + msgLen);
+
+    uint256 msgHash = ss.GetHash();
+    // __android_log_print(ANDROID_LOG_INFO, APPNAME, "signing msgHash %s\n", msgHash.GetHex().c_str());
+    std::vector<unsigned char> vchSig;
+    if (!key.SignCompact(msgHash, vchSig)) // signing will only fail if the key is bogus
+    {
+        return 0;
+    }
+    unsigned int sz = vchSig.size();
+    if (sz == 0)
+        return 0;
+    if (sz > resultLen)
+        return 0;
+
+    // __android_log_print(ANDROID_LOG_INFO, APPNAME, "signing sigSize %d data %s\n", vchSig.size(),
+    // GetHex(vchSig.begin(), vchSig.size()).c_str());
+    memcpy(result, vchSig.data(), sz);
+    return sz;
+}
+
+SLAPI int verifyMessage(const unsigned char *message,
+    unsigned int msgLen,
+    const unsigned char *addr,
+    unsigned int addrLen,
+    const unsigned char *sig,
+    unsigned int sigLen,
+    unsigned char *result,
+    unsigned int resultLen)
+{
+    if (addrLen != 20)
+        return 0;
+
+    checkSigInit();
+
+    CHashWriter ss(SER_GETHASH, 0);
+    ss << strMessageMagic << std::vector<unsigned char>(message, message + msgLen);
+    uint256 msgHash = ss.GetHash();
+    //__android_log_print(ANDROID_LOG_INFO, APPNAME, "verifying msgHash %s\n", msgHash.GetHex().c_str());
+    //__android_log_print(ANDROID_LOG_INFO, APPNAME, "verifying sigSize %d data %s\n", sig.size, GetHex(sig.data,
+    // sig.size).c_str());
+
+    CPubKey pubkey;
+    std::vector<unsigned char> sigv(sig, sig + sigLen);
+    if (!pubkey.RecoverCompact(msgHash, sigv))
+        return 0;
+
+    CKeyID pkAddr = pubkey.GetID();
+    CKeyID passedAddr = CKeyID(uint160(addr));
+    //__android_log_print(ANDROID_LOG_INFO, APPNAME, "pkAddr %s\n", pkAddr.GetHex().c_str());
+    //__android_log_print(ANDROID_LOG_INFO, APPNAME, "passedAddr %s\n", passedAddr.GetHex().c_str());
+    unsigned int sz = pubkey.size();
+    if (sz > resultLen)
+        return 0;
+
+    memcpy(result, pubkey.begin(), sz);
+    if (pkAddr == passedAddr)
+        return sz;
+    else
+        return -sz;
+}
+
+SLAPI bool verifyBlockHeader(int chainSelector, const unsigned char *serializedHeader, int serLen)
+{
+    checkSigInit();
+    const CChainParams *cp = GetChainParams(static_cast<ChainSelector>(chainSelector));
+    if (cp == nullptr)
+    {
+        return false;
+    }
+    CDataStream dataStrm((char *)serializedHeader, (char *)serializedHeader + serLen, SER_NETWORK, PROTOCOL_VERSION);
+    CBlockHeader blkHeader;
+    try
+    {
+        dataStrm >> blkHeader;
+    }
+    catch (const std::exception &)
+    {
+        return false;
+    }
+    CValidationState state;
+    bool result = CheckBlockHeader(cp->GetConsensus(), blkHeader, state, true);
+    return result;
+}
+
+SLAPI int encodeCashAddr(int chainSelector, int typ, const unsigned char *data, int len, char *result, int resultMaxLen)
+{
+    CTxDestination dst = CNoDestination();
+
+    if ((typ == PayAddressTypeP2PKH) || (typ == PayAddressTypeP2SH))
+    {
+        if (len != 20)
+        {
+            return 0;
+        }
+        uint160 tmp((const uint8_t *)data);
+        if (typ == PayAddressTypeP2PKH)
+        {
+            dst = CKeyID(tmp);
+        }
+        else if (typ == PayAddressTypeP2SH)
+        {
+            dst = CScriptID(tmp);
+        }
+    }
+    else if ((typ == PayAddressTypeTEMPLATE) || (typ == PayAddressTypeP2PKT))
+    {
+        // A PayAddress contains a serialized script
+        // Really the "right" way to do this is to just encode the exact bytes without stripping off
+        // the serialization and putting it back on but that does not work with the "Destination" code.
+        // As it is, any additional parts (currently none are defined) to the PayAddress will be removed
+        ScriptTemplateDestination st;
+        std::vector<unsigned char> vec(data, data + len);
+        CDataStream ssData(vec, SER_NETWORK, PROTOCOL_VERSION);
+        ssData >> st;
+        dst = st;
+    }
+    else
+    {
+        return 0;
+    }
+
+    const CChainParams *cp = GetChainParams((ChainSelector)chainSelector);
+    if (cp == nullptr)
+    {
+        return 0;
+    }
+    std::string addrAsStr(EncodeCashAddr(dst, *cp));
+    int sz = addrAsStr.size();
+    if (sz >= resultMaxLen)
+        return -sz;
+    strncpy(result, addrAsStr.c_str(), resultMaxLen);
+    return sz;
+}
+
+
+SLAPI int decodeCashAddr(int chainSelector, const char *addrstr, unsigned char *result, int resultMaxLen)
+{
+    const CChainParams *cp = GetChainParams((ChainSelector)chainSelector);
+    if (cp == nullptr)
+    {
+        return 0;
+    }
+
+    CTxDestination dst = DecodeCashAddr(addrstr, *cp);
+    std::vector<unsigned char> resultv;
+    std::visit(PubkeyExtractor(resultv, *cp), dst);
+    int sz = resultv.size();
+    if (sz > resultMaxLen)
+        return -sz;
+    memcpy(result, &resultv[0], sz);
+    return sz;
+}
+
+SLAPI int groupIdToAddr(int chainSelector, const unsigned char *data, int len, char *result, int resultMaxLen)
+{
+    if (len < 32)
+    {
+        return -len;
+    }
+    if (len > 520)
+    {
+        return -len;
+    }
+    CGroupTokenID grp((uint8_t *)data, len);
+    const CChainParams *cp = GetChainParams((ChainSelector)chainSelector);
+    if (cp == nullptr)
+    {
+        return 0;
+    }
+    std::string addrAsStr(EncodeGroupToken(grp, *cp));
+    int sz = addrAsStr.size();
+    if (sz >= resultMaxLen)
+        return -sz;
+    strncpy(result, addrAsStr.c_str(), resultMaxLen);
+    return sz;
+}
+
+
+SLAPI int groupIdFromAddr(int chainSelector, const char *addrstr, unsigned char *result, int resultMaxLen)
+{
+    const CChainParams *cp = GetChainParams((ChainSelector)chainSelector);
+    if (cp == nullptr)
+    {
+        return 0;
+    }
+    CGroupTokenID gid = DecodeGroupToken(addrstr, *cp);
+    size_t size = gid.bytes().size();
+    if (size < 32) // min group id size
+    {
+        return -size;
+    }
+    if (size > 520) // max group id size
+    {
+        return -size;
+    }
+    if (size > (unsigned int)resultMaxLen)
+        return -size;
+
+    memcpy(result, &gid.bytes().front(), size);
+    return size;
+}
+
+
+SLAPI int decodeWifPrivateKey(int chainSelector, const char *secretWIF, unsigned char *result, int resultMaxLen)
+{
+    const CChainParams *cp = GetChainParams(static_cast<ChainSelector>(chainSelector));
+    if (cp == nullptr)
+    {
+        return 0;
+    }
+    CBitcoinSecret secret;
+    const bool ok = secret.SetString(*cp, secretWIF);
+    if (!ok)
+    {
+        return 0;
+    }
+    const CKey key = secret.GetKey();
+    if (!key.IsValid())
+    {
+        return 0;
+    }
+    auto sz = key.size();
+    if (sz > (unsigned int)resultMaxLen)
+        return -sz;
+    memcpy(result, static_cast<const uint8_t *>(key.begin()), sz);
+    return sz;
+}
+#endif
+
+#ifndef LIGHT // The script interpreter is not available in light clients
+
 /*
 Since the ScriptMachine is often going to be initialized, called and destructed within a single stack frame, it
 does not make copies of the data it is using.  But higher-level language and debugging interaction use the
@@ -1000,7 +1388,132 @@ SLAPI unsigned int SmGetError(void *smId)
     ScriptMachineData *smd = (ScriptMachineData *)smId;
     return (unsigned int)smd->sm->getError();
 }
-#endif // ifndef ANDROID
+
+#endif // LIGHT
+
+// result must be 32 bytes
+SLAPI void sha256(const unsigned char *data, unsigned int len, unsigned char *result)
+{
+    CSHA256 sha;
+    sha.Write((const unsigned char *)data, len);
+    sha.Finalize((unsigned char *)result);
+}
+
+
+// result must be 32 bytes
+SLAPI void hash256(const unsigned char *data, unsigned int len, unsigned char *result)
+{
+    CHash256 hash;
+    hash.Write((const unsigned char *)data, len);
+    hash.Finalize((unsigned char *)result);
+}
+
+
+// result must be 20 bytes
+SLAPI void hash160(const unsigned char *data, unsigned int len, unsigned char *result)
+{
+    CHash160 hash;
+    hash.Write((const unsigned char *)data, len);
+    hash.Finalize((unsigned char *)result);
+}
+
+/** Get work from nbits */
+SLAPI void getWorkFromDifficultyBits(unsigned long int nBits, unsigned char *result)
+{
+    arith_uint256 work = GetWorkForDifficultyBits((uint32_t)nBits);
+    uint256 ui = ArithToUint256(work);
+    ui.reverse();
+    memcpy(result, ui.begin(), 32);
+}
+
+
+/** Create a bloom filter */
+SLAPI int createBloomFilter(const unsigned char *data,
+    unsigned int len,
+    unsigned int elemLen,
+    double falsePosRate,
+    int capacity,
+    int maxSize,
+    int flags,
+    int tweak,
+    unsigned char *result)
+{
+    if (capacity < 10)
+        capacity = 10; // sanity check the capacity
+
+    if (!((falsePosRate >= 0) && (falsePosRate <= 1.0)))
+    {
+        return 0;
+    }
+
+    int maxx = (capacity > len) ? capacity : len;
+    CBloomFilter bloom(maxx, falsePosRate, tweak, flags, maxSize);
+
+    const unsigned char *elemData = data;
+    for (size_t i = 0; i < len; i++, elemData += elemLen)
+    {
+        bloom.insert(std::vector<unsigned char>(elemData, elemData + elemLen));
+    }
+
+    CDataStream serializer(SER_NETWORK, PROTOCOL_VERSION);
+    serializer << bloom;
+    //__android_log_print(ANDROID_LOG_INFO, APPNAME, "Bloom size: %d Bloom serialized size: %d numAddrs: %d\n",
+    //    (unsigned int)bloom.vDataSize(), (unsigned int)serializer.size(), (unsigned int)len);
+    int ret = serializer.size();
+
+    if (!result)
+        return 0; // failed
+    memcpy(result, serializer.data(), ret);
+    return ret;
+}
+
+// Since partial Merkle blocks are just trees of hashes, this structure is the same for Nexa and BCH
+SLAPI int extractFromMerkleBlock(int numTxes,
+    const unsigned char *merkleProofPath,
+    int mppLen,
+    const unsigned char *hashIn,
+    int numHashes,
+    unsigned char *result,
+    int resultLen)
+{
+    const unsigned int HASH_LEN = 32;
+    CDecodablePartialMerkleTree tree(numTxes, merkleProofPath, mppLen);
+    // Copy the hashes out of the array into the PartialMerkleTree
+    auto &hashes = tree.accessHashes();
+    hashes.resize(numHashes);
+    for (size_t i = 0; i < (unsigned int)numHashes; i++)
+    {
+        hashes[i] = uint256(hashIn + (i * HASH_LEN));
+    }
+
+    std::vector<uint256> matches;
+    std::vector<unsigned int> matchIndexes;
+    uint256 merkleRoot = tree.ExtractMatches(matches, matchIndexes);
+
+    unsigned char *dest = result;
+    unsigned char *end = result + resultLen;
+
+    int ret = matches.size() + 1;
+    if (dest + HASH_LEN > end)
+        return ret;
+
+    memcpy(dest, merkleRoot.begin(), HASH_LEN);
+
+    dest += HASH_LEN;
+    if (dest > end)
+        return ret;
+
+    // Fill the rest with transaction hashes
+    for (size_t i = 0; i < matches.size(); i++)
+    {
+        memcpy(dest, matches[i].begin(), HASH_LEN);
+        dest += HASH_LEN;
+        if (dest > end)
+            return ret;
+    }
+    return ret;
+}
+
 
 #ifdef JAVA
 
@@ -1112,8 +1625,8 @@ jbyteArray makeJByteArray(JNIEnv *env, std::vector<unsigned char> &buf)
     return bArray;
 }
 
-#ifndef ANDROID
-extern "C" JNIEXPORT jlong JNICALL Java_bitcoinunlimited_libbitcoincash_ScriptMachine_create(JNIEnv *env,
+#ifndef LIGHT
+extern "C" JNIEXPORT jlong JNICALL Java_org_nexa_libnexakotlin_ScriptMachine_create(JNIEnv *env,
     jobject ths,
     jbyteArray tx,
     jbyteArray outpoints,
@@ -1134,7 +1647,7 @@ extern "C" JNIEXPORT jlong JNICALL Java_bitcoinunlimited_libbitcoincash_ScriptMa
     return ((jlong)sm);
 }
 
-extern "C" JNIEXPORT jlong JNICALL Java_bitcoinunlimited_libbitcoincash_ScriptMachine_createTemplateContext(JNIEnv *env,
+extern "C" JNIEXPORT jlong JNICALL Java_org_nexa_libnexakotlin_ScriptMachine_createTemplateContext(JNIEnv *env,
     jobject ths,
     jbyteArray tx,
     jbyteArray outpoints,
@@ -1199,7 +1712,7 @@ extern "C" JNIEXPORT jlong JNICALL Java_bitcoinunlimited_libbitcoincash_ScriptMa
 }
 
 
-extern "C" JNIEXPORT jlong JNICALL Java_bitcoinunlimited_libbitcoincash_ScriptMachine_createNoContext(JNIEnv *env,
+extern "C" JNIEXPORT jlong JNICALL Java_org_nexa_libnexakotlin_ScriptMachine_createNoContext(JNIEnv *env,
     jobject ths,
     jint flags)
 {
@@ -1210,7 +1723,7 @@ extern "C" JNIEXPORT jlong JNICALL Java_bitcoinunlimited_libbitcoincash_ScriptMa
 }
 
 
-extern "C" JNIEXPORT jboolean Java_bitcoinunlimited_libbitcoincash_ScriptMachine_eval(JNIEnv *env,
+extern "C" JNIEXPORT jboolean Java_org_nexa_libnexakotlin_ScriptMachine_eval(JNIEnv *env,
     jobject ths,
     jlong smid,
     jbyteArray scriptBytes,
@@ -1229,7 +1742,7 @@ extern "C" JNIEXPORT jboolean Java_bitcoinunlimited_libbitcoincash_ScriptMachine
     return ret;
 }
 
-extern "C" JNIEXPORT jboolean JNICALL Java_bitcoinunlimited_libbitcoincash_ScriptMachine_cont(JNIEnv *env,
+extern "C" JNIEXPORT jboolean JNICALL Java_org_nexa_libnexakotlin_ScriptMachine_cont(JNIEnv *env,
     jobject ths,
     jlong smid)
 {
@@ -1242,7 +1755,7 @@ extern "C" JNIEXPORT jboolean JNICALL Java_bitcoinunlimited_libbitcoincash_Scrip
     return smd->sm->Continue();
 }
 
-extern "C" JNIEXPORT jboolean JNICALL Java_bitcoinunlimited_libbitcoincash_ScriptMachine_step(JNIEnv *env,
+extern "C" JNIEXPORT jboolean JNICALL Java_org_nexa_libnexakotlin_ScriptMachine_step(JNIEnv *env,
     jobject ths,
     jlong smid)
 {
@@ -1261,7 +1774,7 @@ extern "C" JNIEXPORT jboolean JNICALL Java_bitcoinunlimited_libbitcoincash_Scrip
 }
 
 
-extern "C" JNIEXPORT void JNICALL Java_bitcoinunlimited_libbitcoincash_ScriptMachine_swapStacks(JNIEnv *env,
+extern "C" JNIEXPORT void JNICALL Java_org_nexa_libnexakotlin_ScriptMachine_swapStacks(JNIEnv *env,
     jobject ths,
     jlong smid)
 {
@@ -1276,9 +1789,7 @@ extern "C" JNIEXPORT void JNICALL Java_bitcoinunlimited_libbitcoincash_ScriptMac
     }
 }
 
-extern "C" JNIEXPORT jstring Java_bitcoinunlimited_libbitcoincash_ScriptMachine_getError(JNIEnv *env,
-    jobject ths,
-    jlong smid)
+extern "C" JNIEXPORT jstring Java_org_nexa_libnexakotlin_ScriptMachine_getError(JNIEnv *env, jobject ths, jlong smid)
 {
     ScriptMachineData *smd = (ScriptMachineData *)smid;
     if ((!smd) || (!smd->sm))
@@ -1295,9 +1806,7 @@ extern "C" JNIEXPORT jstring Java_bitcoinunlimited_libbitcoincash_ScriptMachine_
 }
 
 // Step-by-step interface: get current position in this script, in bytes offset from the script start
-extern "C" JNIEXPORT jint Java_bitcoinunlimited_libbitcoincash_ScriptMachine_getPos(JNIEnv *env,
-    jobject ths,
-    jlong smId)
+extern "C" JNIEXPORT jint Java_org_nexa_libnexakotlin_ScriptMachine_getPos(JNIEnv *env, jobject ths, jlong smId)
 
 {
     ScriptMachineData *smd = (ScriptMachineData *)smId;
@@ -1310,7 +1819,7 @@ extern "C" JNIEXPORT jint Java_bitcoinunlimited_libbitcoincash_ScriptMachine_get
 }
 
 // Step-by-step interface: get current position in this script, in bytes offset from the script start
-extern "C" JNIEXPORT jint Java_bitcoinunlimited_libbitcoincash_ScriptMachine_setPos(JNIEnv *env,
+extern "C" JNIEXPORT jint Java_org_nexa_libnexakotlin_ScriptMachine_setPos(JNIEnv *env,
     jobject ths,
     jlong smId,
     jint pos)
@@ -1332,9 +1841,7 @@ extern "C" JNIEXPORT jint Java_bitcoinunlimited_libbitcoincash_ScriptMachine_set
 
 
 // Step-by-step interface: get current position in this script, in bytes offset from the script start
-extern "C" JNIEXPORT jstring Java_bitcoinunlimited_libbitcoincash_ScriptMachine_getBMD(JNIEnv *env,
-    jobject ths,
-    jlong smId)
+extern "C" JNIEXPORT jstring Java_org_nexa_libnexakotlin_ScriptMachine_getBMD(JNIEnv *env, jobject ths, jlong smId)
 
 {
     ScriptMachineData *smd = (ScriptMachineData *)smId;
@@ -1347,7 +1854,7 @@ extern "C" JNIEXPORT jstring Java_bitcoinunlimited_libbitcoincash_ScriptMachine_
 }
 
 // Step-by-step interface: get current position in this script, in bytes offset from the script start
-extern "C" JNIEXPORT bool Java_bitcoinunlimited_libbitcoincash_ScriptMachine_modify(JNIEnv *env,
+extern "C" JNIEXPORT bool Java_org_nexa_libnexakotlin_ScriptMachine_modify(JNIEnv *env,
     jobject ths,
     jlong smId,
     jint offset,
@@ -1368,7 +1875,7 @@ extern "C" JNIEXPORT bool Java_bitcoinunlimited_libbitcoincash_ScriptMachine_mod
 /** This makes sense to give as text because we don't want the higher layers to have to parse the BigNum format
     and certainly don't want to expose the internal bignum representation
 */
-extern "C" JNIEXPORT jstring Java_bitcoinunlimited_libbitcoincash_ScriptMachine_getStackItemText(JNIEnv *env,
+extern "C" JNIEXPORT jstring Java_org_nexa_libnexakotlin_ScriptMachine_getStackItemText(JNIEnv *env,
     jobject ths,
     jlong smid,
     jint whichStack,
@@ -1424,7 +1931,7 @@ extern "C" JNIEXPORT jstring Java_bitcoinunlimited_libbitcoincash_ScriptMachine_
 }
 
 
-extern "C" JNIEXPORT jboolean JNICALL Java_bitcoinunlimited_libbitcoincash_ScriptMachine_delete(JNIEnv *env,
+extern "C" JNIEXPORT jboolean JNICALL Java_org_nexa_libnexakotlin_ScriptMachine_delete(JNIEnv *env,
     jobject ths,
     jlong smid)
 {
@@ -1435,7 +1942,7 @@ extern "C" JNIEXPORT jboolean JNICALL Java_bitcoinunlimited_libbitcoincash_Scrip
 
 #endif // ifndef ANDROID
 
-extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Wallet_signMessage(JNIEnv *env,
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_signMessage(JNIEnv *env,
     jobject ths,
     jbyteArray jmessage,
     jbyteArray secret)
@@ -1447,7 +1954,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Wal
 
     checkSigInit();
 
-    CKey key = LoadKey((unsigned char *)privkey.data);
+    CKey key = LoadKey((const unsigned char *)privkey.data);
 
     CHashWriter ss(SER_GETHASH, 0);
     ss << strMessageMagic << message.vec();
@@ -1486,7 +1993,7 @@ extern "C" JNIEXPORT jboolean JNICALL Java_bitcoinunlimited_libbitcoincash_Walle
     return pubkey.VerifySchnorr(messageHash, sig.vec());
 }
 
-extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Wallet_verifyMessage(JNIEnv *env,
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_verifyMessage(JNIEnv *env,
     jobject ths,
     jbyteArray jmessage,
     jbyteArray addrBytes,
@@ -1529,7 +2036,6 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Wal
                     destination = DecodeDestination(s, Params(CBaseChainParams::LEGACY_UNIT_TESTS));
                     if (!IsValidDestination(destination))
                     {
-                        return makeJByteArray(env, s);
                         return jbyteArray();
                     }
                 }
@@ -1591,7 +2097,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Wal
 }
 
 
-extern "C" JNIEXPORT jstring JNICALL Java_bitcoinunlimited_libbitcoincash_Codec_encode64(JNIEnv *env,
+extern "C" JNIEXPORT jstring JNICALL Java_org_nexa_libnexakotlin_Native_encode64(JNIEnv *env,
     jobject ths,
     jbyteArray jdata)
 {
@@ -1600,7 +2106,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_bitcoinunlimited_libbitcoincash_Codec_
     return env->NewStringUTF(dataAsStr.c_str());
 }
 
-extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Codec_decode64(JNIEnv *env,
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_decode64(JNIEnv *env,
     jobject ths,
     jstring jdata)
 {
@@ -1615,7 +2121,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Cod
     return makeJByteArray(env, dataBytes);
 }
 
-extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Wallet_signOneInputUsingECDSA(JNIEnv *env,
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_signOneInputUsingECDSA(JNIEnv *env,
     jobject ths,
     jbyteArray txData,
     jint sigHashType,
@@ -1639,8 +2145,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Wal
     return makeJByteArray(env, result, resultLen);
 }
 
-extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Wallet_signOneInputUsingSchnorr(
-    JNIEnv *env,
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_signOneInputUsingSchnorr(JNIEnv *env,
     jobject ths,
     jbyteArray txData,
     jbyteArray hashType,
@@ -1657,7 +2162,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Wal
         return jbyteArray();
 
     unsigned char result[MAX_SIG_LEN];
-    uint32_t resultLen = SignTxSchnorr(tx.data, tx.size, inputIdx, inputAmount, prevout.data, prevout.size,
+    uint32_t resultLen = signTxOneInputUsingSchnorr(tx.data, tx.size, inputIdx, inputAmount, prevout.data, prevout.size,
         sigHashType.data, sigHashType.size, privkey.data, result, MAX_SIG_LEN);
 
     if (resultLen == 0)
@@ -1668,8 +2173,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Wal
     return makeJByteArray(env, result, resultLen);
 }
 
-extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Wallet_signOneBchInputUsingSchnorr(
-    JNIEnv *env,
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_signOneBchInputUsingSchnorr(JNIEnv *env,
     jobject ths,
     jbyteArray txData,
     jint sigHashType,
@@ -1685,8 +2189,8 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Wal
         return jbyteArray();
 
     unsigned char result[MAX_SIG_LEN];
-    uint32_t resultLen = SignBchTxSchnorr(tx.data, tx.size, inputIdx, inputAmount, prevout.data, prevout.size,
-        sigHashType, privkey.data, result, MAX_SIG_LEN);
+    uint32_t resultLen = signBchTxOneInputUsingSchnorr(tx.data, tx.size, inputIdx, inputAmount, prevout.data,
+        prevout.size, sigHashType, privkey.data, result, MAX_SIG_LEN);
 
     if (resultLen == 0)
     {
@@ -1698,7 +2202,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Wal
 
 
 /** Create a bloom filter */
-extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Wallet_CreateBloomFilter(JNIEnv *env,
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_createBloomFilter(JNIEnv *env,
     jobject ths,
     jobjectArray arg,
     jdouble falsePosRate,
@@ -1742,8 +2246,8 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Wal
 
     CDataStream serializer(SER_NETWORK, PROTOCOL_VERSION);
     serializer << bloom;
-    __android_log_print(ANDROID_LOG_INFO, APPNAME, "Bloom size: %d Bloom serialized size: %d numAddrs: %d\n",
-        (unsigned int)bloom.vDataSize(), (unsigned int)serializer.size(), (unsigned int)len);
+    //__android_log_print(ANDROID_LOG_INFO, APPNAME, "Bloom size: %d Bloom serialized size: %d numAddrs: %d\n",
+    //    (unsigned int)bloom.vDataSize(), (unsigned int)serializer.size(), (unsigned int)len);
     jbyteArray ret = env->NewByteArray(serializer.size());
     jbyte *retData = env->GetByteArrayElements(ret, 0);
 
@@ -1756,15 +2260,16 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Wal
 }
 
 /** Get work from nbits */
-extern "C" JNIEXPORT jbyteArray JNICALL
-Java_bitcoinunlimited_libbitcoincash_Blockchain_getWorkFromDifficultyBits(JNIEnv *env, jobject ths, jlong nBits)
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_getWorkFromDifficultyBits(JNIEnv *env,
+    jobject ths,
+    jlong nBits)
 {
     arith_uint256 result = GetWorkForDifficultyBits((uint32_t)nBits);
     return encodeUint256(env, result);
 }
 
 /** Given a private key, return its corresponding public key */
-extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_PayDestination_GetPubKey(JNIEnv *env,
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_getPubKey(JNIEnv *env,
     jobject ths,
     jbyteArray arg)
 {
@@ -1779,9 +2284,13 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Pay
         triggerJavaIllegalStateException(env, err.str().c_str());
         return nullptr;
     }
-    assert(len == 32);
 
-    CKey k = LoadKey((unsigned char *)data);
+    CKey k = LoadKey((const unsigned char *)data);
+    if (!k.IsValid())
+    {
+        triggerJavaIllegalStateException(env, "invalid secret");
+        return nullptr;
+    }
     CPubKey pub = k.GetPubKey();
     jbyteArray bArray = env->NewByteArray(pub.size());
     jbyte *dest = env->GetByteArrayElements(bArray, 0);
@@ -1792,7 +2301,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Pay
     return bArray;
 }
 
-extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Key_signDataUsingSchnorr(JNIEnv *env,
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_signHashSchnorr(JNIEnv *env,
     jobject ths,
     jbyteArray message,
     jbyteArray secret)
@@ -1820,7 +2329,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Key
     }
 
     unsigned char result[MAX_SIG_LEN];
-    uint32_t resultLen = SignHashSchnorr(data.data, privkey.data, result, MAX_SIG_LEN);
+    uint32_t resultLen = SignHashSchnorr(data.data, privkey.data, result);
 
     if (resultLen == 0)
     {
@@ -1831,7 +2340,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Key
 }
 
 
-extern "C" JNIEXPORT jstring JNICALL Java_bitcoinunlimited_libbitcoincash_PayAddress_EncodeCashAddr(JNIEnv *env,
+extern "C" JNIEXPORT jstring JNICALL Java_org_nexa_libnexakotlin_Native_encodeCashAddr(JNIEnv *env,
     jobject ths,
     jbyte chainSelector,
     jbyte typ,
@@ -1888,41 +2397,8 @@ extern "C" JNIEXPORT jstring JNICALL Java_bitcoinunlimited_libbitcoincash_PayAdd
     return env->NewStringUTF(addrAsStr.c_str());
 }
 
-class PubkeyExtractor
-{
-protected:
-    const CChainParams &params;
-    std::vector<unsigned char> &dest;
 
-public:
-    PubkeyExtractor(std::vector<unsigned char> &destination, const CChainParams &p) : params(p), dest(destination) {}
-    void operator()(const CKeyID &id) const
-    {
-        dest.resize(21);
-        dest[0] = PayAddressTypeP2PKH;
-        memcpy(&dest[1], id.begin(), 20); // pubkey is 20 bytes
-    }
-    void operator()(const CScriptID &id) const
-    {
-        dest.resize(21);
-        dest[0] = PayAddressTypeP2SH;
-        memcpy(&dest[1], id.begin(), 20); // pubkey is 20 bytes
-    }
-    void operator()(const CNoDestination &) const
-    {
-        dest.resize(1);
-        dest[0] = PayAddressTypeNONE;
-    }
-    void operator()(const ScriptTemplateDestination &id) const
-    {
-        // There may be no pubkey here or we can't find it anyway... extract and return the script
-        dest.resize(1);
-        dest[0] = PayAddressTypeTEMPLATE;
-        dest = id.appendTo(dest);
-    }
-};
-
-extern "C" JNIEXPORT jstring JNICALL Java_bitcoinunlimited_libbitcoincash_GroupId_ToAddr(JNIEnv *env,
+extern "C" JNIEXPORT jstring JNICALL Java_org_nexa_libnexakotlin_Native_groupIdToAddr(JNIEnv *env,
     jobject ths,
     jbyte chainSelector,
     jbyteArray arg)
@@ -1930,7 +2406,12 @@ extern "C" JNIEXPORT jstring JNICALL Java_bitcoinunlimited_libbitcoincash_GroupI
     size_t len = env->GetArrayLength(arg);
     if (len < 32)
     {
-        triggerJavaIllegalStateException(env, "bad address argument length");
+        triggerJavaIllegalStateException(env, "bad address argument length too small");
+        return nullptr;
+    }
+    if (len > 520)
+    {
+        triggerJavaIllegalStateException(env, "bad address argument length too large");
         return nullptr;
     }
     jbyte *data = env->GetByteArrayElements(arg, 0);
@@ -1950,7 +2431,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_bitcoinunlimited_libbitcoincash_GroupI
 }
 
 
-extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_GroupId_FromAddr(JNIEnv *env,
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_groupIdFromAddr(JNIEnv *env,
     jobject ths,
     jbyte chainSelector,
     jstring addrstr)
@@ -1966,7 +2447,12 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Gro
     size_t size = gid.bytes().size();
     if (size < 32) // min group id size
     {
-        triggerJavaIllegalStateException(env, "Address is not a group");
+        triggerJavaIllegalStateException(env, "Address is not a group (too small)");
+        return nullptr;
+    }
+    if (size > 520) // max group id size
+    {
+        triggerJavaIllegalStateException(env, "Address is not a group (too large)");
         return nullptr;
     }
 
@@ -1978,7 +2464,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Gro
 }
 
 
-extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_PayAddress_DecodeCashAddr(JNIEnv *env,
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_decodeCashAddr(JNIEnv *env,
     jobject ths,
     jbyte chainSelector,
     jstring addrstr)
@@ -2000,7 +2486,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Pay
     return bArray;
 }
 
-extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Key_decodePrivateKey(JNIEnv *env,
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_decodeWifPrivateKey(JNIEnv *env,
     jobject ths,
     jbyte chainSelector,
     jstring secretWIF)
@@ -2030,8 +2516,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Key
 }
 
 // many of the args are long so that the hardened selectors (i.e. 0x80000000) are not negative
-extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_AddressDerivationKey_Hd44DeriveChildKey(
-    JNIEnv *env,
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_deriveHd44ChildKey(JNIEnv *env,
     jobject ths,
     jbyteArray masterSecretBytes,
     jlong purpose,
@@ -2064,7 +2549,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Add
     return bArray;
 }
 
-extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Hash_sha256(JNIEnv *env,
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_sha256(JNIEnv *env,
     jobject ths,
     jbyteArray arg)
 {
@@ -2080,7 +2565,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Has
     return bArray;
 }
 
-extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Hash_hash256(JNIEnv *env,
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_hash256(JNIEnv *env,
     jobject ths,
     jbyteArray arg)
 {
@@ -2096,7 +2581,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Has
     return bArray;
 }
 
-extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Hash_hash160(JNIEnv *env,
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_hash160(JNIEnv *env,
     jobject ths,
     jbyteArray arg)
 {
@@ -2112,7 +2597,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Has
     return bArray;
 }
 
-extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_NexaBlockHeader_blockHash(JNIEnv *env,
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_blockHash(JNIEnv *env,
     jobject ths,
     jbyteArray arg)
 {
@@ -2134,8 +2619,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Nex
     return bArray;
 }
 
-extern "C" JNIEXPORT jboolean JNICALL Java_bitcoinunlimited_libbitcoincash_NexaBlockHeader_verifyBlockHeader(
-    JNIEnv *env,
+extern "C" JNIEXPORT jboolean JNICALL Java_org_nexa_libnexakotlin_Native_verifyBlockHeader(JNIEnv *env,
     jobject ths,
     jbyte chainSelector,
     jbyteArray arg)
@@ -2162,7 +2646,7 @@ extern "C" JNIEXPORT jboolean JNICALL Java_bitcoinunlimited_libbitcoincash_NexaB
 }
 
 
-extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_NexaTransaction_txid(JNIEnv *env,
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_txid(JNIEnv *env,
     jobject ths,
     jbyteArray arg)
 {
@@ -2180,7 +2664,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Nex
     return bArray;
 }
 
-extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_NexaTransaction_txidem(JNIEnv *env,
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_txidem(JNIEnv *env,
     jobject ths,
     jbyteArray arg)
 {
@@ -2199,21 +2683,6 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_bitcoinunlimited_libbitcoincash_Nex
 }
 
 
-class CDecodablePartialMerkleTree : public CPartialMerkleTree
-{
-public:
-    std::vector<uint256> &accessHashes() { return vHash; }
-    CDecodablePartialMerkleTree(unsigned int ntx, char *bitField, int bitFieldLen)
-    {
-        nTransactions = ntx;
-        vBits.resize(bitFieldLen * 8);
-        for (unsigned int p = 0; p < vBits.size(); p++)
-            vBits[p] = (bitField[p / 8] & (1 << (p % 8))) != 0;
-        fBad = false;
-    }
-};
-
-
 // Since partial Merkle blocks are just trees of hashes, this structure is the same for Nexa and BCH
 jobjectArray JNICALL
 MerkleBlock_Extract(JNIEnv *env, jobject ths, jint numTxes, jbyteArray merkleProofPath, jobjectArray hashArray)
@@ -2223,7 +2692,7 @@ MerkleBlock_Extract(JNIEnv *env, jobject ths, jint numTxes, jbyteArray merklePro
 
     jbyte *mppData = env->GetByteArrayElements(merkleProofPath, 0);
     size_t mppLen = env->GetArrayLength(merkleProofPath);
-    CDecodablePartialMerkleTree tree(numTxes, (char *)mppData, mppLen);
+    CDecodablePartialMerkleTree tree(numTxes, (const unsigned char *)mppData, mppLen);
     env->ReleaseByteArrayElements(merkleProofPath, mppData, 0);
 
     // Copy the hashes out of the java wrapper objects into the PartialMerkleTree
@@ -2271,7 +2740,7 @@ MerkleBlock_Extract(JNIEnv *env, jobject ths, jint numTxes, jbyteArray merklePro
     return ret;
 }
 
-extern "C" JNIEXPORT jobjectArray JNICALL Java_bitcoinunlimited_libbitcoincash_NexaMerkleBlock_Extract(JNIEnv *env,
+extern "C" JNIEXPORT jobjectArray JNICALL Java_org_nexa_libnexakotlin_Native_extractFromMerkleBlock(JNIEnv *env,
     jobject ths,
     jint numTxes,
     jbyteArray merkleProofPath,
@@ -2280,64 +2749,29 @@ extern "C" JNIEXPORT jobjectArray JNICALL Java_bitcoinunlimited_libbitcoincash_N
     return MerkleBlock_Extract(env, ths, numTxes, merkleProofPath, hashArray);
 }
 
-extern "C" JNIEXPORT jobjectArray JNICALL Java_bitcoinunlimited_libbitcoincash_BchMerkleBlock_Extract(JNIEnv *env,
-    jobject ths,
-    jint numTxes,
-    jbyteArray merkleProofPath,
-    jobjectArray hashArray)
-{
-    return MerkleBlock_Extract(env, ths, numTxes, merkleProofPath, hashArray);
-}
-
-extern "C" JNIEXPORT jstring JNICALL Java_bitcoinunlimited_libbitcoincash_Initialize_LibBitcoinCash(JNIEnv *env,
-    jobject ths,
-    jbyte chainSelector)
+extern "C" JNIEXPORT jboolean JNICALL Java_org_nexa_libnexakotlin_Native_initializeLibNexa(JNIEnv *env, jobject ths)
 {
     javaEnv = env;
 
-    cashlibParams = GetChainParams((ChainSelector)chainSelector);
-    if (cashlibParams == nullptr)
-    {
-        triggerJavaIllegalStateException(env, "unknown blockchain selection");
-        return nullptr;
-    }
-    switch ((ChainSelector)chainSelector)
-    {
-    case AddrBlockchainNexa:
-        SelectParams("nexa");
-        break;
-    case AddrBlockchainTestnet:
-        SelectParams("test");
-        break;
-    case AddrBlockchainRegtest:
-        SelectParams("regtest");
-        break;
-    case AddrBlockchainBCH:
-        SelectParams("main");
-        break;
-        // These set the default params to the NEXA equivalent, because these testnets are not def-ed across the
-        // codebase.  Basically, DONT initialize to these!
-    case AddrBlockchainBchTestnet:
-        SelectParams("test");
-        break;
-    case AddrBlockchainBchRegtest:
-        SelectParams("regtest");
-        break;
-    }
+    // A chain selection parameter should be part of every cashlib API, but the underlying code still
+    // requires a default to be set so pick Nexa as the default.
+    SelectParams("nexa");
 
 #ifdef ANDROID
     // initialize the env globals and hook up the random number generator
-    jclass c = env->FindClass("bitcoinunlimited/libbitcoincash/Initialize");
+    jclass c = env->FindClass("org/nexa/libnexakotlin/Native");
     if (c == nullptr)
     {
         __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "class not found\n");
+        triggerJavaIllegalStateException(env, "Cannot connect to SecureRandomBytes java function");
+        return false;
     }
     else
     {
         secRandomClass = reinterpret_cast<jclass>(env->NewGlobalRef(c));
         //__android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "class found: %x", secRandomClass);
         // Get the method that you want to call
-        secRandom = env->GetStaticMethodID(c, "SecRandom", "([B)V");
+        secRandom = env->GetStaticMethodID(c, "SecureRandomBytes", "([B)V");
         //__android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "method ID: %x", secRandom);
     }
 #endif // ANDROID
@@ -2345,7 +2779,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_bitcoinunlimited_libbitcoincash_Initia
     // must be below the random number generator hookup
     checkSigInit();
 
-    return env->NewStringUTF("");
+    return true;
 }
 
 #ifdef ANDROID
@@ -2371,11 +2805,48 @@ void GetStrongRandBytes(unsigned char *buf, int num) { RandomBytes(buf, num); }
 #endif // ANDROID
 #endif // JAVA
 
-#if !defined(JAVA) && !defined(ANDROID)
+#ifdef IOS
+#include <Security/Security.h>
+// Implement in Android by calling into the java SecureRandom implementation.
+// You must provide this Java API
+SLAPI int RandomBytes(unsigned char *buf, int num)
+{
+    int rc = SecRandomCopyBytes(kSecRandomDefault, num, buf);
+    if (rc != 0)
+        return 0;
+    return num;
+}
+// Implement APIs normally provided by random.cpp calling openssl
+void GetRandBytes(unsigned char *buf, int num)
+{
+    // it would be dangerous to return if we aren't getting random bytes
+    while (1)
+    {
+        int ret = RandomBytes(buf, num);
+        if (ret == num)
+            return;
+        sleep(100);
+    }
+}
+void GetStrongRandBytes(unsigned char *buf, int num)
+{
+    // it would be dangerous to return if we aren't getting random bytes
+    while (1)
+    {
+        int ret = RandomBytes(buf, num);
+        if (ret == num)
+            return;
+        sleep(100);
+    }
+}
+#endif
+
+#if !defined(JAVA) && !defined(ANDROID) && !defined(IOS)
 /** Return random bytes from cryptographically acceptable random sources */
 SLAPI int RandomBytes(unsigned char *buf, int num)
 {
     GetStrongRandBytes(buf, num);
     return num;
 }
-#endif // JAVA_ANDROID
+
+#endif
