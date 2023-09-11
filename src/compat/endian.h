@@ -15,7 +15,11 @@
 #include "compat/byteswap.h"
 
 #if defined(HAVE_ENDIAN_H)
+#ifdef MACOS
+#include <machine/endian.h>
+#else
 #include <endian.h>
+#endif
 #elif defined(HAVE_SYS_ENDIAN_H)
 #include <sys/endian.h>
 #endif

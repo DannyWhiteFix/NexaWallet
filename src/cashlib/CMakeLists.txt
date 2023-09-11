@@ -3,21 +3,39 @@
 
 # Sets the minimum version of CMake required to build the native library.
 
-cmake_minimum_required(VERSION 3.10.2)
+cmake_minimum_required(VERSION 3.14.4)
+
+message(STATUS "Nexa fullnode cashlib cmake is running")
+
+set(CMAKE_C_FLAGS "")
+set(CMAKE_C_FLAGS_DEBUG "")
+set(CMAKE_C_FLAGS_RELEASE "")
+set(CMAKE_CXX_FLAGS "")
+set(CMAKE_CXX_FLAGS_DEBUG "")
+set(CMAKE_CXX_FLAGS_RELEASE "")
+
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
+# set(CMAKE_OSX_ARCHITECTURES "zzzzarm64" CACHE STRING "" FORCE)
+# set(CMAKE_OSX_DEPLOYMENT_TARGET $ENV{CMAKE_OSX_DEPLOYMENT_TARGET} CACHE STRING "Min OSX ver")
+set(CMAKE_OSX_DEPLOYMENT_TARGET "" CACHE STRING "Force unset of the deployment target for iOS" FORCE)
+# set(CMAKE_OSX_SYSROOT $ENV{SYSROOT} CACHE STRING "target system root")
+set(CMAKE_OSX_SYSROOT "" CACHE STRING "force unset of sysroot" FORCE)
+
+set(COMPILE_OPTIONS "" CACHE STRING "" FORCE)
+set(COMPILE_FLAGS "" CACHE STRING "" FORCE)
+
+project(libnexa)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 # Creates and names a library, sets it as either STATIC
 # or SHARED, and provides the relative paths to its source code.
 # You can define multiple libraries, and CMake builds them for you.
 # Gradle automatically packages shared libraries with your APK.
 
-add_definitions(-Wno-tautological-constant-compare -DBOOST_SYSTEM_NO_DEPRECATED)
 
-add_library( # Sets the name of the library.
-             nexandroid
+add_definitions(-DLIGHT -DANDROID -Wno-tautological-constant-compare -DBOOST_SYSTEM_NO_DEPRECATED)
 
-             # Sets the library as a shared library.
-             SHARED
-
+set(libsrc
              # Provides a relative path to your source file(s).
              cashlib.cpp
              ../config.cpp
@@ -83,6 +101,15 @@ add_library( # Sets the name of the library.
              ../validation/headervalidation.cpp
              )
 
+add_library(objlib OBJECT ${libsrc})
+set_property(TARGET objlib PROPERTY POSITION_INDEPENDENT_CODE 1)
+target_compile_features(objlib PRIVATE cxx_std_17)
+
+# shared and static libraries built from the same object files
+add_library(nexalight SHARED $<TARGET_OBJECTS:objlib>)
+add_library(nexalighta STATIC $<TARGET_OBJECTS:objlib>)
+target_compile_features(nexalight PRIVATE cxx_std_17)
+target_compile_features(nexalighta PRIVATE cxx_std_17)
 
 SET(OPT_SELECTION "-DHAVE_CONFIG_H -DVERIFY")
 SET_SOURCE_FILES_PROPERTIES(../secp256k1/src/secp256k1.c PROPERTIES COMPILE_FLAGS ${OPT_SELECTION} )
@@ -130,12 +157,25 @@ include_directories( .
 # build script, prebuilt third-party libraries, or system libraries.
 
 # if you need boost libraries again someday
-# set_target_properties(nexandroid PROPERTIES LINK_FLAGS -L/fast/bitcoin/boostAndroid/build/out/${ANDROID_ABI}/lib)
+# set_target_properties(nexalight PROPERTIES LINK_FLAGS -L/fast/bitcoin/boostAndroid/build/out/${ANDROID_ABI}/lib)
+
+
+#target_compile_features(nexalighta PRIVATE cxx_std_17)
+SET(CMAKE_CXX_FLAGS  "-std=c++17 ${CMAKE_CXX_FLAGS}")
 
 target_link_libraries( # Specifies the target library.
-                       nexandroid
+                       nexalight
                        # Links the target library to these libraries
                        android  # base android library
                        log  # android log library
+                       # ${Boost_LIBRARIES}
+                       )
+
+target_link_libraries( # Specifies the target library.
+                       nexalighta
+                       # Links the target library to these libraries
+                       android  # base android library
+                       log  # android log library
+                       c++_static
                        # ${Boost_LIBRARIES}
                        )

@@ -22,6 +22,7 @@ packages:
 - "bsdmainutils"
 - "ca-certificates"
 - "python"
+- "openjdk-17-jdk-headless"
 # arm32
 - "binutils-arm-linux-gnueabihf"
 - "g++-8-arm-linux-gnueabihf"
@@ -119,7 +120,7 @@ script: |
   tar xf ../$SOURCEDIST
   find nexa* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
   popd
-
+  export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
   ORIGPATH="$PATH"
   # Extract the release tarball into a dir for each host and build
   for i in ${HOSTS}; do

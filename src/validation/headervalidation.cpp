@@ -29,7 +29,7 @@ bool CheckBlockHeader(const Consensus::Params &consensusParams,
 
         // Light wallets can check this themselves if they care, but a light client should not be rejecting a header
         // based on time -- its more likely that the light client's time is incorrect
-#ifndef ANDROID
+#ifndef LIGHT
     // Check timestamp
     if (block.GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60)
         return state.Invalid(

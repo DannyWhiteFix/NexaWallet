@@ -12,7 +12,7 @@
 
 using namespace std;
 
-#ifndef ANDROID // limit dependencies
+#ifndef LIGHT // limit dependencies
 CMerkleBlock::CMerkleBlock(const CBlock &block, CBloomFilter &filter)
 {
     /* A bloom filter over a block can contain transaction ids, idems, prevouts, or outputs

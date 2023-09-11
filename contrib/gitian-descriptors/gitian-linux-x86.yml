@@ -22,6 +22,7 @@ packages:
 - "bsdmainutils"
 - "ca-certificates"
 - "python"
+- "openjdk-17-jdk-headless"
 - "python3-git" # building Rostrum
 - "clang" # for rocksdb in Rostrum
 - "cmake" # for rocksdb in Rostrum
@@ -36,7 +37,7 @@ script: |
 
   WRAP_DIR=$HOME/wrapped
   HOSTS="x86_64-linux-gnu"
-  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests --disable-tests"
+  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests --disable-tests --enable-shared --enable-javacashlib"
   FAKETIME_HOST_PROGS=""
   FAKETIME_PROGS="date ar ranlib nm strip"
   HOST_CFLAGS="-O2 -g"
@@ -131,6 +132,7 @@ script: |
         # We'll support x86_64 only for now.
         make ${MAKEOPTS} rostrum
     fi
+    export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
     make ${MAKEOPTS}
     make ${MAKEOPTS} -C src check-security
     make ${MAKEOPTS} -C src check-symbols

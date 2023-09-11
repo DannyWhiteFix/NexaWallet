@@ -32,7 +32,7 @@
 #define Stringify(x) #x
 #define StringifyIntLiteral(x) Stringify(x)
 
-#ifndef ANDROID
+#ifndef LIGHT
 #include <boost/signals2/signal.hpp>
 #include <boost/thread.hpp>
 
@@ -77,7 +77,16 @@ inline std::string _(const char *psz)
 // external linkage.
 // For example:
 // SLAPI int myExportedFunc(unsigned char *buf, int num);
+// If windows build, export all the APIs as dll symbols
+#ifdef __MINGW32__
+#define SLAPI extern "C" __declspec(dllexport)
+#else
+#ifdef __MINGW64__
+#define SLAPI extern "C" __declspec(dllexport)
+#else
 #define SLAPI extern "C" __attribute__((visibility("default")))
+#endif
+#endif
 
 #ifdef DEBUG_PAUSE
 // Stops this thread by taking a semaphore
@@ -313,7 +322,7 @@ void TraceThreads(const std::string &name, Callable func)
         func();
         LOGA("%s thread exit\n", name);
     }
-#ifndef ANDROID
+#ifndef LIGHT
     catch (const boost::thread_interrupted &)
     {
         LOGA("%s thread interrupt\n", name);

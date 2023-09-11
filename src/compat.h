@@ -121,10 +121,33 @@ typedef int32_t ssize_t;
 
 #define JAVA
 #endif
+#ifdef OSX
+#define HAVE_DECL_STRNLEN 1
+#define HAVE_DECL_HTOLE16 1
+#define HAVE_DECL_HTOLE16 1
+#define HAVE_DECL_LE16TOH 1
 
+#define HAVE_DECL_HTOBE16 1
+#define HAVE_DECL_HTOBE32 1
+#define HAVE_DECL_HTOLE32 1
+#define HAVE_DECL_BE16TOH 1
+#define HAVE_DECL_BE32TOH 1
+#define HAVE_DECL_LE32TOH 1
+#define HAVE_DECL_HTOBE64 1
+
+#define HAVE_DECL_HTOLE64 1
+#define HAVE_DECL_BE64TOH 1
+#define HAVE_DECL_LE64TOH 1
+
+#define JAVA
+#endif
+
+// If you get this redefined on linux, your nexa-config.h is not being included
+#ifndef IOS
 #if HAVE_DECL_STRNLEN == 0
 size_t strnlen(const char *start, size_t max_len);
 #endif // HAVE_DECL_STRNLEN
+#endif
 
 bool static inline IsSelectableSocket(SOCKET s)
 {

@@ -7,6 +7,7 @@
 #include "primitives/block.h"
 #include "uint256.h"
 #include "util.h"
+#include "validation/forks.h"
 
 static uint256 sha256(uint256 data)
 {

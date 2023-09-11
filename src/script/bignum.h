@@ -6,7 +6,7 @@
 #define NEXA_BIGNUM_H
 
 #include <exception>
-#ifndef ANDROID // limit dependencies: BigNum is a NO_OP on android since script machine not needed
+#ifndef LIGHT // limit dependencies: BigNum is a NO_OP on android since script machine not needed
 #include <gmp.h>
 #endif
 #include <stdarg.h>
@@ -29,7 +29,7 @@ public:
 
 class BigNum
 {
-#ifndef ANDROID // limit dependencies
+#ifndef LIGHT // limit dependencies
 protected:
     mpz_t n;
 
@@ -323,7 +323,7 @@ extern const BigNum bnInt64Max;
 extern const BigNum bnUint64Max;
 
 
-#ifndef ANDROID
+#ifndef LIGHT
 inline BigNum BigNum::operator>>(const unsigned long int amt) const
 {
     BigNum ret;

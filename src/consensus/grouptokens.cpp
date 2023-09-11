@@ -4,7 +4,7 @@
 #include "grouptokens.h"
 #include "base58.h"
 #include "cashaddrenc.h"
-#ifndef ANDROID // limit dependencies
+#ifndef LIGHT // limit dependencies
 #include "coincontrol.h"
 #include "coins.h"
 #endif
@@ -113,7 +113,10 @@ CGroupTokenInfo::CGroupTokenInfo(const CTxOut &output)
     IsScriptGrouped(output.scriptPubKey, nullptr, this);
 }
 
-#ifndef ANDROID // limit dependencies (CCoinsViewCache)
+
+#ifndef LIGHT // limit dependencies (CCoinsViewCache).
+// This function determines the consensus validity of the group tokens in this transaction so it not useful
+// in a light wallet (and will not compile because the light wallet does not contain the UTXO)
 bool CheckGroupTokens(const CTransaction &tx, CValidationState &state, const CCoinsViewCache &view)
 {
     GroupBalanceMapRef gBalanceState = MakeGroupBalanceMapRef();

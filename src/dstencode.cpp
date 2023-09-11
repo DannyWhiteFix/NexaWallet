@@ -29,7 +29,10 @@ bool IsValidDestinationString(const std::string &addr, const CChainParams &param
     return IsValidDestination(DecodeDestination(addr, params));
 }
 
+#ifndef LIGHT
 std::string EncodeDestination(const CTxDestination &dst) { return EncodeDestination(dst, Params(), GetConfig()); }
+#endif
+
 CTxDestination DecodeDestination(const std::string &addr) { return DecodeDestination(addr, Params()); }
 bool IsValidDestinationString(const std::string &addr) { return IsValidDestinationString(addr, Params()); }
 

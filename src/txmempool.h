@@ -847,7 +847,7 @@ private:
     std::unique_ptr<DoubleSpendProofStorage> m_dspStorage;
 };
 
-#ifndef ANDROID // limit dependencies (CCoinsView)
+#ifndef LIGHT // limit dependencies (CCoinsView)
 /**
  * CCoinsView that brings transactions from a memorypool into view.
  * It does not check for spendings by memory pool transactions.

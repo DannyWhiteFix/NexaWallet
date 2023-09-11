@@ -21,6 +21,7 @@ packages:
 - "zip"
 - "ca-certificates"
 - "python"
+- "openjdk-17-jdk-headless"
 - "rename"
 reference_datetime: "2020-08-20 00:00:00"
 remotes:
@@ -32,7 +33,7 @@ script: |
 
   WRAP_DIR=$HOME/wrapped
   HOSTS="x86_64-w64-mingw32"
-  CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-tests"
+  CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-tests --enable-shared --enable-javacashlib"
   FAKETIME_HOST_PROGS="ar ranlib nm windres strip"
   FAKETIME_PROGS="date makensis zip"
 
@@ -92,6 +93,7 @@ script: |
   done
 
   export PATH=${WRAP_DIR}:${PATH}
+  export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 
   cd nexa
   BASEPREFIX=`pwd`/depends
@@ -119,22 +121,28 @@ script: |
   ORIGPATH="$PATH"
   # Extract the release tarball into a dir for each host and build
   for i in ${HOSTS}; do
-    export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
+    # ORIGPATH must be first because we need to grab the wrapped g++ to ensure we get the proper threading model (posix or windows)
+    export PATH=${ORIGPATH}:${BASEPREFIX}/${i}/native/bin
     mkdir -p distsrc-${i}
     cd distsrc-${i}
     INSTALLPATH=`pwd`/installed/${DISTNAME}
     mkdir -p ${INSTALLPATH}
+    echo BUILDING NEXA for ${i} in `pwd` to be installed into ${INSTALLPATH}
     cp ../INSTALL.md ${INSTALLPATH}
     tar --strip-components=1 -xf ../$SOURCEDIST
 
     ./configure --prefix=${BASEPREFIX}/${i} --bindir=${INSTALLPATH}/bin --includedir=${INSTALLPATH}/include --libdir=${INSTALLPATH}/lib --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS}
-    make ${MAKEOPTS}
+    echo "removing -DDLL_EXPORT from libtool via: sed -i 's/-DDLL_EXPORT//g' libtool"
+    sed -i 's/-DDLL_EXPORT//g' libtool
+    make V=1 ${MAKEOPTS}
     make ${MAKEOPTS} -C src check-security
     make ${MAKEOPTS} -C src check-symbols
     make deploy
     make install-strip
     cp -f nexa*setup*.exe $OUTDIR/
     cd installed
+    # fix up the name; its being generated as libnexa-0.dll
+    (cd */bin; mv libnexa-0.dll libnexa.dll)
     find . -name "lib*.la" -delete
     find . -name "lib*.a" -delete
     rm -rf ${DISTNAME}/lib/pkgconfig
