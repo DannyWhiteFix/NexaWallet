@@ -516,6 +516,8 @@ public:
     {
         LOCK(cs_addrman);
         vRandom.clear();
+        mapInfo.clear();
+        mapAddr.clear();
         nKey = insecure_rand.rand256();
         for (size_t bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; bucket++)
         {
