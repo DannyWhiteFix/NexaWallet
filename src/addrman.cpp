@@ -110,19 +110,20 @@ void CAddrMan::SwapRandom(unsigned int nRndPos1, unsigned int nRndPos2)
     if (nRndPos1 == nRndPos2)
         return;
 
-    assert(nRndPos1 < vRandom.size() && nRndPos2 < vRandom.size());
-
+    DbgAssert(nRndPos1 < vRandom.size() && nRndPos2 < vRandom.size(), return);
     int nId1 = vRandom[nRndPos1];
     int nId2 = vRandom[nRndPos2];
 
-    assert(mapInfo.count(nId1) == 1);
-    assert(mapInfo.count(nId2) == 1);
+    if (mapInfo.count(nId1) == 1 && mapInfo.count(nId2) == 1)
+    {
+        mapInfo[nId1].nRandomPos = nRndPos2;
+        mapInfo[nId2].nRandomPos = nRndPos1;
 
-    mapInfo[nId1].nRandomPos = nRndPos2;
-    mapInfo[nId2].nRandomPos = nRndPos1;
-
-    vRandom[nRndPos1] = nId2;
-    vRandom[nRndPos2] = nId1;
+        vRandom[nRndPos1] = nId2;
+        vRandom[nRndPos2] = nId1;
+    }
+    else
+        DbgAssert(mapInfo.count(nId1) == 1 && mapInfo.count(nId2) == 1, return);
 }
 
 void CAddrMan::Delete(int nId)
@@ -131,8 +132,8 @@ void CAddrMan::Delete(int nId)
 
     DbgAssert(mapInfo.count(nId) != 0, return); // already deleted so no-op
     CAddrInfo &info = mapInfo[nId];
-    assert(!info.fInTried);
-    assert(info.nRefCount == 0);
+    DbgAssert(!info.fInTried, return);
+    DbgAssert(info.nRefCount == 0, return);
 
     SwapRandom(info.nRandomPos, vRandom.size() - 1);
     vRandom.pop_back();
@@ -150,13 +151,17 @@ void CAddrMan::ClearNew(int nUBucket, int nUBucketPos)
     {
         int nIdDelete = vvNew[nUBucket][nUBucketPos];
         CAddrInfo &infoDelete = mapInfo[nIdDelete];
-        assert(infoDelete.nRefCount > 0);
-        infoDelete.nRefCount--;
-        vvNew[nUBucket][nUBucketPos] = -1;
-        if (infoDelete.nRefCount == 0)
+        if (infoDelete.nRefCount > 0)
         {
-            Delete(nIdDelete);
+            infoDelete.nRefCount--;
+            vvNew[nUBucket][nUBucketPos] = -1;
+            if (infoDelete.nRefCount == 0)
+            {
+                Delete(nIdDelete);
+            }
         }
+        else
+            DbgAssert(infoDelete.nRefCount > 0, return);
     }
 }
 
@@ -176,7 +181,7 @@ void CAddrMan::MakeTried(CAddrInfo &info, int nId)
     }
     nNew--;
 
-    assert(info.nRefCount == 0);
+    DbgAssert(info.nRefCount == 0, return);
 
     // which tried bucket to move the entry to
     int nKBucket = info.GetTriedBucket(nKey);
@@ -187,7 +192,7 @@ void CAddrMan::MakeTried(CAddrInfo &info, int nId)
     {
         // find an item to evict
         int nIdEvict = vvTried[nKBucket][nKBucketPos];
-        assert(mapInfo.count(nIdEvict) == 1);
+        DbgAssert(mapInfo.count(nIdEvict) == 1, return);
         CAddrInfo &infoOld = mapInfo[nIdEvict];
 
         // Remove the to-be-evicted item from the tried set.
@@ -199,14 +204,14 @@ void CAddrMan::MakeTried(CAddrInfo &info, int nId)
         int nUBucket = infoOld.GetNewBucket(nKey);
         int nUBucketPos = infoOld.GetBucketPosition(nKey, true, nUBucket);
         ClearNew(nUBucket, nUBucketPos);
-        assert(vvNew[nUBucket][nUBucketPos] == -1);
+        DbgAssert(vvNew[nUBucket][nUBucketPos] == -1, return);
 
         // Enter it into the new set again.
         infoOld.nRefCount = 1;
         vvNew[nUBucket][nUBucketPos] = nIdEvict;
         nNew++;
     }
-    assert(vvTried[nKBucket][nKBucketPos] == -1);
+    DbgAssert(vvTried[nKBucket][nKBucketPos] == -1, return);
 
     vvTried[nKBucket][nKBucketPos] = nId;
     nTried++;
@@ -429,11 +434,15 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
                 nKBucketPos = (nKBucketPos + insecure_rand.randbits(ADDRMAN_BUCKET_SIZE_LOG2)) % ADDRMAN_BUCKET_SIZE;
             }
             int nId = vvTried[nKBucket][nKBucketPos];
-            assert(mapInfo.count(nId) == 1);
-            CAddrInfo &info = mapInfo[nId];
-            if (insecure_rand.randbits(30) < fChanceFactor * info.GetChance() * (1 << 30))
-                return info;
-            fChanceFactor *= 1.2;
+            if (mapInfo.count(nId) == 1)
+            {
+                CAddrInfo &info = mapInfo[nId];
+                if (insecure_rand.randbits(30) < fChanceFactor * info.GetChance() * (1 << 30))
+                    return info;
+                fChanceFactor *= 1.2;
+            }
+            else
+                return CAddrInfo();
         }
     }
     else
@@ -454,11 +463,15 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
                 nUBucketPos = (nUBucketPos + insecure_rand.randbits(ADDRMAN_BUCKET_SIZE_LOG2)) % ADDRMAN_BUCKET_SIZE;
             }
             int nId = vvNew[nUBucket][nUBucketPos];
-            assert(mapInfo.count(nId) == 1);
-            CAddrInfo &info = mapInfo[nId];
-            if (insecure_rand.randbits(30) < fChanceFactor * info.GetChance() * (1 << 30))
-                return info;
-            fChanceFactor *= 1.2;
+            if (mapInfo.count(nId) == 1)
+            {
+                CAddrInfo &info = mapInfo[nId];
+                if (insecure_rand.randbits(30) < fChanceFactor * info.GetChance() * (1 << 30))
+                    return info;
+                fChanceFactor *= 1.2;
+            }
+            else
+                return CAddrInfo();
         }
     }
 }
@@ -569,7 +582,7 @@ void CAddrMan::GetAddr_(std::vector<CAddress> &vAddr)
 
         int nRndPos = insecure_rand.randrange(vRandom.size() - n) + n;
         SwapRandom(n, nRndPos);
-        assert(mapInfo.count(vRandom[n]) == 1);
+        DbgAssert(mapInfo.count(vRandom[n]) == 1, return);
 
         const CAddrInfo &ai = mapInfo[vRandom[n]];
         if (!ai.IsTerrible())
