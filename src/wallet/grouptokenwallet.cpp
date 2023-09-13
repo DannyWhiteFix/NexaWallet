@@ -261,7 +261,7 @@ void GetAllGroupDescriptions(const CWallet *wallet,
         }
 
         // If there is no OP_RETURN then just return empty strings for the token descriptions
-        if (!fOpReturn)
+        if (!fOpReturn && !desc.count(tg.associatedGroup))
         {
             desc[tg.associatedGroup] = std::vector<std::string>({"", "", "", "", ""});
         }
