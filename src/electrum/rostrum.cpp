@@ -202,7 +202,7 @@ std::vector<std::string> rostrum_args(int rpcport, int p2pport, const std::strin
     }
     else
     {
-        // This explicit code ought to work for any network, but it is only needed for NEXA because electrs
+        // This explicit code ought to work for any network, but it is only needed for NEXA because rostrum
         // guesses "testnet3" since we told it testnet was being used.
         if (network == CBaseChainParams::NEXA)
         {

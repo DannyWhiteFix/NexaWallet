@@ -1,4 +1,4 @@
-[Website](https://www.bitcoinunlimited.info)  | [Download](https://www.bitcoinunlimited.info/download) | [Setup](../README.md)  |  [Xthin](bu-xthin.md)  |  [Xpedited](bu-xpedited-forwarding.md)  |   [Miner](miner.md)
+[Website](https://www.nexa.org)  | [Download](https://gitlab.com/nexa/nexa/-/releases) | [Setup](../README.md)  |  [Xthin](bu-xthin.md)  |  [Xpedited](bu-xpedited-forwarding.md)  |   [Miner](miner.md)
 
 # How to setup and get the best results using Xpedited forwarding
 
@@ -8,34 +8,34 @@ Xpedited Forwarding is a decentralised rapid block propagation system designed t
 can participate in or easily setup their own Xpedited Network.
 
 The forwarding mechanism while simple to understand uses several enhancements to speed the delivery of newly mined blocks
-throughout the world and most importantly to other miners.  Essentially when one participates in the network, as soon as a new block 
-is found, an Xthin-format block is forwarded to every node you are connected to that has requested expedited forwarding.  When they receive 
+throughout the world and most importantly to other miners.  Essentially when one participates in the network, as soon as a new block
+is found, an Xthin-format block is forwarded to every node you are connected to that has requested expedited forwarding.  When they receive
 the Xthin-format block, the header is quickly checked to make sure it is valid (and of appropriate difficulty) and then forwarded to the next
 set of nodes and so on.
 
-It's important to note that the block is verified and accepted only after being forwarded.  And the normal 3-phase  conversation (INV, GET, response) is reduced to a single send.  This allows for a much faster propagation through 
+It's important to note that the block is verified and accepted only after being forwarded.  And the normal 3-phase  conversation (INV, GET, response) is reduced to a single send.  This allows for a much faster propagation through
 the network.
 
-Furthermore, upstream expedited peers will not be banned or disconnected for any reason due to any misbehavior. For 
-example, Node 'A' which initiates the expedited connection to node 'B' will not ban node 'B' in the event that any 
-expedited blocks which are forwarded to the node 'A' fail to reconstruct in any way. 
+Furthermore, upstream expedited peers will not be banned or disconnected for any reason due to any misbehavior. For
+example, Node 'A' which initiates the expedited connection to node 'B' will not ban node 'B' in the event that any
+expedited blocks which are forwarded to the node 'A' fail to reconstruct in any way.
 
 ## Setting up an Xpedited connection
 
 Xpedited connections can only be set up by the node that will be receiving the Xpedited data.
 
-There are two ways to setup Xpedited connections.  First, you can use the `expedited` command in the bitcoin-cli or RPC calls to
+There are two ways to setup Xpedited connections.  First, you can use the `expedited` command in the nexa-cli or RPC calls to
 request expedited service from a particular node (use "addnode <IP> onetry" to make sure you are connected first).  However, if
-your connection to this node is dropped, or your node is reset, expedited service will not be re-established until you run the 
+your connection to this node is dropped, or your node is reset, expedited service will not be re-established until you run the
 `expedited` command again.
 
-The recommended method is to add entries in your bitcoin.conf file.  With this mechanism the configuration will persist and Xpedited service
+The recommended method is to add entries in your nexa.conf file.  With this mechanism the configuration will persist and Xpedited service
 will be restarted when either your node or the other is restarted.
 
 
-### Setting up an Xpedited connection using bitcoin.conf
+### Setting up an Xpedited connection using nexa.conf
 
-Two bitcoin.conf entries need to be made.  One is the `addnode` connection which opens the connection to the remote peer and the 
+Two nexa.conf entries need to be made.  One is the `addnode` connection which opens the connection to the remote peer and the
 second is the `expeditedblock` entry which makes the request to begin the receipt of Xpedited blocks from this peer.
 
 	addnode=<ip:port>
@@ -78,14 +78,14 @@ Using RPC is simple as follows:
 
 For example, to turn on expedited forwarding of blocks from a remote peer to my peer you would enter the following:
 
-	bitcoin-cli expedited block "192.168.0.6:8333" on
+	nexa-cli expedited block "192.168.0.6:8333" on
 
 and to do the same for transaction forwarding I would enter:
 
-	bitcoin-cli expedited tx "192.168.0.6:8333" on
+	nexa-cli expedited tx "192.168.0.6:8333" on
 
 
-To get more help on how to use the RPC commands you can type in "bitcoin-cli help expedited" from the command line, or if you ar using the debug console
+To get more help on how to use the RPC commands you can type in "nexa-cli help expedited" from the command line, or if you ar using the debug console
 then simply type "help expedited".
 
 

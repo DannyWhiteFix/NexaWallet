@@ -10,7 +10,7 @@
 
 class CExtversionMessage;
 
-/// Electrs specific code goes in here. Separating generic electrum code allows
+/// Rostrum specific code goes in here. Separating generic electrum code allows
 /// us to support multiple, or swap electrum implementation in the future.
 
 namespace electrum {

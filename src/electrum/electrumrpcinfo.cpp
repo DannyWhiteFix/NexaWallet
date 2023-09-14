@@ -30,7 +30,7 @@ UniValue ElectrumRPCInfo::GetElectrumInfo() const
     }
     catch (const std::runtime_error &e)
     {
-        LOGA("Electrum: %s: Failed to fetch electrs info %s", __func__, e.what());
+        LOGA("Electrum: %s: Failed to fetch rostrum info %s", __func__, e.what());
     }
     int64_t index_height = get_index_height(rostruminfo);
 

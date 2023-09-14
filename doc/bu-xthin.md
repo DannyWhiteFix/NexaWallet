@@ -1,4 +1,4 @@
-[Website](https://www.bitcoinunlimited.info)  | [Download](https://www.bitcoinunlimited.info/download) | [Setup](../README.md)  |  [Xthin](bu-xthin.md)  |  [Xpedited](bu-xpedited-forwarding.md)  |   [Miner](miner.md)
+[Website](https://www.nexa.org)  | [Download](https://gitlab.com/nexa/nexa/-/releases) | [Setup](../README.md)  |  [Xthin](bu-xthin.md)  |  [Xpedited](bu-xpedited-forwarding.md)  |   [Miner](miner.md)
 
 # How to setup and get the best results with Xthins
 
@@ -6,7 +6,7 @@
 ## Turning Thinblocks ON/OFF
 
 When you run a Bitcoin Unimited node the XTHIN service is turned on by default.  If you wish to turn it off for some reason
-you can use the bitcoin.conf setting (0 = off, 1 = on) as follows:
+you can use the nexa.conf setting (0 = off, 1 = on) as follows:
 
 	use-thinblocks=0
 
