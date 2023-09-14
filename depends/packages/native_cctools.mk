@@ -57,6 +57,10 @@ define $(package)_preprocess_cmds
   patch -p1 < $($(package)_patch_dir)/ld64_disable_threading.patch
 endef
 
+define $(package)_preprocess_cmds
+  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub cctools
+endef
+
 define $(package)_config_cmds
   $($(package)_autoconf)
 endef
