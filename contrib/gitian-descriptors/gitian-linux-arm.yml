@@ -132,24 +132,11 @@ script: |
     cp ../INSTALL.md ${INSTALLPATH}/
     tar --strip-components=1 -xf ../$SOURCEDIST
     CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS} CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}" LDFLAGS="${HOST_LDFLAGS}"
-    if [ "$i" = "x86_64-linux-gnu" ]; then
-        # Scope of electrscash support is for servers running linux.
-        # We'll support x86_64 only for now.
-        make ${MAKEOPTS} electrscash
-    fi
     make -j7 ${MAKEOPTS}
     make ${MAKEOPTS} -C src check-security
     make ${MAKEOPTS} -C src check-symbols
     make install DESTDIR=${INSTALLPATH}
-    # FIXME: electrscash is goin to be rename to Rotrsum
-    # and also need to be changed to be compatible with
-    # nexa blockchan
-    if [ -f src/electrscash ]; then
-        cp src/electrscash ${OUTDIR}/electrscash-${i}.debug
-        strip src/electrscash
-        cp src/electrscash ${INSTALLPATH}/bin/electrscash
-    fi
-    # BU save the executables with debug symbols
+    # Nexa saves the executables with debug symbols
     cp -f src/nexad ${OUTDIR}/nexad-${i}.debug
     if [ -f src/qt/nexa-qt ]
     then

@@ -627,9 +627,7 @@ static void addElectrumOptions(AllowedArgs &allowedArgs)
             "Port electrum Websocket listens on (default: mainnet 20003, testnet: "
             "30003, regtest: 30403)")
         .addArg("electrum.shutdownonerror", optionalBool, "Shutdown if the electrum server exits unexpectedly")
-        .addArg("electrum.blocknotify", optionalBool,
-            "Instantly notify electrum server of new blocks. "
-            "Must only be used with ElectrsCash 2.0.0 or later")
+        .addArg("electrum.blocknotify", optionalBool, "Instantly notify electrum server of new blocks.")
         .addDebugArg("electrum.exec", requiredStr, "Path to electrum daemon executable")
         .addDebugArg("electrum.monitoring.port", requiredStr, "Port to bind monitoring service")
         .addDebugArg("electrum.monitoring.host", requiredStr, "Host to bind monitoring service")

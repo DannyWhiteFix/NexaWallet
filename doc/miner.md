@@ -1,4 +1,4 @@
-[Website](https://www.bitcoinunlimited.info)  | [Download](https://www.bitcoinunlimited.info/download) | [Setup](../README.md)   |   [Miner](miner.md)  |  [ElectronCash](bu-electrum-integration.md)  |  [UnconfirmedChains](unconfirmedTxChainLimits.md)
+[Website](https://www.nexa.org)  | [Download](https://gitlab.com/nexa/nexa/-/releases) | [Setup](../README.md)   |   [Miner](miner.md)  |  [Rostrum](electrum-integration.md)  |  [UnconfirmedChains](unconfirmedTxChainLimits.md)
 
 # Using Nexa for Mining
 
