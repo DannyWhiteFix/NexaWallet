@@ -1432,10 +1432,10 @@ SLAPI int createBloomFilter(const unsigned char *data,
     unsigned int len,
     unsigned int elemLen,
     double falsePosRate,
-    int capacity,
-    int maxSize,
-    int flags,
-    int tweak,
+    unsigned int capacity,
+    unsigned int maxSize,
+    unsigned int flags,
+    unsigned int tweak,
     unsigned char *result)
 {
     if (capacity < 10)
