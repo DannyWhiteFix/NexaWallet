@@ -1,5 +1,5 @@
-OSX_MIN_VERSION=10.14
-OSX_SDK_VERSION=10.15
+OSX_MIN_VERSION=11.0
+OSX_SDK_VERSION=11.3
 OSX_SDK=$(SDK_PATH)/MacOSX$(OSX_SDK_VERSION).sdk
 LD64_VERSION=609
 darwin_CC=clang -target $(host) -mmacosx-version-min=$(OSX_MIN_VERSION) -isysroot $(OSX_SDK) -mlinker-version=$(LD64_VERSION) -B$(build_prefix)/bin
