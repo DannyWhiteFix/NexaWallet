@@ -7,11 +7,11 @@ $(package)_build_subdir=cctools
 $(package)_patches=ld64_disable_threading.patch
 
 
-$(package)_clang_version=11.1.0
+$(package)_clang_version=15.0.6
 $(package)_clang_download_path=https://github.com/llvm/llvm-project/releases/download/llvmorg-$($(package)_clang_version)
-$(package)_clang_download_file=clang+llvm-$($(package)_clang_version)-x86_64-linux-gnu-ubuntu-16.04.tar.xz
-$(package)_clang_file_name=clang+llvm-$($(package)_clang_version)-x86_64-linux-gnu-ubuntu-16.04.tar.xz
-$(package)_clang_sha256_hash=c691a558967fb7709fb81e0ed80d1f775f4502810236aa968b4406526b43bee1
+$(package)_clang_download_file=clang+llvm-$($(package)_clang_version)-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+$(package)_clang_file_name=clang+llvm-$($(package)_clang_version)-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+$(package)_clang_sha256_hash=38bc7f5563642e73e69ac5626724e206d6d539fbef653541b34cae0ba9c3f036
 
 $(package)_libtapi_version=664b8414f89612f2dfd35a9b679c345aa5389026
 $(package)_libtapi_download_path=https://github.com/tpoechtrager/apple-libtapi/archive
