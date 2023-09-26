@@ -8,18 +8,19 @@ $(package)_dependencies=openssl
 $(package)_linux_dependencies=freetype fontconfig libxcb libxkbcommon libxcb_util libxcb_util_render libxcb_util_keysyms libxcb_util_image libxcb_util_wm
 $(package)_qt_libs=corelib network widgets gui plugins testlib
 $(package)_linguist_tools = lrelease lupdate lconvert
-$(package)_patches+= dont_hardcode_pwd.patch
-$(package)_patches+= dont_hardcode_x86_64.patch
-$(package)_patches+= fix_limits_header.patch
-$(package)_patches+= fix_montery_include.patch
-$(package)_patches+= fix_qt_pkgconfig.patch
-$(package)_patches+= mac-qmake.conf
-$(package)_patches+= no-xlib.patch
-$(package)_patches+= qtbase-moc-ignore-gcc-macro.patch
-$(package)_patches = qt.pro
-$(package)_patches+= qttools_src.pro
-$(package)_patches+= rcc_hardcode_timestamp.patch
-$(package)_patches+= duplicate_lcqpafonts.patch
+$(package)_patches = dont_hardcode_pwd.patch
+$(package)_patches += dont_hardcode_x86_64.patch
+$(package)_patches += duplicate_lcqpafonts.patch
+$(package)_patches += fast_fixed_dtoa_no_optimize.patch
+$(package)_patches += fix_limits_header.patch
+$(package)_patches += fix_montery_include.patch
+$(package)_patches += fix_qt_pkgconfig.patch
+$(package)_patches += mac-qmake.conf
+$(package)_patches += no-xlib.patch
+$(package)_patches += qtbase-moc-ignore-gcc-macro.patch
+$(package)_patches += qt.pro
+$(package)_patches += qttools_src.pro
+$(package)_patches += rcc_hardcode_timestamp.patch
 
 $(package)_qttranslations_file_name=qttranslations-$($(package)_suffix)
 $(package)_qttranslations_sha256_hash=5d7869f670a135ad0986e266813b9dd5bbae2b09577338f9cdf8904d4af52db0
@@ -221,6 +222,7 @@ define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/dont_hardcode_pwd.patch && \
   patch -p1 -i $($(package)_patch_dir)/dont_hardcode_x86_64.patch && \
   patch -p1 -i $($(package)_patch_dir)/duplicate_lcqpafonts.patch && \
+  patch -p1 -i $($(package)_patch_dir)/fast_fixed_dtoa_no_optimize.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_limits_header.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_montery_include.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_qt_pkgconfig.patch && \
