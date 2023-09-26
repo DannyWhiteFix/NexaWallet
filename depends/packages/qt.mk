@@ -12,7 +12,6 @@ $(package)_patches+= dont_hardcode_pwd.patch
 $(package)_patches+= dont_hardcode_x86_64.patch
 $(package)_patches+= fix_limits_header.patch
 $(package)_patches+= fix_montery_include.patch
-$(package)_patches+= fix_no_printer.patch
 $(package)_patches+= fix_qt_pkgconfig.patch
 $(package)_patches+= mac-qmake.conf
 $(package)_patches+= no-xlib.patch
@@ -219,7 +218,6 @@ define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/dont_hardcode_x86_64.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_limits_header.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_montery_include.patch && \
-  patch -p1 -i $($(package)_patch_dir)/fix_no_printer.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_qt_pkgconfig.patch && \
   patch -p1 -i $($(package)_patch_dir)/no-xlib.patch && \
   patch -p1 -i $($(package)_patch_dir)/qtbase-moc-ignore-gcc-macro.patch && \
