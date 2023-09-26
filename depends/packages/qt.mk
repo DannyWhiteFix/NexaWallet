@@ -19,6 +19,7 @@ $(package)_patches+= qtbase-moc-ignore-gcc-macro.patch
 $(package)_patches = qt.pro
 $(package)_patches+= qttools_src.pro
 $(package)_patches+= rcc_hardcode_timestamp.patch
+$(package)_patches+= duplicate_lcqpafonts.patch
 
 $(package)_qttranslations_file_name=qttranslations-$($(package)_suffix)
 $(package)_qttranslations_sha256_hash=5d7869f670a135ad0986e266813b9dd5bbae2b09577338f9cdf8904d4af52db0
@@ -216,6 +217,7 @@ define $(package)_preprocess_cmds
   cp $($(package)_patch_dir)/qttools_src.pro qttools/src/src.pro && \
   patch -p1 -i $($(package)_patch_dir)/dont_hardcode_pwd.patch && \
   patch -p1 -i $($(package)_patch_dir)/dont_hardcode_x86_64.patch && \
+  patch -p1 -i $($(package)_patch_dir)/duplicate_lcqpafonts.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_limits_header.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_montery_include.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_qt_pkgconfig.patch && \
