@@ -6,7 +6,7 @@ $(package)_download_path=https://www.bitcoinunlimited.info/depends-sources
 $(package)_file_name=gmp-$($(package)_version).tar.gz
 $(package)_sha256_hash=0e19db71bcd2082b404350ce2bd5c32ad54525c10ce28a71cb46d88113fe626b
 
-ifeq  ($(HOST),i686-pc-linux-gnu)
+ifeq ($(HOST),i686-pc-linux-gnu)
   XTRA_CFG:=--disable-assembly
   $(package)_cflags+=-m32
 endif
@@ -16,7 +16,7 @@ ifeq ($(HOST),x86_64-w64-mingw32)
   XTRA_CFG_ENV:=CC_FOR_BUILD=gcc
 endif
 
-ifeq  ($(HOST),x86_64-apple-darwin19)
+ifeq (darwin, $(findstring darwin, $(HOST)))
   XTRA_CFG:=--disable-assembly
   XTRA_CFG_ENV:=CC="$(darwin_CC)" CXX="$(darwin_CXX)"
 endif
