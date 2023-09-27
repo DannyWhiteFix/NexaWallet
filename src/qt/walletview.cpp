@@ -247,6 +247,22 @@ void WalletView::backupWallet()
     }
 }
 
+void WalletView::restoreWallet()
+{
+    QString filename =
+        GUIUtil::getOpenFileName(this, tr("Restore Wallet"), QString(), tr("Wallet Data (*.dat)"), nullptr);
+
+    if (filename.isEmpty())
+        return;
+
+    if (!walletModel->restoreWallet(filename))
+    {
+        Q_EMIT message(tr("Restore Failed"),
+            tr("There was an error trying to restore the wallet data to %1.").arg(filename),
+            CClientUIInterface::MSG_ERROR);
+    }
+}
+
 void WalletView::changePassphrase()
 {
     AskPassphraseDialog dlg(AskPassphraseDialog::ChangePass, this);

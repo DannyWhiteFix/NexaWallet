@@ -22,6 +22,7 @@
 
 #include <stdint.h>
 
+#include <QApplication>
 #include <QDebug>
 #include <QTimer>
 
@@ -194,6 +195,7 @@ static void ShowProgress(ClientModel *clientmodel, const std::string &title, int
     // emits signal "showProgress"
     QMetaObject::invokeMethod(clientmodel, "showProgress", Qt::QueuedConnection,
         Q_ARG(QString, QString::fromStdString(title)), Q_ARG(int, nProgress));
+    qApp->processEvents();
 }
 
 static void NotifyNumConnectionsChanged(ClientModel *clientmodel, int newNumConnections)

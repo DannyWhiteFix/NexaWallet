@@ -190,6 +190,7 @@ private:
 };
 
 bool BackupWallet(const CWallet &wallet, const std::string &strDest);
+bool RestoreWallet(const CWallet &wallet, const std::string &strDest);
 void ThreadFlushWalletDB(const std::string &strFile);
 
 #endif // NEXA_WALLET_WALLETDB_H

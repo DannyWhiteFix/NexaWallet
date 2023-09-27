@@ -1776,16 +1776,18 @@ int CWallet::ScanForWalletTransactions(CBlockIndex *pindexStart, bool fUpdate)
         }
 
         // show rescan progress in GUI as dialog or on splashscreen, if -rescan on startup
-        ShowProgress(_("Rescanning..."), 0);
+        uiInterface.ShowProgress(_("Rescanning..."), 0);
         double dProgressStart = Checkpoints::GuessVerificationProgress(pindex, false);
         double dProgressTip = Checkpoints::GuessVerificationProgress(chainActive.Tip(), false);
         while (pindex)
         {
             if (pindex->height() % 100 == 0 && dProgressTip - dProgressStart > 0.0)
-                ShowProgress(_("Rescanning..."),
+            {
+                uiInterface.ShowProgress(_("Rescanning..."),
                     std::max(
                         1, std::min(99, (int)((Checkpoints::GuessVerificationProgress(pindex, false) - dProgressStart) /
                                               (dProgressTip - dProgressStart) * 100))));
+            }
 
             const ConstCBlockRef pblock = ReadBlockFromDisk(pindex, Params().GetConsensus());
             if (!pblock)
@@ -1810,7 +1812,7 @@ int CWallet::ScanForWalletTransactions(CBlockIndex *pindexStart, bool fUpdate)
                         Checkpoints::GuessVerificationProgress(pindex, false));
             }
         }
-        ShowProgress(_("Rescanning..."), 100); // hide progress dialog in GUI
+        uiInterface.ShowProgress(_("Rescanning..."), 100); // hide progress dialog in GUI
     }
     // Rescan is now finished. Set to false to allow network connections to resume.
     fRescan = false;
@@ -4521,7 +4523,145 @@ bool CWallet::GetDestData(const CTxDestination &dest, const std::string &key, st
     return false;
 }
 
-bool CWallet::InitLoadWallet()
+bool CWallet::ParameterInteraction()
+{
+    // check payTxFee
+    if (payTxFeeTweak.Value() > 0)
+    {
+        if (payTxFeeTweak.Value() > HIGH_TX_FEE_PER_KB)
+            InitWarning(_("-wallet.payTxFee is set very high! This is the transaction fee you will pay if you send a "
+                          "transaction."));
+        CFeeRate payTxFee = CFeeRate(payTxFeeTweak.Value(), 1000);
+        if (payTxFee < ::minRelayTxFee)
+        {
+            return InitError(strprintf(_("Invalid amount for -wallet.payTxFee=<amount>: '%u' (must be at least %s)"),
+                payTxFee.ToString(), ::minRelayTxFee.ToString()));
+        }
+    }
+
+    // check maxTxFee
+    {
+        if (maxTxFeeTweak.Value() > HIGH_MAX_TX_FEE)
+            InitWarning(_("-wallet.maxTxFee is set very high! Fees this large could be paid on a single transaction."));
+        if (CFeeRate(maxTxFeeTweak.Value(), 1000) < ::minRelayTxFee)
+        {
+            return InitError(
+                strprintf(_("Invalid amount for -wallet.maxTxFee=<amount>: '%u' (must be at least the minrelay "
+                            "fee of %s to prevent stuck transactions)"),
+                    maxTxFeeTweak.Value(), ::minRelayTxFee.ToString()));
+        }
+    }
+    nTxConfirmTarget = GetArg("-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET);
+
+    // If instant transactions is turned on then we must be able to spend zero conf change as well.
+    if (instantTxns.Value())
+    {
+        bSpendZeroConfChange = GetBoolArg("-spendzeroconfchange", true);
+    }
+    else
+    {
+        bSpendZeroConfChange = GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
+    }
+
+    // If auto consolidation is on then we must have at least spendzeroconfchange
+    if (autoTxns.Value())
+    {
+        bSpendZeroConfChange = GetBoolArg("-spendzeroconfchange", true);
+        if (!bSpendZeroConfChange && !instantTxns.Value())
+        {
+            InitWarning(_("You are trying to use -wallet.auto but neither -spendzeroconfchange nor -wallet.instant is "
+                          "turned on"));
+        }
+    }
+
+    fSendFreeTransactions = GetBoolArg("-sendfreetransactions", DEFAULT_SEND_FREE_TRANSACTIONS);
+
+    return true;
+}
+
+void CWallet::EraseFromRam(CWalletTxRef tx)
+{
+    // Remove id record
+    mapWallet.erase(COutPoint(tx->GetId()));
+    // Remove idem record
+    mapWallet.erase(COutPoint(tx->GetIdem()));
+    // remove all outpoint records
+    for (size_t i = 0; i < tx->vout.size(); i++)
+    {
+        mapWallet.erase(tx->OutpointAt(i));
+    }
+}
+
+CKeyPool::CKeyPool() { nTime = GetTime(); }
+CKeyPool::CKeyPool(const CPubKey &vchPubKeyIn)
+{
+    nTime = GetTime();
+    vchPubKey = vchPubKeyIn;
+}
+
+CWalletKey::CWalletKey(int64_t nExpires)
+{
+    nTimeCreated = (nExpires ? GetTime() : 0);
+    nTimeExpires = nExpires;
+}
+
+int CMerkleTx::SetMerkleBranch(const CBlock &block, int txIdx)
+{
+    // txIdx never == -1 since the caller already know txIdx
+    assert(txIdx >= 0);
+    CBlock blockTmp;
+
+    // Update the tx's hashBlock
+    hashBlock = block.GetHash();
+    // Set the position of the transaction in the block
+    nIndex = txIdx;
+
+    // Is the tx in a block that's in the main chain
+    const CBlockIndex *pindex = LookupBlockIndex(hashBlock);
+    if (!pindex || !chainActive.Contains(pindex))
+        return 0;
+
+    return chainActive.Height() - pindex->height() + 1;
+}
+
+int CMerkleTx::GetDepthInMainChain(const CBlockIndex *&pindexRet) const
+{
+    if (hashUnset())
+        return 0;
+
+    // Find the block it claims to be in
+    const CBlockIndex *pindex = LookupBlockIndex(hashBlock);
+    if (!pindex || !chainActive.Contains(pindex))
+        return 0;
+
+    pindexRet = pindex; // we can return a pindex out of the lock because block headers are never deleted
+    return ((nIndex == -1) ? (-1) : 1) * (chainActive.Height() - pindex->height() + 1);
+}
+
+int CMerkleTx::GetBlocksToMaturity() const
+{
+    if (!IsCoinBase())
+        return 0;
+
+    return max(0, (Params().GetConsensus().coinbaseMaturity + 1) - GetDepthInMainChain());
+}
+
+void ThreadRescan()
+{
+    pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
+    pwalletMain->ReacceptWalletTransactions();
+    pwalletMain->Flush();
+    statusStrings.Clear("rescanning");
+}
+
+void StartWalletRescanThread()
+{
+    statusStrings.Set("rescanning");
+    std::thread rescanThread(std::bind(&TraceThread<void (*)()>, "rescan", &ThreadRescan));
+    rescanThread.detach();
+}
+
+bool InitLoadWallet()
 {
     std::string walletFile = GetArg("-wallet", DEFAULT_WALLET_DAT);
 
@@ -4705,142 +4845,4 @@ bool CWallet::InitLoadWallet()
     walletInstance->SetBroadcastTransactions(GetBoolArg("-walletbroadcast", DEFAULT_WALLETBROADCAST));
     pwalletMain = walletInstance;
     return true;
-}
-
-bool CWallet::ParameterInteraction()
-{
-    // check payTxFee
-    if (payTxFeeTweak.Value() > 0)
-    {
-        if (payTxFeeTweak.Value() > HIGH_TX_FEE_PER_KB)
-            InitWarning(_("-wallet.payTxFee is set very high! This is the transaction fee you will pay if you send a "
-                          "transaction."));
-        CFeeRate payTxFee = CFeeRate(payTxFeeTweak.Value(), 1000);
-        if (payTxFee < ::minRelayTxFee)
-        {
-            return InitError(strprintf(_("Invalid amount for -wallet.payTxFee=<amount>: '%u' (must be at least %s)"),
-                payTxFee.ToString(), ::minRelayTxFee.ToString()));
-        }
-    }
-
-    // check maxTxFee
-    {
-        if (maxTxFeeTweak.Value() > HIGH_MAX_TX_FEE)
-            InitWarning(_("-wallet.maxTxFee is set very high! Fees this large could be paid on a single transaction."));
-        if (CFeeRate(maxTxFeeTweak.Value(), 1000) < ::minRelayTxFee)
-        {
-            return InitError(
-                strprintf(_("Invalid amount for -wallet.maxTxFee=<amount>: '%u' (must be at least the minrelay "
-                            "fee of %s to prevent stuck transactions)"),
-                    maxTxFeeTweak.Value(), ::minRelayTxFee.ToString()));
-        }
-    }
-    nTxConfirmTarget = GetArg("-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET);
-
-    // If instant transactions is turned on then we must be able to spend zero conf change as well.
-    if (instantTxns.Value())
-    {
-        bSpendZeroConfChange = GetBoolArg("-spendzeroconfchange", true);
-    }
-    else
-    {
-        bSpendZeroConfChange = GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
-    }
-
-    // If auto consolidation is on then we must have at least spendzeroconfchange
-    if (autoTxns.Value())
-    {
-        bSpendZeroConfChange = GetBoolArg("-spendzeroconfchange", true);
-        if (!bSpendZeroConfChange && !instantTxns.Value())
-        {
-            InitWarning(_("You are trying to use -wallet.auto but neither -spendzeroconfchange nor -wallet.instant is "
-                          "turned on"));
-        }
-    }
-
-    fSendFreeTransactions = GetBoolArg("-sendfreetransactions", DEFAULT_SEND_FREE_TRANSACTIONS);
-
-    return true;
-}
-
-void CWallet::EraseFromRam(CWalletTxRef tx)
-{
-    // Remove id record
-    mapWallet.erase(COutPoint(tx->GetId()));
-    // Remove idem record
-    mapWallet.erase(COutPoint(tx->GetIdem()));
-    // remove all outpoint records
-    for (size_t i = 0; i < tx->vout.size(); i++)
-    {
-        mapWallet.erase(tx->OutpointAt(i));
-    }
-}
-
-CKeyPool::CKeyPool() { nTime = GetTime(); }
-CKeyPool::CKeyPool(const CPubKey &vchPubKeyIn)
-{
-    nTime = GetTime();
-    vchPubKey = vchPubKeyIn;
-}
-
-CWalletKey::CWalletKey(int64_t nExpires)
-{
-    nTimeCreated = (nExpires ? GetTime() : 0);
-    nTimeExpires = nExpires;
-}
-
-int CMerkleTx::SetMerkleBranch(const CBlock &block, int txIdx)
-{
-    // txIdx never == -1 since the caller already know txIdx
-    assert(txIdx >= 0);
-    CBlock blockTmp;
-
-    // Update the tx's hashBlock
-    hashBlock = block.GetHash();
-    // Set the position of the transaction in the block
-    nIndex = txIdx;
-
-    // Is the tx in a block that's in the main chain
-    const CBlockIndex *pindex = LookupBlockIndex(hashBlock);
-    if (!pindex || !chainActive.Contains(pindex))
-        return 0;
-
-    return chainActive.Height() - pindex->height() + 1;
-}
-
-int CMerkleTx::GetDepthInMainChain(const CBlockIndex *&pindexRet) const
-{
-    if (hashUnset())
-        return 0;
-
-    // Find the block it claims to be in
-    const CBlockIndex *pindex = LookupBlockIndex(hashBlock);
-    if (!pindex || !chainActive.Contains(pindex))
-        return 0;
-
-    pindexRet = pindex; // we can return a pindex out of the lock because block headers are never deleted
-    return ((nIndex == -1) ? (-1) : 1) * (chainActive.Height() - pindex->height() + 1);
-}
-
-int CMerkleTx::GetBlocksToMaturity() const
-{
-    if (!IsCoinBase())
-        return 0;
-
-    return max(0, (Params().GetConsensus().coinbaseMaturity + 1) - GetDepthInMainChain());
-}
-
-void ThreadRescan()
-{
-    pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
-    pwalletMain->ReacceptWalletTransactions();
-    pwalletMain->Flush();
-    statusStrings.Clear("rescanning");
-}
-
-void StartWalletRescanThread()
-{
-    statusStrings.Set("rescanning");
-    std::thread rescanThread(std::bind(&TraceThread<void (*)()>, "rescan", &ThreadRescan));
-    rescanThread.detach();
 }

@@ -79,6 +79,7 @@
 
 std::atomic<bool> fImporting{false};
 std::atomic<bool> fReindex{false};
+
 bool fBlocksOnly = false;
 bool fTxIndex = false;
 bool fHavePruned = false;

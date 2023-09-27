@@ -12,6 +12,7 @@
 #include "consensus/validation.h"
 #include "dstencode.h"
 #include "fs.h"
+#include "init.h"
 #include "main.h" // For CheckTransaction
 #include "protocol.h"
 #include "serialize.h"
@@ -942,6 +943,92 @@ bool BackupWallet(const CWallet &wallet, const string &strDest)
     return false;
 }
 
+bool RestoreWallet(const CWallet &wallet, const string &strSrc)
+{
+    if (!wallet.fFileBacked)
+        return false;
+    int nBakCount = 1;
+    fs::path pathBak = "";
+    {
+        LOCK(bitdb.cs_db);
+        if (!bitdb.mapFileUseCount.count(wallet.strWalletFile) || bitdb.mapFileUseCount[wallet.strWalletFile] == 0)
+        {
+            // Flush log data to the dat file
+            bitdb.CloseDb(wallet.strWalletFile);
+            bitdb.CheckpointLSN(wallet.strWalletFile);
+            bitdb.mapFileUseCount.erase(wallet.strWalletFile);
+
+            // Rename wallet.dat to wallet.dat.bak(n).  If the *.bak file already exists then
+            // increment the index value and keep looking until we find one that doesn't exist yet.
+            do
+            {
+                string destBak = wallet.strWalletFile + ".bak" + std::to_string(nBakCount++);
+                pathBak = GetDataDir() / destBak;
+            } while (fs::exists(pathBak));
+
+            fs::path pathSrc = GetDataDir() / wallet.strWalletFile;
+            try
+            {
+                fs::rename(pathSrc, pathBak);
+            }
+            catch (std::ios_base::failure &e)
+            {
+                LOGA("error renaming wallet from %s to %s - %s\n", pathSrc.string(), pathBak.string(), e.what());
+                return false;
+            }
+        }
+        else
+            return false;
+    }
+
+    // Copy selected wallet to wallet.dat and then reload
+    fs::path pathDest = GetDataDir() / wallet.strWalletFile;
+    fs::path pathSrc(strSrc);
+    if (fs::is_directory(pathSrc))
+        return false;
+
+    if (pathSrc == pathDest)
+    {
+        uiInterface.ThreadSafeMessageBox(
+            strprintf(_("You are trying to restore the same wallet which you are trying to replace.")), "",
+            CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_OK);
+        return false;
+    }
+    try
+    {
+        fs::copy_file(pathSrc, pathDest);
+    }
+    catch (std::ios_base::failure &e)
+    {
+        LOGA("error copying wallet from %s to %s - %s\n", pathSrc.string(), pathDest.string(), e.what());
+        return false;
+    }
+
+    // Initiate a rescan of the wallet by setting the rescan flag and then
+    // loading the wallet into memory.  Once done we can initiate a shutdown
+    // which will save the updated wallet to disk.
+    if (!SoftSetBoolArg("-rescan", true))
+        return false;
+    bool ret = InitLoadWallet();
+    if (!ret)
+    {
+        return false;
+    }
+    else
+    {
+        bool fRet = uiInterface.ThreadSafeMessageBox(
+            strprintf(_("\"Restore Wallet\" succeeded and a backup of the previous wallet was saved to: "
+                        "%s.\n\n\nWhen you click \"OK\" Nexa will shutdown to complete the process."),
+                pathBak),
+            "", CClientUIInterface::MSG_INFORMATION | CClientUIInterface::BTN_OK | CClientUIInterface::MODAL);
+        if (fRet)
+        {
+            StartShutdown();
+        }
+    }
+
+    return true;
+}
 //
 // Try to (very carefully!) recover wallet.dat if there is a problem.
 //

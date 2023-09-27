@@ -1524,7 +1524,7 @@ bool AppInit2(Config &config)
     }
     else
     {
-        CWallet::InitLoadWallet();
+        InitLoadWallet();
         if (!pwalletMain)
             return false;
     }
