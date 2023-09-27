@@ -70,10 +70,10 @@ BitcoinGUI::BitcoinGUI(const Config *_cfg,
       progressDialog(0), appMenuBar(0), overviewAction(0), historyAction(0), quitAction(0), sendCoinsAction(0),
       sendCoinsMenuAction(0), usedSendingAddressesAction(0), usedReceivingAddressesAction(0), signMessageAction(0),
       verifyMessageAction(0), aboutAction(0), receiveCoinsAction(0), receiveCoinsMenuAction(0), optionsAction(0),
-      unlimitedAction(0), toggleHideAction(0), encryptWalletAction(0), backupWalletAction(0), changePassphraseAction(0),
-      aboutQtAction(0), openRPCConsoleAction(0), openAction(0), showHelpMessageAction(0), trayIcon(0), trayIconMenu(0),
-      notificator(0), rpcConsole(0), helpMessageDialog(0), modalOverlay(0), prevBlocks(0), spinnerFrame(0),
-      platformStyle(_platformStyle), cfg(_cfg)
+      unlimitedAction(0), toggleHideAction(0), encryptWalletAction(0), backupWalletAction(0), restoreWalletAction(0),
+      changePassphraseAction(0), aboutQtAction(0), openRPCConsoleAction(0), openAction(0), showHelpMessageAction(0),
+      trayIcon(0), trayIconMenu(0), notificator(0), rpcConsole(0), helpMessageDialog(0), modalOverlay(0), prevBlocks(0),
+      spinnerFrame(0), platformStyle(_platformStyle), cfg(_cfg)
 {
     GUIUtil::restoreWindowGeometry("nWindow", QSize(850, 550), this);
 
@@ -311,6 +311,8 @@ void BitcoinGUI::createActions()
     encryptWalletAction->setCheckable(true);
     backupWalletAction = new QAction(platformStyle->TextColorIcon(":/icons/filesave"), tr("&Backup Wallet..."), this);
     backupWalletAction->setStatusTip(tr("Backup wallet to another location"));
+    restoreWalletAction = new QAction(platformStyle->TextColorIcon(":/icons/open"), tr("&Restore Wallet..."), this);
+    restoreWalletAction->setStatusTip(tr("Restore wallet from another location"));
     changePassphraseAction =
         new QAction(platformStyle->TextColorIcon(":/icons/key"), tr("&Change Passphrase..."), this);
     changePassphraseAction->setStatusTip(tr("Change the passphrase used for wallet encryption"));
@@ -356,6 +358,7 @@ void BitcoinGUI::createActions()
     {
         connect(encryptWalletAction, SIGNAL(triggered(bool)), walletFrame, SLOT(encryptWallet(bool)));
         connect(backupWalletAction, SIGNAL(triggered()), walletFrame, SLOT(backupWallet()));
+        connect(restoreWalletAction, SIGNAL(triggered()), walletFrame, SLOT(restoreWallet()));
         connect(changePassphraseAction, SIGNAL(triggered()), walletFrame, SLOT(changePassphrase()));
         connect(signMessageAction, SIGNAL(triggered()), this, SLOT(gotoSignMessageTab()));
         connect(verifyMessageAction, SIGNAL(triggered()), this, SLOT(gotoVerifyMessageTab()));
@@ -385,6 +388,7 @@ void BitcoinGUI::createMenuBar()
     {
         file->addAction(openAction);
         file->addAction(backupWalletAction);
+        file->addAction(restoreWalletAction);
         file->addAction(signMessageAction);
         file->addAction(verifyMessageAction);
         file->addSeparator();
@@ -511,6 +515,7 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     historyAction->setEnabled(enabled);
     encryptWalletAction->setEnabled(enabled);
     backupWalletAction->setEnabled(enabled);
+    restoreWalletAction->setEnabled(enabled);
     changePassphraseAction->setEnabled(enabled);
     signMessageAction->setEnabled(enabled);
     verifyMessageAction->setEnabled(enabled);
