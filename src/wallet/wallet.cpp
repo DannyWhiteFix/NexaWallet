@@ -2450,6 +2450,9 @@ unsigned int CWallet::FilterCoins(vector<COutput> &vCoins, std::function<bool(co
             if (depth < 0)
                 continue;
 
+            if (!wtx->IsTrusted())
+                continue;
+
             // We should not consider coins which aren't at least in our txpool
             // It's possible for these to be conflicted via ancestors which we may never be able to detect
             if (depth == 0 && !wtx->InMempool())

@@ -210,6 +210,18 @@ class GroupTokensTest (BitcoinTestFramework):
     def run_test(self):
         logging.info("starting grouptokens test")
 
+
+        # instant transactions should be on so that balances are fully
+        # available when transactions show up in the mempool.  Later
+        # in the testing we can turn off to test whether
+        # instant transactions can be turned off for tokens.
+        self.nodes[0].set("wallet.instant=true");
+        self.nodes[0].set("wallet.instantDelay=0");
+        self.nodes[1].set("wallet.instant=true");
+        self.nodes[1].set("wallet.instantDelay=0");
+        self.nodes[2].set("wallet.instant=true");
+        self.nodes[2].set("wallet.instantDelay=0");
+
         # generate enough blocks so that nodes[0] has a balance
         self.nodes[2].generate(2)
         self.sync_blocks()
@@ -332,6 +344,10 @@ class GroupTokensTest (BitcoinTestFramework):
         self.nodes[0].token("mint", grpId, mint1_0, 1000)
         assert(self.nodes[0].token("balance", grpId) == 2000)
         self.checkTokenInfo(self.nodes[0], grpId,"","","","", 2000)
+
+        # TODO: what happens here to foreign address minting? 
+        # print("node 1 balance " + str( self.nodes[1].token("balance", grpId)))
+          # add more tests for foreign address?
 
         # mint but node does not have authority
         try:
@@ -504,6 +520,49 @@ class GroupTokensTest (BitcoinTestFramework):
         self.subgroupTest()
         self.descDocTest()
         self.decimalDescTest()
+
+
+        ### Test that the instant transaction delay works for tokens
+        # 1) Send a token from node2 to a new address on node2.  Even with
+        #    and instantdelay setting the balance should update immmediately because
+        #    the sourc of the tokens is ourselves and is trusted.
+        # 2) Send a token from one node to another. The instant delay should be in effect.
+        logging.info("testing instant transactions")
+        instantDelay = 3
+        self.nodes[0].set("wallet.instantDelay=3");
+        self.nodes[1].set("wallet.instantDelay=3");
+        self.nodes[2].set("wallet.instantDelay=3");
+
+        # Send to our own node - there should be no instant delay
+        addr1 = self.nodes[2].getnewaddress()
+        self.nodes[2].token("send", grp2Id, addr1, 100)
+        assert(self.nodes[2].token("balance", grp2Id, addr1) == 100)
+
+        # Send to another node - the instant delay should be visible
+        addr2 = self.nodes[2].getnewaddress()
+        self.nodes[0].token("send", grp0Id, addr2, 10)
+        time.sleep(instantDelay - 1) # wait until just before the delay expires
+        assert(self.nodes[2].token("balance", grp0Id, addr2) == 0)
+        time.sleep(1) # wait the last second and the balance should update
+        assert(self.nodes[2].token("balance", grp0Id, addr2) == 10)
+
+
+        ### Test instant transactions for tokens can be turned off.
+        #   1) send tokens back to node0 and observer that the balance does not
+        #      update after the instantDelay has expired
+        self.nodes[0].set("wallet.instant=false");
+        self.nodes[1].set("wallet.instant=false");
+        self.nodes[2].set("wallet.instant=false");
+
+        addr3 = self.nodes[0].getnewaddress()
+        self.nodes[2].token("send", grp0Id, addr3, 25)
+        time.sleep(instantDelay + 1) # wait one second extra to be sure
+        assert(self.nodes[0].token("balance", grp0Id, addr3) == 0)
+        
+        # generate a block and the balance should now update
+        self.nodes[0].generate(1)
+        assert(self.nodes[0].token("balance", grp0Id, addr3) == 25)
+
 
         logging.info("test complete")
 
