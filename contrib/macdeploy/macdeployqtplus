@@ -231,7 +231,7 @@ def getFrameworks(binaryPath, verbose):
     return libraries
 
 def runInstallNameTool(action, *args):
-    installnametoolbin=os.getenv("INSTALLNAMETOOL", "install_name_tool")
+    installnametoolbin=os.getenv("INSTALL_NAME_TOOL", "install_name_tool")
     subprocess.check_call([installnametoolbin, "-"+action] + list(args))
 
 def changeInstallName(oldName, newName, binaryPath, verbose):

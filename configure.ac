@@ -537,7 +537,7 @@ case $host in
            BUILD_OS=darwin
            ;;
          *)
-           AC_PATH_TOOL([INSTALLNAMETOOL], [install_name_tool], install_name_tool)
+           AC_PATH_TOOL([INSTALL_NAME_TOOL], [install_name_tool], install_name_tool)
            AC_PATH_TOOL([OTOOL], [otool], otool)
            AC_PATH_PROGS([GENISOIMAGE], [genisoimage mkisofs],genisoimage)
            AC_PATH_PROGS([RSVG_CONVERT], [rsvg-convert rsvg],rsvg-convert)
