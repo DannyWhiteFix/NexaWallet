@@ -6,7 +6,6 @@ These are the dependencies currently used by Bitcoin Unlimited. You can find ins
 | --- | --- | --- | --- | --- | --- |
 | Berkeley DB | [5.3.28](http://www.oracle.com/technetwork/database/database-technologies/berkeleydb/downloads/index.html) | 5.3.x | No |  |  |
 | Boost | [1.71.0](http://www.boost.org/users/download/) | [1.55.0](https://github.com/BitcoinUnlimited/BitcoinUnlimited/pull/1562) | No |  |  |
-| ccache | [3.4.2](https://ccache.samba.org/download.html) |  | No |  |  |
 | D-Bus | [1.10.19](https://cgit.freedesktop.org/dbus/dbus/tree/NEWS?h=dbus-1.10) |  | No | Yes |  |
 | Expat | [2.4.1](https://libexpat.github.io/) |  | No | Yes |  |
 | fontconfig | [2.12.1](https://www.freedesktop.org/software/fontconfig/release/) |  | No | Yes |  |
