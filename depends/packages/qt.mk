@@ -151,13 +151,19 @@ $(package)_config_opts_linux += -no-opengl
 $(package)_config_opts_linux += -no-feature-vulkan
 $(package)_config_opts_linux += -dbus-runtime
 $(package)_config_opts_linux += -no-feature-vulkan
+$(package)_config_opts_linux += OPENSSL_LIBS="-lssl -lcrypto -lpthread"
 ifneq ($(LTO),)
 $(package)_config_opts_linux += -ltcg
 endif
-$(package)_config_opts_linux += OPENSSL_LIBS="-lssl -lcrypto -lpthread"
-$(package)_config_opts_linux += -platform linux-g++ -xplatform bitcoin-linux-g++
-ifneq (,$(findstring -stdlib=libc++,$($(1)_cxx)))
-$(package)_config_opts_x86_64_linux = -xplatform linux-clang-libc++
+
+ifneq (,$(findstring clang,$($(package)_cxx)))
+  ifneq (,$(findstring -stdlib=libc++,$($(package)_cxx)))
+    $(package)_config_opts_linux += -platform linux-clang-libc++ -xplatform linux-clang-libc++
+  else
+    $(package)_config_opts_linux += -platform linux-clang -xplatform linux-clang
+  endif
+else
+  $(package)_config_opts_linux += -platform linux-g++ -xplatform bitcoin-linux-g++
 endif
 
 $(package)_config_opts_mingw32 = -no-opengl
