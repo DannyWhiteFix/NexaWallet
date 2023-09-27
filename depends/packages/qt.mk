@@ -135,6 +135,7 @@ $(package)_config_opts_darwin += -device-option MAC_SDK_PATH=$(OSX_SDK)
 $(package)_config_opts_darwin += -device-option MAC_SDK_VERSION=$(OSX_SDK_VERSION)
 $(package)_config_opts_darwin += -device-option CROSS_COMPILE="$(host)-"
 $(package)_config_opts_darwin += -device-option MAC_TARGET=$(host)
+$(package)_config_opts_darwin += OPENSSL_LIBS="-lssl -lcrypto -lpthread -ldl"
 endif
 
 ifneq ($(build_arch),$(host_arch))
