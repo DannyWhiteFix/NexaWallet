@@ -197,7 +197,7 @@ build-ubuntu-tests-nodeps:
             - ccache/
             - depends/sources
             - depends/built
-            - depends/x86_64-unknown-linux-gnu
+            - depends/x86_64-linux-gnu
 
 build-ubuntu-deps:
     stage: build_depends
@@ -205,10 +205,10 @@ build-ubuntu-deps:
     needs: []
     script:
         - cd depends
-        - make HOST=x86_64-unknown-linux-gnu -j `nproc`
+        - make HOST=x86_64-linux-gnu -j `nproc`
     artifacts:
         paths:
-            - depends/x86_64-unknown-linux-gnu
+            - depends/x86_64-linux-gnu
     rules:
       - if: ($CI_PIPELINE_SOURCE != "schedule" || $EXTENDED_TESTS == "True")
 
@@ -219,7 +219,7 @@ build-ubuntu:
     script:
         - ./autogen.sh
         - mkdir build; cd build
-        - ../configure --enable-shared --enable-debug --enable-zmq --enable-glibc-back-compat --enable-reduce-exports --cache-file=config.cache --prefix=$PWD/../depends/x86_64-unknown-linux-gnu CPPFLAGS=-DDEBUG_LOCKORDER
+        - ../configure --enable-shared --enable-debug --enable-zmq --enable-glibc-back-compat --enable-reduce-exports --cache-file=config.cache --prefix=$PWD/../depends/x86_64-linux-gnu CPPFLAGS=-DDEBUG_LOCKORDER
         - make -j `nproc`
         - ccache --show-stats
     dependencies:
@@ -264,12 +264,12 @@ build-ubuntu-rostrum:
 
     script:
         # add cargo to PATH
-        - export PATH=$PATH:`pwd`/depends/x86_64-unknown-linux-gnu/native/bin
+        - export PATH=$PATH:`pwd`/depends/x86_64-linux-gnu/native/bin
         # Prepare make file
         - ./autogen.sh > /dev/null
         - cd build
         - ../configure --cache-file=config.cache
-            --prefix=$PWD/../depends/x86_64-unknown-linux-gnu > /dev/null
+            --prefix=$PWD/../depends/x86_64-linux-gnu > /dev/null
 
         - make rostrum
 
