@@ -1,10 +1,10 @@
 package=libgmp
-$(package)_version=6.2.1
+$(package)_version=6.3.0
 $(package)_download_path=https://www.bitcoinunlimited.info/depends-sources
 # original source: https://gmplib.org/download/gmp
 # $(package)_file_name=$(package)-$($(package)_version).tar.lz
-$(package)_file_name=gmp-$($(package)_version).tar.gz
-$(package)_sha256_hash=0e19db71bcd2082b404350ce2bd5c32ad54525c10ce28a71cb46d88113fe626b
+$(package)_file_name=gmp-$($(package)_version).tar.xz
+$(package)_sha256_hash=a3c2b80201b89e68616f4ad30bc66aee4927c3ce50e33929ca819d5c43538898
 
 ifeq ($(HOST),i686-pc-linux-gnu)
   XTRA_CFG:=--disable-assembly
