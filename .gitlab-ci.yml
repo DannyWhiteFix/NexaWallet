@@ -590,7 +590,7 @@ build-win-64:
             - ccache/
             - depends/sources
             - depends/built
-            - depends/x86_64-apple-darwin19
+            - depends/x86_64-apple-darwin
     rules:
       - if: $CI_PIPELINE_SOURCE != "schedule"
 
@@ -599,14 +599,14 @@ build-osx-depends:
     extends: .cache-osx
     script:
         - mkdir -p depends/sdk-sources; mkdir depends/SDKs
-        - curl --location --fail https://www.bitcoinunlimited.info/sdks/MacOSX10.15.sdk.tar.xz -o ./depends/sdk-sources/MacOSX10.15.sdk.tar.xz
-        - tar -C depends/SDKs -xf depends/sdk-sources/MacOSX10.15.sdk.tar.xz
+        - curl --location --fail https://www.bitcoinunlimited.info/sdks/MacOSX11.3.sdk.tar.xz -o ./depends/sdk-sources/MacOSX11.3.sdk.tar.xz
+        - tar -C depends/SDKs -xf depends/sdk-sources/MacOSX11.3.sdk.tar.xz
         - cd depends
-        - make HOST=x86_64-apple-darwin19 -j `nproc` NO_RUST=1
+        - make HOST=x86_64-apple-darwin -j `nproc` NO_RUST=1
         - ccache --show-stats
     artifacts:
         paths:
-            - depends/x86_64-apple-darwin19
+            - depends/x86_64-apple-darwin
             - depends/SDKs
     rules:
       - if: $CI_PIPELINE_SOURCE != "schedule"
@@ -618,7 +618,7 @@ build-osx:
     script:
         - ./autogen.sh
         - mkdir build; cd build
-        - ../configure --enable-reduce-exports --prefix=$PWD/../depends/x86_64-apple-darwin19
+        - ../configure --enable-reduce-exports --prefix=$PWD/../depends/x86_64-apple-darwin
         - make -j `nproc`
         - ccache --show-stats
     dependencies:
@@ -628,7 +628,7 @@ build-osx:
         paths:
             - ./build/src/.libs/libnexa.*
             - ./build/config.log # on failure
-            - ./depends/x86_64-apple-darwin19/share/config.site # on failure
+            - ./depends/x86_64-apple-darwin/share/config.site # on failure
     rules:
       - if: $CI_PIPELINE_SOURCE != "schedule"
 
