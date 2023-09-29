@@ -17,7 +17,7 @@ from __future__ import division, print_function, unicode_literals
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import subprocess, sys, re, os, shutil, stat, os.path, time
+import subprocess, sys, re, os, platform, shutil, stat, os.path, time, subprocess
 from string import Template
 from argparse import ArgumentParser
 
@@ -715,6 +715,9 @@ elif config.sign:
     subprocess.check_call("codesign --force %s %s"%(os.environ['CODESIGNARGS'], target), shell=True)
 
 # ------------------------------------------------
+
+if platform.system() == "Darwin":
+    subprocess.check_call(f"codesign --deep --force --sign - {target}", shell=True)
 
 if config.dmg is not None:
 
