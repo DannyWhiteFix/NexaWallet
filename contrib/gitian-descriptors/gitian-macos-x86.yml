@@ -1,5 +1,5 @@
 ---
-name: "nexa-osx"
+name: "nexa-macos-x86"
 enable_cache: true
 suites:
 - "focal"
@@ -34,12 +34,12 @@ remotes:
 - "url": "https://gitlab.com/nexa/nexa.git"
   "dir": "nexa"
 files:
-- "MacOSX10.15.sdk.tar.xz"
+- "MacOSX11.3.sdk.tar.xz"
 script: |
   set -e -o pipefail
 
   WRAP_DIR=$HOME/wrapped
-  HOSTS="x86_64-apple-darwin19"
+  HOSTS="x86_64-apple-darwin"
   CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-tests --enable-shared --enable-javacashlib GENISOIMAGE=$WRAP_DIR/genisoimage"
   FAKETIME_HOST_PROGS=""
   FAKETIME_PROGS="ar ranlib date dmg genisoimage"
@@ -83,7 +83,7 @@ script: |
   BASEPREFIX=`pwd`/depends
   export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
   mkdir -p ${BASEPREFIX}/SDKs
-  tar -C ${BASEPREFIX}/SDKs -xf ${BUILD_DIR}/MacOSX10.15.sdk.tar.xz
+  tar -C ${BASEPREFIX}/SDKs -xf ${BUILD_DIR}/MacOSX11.3.sdk.tar.xz
 
   # Build dependencies for each host
   for i in $HOSTS; do

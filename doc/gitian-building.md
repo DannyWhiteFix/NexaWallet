@@ -34,7 +34,7 @@ bin/gbuild -j 4 -m 10000 --url nexa=https://gitlab.com/nexa/nexa.git --commit ne
 
 Your binaries will be ready to be used in `build/out/` folder.
 
-To compile binaries for MacOSX darwin first you need to get OSX SDK from here https://github.com/phracker/MacOSX-SDKs/releases/download/11.3/MacOSX10.15.sdk.tar.xz
+To compile binaries for MacOSX darwin first you need to get OSX SDK 11.3 from here https://github.com/joseluisq/macosx-sdks
 
 Then issue the following command to have the binaries for osx produced and stored in `build/out`
 
