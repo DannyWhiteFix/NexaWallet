@@ -1079,7 +1079,7 @@ bool CheckInputs(const CTransactionRef &tx,
     CValidationState &state,
     const CCoinsViewCache &inputs,
     bool fScriptChecks,
-    unsigned int flags,
+    const unsigned int flags,
     bool cacheStore,
     ValidationResourceTracker *resourceTracker,
     const CChainParams &chainparams,
@@ -2245,7 +2245,7 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
     nLockTimeFlags |= LOCKTIME_VERIFY_SEQUENCE;
 
     // Get the script flags for this block
-    uint32_t flags = GetBlockScriptFlags(pindex, chainparams.GetConsensus());
+    const uint32_t flags = GetBlockScriptFlags(pindex, chainparams.GetConsensus());
 
     std::vector<ValidationResourceTracker> txResourceTracker;
     std::vector<int> prevheights;
