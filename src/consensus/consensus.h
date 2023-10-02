@@ -75,7 +75,10 @@ static const uint32_t MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH |
                                                       SCRIPT_VERIFY_NULLFAIL |
                                                       SCRIPT_VERIFY_MINIMALDATA |
                                                       SCRIPT_ALLOW_64_BIT_INTEGERS |
-                                                      SCRIPT_ALLOW_NATIVE_INTROSPECTION;
+                                                      SCRIPT_ALLOW_NATIVE_INTROSPECTION |
+                                                      SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY |
+                                                      SCRIPT_VERIFY_CHECKSEQUENCEVERIFY |
+                                                      SCRIPT_ENABLE_CHECKDATASIG;
 
 /* clang-format on */
 
