@@ -276,7 +276,10 @@ std::tuple<bool, opcodetype, StackItem, ScriptError> ScriptMachine::Peek()
     StackItem vchPushValue;
     auto oldpc = pc;
     if (!script->GetOp(pc, opcode, vchPushValue))
+    {
+        LOG(SCRIPT, "Peek GetOp failed at offset %d", pc - pbegin);
         set_error(&err, SCRIPT_ERR_BAD_OPCODE);
+    }
     else if (vchPushValue.isVch() && vchPushValue.size() > MAX_SCRIPT_ELEMENT_SIZE)
         set_error(&err, SCRIPT_ERR_PUSH_SIZE);
     pc = oldpc;
@@ -399,6 +402,7 @@ bool ScriptMachine::Step()
             //
             if (!script->GetOp(pc, opcode, vchPushValue))
             {
+                LOG(SCRIPT, "Step GetOp failed at offset %d", pc - pbegin);
                 return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
             }
             if (vchPushValue.isVch() && (vchPushValue.size() > MAX_SCRIPT_ELEMENT_SIZE))
@@ -1768,6 +1772,7 @@ bool ScriptMachine::Step()
                 {
                     if (!nativeIntrospection)
                     {
+                        LOG(SCRIPT, "Native Introspection is off; opcode rejected");
                         return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
                     }
                     if (!sis.tx)
@@ -1840,6 +1845,7 @@ bool ScriptMachine::Step()
                 {
                     if (!nativeIntrospection)
                     {
+                        LOG(SCRIPT, "Native Introspection is off; opcode rejected");
                         return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
                     }
                     if (!sis.tx)
@@ -2139,6 +2145,7 @@ bool ScriptMachine::Step()
                 break;
 
                 default:
+                    LOG(SCRIPT, "Unknown opcode rejected %d", opcode);
                     return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
                 }
             }
