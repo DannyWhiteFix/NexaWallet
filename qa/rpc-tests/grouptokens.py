@@ -415,6 +415,37 @@ class GroupTokensTest (BitcoinTestFramework):
         except JSONRPCException as e:
             assert("Not enough tokens in the wallet." in e.error["message"])
 
+        try:  # melt too little
+            self.nodes[2].token("melt", grp2Id, 0)
+            assert(0)
+        except JSONRPCException as e:
+            print(str(e.error["message"]))
+            assert("Token melt amount must be greater than zero" in e.error["message"])
+
+        try:  # melt too little
+            self.nodes[2].token("melt", grp2Id, -1)
+            assert(0)
+        except JSONRPCException as e:
+            assert("Token melt amount must be greater than zero" in e.error["message"])
+
+        try:  # melt too little
+            self.nodes[2].token("melt", grp2Id, "A")
+            assert(0)
+        except JSONRPCException as e:
+            assert("Token melt amount must be greater than zero" in e.error["message"])
+
+        try:  # melt too many params
+            self.nodes[2].token("melt", grp2Id, 1, 2)
+            assert(0)
+        except JSONRPCException as e:
+            assert("Invalid number of arguments for token melt" in e.error["message"])
+
+        try:  # melt with invalid group id
+            self.nodes[2].token("melt", "invalidgroupid", 1)
+            assert(0)
+        except JSONRPCException as e:
+            assert("Invalid parameter: No group specified" in e.error["message"])
+
         self.nodes[2].token("melt", grp2Id, 100)
         waitFor(30, lambda: self.nodes[2].token("balance", grp2Id) == 900)
 
