@@ -97,6 +97,13 @@ void OptionsModel::Init(bool resetSettings)
 
 // Wallet
 #ifdef ENABLE_WALLET
+    // Start wallet rescan and then turn off the rescan checkbox so that we do it only one time
+    if (!settings.contains("fRescanOnStartup"))
+        settings.setValue("fRescanOnStartup", false);
+    if (!SoftSetArg("-rescan", settings.value("fRescanOnStartup").toString().toStdString()))
+        addOverriddenOption("-rescan");
+    settings.setValue("fRescanOnStartup", false);
+
     if (!settings.contains("bSpendZeroConfChange"))
         settings.setValue("bSpendZeroConfChange", true);
 
@@ -265,6 +272,8 @@ QVariant OptionsModel::data(const QModelIndex &index, int role) const
             return settings.value("QT_instantTransactions");
         case AutoConsolidation:
             return settings.value("fAutoConsolidation");
+        case RescanOnStartup:
+            return settings.value("fRescanOnStartup");
 #endif
         case DisplayUnit:
             return nDisplayUnit;
@@ -442,6 +451,10 @@ bool OptionsModel::setData(const QModelIndex &index, const QVariant &value, int 
                 settings.setValue("fAutoConsolidation", value);
                 autoTxns.Set(value.toBool());
             }
+            break;
+        case RescanOnStartup:
+            settings.setValue("fRescanOnStartup", value);
+            setRestartRequired(true);
             break;
 #endif
         case DisplayUnit:

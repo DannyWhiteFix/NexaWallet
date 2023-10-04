@@ -50,6 +50,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet)
     ui->threadsScriptVerif->setMinimum(-GetNumCores());
     ui->threadsScriptVerif->setMaximum(MAX_SCRIPTCHECK_THREADS);
     ui->reindexOnStartup->setEnabled(true);
+    ui->rescanOnStartup->setEnabled(true);
 
 /* Network elements init */
 #ifndef USE_UPNP
@@ -196,6 +197,7 @@ void OptionsDialog::setModel(OptionsModel *_model)
     connect(ui->spendZeroConfChange, SIGNAL(clicked(bool)), this, SLOT(setZeroConf()));
     connect(ui->instantTransactions, SIGNAL(clicked(bool)), this, SLOT(setInstant()));
     connect(ui->autoConsolidation, SIGNAL(clicked(bool)), this, SLOT(setAuto()));
+    connect(ui->rescanOnStartup, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     /* Network */
     connect(ui->allowIncoming, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     connect(ui->connectSocks, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
@@ -217,6 +219,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->coinControlFeatures, OptionsModel::CoinControlFeatures);
     mapper->addMapping(ui->instantTransactions, OptionsModel::InstantTransactions);
     mapper->addMapping(ui->autoConsolidation, OptionsModel::AutoConsolidation);
+    mapper->addMapping(ui->rescanOnStartup, OptionsModel::RescanOnStartup);
 
     /* Network */
     mapper->addMapping(ui->mapPortUpnp, OptionsModel::MapPortUPnP);
