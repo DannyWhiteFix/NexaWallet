@@ -103,6 +103,9 @@
           </property>
           <item>
            <widget class="QPushButton" name="pushButtonCoinControl">
+            <property name="toolTip">
+             <string>Select specific coins you want to use in this transaction</string>
+            </property>
             <property name="styleSheet">
              <string notr="true"/>
             </property>
@@ -562,6 +565,9 @@
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="toolTip">
+             <string>Custom change address</string>
+            </property>
            </widget>
           </item>
           <item>
@@ -766,6 +772,9 @@
               </item>
               <item>
                <widget class="QPushButton" name="buttonChooseFee">
+                <property name="toolTip">
+                 <string>Choose your transaction fee.</string>
+                </property>
                 <property name="text">
                  <string>Choose...</string>
                 </property>
@@ -882,7 +891,11 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="BitcoinAmountField" name="customFee"/>
+                  <widget class="BitcoinAmountField" name="customFee">
+                   <property name="toolTip">
+                    <string>Custom fee amount</string>
+                   </property>
+                  </widget>
                  </item>
                  <item>
                   <spacer name="horizontalSpacer_6">
@@ -948,6 +961,9 @@
               <layout class="QVBoxLayout" name="verticalLayoutFee4" stretch="0,1">
                <item>
                 <widget class="QRadioButton" name="radioSmartFee">
+                 <property name="toolTip">
+                  <string>Use the recommended fee amount.  You can select a faster or slower confirmation time by moving the &quot;Confirmation Time&quot; slider.</string>
+                 </property>
                  <property name="text">
                   <string>Recommended:</string>
                  </property>
@@ -978,6 +994,9 @@
               <layout class="QVBoxLayout" name="verticalLayoutFee9" stretch="0,1">
                <item>
                 <widget class="QRadioButton" name="radioCustomFee">
+                 <property name="toolTip">
+                  <string>Choose a custom fee amount</string>
+                 </property>
                  <property name="text">
                   <string>Custom:</string>
                  </property>
@@ -1059,6 +1078,9 @@
                   <layout class="QVBoxLayout" name="verticalLayoutFee6">
                    <item>
                     <widget class="QLabel" name="labelSmartFee3">
+                     <property name="toolTip">
+                      <string>Transaction confirmation time</string>
+                     </property>
                      <property name="text">
                       <string>Confirmation time:</string>
                      </property>
@@ -1089,6 +1111,9 @@
                    </property>
                    <item>
                     <widget class="QSlider" name="sliderSmartFee">
+                     <property name="toolTip">
+                      <string>Transaction confirmation time</string>
+                     </property>
                      <property name="minimum">
                       <number>0</number>
                      </property>
@@ -1335,6 +1360,9 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="toolTip">
+          <string>Current Balance</string>
+         </property>
          <property name="text">
           <string>Balance:</string>
          </property>
@@ -1383,7 +1411,7 @@
  </resources>
  <connections/>
  <buttongroups>
-  <buttongroup name="groupFee"/>
   <buttongroup name="groupCustomFee"/>
+  <buttongroup name="groupFee"/>
  </buttongroups>
 </ui>
