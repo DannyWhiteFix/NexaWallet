@@ -332,7 +332,15 @@ static CAmount AmountFromIntegralValue(const UniValue &value)
 {
     if (!value.isNum() && !value.isStr())
         throw std::runtime_error("Amount is not a number or string");
-    int64_t val = atoi64(value.getValStr());
+    int64_t val = 0;
+    try
+    {
+        val = atoi64(value.getValStr());
+    }
+    catch (...)
+    {
+        throw std::runtime_error("Could not convert univalue to integer");
+    }
     CAmount amount = val;
     return amount;
 }
@@ -624,6 +632,14 @@ void GroupMelt(CWalletTx &wtxNew, const CGroupTokenID &grpID, CAmount totalNeede
     CAmount totalAvailable = 0;
     CAmount totalBchAvailable = 0;
     CAmount totalBchNeeded = 0;
+
+    if (totalNeeded <= 0)
+    {
+        strError =
+            strprintf("Token amount of %ld not valid. Token melt amount must be greater than zero.", totalNeeded);
+        throw JSONRPCError(RPC_INVALID_PARAMS, strError);
+    }
+
     LOCK(wallet->cs_wallet);
 
     // Find melt authority
@@ -1439,6 +1455,11 @@ extern UniValue token(const UniValue &params, bool fHelp)
     }
     else if (operation == "melt")
     {
+        if (params.size() > 3)
+        {
+            throw std::runtime_error("Invalid number of arguments for token melt");
+        }
+
         CGroupTokenID grpID;
         std::vector<CRecipient> outputs;
 
