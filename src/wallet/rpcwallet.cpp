@@ -3006,6 +3006,7 @@ UniValue getwalletinfo(const UniValue &params, bool fHelp)
             CURRENCY_UNIT +
             "\n"
             "  \"txcount\": xxxxxxx,         (numeric) the total number of transactions in the wallet\n"
+            "  \"unspentcount\": xxxxxxx,    (numeric) the total number of unspent coins in wallet\n"
             "  \"keypoololdest\": xxxxxx,    (numeric) the timestamp (seconds since GMT epoch) of the "
             "oldest pre-generated key in the key pool\n"
             "  \"keypoolsize\": xxxx,        (numeric) how many new keys are pre-generated\n"
@@ -3032,6 +3033,20 @@ UniValue getwalletinfo(const UniValue &params, bool fHelp)
     obj.pushKV("unconfirmed_watchonly_balance", ValueFromAmount(pwalletMain->GetUnconfirmedWatchOnlyBalance()));
     obj.pushKV("immature_watchonly_balance", ValueFromAmount(pwalletMain->GetImmatureWatchOnlyBalance()));
     obj.pushKV("txcount", (int)pwalletMain->mapWallet.size() / 3);
+
+    // We need to count each coin because the unspent map may still contain a few
+    // already spent coins which havn't been cleared yet.
+    uint64_t nCountUnspent = 0;
+    for (const auto &coin : pwalletMain->mapWalletUnspent)
+    {
+        if (!pwalletMain->IsSpent(coin.first))
+        {
+            // This also includes watch-only coins.
+            nCountUnspent++;
+        }
+    }
+    obj.pushKV("unspentcount", nCountUnspent);
+
     obj.pushKV("keypoololdest", pwalletMain->GetOldestKeyPoolTime());
     obj.pushKV("keypoolsize", (int)pwalletMain->GetKeyPoolSize());
     if (pwalletMain->IsCrypted())

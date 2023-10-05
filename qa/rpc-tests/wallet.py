@@ -130,6 +130,7 @@ class WalletTest (BitcoinTestFramework):
         assert_equal(walletinfo['immature_balance'], COINBASE_REWARD)
         assert_equal(walletinfo['balance'], 0)
         assert_equal(walletinfo['txcount'], 1)
+        assert_equal(walletinfo['unspentcount'], 1)
 
         self.sync_blocks()
         self.nodes[1].generate(101)
@@ -149,6 +150,9 @@ class WalletTest (BitcoinTestFramework):
         assert_equal(len(self.nodes[0].listunspent()), 1)
         assert_equal(len(self.nodes[1].listunspent()), 1)
         assert_equal(len(self.nodes[2].listunspent()), 0)
+        assert_equal(self.nodes[0].getwalletinfo()['unspentcount'], 1)
+        assert_equal(self.nodes[1].getwalletinfo()['unspentcount'], 101)
+        assert_equal(self.nodes[2].getwalletinfo()['unspentcount'], 0)
 
         # Send 21 BTC from 0 to 2 using sendtoaddress call.
         # Second transaction will be child of first, and will require a fee
@@ -159,6 +163,7 @@ class WalletTest (BitcoinTestFramework):
         walletinfo = self.nodes[0].getwalletinfo()
         assert_equal(walletinfo['immature_balance'], 0)
         assert_equal(walletinfo['txcount'], 3)
+        assert_equal(walletinfo['unspentcount'], 1)
         waitFor(waitTime, lambda: self.nodes[2].getbalance("",0) == SentAmt)
         waitFor(waitTime, lambda: self.nodes[2].getbalance("*",0) == SentAmt)
         assert self.nodes[2].getbalance("") == 0
@@ -497,7 +502,16 @@ class WalletTest (BitcoinTestFramework):
                             {"address": self.nodes[2].getaddressforms(p2shAddress2)["nexa"]},
                             {"label": ""})
 
-        #check if wallet or blochchain maintenance changes the balance
+        # Check wallet unspent counts. The counts may be different from the listunspent count because
+        # they include watch-only amounts as well as any immature coinbases, unconfirmed and/or locked coins.
+        assert_equal(self.nodes[0].getwalletinfo()["unspentcount"], 11)
+        assert_equal(len(self.nodes[0].listunspent()), 5)
+        assert_equal(self.nodes[1].getwalletinfo()["unspentcount"], 229)
+        assert_equal(len(self.nodes[1].listunspent()), 139)
+        assert_equal(self.nodes[2].getwalletinfo()["unspentcount"], 37)
+        assert_equal(len(self.nodes[2].listunspent()), 33)
+
+        # check if wallet or blockchain maintenance changes the balance
         self.sync_blocks()
         blocks = self.nodes[0].generate(2)
         self.sync_blocks()

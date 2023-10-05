@@ -49,6 +49,7 @@ class WalletWatchonlyTest (BitcoinTestFramework):
         assert_equal(walletinfo['immature_balance'], COINBASE_REWARD)
         assert_equal(walletinfo['balance'], 0)
         assert_equal(walletinfo['txcount'], 1)
+        assert_equal(walletinfo['unspentcount'], 1)
 
         self.sync_blocks()
         watch_mining_address = self.nodes[1].getnewaddress()
@@ -86,6 +87,7 @@ class WalletWatchonlyTest (BitcoinTestFramework):
         assert_equal(walletinfo['watchonly_balance'], COINBASE_REWARD)
         assert_equal(walletinfo['immature_watchonly_balance'], COINBASE_REWARD * 100)
         assert_equal(walletinfo['unconfirmed_watchonly_balance'], 0)
+        assert_equal(walletinfo['unspentcount'], 101)
 
         # send some coins to watchonly address, see that we see it in the watcher
         watch_sent = 50000
@@ -95,6 +97,7 @@ class WalletWatchonlyTest (BitcoinTestFramework):
         assert_equal(walletinfo['watchonly_balance'], COINBASE_REWARD)
         assert_equal(walletinfo['immature_watchonly_balance'], COINBASE_REWARD * 100)
         assert_equal(walletinfo['unconfirmed_watchonly_balance'], watch_sent)
+        assert_equal(walletinfo['unspentcount'], 102)
 
         # Send small coins from node1 to node2. This should work but in the past
         # would trigger an error becasue watchonly coins were being used as available coins
