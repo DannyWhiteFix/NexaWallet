@@ -97,10 +97,10 @@ long ClientModel::getMempoolSize() const { return mempool.size(); }
 long ClientModel::getOrphanPoolSize() const { return orphanpool.GetOrphanPoolSize(); }
 long ClientModel::getCapdMessagePoolSize() const { return msgpool.Count(); }
 size_t ClientModel::getMempoolDynamicUsage() const { return mempool.DynamicMemoryUsage(); }
-double ClientModel::getVerificationProgress(const CBlockIndex *tipIn) const
+double ClientModel::getVerificationProgress(const CBlockIndex *tipIn, bool fHeader) const
 {
     CBlockIndex *tip = const_cast<CBlockIndex *>(tipIn);
-    if (!tip)
+    if (!tip || fHeader)
     {
         tip = chainActive.Tip();
     }
@@ -232,7 +232,7 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, const CB
         // pass a async signal to the UI thread
         QMetaObject::invokeMethod(clientmodel, "numBlocksChanged", Qt::QueuedConnection, Q_ARG(int, pIndex->height()),
             Q_ARG(QDateTime, QDateTime::fromTime_t(clientmodel->lastBlockTime)),
-            Q_ARG(double, clientmodel->getVerificationProgress(pIndex)), Q_ARG(bool, fHeader));
+            Q_ARG(double, clientmodel->getVerificationProgress(pIndex, fHeader)), Q_ARG(bool, fHeader));
         nLastBlockTipUpdateNotification = now;
     }
 }
