@@ -20,9 +20,12 @@ created. To use it for Bitcoin:
 
 Common `host-platform-triplets` for cross compilation are:
 
+- `i686-pc-linux-gnu` for Linux 32 bit
+- `x86_64-pc-linux-gnu` for x86 Linux
 - `i686-w64-mingw32` for Win32
 - `x86_64-w64-mingw32` for Win64
-- `x86_64-apple-darwin19` for MacOSX
+- `x86_64-apple-darwin` for MacOSX (Intel)
+- `arm64-apple-darwin` for MacOSX (ARM)
 - `arm-linux-gnueabihf` for Linux ARM 32 bit
 - `aarch64-linux-gnu` for Linux ARM 64 bit
 
@@ -34,6 +37,11 @@ Install the required dependencies: Ubuntu & Debian
 For macOS cross compilation:
 
     sudo apt-get install curl librsvg2-bin libtiff-tools bsdmainutils cmake imagemagick libcap-dev libz-dev libbz2-dev python-setuptools
+
+Note: You must obtain the macOS SDK before proceeding with a cross-compile.
+Under the depends directory, create a subdirectory named `SDKs`.
+Then, place the extracted SDK under this new directory.
+You can find macOS SDKs here: https://github.com/joseluisq/macosx-sdks or you can create an Apple developer account and download it from Apple website. If you chose the latter way you need to extract the SDK your self from the archive provided by Apple.
 
 For Win32/Win64 cross compilation:
 

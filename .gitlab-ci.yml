@@ -197,7 +197,7 @@ build-ubuntu-tests-nodeps:
             - ccache/
             - depends/sources
             - depends/built
-            - depends/x86_64-unknown-linux-gnu
+            - depends/x86_64-linux-gnu
 
 build-ubuntu-deps:
     stage: build_depends
@@ -205,10 +205,10 @@ build-ubuntu-deps:
     needs: []
     script:
         - cd depends
-        - make HOST=x86_64-unknown-linux-gnu -j `nproc`
+        - make HOST=x86_64-linux-gnu -j `nproc`
     artifacts:
         paths:
-            - depends/x86_64-unknown-linux-gnu
+            - depends/x86_64-linux-gnu
     rules:
       - if: ($CI_PIPELINE_SOURCE != "schedule" || $EXTENDED_TESTS == "True")
 
@@ -219,7 +219,7 @@ build-ubuntu:
     script:
         - ./autogen.sh
         - mkdir build; cd build
-        - ../configure --enable-shared --enable-debug --enable-zmq --enable-glibc-back-compat --enable-reduce-exports --cache-file=config.cache --prefix=$PWD/../depends/x86_64-unknown-linux-gnu CPPFLAGS=-DDEBUG_LOCKORDER
+        - ../configure --enable-shared --enable-debug --enable-zmq --enable-glibc-back-compat --enable-reduce-exports --cache-file=config.cache --prefix=$PWD/../depends/x86_64-linux-gnu CPPFLAGS=-DDEBUG_LOCKORDER
         - make -j `nproc`
         - ccache --show-stats
     dependencies:
@@ -264,12 +264,12 @@ build-ubuntu-rostrum:
 
     script:
         # add cargo to PATH
-        - export PATH=$PATH:`pwd`/depends/x86_64-unknown-linux-gnu/native/bin
+        - export PATH=$PATH:`pwd`/depends/x86_64-linux-gnu/native/bin
         # Prepare make file
         - ./autogen.sh > /dev/null
         - cd build
         - ../configure --cache-file=config.cache
-            --prefix=$PWD/../depends/x86_64-unknown-linux-gnu > /dev/null
+            --prefix=$PWD/../depends/x86_64-linux-gnu > /dev/null
 
         - make rostrum
 
@@ -579,7 +579,7 @@ build-win-64:
       - if: $CI_PIPELINE_SOURCE != "schedule"
 
 ######################################################
-######## OSX
+######## macOS Intel X86_64
 ######################################################
 .cache-osx:
     extends: .ubuntu_ccache_scripts
@@ -590,7 +590,7 @@ build-win-64:
             - ccache/
             - depends/sources
             - depends/built
-            - depends/x86_64-apple-darwin19
+            - depends/x86_64-apple-darwin
     rules:
       - if: $CI_PIPELINE_SOURCE != "schedule"
 
@@ -599,14 +599,14 @@ build-osx-depends:
     extends: .cache-osx
     script:
         - mkdir -p depends/sdk-sources; mkdir depends/SDKs
-        - curl --location --fail https://www.bitcoinunlimited.info/sdks/MacOSX10.15.sdk.tar.xz -o ./depends/sdk-sources/MacOSX10.15.sdk.tar.xz
-        - tar -C depends/SDKs -xf depends/sdk-sources/MacOSX10.15.sdk.tar.xz
+        - curl --location --fail https://www.bitcoinunlimited.info/sdks/MacOSX11.3.sdk.tar.xz -o ./depends/sdk-sources/MacOSX11.3.sdk.tar.xz
+        - tar -C depends/SDKs -xf depends/sdk-sources/MacOSX11.3.sdk.tar.xz
         - cd depends
-        - make HOST=x86_64-apple-darwin19 -j `nproc` NO_RUST=1
+        - make HOST=x86_64-apple-darwin -j `nproc` NO_RUST=1
         - ccache --show-stats
     artifacts:
         paths:
-            - depends/x86_64-apple-darwin19
+            - depends/x86_64-apple-darwin
             - depends/SDKs
     rules:
       - if: $CI_PIPELINE_SOURCE != "schedule"
@@ -618,7 +618,7 @@ build-osx:
     script:
         - ./autogen.sh
         - mkdir build; cd build
-        - ../configure --enable-reduce-exports --prefix=$PWD/../depends/x86_64-apple-darwin19
+        - ../configure --enable-reduce-exports --prefix=$PWD/../depends/x86_64-apple-darwin
         - make -j `nproc`
         - ccache --show-stats
     dependencies:
@@ -628,7 +628,61 @@ build-osx:
         paths:
             - ./build/src/.libs/libnexa.*
             - ./build/config.log # on failure
-            - ./depends/x86_64-apple-darwin19/share/config.site # on failure
+            - ./depends/x86_64-apple-darwin/share/config.site # on failure
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
+
+######################################################
+######## macOS ARM 64
+######################################################
+.cache-osx-arm64:
+    extends: .ubuntu_ccache_scripts
+    cache:
+        <<: *global_cache_settings
+        key: osx_cache_arm64
+        paths:
+            - ccache/
+            - depends/sources
+            - depends/built
+            - depends/arm64-apple-darwin
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
+
+build-osx-arm64-depends:
+    stage: build_depends
+    extends: .cache-osx-arm64
+    script:
+        - mkdir -p depends/sdk-sources; mkdir depends/SDKs
+        - curl --location --fail https://www.bitcoinunlimited.info/sdks/MacOSX11.3.sdk.tar.xz -o ./depends/sdk-sources/MacOSX11.3.sdk.tar.xz
+        - tar -C depends/SDKs -xf depends/sdk-sources/MacOSX11.3.sdk.tar.xz
+        - cd depends
+        - make HOST=arm64-apple-darwin -j `nproc` NO_RUST=1
+        - ccache --show-stats
+    artifacts:
+        paths:
+            - depends/arm64-apple-darwin
+            - depends/SDKs
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
+
+build-osx-arm64:
+    stage: build
+    extends: .cache-osx-arm64
+    needs: ["build-osx-arm64-depends"]
+    script:
+        - ./autogen.sh
+        - mkdir build; cd build
+        - ../configure --enable-reduce-exports --prefix=$PWD/../depends/arm64-apple-darwin
+        - make -j `nproc`
+        - ccache --show-stats
+    dependencies:
+        - build-osx-arm64-depends
+    artifacts:
+        when: always
+        paths:
+            - ./build/src/.libs/libnexa.*
+            - ./build/config.log # on failure
+            - ./depends/arm64-apple-darwin/share/config.site # on failure
     rules:
       - if: $CI_PIPELINE_SOURCE != "schedule"
 

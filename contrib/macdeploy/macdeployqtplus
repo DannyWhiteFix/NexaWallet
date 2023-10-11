@@ -17,7 +17,7 @@ from __future__ import division, print_function, unicode_literals
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import subprocess, sys, re, os, shutil, stat, os.path, time
+import subprocess, sys, re, os, platform, shutil, stat, os.path, time, subprocess
 from string import Template
 from argparse import ArgumentParser
 
@@ -231,7 +231,7 @@ def getFrameworks(binaryPath, verbose):
     return libraries
 
 def runInstallNameTool(action, *args):
-    installnametoolbin=os.getenv("INSTALLNAMETOOL", "install_name_tool")
+    installnametoolbin=os.getenv("INSTALL_NAME_TOOL", "install_name_tool")
     subprocess.check_call([installnametoolbin, "-"+action] + list(args))
 
 def changeInstallName(oldName, newName, binaryPath, verbose):
@@ -265,57 +265,45 @@ def copyFramework(framework, path, verbose):
     toDir = os.path.join(path, framework.destinationDirectory)
     toPath = os.path.join(toDir, framework.binaryName)
 
-    if not os.path.exists(fromPath):
-        raise RuntimeError("No file at " + fromPath)
+    if framework.isDylib():
+        if not os.path.exists(fromPath):
+            raise RuntimeError(f"No file at {fromPath}")
 
-    if os.path.exists(toPath):
-        return None # Already there
+        if os.path.exists(toPath):
+            return None # Already there
 
-    if not os.path.exists(toDir):
-        os.makedirs(toDir)
+        if not os.path.exists(toDir):
+            os.makedirs(toDir)
 
-    shutil.copy2(fromPath, toPath)
-    if verbose >= 3:
-        print("Copied:", fromPath)
-        print(" to:", toPath)
+        shutil.copy2(fromPath, toPath)
+        if verbose:
+            print("Copied:", fromPath)
+            print(" to:", toPath)
+    else:
+        to_dir = os.path.join(path, "Contents", "Frameworks", framework.frameworkName)
+        if os.path.exists(to_dir):
+            return None # Already there
+
+        from_dir = framework.frameworkPath
+        if not os.path.exists(from_dir):
+            raise RuntimeError(f"No directory at {from_dir}")
+
+        shutil.copytree(from_dir, to_dir, symlinks=True)
+        if verbose:
+            print("Copied:", from_dir)
+            print(" to:", to_dir)
+
+        headers_link = os.path.join(to_dir, "Headers")
+        if os.path.exists(headers_link):
+            os.unlink(headers_link)
+
+        headers_dir = os.path.join(to_dir, framework.binaryDirectory, "Headers")
+        if os.path.exists(headers_dir):
+            shutil.rmtree(headers_dir)
 
     permissions = os.stat(toPath)
     if not permissions.st_mode & stat.S_IWRITE:
       os.chmod(toPath, permissions.st_mode | stat.S_IWRITE)
-
-    if not framework.isDylib(): # Copy resources for real frameworks
-
-        linkfrom = os.path.join(path, "Contents","Frameworks", framework.frameworkName, "Versions", "Current")
-        linkto = framework.version
-        if not os.path.exists(linkfrom):
-            os.symlink(linkto, linkfrom)
-            if verbose >= 2:
-                print("Linked:", linkfrom, "->", linkto)
-        fromResourcesDir = framework.sourceResourcesDirectory
-        if os.path.exists(fromResourcesDir):
-            toResourcesDir = os.path.join(path, framework.destinationResourcesDirectory)
-            shutil.copytree(fromResourcesDir, toResourcesDir, symlinks=True)
-            if verbose >= 3:
-                print("Copied resources:", fromResourcesDir)
-                print(" to:", toResourcesDir)
-        fromContentsDir = framework.sourceVersionContentsDirectory
-        if not os.path.exists(fromContentsDir):
-            fromContentsDir = framework.sourceContentsDirectory
-        if os.path.exists(fromContentsDir):
-            toContentsDir = os.path.join(path, framework.destinationVersionContentsDirectory)
-            shutil.copytree(fromContentsDir, toContentsDir, symlinks=True)
-            contentslinkfrom = os.path.join(path, framework.destinationContentsDirectory)
-            if verbose >= 3:
-                print("Copied Contents:", fromContentsDir)
-                print(" to:", toContentsDir)
-    elif framework.frameworkName.startswith("libQtGui"): # Copy qt_menu.nib (applies to non-framework layout)
-        qtMenuNibSourcePath = os.path.join(framework.frameworkDirectory, "Resources", "qt_menu.nib")
-        qtMenuNibDestinationPath = os.path.join(path, "Contents", "Resources", "qt_menu.nib")
-        if os.path.exists(qtMenuNibSourcePath) and not os.path.exists(qtMenuNibDestinationPath):
-            shutil.copytree(qtMenuNibSourcePath, qtMenuNibDestinationPath, symlinks=True)
-            if verbose >= 3:
-                print("Copied for libQtGui:", qtMenuNibSourcePath)
-                print(" to:", qtMenuNibDestinationPath)
 
     return toPath
 
@@ -715,6 +703,9 @@ elif config.sign:
     subprocess.check_call("codesign --force %s %s"%(os.environ['CODESIGNARGS'], target), shell=True)
 
 # ------------------------------------------------
+
+if platform.system() == "Darwin":
+    subprocess.check_call(f"codesign --deep --force --sign - {target}", shell=True)
 
 if config.dmg is not None:
 
