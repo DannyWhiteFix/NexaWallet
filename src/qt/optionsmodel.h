@@ -49,6 +49,7 @@ public:
         SpendZeroConfChange, // bool
         InstantTransactions, // bool
         AutoConsolidation, // bool
+        RescanOnStartup, // bool
         Listen, // bool
         OptionIDRowCount,
     };
