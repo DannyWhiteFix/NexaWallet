@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "consensus/adaptive_blocksize.h"
+#include "validation/forks.h"
 
 CCriticalSection cs_median;
 std::vector<uint64_t> vSizesShortWindow GUARDED_BY(cs_median);
@@ -160,7 +161,12 @@ bool CalculateMedianSize(CBlockIndex *pindexNew,
 uint64_t CalculateNextMaxBlockSize(CBlockIndex *pindexPrev, uint64_t nBlockSize)
 {
     uint64_t nBlockSizeMultiplier = Params().GetConsensus().nBlockSizeMultiplier;
-    uint64_t nNextMaxBlockSize = DEFAULT_NEXT_MAX_BLOCK_SIZE;
+
+    uint64_t nNextMaxBlockSize = 0;
+    if (IsFork1Enabled(pindexPrev))
+        nNextMaxBlockSize = Params().GetConsensus().nNextMaxBlockSize;
+    else
+        nNextMaxBlockSize = DEFAULT_NEXT_MAX_BLOCK_SIZE;
 
     if (!pindexPrev)
         return nNextMaxBlockSize;
@@ -190,7 +196,14 @@ uint64_t CalculateNextMaxBlockSize(CBlockIndex *pindexPrev, uint64_t nBlockSize)
     LOG(VALIDATION, "Validation: Next maximum block size candidate (bytes): %" PRIu64, nNextMaxBlockSize);
 
     // use the default value if next max size is too small.
-    nNextMaxBlockSize = std::max(nNextMaxBlockSize, DEFAULT_NEXT_MAX_BLOCK_SIZE);
+    if (IsFork1Enabled(pindexPrev))
+    {
+        nNextMaxBlockSize = std::max(nNextMaxBlockSize, Params().GetConsensus().nNextMaxBlockSize);
+    }
+    else
+    {
+        nNextMaxBlockSize = std::max(nNextMaxBlockSize, DEFAULT_NEXT_MAX_BLOCK_SIZE);
+    }
 
     // make sure we are not over the maximum allowed
     nNextMaxBlockSize = std::min(nNextMaxBlockSize, DEFAULT_LARGEST_BLOCKSIZE_POSSIBLE);

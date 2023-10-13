@@ -22,6 +22,8 @@ static const unsigned int ONE_DAY_OF_BLOCKS = 144 * 5; // average number of bloc
 
 /** Adaptive block size params */
 static const uint64_t DEFAULT_NEXT_MAX_BLOCK_SIZE = 100000; // 100KB
+static const uint64_t DEFAULT_NEXT_MAX_BLOCK_SIZE_FORK1 = 2 * ONE_MEGABYTE;
+static const uint64_t DEFAULT_NEXT_MAX_BLOCK_SIZE_FORK1_REGTEST = 150000; // 150KB
 static const uint64_t SHORT_BLOCK_WINDOW = ONE_DAY_OF_BLOCKS * 90; // 90 days of blocks
 static const uint64_t LONG_BLOCK_WINDOW = ONE_DAY_OF_BLOCKS * 365; // 365 days of blocks
 static const uint64_t SHORT_BLOCK_WINDOW_REGTEST = 150; // used for testing only!
