@@ -466,7 +466,7 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel)
         connect(_clientModel, SIGNAL(numConnectionsChanged(int)), this, SLOT(setNumConnections(int)));
 
         setNumBlocks(_clientModel->getNumBlocks(), _clientModel->getLastBlockDate(),
-            _clientModel->getVerificationProgress(nullptr), false);
+            _clientModel->getVerificationProgress(nullptr, false), false);
         connect(_clientModel, SIGNAL(numBlocksChanged(int, QDateTime, double, bool)), this,
             SLOT(setNumBlocks(int, QDateTime, double, bool)));
 
@@ -780,55 +780,58 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime &blockDate, double nVer
     tooltip = tr("Processed %n block(s) of transaction history.", "", count);
 
     // Set icon state: spinning if catching up, tick otherwise
-    if (fHeader == false && secs < 90 * 60)
+    if (!fHeader)
     {
-        tooltip = tr("Up to date") + QString(".<br>") + tooltip;
-        labelBlocksIcon->setPixmap(
-            platformStyle->SingleColorIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
-
-#ifdef ENABLE_WALLET
-        if (walletFrame)
+        if (secs < 90 * 60)
         {
-            walletFrame->showOutOfSyncWarning(false);
-            modalOverlay->showHide(true, true);
-        }
-#endif // ENABLE_WALLET
-
-        progressBarLabel->setVisible(false);
-        progressBar->setVisible(false);
-    }
-    else
-    {
-        QString timeBehindText = GUIUtil::formateNiceTimeOffset(secs);
-
-        progressBarLabel->setVisible(true);
-        progressBar->setFormat(tr("%1 behind").arg(timeBehindText));
-        progressBar->setMaximum(1000000000);
-        progressBar->setValue(nVerificationProgress * 1000000000.0 + 0.5);
-        progressBar->setVisible(true);
-
-        tooltip = tr("Catching up...") + QString("<br>") + tooltip;
-        if (count != prevBlocks)
-        {
+            tooltip = tr("Up to date") + QString(".<br>") + tooltip;
             labelBlocksIcon->setPixmap(
-                platformStyle->SingleColorIcon(QString(":/movies/spinner-%1").arg(spinnerFrame, 3, 10, QChar('0')))
-                    .pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
-            spinnerFrame = (spinnerFrame + 1) % SPINNER_FRAMES;
-        }
-        prevBlocks = count;
+                platformStyle->SingleColorIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
 
 #ifdef ENABLE_WALLET
-        if (walletFrame && secs >= 90 * 60)
-        {
-            walletFrame->showOutOfSyncWarning(true);
-            modalOverlay->showHide();
-        }
+            if (walletFrame)
+            {
+                walletFrame->showOutOfSyncWarning(false);
+                modalOverlay->showHide(true, true);
+            }
 #endif // ENABLE_WALLET
 
-        tooltip += QString("<br>");
-        tooltip += tr("Last received block was generated %1 ago.").arg(timeBehindText);
-        tooltip += QString("<br>");
-        tooltip += tr("Transactions after this will not yet be visible.");
+            progressBarLabel->setVisible(false);
+            progressBar->setVisible(false);
+        }
+        else
+        {
+            QString timeBehindText = GUIUtil::formateNiceTimeOffset(secs);
+
+            progressBarLabel->setVisible(true);
+            progressBar->setFormat(tr("%1 behind").arg(timeBehindText));
+            progressBar->setMaximum(1000000000);
+            progressBar->setValue(nVerificationProgress * 1000000000.0 + 0.5);
+            progressBar->setVisible(true);
+
+            tooltip = tr("Catching up...") + QString("<br>") + tooltip;
+            if (count != prevBlocks)
+            {
+                labelBlocksIcon->setPixmap(
+                    platformStyle->SingleColorIcon(QString(":/movies/spinner-%1").arg(spinnerFrame, 3, 10, QChar('0')))
+                        .pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
+                spinnerFrame = (spinnerFrame + 1) % SPINNER_FRAMES;
+            }
+            prevBlocks = count;
+
+#ifdef ENABLE_WALLET
+            if (walletFrame && secs >= 90 * 60)
+            {
+                walletFrame->showOutOfSyncWarning(true);
+                modalOverlay->showHide();
+            }
+#endif // ENABLE_WALLET
+
+            tooltip += QString("<br>");
+            tooltip += tr("Last received block was generated %1 ago.").arg(timeBehindText);
+            tooltip += QString("<br>");
+            tooltip += tr("Transactions after this will not yet be visible.");
+        }
     }
 
     // Don't word-wrap this (fixed-width) tooltip
