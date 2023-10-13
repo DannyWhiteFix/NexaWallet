@@ -269,6 +269,7 @@ public:
         consensus.nShortBlockWindow = SHORT_BLOCK_WINDOW;
         consensus.nLongBlockWindow = LONG_BLOCK_WINDOW;
         consensus.nBlockSizeMultiplier = BLOCK_SIZE_MULTIPLIER;
+        consensus.nNextMaxBlockSize = DEFAULT_NEXT_MAX_BLOCK_SIZE_FORK1;
 
         std::vector<unsigned char> nonce;
         std::vector<unsigned char> hardCodedNonce;
@@ -365,6 +366,7 @@ public:
         consensus.nShortBlockWindow = SHORT_BLOCK_WINDOW_REGTEST;
         consensus.nLongBlockWindow = LONG_BLOCK_WINDOW_REGTEST;
         consensus.nBlockSizeMultiplier = BLOCK_SIZE_MULTIPLIER;
+        consensus.nNextMaxBlockSize = DEFAULT_NEXT_MAX_BLOCK_SIZE_FORK1_REGTEST;
 
         std::vector<unsigned char> nonce;
         nonce.resize(1);
@@ -475,6 +477,7 @@ public:
         consensus.nShortBlockWindow = SHORT_BLOCK_WINDOW_TESTNET;
         consensus.nLongBlockWindow = LONG_BLOCK_WINDOW_TESTNET;
         consensus.nBlockSizeMultiplier = BLOCK_SIZE_MULTIPLIER;
+        consensus.nNextMaxBlockSize = DEFAULT_NEXT_MAX_BLOCK_SIZE_FORK1;
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -582,6 +585,7 @@ public:
         consensus.nShortBlockWindow = SHORT_BLOCK_WINDOW;
         consensus.nLongBlockWindow = LONG_BLOCK_WINDOW;
         consensus.nBlockSizeMultiplier = BLOCK_SIZE_MULTIPLIER;
+        consensus.nNextMaxBlockSize = DEFAULT_NEXT_MAX_BLOCK_SIZE_FORK1;
 
         vFixedSeeds.clear();
         vSeeds.clear();

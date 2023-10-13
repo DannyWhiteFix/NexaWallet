@@ -144,13 +144,14 @@ struct Params
     // difficulty is cut in half. Doubled if blocks are ahead of schedule.
     int64_t nASERTHalfLife;
 
-    /** May 15, 2021 MTP activation time will be 12:00:00 UTC */
+    /** Fork activation time */
     uint64_t nextForkActivationTime;
 
     /** Adaptive Block Size settings */
     uint64_t nShortBlockWindow;
     uint64_t nLongBlockWindow;
     uint64_t nBlockSizeMultiplier;
+    uint64_t nNextMaxBlockSize;
 };
 } // namespace Consensus
 
