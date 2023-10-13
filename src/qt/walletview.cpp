@@ -16,6 +16,7 @@
 #include "receivecoinsdialog.h"
 #include "sendcoinsdialog.h"
 #include "signverifymessagedialog.h"
+#include "tokensviewdialog.h"
 #include "transactiontablemodel.h"
 #include "transactionview.h"
 #include "walletmodel.h"
@@ -54,6 +55,7 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, const Config *cfg, Q
 
     receiveCoinsPage = new ReceiveCoinsDialog(platformStyle, cfg);
     sendCoinsPage = new SendCoinsDialog(platformStyle);
+    tokensPage = new TokensViewDialog(platformStyle, cfg);
 
     usedSendingAddressesPage =
         new AddressBookPage(platformStyle, AddressBookPage::ForEditing, AddressBookPage::SendingTab, this);
@@ -64,6 +66,7 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, const Config *cfg, Q
     addWidget(transactionsPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
+    addWidget(tokensPage);
 
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
     connect(
@@ -125,6 +128,7 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
     overviewPage->setWalletModel(_walletModel);
     receiveCoinsPage->setModel(_walletModel);
     sendCoinsPage->setModel(_walletModel);
+    tokensPage->setModel(_walletModel);
     usedReceivingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
     usedSendingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
 
@@ -183,6 +187,7 @@ void WalletView::gotoSendCoinsPage(QString addr)
     if (!addr.isEmpty())
         sendCoinsPage->setAddress(addr);
 }
+void WalletView::gotoTokensPage() { setCurrentWidget(tokensPage); }
 
 void WalletView::gotoSignMessageTab(QString addr)
 {

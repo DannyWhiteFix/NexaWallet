@@ -26,6 +26,7 @@ static const char DB_TXIDEM_INDEX = 'i';
 static const char DB_OUTPOINT_INDEX = 'p';
 static const char DB_TXINDEX_BLOCK = 'T';
 static const char DB_BLOCK_INDEX = 'b';
+static const char DB_TOKEN_DESC = 'D';
 
 static const char DB_BEST_BLOCK = 'B';
 static const char DB_FLAG = 'F';
@@ -457,7 +458,6 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 pindexNew->nFile = diskindex.nFile;
                 pindexNew->nDataPos = diskindex.nDataPos;
                 pindexNew->nUndoPos = diskindex.nUndoPos;
-                // TODO add new fields
                 pindexNew->header = diskindex.header;
                 pindexNew->nStatus = diskindex.nStatus;
                 pindexNew->nSequenceId = diskindex.nSequenceId;
@@ -826,6 +826,21 @@ void AdjustCoinCacheSize()
         }
     }
 #endif
+}
+
+CTokenDescriptionDB::CTokenDescriptionDB(size_t n_cache_size, bool f_memory, bool f_wipe)
+    : CDBWrapper(GetDataDir() / "indexes" / "tokendesc", n_cache_size, f_memory, f_wipe)
+{
+}
+
+bool CTokenDescriptionDB::ReadDesc(const CGroupTokenID &grpID, std::vector<std::string> &desc) const
+{
+    return Read(std::make_pair(DB_TOKEN_DESC, grpID), desc);
+}
+
+bool CTokenDescriptionDB::WriteDesc(const CGroupTokenID &grpID, const std::vector<std::string> &desc)
+{
+    return Write(std::make_pair(DB_TOKEN_DESC, grpID), desc);
 }
 
 TxIndexDB::TxIndexDB(size_t n_cache_size, bool f_memory, bool f_wipe)

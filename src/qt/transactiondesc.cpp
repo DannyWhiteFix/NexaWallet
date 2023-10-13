@@ -18,6 +18,7 @@
 #include "txadmission.h"
 #include "util.h"
 #include "wallet/db.h"
+#include "wallet/grouptokenwallet.h"
 #include "wallet/wallet.h"
 
 #include <stdint.h>
@@ -372,6 +373,66 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
                        .arg(QString::number(numBlocksToMaturity)) +
                    "<br>";
     }
+
+    //
+    // Token Information
+    //
+    std::list<CGroupedOutputEntry> listReceived;
+    std::list<CGroupedOutputEntry> listSent;
+    CAmount nGroupFee;
+    std::string strSentAccount;
+    wtx.GetAmounts(listReceived, listSent, nGroupFee, strSentAccount, ISMINE_ALL);
+
+    // Tokens Sent
+    if (!listSent.empty())
+    {
+        strHTML += "<br>";
+        for (const CGroupedOutputEntry &sent : listSent)
+        {
+            if (sent.grp != NoGroup)
+            {
+                strHTML += "<b>" + tr("Token ID") + ": </b>" + EncodeGroupToken(sent.grp).c_str() + "<br>";
+
+                auto info = tokencache.GetTokenDesc(sent.grp);
+                if (info.size() >= 4)
+                {
+                    strHTML += "<b>" + tr("Ticker") + ": </b>" + info[0].c_str() + "<br>";
+                    strHTML += "<b>" + tr("Name") + ": </b>" + info[1].c_str() + "<br>";
+                }
+                if (info.size() >= 5)
+                {
+                    strHTML += "<b>" + tr("Decimals") + ": </b>" + info[4].c_str() + "<br>";
+                }
+                strHTML += "<b>" + tr("Amount Sent") + ": </b>" + QString::number(sent.grpAmount) + "<br>";
+            }
+        }
+    }
+
+    // Tokens Received
+    if (!listReceived.empty())
+    {
+        strHTML += "<br>";
+        for (const CGroupedOutputEntry &recv : listReceived)
+        {
+            if (recv.grp != NoGroup)
+            {
+                strHTML += "<b>" + tr("Token ID") + ": </b>" + EncodeGroupToken(recv.grp).c_str() + "<br>";
+
+                auto info = tokencache.GetTokenDesc(recv.grp);
+                if (info.size() >= 4)
+                {
+                    strHTML += "<b>" + tr("Ticker") + ": </b>" + info[0].c_str() + "<br>";
+                    strHTML += "<b>" + tr("Name") + ": </b>" + info[1].c_str() + "<br>";
+                }
+                if (info.size() >= 5)
+                {
+                    strHTML += "<b>" + tr("Decimals") + ": </b>" + info[4].c_str() + "<br>";
+                }
+                strHTML += "<b>" + tr("Amount Received") + ": </b>" + QString::number(recv.grpAmount) + "<br>";
+            }
+        }
+    }
+
 
     //
     // Debug view

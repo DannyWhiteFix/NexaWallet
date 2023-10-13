@@ -376,6 +376,18 @@ bool CheckGroupTokens(const CTransaction &tx, CValidationState &state, const CCo
 
 bool CGroupTokenID::isUserGroup(void) const { return (!data.empty()); }
 bool CGroupTokenID::isSubgroup(void) const { return (data.size() > PARENT_GROUP_ID_SIZE); }
+std::vector<unsigned char> CGroupTokenID::getSubgroupData(void)
+{
+    if (data.size() > PARENT_GROUP_ID_SIZE)
+    {
+        std::vector<unsigned char> vSubgroupData(data.begin() + PARENT_GROUP_ID_SIZE, data.end());
+        return vSubgroupData;
+    }
+    else
+    {
+        return {};
+    }
+}
 CGroupTokenID CGroupTokenID::parentGroup(void) const
 {
     if (data.size() <= PARENT_GROUP_ID_SIZE)

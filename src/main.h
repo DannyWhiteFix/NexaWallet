@@ -272,6 +272,8 @@ extern CCoinsViewCache *pcoinsTip;
 extern CBlockTreeDB *pblocktree;
 /** Global variable that points to the block tree on the inactive storage method (protected by cs_main) */
 extern CBlockTreeDB *pblocktreeother;
+/** Global variable that points to the token description database (protected by tokencache.cs_tokencache) */
+extern CTokenDescriptionDB *ptokenDesc;
 
 extern std::vector<CBlockFileInfo> vinfoBlockFile;
 extern int nLastBlockFile;

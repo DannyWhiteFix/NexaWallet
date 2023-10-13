@@ -16,9 +16,16 @@ FORMS += \
     ../src/qt/forms/sendcoinsdialog.ui \
     ../src/qt/forms/sendcoinsentry.ui \
     ../src/qt/forms/signverifymessagedialog.ui \
+    ../src/qt/forms/tokensviewdialog.ui \
     ../src/qt/forms/transactiondescdialog.ui \
 
 
 
 RESOURCES += \
     ../src/qt/bitcoin.qrc
+
+HEADERS += \
+    ../src/qt/forms/tokensviewdialog.h
+
+SOURCES += \
+    ../src/qt/forms/tokensviewdialog.cpp

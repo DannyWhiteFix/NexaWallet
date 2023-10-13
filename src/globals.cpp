@@ -55,6 +55,7 @@
 #include "versionbits.h"
 
 #ifdef ENABLE_WALLET
+#include "wallet/grouptokenwallet.h"
 #include "wallet/wallet.h"
 #endif
 
@@ -220,9 +221,13 @@ int interruptIntervals[] = {30, 30 * 12, 30 * 12 * 24, 30 * 12 * 24 * 30};
 std::chrono::milliseconds statMinInterval(10000);
 boost::asio::io_service stat_io_service;
 
+// Various caches
 CBlockCache blockcache;
 CTxMemPool mempool;
 CTxOrphanPool orphanpool;
+#ifdef ENABLE_WALLET
+CTokenDescCache tokencache;
+#endif
 
 std::list<CStatBase *> mallocedStats;
 CStatMap statistics;
