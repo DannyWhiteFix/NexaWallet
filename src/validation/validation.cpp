@@ -38,8 +38,6 @@
 extern CTweak<int> maxReorgDepth;
 extern CTweak<bool> pvtest;
 extern std::atomic<uint64_t> nTotalChainTx;
-static bool FinalizeBlockInternal(CValidationState &state, const CBlockIndex *pindex);
-static const CBlockIndex *FindBlockToFinalize(const CBlockIndex *pindexNew);
 
 class Hasher
 {
@@ -105,11 +103,6 @@ std::atomic<int64_t> nTimeBestReceived{0};
 
 CBlockIndex *pindexBestForkTip = nullptr;
 CBlockIndex *pindexBestForkBase = nullptr;
-/**
- * The best finalized block.
- * This block cannot be reorged in any way, shape or form.
- */
-CBlockIndex const *pindexFinalized GUARDED_BY(cs_main);
 
 extern uint64_t nBlockSequenceId;
 extern bool fCheckForPruning;
@@ -714,7 +707,6 @@ void UnloadBlockIndex()
         chainActive.SetTip(nullptr);
         pindexBestInvalid = nullptr;
         pindexBestHeader = nullptr;
-        pindexFinalized = nullptr;
         ResetASERTAnchorBlockCache();
         mapBlocksUnlinked.clear();
         vinfoBlockFile.clear();
@@ -1471,17 +1463,6 @@ CBlockIndex *FindMostWorkChain()
             if (it == setBlockIndexCandidates.rend())
                 return nullptr;
             pindexNew = *it;
-        }
-
-        // If this block will cause a finalized block to be reorged, then we
-        // mark it as invalid.
-        if (pindexFinalized && !AreOnTheSameFork(pindexNew, pindexFinalized))
-        {
-            LOGA("Mark block %s invalid because it forks prior to the "
-                 "finalization point %d.\n",
-                pindexNew->GetBlockHash().ToString(), pindexFinalized->height());
-
-            pindexNew->nStatus |= BLOCK_FAILED_VALID;
         }
 
         // Check whether all blocks on the path between the currently active chain and the candidate are valid.
@@ -2948,12 +2929,6 @@ bool DisconnectTip(CValidationState &state, const Consensus::Params &consensusPa
         txRecentlyInBlock.reset();
         recentRejects.reset();
 
-        // If the tip is finalized, then undo it.
-        if (pindexFinalized == pindexDelete)
-        {
-            pindexFinalized = pindexDelete->pprev;
-        }
-
         // Update chainActive and related variables.
         UpdateTip(pindexDelete->pprev);
         // Let wallets know transactions went from 1-confirmed to
@@ -3052,20 +3027,6 @@ bool ConnectTip(CValidationState &state,
         bool result = view.Flush();
         assert(result);
         LOG(BENCH, "      - Update Coins %.3fms\n", GetStopwatchMicros() - nStart);
-
-        // Update the finalized block.
-        if (maxReorgDepth.Value() >= 0)
-        {
-            const CBlockIndex *pindexToFinalize = FindBlockToFinalize(pindexNew);
-            if (pindexToFinalize && !FinalizeBlockInternal(state, pindexToFinalize))
-            {
-                state.SetCorruptionPossible();
-                return error("ConnectTip(): FinalizeBlock %s failed (%s)", pindexNew->GetBlockHash().ToString(),
-                    FormatStateMessage(state));
-            }
-        }
-        else
-            pindexFinalized = nullptr;
 
         mapBlockSource.erase(pindexNew->GetBlockHash());
         nTime3 = GetStopwatchMicros();
@@ -3737,123 +3698,6 @@ bool ProcessNewBlock(CValidationState &state,
     LOCK(cs_blockvalidationtime);
     nBlockValidationTime << (end - start);
     return true;
-}
-
-static bool FinalizeBlockInternal(CValidationState &state, const CBlockIndex *pindex)
-{
-    if (pindex != chainActive.Genesis())
-    {
-        READLOCK(cs_mapBlockIndex);
-        if (!pindex->IsValid(BLOCK_VALID_CHAIN))
-        {
-            // We try to finalize an invalid block.
-            return state.DoS(100,
-                error("%s: Trying to finalize invalid block %s", __func__, pindex->GetBlockHash().ToString()),
-                REJECT_INVALID, "finalize-invalid-block");
-        }
-    }
-
-    // Check that the request is consistent with current finalization.
-    {
-        LOCK(cs_main); // for pindexFinalized
-        if (pindexFinalized && !AreOnTheSameFork(pindex, pindexFinalized))
-        {
-            return state.DoS(20,
-                error("%s: Trying to finalize block %s which conflicts "
-                      "with already finalized block",
-                    __func__, pindex->GetBlockHash().ToString()),
-                REJECT_AGAINST_FINALIZED, "bad-fork-prior-finalized");
-        }
-
-        // If we receive a block prior to the finalization point we may end up rolling back the current
-        // finalization point. So we check here to see if the block is an ancestor of the finalized block index.
-        if (IsBlockFinalized(pindex)) // also requires cs_main
-        {
-            return true;
-        }
-
-        // We have a valid candidate
-        pindexFinalized = pindex;
-    }
-    return true;
-}
-
-static const CBlockIndex *FindBlockToFinalize(const CBlockIndex *pindexNew)
-{
-    AssertLockHeld(cs_main);
-
-    const int32_t maxreorgdepth = maxReorgDepth.Value();
-
-    const int64_t finalizationdelay = GetArg("-finalizationdelay", DEFAULT_MIN_FINALIZATION_DELAY);
-
-    // Find our candidate.
-    // If maxreorgdepth is < 0 pindex will be null and auto finalization
-    // disabled
-    const CBlockIndex *pindex = pindexNew->GetAncestor(pindexNew->height() - maxreorgdepth);
-
-    int64_t now = GetTime();
-
-    // If the finalization delay is not expired since the startup time,
-    // finalization should be avoided. Header receive time is not saved to disk
-    // and so cannot be anterior to startup time.
-    if (now < (GetStartupTime() + finalizationdelay))
-    {
-        return nullptr;
-    }
-
-    // While our candidate is not eligible (finalization delay not expired), try
-    // the previous one.
-    while (pindex && (pindex != pindexFinalized))
-    {
-        // Check that the block to finalize is known for a long enough time.
-        // This test will ensure that an attacker could not cause a block to
-        // finalize by forking the chain with a depth > maxreorgdepth.
-        // If the block is loaded from disk, header receive time is 0 and the
-        // block will be finalized. This is safe because the delay since the
-        // node startup is already expired.
-        auto headerReceivedTime = pindex->GetHeaderReceivedTime();
-
-        // If finalization delay is <= 0, finalization always occurs immediately
-        if (now >= (headerReceivedTime + finalizationdelay))
-        {
-            return pindex;
-        }
-
-        pindex = pindex->pprev;
-    }
-
-    return nullptr;
-}
-
-bool FinalizeBlockAndInvalidate(CValidationState &state, CBlockIndex *pindex)
-{
-    if (!FinalizeBlockInternal(state, pindex))
-        return false;
-
-    // If the finalized block is not on the active chain, we need to rewind.
-    if (!AreOnTheSameFork(pindex, chainActive.Tip()))
-    {
-        const CBlockIndex *pindexFork = chainActive.FindFork(pindex);
-        CBlockIndex *pindexToInvalidate = chainActive.Tip()->GetAncestor(pindexFork->height() + 1);
-        LOCK(cs_main);
-        return InvalidateBlock(state, Params().GetConsensus(), pindexToInvalidate);
-    }
-
-    return true;
-}
-
-const CBlockIndex *GetFinalizedBlock()
-{
-    AssertLockHeld(cs_main);
-    return pindexFinalized;
-}
-
-bool IsBlockFinalized(const CBlockIndex *pindex)
-{
-    DbgAssert(pindex != nullptr, return false);
-
-    AssertLockHeld(cs_main);
-    return pindexFinalized && pindexFinalized->GetAncestor(pindex->height()) == pindex;
 }
 
 bool IsBlockPruned(const CBlockIndex *pblockindex)

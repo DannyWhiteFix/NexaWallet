@@ -198,7 +198,6 @@ testScripts = [ RpcTest(t) for t in [
     'grouptokens',
     Disabled('sigchecks_inputstandardness_activation', 'Already activated, and mempool bad sigcheck mempool cleanup removed so test will fail'),
     'command_line_args',
-    'finalizeblock',
     'expeditedblock',
     'txindex',
     Disabled('segwit_recovery', 'not needed in nextchain'),

@@ -415,6 +415,25 @@ class BlockchainTest(BitcoinTestFramework):
         # check that nothing happened and we're still on the same chaintip
         assert_equal(self.nodes[0].getbestblockhash(), bestblockhashfork3);
 
+
+        ### Test that reconnect the blocks on the other chains that were previously created.
+        logging.info ("Test that reconsiderblock() works")
+        tips = self.nodes[0].getchaintips()
+        assert_equal (tips[0]['branchlen'], 0)
+        assert_equal (tips[1]['branchlen'], 129)
+        assert_equal (tips[2]['branchlen'], 124)
+        assert_equal(self.nodes[0].getbestblockhash(), tips[0]['hash'])
+
+        self.nodes[0].reconsiderblock(tips[1]['hash'])
+        assert_equal(self.nodes[0].getbestblockhash(), tips[1]['hash'])
+
+        self.nodes[0].reconsiderblock(tips[2]['hash'])
+        assert_equal(self.nodes[0].getbestblockhash(), tips[2]['hash'])
+
+        self.nodes[0].reconsiderblock(tips[0]['hash'])
+        assert_equal(self.nodes[0].getbestblockhash(), tips[0]['hash'])
+
+
     def _test_transaction_pools(self):
         node = self.nodes[0]
 
