@@ -21,7 +21,6 @@
 #include "txdebugger.h"
 #include "unlimited.h"
 #include "utilmoneystr.h"
-#include "wallet/wallet.h"
 #include <algorithm>
 
 #include "main.h" // for BlockMap
@@ -499,7 +498,7 @@ uint64_t RenewAuthority(const COutput &authority, std::vector<CRecipient> &outpu
     return totalBchNeeded;
 }
 
-void ConstructTx(CWalletTx &wtxNew,
+bool ConstructTx(CWalletTx &wtxNew,
     const std::vector<COutput> &chosenCoins,
     const std::vector<CRecipient> &outputs,
     CAmount totalAvailable,
@@ -507,9 +506,10 @@ void ConstructTx(CWalletTx &wtxNew,
     CAmount totalGroupedAvailable,
     CAmount totalGroupedNeeded,
     CGroupTokenID grpID,
-    CWallet *wallet)
+    CWallet *wallet,
+    std::string *strError,
+    bool fRPC)
 {
-    std::string strError;
     CMutableTransaction tx;
     CReserveKey groupChangeKeyReservation(wallet);
     CReserveKey feeChangeKeyReservation(wallet);
@@ -542,8 +542,19 @@ void ConstructTx(CWalletTx &wtxNew,
             CPubKey newKey;
 
             if (!groupChangeKeyReservation.GetReservedKey(newKey))
-                throw JSONRPCError(
-                    RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+            {
+                std::string msg = strprintf(_("Error: Keypool ran out, please call keypoolrefill first"));
+                if (fRPC)
+                {
+                    throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, msg);
+                }
+                else
+                {
+                    if (strError)
+                        *strError = msg;
+                    return false;
+                }
+            }
 
             CTxOut txout(GROUPED_SATOSHI_AMT, P2pktOutput(newKey, grpID, totalGroupedAvailable - totalGroupedNeeded));
             tx.vout.push_back(txout);
@@ -578,8 +589,17 @@ void ConstructTx(CWalletTx &wtxNew,
             CAmount feeCoinAmountNeeded = totalNeeded + fee - totalAvailable;
             if (!NearestGreaterCoin(nexacoins, feeCoinAmountNeeded, feeCoin))
             {
-                strError = strprintf("Not enough funds for fee of %d.", FormatMoney(fee));
-                throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strError);
+                std::string msg = strprintf("Not enough funds for fee of %d.", FormatMoney(fee));
+                if (fRPC)
+                {
+                    throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, msg);
+                }
+                else
+                {
+                    if (strError)
+                        *strError = msg;
+                    return false;
+                }
             }
 
             CTxIn txin(
@@ -594,8 +614,19 @@ void ConstructTx(CWalletTx &wtxNew,
             CPubKey newKey;
 
             if (!feeChangeKeyReservation.GetReservedKey(newKey))
-                throw JSONRPCError(
-                    RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+            {
+                std::string msg = strprintf(_("Error: Keypool ran out, please call keypoolrefill first"));
+                if (fRPC)
+                {
+                    throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, msg);
+                }
+                else
+                {
+                    if (strError)
+                        *strError = msg;
+                    return false;
+                }
+            }
 
             CTxOut txout(totalAvailable - totalNeeded - fee, P2pktOutput(newKey));
             // figure out what the additional fee will be for the change output
@@ -607,7 +638,17 @@ void ConstructTx(CWalletTx &wtxNew,
 
         if (!wallet->SignTransaction(tx))
         {
-            throw JSONRPCError(RPC_WALLET_ERROR, "Signing transaction failed (group token)");
+            std::string msg = strprintf(_("Signing token transaction failed"));
+            if (fRPC)
+            {
+                throw JSONRPCError(RPC_WALLET_ERROR, msg);
+            }
+            else
+            {
+                if (strError)
+                    *strError = msg;
+                return false;
+            }
         }
     }
 
@@ -616,12 +657,25 @@ void ConstructTx(CWalletTx &wtxNew,
     *static_cast<CTransaction *>(&wtxNew) = CTransaction(tx);
     // I'll manage my own keys because I have multiple.  Passing a valid key down breaks layering.
     CReserveKey dummy(wallet);
-    std::string error;
-    if (!wallet->CommitTransaction(wtxNew, dummy, error))
-        throw JSONRPCError(RPC_WALLET_ERROR, error);
+    std::string msg;
+    if (!wallet->CommitTransaction(wtxNew, dummy, msg))
+    {
+        if (fRPC)
+        {
+            throw JSONRPCError(RPC_WALLET_ERROR, msg);
+        }
+        else
+        {
+            if (strError)
+                *strError = msg;
+            return false;
+        }
+    }
 
     feeChangeKeyReservation.KeepKey();
     groupChangeKeyReservation.KeepKey();
+
+    return true;
 }
 
 
@@ -720,14 +774,15 @@ void GroupMelt(CWalletTx &wtxNew, const CGroupTokenID &grpID, CAmount totalNeede
     childAuthorityKey.KeepKey();
 }
 
-void GroupSend(CWalletTx &wtxNew,
+bool GroupSend(CWalletTx &wtxNew,
     const CGroupTokenID &grpID,
     const std::vector<CRecipient> &outputs,
     CAmount totalNeeded,
-    CWallet *wallet)
+    CWallet *wallet,
+    std::string *strError,
+    bool fRPC)
 {
     LOCK(wallet->cs_wallet);
-    std::string strError;
     std::vector<COutput> coins;
     CAmount totalAvailable = 0;
     CAmount totalBchNeeded = 0;
@@ -745,8 +800,18 @@ void GroupSend(CWalletTx &wtxNew,
 
     if (totalAvailable < totalNeeded)
     {
-        strError = strprintf("Not enough tokens in the wallet.  Need %d more.", totalNeeded - totalAvailable);
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strError);
+        std::string msg =
+            strprintf(_("Insufficient funds for this token.  Need %d more."), totalNeeded - totalAvailable);
+        if (fRPC)
+        {
+            throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, msg);
+        }
+        else
+        {
+            if (strError)
+                *strError = msg;
+            return false;
+        }
     }
 
     // Account for the satoshi dust for each token output
@@ -757,7 +822,8 @@ void GroupSend(CWalletTx &wtxNew,
     std::vector<COutput> chosenCoins;
     totalAvailable = GroupCoinSelection(coins, totalNeeded, chosenCoins);
 
-    ConstructTx(wtxNew, chosenCoins, outputs, 0, totalBchNeeded, totalAvailable, totalNeeded, grpID, wallet);
+    return ConstructTx(
+        wtxNew, chosenCoins, outputs, 0, totalBchNeeded, totalAvailable, totalNeeded, grpID, wallet, strError, false);
 }
 
 std::vector<std::vector<unsigned char> > ParseGroupDescParams(const UniValue &params, unsigned int &curparam)
@@ -979,7 +1045,7 @@ extern UniValue token(const UniValue &params, bool fHelp)
         else // assume string
         {
             std::string postfixStr = params[curparam].get_str();
-            if ((postfixStr[0] == '0') && (postfixStr[0] == 'x'))
+            if ((postfixStr.size() >= 2) && (postfixStr[0] == '0') && (postfixStr[1] == 'x'))
             {
                 throw JSONRPCError(RPC_INVALID_PARAMS, "Invalid parameter: Hex not implemented yet");
             }
@@ -1871,4 +1937,76 @@ UniValue groupedlistsinceblock(const UniValue &params, bool fHelp)
     ret.pushKV("lastblock", lastblock.GetHex());
 
     return ret;
+}
+
+// Token Description Cache methods
+void CTokenDescCache::AddTokenDesc(const CGroupTokenID &_grpID, const std::vector<std::string> &_desc)
+{
+    // When we add a token description we add it only to the database but not the cache.  We instead
+    // add values to the cache when reading from the database, when needed. This way we only fill the in
+    // memory cache with values we know are needed for the token wallet.  These values would be pulled
+    // into the cache during node startup so there is no real performance loss during normal wallet use.
+    LOCK(cs_tokencache);
+    ptokenDesc->WriteDesc(_grpID, _desc);
+}
+
+const std::vector<std::string> CTokenDescCache::GetTokenDesc(const CGroupTokenID &_grpID)
+{
+    std::vector<std::string> _desc;
+
+    LOCK(cs_tokencache);
+    if (cache.count(_grpID))
+    {
+        return cache[_grpID];
+    }
+    else if (ptokenDesc->ReadDesc(_grpID, _desc))
+    {
+        // Limit the size of cache.  If the cache size is exceeded, which is unlikely, then
+        // we don't add any more values to the cache and we rather get descrptions directly
+        // from the database.
+        if (cache.size() <= nMaxCacheSize)
+        {
+            cache.emplace(_grpID, _desc);
+        }
+        return _desc;
+    }
+    else
+    {
+        return {};
+    }
+}
+
+void CTokenDescCache::EraseTokenDesc(const CGroupTokenID &_grpID)
+{
+    LOCK(cs_tokencache);
+    cache.erase(_grpID);
+}
+
+void CTokenDescCache::ProcessTokenDescriptions(CTransactionRef ptx)
+{
+    for (size_t i = 0; i < ptx->vout.size(); i++)
+    {
+        const CTxOut &out = ptx->vout[i];
+        CGroupTokenInfo tg(out.scriptPubKey);
+        if ((tg.associatedGroup != NoGroup) && tg.isAuthority())
+        {
+            // If we have an authority then we have to check all the outputs again for an OP_RETURN
+            for (size_t j = 0; j < ptx->vout.size(); j++)
+            {
+                if (i == j) // skip the one we already checked in the upper loop
+                    continue;
+
+                // find op_return associated with the tx if there is one
+                const CTxOut &out2 = ptx->vout[j];
+                if (out2.scriptPubKey[0] == OP_RETURN)
+                {
+                    const auto tokenDesc = GetTokenDescription(out2.scriptPubKey);
+                    tokencache.AddTokenDesc(tg.associatedGroup, tokenDesc);
+                    break;
+                }
+            }
+
+            break;
+        }
+    }
 }

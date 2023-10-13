@@ -124,6 +124,8 @@ public:
     bool isUserGroup(void) const;
     //* returns true if this is a subgroup
     bool isSubgroup(void) const;
+    //* returns the data portion of a subgroup */
+    std::vector<unsigned char> getSubgroupData(void);
     //* returns the parent group if this is a subgroup or itself.
     CGroupTokenID parentGroup(void) const;
 

@@ -29,6 +29,7 @@
 #include "util.h"
 #include "utilstrencodings.h"
 #include "validationinterface.h"
+#include "wallet/grouptokenwallet.h"
 
 #include <algorithm>
 #include <boost/scope_exit.hpp>
@@ -3126,6 +3127,13 @@ bool ConnectTip(CValidationState &state,
             g_txindex->BlockConnected();
         }
 
+#ifdef ENABLE_WALLET
+        // Gather token descriptions if any - TODO: this should be in it's own thread.
+        for (const CTransactionRef ptx : pblock->vtx)
+        {
+            tokencache.ProcessTokenDescriptions(ptx);
+        }
+#endif
         // Write the chain state to disk, if necessary. This should be done after UpdateTip to make sure the tip
         // is set correctly when calling FlushStateToDisk(); this is because the automatic -cache.dbcache adjustment
         // mechanism gets triggered when the chain is synced completely detemined by when the best header matches

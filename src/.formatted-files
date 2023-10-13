@@ -284,6 +284,8 @@ qt/signverifymessagedialog.cpp
 qt/signverifymessagedialog.h
 qt/splashscreen.cpp
 qt/splashscreen.h
+qt/tokensviewdialog.cpp
+qt/tokensviewdialog.h
 qt/trafficgraphwidget.cpp
 qt/trafficgraphwidget.h
 qt/transactiondesc.cpp

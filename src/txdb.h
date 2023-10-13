@@ -152,6 +152,8 @@ public:
     //! Return the current memory allocated for the write buffers
     size_t TotalWriteBufferSize() const;
 };
+/** Global variable that points to the coins database */
+extern CCoinsViewDB *pcoinsdbview;
 
 /** Specialization of CCoinsViewCursor to iterate over a CCoinsViewDB */
 class CCoinsViewDBCursor : public CCoinsViewCursor
@@ -205,8 +207,15 @@ public:
     bool WriteBestBlockHeaderChainTx(const uint64_t nChainTx);
 };
 
-/** Global variable that points to the coins database */
-extern CCoinsViewDB *pcoinsdbview;
+/** Access to the token description database (indexes/tokendesc */
+class CTokenDescriptionDB : public CDBWrapper
+{
+public:
+    CTokenDescriptionDB(size_t n_cache_size, bool fMemory = false, bool fWipe = false);
+
+    bool ReadDesc(const CGroupTokenID &grpID, std::vector<std::string> &desc) const;
+    bool WriteDesc(const CGroupTokenID &grpID, const std::vector<std::string> &desc);
+};
 
 /**
  * Access to the txindex database (indexes/txindex/)

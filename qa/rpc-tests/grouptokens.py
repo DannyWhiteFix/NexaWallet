@@ -453,7 +453,7 @@ class GroupTokensTest (BitcoinTestFramework):
             self.nodes[2].token("send", grp2Id, mint0_0, 1000)
             assert(0)
         except JSONRPCException as e:
-            assert("Not enough tokens in the wallet." in e.error["message"])
+            assert("Insufficient funds for this token." in e.error["message"])
 
         waitFor(30, lambda: self.nodes[2].token("balance", grp2Id) == 900)
         tx = self.nodes[2].token("send", grp2Id, mint0_0, 100)

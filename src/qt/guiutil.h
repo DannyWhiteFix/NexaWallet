@@ -47,7 +47,7 @@ std::string DummyAddress(const CChainParams &params, const Config &cfg);
 
 // Set up widgets for address and amounts
 void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent);
-void setupAmountWidget(QLineEdit *widget, QWidget *parent);
+void setupAmountWidget(QLineEdit *widget, QWidget *parent, uint32_t nDecimal);
 
 QString bitcoinURIScheme(const CChainParams &, bool useCashAddr);
 QString bitcoinURIScheme(const Config &);

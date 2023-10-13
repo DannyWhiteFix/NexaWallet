@@ -1373,6 +1373,7 @@ bool AppInit2(Config &config)
                 delete pblocktree;
                 delete pblocktreeother;
                 delete pblockdb;
+                delete ptokenDesc;
 
                 uiInterface.InitMessage(_("Opening Block database..."));
                 InitializeBlockStorage(
@@ -1386,6 +1387,10 @@ bool AppInit2(Config &config)
                 pcoinscatcher = new CCoinsViewErrorCatcher(pcoinsdbview, pblocktree);
                 uiInterface.InitMessage(_("Opening Coins Cache database..."));
                 pcoinsTip = new CCoinsViewCache(pcoinscatcher);
+
+                uiInterface.InitMessage(_("Opening Token Description database..."));
+                ptokenDesc = new CTokenDescriptionDB(cacheConfig.nBlockTreeDBCache, false, fReindex);
+
                 InitTxAdmission();
 
                 if (fReindex)

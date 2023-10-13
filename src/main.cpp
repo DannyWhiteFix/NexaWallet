@@ -213,6 +213,7 @@ CBlockIndex *FindForkInGlobalIndex(const CChain &chain, const CBlockLocator &loc
 CCoinsViewCache *pcoinsTip = nullptr;
 CBlockTreeDB *pblocktree = nullptr;
 CBlockTreeDB *pblocktreeother = nullptr;
+CTokenDescriptionDB *ptokenDesc = nullptr;
 
 bool TestLockPointValidity(const LockPoints *lp)
 {

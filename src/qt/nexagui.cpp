@@ -67,13 +67,14 @@ BitcoinGUI::BitcoinGUI(const Config *_cfg,
     QWidget *parent)
     : QMainWindow(parent), clientModel(0), walletFrame(0), unitDisplayControl(0), labelWalletEncryptionIcon(0),
       labelWalletHDStatusIcon(0), labelConnectionsIcon(0), labelBlocksIcon(0), progressBarLabel(0), progressBar(0),
-      progressDialog(0), appMenuBar(0), overviewAction(0), historyAction(0), quitAction(0), sendCoinsAction(0),
-      sendCoinsMenuAction(0), usedSendingAddressesAction(0), usedReceivingAddressesAction(0), signMessageAction(0),
-      verifyMessageAction(0), aboutAction(0), receiveCoinsAction(0), receiveCoinsMenuAction(0), optionsAction(0),
-      unlimitedAction(0), toggleHideAction(0), encryptWalletAction(0), backupWalletAction(0), restoreWalletAction(0),
-      changePassphraseAction(0), aboutQtAction(0), openRPCConsoleAction(0), openAction(0), showHelpMessageAction(0),
-      trayIcon(0), trayIconMenu(0), notificator(0), rpcConsole(0), helpMessageDialog(0), modalOverlay(0), prevBlocks(0),
-      spinnerFrame(0), platformStyle(_platformStyle), cfg(_cfg)
+      progressDialog(0), appMenuBar(0), overviewAction(0), historyAction(0), tokensAction(0), tokensMenuAction(0),
+      quitAction(0), sendCoinsAction(0), sendCoinsMenuAction(0), usedSendingAddressesAction(0),
+      usedReceivingAddressesAction(0), signMessageAction(0), verifyMessageAction(0), aboutAction(0),
+      receiveCoinsAction(0), receiveCoinsMenuAction(0), optionsAction(0), unlimitedAction(0), toggleHideAction(0),
+      encryptWalletAction(0), backupWalletAction(0), restoreWalletAction(0), changePassphraseAction(0),
+      aboutQtAction(0), openRPCConsoleAction(0), openAction(0), showHelpMessageAction(0), trayIcon(0), trayIconMenu(0),
+      notificator(0), rpcConsole(0), helpMessageDialog(0), modalOverlay(0), prevBlocks(0), spinnerFrame(0),
+      platformStyle(_platformStyle), cfg(_cfg)
 {
     GUIUtil::restoreWindowGeometry("nWindow", QSize(850, 550), this);
 
@@ -265,6 +266,18 @@ void BitcoinGUI::createActions()
     historyAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_4));
     tabGroup->addAction(historyAction);
 
+    tokensAction = new QAction(platformStyle->SingleColorIcon(":/icons/send"), tr("&Tokens"), this);
+    tokensAction->setStatusTip(tr("Browse or Send Tokens").arg(GUIUtil::bitcoinURIScheme(*cfg)));
+    tokensAction->setToolTip(tokensAction->statusTip());
+    tokensAction->setCheckable(true);
+    tokensAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
+    tabGroup->addAction(tokensAction);
+
+    tokensMenuAction = new QAction(platformStyle->TextColorIcon(":/icons/send"), tokensAction->text(), this);
+    tokensMenuAction->setStatusTip(tokensAction->statusTip());
+    tokensMenuAction->setToolTip(tokensMenuAction->statusTip());
+
+
 #ifdef ENABLE_WALLET
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
@@ -280,6 +293,10 @@ void BitcoinGUI::createActions()
     connect(receiveCoinsMenuAction, SIGNAL(triggered()), this, SLOT(gotoReceiveCoinsPage()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(gotoHistoryPage()));
+    connect(tokensAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(tokensAction, SIGNAL(triggered()), this, SLOT(gotoTokensPage()));
+    connect(tokensMenuAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(tokensMenuAction, SIGNAL(triggered()), this, SLOT(gotoTokensPage()));
 #endif // ENABLE_WALLET
 
     quitAction = new QAction(platformStyle->TextColorIcon(":/icons/quit"), tr("E&xit"), this);
@@ -430,6 +447,7 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
+        toolbar->addAction(tokensAction);
         overviewAction->setChecked(true);
     }
 }
@@ -513,6 +531,8 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     receiveCoinsAction->setEnabled(enabled);
     receiveCoinsMenuAction->setEnabled(enabled);
     historyAction->setEnabled(enabled);
+    tokensAction->setEnabled(enabled);
+    tokensMenuAction->setEnabled(enabled);
     encryptWalletAction->setEnabled(enabled);
     backupWalletAction->setEnabled(enabled);
     restoreWalletAction->setEnabled(enabled);
@@ -563,6 +583,7 @@ void BitcoinGUI::createTrayIconMenu()
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(sendCoinsMenuAction);
     trayIconMenu->addAction(receiveCoinsMenuAction);
+    trayIconMenu->addAction(tokensMenuAction);
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(signMessageAction);
     trayIconMenu->addAction(verifyMessageAction);
@@ -662,6 +683,13 @@ void BitcoinGUI::gotoSendCoinsPage(QString addr)
     sendCoinsAction->setChecked(true);
     if (walletFrame)
         walletFrame->gotoSendCoinsPage(addr);
+}
+
+void BitcoinGUI::gotoTokensPage()
+{
+    tokensAction->setChecked(true);
+    if (walletFrame)
+        walletFrame->gotoTokensPage();
 }
 
 void BitcoinGUI::gotoSignMessageTab(QString addr)
