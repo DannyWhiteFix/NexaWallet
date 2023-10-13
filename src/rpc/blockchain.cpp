@@ -14,6 +14,7 @@
 #include "coins.h"
 #include "consensus/grouptokens.h"
 #include "consensus/validation.h"
+#include "dosman.h"
 #include "dstencode.h"
 #include "hashwrapper.h"
 #include "main.h"
@@ -195,28 +196,6 @@ UniValue getbestblockhash(const UniValue &params, bool fHelp)
                             HelpExampleCli("getbestblockhash", "") + HelpExampleRpc("getbestblockhash", ""));
 
     return chainActive.Tip()->GetBlockHash().GetHex();
-}
-
-UniValue getfinalizedblockhash(const UniValue &params, bool fHelp)
-{
-    if (fHelp || params.size() != 0)
-    {
-        throw std::runtime_error("getfinalizedblockhash\n"
-                                 "\nReturns the hash of the currently finalized block\n"
-                                 "\nResult:\n"
-                                 "\"hex\"      (string) the block hash hex encoded\n");
-    }
-
-    if (maxReorgDepth.Value() < 0)
-        throw JSONRPCError(RPC_INVALID_REQUEST, "Block finalization is not enabled");
-
-    LOCK(cs_main);
-    const CBlockIndex *blockIndexFinalized = GetFinalizedBlock();
-    if (blockIndexFinalized)
-    {
-        return blockIndexFinalized->GetBlockHash().GetHex();
-    }
-    return UniValue(UniValue::VSTR);
 }
 
 UniValue getdifficulty(const UniValue &params, bool fHelp)
@@ -1787,63 +1766,13 @@ UniValue invalidateblock(const UniValue &params, bool fHelp)
     return NullUniValue;
 }
 
-UniValue finalizeblock(const UniValue &params, bool fHelp)
-{
-    if (fHelp || params.size() != 1)
-    {
-        throw std::runtime_error("finalizeblock \"blockhash\"\n"
-
-                                 "\nTreats a block as final. It cannot be reorged. Any chain\n"
-                                 "that does not contain this block is invalid. Used on a less\n"
-                                 "work chain, it can effectively PUTS YOU OUT OF CONSENSUS.\n"
-                                 "USE WITH CAUTION!\n"
-                                 "\nResult:\n"
-                                 "\nExamples:\n" +
-                                 HelpExampleCli("finalizeblock", "\"blockhash\"") +
-                                 HelpExampleRpc("finalizeblock", "\"blockhash\""));
-    }
-
-    std::string strHash = params[0].get_str();
-    uint256 hash(uint256S(strHash));
-    CValidationState state;
-
-    if (maxReorgDepth.Value() < 0)
-        throw JSONRPCError(RPC_INVALID_REQUEST, "Block finalization is not enabled");
-    else
-    {
-        CBlockIndex *pblockindex;
-        {
-            READLOCK(cs_mapBlockIndex);
-            if (mapBlockIndex.count(hash) == 0)
-            {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
-            }
-
-            pblockindex = mapBlockIndex[hash];
-        }
-        FinalizeBlockAndInvalidate(state, pblockindex);
-    }
-
-    if (state.IsValid())
-    {
-        ActivateBestChain(state, Params());
-    }
-
-    if (!state.IsValid())
-    {
-        throw JSONRPCError(RPC_DATABASE_ERROR, state.GetRejectReason());
-    }
-
-    return NullUniValue;
-}
-
 UniValue reconsiderblock(const UniValue &params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
             "reconsiderblock \"hash\"\n"
-            "\nRemoves invalidity status of a block and its descendants, reconsider them for activation.\n"
-            "This can be used to undo the effects of invalidateblock.\n"
+            "\nRemoves invalidity status of a block and its descendants and reconsiders them for activation.\n"
+            "This can be used to undo the effects of invalidateblock or a fork in the chain.\n"
             "\nArguments:\n"
             "1. hash   (string, required) the hash of the block to reconsider\n"
             "\nResult:\n"
@@ -1857,6 +1786,20 @@ UniValue reconsiderblock(const UniValue &params, bool fHelp)
     CBlockIndex *pblockindex = LookupBlockIndex(hash);
     if (!pblockindex)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+
+    // Find where chainActive meets the chain we want to reconsider
+    const CBlockIndex *pFork;
+    pFork = chainActive.FindFork(pblockindex);
+
+    // Rollback to the common forkheight.
+    if (pFork != pblockindex)
+    {
+        std::string error = RollBackChain(pFork->height(), true);
+        if (error.size() > 0)
+        {
+            throw runtime_error(error.c_str());
+        }
+    }
 
     {
         LOCK(cs_main);
@@ -1874,6 +1817,10 @@ UniValue reconsiderblock(const UniValue &params, bool fHelp)
     }
 
     uiInterface.NotifyBlockTip(false, chainActive.Tip(), false);
+
+    // Clear the ban table in case there was an invalid fork and we have
+    // banned many peers.
+    dosMan.ClearBanned();
 
     return NullUniValue;
 }
@@ -2824,8 +2771,6 @@ static const CRPCCommand commands[] = {
     {"hidden", "reconsiderblock", &reconsiderblock, true},
     {"hidden", "rollbackchain", &rollbackchain, true},
     {"hidden", "reconsidermostworkchain", &reconsidermostworkchain, true},
-    {"hidden", "finalizeblock", &finalizeblock, true},
-    {"hidden", "getfinalizedblockhash", &getfinalizedblockhash, true},
 };
 
 void RegisterBlockchainRPCCommands(CRPCTable &table)

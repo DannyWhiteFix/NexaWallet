@@ -18,13 +18,6 @@
 
 /** Default for -blockchain.maxReorgDepth. A value less than zero disables the feature */
 static const int DEFAULT_MAX_REORG_DEPTH = -1; // disabled
-/**
- * Default for -finalizationdelay
- * This is the minimum time between a block header reception and the block
- * finalization.
- * This value should be >> block propagation and validation time
- */
-static const int64_t DEFAULT_MIN_FINALIZATION_DELAY = 2 * 60 * 60;
 
 /** Is express validation turned on/off */
 static const bool DEFAULT_XVAL_ENABLED = true;
@@ -200,18 +193,6 @@ bool ProcessNewBlock(CValidationState &state,
     bool fForceProcessing,
     CDiskBlockPos *dbp,
     bool fParallel);
-
-/**
- * Mark a block as finalized.
- * A finalized block can not be reorged in any way.
- */
-bool FinalizeBlockAndInvalidate(CValidationState &state, CBlockIndex *pindex);
-
-/** Get the the block index for the currently finalized block */
-const CBlockIndex *GetFinalizedBlock();
-
-/** Is this block finalized or within the chain that is already finalized */
-bool IsBlockFinalized(const CBlockIndex *pindex);
 
 //! Check whether the block associated with this index entry is pruned or not.
 bool IsBlockPruned(const CBlockIndex *pblockindex);
