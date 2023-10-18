@@ -9,241 +9,213 @@
 #define UNUSED
 #endif
 static const char UNUSED *bitcoin_strings[] = {
-    QT_TRANSLATE_NOOP("nexa", "Nexa"),
-    QT_TRANSLATE_NOOP("nexa", "The %s developers"),
-    QT_TRANSLATE_NOOP("nexa", "Bitcoin Bitcoin XT and Bitcoin Unlimited"),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "-wallet.maxTxFee is set very high! Fees this large could be paid on a single "
-        "transaction."),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "-wallet.payTxFee is set very high! This is the transaction fee you will pay "
-        "if you send a transaction."),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Cannot obtain a lock on data directory %s. %s is probably already running."),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Could not locate RPC credentials. No authentication cookie could be found, "
-        "and no rpcpassword is set in the configuration file (%s)"),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Deployment configuration file '%s' contained invalid data - see debug.log"),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Distributed under the MIT software license, see the accompanying file "
-        "COPYING or <http://www.opensource.org/licenses/mit-license.php>."),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Error loading %s: You can't enable HD on a already existing non-HD wallet"),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Error reading %s! All keys read correctly, but transaction data or address "
-        "book entries might be missing or incorrect."),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Error reading from the coin database.\n"
-        "Details: %s\n"
-        "\n"
-        "Do you want to reindex on the next restart?"),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Error: Listening for incoming connections failed (listen returned error %s)"),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Failed to listen on all P2P ports. Failing as requested by -bindallorfail."),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Fee: %ld is larger than configured maximum allowed fee of : %ld.  To change, "
-        "set 'wallet.maxTxFee'."),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Invalid amount for -wallet.maxTxFee=<amount>: '%u' (must be at least the "
-        "minrelay fee of %s to prevent stuck transactions)"),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Invalid amount for -wallet.payTxFee=<amount>: '%u' (must be at least %s)"),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Please check that your computer's date and time are correct! If your clock "
-        "is wrong, %s will not work properly."),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Prune configured below the minimum of %d MiB.  Please use a higher number."),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Prune: last wallet synchronisation goes beyond pruned data. You need to -"
-        "reindex (download the whole blockchain again in case of pruned node)"),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Reducing -maxconnections from %d to %d because of file descriptor "
-        "limitations (unix) or winsocket fd_set limitations (windows). If you are a "
-        "windows user there is a hard upper limit of 1024 which cannot be changed by "
-        "adjusting the node's configuration."),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Rescans are not possible in pruned mode. You will need to use -reindex which "
-        "will download the whole blockchain again."),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "The block database contains a block which appears to be from the future. "
-        "This may be due to your computer's date and time being set incorrectly. Only "
-        "rebuild the block database if you are sure that your computer's date and "
-        "time are correct"),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "The transaction amount is too small to send after the fee has been deducted"),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "This is a pre-release test build - use at your own risk - do not use for "
-        "mining or merchant applications"),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "This product includes software developed by the OpenSSL Project for use in "
-        "the OpenSSL Toolkit <https://www.openssl.org/> and cryptographic software "
-        "written by Eric Young and UPnP software written by Thomas Bernard."),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Total length of network version string with uacomments added exceeded the "
-        "maximum length (%i) and have been truncated.  Reduce the number or size of "
-        "uacomments to avoid truncation."),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Transaction has %d inputs and %d outputs. Maximum inputs allowed are %d and "
-        "maximum outputs are %d"),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Transaction has %d inputs. Maximum inputs allowed is %d. Try reducing inputs "
-        "by transferring a smaller amount."),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "WARNING: abnormally high number of blocks generated, %d blocks received in "
-        "the last %d hours (%d expected)"),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "WARNING: check your network connection, %d blocks received in the last %d "
-        "hours (%d expected)"),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Wallet is not password protected. Your funds may be at risk! Goto \"Settings"
-        "\" and then select \"Encrypt Wallet\" to create a password."),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Warning: Could not open deployment configuration CSV file '%s' for reading"),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Warning: The network does not appear to fully agree! Some miners appear to "
-        "be experiencing issues."),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Warning: Unknown block versions being mined! It's possible unknown rules are "
-        "in effect"),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; "
-        "if your balance or transactions are incorrect you should restore from a "
-        "backup."),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "Warning: We do not appear to fully agree with our peers! You may need to "
-        "upgrade, or other nodes may need to upgrade."),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "You are trying to use -wallet.auto but neither -spendzeroconfchange nor -"
-        "wallet.instant is turned on"),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "You are trying to use wallet.fallbackFee which has been deprecated an no "
-        "longer in  use - use wallet.payTxFee instead "),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "You are trying to use wallet.minTxFee which has been deprecated an no longer "
-        "in  use - use wallet.payTxFee instead "),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "You can not send free transactions if you have configured a -relay."
-        "limitFreeRelay of zero"),
-    QT_TRANSLATE_NOOP("nexa",
-        ""
-        "You need to rebuild the database using -reindex to go back to unpruned "
-        "mode.  This will redownload the entire blockchain"),
-    QT_TRANSLATE_NOOP("nexa", "%s "),
-    QT_TRANSLATE_NOOP("nexa", "%s corrupt, salvage failed"),
-    QT_TRANSLATE_NOOP("nexa", "-maxtxpool must be at least %d MB"),
-    QT_TRANSLATE_NOOP("nexa", "-xthinbloomfiltersize must be at least %d Bytes"),
-    QT_TRANSLATE_NOOP("nexa", "Activating best chain..."),
-    QT_TRANSLATE_NOOP("nexa", "Cannot downgrade wallet"),
-    QT_TRANSLATE_NOOP("nexa", "Cannot resolve -bind address: '%s'"),
-    QT_TRANSLATE_NOOP("nexa", "Cannot resolve -externalip address: '%s'"),
-    QT_TRANSLATE_NOOP("nexa", "Cannot resolve -whitebind address: '%s'"),
-    QT_TRANSLATE_NOOP("nexa", "Cannot write default address"),
-    QT_TRANSLATE_NOOP("nexa", "CommitTransaction failed."),
-    QT_TRANSLATE_NOOP("nexa", "Copyright (C) 2015-%i The Bitcoin Unlimited Developers"),
-    QT_TRANSLATE_NOOP("nexa", "Corrupted block database detected"),
-    QT_TRANSLATE_NOOP("nexa", "Deployment configuration file '%s' not found"),
-    QT_TRANSLATE_NOOP("nexa", "Do you want to rebuild the block database now?"),
-    QT_TRANSLATE_NOOP("nexa", "Done loading"),
-    QT_TRANSLATE_NOOP("nexa", "Error initializing block database"),
-    QT_TRANSLATE_NOOP("nexa", "Error initializing wallet database environment %s!"),
-    QT_TRANSLATE_NOOP("nexa", "Error loading %s"),
-    QT_TRANSLATE_NOOP("nexa", "Error loading %s: Wallet corrupted"),
-    QT_TRANSLATE_NOOP("nexa", "Error loading %s: Wallet requires newer version of %s"),
-    QT_TRANSLATE_NOOP("nexa", "Error loading %s: You can't disable HD on a already existing HD wallet"),
-    QT_TRANSLATE_NOOP("nexa", "Error opening block database"),
-    QT_TRANSLATE_NOOP("nexa", "Error"),
-    QT_TRANSLATE_NOOP("nexa", "Error: A fatal internal error occurred, see debug.log for details"),
-    QT_TRANSLATE_NOOP("nexa", "Error: Disk space is low!"),
-    QT_TRANSLATE_NOOP("nexa", "Failed to listen on any port. Use -listen=0 if you want this."),
-    QT_TRANSLATE_NOOP("nexa", "Importing..."),
-    QT_TRANSLATE_NOOP("nexa", "Incorrect or no genesis block found. Wrong datadir for network?"),
-    QT_TRANSLATE_NOOP("nexa", "Information"),
-    QT_TRANSLATE_NOOP("nexa", "Initialization sanity check failed. %s is shutting down."),
-    QT_TRANSLATE_NOOP("nexa", "Insufficient funds or funds not confirmed"),
-    QT_TRANSLATE_NOOP("nexa", "Invalid -onion address: '%s'"),
-    QT_TRANSLATE_NOOP("nexa", "Invalid -proxy address: '%s'"),
-    QT_TRANSLATE_NOOP("nexa", "Invalid netmask specified in -whitelist: '%s'"),
-    QT_TRANSLATE_NOOP("nexa", "Keypool ran out, please call keypoolrefill first"),
-    QT_TRANSLATE_NOOP("nexa", "Loading Orphanpool"),
-    QT_TRANSLATE_NOOP("nexa", "Loading TxPool"),
-    QT_TRANSLATE_NOOP("nexa", "Loading addresses..."),
-    QT_TRANSLATE_NOOP("nexa", "Loading banlist..."),
-    QT_TRANSLATE_NOOP("nexa", "Loading block index..."),
-    QT_TRANSLATE_NOOP("nexa", "Loading wallet..."),
-    QT_TRANSLATE_NOOP("nexa", "Need to specify a port with -whitebind: '%s'"),
-    QT_TRANSLATE_NOOP("nexa", "Not enough file descriptors available."),
-    QT_TRANSLATE_NOOP("nexa", "Opening Block database..."),
-    QT_TRANSLATE_NOOP("nexa", "Opening Coins Cache database..."),
-    QT_TRANSLATE_NOOP("nexa", "Opening UTXO database..."),
-    QT_TRANSLATE_NOOP("nexa", "Portions Copyright (C) 2009-%i The Bitcoin Core Developers"),
-    QT_TRANSLATE_NOOP("nexa", "Portions Copyright (C) 2014-%i The Bitcoin XT Developers"),
-    QT_TRANSLATE_NOOP("nexa", "Prune cannot be configured with a negative value."),
-    QT_TRANSLATE_NOOP("nexa", "Prune mode is incompatible with -txindex."),
-    QT_TRANSLATE_NOOP("nexa", "Pruning blockstore..."),
-    QT_TRANSLATE_NOOP("nexa", "Reaccepting Wallet Transactions"),
-    QT_TRANSLATE_NOOP("nexa", "Rescanning..."),
-    QT_TRANSLATE_NOOP("nexa", "Signing transaction failed"),
-    QT_TRANSLATE_NOOP("nexa", "Starting txindex"),
-    QT_TRANSLATE_NOOP("nexa", "The transaction amount is too small to pay the fee"),
-    QT_TRANSLATE_NOOP("nexa", "This is experimental software."),
-    QT_TRANSLATE_NOOP("nexa", "Transaction amount too small"),
-    QT_TRANSLATE_NOOP("nexa", "Transaction amounts must be positive"),
-    QT_TRANSLATE_NOOP("nexa", "Transaction has %d outputs. Maximum outputs allowed is %d"),
-    QT_TRANSLATE_NOOP("nexa", "Transaction of %d bytes is too large. Maximum allowed is %d bytes"),
-    QT_TRANSLATE_NOOP("nexa", "Transaction too large for fee policy"),
-    QT_TRANSLATE_NOOP("nexa", "Turn off auto consolidate and try sending again."),
-    QT_TRANSLATE_NOOP("nexa", "Unable to bind to %s on this computer (bind returned error %s)"),
-    QT_TRANSLATE_NOOP("nexa", "Unable to bind to %s on this computer. %s is probably already running."),
-    QT_TRANSLATE_NOOP("nexa", "Unable to start RPC services. See debug log for details."),
-    QT_TRANSLATE_NOOP("nexa", "Unknown network specified in -onlynet: '%s'"),
-    QT_TRANSLATE_NOOP("nexa", "Upgrading block database...This could take a while."),
-    QT_TRANSLATE_NOOP("nexa", "Upgrading txindex database "),
-    QT_TRANSLATE_NOOP("nexa", "Upgrading txindex database..."),
-    QT_TRANSLATE_NOOP("nexa", "User Agent comment (%s) contains unsafe characters."),
-    QT_TRANSLATE_NOOP("nexa", "Verifying blocks..."),
-    QT_TRANSLATE_NOOP("nexa", "Verifying wallet..."),
-    QT_TRANSLATE_NOOP("nexa", "Waiting for Genesis Block..."),
-    QT_TRANSLATE_NOOP("nexa", "Wallet %s resides outside data directory %s"),
-    QT_TRANSLATE_NOOP("nexa", "Wallet needed to be rewritten: restart %s to complete"),
-    QT_TRANSLATE_NOOP("nexa", "Warning"),
+QT_TRANSLATE_NOOP("nexa", "Nexa"),
+QT_TRANSLATE_NOOP("nexa", "The %s developers"),
+QT_TRANSLATE_NOOP("nexa", "Bitcoin Bitcoin XT and Bitcoin Unlimited"),
+QT_TRANSLATE_NOOP("nexa", ""
+"-wallet.maxTxFee is set very high! Fees this large could be paid on a single "
+"transaction."),
+QT_TRANSLATE_NOOP("nexa", ""
+"-wallet.payTxFee is set very high! This is the transaction fee you will pay "
+"if you send a transaction."),
+QT_TRANSLATE_NOOP("nexa", ""
+"Cannot obtain a lock on data directory %s. %s is probably already running."),
+QT_TRANSLATE_NOOP("nexa", ""
+"Could not locate RPC credentials. No authentication cookie could be found, "
+"and no rpcpassword is set in the configuration file (%s)"),
+QT_TRANSLATE_NOOP("nexa", ""
+"Deployment configuration file '%s' contained invalid data - see debug.log"),
+QT_TRANSLATE_NOOP("nexa", ""
+"Distributed under the MIT software license, see the accompanying file "
+"COPYING or <http://www.opensource.org/licenses/mit-license.php>."),
+QT_TRANSLATE_NOOP("nexa", ""
+"Error loading %s: You can't enable HD on a already existing non-HD wallet"),
+QT_TRANSLATE_NOOP("nexa", ""
+"Error reading %s! All keys read correctly, but transaction data or address "
+"book entries might be missing or incorrect."),
+QT_TRANSLATE_NOOP("nexa", ""
+"Error reading from the coin database.\n"
+"Details: %s\n"
+"\n"
+"Do you want to reindex on the next restart?"),
+QT_TRANSLATE_NOOP("nexa", ""
+"Error: Listening for incoming connections failed (listen returned error %s)"),
+QT_TRANSLATE_NOOP("nexa", ""
+"Failed to listen on all P2P ports. Failing as requested by -bindallorfail."),
+QT_TRANSLATE_NOOP("nexa", ""
+"Fee: %ld is larger than configured maximum allowed fee of : %ld.  To change, "
+"set 'wallet.maxTxFee'."),
+QT_TRANSLATE_NOOP("nexa", ""
+"Invalid amount for -wallet.maxTxFee=<amount>: '%u' (must be at least the "
+"minrelay fee of %s to prevent stuck transactions)"),
+QT_TRANSLATE_NOOP("nexa", ""
+"Invalid amount for -wallet.payTxFee=<amount>: '%u' (must be at least %s)"),
+QT_TRANSLATE_NOOP("nexa", ""
+"Please check that your computer's date and time are correct! If your clock "
+"is wrong, %s will not work properly."),
+QT_TRANSLATE_NOOP("nexa", ""
+"Prune configured below the minimum of %d MiB.  Please use a higher number."),
+QT_TRANSLATE_NOOP("nexa", ""
+"Prune: last wallet synchronisation goes beyond pruned data. You need to -"
+"reindex (download the whole blockchain again in case of pruned node)"),
+QT_TRANSLATE_NOOP("nexa", ""
+"Reducing -maxconnections from %d to %d because of file descriptor "
+"limitations (unix) or winsocket fd_set limitations (windows). If you are a "
+"windows user there is a hard upper limit of 1024 which cannot be changed by "
+"adjusting the node's configuration."),
+QT_TRANSLATE_NOOP("nexa", ""
+"Rescans are not possible in pruned mode. You will need to use -reindex which "
+"will download the whole blockchain again."),
+QT_TRANSLATE_NOOP("nexa", ""
+"The block database contains a block which appears to be from the future. "
+"This may be due to your computer's date and time being set incorrectly. Only "
+"rebuild the block database if you are sure that your computer's date and "
+"time are correct"),
+QT_TRANSLATE_NOOP("nexa", ""
+"The transaction amount is too small to send after the fee has been deducted"),
+QT_TRANSLATE_NOOP("nexa", ""
+"This is a pre-release test build - use at your own risk - do not use for "
+"mining or merchant applications"),
+QT_TRANSLATE_NOOP("nexa", ""
+"This product includes software developed by the OpenSSL Project for use in "
+"the OpenSSL Toolkit <https://www.openssl.org/> and cryptographic software "
+"written by Eric Young and UPnP software written by Thomas Bernard."),
+QT_TRANSLATE_NOOP("nexa", ""
+"Total length of network version string with uacomments added exceeded the "
+"maximum length (%i) and have been truncated.  Reduce the number or size of "
+"uacomments to avoid truncation."),
+QT_TRANSLATE_NOOP("nexa", ""
+"Transaction has %d inputs and %d outputs. Maximum inputs allowed are %d and "
+"maximum outputs are %d"),
+QT_TRANSLATE_NOOP("nexa", ""
+"Transaction has %d inputs. Maximum inputs allowed is %d. Try reducing inputs "
+"by transferring a smaller amount."),
+QT_TRANSLATE_NOOP("nexa", ""
+"WARNING: abnormally high number of blocks generated, %d blocks received in "
+"the last %d hours (%d expected)"),
+QT_TRANSLATE_NOOP("nexa", ""
+"WARNING: check your network connection, %d blocks received in the last %d "
+"hours (%d expected)"),
+QT_TRANSLATE_NOOP("nexa", ""
+"Wallet is not password protected. Your funds may be at risk! Goto \"Settings"
+"\" and then select \"Encrypt Wallet\" to create a password."),
+QT_TRANSLATE_NOOP("nexa", ""
+"Warning: Could not open deployment configuration CSV file '%s' for reading"),
+QT_TRANSLATE_NOOP("nexa", ""
+"Warning: The network does not appear to fully agree! Some miners appear to "
+"be experiencing issues."),
+QT_TRANSLATE_NOOP("nexa", ""
+"Warning: Unknown block versions being mined! It's possible unknown rules are "
+"in effect"),
+QT_TRANSLATE_NOOP("nexa", ""
+"Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; "
+"if your balance or transactions are incorrect you should restore from a "
+"backup."),
+QT_TRANSLATE_NOOP("nexa", ""
+"Warning: We do not appear to fully agree with our peers! You may need to "
+"upgrade, or other nodes may need to upgrade."),
+QT_TRANSLATE_NOOP("nexa", ""
+"You are trying to restore the same wallet which you are trying to replace."),
+QT_TRANSLATE_NOOP("nexa", ""
+"You are trying to use -wallet.auto but neither -spendzeroconfchange nor -"
+"wallet.instant is turned on"),
+QT_TRANSLATE_NOOP("nexa", ""
+"You can not run \"-salvagewallet\" as an HD wallet.\n"
+"\n"
+"Please relaunch Nexa with \"-usehd=0\"."),
+QT_TRANSLATE_NOOP("nexa", ""
+"You can not send free transactions if you have configured a -relay."
+"limitFreeRelay of zero"),
+QT_TRANSLATE_NOOP("nexa", ""
+"You need to rebuild the database using -reindex to go back to unpruned "
+"mode.  This will redownload the entire blockchain"),
+QT_TRANSLATE_NOOP("nexa", ""
+"\"Restore Wallet\" succeeded and a backup of the previous wallet was saved "
+"to: %s.\n"
+"\n"
+"\n"
+"When you click \"OK\" Nexa will shutdown to complete the process."),
+QT_TRANSLATE_NOOP("nexa", "%s "),
+QT_TRANSLATE_NOOP("nexa", "%s corrupt, salvage failed"),
+QT_TRANSLATE_NOOP("nexa", "-maxtxpool must be at least %d MB"),
+QT_TRANSLATE_NOOP("nexa", "-xthinbloomfiltersize must be at least %d Bytes"),
+QT_TRANSLATE_NOOP("nexa", "Activating best chain..."),
+QT_TRANSLATE_NOOP("nexa", "Cannot downgrade wallet"),
+QT_TRANSLATE_NOOP("nexa", "Cannot resolve -bind address: '%s'"),
+QT_TRANSLATE_NOOP("nexa", "Cannot resolve -externalip address: '%s'"),
+QT_TRANSLATE_NOOP("nexa", "Cannot resolve -whitebind address: '%s'"),
+QT_TRANSLATE_NOOP("nexa", "Cannot write default address"),
+QT_TRANSLATE_NOOP("nexa", "CommitTransaction failed."),
+QT_TRANSLATE_NOOP("nexa", "Copyright (C) 2015-%i The Bitcoin Unlimited Developers"),
+QT_TRANSLATE_NOOP("nexa", "Corrupted block database detected"),
+QT_TRANSLATE_NOOP("nexa", "Deployment configuration file '%s' not found"),
+QT_TRANSLATE_NOOP("nexa", "Do you want to rebuild the block database now?"),
+QT_TRANSLATE_NOOP("nexa", "Done loading"),
+QT_TRANSLATE_NOOP("nexa", "Error initializing block database"),
+QT_TRANSLATE_NOOP("nexa", "Error initializing wallet database environment %s!"),
+QT_TRANSLATE_NOOP("nexa", "Error loading %s"),
+QT_TRANSLATE_NOOP("nexa", "Error loading %s: Wallet corrupted"),
+QT_TRANSLATE_NOOP("nexa", "Error loading %s: Wallet requires newer version of %s"),
+QT_TRANSLATE_NOOP("nexa", "Error loading %s: You can't disable HD on a already existing HD wallet"),
+QT_TRANSLATE_NOOP("nexa", "Error opening block database"),
+QT_TRANSLATE_NOOP("nexa", "Error"),
+QT_TRANSLATE_NOOP("nexa", "Error: A fatal internal error occurred, see debug.log for details"),
+QT_TRANSLATE_NOOP("nexa", "Error: Disk space is low!"),
+QT_TRANSLATE_NOOP("nexa", "Error: Keypool ran out, please call keypoolrefill first"),
+QT_TRANSLATE_NOOP("nexa", "Failed to listen on any port. Use -listen=0 if you want this."),
+QT_TRANSLATE_NOOP("nexa", "Importing..."),
+QT_TRANSLATE_NOOP("nexa", "Incorrect or no genesis block found. Wrong datadir for network?"),
+QT_TRANSLATE_NOOP("nexa", "Information"),
+QT_TRANSLATE_NOOP("nexa", "Initialization sanity check failed. %s is shutting down."),
+QT_TRANSLATE_NOOP("nexa", "Insufficient funds for this token.  Need %d more."),
+QT_TRANSLATE_NOOP("nexa", "Insufficient funds or funds not confirmed"),
+QT_TRANSLATE_NOOP("nexa", "Invalid -onion address: '%s'"),
+QT_TRANSLATE_NOOP("nexa", "Invalid -proxy address: '%s'"),
+QT_TRANSLATE_NOOP("nexa", "Invalid netmask specified in -whitelist: '%s'"),
+QT_TRANSLATE_NOOP("nexa", "Keypool ran out, please call keypoolrefill first"),
+QT_TRANSLATE_NOOP("nexa", "Loading Orphanpool"),
+QT_TRANSLATE_NOOP("nexa", "Loading TxPool"),
+QT_TRANSLATE_NOOP("nexa", "Loading addresses..."),
+QT_TRANSLATE_NOOP("nexa", "Loading banlist..."),
+QT_TRANSLATE_NOOP("nexa", "Loading block index..."),
+QT_TRANSLATE_NOOP("nexa", "Loading wallet..."),
+QT_TRANSLATE_NOOP("nexa", "Need to specify a port with -whitebind: '%s'"),
+QT_TRANSLATE_NOOP("nexa", "Not enough file descriptors available."),
+QT_TRANSLATE_NOOP("nexa", "Opening Block database..."),
+QT_TRANSLATE_NOOP("nexa", "Opening Coins Cache database..."),
+QT_TRANSLATE_NOOP("nexa", "Opening Token Description database..."),
+QT_TRANSLATE_NOOP("nexa", "Opening UTXO database..."),
+QT_TRANSLATE_NOOP("nexa", "Portions Copyright (C) 2009-%i The Bitcoin Core Developers"),
+QT_TRANSLATE_NOOP("nexa", "Portions Copyright (C) 2014-%i The Bitcoin XT Developers"),
+QT_TRANSLATE_NOOP("nexa", "Prune cannot be configured with a negative value."),
+QT_TRANSLATE_NOOP("nexa", "Prune mode is incompatible with -txindex."),
+QT_TRANSLATE_NOOP("nexa", "Pruning blockstore..."),
+QT_TRANSLATE_NOOP("nexa", "Reaccepting Wallet Transactions"),
+QT_TRANSLATE_NOOP("nexa", "Rescanning..."),
+QT_TRANSLATE_NOOP("nexa", "Signing token transaction failed"),
+QT_TRANSLATE_NOOP("nexa", "Signing transaction failed"),
+QT_TRANSLATE_NOOP("nexa", "Starting txindex"),
+QT_TRANSLATE_NOOP("nexa", "The transaction amount is too small to pay the fee"),
+QT_TRANSLATE_NOOP("nexa", "This is experimental software."),
+QT_TRANSLATE_NOOP("nexa", "Transaction amount too small"),
+QT_TRANSLATE_NOOP("nexa", "Transaction amounts must be positive"),
+QT_TRANSLATE_NOOP("nexa", "Transaction has %d outputs. Maximum outputs allowed is %d"),
+QT_TRANSLATE_NOOP("nexa", "Transaction of %d bytes is too large. Maximum allowed is %d bytes"),
+QT_TRANSLATE_NOOP("nexa", "Transaction too large for fee policy"),
+QT_TRANSLATE_NOOP("nexa", "Turn off auto consolidate and try sending again."),
+QT_TRANSLATE_NOOP("nexa", "Unable to bind to %s on this computer (bind returned error %s)"),
+QT_TRANSLATE_NOOP("nexa", "Unable to bind to %s on this computer. %s is probably already running."),
+QT_TRANSLATE_NOOP("nexa", "Unable to start RPC services. See debug log for details."),
+QT_TRANSLATE_NOOP("nexa", "Unknown network specified in -onlynet: '%s'"),
+QT_TRANSLATE_NOOP("nexa", "Upgrading block database...This could take a while."),
+QT_TRANSLATE_NOOP("nexa", "Upgrading txindex database "),
+QT_TRANSLATE_NOOP("nexa", "Upgrading txindex database..."),
+QT_TRANSLATE_NOOP("nexa", "User Agent comment (%s) contains unsafe characters."),
+QT_TRANSLATE_NOOP("nexa", "Verifying blocks..."),
+QT_TRANSLATE_NOOP("nexa", "Verifying wallet..."),
+QT_TRANSLATE_NOOP("nexa", "Waiting for Genesis Block..."),
+QT_TRANSLATE_NOOP("nexa", "Wallet %s resides outside data directory %s"),
+QT_TRANSLATE_NOOP("nexa", "Wallet needed to be rewritten: restart %s to complete"),
+QT_TRANSLATE_NOOP("nexa", "Warning"),
+QT_TRANSLATE_NOOP("nexa", "Zapping all transactions from wallet..."),
 };

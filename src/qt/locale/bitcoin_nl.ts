@@ -210,12 +210,7 @@
         <translation>Weet u zeker dat u uw portemonnee wilt versleutelen?</translation>
     </message>
     <message>
-        <location line="+15"/>
-        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>BELANGRIJK: Elke eerder gemaakte backup van uw portemonneebestand dient u te vervangen door het nieuw gegenereerde, versleutelde portemonneebestand. Om veiligheidsredenen zullen eerdere backups van het niet-versleutelde portemonneebestand onbruikbaar worden zodra u uw nieuwe, versleutelde, portemonnee begint te gebruiken.</translation>
-    </message>
-    <message>
-        <location line="+104"/>
+        <location line="+119"/>
         <location line="+29"/>
         <source>Warning: The Caps Lock key is on!</source>
         <translation>Waarschuwing: De Caps Locktoets staat aan!</translation>
@@ -242,7 +237,12 @@
         <translation>%1 wordt nu afgesloten om het versleutelingsproces te voltooien. Onthoud dat het versleutelen van uw portemonnee uw munten niet volledig kan beschermen tegen diefstal door malware die uw computer infecteert.</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+5"/>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons you should no longer keep previous unencrypted backups as your funds will be at risk if someone gains access to them.</source>
+        <translation>BELANGRIJK: Alle eerdere back-ups die u van uw portefeuillebestand heeft gemaakt, moeten worden vervangen door het nieuw gegenereerde, gecodeerde portefeuillebestand. Om veiligheidsredenen mag u eerdere niet-versleutelde back-ups niet langer bewaren, aangezien uw geld in gevaar komt als iemand er toegang toe krijgt.</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <location line="+8"/>
         <location line="+42"/>
         <location line="+6"/>
@@ -309,17 +309,17 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../nexagui.cpp" line="+318"/>
+        <location filename="../nexagui.cpp" line="+336"/>
         <source>Sign &amp;message...</source>
         <translation>&amp;Onderteken bericht...</translation>
     </message>
     <message>
-        <location line="+411"/>
+        <location line="+425"/>
         <source>Synchronizing with network...</source>
         <translation>Synchroniseren met netwerk...</translation>
     </message>
     <message>
-        <location line="-500"/>
+        <location line="-531"/>
         <source>&amp;Overview</source>
         <translation>&amp;Overzicht</translation>
     </message>
@@ -349,7 +349,17 @@
         <translation>Blader door transactiegescheidenis</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+6"/>
+        <source>&amp;Tokens</source>
+        <translation>&amp;Tokens</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Browse or Send Tokens</source>
+        <translation>Blader of verzend tokens</translation>
+    </message>
+    <message>
+        <location line="+32"/>
         <source>E&amp;xit</source>
         <translation>A&amp;fsluiten</translation>
     </message>
@@ -399,7 +409,7 @@
         <translation>Wijzig Bitcoin Unlimited-opties</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Versleutel Portemonnee...</translation>
     </message>
@@ -409,7 +419,17 @@
         <translation>&amp;Backup Portemonnee...</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
+        <source>&amp;Restore Wallet...</source>
+        <translation>&amp;Portemonnee herstellen...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Restore wallet from another location</source>
+        <translation>Herstel portemonnee vanaf een andere locatie</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>&amp;Change Passphrase...</source>
         <translation>&amp;Wijzig Wachtwoord</translation>
     </message>
@@ -429,7 +449,7 @@
         <translation>Open &amp;URI...</translation>
     </message>
     <message>
-        <location line="+397"/>
+        <location line="+411"/>
         <source>Importing blocks from disk...</source>
         <translation>Blokken aan het importeren vanaf harde schijf...</translation>
     </message>
@@ -439,17 +459,17 @@
         <translation>Bezig met herindexeren van blokken op harde schijf...</translation>
     </message>
     <message>
-        <location line="-498"/>
+        <location line="-529"/>
         <source>Send coins to a Nexa address</source>
         <translation>Verstuur munten naar een Nexaadres</translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+92"/>
         <source>Backup wallet to another location</source>
         <translation>Backup portemonnee naar een andere locatie</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+5"/>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Wijzig het wachtwoord voor uw portemonneversleuteling</translation>
     </message>
@@ -469,12 +489,12 @@
         <translation>&amp;Verifiëer bericht...</translation>
     </message>
     <message>
-        <location line="+495"/>
+        <location line="+509"/>
         <source>Nexa</source>
         <translation>Nexa</translation>
     </message>
     <message>
-        <location line="-726"/>
+        <location line="-757"/>
         <source>Wallet</source>
         <translation>Portemonnee</translation>
     </message>
@@ -489,7 +509,7 @@
         <translation>&amp;Ontvangen</translation>
     </message>
     <message>
-        <location line="+53"/>
+        <location line="+69"/>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Toon / Verberg</translation>
     </message>
@@ -499,12 +519,12 @@
         <translation>Toon of verberg het hoofdvenster</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+8"/>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation>Versleutel de geheime sleutels die bij uw portemonnee horen</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+10"/>
         <source>Sign messages with your Nexa addresses to prove you own them</source>
         <translation>Onderteken berichten met uw Nexaadressen om te bewijzen dat u deze adressen bezit</translation>
     </message>
@@ -514,12 +534,12 @@
         <translation>Verifiëer handtekeningen om zeker te zijn dat de berichten zijn ondertekend met de gespecificeerde Nexaadressen</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+64"/>
         <source>&amp;File</source>
         <translation>&amp;Bestand</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+15"/>
         <source>&amp;Settings</source>
         <translation>&amp;Instellingen</translation>
     </message>
@@ -534,7 +554,7 @@
         <translation>Tab-werkbalk</translation>
     </message>
     <message>
-        <location line="-93"/>
+        <location line="-95"/>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Toon de lijst met gebruikte verstuuradressen en -labels</translation>
     </message>
@@ -549,7 +569,7 @@
         <translation>&amp;Opdrachytregelopties</translation>
     </message>
     <message numerus="yes">
-        <location line="+366"/>
+        <location line="+380"/>
         <source>%n active connection(s) to Nexa network</source>
         <translation>
             <numerusform>%n actieve verbinding met Nexanetwerk</numerusform>
@@ -605,7 +625,7 @@
         <translation>Bijgewerkt</translation>
     </message>
     <message>
-        <location line="-417"/>
+        <location line="-431"/>
         <source>Open a %1: URI or payment request</source>
         <translation>Open een %1: URI of betalingsverzoek</translation>
     </message>
@@ -615,12 +635,12 @@
         <translation>Toon het %1 helpbericht om een lijst met mogelijke Nexa-opdrachtregelopties te krijgen</translation>
     </message>
     <message>
-        <location line="+185"/>
+        <location line="+191"/>
         <source>%1 client</source>
         <translation>%1 klant</translation>
     </message>
     <message>
-        <location line="+251"/>
+        <location line="+259"/>
         <source>Catching up...</source>
         <translation>Aan het bijwerken...</translation>
     </message>
@@ -1396,7 +1416,12 @@
         <translation>Automatisch consolideren</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+39"/>
+        <source>&amp;Rescan wallet on startup</source>
+        <translation>&amp;Portefeuille opnieuw scannen bij opstarten</translation>
+    </message>
+    <message>
+        <location line="+15"/>
         <source>Automatically open the Nexa client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Open de Nexapoort automatisch op de router. Dit werkt alleen als de router UPnP ondersteunt en het aanstaat.</translation>
     </message>
@@ -1556,17 +1581,17 @@
         <translation>&amp;Annuleren</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+118"/>
+        <location filename="../optionsdialog.cpp" line="+123"/>
         <source>default</source>
         <translation>standaard</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+57"/>
         <source>none</source>
         <translation>geen</translation>
     </message>
     <message>
-        <location line="+73"/>
+        <location line="+75"/>
         <source>Confirm options reset</source>
         <translation>Bevestig reset opties</translation>
     </message>
@@ -2608,7 +2633,7 @@
     <message>
         <location filename="../forms/receivefreezedialog.ui" line="+14"/>
         <source>Coin Freeze</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+24"/>
@@ -2782,7 +2807,7 @@
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+627"/>
+        <location filename="../sendcoinsdialog.cpp" line="+633"/>
         <source>Send Coins</source>
         <translation>Verstuurde munten</translation>
     </message>
@@ -2792,7 +2817,12 @@
         <translation>Coin controle opties</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+17"/>
+        <source>Select specific coins you want to use in this transaction</source>
+        <translation>Selecteer specifieke munten die u bij deze transactie wilt gebruiken</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Inputs...</source>
         <translation>Invoer...</translation>
     </message>
@@ -2848,16 +2878,22 @@
     </message>
     <message>
         <location line="+3"/>
+        <location line="+16"/>
         <source>Custom change address</source>
         <translation>Aangepast wisselgeldadres</translation>
     </message>
     <message>
-        <location line="+206"/>
+        <location line="+193"/>
         <source>Transaction Fee:</source>
         <translation>Transactiekosten:</translation>
     </message>
     <message>
         <location line="+14"/>
+        <source>Choose your transaction fee.</source>
+        <translation>Kies uw transactiekosten.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Choose...</source>
         <translation>Kies...</translation>
     </message>
@@ -2888,7 +2924,12 @@
         <translation>totaal ten minste</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+10"/>
+        <source>Custom fee amount</source>
+        <translation>Aangepast vergoedingsbedrag</translation>
+    </message>
+    <message>
+        <location line="+24"/>
         <location line="+13"/>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for nexa transactions than the network can process.</source>
         <translation>De minimale toeslag betalen is prima mits het transactievolume kleiner is dan de ruimte in de blokken. Let wel op dat dit tot gevolg kan hebben dat een transactie nooit wordt bevestigd als er meer vraag is naar nexatransacties dan het netwerk kan verwerken.</translation>
@@ -2900,11 +2941,21 @@
     </message>
     <message>
         <location line="+29"/>
+        <source>Use the recommended fee amount.  You can select a faster or slower confirmation time by moving the &quot;Confirmation Time&quot; slider.</source>
+        <translation>Gebruik het aanbevolen tariefbedrag. U kunt een snellere of langzamere bevestigingstijd selecteren door de schuifregelaar &quot;Bevestigingstijd&quot; te verplaatsen.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Recommended:</source>
         <translation>Aanbevolen:</translation>
     </message>
     <message>
         <location line="+30"/>
+        <source>Choose a custom fee amount</source>
+        <translation>Kies een aangepast tariefbedrag</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Custom:</source>
         <translation>Handmatig:</translation>
     </message>
@@ -2915,11 +2966,17 @@
     </message>
     <message>
         <location line="+29"/>
+        <location line="+33"/>
+        <source>Transaction confirmation time</source>
+        <translation>Transactiebevestigingstijd</translation>
+    </message>
+    <message>
+        <location line="-30"/>
         <source>Confirmation time:</source>
         <translation>Bevestigings tijd:</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+63"/>
         <source>normal</source>
         <translation>normaal</translation>
     </message>
@@ -2954,22 +3011,27 @@
         <translation>Wis alle velden van het formulier.</translation>
     </message>
     <message>
-        <location line="-858"/>
+        <location line="-880"/>
         <source>Dust:</source>
         <translation>Stof:</translation>
     </message>
     <message>
-        <location line="+861"/>
+        <location line="+883"/>
         <source>Clear &amp;All</source>
         <translation>Verwijder &amp;Alles</translation>
     </message>
     <message>
         <location line="+55"/>
+        <source>Current Balance</source>
+        <translation>Huidig ​​saldo</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Balance:</source>
         <translation>Saldo:</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-87"/>
         <source>Confirm the send action</source>
         <translation>Bevestig de verstuuractie</translation>
     </message>
@@ -2992,7 +3054,7 @@
         <translation>%1 tot %2</translation>
     </message>
     <message>
-        <location line="-283"/>
+        <location line="-289"/>
         <source>Copy quantity</source>
         <translation>Kopieer aantal</translation>
     </message>
@@ -3027,7 +3089,7 @@
         <translation>Kopieer wijziging</translation>
     </message>
     <message>
-        <location line="+247"/>
+        <location line="+253"/>
         <source>&lt;b&gt;Public label:&lt;/b&gt; %1</source>
         <translation>&lt;b&gt;Openbaar label:&lt;/b&gt; %1</translation>
     </message>
@@ -3087,12 +3149,12 @@
         <translation>Public Label overschrijdt limiet van </translation>
     </message>
     <message>
-        <location line="+105"/>
+        <location line="+102"/>
         <source>Pay only the required fee of %1</source>
         <translation>Betaal alleen de verplichte transactiekosten van %1</translation>
     </message>
     <message>
-        <location line="-139"/>
+        <location line="-136"/>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation>Het adres van de ontvanger is niet geldig. Gelieve opnieuw te controleren..</translation>
     </message>
@@ -3102,7 +3164,7 @@
         <translation>Dubbel adres gevonden: adressen mogen maar één keer worden gebruikt worden.</translation>
     </message>
     <message>
-        <location line="+255"/>
+        <location line="+252"/>
         <source>Warning: Invalid Nexa address</source>
         <translation>Waarschuwing: Ongeldig Nexaadres</translation>
     </message>
@@ -3127,12 +3189,12 @@
         <translation>Waarschuwing: Onbekend wisselgeldadres</translation>
     </message>
     <message>
-        <location line="-781"/>
+        <location line="-784"/>
         <source>Copy dust</source>
         <translation>Kopieër stof</translation>
     </message>
     <message>
-        <location line="+292"/>
+        <location line="+298"/>
         <source>Are you sure you want to send?</source>
         <translation>Weet u zeker dat u wilt versturen?</translation>
     </message>
@@ -3145,14 +3207,14 @@
 <context>
     <name>SendCoinsEntry</name>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="+82"/>
-        <location line="+650"/>
-        <location line="+533"/>
+        <location filename="../forms/sendcoinsentry.ui" line="+86"/>
+        <location line="+677"/>
+        <location line="+560"/>
         <source>A&amp;mount:</source>
         <translation>B&amp;edrag:</translation>
     </message>
     <message>
-        <location line="-1170"/>
+        <location line="-1224"/>
         <source>Pay &amp;To:</source>
         <translation>Betaal &amp;Aan:</translation>
     </message>
@@ -3162,12 +3224,7 @@
         <translation>Kies een eerder gebruikt adres</translation>
     </message>
     <message>
-        <location line="-106"/>
-        <source>This is a normal payment.</source>
-        <translation>Dit is een normale betaling.</translation>
-    </message>
-    <message>
-        <location line="+38"/>
+        <location line="-68"/>
         <source>Private Description:</source>
         <translation>Privébeschrijving:</translation>
     </message>
@@ -3198,13 +3255,13 @@
     </message>
     <message>
         <location line="+7"/>
-        <location line="+526"/>
-        <location line="+533"/>
+        <location line="+553"/>
+        <location line="+560"/>
         <source>Remove this entry</source>
         <translation>Verwijder deze toevoeging</translation>
     </message>
     <message>
-        <location line="-1037"/>
+        <location line="-1091"/>
         <source>A message that was attached to the coin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Nexa network.</source>
         <translation>Een bericht dat aan de munt was gehecht: URI die ter referentie bij de transactie wordt opgeslagen. Opmerking: dit bericht wordt niet via het Nexa-netwerk verzonden.</translation>
     </message>
@@ -3230,17 +3287,22 @@
         <translation>De transactiekosten zal worden afgetrokken van het bedrag dat verstuurd wordt. De ontvangers zullen minder coins ontvangen dan ingevoerd is in het hoeveelheidsveld. Als er meerdere ontvangers geselecteerd zijn, dan worden de transactiekosten gelijk verdeeld.</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-7"/>
+        <source>Amount to send</source>
+        <translation>Hoeveelheid om te versturen</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>S&amp;ubtract fee from amount</source>
         <translation>Trek de transactiekosten a&amp;f van het bedrag.</translation>
     </message>
     <message>
-        <location line="+616"/>
+        <location line="+643"/>
         <source>This is an unauthenticated payment request.</source>
         <translation>Dit is een niet-geverifieerd betalingsverzoek.</translation>
     </message>
     <message>
-        <location line="+529"/>
+        <location line="+556"/>
         <source>This is an authenticated payment request.</source>
         <translation>Dit is een geverifieerd betalingsverzoek.</translation>
     </message>
@@ -3255,14 +3317,14 @@
         <translation>Voer een privélabel in voor dit adres om het aan uw adresboek toe te voegen</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="-514"/>
-        <location line="+529"/>
+        <location filename="../forms/sendcoinsentry.ui" line="-541"/>
+        <location line="+556"/>
         <source>Pay To:</source>
         <translation>Betaal Aan:</translation>
     </message>
     <message>
-        <location line="-495"/>
-        <location line="+533"/>
+        <location line="-522"/>
+        <location line="+560"/>
         <source>Memo:</source>
         <translation>Memo:</translation>
     </message>
@@ -3420,6 +3482,220 @@
     </message>
 </context>
 <context>
+    <name>TokenDescDialog</name>
+    <message>
+        <location filename="../forms/tokendescdialog.ui" line="+17"/>
+        <source>Token details</source>
+        <translation>Tokendetails</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This pane shows a detailed description of the token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Dit venster toont een gedetailleerde beschrijving van het token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+</context>
+<context>
+    <name>TokensViewDialog</name>
+    <message>
+        <location filename="../forms/tokensviewdialog.ui" line="+14"/>
+        <source>Tokens</source>
+        <translation>Tokens</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Amount: </source>
+        <translation>Bedrag:</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The number of tokens to send&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Het aantal tokens dat moet worden verzonden&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>  Pay To: </source>
+        <translation>  Betaal Aan: </translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>The Nexa address to send the payment to</source>
+        <translation>Het Nexaadres om betaling aan te versturen</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Choose previously used address</source>
+        <translation>Kies een eerder gebruikt adres</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Alt+A</source>
+        <translation>Alt+A</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Paste address from clipboard</source>
+        <translation>Plak adres vanuit klembord</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Alt+P</source>
+        <translation>Alt+P</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Remove this entry</source>
+        <translation>Verwijder deze toevoeging</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send tokens&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Verstuur tokens&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Send</source>
+        <translation>Versturen</translation>
+    </message>
+    <message>
+        <location line="+56"/>
+        <source>Token ID</source>
+        <translation>Token ID</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>The unique token identifier</source>
+        <translation>De unieke token-ID</translation>
+    </message>
+    <message>
+        <location line="-45"/>
+        <source>The token group identifier</source>
+        <translation>De tokengroep-ID</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Name</source>
+        <translation>Naam</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The name of the token</source>
+        <translation>De naam van het token</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Ticker</source>
+        <translation>Tikker</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The token ticker symbol</source>
+        <translation>Het token-ticker-symbool</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Balance</source>
+        <translation>Saldo</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Confirmed token balance</source>
+        <translation>Bevestigd tokensaldo</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Pending</source>
+        <translation>Afwachtend</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Unconfirmed token balance</source>
+        <translation>Onbevestigd token saldo</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Sub</source>
+        <translation>Sub</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>If checked then this item is a subgroup.</source>
+        <translation>Indien aangevinkt, is dit item een subgroep.</translation>
+    </message>
+    <message>
+        <location filename="../tokensviewdialog.cpp" line="+391"/>
+        <location line="+7"/>
+        <location line="+4"/>
+        <source>Data</source>
+        <translation>gegevens</translation>
+    </message>
+    <message>
+        <location line="-11"/>
+        <source>string</source>
+        <translation>tekenreeks</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location line="+4"/>
+        <source>num</source>
+        <translation>num</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>NaN</source>
+        <translation>NaN</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Name:</source>
+        <translation>Naam:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ticker:</source>
+        <translation>Tikker:</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>URL:</source>
+        <translation>URL:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Hash:</source>
+        <translation>Hasj:</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Decimals:</source>
+        <translation>Decimalen:</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Balance:</source>
+        <translation>Saldo:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pending:</source>
+        <translation>Afwachtend:</translation>
+    </message>
+    <message>
+        <location line="+79"/>
+        <source>Are you sure you want to send?</source>
+        <translation>Weet u zeker dat u wilt versturen?</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&lt;b&gt;Token(s)&lt;/b&gt;</source>
+        <translation>&lt;b&gt;Token(s)&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Confirm send tokens</source>
+        <translation>Bevestig versturen tokens</translation>
+    </message>
+</context>
+<context>
     <name>TrafficGraphWidget</name>
     <message>
         <location filename="../trafficgraphwidget.cpp" line="+74"/>
@@ -3430,7 +3706,7 @@
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+34"/>
+        <location filename="../transactiondesc.cpp" line="+35"/>
         <source>Open until %1</source>
         <translation>Openen totdat %1</translation>
     </message>
@@ -3548,12 +3824,12 @@
         <location line="+41"/>
         <location line="+63"/>
         <location line="+47"/>
-        <location line="+74"/>
+        <location line="+134"/>
         <source>Credit</source>
         <translation>Credit</translation>
     </message>
     <message numerus="yes">
-        <location line="-222"/>
+        <location line="-282"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>komt tot wasdom na %n nieuw blok</numerusform>
@@ -3568,12 +3844,12 @@
     <message>
         <location line="+102"/>
         <location line="+31"/>
-        <location line="+79"/>
+        <location line="+139"/>
         <source>Debit</source>
         <translation>Debet</translation>
     </message>
     <message>
-        <location line="-98"/>
+        <location line="-158"/>
         <source>Total debit</source>
         <translation>Totaal debit</translation>
     </message>
@@ -3624,7 +3900,41 @@
         <translation>Gegenereerde munten moeten %1 blokken rijpen voordat ze kunnen worden besteed. Toen dit blok gegenereerd werd, werd het uitgezonden naar het netwerk om aan de blokketen toegevoegd te worden. Als het niet lukt om in de keten toegevoegd te worden, zal de status te veranderen naar &quot;niet geaccepteerd&quot; en het zal deze niet besteedbaar zijn. Dit kan soms gebeuren als een ander knooppunt een blok genereert binnen een paar seconden na die van u.</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+25"/>
+        <location line="+25"/>
+        <source>Token ID</source>
+        <translation>Token ID</translation>
+    </message>
+    <message>
+        <location line="-20"/>
+        <location line="+25"/>
+        <source>Ticker</source>
+        <translation>Tikker</translation>
+    </message>
+    <message>
+        <location line="-24"/>
+        <location line="+25"/>
+        <source>Name</source>
+        <translation>Naam</translation>
+    </message>
+    <message>
+        <location line="-21"/>
+        <location line="+25"/>
+        <source>Decimals</source>
+        <translation>Decimalen</translation>
+    </message>
+    <message>
+        <location line="-23"/>
+        <source>Amount Sent</source>
+        <translation>Bedrag verzonden</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Amount Received</source>
+        <translation>Bedrag ontvangen</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Debug information</source>
         <translation>Debuginformatie</translation>
     </message>
@@ -3656,7 +3966,7 @@
         <translation>onwaar</translation>
     </message>
     <message>
-        <location line="-357"/>
+        <location line="-417"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, is nog niet met succes uitgezonden</translation>
     </message>
@@ -4174,7 +4484,7 @@
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+44"/>
+        <location filename="../walletview.cpp" line="+45"/>
         <source>&amp;Export</source>
         <translation>&amp;Exporteer</translation>
     </message>
@@ -4184,17 +4494,18 @@
         <translation>Exporteer de data in de huidige tab naar een bestand</translation>
     </message>
     <message>
-        <location line="+187"/>
+        <location line="+191"/>
         <source>Backup Wallet</source>
         <translation>Portemonnee backuppen</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location line="+21"/>
         <source>Wallet Data (*.dat)</source>
         <translation>Portemonneedata (*.dat)</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-14"/>
         <source>Backup Failed</source>
         <translation>Backup Mislukt</translation>
     </message>
@@ -4212,6 +4523,21 @@
         <location line="+0"/>
         <source>Backup Successful</source>
         <translation>Backup Succesvol</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Restore Wallet</source>
+        <translation>Portemonnee herstellen...</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Restore Failed</source>
+        <translation>Herstellen mislukt</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>There was an error trying to restore the wallet data to %1.</source>
+        <translation>Er is een fout opgetreden bij het herstellen van de portefeuillegegevens naar %1.</translation>
     </message>
 </context>
 <context>
@@ -4232,17 +4558,17 @@
         <translation>Herscannen is niet mogelijk in de snoeimodus. U moet -reindex gebruiken dat de hele blokketen opnieuw zal downloaden.</translation>
     </message>
     <message>
-        <location line="+90"/>
+        <location line="+96"/>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Fout: er is een fout opgetreden,  zie debug.log voor details</translation>
     </message>
     <message>
-        <location line="+27"/>
+        <location line="+30"/>
         <source>Pruning blockstore...</source>
         <translation>Snoei blokopslag...</translation>
     </message>
     <message>
-        <location line="-155"/>
+        <location line="-164"/>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>Uitgegeven onder de MIT-softwarelicentie, zie het bijgevoegde bestand COPYING of &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
@@ -4277,7 +4603,16 @@
         <translation>Waarschuwing: Het lijkt erop dat we geen consensus kunnen vinden met onze peers! Mogelijk dient u te upgraden, of andere nodes moeten wellicht upgraden.</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+8"/>
+        <source>You can not run &quot;-salvagewallet&quot; as an HD wallet.
+
+Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
+        <translation>U kunt &quot;-salvagewallet&quot; niet gebruiken als een HD-portemonnee.
+
+Start Nexa opnieuw met &quot;-usehd=0&quot;.</translation>
+    </message>
+    <message>
+        <location line="+28"/>
         <source>Corrupted block database detected</source>
         <translation>Corrupte blokkendatabase gedetecteerd</translation>
     </message>
@@ -4307,7 +4642,7 @@
         <translation>Fout: Weinig vrije diskruimte!</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Mislukt om op welke poort dan ook te luisteren. Gebruik -listen=0 as u dit wilt.</translation>
     </message>
@@ -4322,7 +4657,7 @@
         <translation>Incorrect of geen genesisblok gevonden. Verkeerde datamap voor het netwerk?</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Invalid -onion address: &apos;%s&apos;</source>
         <translation>Ongeldig -onion adres &apos;%s&apos;</translation>
     </message>
@@ -4332,7 +4667,7 @@
         <translation>Niet genoeg file descriptors beschikbaar.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>Snoeien kan niet worden geconfigureerd met een negatieve waarde.</translation>
     </message>
@@ -4342,7 +4677,12 @@
         <translation>Snoeimodus is niet-compatibel met -txindex</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+4"/>
+        <source>Signing token transaction failed</source>
+        <translation>Het ondertekenen van de tokentransactie is mislukt</translation>
+    </message>
+    <message>
+        <location line="+18"/>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>User Agentcommentaar (%s) bevat onveilige karakters.</translation>
     </message>
@@ -4367,7 +4707,7 @@
         <translation>Portemonnee %s bevindt zich buiten de gegevensmap %s</translation>
     </message>
     <message>
-        <location line="-166"/>
+        <location line="-176"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Fout: luisteren naar binnenkomende verbindingen mislukt (luisteren gaf foutmelding %s)</translation>
     </message>
@@ -4387,7 +4727,7 @@
         <translation>U moet de database herbouwen met -reindex om terug te gaan naar de ongesnoeide modus. Dit zal de gehele blokkketen opnieuw downloaden.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+13"/>
         <source>Activating best chain...</source>
         <translation>Beste reeks activeren...</translation>
     </message>
@@ -4402,12 +4742,12 @@
         <translation>Auteursrecht (C) 2015-%i De Bitcoin Unlimited Ontwikkelaars</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+19"/>
         <source>Information</source>
         <translation>Informatie</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Invalid netmask specified in -whitelist: &apos;%s&apos;</source>
         <translation>Ongeldig netmask gespecificeerd in -whitelist: &apos;%s&apos;</translation>
     </message>
@@ -4417,7 +4757,7 @@
         <translation>Verplicht een poort met -whitebind op te geven: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+14"/>
         <source>Signing transaction failed</source>
         <translation>Ondertekenen van transactie mislukt</translation>
     </message>
@@ -4472,7 +4812,7 @@
         <translation>Waarschuwing</translation>
     </message>
     <message>
-        <location line="-39"/>
+        <location line="-41"/>
         <source>Loading addresses...</source>
         <translation>Adressen aan het laden...</translation>
     </message>
@@ -4482,12 +4822,12 @@
         <translation>Ongeldig -proxy adres: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+36"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Onbekend netwerk gespecificeerd in -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-61"/>
+        <location line="-65"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Kan -bind adres niet herleiden: &apos;%s&apos;</translation>
     </message>
@@ -4497,7 +4837,7 @@
         <translation>Kan -externlip adres niet herleiden: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+35"/>
         <source>Loading block index...</source>
         <translation>Blokindex aan het laden...</translation>
     </message>
@@ -4507,12 +4847,12 @@
         <translation>Portemonnee aan het laden...</translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-38"/>
         <source>Cannot downgrade wallet</source>
         <translation>Kan portemonnee niet downgraden</translation>
     </message>
     <message>
-        <location line="-125"/>
+        <location line="-131"/>
         <source>Nexa</source>
         <translation>Nexa</translation>
     </message>
@@ -4639,23 +4979,29 @@ Wilt u opnieuw indexeren bij de volgende herstart?</translation>
     </message>
     <message>
         <location line="+7"/>
+        <source>You are trying to restore the same wallet which you are trying to replace.</source>
+        <translation>U probeert dezelfde portemonnee te herstellen die u probeert te vervangen.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>You are trying to use -wallet.auto but neither -spendzeroconfchange nor -wallet.instant is turned on</source>
         <translation>U probeert -wallet.auto te gebruiken, maar noch -spendzeroconfchange noch -wallet.instant is ingeschakeld</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>You are trying to use wallet.fallbackFee which has been deprecated an no longer in  use - use wallet.payTxFee instead </source>
-        <translation>U probeert wallet.fallbackFee te gebruiken die is verouderd en niet meer in gebruik is - gebruik in plaats daarvan wallet.payTxFee </translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>You are trying to use wallet.minTxFee which has been deprecated an no longer in  use - use wallet.payTxFee instead </source>
-        <translation>U probeert wallet.minTxFee te gebruiken dat is verouderd en niet meer in gebruik is - gebruik in plaats daarvan wallet.payTxFee </translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+7"/>
         <source>You can not send free transactions if you have configured a -relay.limitFreeRelay of zero</source>
         <translation>U kunt geen gratis transacties verzenden als u een -relay.limitFreeRelay van nul hebt geconfigureerd</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&quot;Restore Wallet&quot; succeeded and a backup of the previous wallet was saved to: %s.
+
+
+When you click &quot;OK&quot; Nexa will shutdown to complete the process.</source>
+        <translation>&quot;Portefeuille herstellen&quot; is gelukt en een back-up van de vorige portemonnee is opgeslagen op: %s.
+
+
+Wanneer u op &quot;OK&quot; klikt, wordt Nexa afgesloten om het proces te voltooien.</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -4713,9 +5059,19 @@ Wilt u opnieuw indexeren bij de volgende herstart?</translation>
         <translation>Fout bij het laden van %s: U kunt HD niet uitschakelen op een reeds bestaande HD-portemonnee</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+5"/>
+        <source>Error: Keypool ran out, please call keypoolrefill first</source>
+        <translation>Fout: Keypool is op, bel eerst keypoolrefill</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Initialization sanity check failed. %s is shutting down.</source>
         <translation>Sanity check initialisatie mislukt. %s wordt afgesloten.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Insufficient funds for this token.  Need %d more.</source>
+        <translation>Onvoldoende saldo voor dit token. %d meer nodig.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4754,6 +5110,11 @@ Wilt u opnieuw indexeren bij de volgende herstart?</translation>
     </message>
     <message>
         <location line="+1"/>
+        <source>Opening Token Description database...</source>
+        <translation>Database met tokenbeschrijving openen...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation>UTXO-database openen...</translation>
     </message>
@@ -4778,7 +5139,7 @@ Wilt u opnieuw indexeren bij de volgende herstart?</translation>
         <translation>Blokketen aan het herscannen...</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+11"/>
         <source>Turn off auto consolidate and try sending again.</source>
         <translation>Schakel automatisch consolideren uit en probeer opnieuw te verzenden.</translation>
     </message>
@@ -4813,7 +5174,12 @@ Wilt u opnieuw indexeren bij de volgende herstart?</translation>
         <translation>Portemonnee moest herschreven worden: herstart %s om te voltooien</translation>
     </message>
     <message>
-        <location line="-61"/>
+        <location line="+2"/>
+        <source>Zapping all transactions from wallet...</source>
+        <translation>Alle transacties uit portemonnee zappen...</translation>
+    </message>
+    <message>
+        <location line="-67"/>
         <source>Done loading</source>
         <translation>Klaar met laden</translation>
     </message>

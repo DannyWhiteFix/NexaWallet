@@ -388,18 +388,18 @@ void TokensViewDialog::on_tokenTable_itemDoubleClicked()
         infoString.append("<b> Token ID:</b>  " + selectedItems[0]->text() + "<br>");
         std::vector<unsigned char> vData = grpID.getSubgroupData();
         std::string strData(vData.begin(), vData.end());
-        infoString.append("<b> Data </b>(string):  " + QString(strData.c_str()) + "<br>");
+        infoString.append("<b> " + tr("Data") + " </b>(" + tr("string") + "):  " + QString(strData.c_str()) + "<br>");
         try
         {
             CDataStream ss(0, 0);
             for (auto c : vData)
                 ss << c;
             uint64_t nData = ser_readdata64(ss);
-            infoString.append("<b> Data </b>(num):  " + QString::number(nData) + "<br>");
+            infoString.append("<b> " + tr("Data") + " </b>(" + tr("num") + "):  " + QString::number(nData) + "<br>");
         }
         catch (...)
         {
-            infoString.append("<b> Data </b>(num):  <i>NaN</i><br>");
+            infoString.append("<b> " + tr("Data") + " </b>(" + tr("num") + "):  <i>" + tr("NaN") + "</i><br>");
         }
         infoString.append("<br>");
 
@@ -413,23 +413,23 @@ void TokensViewDialog::on_tokenTable_itemDoubleClicked()
         infoString.append("<b> Token ID:</b>  " + selectedItems[0]->text() + "<br>");
     }
 
-    infoString.append("<b> Name:</b>  " + selectedItems[1]->text() + "<br>");
-    infoString.append("<b> Ticker:</b>  " + selectedItems[2]->text() + "<br>");
+    infoString.append("<b> " + tr("Name:") + "</b>  " + selectedItems[1]->text() + "<br>");
+    infoString.append("<b> " + tr("Ticker:") + "</b>  " + selectedItems[2]->text() + "<br>");
 
     auto info = tokencache.GetTokenDesc(grpID);
     if (info.size() >= 4)
     {
-        infoString.append("<b> URL:</b>  " + QString(info[2].c_str()) + "<br>");
-        infoString.append("<b> Hash:</b>  " + QString(info[3].c_str()) + "<br>");
+        infoString.append("<b> " + tr("URL:") + "</b>  " + QString(info[2].c_str()) + "<br>");
+        infoString.append("<b> " + tr("Hash:") + "</b>  " + QString(info[3].c_str()) + "<br>");
     }
     if (info.size() >= 5)
     {
-        infoString.append("<b> Decimals:</b>  " + QString(info[4].c_str()) + "<br>");
+        infoString.append("<b> " + tr("Decimals:") + "</b>  " + QString(info[4].c_str()) + "<br>");
     }
 
     infoString.append("<hr></hr>");
-    infoString.append("<b> Balance:</b>  " + selectedItems[3]->text() + "<br>");
-    infoString.append("<b> Pending:</b>  " + selectedItems[4]->text() + "<br>");
+    infoString.append("<b> " + tr("Balance:") + "</b>  " + selectedItems[3]->text() + "<br>");
+    infoString.append("<b> " + tr("Pending:") + "</b>  " + selectedItems[4]->text() + "<br>");
 
     if (!uiTokenDesc || !uiTokenDesc->isVisible())
     {

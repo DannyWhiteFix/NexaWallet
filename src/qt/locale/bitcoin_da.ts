@@ -210,12 +210,7 @@
         <translation>Er du sikker på, at du ønsker at kryptere din tegnebog?</translation>
     </message>
     <message>
-        <location line="+15"/>
-        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>VIGTIGT: Enhver tidligere sikkerhedskopi, som du har lavet af tegnebogsfilen, bør blive erstattet af den nyligt genererede, krypterede tegnebogsfil. Af sikkerhedsmæssige årsager vil tidligere sikkerhedskopier af den ikke-krypterede tegnebogsfil blive ubrugelige i det øjeblik, du starter med at anvende den nye, krypterede tegnebog.</translation>
-    </message>
-    <message>
-        <location line="+104"/>
+        <location line="+119"/>
         <location line="+29"/>
         <source>Warning: The Caps Lock key is on!</source>
         <translation>Advarsel: Caps Lock-tasten er aktiveret!</translation>
@@ -242,7 +237,12 @@
         <translation>%1 vil lukke nu for at afslutte krypteringsprocessen. Husk, at kryptering af din tegnebog ikke fuldt ud kan beskytte dine mønter mod at blive stjålet af malware, der inficerer din computer.</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+5"/>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons you should no longer keep previous unencrypted backups as your funds will be at risk if someone gains access to them.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <location line="+8"/>
         <location line="+42"/>
         <location line="+6"/>
@@ -309,17 +309,17 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../nexagui.cpp" line="+318"/>
+        <location filename="../nexagui.cpp" line="+336"/>
         <source>Sign &amp;message...</source>
         <translation>Underskriv &amp;besked…</translation>
     </message>
     <message>
-        <location line="+411"/>
+        <location line="+425"/>
         <source>Synchronizing with network...</source>
         <translation>Synkroniserer med netværk…</translation>
     </message>
     <message>
-        <location line="-500"/>
+        <location line="-531"/>
         <source>&amp;Overview</source>
         <translation>&amp;Oversigt</translation>
     </message>
@@ -349,7 +349,17 @@
         <translation>Gennemse transaktionshistorik</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+6"/>
+        <source>&amp;Tokens</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Browse or Send Tokens</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+32"/>
         <source>E&amp;xit</source>
         <translation>&amp;Luk</translation>
     </message>
@@ -399,7 +409,7 @@
         <translation>Rediger Bitcoin Unlimited muligheder</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Kryptér tegnebog…</translation>
     </message>
@@ -409,7 +419,17 @@
         <translation>&amp;Sikkerhedskopiér tegnebog…</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
+        <source>&amp;Restore Wallet...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Restore wallet from another location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>&amp;Change Passphrase...</source>
         <translation>&amp;Skift adgangskode…</translation>
     </message>
@@ -429,7 +449,7 @@
         <translation>&amp;Åbn URI…</translation>
     </message>
     <message>
-        <location line="+397"/>
+        <location line="+411"/>
         <source>Importing blocks from disk...</source>
         <translation>Importerer blokke fra disken…</translation>
     </message>
@@ -439,17 +459,17 @@
         <translation>Genindekserer blokke på disken…</translation>
     </message>
     <message>
-        <location line="-498"/>
+        <location line="-529"/>
         <source>Send coins to a Nexa address</source>
         <translation>Send coins til en Nexa-adresse</translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+92"/>
         <source>Backup wallet to another location</source>
         <translation>Lav sikkerhedskopi af tegnebogen til et andet sted</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+5"/>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Skift adgangskode anvendt til tegnebogskryptering</translation>
     </message>
@@ -469,12 +489,12 @@
         <translation>&amp;Verificér besked…</translation>
     </message>
     <message>
-        <location line="+495"/>
+        <location line="+509"/>
         <source>Nexa</source>
         <translation>Nexa</translation>
     </message>
     <message>
-        <location line="-726"/>
+        <location line="-757"/>
         <source>Wallet</source>
         <translation>Tegnebog</translation>
     </message>
@@ -489,7 +509,7 @@
         <translation>&amp;Modtag</translation>
     </message>
     <message>
-        <location line="+53"/>
+        <location line="+69"/>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Vis / skjul</translation>
     </message>
@@ -499,12 +519,12 @@
         <translation>Vis eller skjul hovedvinduet</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+8"/>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation>Kryptér de private nøgler, der hører til din tegnebog</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+10"/>
         <source>Sign messages with your Nexa addresses to prove you own them</source>
         <translation>Underskriv beskeder med dine Nexa-adresser for at bevise, at de tilhører dig</translation>
     </message>
@@ -514,12 +534,12 @@
         <translation>Verificér beskeder for at sikre, at de er underskrevet med de angivne Nexa-adresser</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+64"/>
         <source>&amp;File</source>
         <translation>&amp;Fil</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+15"/>
         <source>&amp;Settings</source>
         <translation>&amp;Opsætning</translation>
     </message>
@@ -534,7 +554,7 @@
         <translation>Faneværktøjslinje</translation>
     </message>
     <message>
-        <location line="-93"/>
+        <location line="-95"/>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Vis listen over brugte afsendelsesadresser og -mærkater</translation>
     </message>
@@ -549,7 +569,7 @@
         <translation>Tilvalg for &amp;kommandolinje</translation>
     </message>
     <message numerus="yes">
-        <location line="+366"/>
+        <location line="+380"/>
         <source>%n active connection(s) to Nexa network</source>
         <translation>
             <numerusform>%n aktiv forbindelse til Nexa-netværket</numerusform>
@@ -605,7 +625,7 @@
         <translation>Opdateret</translation>
     </message>
     <message>
-        <location line="-417"/>
+        <location line="-431"/>
         <source>Open a %1: URI or payment request</source>
         <translation>Åbn en %1: URI eller betalingsanmodning</translation>
     </message>
@@ -615,12 +635,12 @@
         <translation>Vis %1 hjælpemeddelelsen for at få en liste med mulige Nexa-kommandolinjeindstillinger</translation>
     </message>
     <message>
-        <location line="+185"/>
+        <location line="+191"/>
         <source>%1 client</source>
         <translation>%1 klient</translation>
     </message>
     <message>
-        <location line="+251"/>
+        <location line="+259"/>
         <source>Catching up...</source>
         <translation>Indhenter…</translation>
     </message>
@@ -1396,7 +1416,12 @@
         <translation>Automatisk konsolidering</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+39"/>
+        <source>&amp;Rescan wallet on startup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+15"/>
         <source>Automatically open the Nexa client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Åbn automatisk Nexa-klientens port på routeren. Dette virker kun, når din router understøtter UPnP, og UPnP er aktiveret.</translation>
     </message>
@@ -1556,17 +1581,17 @@
         <translation>&amp;Annullér</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+118"/>
+        <location filename="../optionsdialog.cpp" line="+123"/>
         <source>default</source>
         <translation>standard</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+57"/>
         <source>none</source>
         <translation>ingen</translation>
     </message>
     <message>
-        <location line="+73"/>
+        <location line="+75"/>
         <source>Confirm options reset</source>
         <translation>Bekræft nulstilling af indstillinger</translation>
     </message>
@@ -2782,7 +2807,7 @@
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+627"/>
+        <location filename="../sendcoinsdialog.cpp" line="+633"/>
         <source>Send Coins</source>
         <translation>Send Coins</translation>
     </message>
@@ -2792,7 +2817,12 @@
         <translation>Egenskaber for coin-styring</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+17"/>
+        <source>Select specific coins you want to use in this transaction</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Inputs...</source>
         <translation>Inputs…</translation>
     </message>
@@ -2848,16 +2878,22 @@
     </message>
     <message>
         <location line="+3"/>
+        <location line="+16"/>
         <source>Custom change address</source>
         <translation>Tilpasset byttepengeadresse</translation>
     </message>
     <message>
-        <location line="+206"/>
+        <location line="+193"/>
         <source>Transaction Fee:</source>
         <translation>Transaktionsgebyr:</translation>
     </message>
     <message>
         <location line="+14"/>
+        <source>Choose your transaction fee.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Choose...</source>
         <translation>Vælg…</translation>
     </message>
@@ -2888,7 +2924,12 @@
         <translation>total mindst</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+10"/>
+        <source>Custom fee amount</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+24"/>
         <location line="+13"/>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for nexa transactions than the network can process.</source>
         <translation>Det er helt fint kun at betale det minimale gebyr, så længe den totale transaktionsvolumen er mindre end den plads, der er tilgængelig i blokkene. Men vær opmærksom på, at dette kan ende ud i transaktioner, der aldrig bliver bekræftet, når der bliver større forespørgsel efter nexa-transaktioner, end hvad netværket kan bearbejde.</translation>
@@ -2900,11 +2941,21 @@
     </message>
     <message>
         <location line="+29"/>
+        <source>Use the recommended fee amount.  You can select a faster or slower confirmation time by moving the &quot;Confirmation Time&quot; slider.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Recommended:</source>
         <translation>Anbefalet:</translation>
     </message>
     <message>
         <location line="+30"/>
+        <source>Choose a custom fee amount</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Custom:</source>
         <translation>Brugertilpasset:</translation>
     </message>
@@ -2915,11 +2966,17 @@
     </message>
     <message>
         <location line="+29"/>
+        <location line="+33"/>
+        <source>Transaction confirmation time</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-30"/>
         <source>Confirmation time:</source>
         <translation>Bekræftelsestid:</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+63"/>
         <source>normal</source>
         <translation>normal</translation>
     </message>
@@ -2954,22 +3011,27 @@
         <translation>Ryd alle felter af formen.</translation>
     </message>
     <message>
-        <location line="-858"/>
+        <location line="-880"/>
         <source>Dust:</source>
         <translation>Støv:</translation>
     </message>
     <message>
-        <location line="+861"/>
+        <location line="+883"/>
         <source>Clear &amp;All</source>
         <translation>Ryd &amp;alle</translation>
     </message>
     <message>
         <location line="+55"/>
+        <source>Current Balance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Balance:</source>
         <translation>Saldo:</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-87"/>
         <source>Confirm the send action</source>
         <translation>Bekræft afsendelsen</translation>
     </message>
@@ -2992,7 +3054,7 @@
         <translation>%1 til %2</translation>
     </message>
     <message>
-        <location line="-283"/>
+        <location line="-289"/>
         <source>Copy quantity</source>
         <translation>Kopiér mængde</translation>
     </message>
@@ -3027,7 +3089,7 @@
         <translation>Kopiér byttepenge</translation>
     </message>
     <message>
-        <location line="+247"/>
+        <location line="+253"/>
         <source>&lt;b&gt;Public label:&lt;/b&gt; %1</source>
         <translation>&lt;b&gt;Offentlig etiket:&lt;/b&gt; %1</translation>
     </message>
@@ -3087,12 +3149,12 @@
         <translation>Public Label overskrider grænsen på </translation>
     </message>
     <message>
-        <location line="+105"/>
+        <location line="+102"/>
         <source>Pay only the required fee of %1</source>
         <translation>Betal kun det påkrævede gebyr på %1</translation>
     </message>
     <message>
-        <location line="-139"/>
+        <location line="-136"/>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation>Modtageradressen er ikke gyldig. Tjek venligst igen.</translation>
     </message>
@@ -3102,7 +3164,7 @@
         <translation>Adressegenganger fundet. Adresser bør kun bruges én gang hver.</translation>
     </message>
     <message>
-        <location line="+255"/>
+        <location line="+252"/>
         <source>Warning: Invalid Nexa address</source>
         <translation>Advarsel: Ugyldig Nexa-adresse</translation>
     </message>
@@ -3127,12 +3189,12 @@
         <translation>Advarsel: Ukendt byttepengeadresse</translation>
     </message>
     <message>
-        <location line="-781"/>
+        <location line="-784"/>
         <source>Copy dust</source>
         <translation>Kopiér støv</translation>
     </message>
     <message>
-        <location line="+292"/>
+        <location line="+298"/>
         <source>Are you sure you want to send?</source>
         <translation>Er du sikker på, at du vil sende?</translation>
     </message>
@@ -3145,14 +3207,14 @@
 <context>
     <name>SendCoinsEntry</name>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="+82"/>
-        <location line="+650"/>
-        <location line="+533"/>
+        <location filename="../forms/sendcoinsentry.ui" line="+86"/>
+        <location line="+677"/>
+        <location line="+560"/>
         <source>A&amp;mount:</source>
         <translation>&amp;Beløb:</translation>
     </message>
     <message>
-        <location line="-1170"/>
+        <location line="-1224"/>
         <source>Pay &amp;To:</source>
         <translation>Betal &amp;til:</translation>
     </message>
@@ -3162,12 +3224,7 @@
         <translation>Vælg tidligere brugt adresse</translation>
     </message>
     <message>
-        <location line="-106"/>
-        <source>This is a normal payment.</source>
-        <translation>Dette er en normal betaling.</translation>
-    </message>
-    <message>
-        <location line="+38"/>
+        <location line="-68"/>
         <source>Private Description:</source>
         <translation>Privat beskrivelse:</translation>
     </message>
@@ -3198,13 +3255,13 @@
     </message>
     <message>
         <location line="+7"/>
-        <location line="+526"/>
-        <location line="+533"/>
+        <location line="+553"/>
+        <location line="+560"/>
         <source>Remove this entry</source>
         <translation>Fjern denne indgang</translation>
     </message>
     <message>
-        <location line="-1037"/>
+        <location line="-1091"/>
         <source>A message that was attached to the coin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Nexa network.</source>
         <translation>En meddelelse, der var knyttet til mønten: URI, som vil blive gemt sammen med transaktionen til din reference. Bemærk: Denne besked vil ikke blive sendt over Nexa-netværket.</translation>
     </message>
@@ -3230,17 +3287,22 @@
         <translation>Gebyret vil blive trukket fra det sendte beløb. Modtageren vil modtage færre coin, end du indtaster i beløbfeltet. Hvis flere modtagere vælges, vil gebyret deles ligeligt.</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-7"/>
+        <source>Amount to send</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>S&amp;ubtract fee from amount</source>
         <translation>&amp;Træk gebyr fra beløb</translation>
     </message>
     <message>
-        <location line="+616"/>
+        <location line="+643"/>
         <source>This is an unauthenticated payment request.</source>
         <translation>Dette er en uautentificeret betalingsanmodning.</translation>
     </message>
     <message>
-        <location line="+529"/>
+        <location line="+556"/>
         <source>This is an authenticated payment request.</source>
         <translation>Dette er en autentificeret betalingsanmodning.</translation>
     </message>
@@ -3255,14 +3317,14 @@
         <translation>Indtast en privat etiket for denne adresse for at tilføje den til din adressebog</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="-514"/>
-        <location line="+529"/>
+        <location filename="../forms/sendcoinsentry.ui" line="-541"/>
+        <location line="+556"/>
         <source>Pay To:</source>
         <translation>Betal til:</translation>
     </message>
     <message>
-        <location line="-495"/>
-        <location line="+533"/>
+        <location line="-522"/>
+        <location line="+560"/>
         <source>Memo:</source>
         <translation>Memo:</translation>
     </message>
@@ -3420,6 +3482,220 @@
     </message>
 </context>
 <context>
+    <name>TokenDescDialog</name>
+    <message>
+        <location filename="../forms/tokendescdialog.ui" line="+17"/>
+        <source>Token details</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This pane shows a detailed description of the token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>TokensViewDialog</name>
+    <message>
+        <location filename="../forms/tokensviewdialog.ui" line="+14"/>
+        <source>Tokens</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Amount: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The number of tokens to send&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>  Pay To: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>The Nexa address to send the payment to</source>
+        <translation type="unfinished">Nexa-adresse, som betalingen skal sendes til</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Choose previously used address</source>
+        <translation type="unfinished">Vælg tidligere brugt adresse</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Alt+A</source>
+        <translation type="unfinished">Alt+A</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Paste address from clipboard</source>
+        <translation type="unfinished">Indsæt adresse fra udklipsholderen</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Alt+P</source>
+        <translation type="unfinished">Alt+P</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Remove this entry</source>
+        <translation type="unfinished">Fjern denne indgang</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send tokens&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Send</source>
+        <translation type="unfinished">Sende</translation>
+    </message>
+    <message>
+        <location line="+56"/>
+        <source>Token ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>The unique token identifier</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-45"/>
+        <source>The token group identifier</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Name</source>
+        <translation type="unfinished">Navn</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The name of the token</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Ticker</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The token ticker symbol</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Balance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Confirmed token balance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Pending</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Unconfirmed token balance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Sub</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>If checked then this item is a subgroup.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tokensviewdialog.cpp" line="+391"/>
+        <location line="+7"/>
+        <location line="+4"/>
+        <source>Data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-11"/>
+        <source>string</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location line="+4"/>
+        <source>num</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>NaN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Name:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ticker:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>URL:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Hash:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Decimals:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Balance:</source>
+        <translation type="unfinished">Saldo:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pending:</source>
+        <translation type="unfinished">Afventende:</translation>
+    </message>
+    <message>
+        <location line="+79"/>
+        <source>Are you sure you want to send?</source>
+        <translation type="unfinished">Er du sikker på, at du vil sende?</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&lt;b&gt;Token(s)&lt;/b&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Confirm send tokens</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>TrafficGraphWidget</name>
     <message>
         <location filename="../trafficgraphwidget.cpp" line="+74"/>
@@ -3430,7 +3706,7 @@
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+34"/>
+        <location filename="../transactiondesc.cpp" line="+35"/>
         <source>Open until %1</source>
         <translation>Åben indtil %1</translation>
     </message>
@@ -3548,12 +3824,12 @@
         <location line="+41"/>
         <location line="+63"/>
         <location line="+47"/>
-        <location line="+74"/>
+        <location line="+134"/>
         <source>Credit</source>
         <translation>Kredit</translation>
     </message>
     <message numerus="yes">
-        <location line="-222"/>
+        <location line="-282"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>modner efter yderligere %n blok</numerusform>
@@ -3568,12 +3844,12 @@
     <message>
         <location line="+102"/>
         <location line="+31"/>
-        <location line="+79"/>
+        <location line="+139"/>
         <source>Debit</source>
         <translation>Debet</translation>
     </message>
     <message>
-        <location line="-98"/>
+        <location line="-158"/>
         <source>Total debit</source>
         <translation>Total debet</translation>
     </message>
@@ -3624,7 +3900,41 @@
         <translation>Minede coins skal modne %1 blokke, før de kan bruges. Da du genererede denne blok, blev den transmitteret til netværket for at blive føjet til blokkæden. Hvis det ikke lykkes at få den i kæden, vil dens tilstand ændres til &quot;ikke accepteret&quot;, og den vil ikke kunne bruges. Dette kan ske nu og da, hvis en anden knude udvinder en blok inden for nogle få sekunder fra din.</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+25"/>
+        <location line="+25"/>
+        <source>Token ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-20"/>
+        <location line="+25"/>
+        <source>Ticker</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-24"/>
+        <location line="+25"/>
+        <source>Name</source>
+        <translation type="unfinished">Navn</translation>
+    </message>
+    <message>
+        <location line="-21"/>
+        <location line="+25"/>
+        <source>Decimals</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-23"/>
+        <source>Amount Sent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Amount Received</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Debug information</source>
         <translation>Fejlsøgningsinformation</translation>
     </message>
@@ -3656,7 +3966,7 @@
         <translation>falsk</translation>
     </message>
     <message>
-        <location line="-357"/>
+        <location line="-417"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, er ikke blevet transmitteret endnu</translation>
     </message>
@@ -4174,7 +4484,7 @@
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+44"/>
+        <location filename="../walletview.cpp" line="+45"/>
         <source>&amp;Export</source>
         <translation>&amp;Eksportér</translation>
     </message>
@@ -4184,17 +4494,18 @@
         <translation>Eksportér den aktuelle visning til en fil</translation>
     </message>
     <message>
-        <location line="+187"/>
+        <location line="+191"/>
         <source>Backup Wallet</source>
         <translation>Sikkerhedskopiér tegnebog</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location line="+21"/>
         <source>Wallet Data (*.dat)</source>
         <translation>Tegnebogsdata (*.dat)</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-14"/>
         <source>Backup Failed</source>
         <translation>Sikkerhedskopiering mislykkedes</translation>
     </message>
@@ -4212,6 +4523,21 @@
         <location line="+0"/>
         <source>Backup Successful</source>
         <translation>Sikkerhedskopiering problemfri</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Restore Wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Restore Failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>There was an error trying to restore the wallet data to %1.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -4232,17 +4558,17 @@
         <translation>Genindlæsninger er ikke mulige i beskåret tilstand. Du er nødt til at bruge -reindex, hvilket vil downloade hele blokkæden igen.</translation>
     </message>
     <message>
-        <location line="+90"/>
+        <location line="+96"/>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Fejl: En alvorlig intern fejl er opstået. Se debug.log for detaljer</translation>
     </message>
     <message>
-        <location line="+27"/>
+        <location line="+30"/>
         <source>Pruning blockstore...</source>
         <translation>Beskærer bloklager…</translation>
     </message>
     <message>
-        <location line="-155"/>
+        <location line="-164"/>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>Distribueret under MIT-softwarelicensen; se den vedlagte fil COPYING eller &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
@@ -4277,7 +4603,14 @@
         <translation>Advarsel: Vi ser ikke ud til at være fuldt ud enige med andre knuder! Du kan være nødt til at opgradere, eller andre knuder kan være nødt til at opgradere.</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+8"/>
+        <source>You can not run &quot;-salvagewallet&quot; as an HD wallet.
+
+Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+28"/>
         <source>Corrupted block database detected</source>
         <translation>Ødelagt blokdatabase opdaget</translation>
     </message>
@@ -4307,7 +4640,7 @@
         <translation>Fejl: Mangel på ledig diskplads!</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Lytning på enhver port mislykkedes. Brug -listen=0, hvis du ønsker dette.</translation>
     </message>
@@ -4322,7 +4655,7 @@
         <translation>Ukorrekt eller ingen tilblivelsesblok fundet. Forkert datamappe for netværk?</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Invalid -onion address: &apos;%s&apos;</source>
         <translation>Ugyldig -onion adresse: &quot;%s&quot;</translation>
     </message>
@@ -4332,7 +4665,7 @@
         <translation>For få tilgængelige fildeskriptorer.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>Beskæring kan ikke opsættes med en negativ værdi.</translation>
     </message>
@@ -4342,7 +4675,12 @@
         <translation>Beskæringstilstand er ikke kompatibel med -txindex.</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+4"/>
+        <source>Signing token transaction failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+18"/>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>Brugeragent-kommentar (%s) indeholder usikre tegn.</translation>
     </message>
@@ -4367,7 +4705,7 @@
         <translation>Tegnebog %s findes uden for datamappe %s</translation>
     </message>
     <message>
-        <location line="-166"/>
+        <location line="-176"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Fejl: Lytning efter indkommende forbindelser mislykkedes (lytning resultarede i fejl %s)</translation>
     </message>
@@ -4387,7 +4725,7 @@
         <translation>Du er nødt til at genopbygge databasen ved hjælp af -reindex for at gå tilbage til ikke-beskåret tilstand. Dette vil downloade hele blokkæden igen</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+13"/>
         <source>Activating best chain...</source>
         <translation>Aktiverer bedste kæde…</translation>
     </message>
@@ -4402,12 +4740,12 @@
         <translation>Ophavsret © 2015-%i Udviklerne af Bitcoin Unlimited</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+19"/>
         <source>Information</source>
         <translation>Information</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Invalid netmask specified in -whitelist: &apos;%s&apos;</source>
         <translation>Ugyldig netmaske angivet i -whitelist: &quot;%s&quot;</translation>
     </message>
@@ -4417,7 +4755,7 @@
         <translation>Nødt til at angive en port med -whitebinde: &quot;%s&quot;</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+14"/>
         <source>Signing transaction failed</source>
         <translation>Underskrift af transaktion mislykkedes</translation>
     </message>
@@ -4472,7 +4810,7 @@
         <translation>Advarsel</translation>
     </message>
     <message>
-        <location line="-39"/>
+        <location line="-41"/>
         <source>Loading addresses...</source>
         <translation>Indlæser adresser…</translation>
     </message>
@@ -4482,12 +4820,12 @@
         <translation>Ugyldig -proxy adresse: &quot;%s&quot;</translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+36"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Ukendt netværk anført i -onlynet: &quot;%s&quot;</translation>
     </message>
     <message>
-        <location line="-61"/>
+        <location line="-65"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Kan ikke finde -bind adressen: &quot;%s&quot;</translation>
     </message>
@@ -4497,7 +4835,7 @@
         <translation>Kan ikke finde -externalip adressen: &quot;%s&quot;</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+35"/>
         <source>Loading block index...</source>
         <translation>Indlæser blokindeks…</translation>
     </message>
@@ -4507,12 +4845,12 @@
         <translation>Indlæser tegnebog…</translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-38"/>
         <source>Cannot downgrade wallet</source>
         <translation>Kan ikke nedgradere tegnebog</translation>
     </message>
     <message>
-        <location line="-125"/>
+        <location line="-131"/>
         <source>Nexa</source>
         <translation>Nexa</translation>
     </message>
@@ -4639,23 +4977,26 @@ Vil du genindeksere ved næste genstart?</translation>
     </message>
     <message>
         <location line="+7"/>
+        <source>You are trying to restore the same wallet which you are trying to replace.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>You are trying to use -wallet.auto but neither -spendzeroconfchange nor -wallet.instant is turned on</source>
         <translation>Du forsøger at bruge -wallet.auto, men hverken -spendzeroconfchange eller -wallet.instant er slået til</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>You are trying to use wallet.fallbackFee which has been deprecated an no longer in  use - use wallet.payTxFee instead </source>
-        <translation>Du forsøger at bruge wallet.fallbackFee, som er blevet forældet og ikke længere i brug - brug wallet.payTxFee i stedet for </translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>You are trying to use wallet.minTxFee which has been deprecated an no longer in  use - use wallet.payTxFee instead </source>
-        <translation>Du forsøger at bruge wallet.minTxFee, som er blevet forældet og ikke længere i brug - brug wallet.payTxFee i stedet </translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+7"/>
         <source>You can not send free transactions if you have configured a -relay.limitFreeRelay of zero</source>
         <translation>Du kan ikke sende gratis transaktioner, hvis du har konfigureret et -relay.limitFreeRelay på nul</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&quot;Restore Wallet&quot; succeeded and a backup of the previous wallet was saved to: %s.
+
+
+When you click &quot;OK&quot; Nexa will shutdown to complete the process.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+6"/>
@@ -4713,9 +5054,19 @@ Vil du genindeksere ved næste genstart?</translation>
         <translation>Fejl ved indlæsning af %s: Du kan ikke deaktivere HD på en allerede eksisterende HD-tegnebog</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+5"/>
+        <source>Error: Keypool ran out, please call keypoolrefill first</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Initialization sanity check failed. %s is shutting down.</source>
         <translation>Initialiseringssundhedstjek mislykkedes. %s lukker ned.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Insufficient funds for this token.  Need %d more.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4754,6 +5105,11 @@ Vil du genindeksere ved næste genstart?</translation>
     </message>
     <message>
         <location line="+1"/>
+        <source>Opening Token Description database...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation>Åbner UTXO-database...</translation>
     </message>
@@ -4778,7 +5134,7 @@ Vil du genindeksere ved næste genstart?</translation>
         <translation>Genindlæser…</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+11"/>
         <source>Turn off auto consolidate and try sending again.</source>
         <translation>Slå automatisk konsolidering fra, og prøv at sende igen.</translation>
     </message>
@@ -4813,7 +5169,12 @@ Vil du genindeksere ved næste genstart?</translation>
         <translation>Tegnebog skulle omskrives: genstart %s for at fuldføre</translation>
     </message>
     <message>
-        <location line="-61"/>
+        <location line="+2"/>
+        <source>Zapping all transactions from wallet...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-67"/>
         <source>Done loading</source>
         <translation>Indlæsning gennemført</translation>
     </message>

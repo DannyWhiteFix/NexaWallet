@@ -220,12 +220,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+5"/>
-        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>TÄHTIS: Kõik varasemad rahakoti varundfailid tuleks üle kirjutada äsja loodud krüpteeritud rahakoti failiga. Turvakaalutlustel tühistatakse krüpteerimata rahakoti failid alates uue, krüpteeritud rahakoti, kasutusele võtust.</translation>
-    </message>
-    <message>
-        <location line="+104"/>
+        <location line="+109"/>
         <location line="+29"/>
         <source>Warning: The Caps Lock key is on!</source>
         <translation>Hoiatus: Caps Lock on sisse lülitatud!</translation>
@@ -242,7 +237,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+93"/>
+        <location line="+84"/>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons you should no longer keep previous unencrypted backups as your funds will be at risk if someone gains access to them.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <location line="+8"/>
         <location line="+42"/>
         <location line="+6"/>
@@ -309,17 +309,17 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../nexagui.cpp" line="+318"/>
+        <location filename="../nexagui.cpp" line="+336"/>
         <source>Sign &amp;message...</source>
         <translation>Signeeri &amp;sõnum</translation>
     </message>
     <message>
-        <location line="+411"/>
+        <location line="+425"/>
         <source>Synchronizing with network...</source>
         <translation>Võrgusünkimine...</translation>
     </message>
     <message>
-        <location line="-500"/>
+        <location line="-531"/>
         <source>&amp;Overview</source>
         <translation>&amp;Ülevaade</translation>
     </message>
@@ -349,7 +349,17 @@
         <translation>Sirvi tehingute ajalugu</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+6"/>
+        <source>&amp;Tokens</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Browse or Send Tokens</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+32"/>
         <source>E&amp;xit</source>
         <translation>V&amp;älju</translation>
     </message>
@@ -399,7 +409,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Krüpteeri Rahakott</translation>
     </message>
@@ -409,7 +419,17 @@
         <translation>&amp;Varunda Rahakott</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
+        <source>&amp;Restore Wallet...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Restore wallet from another location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>&amp;Change Passphrase...</source>
         <translation>&amp;Salafraasi muutmine</translation>
     </message>
@@ -449,12 +469,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+185"/>
+        <location line="+191"/>
         <source>%1 client</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location line="+178"/>
+        <location line="+186"/>
         <source>%n active connection(s) to Nexa network</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -472,17 +492,17 @@
         <translation>Kettal olevate blokkide re-indekseerimine...</translation>
     </message>
     <message>
-        <location line="-498"/>
+        <location line="-529"/>
         <source>Send coins to a Nexa address</source>
         <translation>Saada münte Nexa aadressile</translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+92"/>
         <source>Backup wallet to another location</source>
         <translation>Varunda rahakott teise asukohta</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+5"/>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Rahakoti krüpteerimise salafraasi muutmine</translation>
     </message>
@@ -502,12 +522,12 @@
         <translation>&amp;Kontrolli sõnumit...</translation>
     </message>
     <message>
-        <location line="+495"/>
+        <location line="+509"/>
         <source>Nexa</source>
         <translation>Nexa</translation>
     </message>
     <message>
-        <location line="-726"/>
+        <location line="-757"/>
         <source>Wallet</source>
         <translation>Rahakott</translation>
     </message>
@@ -522,7 +542,7 @@
         <translation>&amp;Saama</translation>
     </message>
     <message>
-        <location line="+53"/>
+        <location line="+69"/>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Näita / Peida</translation>
     </message>
@@ -532,12 +552,12 @@
         <translation>Näita või peida peaaken</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+8"/>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation>Krüpteeri oma rahakoti privaatvõtmed</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+10"/>
         <source>Sign messages with your Nexa addresses to prove you own them</source>
         <translation>Omandi tõestamiseks allkirjasta sõnumid oma Nexa aadressiga</translation>
     </message>
@@ -547,12 +567,12 @@
         <translation>Kinnita sõnumid kindlustamaks et need allkirjastati määratud Nexa aadressiga</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+64"/>
         <source>&amp;File</source>
         <translation>&amp;Fail</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+15"/>
         <source>&amp;Settings</source>
         <translation>&amp;Seaded</translation>
     </message>
@@ -567,12 +587,12 @@
         <translation>Vahelehe tööriistariba</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-86"/>
         <source>&amp;Command-line options</source>
         <translation>Käsurea valikud</translation>
     </message>
     <message>
-        <location line="+434"/>
+        <location line="+448"/>
         <source>%1 behind</source>
         <translation>%1 maas</translation>
     </message>
@@ -1389,7 +1409,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+39"/>
+        <source>&amp;Rescan wallet on startup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+15"/>
         <source>Automatically open the Nexa client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Nexa kliendi pordi automaatne avamine ruuteris. Toimib, kui sinu ruuter aktsepteerib UPnP ühendust.</translation>
     </message>
@@ -1556,17 +1581,17 @@
         <translation>&amp;Katkesta</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+118"/>
+        <location filename="../optionsdialog.cpp" line="+123"/>
         <source>default</source>
         <translation>vaikeväärtus</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+57"/>
         <source>none</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+73"/>
+        <location line="+75"/>
         <source>Confirm options reset</source>
         <translation>Kinnita valikute algseadistamine</translation>
     </message>
@@ -2782,7 +2807,7 @@
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+627"/>
+        <location filename="../sendcoinsdialog.cpp" line="+633"/>
         <source>Send Coins</source>
         <translation>Müntide saatmine</translation>
     </message>
@@ -2792,7 +2817,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+17"/>
+        <source>Select specific coins you want to use in this transaction</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Inputs...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2853,16 +2883,22 @@
     </message>
     <message>
         <location line="+3"/>
+        <location line="+16"/>
         <source>Custom change address</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+206"/>
+        <location line="+193"/>
         <source>Transaction Fee:</source>
         <translation>Tehingu tasu:</translation>
     </message>
     <message>
         <location line="+14"/>
+        <source>Choose your transaction fee.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Choose...</source>
         <translation>Vali...</translation>
     </message>
@@ -2893,7 +2929,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+10"/>
+        <source>Custom fee amount</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+24"/>
         <location line="+13"/>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for nexa transactions than the network can process.</source>
         <translation type="unfinished"></translation>
@@ -2905,11 +2946,21 @@
     </message>
     <message>
         <location line="+29"/>
+        <source>Use the recommended fee amount.  You can select a faster or slower confirmation time by moving the &quot;Confirmation Time&quot; slider.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Recommended:</source>
         <translation>Soovitatud:</translation>
     </message>
     <message>
         <location line="+30"/>
+        <source>Choose a custom fee amount</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Custom:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2920,11 +2971,17 @@
     </message>
     <message>
         <location line="+29"/>
+        <location line="+33"/>
+        <source>Transaction confirmation time</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-30"/>
         <source>Confirmation time:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+63"/>
         <source>normal</source>
         <translation>normaalne</translation>
     </message>
@@ -2965,11 +3022,16 @@
     </message>
     <message>
         <location line="+55"/>
+        <source>Current Balance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Balance:</source>
         <translation>Jääk:</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-87"/>
         <source>Confirm the send action</source>
         <translation>Saatmise kinnitamine</translation>
     </message>
@@ -2984,7 +3046,7 @@
         <translation>Müntide saatmise kinnitamine</translation>
     </message>
     <message>
-        <location line="-327"/>
+        <location line="-333"/>
         <source>Copy amount</source>
         <translation>Kopeeri summa</translation>
     </message>
@@ -3024,7 +3086,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+247"/>
+        <location line="+253"/>
         <source>&lt;b&gt;Public label:&lt;/b&gt; %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3112,7 +3174,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+105"/>
+        <location line="+102"/>
         <source>Pay only the required fee of %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3145,24 +3207,24 @@
 <context>
     <name>SendCoinsEntry</name>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="+82"/>
-        <location line="+650"/>
-        <location line="+533"/>
+        <location filename="../forms/sendcoinsentry.ui" line="+86"/>
+        <location line="+677"/>
+        <location line="+560"/>
         <source>A&amp;mount:</source>
         <translation>S&amp;umma:</translation>
     </message>
     <message>
-        <location line="-1170"/>
+        <location line="-1224"/>
         <source>Pay &amp;To:</source>
         <translation>Maksa &amp;:</translation>
     </message>
     <message>
-        <location line="-74"/>
-        <source>This is a normal payment.</source>
+        <location line="-55"/>
+        <source>Amount to send</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+7"/>
         <source>The fee will be deducted from the amount being sent. The recipient will receive less coins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3208,13 +3270,13 @@
     </message>
     <message>
         <location line="+7"/>
-        <location line="+526"/>
-        <location line="+533"/>
+        <location line="+553"/>
+        <location line="+560"/>
         <source>Remove this entry</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-1037"/>
+        <location line="-1091"/>
         <source>A message that was attached to the coin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Nexa network.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3235,13 +3297,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+439"/>
+        <location line="+466"/>
         <source>This is an unauthenticated payment request.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+49"/>
-        <location line="+533"/>
+        <location line="+560"/>
         <source>Memo:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3251,8 +3313,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-514"/>
-        <location line="+529"/>
+        <location line="-541"/>
+        <location line="+556"/>
         <source>Pay To:</source>
         <translation>Maksa :</translation>
     </message>
@@ -3420,6 +3482,220 @@
     </message>
 </context>
 <context>
+    <name>TokenDescDialog</name>
+    <message>
+        <location filename="../forms/tokendescdialog.ui" line="+17"/>
+        <source>Token details</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This pane shows a detailed description of the token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>TokensViewDialog</name>
+    <message>
+        <location filename="../forms/tokensviewdialog.ui" line="+14"/>
+        <source>Tokens</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Amount: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The number of tokens to send&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>  Pay To: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>The Nexa address to send the payment to</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Choose previously used address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Alt+A</source>
+        <translation type="unfinished">Alt+A</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Paste address from clipboard</source>
+        <translation type="unfinished">Kleebi aadress vahemälust</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Alt+P</source>
+        <translation type="unfinished">Alt+P</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Remove this entry</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send tokens&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Send</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+56"/>
+        <source>Token ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>The unique token identifier</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-45"/>
+        <source>The token group identifier</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Name</source>
+        <translation type="unfinished">Nimi</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The name of the token</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Ticker</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The token ticker symbol</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Balance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Confirmed token balance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Pending</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Unconfirmed token balance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Sub</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>If checked then this item is a subgroup.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tokensviewdialog.cpp" line="+391"/>
+        <location line="+7"/>
+        <location line="+4"/>
+        <source>Data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-11"/>
+        <source>string</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location line="+4"/>
+        <source>num</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>NaN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Name:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ticker:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>URL:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Hash:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Decimals:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Balance:</source>
+        <translation type="unfinished">Jääk:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pending:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+79"/>
+        <source>Are you sure you want to send?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&lt;b&gt;Token(s)&lt;/b&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Confirm send tokens</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>TrafficGraphWidget</name>
     <message>
         <location filename="../trafficgraphwidget.cpp" line="+74"/>
@@ -3430,7 +3706,7 @@
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+34"/>
+        <location filename="../transactiondesc.cpp" line="+35"/>
         <source>Open until %1</source>
         <translation>Avatud kuni %1</translation>
     </message>
@@ -3556,12 +3832,12 @@
         <location line="+41"/>
         <location line="+63"/>
         <location line="+47"/>
-        <location line="+74"/>
+        <location line="+134"/>
         <source>Credit</source>
         <translation>Krediit</translation>
     </message>
     <message numerus="yes">
-        <location line="-222"/>
+        <location line="-282"/>
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -3576,12 +3852,12 @@
     <message>
         <location line="+102"/>
         <location line="+31"/>
-        <location line="+79"/>
+        <location line="+139"/>
         <source>Debit</source>
         <translation>Deebet</translation>
     </message>
     <message>
-        <location line="-98"/>
+        <location line="-158"/>
         <source>Total debit</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3632,7 +3908,41 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+25"/>
+        <location line="+25"/>
+        <source>Token ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-20"/>
+        <location line="+25"/>
+        <source>Ticker</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-24"/>
+        <location line="+25"/>
+        <source>Name</source>
+        <translation type="unfinished">Nimi</translation>
+    </message>
+    <message>
+        <location line="-21"/>
+        <location line="+25"/>
+        <source>Decimals</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-23"/>
+        <source>Amount Sent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Amount Received</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Debug information</source>
         <translation>Debug&apos;imise info</translation>
     </message>
@@ -3664,7 +3974,7 @@
         <translation>vale</translation>
     </message>
     <message>
-        <location line="-357"/>
+        <location line="-417"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, veel esitlemata</translation>
     </message>
@@ -4174,7 +4484,7 @@
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+44"/>
+        <location filename="../walletview.cpp" line="+45"/>
         <source>&amp;Export</source>
         <translation>&amp;Ekspordi</translation>
     </message>
@@ -4184,17 +4494,18 @@
         <translation>Ekspordi kuvatava vahelehe sisu faili</translation>
     </message>
     <message>
-        <location line="+187"/>
+        <location line="+191"/>
         <source>Backup Wallet</source>
         <translation>Varundatud Rahakott</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location line="+21"/>
         <source>Wallet Data (*.dat)</source>
         <translation>Rahakoti andmed (*.dat)</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-14"/>
         <source>Backup Failed</source>
         <translation>Varundamine nurjus</translation>
     </message>
@@ -4213,6 +4524,21 @@
         <source>The wallet data was successfully saved to %1.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <location line="+8"/>
+        <source>Restore Wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Restore Failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>There was an error trying to restore the wallet data to %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>nexa</name>
@@ -4222,7 +4548,14 @@
         <translation>See on test-versioon - kasutamine omal riisikol - ära kasuta mining&apos;uks ega kaupmeeste programmides</translation>
     </message>
     <message>
-        <location line="+68"/>
+        <location line="+46"/>
+        <source>You can not run &quot;-salvagewallet&quot; as an HD wallet.
+
+Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+28"/>
         <source>Corrupted block database detected</source>
         <translation>Tuvastati vigane bloki andmebaas</translation>
     </message>
@@ -4252,12 +4585,17 @@
         <translation>Tõrge: liiga vähe kettaruumi!</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Pordi kuulamine nurjus. Soovikorral kasuta -listen=0.</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+30"/>
+        <source>Signing token transaction failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Starting txindex</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4337,17 +4675,17 @@
         <translation>Kontrollin rahakotti...</translation>
     </message>
     <message>
-        <location line="-65"/>
+        <location line="-69"/>
         <source>Cannot resolve -whitebind address: &apos;%s&apos;</source>
         <translation>Tundmatu -whitebind aadress: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+22"/>
         <source>Information</source>
         <translation>Informatsioon</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+28"/>
         <source>Signing transaction failed</source>
         <translation>Tehingu allkirjastamine ebaõnnestus</translation>
     </message>
@@ -4367,7 +4705,7 @@
         <translation>Hoiatus</translation>
     </message>
     <message>
-        <location line="-39"/>
+        <location line="-41"/>
         <source>Loading addresses...</source>
         <translation>Aadresside laadimine...</translation>
     </message>
@@ -4377,12 +4715,12 @@
         <translation>Vigane -proxi aadress: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+36"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Kirjeldatud tundmatu võrgustik -onlynet&apos;is: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-61"/>
+        <location line="-65"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Tundmatu -bind aadress: &apos;%s&apos;</translation>
     </message>
@@ -4392,7 +4730,7 @@
         <translation>Tundmatu -externalip aadress: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+35"/>
         <source>Loading block index...</source>
         <translation>Klotside indeksi laadimine...</translation>
     </message>
@@ -4402,12 +4740,12 @@
         <translation>Rahakoti laadimine...</translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-38"/>
         <source>Cannot downgrade wallet</source>
         <translation>Rahakoti vanandamine ebaõnnestus</translation>
     </message>
     <message>
-        <location line="-125"/>
+        <location line="-131"/>
         <source>Nexa</source>
         <translation type="unfinished">Nexa</translation>
     </message>
@@ -4591,21 +4929,16 @@ Do you want to reindex on the next restart?</source>
     </message>
     <message>
         <location line="+3"/>
+        <source>You are trying to restore the same wallet which you are trying to replace.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>You are trying to use -wallet.auto but neither -spendzeroconfchange nor -wallet.instant is turned on</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>You are trying to use wallet.fallbackFee which has been deprecated an no longer in  use - use wallet.payTxFee instead </source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>You are trying to use wallet.minTxFee which has been deprecated an no longer in  use - use wallet.payTxFee instead </source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+7"/>
         <source>You can not send free transactions if you have configured a -relay.limitFreeRelay of zero</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4616,6 +4949,14 @@ Do you want to reindex on the next restart?</source>
     </message>
     <message>
         <location line="+3"/>
+        <source>&quot;Restore Wallet&quot; succeeded and a backup of the previous wallet was saved to: %s.
+
+
+When you click &quot;OK&quot; Nexa will shutdown to complete the process.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>%s </source>
         <translation type="unfinished"></translation>
     </message>
@@ -4685,7 +5026,12 @@ Do you want to reindex on the next restart?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
+        <source>Error: Keypool ran out, please call keypoolrefill first</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Importing...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4697,6 +5043,11 @@ Do you want to reindex on the next restart?</source>
     <message>
         <location line="+2"/>
         <source>Initialization sanity check failed. %s is shutting down.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Insufficient funds for this token.  Need %d more.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4756,6 +5107,11 @@ Do you want to reindex on the next restart?</source>
     </message>
     <message>
         <location line="+1"/>
+        <source>Opening Token Description database...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4795,7 +5151,7 @@ Do you want to reindex on the next restart?</source>
         <translation>Üleskaneerimine...</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+22"/>
         <source>Waiting for Genesis Block...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4810,7 +5166,12 @@ Do you want to reindex on the next restart?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-61"/>
+        <location line="+2"/>
+        <source>Zapping all transactions from wallet...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-67"/>
         <source>Done loading</source>
         <translation>Laetud</translation>
     </message>

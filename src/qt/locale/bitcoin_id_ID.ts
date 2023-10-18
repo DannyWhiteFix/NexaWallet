@@ -210,12 +210,7 @@
         <translation>Apakah Anda yakin ingin mengenkripsi dompet Anda?</translation>
     </message>
     <message>
-        <location line="+15"/>
-        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>PENTING: Setiap back up yang sudah Anda buat sebaiknya diganti dengan data dompet Anda yang baru dan terenkripsi. Untuk alasan keamanan, data back up tidak terenkripsi yang sudah Anda buat sebelumnya tidak akan dapat digunakan setelah Anda mulai menggunakan dompet yang baru dan terenkripsi.</translation>
-    </message>
-    <message>
-        <location line="+104"/>
+        <location line="+119"/>
         <location line="+29"/>
         <source>Warning: The Caps Lock key is on!</source>
         <translation>Perhatian: tombol Caps Lock sementara aktif!</translation>
@@ -239,10 +234,15 @@
     <message>
         <location line="+55"/>
         <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your coins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 akan ditutup sekarang untuk menyelesaikan proses enkripsi. Ingatlah bahwa mengenkripsi dompet Anda tidak dapat sepenuhnya melindungi koin Anda dari pencurian malware yang menginfeksi komputer Anda.</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+5"/>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons you should no longer keep previous unencrypted backups as your funds will be at risk if someone gains access to them.</source>
+        <translation>PENTING: Semua cadangan file dompet Anda sebelumnya harus diganti dengan file dompet terenkripsi yang baru dibuat. Demi alasan keamanan, Anda sebaiknya tidak lagi menyimpan cadangan sebelumnya yang tidak terenkripsi karena dana Anda akan berisiko jika seseorang mendapatkan akses ke cadangan tersebut.</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <location line="+8"/>
         <location line="+42"/>
         <location line="+6"/>
@@ -298,28 +298,28 @@
     <message>
         <location line="+0"/>
         <source>User Agent</source>
-        <translation type="unfinished"></translation>
+        <translation>Agen Pengguna</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Ban Reason</source>
-        <translation type="unfinished"></translation>
+        <translation>Alasan Larangan</translation>
     </message>
 </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../nexagui.cpp" line="+318"/>
+        <location filename="../nexagui.cpp" line="+336"/>
         <source>Sign &amp;message...</source>
         <translation>Pesan &amp;penanda...</translation>
     </message>
     <message>
-        <location line="+411"/>
+        <location line="+425"/>
         <source>Synchronizing with network...</source>
         <translation>Sinkronisasi dengan jaringan...</translation>
     </message>
     <message>
-        <location line="-500"/>
+        <location line="-531"/>
         <source>&amp;Overview</source>
         <translation>&amp;Kilasan</translation>
     </message>
@@ -336,7 +336,7 @@
     <message>
         <location line="+20"/>
         <source>Request payments (generates QR codes and %1: URIs)</source>
-        <translation type="unfinished"></translation>
+        <translation>Minta pembayaran (menghasilkan kode QR dan %1: URI)</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -349,7 +349,17 @@
         <translation>Lihat riwayat transaksi</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+6"/>
+        <source>&amp;Tokens</source>
+        <translation>&amp;Token</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Browse or Send Tokens</source>
+        <translation>Telusuri atau Kirim Token</translation>
+    </message>
+    <message>
+        <location line="+32"/>
         <source>E&amp;xit</source>
         <translation>K&amp;eluar</translation>
     </message>
@@ -361,12 +371,12 @@
     <message>
         <location line="+4"/>
         <source>&amp;About %1</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Mengenai %1</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Show information about %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Tampilkan informasi tentang %1</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -386,20 +396,20 @@
     <message>
         <location line="+1"/>
         <source>Modify configuration options for %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Ubah opsi konfigurasi untuk %1</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>&amp;Unlimited...</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Unlimited...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Modify Bitcoin Unlimited Options</source>
-        <translation type="unfinished"></translation>
+        <translation>Ubah Opsi Bitcoin Unlimited</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Enkripsi Dompet...</translation>
     </message>
@@ -409,7 +419,17 @@
         <translation>&amp;Cadangkan Dompet...</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
+        <source>&amp;Restore Wallet...</source>
+        <translation>&amp;Pulihkan Dompet...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Restore wallet from another location</source>
+        <translation>Pulihkan dompet dari lokasi lain</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>&amp;Change Passphrase...</source>
         <translation>&amp;Ubah Kata Kunci...</translation>
     </message>
@@ -429,7 +449,7 @@
         <translation>Buka &amp;URI</translation>
     </message>
     <message>
-        <location line="+397"/>
+        <location line="+411"/>
         <source>Importing blocks from disk...</source>
         <translation>Mengimpor blok dari disk...</translation>
     </message>
@@ -439,17 +459,17 @@
         <translation>Mengindex ulang blok di dalam disk...</translation>
     </message>
     <message>
-        <location line="-498"/>
+        <location line="-529"/>
         <source>Send coins to a Nexa address</source>
         <translation>Kirim koin ke alamat Nexa</translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+92"/>
         <source>Backup wallet to another location</source>
         <translation>Cadangkan dompet ke lokasi lain</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+5"/>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Ubah kata kunci yang digunakan untuk enkripsi dompet</translation>
     </message>
@@ -469,12 +489,12 @@
         <translation>&amp;Verifikasi pesan...</translation>
     </message>
     <message>
-        <location line="+495"/>
+        <location line="+509"/>
         <source>Nexa</source>
         <translation>Nexa</translation>
     </message>
     <message>
-        <location line="-726"/>
+        <location line="-757"/>
         <source>Wallet</source>
         <translation>Dompet</translation>
     </message>
@@ -489,7 +509,7 @@
         <translation>&amp;Menerima</translation>
     </message>
     <message>
-        <location line="+53"/>
+        <location line="+69"/>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Tampilkan / Sembunyikan</translation>
     </message>
@@ -499,12 +519,12 @@
         <translation>Tampilkan atau sembunyikan jendela utama</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+8"/>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation>Enkripsi private key yang dimiliki dompet Anda</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+10"/>
         <source>Sign messages with your Nexa addresses to prove you own them</source>
         <translation>Tanda tangani sebuah pesan menggunakan alamat Nexa Anda untuk membuktikan bahwa Anda adalah pemilik alamat tersebut</translation>
     </message>
@@ -514,12 +534,12 @@
         <translation>Verifikasi pesan untuk memastikan bahwa pesan tersebut ditanda tangani oleh suatu alamat Nexa tertentu</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+64"/>
         <source>&amp;File</source>
         <translation>&amp;Berkas</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+15"/>
         <source>&amp;Settings</source>
         <translation>&amp;Pengaturan</translation>
     </message>
@@ -534,7 +554,7 @@
         <translation>Baris tab</translation>
     </message>
     <message>
-        <location line="-93"/>
+        <location line="-95"/>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Tampilkan daftar alamat dan label yang terkirim</translation>
     </message>
@@ -549,7 +569,7 @@
         <translation>&amp;pilihan Command-line</translation>
     </message>
     <message numerus="yes">
-        <location line="+366"/>
+        <location line="+380"/>
         <source>%n active connection(s) to Nexa network</source>
         <translation>
             <numerusform>%n koneksi aktif ke jaringan Nexa</numerusform>
@@ -603,22 +623,22 @@
         <translation>Terbaru</translation>
     </message>
     <message>
-        <location line="-417"/>
+        <location line="-431"/>
         <source>Open a %1: URI or payment request</source>
-        <translation type="unfinished"></translation>
+        <translation>Buka %1: URI atau permintaan pembayaran</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Show the %1 help message to get a list with possible Nexa command-line options</source>
-        <translation type="unfinished"></translation>
+        <translation>Tampilkan pesan bantuan %1 untuk mendapatkan daftar dengan kemungkinan opsi baris perintah Nexa</translation>
     </message>
     <message>
-        <location line="+185"/>
+        <location line="+191"/>
         <source>%1 client</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 klien</translation>
     </message>
     <message>
-        <location line="+251"/>
+        <location line="+259"/>
         <source>Catching up...</source>
         <translation>Menyusul...</translation>
     </message>
@@ -670,12 +690,12 @@
     <message>
         <location line="+54"/>
         <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>Pembuatan kunci HD &lt;b&gt;diaktifkan&lt;/b&gt;</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>Pembuatan kunci HD &lt;b&gt;dinonaktifkan&lt;/b&gt;</translation>
     </message>
     <message>
         <location line="+20"/>
@@ -904,7 +924,7 @@
     <message>
         <location line="+29"/>
         <source>none</source>
-        <translation>tidak satupun</translation>
+        <translation>tidak ada</translation>
     </message>
     <message>
         <location line="+167"/>
@@ -1081,7 +1101,7 @@
     <message>
         <location line="+5"/>
         <source>About %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Mengenai %1</translation>
     </message>
     <message>
         <location line="+21"/>
@@ -1109,17 +1129,17 @@
     <message>
         <location line="+9"/>
         <source>Welcome to %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Selamat datang di %1.</translation>
     </message>
     <message>
         <location line="+26"/>
         <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
-        <translation type="unfinished"></translation>
+        <translation>Karena ini adalah pertama kalinya program diluncurkan, Anda dapat memilih di mana %1 akan menyimpan datanya.</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>%1 will download and store a copy of the Nexa block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 akan mengunduh dan menyimpan salinan rantai blok Nexa. Setidaknya %2GB data akan disimpan di direktori ini, dan akan bertambah seiring waktu. Dompet juga akan disimpan di direktori ini.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1161,7 +1181,7 @@
     <message>
         <location filename="../unlimiteddialog.cpp" line="+486"/>
         <source>Upstream traffic shaping parameters can&apos;t be blank</source>
-        <translation type="unfinished"></translation>
+        <translation>Parameter pembentukan lalu lintas hulu wajib diisi</translation>
     </message>
 </context>
 <context>
@@ -1169,84 +1189,84 @@
     <message>
         <location filename="../forms/modaloverlay.ui" line="+14"/>
         <source>Form</source>
-        <translation type="unfinished">Formulir</translation>
+        <translation>Formulir</translation>
     </message>
     <message>
         <location line="+119"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Nexa network after a connection is established, but this process has not completed yet. This means that recent transactions will not be visible, and the balance will not be up-to-date until this process has completed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Informasi yang ditampilkan mungkin kedaluwarsa. Dompet Anda secara otomatis melakukan sinkronisasi dengan jaringan Nexa setelah koneksi dibuat, namun proses ini belum selesai. Artinya, transaksi terkini tidak akan terlihat, dan saldo tidak akan diperbarui hingga proses ini selesai.</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>Spending coins may not be possible during that phase!</source>
-        <translation type="unfinished"></translation>
+        <translation>Menghabiskan koin mungkin tidak dapat dilakukan selama fase itu!</translation>
     </message>
     <message>
         <location line="+63"/>
         <source>Amount of blocks left</source>
-        <translation type="unfinished"></translation>
+        <translation>Jumlah blok yang tersisa</translation>
     </message>
     <message>
         <location line="+7"/>
         <location line="+26"/>
         <source>unknown...</source>
-        <translation type="unfinished"></translation>
+        <translation>tidak diketahui...</translation>
     </message>
     <message>
         <location line="-13"/>
         <source>Last block time</source>
-        <translation type="unfinished">Waktu blok terakhir</translation>
+        <translation>Waktu blok terakhir</translation>
     </message>
     <message>
         <location line="+26"/>
         <source>Progress</source>
-        <translation type="unfinished"></translation>
+        <translation>Kemajuan</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>~</source>
-        <translation type="unfinished"></translation>
+        <translation>~</translation>
     </message>
     <message>
         <location line="+22"/>
         <source>Progress increase per Hour</source>
-        <translation type="unfinished"></translation>
+        <translation>Kemajuan meningkat per Jam</translation>
     </message>
     <message>
         <location line="+7"/>
         <location line="+20"/>
         <source>calculating...</source>
-        <translation type="unfinished"></translation>
+        <translation>menghitung...</translation>
     </message>
     <message>
         <location line="-7"/>
         <source>Estimated time left until synced</source>
-        <translation type="unfinished"></translation>
+        <translation>Perkiraan waktu tersisa hingga disinkronkan</translation>
     </message>
     <message>
         <location line="+37"/>
         <source>Hide</source>
-        <translation type="unfinished"></translation>
+        <translation>Bersembunyi</translation>
     </message>
     <message>
         <location filename="../modaloverlay.cpp" line="+140"/>
         <source>Unknown. Reindexing (%1)...</source>
-        <translation type="unfinished"></translation>
+        <translation>Tidak dikenal. Mengindeks ulang (%1)...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unknown. Reindexing...</source>
-        <translation type="unfinished"></translation>
+        <translation>Tidak dikenal. Mengindeks ulang...</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Unknown. Syncing Headers (%1)...</source>
-        <translation type="unfinished"></translation>
+        <translation>Tidak dikenal. Menyinkronkan Header (%1)...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unknown. Syncing Headers...</source>
-        <translation type="unfinished"></translation>
+        <translation>Tidak dikenal. Menyinkronkan Header...</translation>
     </message>
 </context>
 <context>
@@ -1374,25 +1394,30 @@
     <message>
         <location line="+13"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When Instant Transactions is enabled you can spend unconfirmed transactions immediately.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ketika Transaksi Instan diaktifkan, Anda dapat segera membelanjakan transaksi yang belum dikonfirmasi.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Instant Transactions</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Transaksi Instan</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When creating and sending transactions, auto consolidate will, if required, automatically create a chain of transactions which have inputs no greater than the consensus input limit.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Saat membuat dan mengirim transaksi, konsolidasi otomatis akan, jika diperlukan, secara otomatis membuat rantai transaksi yang masukannya tidak lebih besar dari batas masukan konsensus.&lt;/p&gt;&lt;/body &gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Auto Consolidate</source>
-        <translation type="unfinished"></translation>
+        <translation>Konsolidasi Otomatis</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+39"/>
+        <source>&amp;Rescan wallet on startup</source>
+        <translation>&amp;Pindai ulang dompet saat startup</translation>
+    </message>
+    <message>
+        <location line="+15"/>
         <source>Automatically open the Nexa client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Otomatis membuka port client Nexa di router. Hanya berjalan apabila router anda mendukung UPnP dan di-enable.</translation>
     </message>
@@ -1404,7 +1429,7 @@
     <message>
         <location line="+7"/>
         <source>Accept connections from outside.</source>
-        <translation type="unfinished"></translation>
+        <translation>Terima koneksi dari luar.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1414,7 +1439,7 @@
     <message>
         <location line="+3"/>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Terhubung melalui proksi SOCKS5 (proksi default):</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -1437,14 +1462,14 @@
     <message>
         <location line="-163"/>
         <source>Used for reaching peers via:</source>
-        <translation type="unfinished"></translation>
+        <translation>Digunakan untuk menjangkau rekan-rekan melalui:</translation>
     </message>
     <message>
         <location line="+13"/>
         <location line="+23"/>
         <location line="+23"/>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
-        <translation type="unfinished"></translation>
+        <translation>Menunjukkan apakah proksi SOCKS5 default yang disediakan digunakan untuk menjangkau rekan melalui jenis jaringan ini.</translation>
     </message>
     <message>
         <location line="-36"/>
@@ -1464,12 +1489,12 @@
     <message>
         <location line="+25"/>
         <source>Connect to the Nexa network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation type="unfinished"></translation>
+        <translation>Hubungkan ke jaringan Nexa melalui proxy SOCKS5 terpisah untuk layanan tersembunyi Tor.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
-        <translation type="unfinished"></translation>
+        <translation>Gunakan proksi SOCKS5 terpisah untuk menjangkau rekan-rekan melalui layanan tersembunyi Tor:</translation>
     </message>
     <message>
         <location line="+102"/>
@@ -1504,7 +1529,7 @@
     <message>
         <location line="+13"/>
         <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Bahasa antarmuka pengguna dapat diatur di sini. Pengaturan ini akan berlaku setelah memulai ulang %1.</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -1524,22 +1549,22 @@
     <message>
         <location line="-121"/>
         <source>Automatically start %1 after logging in to the system.</source>
-        <translation type="unfinished"></translation>
+        <translation>Secara otomatis memulai %1 setelah masuk ke sistem.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Start %1 on system login</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Mulai %1 pada login sistem</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Automatically initiate a, one time only, full database reindex on the next startup.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Secara otomatis memulai pengindeksan ulang database lengkap, hanya satu kali saja, pada permulaan berikutnya.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Reindex on startup</source>
-        <translation type="unfinished"></translation>
+        <translation>Indeks ulang saat startup</translation>
     </message>
     <message>
         <location line="+766"/>
@@ -1552,17 +1577,17 @@
         <translation>&amp;Batal</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+118"/>
+        <location filename="../optionsdialog.cpp" line="+123"/>
         <source>default</source>
         <translation>standar</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+57"/>
         <source>none</source>
-        <translation>tidak satupun</translation>
+        <translation>tidak ada</translation>
     </message>
     <message>
-        <location line="+73"/>
+        <location line="+75"/>
         <source>Confirm options reset</source>
         <translation>Memastikan reset pilihan</translation>
     </message>
@@ -1604,22 +1629,22 @@
     <message>
         <location line="-333"/>
         <source>Unconfirmed transactions to watch-only addresses</source>
-        <translation type="unfinished"></translation>
+        <translation>Transaksi yang belum dikonfirmasi ke alamat hanya jam tangan</translation>
     </message>
     <message>
         <location line="+50"/>
         <source>Mined balance in watch-only addresses that has not yet matured</source>
-        <translation type="unfinished"></translation>
+        <translation>Saldo yang ditambang di alamat hanya jam tangan yang belum jatuh tempo</translation>
     </message>
     <message>
         <location line="+128"/>
         <source>Current total balance in watch-only addresses</source>
-        <translation type="unfinished"></translation>
+        <translation>Total saldo saat ini di alamat khusus jam tangan</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Watch-only:</source>
-        <translation type="unfinished"></translation>
+        <translation>Hanya tontonan:</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1634,22 +1659,22 @@
     <message>
         <location line="+25"/>
         <source>Your current balance in watch-only addresses</source>
-        <translation type="unfinished"></translation>
+        <translation>Saldo Anda saat ini di alamat hanya jam tangan</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Pending:</source>
-        <translation>Ditunda</translation>
+        <translation>Ditunda:</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Spendable:</source>
-        <translation type="unfinished"></translation>
+        <translation>Dapat dibelanjakan:</translation>
     </message>
     <message>
         <location line="+49"/>
         <source>Recent transactions</source>
-        <translation type="unfinished"></translation>
+        <translation>Transaksi terkini</translation>
     </message>
     <message>
         <location line="-292"/>
@@ -1818,12 +1843,12 @@
     <message>
         <location line="+0"/>
         <source>Node/Service</source>
-        <translation type="unfinished"></translation>
+        <translation>Node/Layanan</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Ping Time</source>
-        <translation type="unfinished"></translation>
+        <translation>Waktu Ping</translation>
     </message>
 </context>
 <context>
@@ -1836,12 +1861,12 @@
     <message>
         <location filename="../guiutil.cpp" line="+135"/>
         <source>Enter a NEXA address (e.g. %1)</source>
-        <translation type="unfinished"></translation>
+        <translation>Masukkan alamat NEXA (misalnya %1)</translation>
     </message>
     <message>
         <location line="+832"/>
         <source>%1 d</source>
-        <translation type="unfinished"></translation>
+        <translation>%1-hari</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1857,12 +1882,12 @@
         <location line="+2"/>
         <location line="+68"/>
         <source>%1 s</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 detik</translation>
     </message>
     <message>
         <location line="-11"/>
         <source>None</source>
-        <translation type="unfinished"></translation>
+        <translation>Tidak ada</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1872,33 +1897,33 @@
     <message>
         <location line="+1"/>
         <source>%1 ms</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 milidetik</translation>
     </message>
     <message numerus="yes">
         <location line="+19"/>
         <source>%n seconds(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n detik</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location line="+4"/>
         <source>%n minutes(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n menit</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location line="+4"/>
         <source>%n hour(s)</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n jam</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location line="+4"/>
         <source>%n day(s)</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n hari</numerusform>
         </translation>
     </message>
@@ -1906,19 +1931,19 @@
         <location line="+4"/>
         <location line="+8"/>
         <source>%n week(s)</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n minggu</numerusform>
         </translation>
     </message>
     <message>
         <location line="-2"/>
         <source>%1 and %2</source>
-        <translation type="unfinished">%1 dan %2</translation>
+        <translation>%1 dan %2</translation>
     </message>
     <message numerus="yes">
         <location line="+1"/>
         <source>%n year(s)</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n tahun</numerusform>
         </translation>
     </message>
@@ -2028,12 +2053,12 @@
     <message>
         <location line="-24"/>
         <source>Using BerkeleyDB version</source>
-        <translation type="unfinished"></translation>
+        <translation>Menggunakan versi BerkeleyDB</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Datadir</source>
-        <translation type="unfinished"></translation>
+        <translation>Direktori data</translation>
     </message>
     <message>
         <location line="+21"/>
@@ -2043,82 +2068,82 @@
     <message>
         <location line="+14"/>
         <source>Last block time (time since)</source>
-        <translation type="unfinished"></translation>
+        <translation>Waktu blok terakhir (waktu sejak)</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Last block size</source>
-        <translation type="unfinished"></translation>
+        <translation>Ukuran blok terakhir</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Transactions in Tx pool</source>
-        <translation type="unfinished"></translation>
+        <translation>Transaksi di Tx pool</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Transactions in Orphan pool</source>
-        <translation type="unfinished"></translation>
+        <translation>Transaksi di Orphan pool</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Messages in CAPD pool</source>
-        <translation type="unfinished"></translation>
+        <translation>Pesan di CAPD pool</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Tx pool - usage</source>
-        <translation type="unfinished"></translation>
+        <translation>Tx pool - penggunaan</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Tx pool - txns per second</source>
-        <translation type="unfinished"></translation>
+        <translation>Tx pool - txns per detik</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>XThin (Totals)</source>
-        <translation type="unfinished"></translation>
+        <translation>XThin (Total)</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>XThin (24-Hour Averages)</source>
-        <translation type="unfinished"></translation>
+        <translation>XThin (Rata-rata 24 Jam)</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Compact (Totals)</source>
-        <translation type="unfinished"></translation>
+        <translation>Compact (Total)</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Compact (24-Hour Averages)</source>
-        <translation type="unfinished"></translation>
+        <translation>Compact (Rata-rata 24 Jam)</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Graphene (Totals)</source>
-        <translation type="unfinished"></translation>
+        <translation>Graphene (Total)</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Graphene (24-Hour Averages)</source>
-        <translation type="unfinished"></translation>
+        <translation>Graphene (Rata-rata 24 Jam)</translation>
     </message>
     <message>
         <location line="+32"/>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation type="unfinished"></translation>
+        <translation>Buka file log debug %1 dari direktori data saat ini. Ini dapat memakan waktu beberapa detik untuk file log berukuran besar.</translation>
     </message>
     <message>
         <location line="+130"/>
         <source>Block Propagation</source>
-        <translation type="unfinished"></translation>
+        <translation>Blokir Propagasi</translation>
     </message>
     <message>
         <location line="+94"/>
         <source>Transaction Pools</source>
-        <translation type="unfinished"></translation>
+        <translation>Kumpulan Transaksi</translation>
     </message>
     <message>
         <location line="+61"/>
@@ -2128,57 +2153,57 @@
     <message>
         <location line="+1986"/>
         <source>Starting Block</source>
-        <translation type="unfinished"></translation>
+        <translation>Blok Awal</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Synced Headers</source>
-        <translation type="unfinished"></translation>
+        <translation>Header yang Disinkronkan</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Synced Blocks</source>
-        <translation type="unfinished"></translation>
+        <translation>Blok yang Disinkronkan</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Ban Score</source>
-        <translation type="unfinished"></translation>
+        <translation>Skor Larangan</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Connection Time</source>
-        <translation type="unfinished"></translation>
+        <translation>Waktu koneksi</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Last Send</source>
-        <translation type="unfinished"></translation>
+        <translation>Pengiriman Terakhir</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Last Receive</source>
-        <translation type="unfinished"></translation>
+        <translation>Penerimaan Terakhir</translation>
     </message>
     <message>
         <location line="+69"/>
         <source>Ping Time</source>
-        <translation type="unfinished"></translation>
+        <translation>Waktu Ping</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>The duration of a currently outstanding ping.</source>
-        <translation type="unfinished"></translation>
+        <translation>Durasi ping yang beredar saat ini.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Ping Wait</source>
-        <translation type="unfinished"></translation>
+        <translation>Ping Tunggu</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Time Offset</source>
-        <translation type="unfinished"></translation>
+        <translation>Pengimbangan Waktu</translation>
     </message>
     <message>
         <location line="-2650"/>
@@ -2189,7 +2214,7 @@
         <location line="+884"/>
         <location line="+1694"/>
         <source>Received</source>
-        <translation type="unfinished"></translation>
+        <translation>Diterima</translation>
     </message>
     <message>
         <location line="-1614"/>
@@ -2200,18 +2225,18 @@
     <message>
         <location line="-1550"/>
         <source>&amp;Transaction Rate</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Tingkat Transaksi</translation>
     </message>
     <message>
         <location line="+58"/>
         <source>Instantaneous Rate (1s)</source>
-        <translation type="unfinished"></translation>
+        <translation>Kecepatan Sesaat (1dtk)</translation>
     </message>
     <message>
         <location line="+8"/>
         <location line="+536"/>
         <source>Peak</source>
-        <translation type="unfinished"></translation>
+        <translation>Puncak</translation>
     </message>
     <message>
         <location line="-463"/>
@@ -2219,7 +2244,7 @@
         <location line="+279"/>
         <location line="+257"/>
         <source>Runtime</source>
-        <translation type="unfinished"></translation>
+        <translation>Waktu proses</translation>
     </message>
     <message>
         <location line="-713"/>
@@ -2227,7 +2252,7 @@
         <location line="+279"/>
         <location line="+257"/>
         <source>24-Hours</source>
-        <translation type="unfinished"></translation>
+        <translation>24 jam</translation>
     </message>
     <message>
         <location line="-713"/>
@@ -2235,45 +2260,45 @@
         <location line="+279"/>
         <location line="+257"/>
         <source>Displayed</source>
-        <translation type="unfinished"></translation>
+        <translation>Ditampilkan</translation>
     </message>
     <message>
         <location line="-769"/>
         <location line="+536"/>
         <source>Average</source>
-        <translation type="unfinished"></translation>
+        <translation>Rata-rata</translation>
     </message>
     <message>
         <location line="-265"/>
         <source>Smoothed Rate (60s)</source>
-        <translation type="unfinished"></translation>
+        <translation>Kecepatan yang Dihaluskan (60 detik)</translation>
     </message>
     <message>
         <location line="+539"/>
         <source>&amp;Peers</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp; Rekan-rekan</translation>
     </message>
     <message>
         <location line="+50"/>
         <source>Banned peers</source>
-        <translation type="unfinished"></translation>
+        <translation>Rekan-rekan yang dilarang</translation>
     </message>
     <message>
         <location line="+57"/>
         <location filename="../rpcconsole.cpp" line="+311"/>
         <location line="+855"/>
         <source>Select a peer to view detailed information.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pilih rekan untuk melihat informasi rinci.</translation>
     </message>
     <message>
         <location line="+28"/>
         <source>Whitelisted</source>
-        <translation type="unfinished"></translation>
+        <translation>Masuk daftar putih</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Direction</source>
-        <translation type="unfinished"></translation>
+        <translation>Arah</translation>
     </message>
     <message>
         <location line="+23"/>
@@ -2306,12 +2331,12 @@
     <message>
         <location line="+36"/>
         <source>Decrease font size</source>
-        <translation type="unfinished"></translation>
+        <translation>Kurangi ukuran font</translation>
     </message>
     <message>
         <location line="+32"/>
         <source>Increase font size</source>
-        <translation type="unfinished"></translation>
+        <translation>Tingkatkan ukuran font</translation>
     </message>
     <message>
         <location line="+127"/>
@@ -2371,7 +2396,7 @@
     <message>
         <location line="-4"/>
         <source>&amp;Disconnect Node</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Putuskan Sambungan Node</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2379,17 +2404,17 @@
         <location line="+1"/>
         <location line="+1"/>
         <source>Ban Node for</source>
-        <translation type="unfinished"></translation>
+        <translation>Larangan Node untuk</translation>
     </message>
     <message>
         <location line="+48"/>
         <source>&amp;Unban Node</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Unban Node</translation>
     </message>
     <message>
         <location line="+118"/>
         <source>Welcome to the %1 RPC console.</source>
-        <translation type="unfinished"></translation>
+        <translation>Selamat datang di konsol %1 RPC.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2409,7 +2434,7 @@
         <location line="+28"/>
         <location line="+1"/>
         <source>Disabled</source>
-        <translation type="unfinished"></translation>
+        <translation>Dengan disabilitas</translation>
     </message>
     <message>
         <location line="+110"/>
@@ -2434,28 +2459,28 @@
     <message>
         <location line="+117"/>
         <source>(node id: %1)</source>
-        <translation type="unfinished"></translation>
+        <translation>(id simpul: %1)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>via %1</source>
-        <translation type="unfinished"></translation>
+        <translation>melalui %1</translation>
     </message>
     <message>
         <location line="+4"/>
         <location line="+2"/>
         <source>never</source>
-        <translation type="unfinished"></translation>
+        <translation>tidak pernah</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Inbound</source>
-        <translation type="unfinished"></translation>
+        <translation>Masuk</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Outbound</source>
-        <translation type="unfinished"></translation>
+        <translation>Keluar</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2536,23 +2561,23 @@
     <message>
         <location line="+94"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
-        <translation type="unfinished"></translation>
+        <translation>Gunakan kembali salah satu alamat penerima yang digunakan sebelumnya. Penggunaan kembali alamat menimbulkan masalah keamanan dan privasi. Jangan gunakan ini kecuali membuat ulang permintaan pembayaran yang dibuat sebelumnya.</translation>
     </message>
     <message>
         <location line="+24"/>
         <location line="+23"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Nexa network.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pesan opsional untuk dilampirkan pada permintaan pembayaran, yang akan ditampilkan saat permintaan dibuka. Catatan: Pesan tidak akan terkirim dengan pembayaran melalui jaringan Nexa.</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Coin freezing locks coins to make them temporarily unspendable. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Pembekuan koin mengunci koin agar tidak dapat digunakan untuk sementara waktu. &lt;/p&gt;&lt;/tubuh&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Coin &amp;Freeze</source>
-        <translation type="unfinished"></translation>
+        <translation>Pembekuan Koin</translation>
     </message>
     <message>
         <location line="+71"/>
@@ -2577,7 +2602,7 @@
     <message>
         <location filename="../receivecoinsdialog.cpp" line="+53"/>
         <source>Copy URI</source>
-        <translation type="unfinished"></translation>
+        <translation>Salin URI</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2600,63 +2625,63 @@
     <message>
         <location filename="../forms/receivefreezedialog.ui" line="+14"/>
         <source>Coin Freeze</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+24"/>
         <source>WARNING! Freezing coins means they will be UNSPENDABLE until the release date or block specified below.</source>
-        <translation type="unfinished"></translation>
+        <translation>PERINGATAN! Membekukan koin berarti koin tersebut TIDAK DAPAT DIBELI hingga tanggal rilis atau blok yang ditentukan di bawah.</translation>
     </message>
     <message>
         <location line="+45"/>
         <source>Freeze until block :</source>
-        <translation type="unfinished"></translation>
+        <translation>Bekukan hingga blok :</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Specify the block when coins are released from the freeze. Coins are UNSPENDABLE until the freeze block.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Tentukan blok kapan koin dilepaskan dari pembekuan. Koin TIDAK DAPAT DIBELI sampai blok beku.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="+3"/>
         <location line="+99"/>
         <source>-</source>
-        <translation type="unfinished"></translation>
+        <translation>-</translation>
     </message>
     <message>
         <location line="-57"/>
         <source>OR</source>
-        <translation type="unfinished"></translation>
+        <translation>Atau</translation>
     </message>
     <message>
         <location line="+26"/>
         <source>Freeze until date and time :</source>
-        <translation type="unfinished"></translation>
+        <translation>Bekukan hingga tanggal dan waktu :</translation>
     </message>
     <message>
         <location line="+22"/>
         <source>Specify the future date and time when coins are released from the freeze. Coins are UNSPENDABLE until after the freeze date and time.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tentukan tanggal dan waktu di masa depan ketika koin dilepaskan dari pembekuan. Koin TIDAK DAPAT DIBELI sampai setelah tanggal dan waktu pembekuan.</translation>
     </message>
     <message>
         <location line="+98"/>
         <source>&amp;Reset</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Mengatur ulang</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Alt+R</source>
-        <translation type="unfinished"></translation>
+        <translation>Alt+R</translation>
     </message>
     <message>
         <location line="+25"/>
         <source>&amp;OK</source>
-        <translation type="unfinished">&amp;YA</translation>
+        <translation>&amp;YA</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Alt+O</source>
-        <translation type="unfinished"></translation>
+        <translation>Alt+O</translation>
     </message>
 </context>
 <context>
@@ -2719,7 +2744,7 @@
     <message>
         <location line="+2"/>
         <source>Freeze until</source>
-        <translation type="unfinished"></translation>
+        <translation>Bekukan sampai</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -2774,7 +2799,7 @@
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+627"/>
+        <location filename="../sendcoinsdialog.cpp" line="+633"/>
         <source>Send Coins</source>
         <translation>Kirim Koin</translation>
     </message>
@@ -2784,7 +2809,12 @@
         <translation>Cara Pengaturan Koin</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+17"/>
+        <source>Select specific coins you want to use in this transaction</source>
+        <translation>Pilih koin tertentu yang ingin Anda gunakan dalam transaksi ini</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Inputs...</source>
         <translation>Masukan...</translation>
     </message>
@@ -2840,78 +2870,105 @@
     </message>
     <message>
         <location line="+3"/>
+        <location line="+16"/>
         <source>Custom change address</source>
         <translation>Alamat uang kembali yang kustom</translation>
     </message>
     <message>
-        <location line="+206"/>
+        <location line="+193"/>
         <source>Transaction Fee:</source>
         <translation>Biaya Transaksi:</translation>
     </message>
     <message>
         <location line="+14"/>
+        <source>Choose your transaction fee.</source>
+        <translation>Pilih biaya transaksi Anda.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Choose...</source>
-        <translation type="unfinished"></translation>
+        <translation>Pilihlah...</translation>
     </message>
     <message>
         <location line="+37"/>
         <source>collapse fee-settings</source>
-        <translation type="unfinished"></translation>
+        <translation>runtuhnya pengaturan biaya</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Hide</source>
-        <translation type="unfinished"></translation>
+        <translation>Bersembunyi</translation>
     </message>
     <message>
         <location line="+48"/>
         <location line="+16"/>
         <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 satoshis in fee, while &quot;total at least&quot; pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation type="unfinished"></translation>
+        <translation>Jika biaya khusus ditetapkan ke 1000 satoshi dan transaksi hanya 250 byte, maka &quot;per kilobyte&quot; hanya membayar biaya 250 satoshi, sedangkan &quot;total setidaknya&quot; membayar 1000 satoshi. Untuk transaksi yang lebih besar dari satu kilobyte, keduanya dibayar per kilobyte.</translation>
     </message>
     <message>
         <location line="-13"/>
         <source>per kilobyte</source>
-        <translation type="unfinished"></translation>
+        <translation>per kilobyte</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>total at least</source>
-        <translation type="unfinished"></translation>
+        <translation>setidaknya total</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+10"/>
+        <source>Custom fee amount</source>
+        <translation>Jumlah biaya khusus</translation>
+    </message>
+    <message>
+        <location line="+24"/>
         <location line="+13"/>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for nexa transactions than the network can process.</source>
-        <translation type="unfinished"></translation>
+        <translation>Hanya membayar biaya minimum tidak masalah selama volume transaksi lebih sedikit daripada ruang di blok. Namun perlu diketahui bahwa hal ini dapat berakhir dengan tidak adanya konfirmasi transaksi ketika ada lebih banyak permintaan untuk transaksi nexa daripada yang dapat diproses oleh jaringan.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>(read the tooltip)</source>
-        <translation type="unfinished"></translation>
+        <translation>(baca keterangan alat)</translation>
     </message>
     <message>
         <location line="+29"/>
+        <source>Use the recommended fee amount.  You can select a faster or slower confirmation time by moving the &quot;Confirmation Time&quot; slider.</source>
+        <translation>Gunakan jumlah biaya yang disarankan. Anda dapat memilih waktu konfirmasi yang lebih cepat atau lebih lambat dengan menggerakkan penggeser &quot;Waktu Konfirmasi&quot;.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Recommended:</source>
         <translation>Disarankan</translation>
     </message>
     <message>
         <location line="+30"/>
+        <source>Choose a custom fee amount</source>
+        <translation>Pilih jumlah biaya khusus</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Custom:</source>
-        <translation type="unfinished"></translation>
+        <translation>Kebiasaan:</translation>
     </message>
     <message>
         <location line="+52"/>
         <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
-        <translation type="unfinished"></translation>
+        <translation>(Biaya pintar belum diinisialisasi. Ini biasanya memerlukan beberapa blok...)</translation>
     </message>
     <message>
         <location line="+29"/>
+        <location line="+33"/>
+        <source>Transaction confirmation time</source>
+        <translation>Waktu konfirmasi transaksi</translation>
+    </message>
+    <message>
+        <location line="-30"/>
         <source>Confirmation time:</source>
         <translation>Waktu konfirmasi:</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+63"/>
         <source>normal</source>
         <translation>normal</translation>
     </message>
@@ -2923,12 +2980,12 @@
     <message>
         <location line="+38"/>
         <source>Send as zero-fee transaction if possible</source>
-        <translation type="unfinished"></translation>
+        <translation>Kirim sebagai transaksi tanpa biaya jika memungkinkan</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>(confirmation may take longer)</source>
-        <translation type="unfinished"></translation>
+        <translation>(konfirmasi mungkin memerlukan waktu lebih lama)</translation>
     </message>
     <message>
         <location line="+110"/>
@@ -2946,22 +3003,27 @@
         <translation>Hapus informasi dari form.</translation>
     </message>
     <message>
-        <location line="-858"/>
+        <location line="-880"/>
         <source>Dust:</source>
         <translation>Dust:</translation>
     </message>
     <message>
-        <location line="+861"/>
+        <location line="+883"/>
         <source>Clear &amp;All</source>
         <translation>Hapus &amp;Semua</translation>
     </message>
     <message>
         <location line="+55"/>
+        <source>Current Balance</source>
+        <translation>Saldo saat ini</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Balance:</source>
         <translation>Saldo:</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-87"/>
         <source>Confirm the send action</source>
         <translation>Konfirmasi aksi pengiriman</translation>
     </message>
@@ -2984,7 +3046,7 @@
         <translation>%1 ke %2</translation>
     </message>
     <message>
-        <location line="-283"/>
+        <location line="-289"/>
         <source>Copy quantity</source>
         <translation>Salin kuantitas</translation>
     </message>
@@ -3019,14 +3081,14 @@
         <translation>Salin uang kembali</translation>
     </message>
     <message>
-        <location line="+247"/>
+        <location line="+253"/>
         <source>&lt;b&gt;Public label:&lt;/b&gt; %1</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;Label publik:&lt;/b&gt; %1</translation>
     </message>
     <message>
         <location line="+33"/>
         <source>&lt;br&gt;&lt;br&gt;&lt;b&gt;WARNING!!! DESTINATION IS A FREEZE ADDRESS&lt;br&gt;UNSPENDABLE UNTIL&lt;/b&gt; %1 &lt;br&gt;*************************************************&lt;br&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;br&gt;&lt;br&gt;&lt;b&gt;PERINGATAN!!! TUJUAN ADALAH ALAMAT YANG DIBEKUKAN&lt;br&gt;TAK DAPAT DIHABISKAN SAMPAI &lt;/b&gt; %1 &lt;br&gt;****************************** ******************&lt;br&gt;</translation>
     </message>
     <message>
         <location line="+36"/>
@@ -3041,7 +3103,7 @@
     <message>
         <location line="+187"/>
         <source>The recipient address is not valid. Please recheck.</source>
-        <translation type="unfinished"></translation>
+        <translation>Alamat penerima tidak valid. Silakan periksa kembali.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -3061,7 +3123,7 @@
     <message>
         <location line="+3"/>
         <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation type="unfinished"></translation>
+        <translation>Alamat duplikat ditemukan: masing-masing alamat hanya boleh digunakan satu kali.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -3086,12 +3148,12 @@
     <message>
         <location line="+4"/>
         <source>Public Label exeeds limit of </source>
-        <translation type="unfinished"></translation>
+        <translation>Label Publik melebihi batas</translation>
     </message>
     <message>
-        <location line="+105"/>
+        <location line="+102"/>
         <source>Pay only the required fee of %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Bayar hanya biaya yang diperlukan sebesar %1</translation>
     </message>
     <message>
         <location line="+128"/>
@@ -3101,17 +3163,17 @@
     <message>
         <location line="+7"/>
         <source>Warning: Unknown change address</source>
-        <translation type="unfinished"></translation>
+        <translation>Peringatan: Alamat perubahan tidak diketahui</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Confirm custom change address</source>
-        <translation type="unfinished"></translation>
+        <translation>Konfirmasikan alamat perubahan khusus</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
-        <translation type="unfinished"></translation>
+        <translation>Alamat yang Anda pilih untuk diubah bukan bagian dari dompet ini. Setiap atau seluruh dana di dompet Anda dapat dikirim ke alamat ini. Apa kamu yakin?</translation>
     </message>
     <message>
         <location line="+24"/>
@@ -3119,12 +3181,12 @@
         <translation>(tidak ada label)</translation>
     </message>
     <message>
-        <location line="-809"/>
+        <location line="-812"/>
         <source>Copy dust</source>
         <translation>Salin dust</translation>
     </message>
     <message>
-        <location line="+292"/>
+        <location line="+298"/>
         <source>Are you sure you want to send?</source>
         <translation>Apakah Anda yakin ingin kirim?</translation>
     </message>
@@ -3137,14 +3199,14 @@
 <context>
     <name>SendCoinsEntry</name>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="+82"/>
-        <location line="+650"/>
-        <location line="+533"/>
+        <location filename="../forms/sendcoinsentry.ui" line="+86"/>
+        <location line="+677"/>
+        <location line="+560"/>
         <source>A&amp;mount:</source>
         <translation>J&amp;umlah:</translation>
     </message>
     <message>
-        <location line="-1170"/>
+        <location line="-1224"/>
         <source>Pay &amp;To:</source>
         <translation>Kirim &amp;Ke:</translation>
     </message>
@@ -3154,39 +3216,34 @@
         <translation>Pilih alamat yang telah digunakan sebelumnya</translation>
     </message>
     <message>
-        <location line="-106"/>
-        <source>This is a normal payment.</source>
-        <translation>Ini adalah pembayaran normal</translation>
-    </message>
-    <message>
-        <location line="+26"/>
+        <location line="-80"/>
         <source>The fee will be deducted from the amount being sent. The recipient will receive less coins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
-        <translation type="unfinished"></translation>
+        <translation>Biaya akan dipotong dari jumlah yang dikirim. Penerima akan menerima koin lebih sedikit daripada yang Anda masukkan di kolom jumlah. Jika beberapa penerima dipilih, biayanya dibagi rata.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>S&amp;ubtract fee from amount</source>
-        <translation type="unfinished"></translation>
+        <translation>Kurangi biaya dari jumlah</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Private Description:</source>
-        <translation type="unfinished"></translation>
+        <translation>Deskripsi Pribadi:</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Private &amp;Label:</source>
-        <translation type="unfinished"></translation>
+        <translation>Pribadi &amp; Label:</translation>
     </message>
     <message>
         <location line="+51"/>
         <source>The Nexa address to send the payment to</source>
-        <translation type="unfinished"></translation>
+        <translation>Alamat Nexa untuk mengirim pembayaran</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Alt+A</source>
-        <translation>Alt+J</translation>
+        <translation>Alt+A</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -3200,63 +3257,68 @@
     </message>
     <message>
         <location line="+7"/>
-        <location line="+526"/>
-        <location line="+533"/>
+        <location line="+553"/>
+        <location line="+560"/>
         <source>Remove this entry</source>
         <translation>Hapus masukan ini</translation>
     </message>
     <message>
-        <location line="-1037"/>
+        <location line="-1091"/>
         <source>A message that was attached to the coin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Nexa network.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pesan yang dilampirkan pada koin: URI yang akan disimpan bersama transaksi untuk referensi Anda. Catatan: Pesan ini tidak akan dikirim melalui jaringan Nexa.</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Enter a private label for this address to add it to the list of used addresses</source>
-        <translation type="unfinished"></translation>
+        <translation>Masukkan label pribadi untuk alamat ini untuk menambahkannya ke daftar alamat yang digunakan</translation>
     </message>
     <message>
         <location line="+11"/>
         <location filename="../sendcoinsentry.cpp" line="+43"/>
         <source>Enter a public label for this transaction</source>
-        <translation type="unfinished"></translation>
+        <translation>Masukkan label publik untuk transaksi ini</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Public Label:</source>
-        <translation type="unfinished"></translation>
+        <translation>Label publik:</translation>
     </message>
     <message>
-        <location line="+439"/>
+        <location line="+466"/>
         <source>This is an unauthenticated payment request.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ini adalah permintaan pembayaran yang tidak diautentikasi.</translation>
     </message>
     <message>
-        <location line="+529"/>
+        <location line="+556"/>
         <source>This is an authenticated payment request.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ini adalah permintaan pembayaran yang diautentikasi.</translation>
     </message>
     <message>
-        <location line="-514"/>
-        <location line="+529"/>
+        <location line="-541"/>
+        <location line="+556"/>
         <source>Pay To:</source>
         <translation>Kirim Ke:</translation>
     </message>
     <message>
-        <location line="-495"/>
-        <location line="+533"/>
+        <location line="-1224"/>
+        <source>Amount to send</source>
+        <translation>Jumlah yang akan dikirim</translation>
+    </message>
+    <message>
+        <location line="+702"/>
+        <location line="+560"/>
         <source>Memo:</source>
         <translation>Catatan Peringatan:</translation>
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="-12"/>
         <source>A message that was attached to the %1 URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Nexa network.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pesan yang dilampirkan pada URI %1 yang akan disimpan bersama transaksi untuk referensi Anda. Catatan: Pesan ini tidak akan dikirim melalui jaringan Nexa.</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Enter a private label for this address to add it to your address book</source>
-        <translation type="unfinished"></translation>
+        <translation>Masukkan label pribadi untuk alamat ini untuk menambahkannya ke buku alamat Anda</translation>
     </message>
 </context>
 <context>
@@ -3264,7 +3326,7 @@
     <message>
         <location filename="../utilitydialog.cpp" line="+76"/>
         <source>%1 is shutting down...</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 dimatikan...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3287,12 +3349,12 @@
     <message>
         <location line="+6"/>
         <source>You can sign messages/agreements with your addresses to prove you can receive coins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished"></translation>
+        <translation>Anda dapat menandatangani pesan/perjanjian dengan alamat Anda untuk membuktikan bahwa Anda dapat menerima koin yang dikirimkan kepada mereka. Berhati-hatilah untuk tidak menandatangani sesuatu yang tidak jelas atau acak, karena serangan phishing mungkin mencoba menipu Anda agar memberikan identitas Anda kepada mereka. Hanya tandatangani pernyataan yang sepenuhnya rinci dan Anda setujui.</translation>
     </message>
     <message>
         <location line="+18"/>
         <source>The Nexa address to sign the message with</source>
-        <translation type="unfinished"></translation>
+        <translation>Alamat Nexa untuk menandatangani pesan</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -3360,17 +3422,17 @@
     <message>
         <location line="+6"/>
         <source>Enter the receiver&apos;s address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
-        <translation type="unfinished"></translation>
+        <translation>Masukkan alamat penerima, pesan (pastikan Anda menyalin jeda baris, spasi, tab, dll. dengan tepat) dan tanda tangan di bawah untuk memverifikasi pesan. Berhati-hatilah untuk tidak membaca lebih dalam tanda tangan daripada isi pesan yang ditandatangani itu sendiri, untuk menghindari tertipu oleh serangan man-in-the-middle. Perhatikan bahwa ini hanya membuktikan pihak yang menandatangani menerima dengan alamatnya, tidak dapat membuktikan pengirim transaksi apa pun!</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>The Nexa address the message was signed with</source>
-        <translation type="unfinished"></translation>
+        <translation>Alamat Nexa yang digunakan untuk menandatangani pesan</translation>
     </message>
     <message>
         <location line="+37"/>
         <source>Verify the message to ensure it was signed with the specified Nexa address</source>
-        <translation type="unfinished"></translation>
+        <translation>Verifikasi pesan untuk memastikan pesan ditandatangani dengan alamat Nexa yang ditentukan</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -3412,6 +3474,220 @@
     </message>
 </context>
 <context>
+    <name>TokenDescDialog</name>
+    <message>
+        <location filename="../forms/tokendescdialog.ui" line="+17"/>
+        <source>Token details</source>
+        <translation>Detail token</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This pane shows a detailed description of the token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Panel ini menampilkan deskripsi detail token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+</context>
+<context>
+    <name>TokensViewDialog</name>
+    <message>
+        <location filename="../forms/tokensviewdialog.ui" line="+14"/>
+        <source>Tokens</source>
+        <translation>Token</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Amount: </source>
+        <translation>Jumlah: </translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The number of tokens to send&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Jumlah token yang akan dikirim&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>  Pay To: </source>
+        <translation>Kirim Ke:</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>The Nexa address to send the payment to</source>
+        <translation>Alamat Nexa untuk mengirim pembayaran</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Choose previously used address</source>
+        <translation>Pilih alamat yang telah digunakan sebelumnya</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Alt+A</source>
+        <translation>Alt+A</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Paste address from clipboard</source>
+        <translation>Tempel alamat dari salinan</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Alt+P</source>
+        <translation>Alt+P</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Remove this entry</source>
+        <translation>Hapus masukan ini</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send tokens&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Kirim token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Send</source>
+        <translation>Kirim</translation>
+    </message>
+    <message>
+        <location line="+56"/>
+        <source>Token ID</source>
+        <translation>ID Token</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>The unique token identifier</source>
+        <translation>Pengidentifikasi token unik</translation>
+    </message>
+    <message>
+        <location line="-45"/>
+        <source>The token group identifier</source>
+        <translation>Pengidentifikasi grup token</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Name</source>
+        <translation>Nama</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The name of the token</source>
+        <translation>Nama tokennya</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Ticker</source>
+        <translation>Simbol</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The token ticker symbol</source>
+        <translation>Simbol token</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Balance</source>
+        <translation>Saldo</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Confirmed token balance</source>
+        <translation>Saldo token dikonfirmasi</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Pending</source>
+        <translation>Ditunda</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Unconfirmed token balance</source>
+        <translation>Saldo token belum dikonfirmasi</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Sub</source>
+        <translation>Sub</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>If checked then this item is a subgroup.</source>
+        <translation>Jika dicentang maka item ini adalah subgrup.</translation>
+    </message>
+    <message>
+        <location filename="../tokensviewdialog.cpp" line="+391"/>
+        <location line="+7"/>
+        <location line="+4"/>
+        <source>Data</source>
+        <translation>Data</translation>
+    </message>
+    <message>
+        <location line="-11"/>
+        <source>string</source>
+        <translation>rangkaian</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location line="+4"/>
+        <source>num</source>
+        <translation>numor</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>NaN</source>
+        <translation>NaN</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Name:</source>
+        <translation>Nama:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ticker:</source>
+        <translation>Simbol:</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>URL:</source>
+        <translation>URL:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Hash:</source>
+        <translation>Hash:</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Decimals:</source>
+        <translation>Desimal:</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Balance:</source>
+        <translation>Saldo:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pending:</source>
+        <translation>Ditunda:</translation>
+    </message>
+    <message>
+        <location line="+79"/>
+        <source>Are you sure you want to send?</source>
+        <translation>Apakah Anda yakin ingin kirim?</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&lt;b&gt;Token(s)&lt;/b&gt;</source>
+        <translation>&lt;b&gt;Token&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Confirm send tokens</source>
+        <translation>Konfirmasikan pengiriman token</translation>
+    </message>
+</context>
+<context>
     <name>TrafficGraphWidget</name>
     <message>
         <location filename="../trafficgraphwidget.cpp" line="+74"/>
@@ -3422,19 +3698,19 @@
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+34"/>
+        <location filename="../transactiondesc.cpp" line="+35"/>
         <source>Open until %1</source>
         <translation>Buka hingga %1</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>double spent</source>
-        <translation type="unfinished"></translation>
+        <translation>sembelanjaan ganda</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>abandoned</source>
-        <translation type="unfinished"></translation>
+        <translation>ditinggalkan</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -3501,7 +3777,7 @@
     <message>
         <location line="-143"/>
         <source>change address</source>
-        <translation type="unfinished"></translation>
+        <translation>mengubah alamat</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -3512,7 +3788,7 @@
         <location line="+0"/>
         <location line="+119"/>
         <source>watch-only</source>
-        <translation type="unfinished"></translation>
+        <translation>hanya untuk menonton</translation>
     </message>
     <message>
         <location line="-116"/>
@@ -3527,24 +3803,24 @@
         <location line="+48"/>
         <location line="+71"/>
         <source>Public label:</source>
-        <translation type="unfinished"></translation>
+        <translation>Label publik</translation>
     </message>
     <message>
         <location line="-167"/>
         <source>Freeze until</source>
-        <translation type="unfinished"></translation>
+        <translation>Bekukan sampai</translation>
     </message>
     <message>
         <location line="+18"/>
         <location line="+41"/>
         <location line="+63"/>
         <location line="+47"/>
-        <location line="+74"/>
+        <location line="+134"/>
         <source>Credit</source>
         <translation>Kredit</translation>
     </message>
     <message numerus="yes">
-        <location line="-222"/>
+        <location line="-282"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>cukup tua sesudah %n blok lagi</numerusform>
@@ -3558,19 +3834,19 @@
     <message>
         <location line="+102"/>
         <location line="+31"/>
-        <location line="+79"/>
+        <location line="+139"/>
         <source>Debit</source>
         <translation>Debet</translation>
     </message>
     <message>
-        <location line="-98"/>
+        <location line="-158"/>
         <source>Total debit</source>
-        <translation type="unfinished"></translation>
+        <translation>Jumlah debet</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Total credit</source>
-        <translation type="unfinished"></translation>
+        <translation>Jumlah kredit</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -3596,12 +3872,12 @@
     <message>
         <location line="+2"/>
         <source>Transaction Idem</source>
-        <translation type="unfinished"></translation>
+        <translation>Identitas Transaksi</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Transaction size</source>
-        <translation type="unfinished"></translation>
+        <translation>Ukuran transaksi</translation>
     </message>
     <message>
         <location line="+20"/>
@@ -3611,10 +3887,44 @@
     <message>
         <location line="+8"/>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation type="unfinished"></translation>
+        <translation>Koin yang dihasilkan harus matang %1 blok sebelum dapat dibelanjakan. Saat Anda membuat blok ini, blok ini disiarkan ke jaringan untuk ditambahkan ke rantai blok. Jika gagal masuk ke dalam rantai, statusnya akan berubah menjadi &quot;tidak diterima&quot; dan tidak dapat dibelanjakan. Hal ini terkadang terjadi jika node lain menghasilkan blok dalam beberapa detik dari node Anda.</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+25"/>
+        <location line="+25"/>
+        <source>Token ID</source>
+        <translation>ID Token</translation>
+    </message>
+    <message>
+        <location line="-20"/>
+        <location line="+25"/>
+        <source>Ticker</source>
+        <translation>Simbol</translation>
+    </message>
+    <message>
+        <location line="-24"/>
+        <location line="+25"/>
+        <source>Name</source>
+        <translation>Nama</translation>
+    </message>
+    <message>
+        <location line="-21"/>
+        <location line="+25"/>
+        <source>Decimals</source>
+        <translation>Desimal</translation>
+    </message>
+    <message>
+        <location line="-23"/>
+        <source>Amount Sent</source>
+        <translation>Jumlah yang Dikirim</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Amount Received</source>
+        <translation>Jumlah yang Diterima</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Debug information</source>
         <translation>Informasi debug</translation>
     </message>
@@ -3646,7 +3956,7 @@
         <translation>salah</translation>
     </message>
     <message>
-        <location line="-357"/>
+        <location line="-417"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, belum berhasil disiarkan</translation>
     </message>
@@ -3681,7 +3991,7 @@
     <message>
         <location filename="../transactiongraphwidget.cpp" line="+148"/>
         <source>tps</source>
-        <translation type="unfinished"></translation>
+        <translation>tps</translation>
     </message>
 </context>
 <context>
@@ -3711,7 +4021,7 @@
     <message>
         <location line="-60"/>
         <source>Address or Label</source>
-        <translation type="unfinished"></translation>
+        <translation>Alamat atau Label</translation>
     </message>
     <message>
         <location line="+63"/>
@@ -3756,12 +4066,12 @@
     <message>
         <location line="+3"/>
         <source>Double Spent</source>
-        <translation type="unfinished"></translation>
+        <translation>Pembelanjaan Ganda</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Abandoned</source>
-        <translation type="unfinished"></translation>
+        <translation>Ditinggalkan</translation>
     </message>
     <message>
         <location line="+51"/>
@@ -3791,17 +4101,17 @@
     <message>
         <location line="+2"/>
         <source>Public label</source>
-        <translation type="unfinished"></translation>
+        <translation>Label publik</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Other</source>
-        <translation type="unfinished">Lainnya</translation>
+        <translation>Lainnya</translation>
     </message>
     <message>
         <location line="+30"/>
         <source>watch-only</source>
-        <translation type="unfinished"></translation>
+        <translation>hanya tontonan</translation>
     </message>
     <message>
         <location line="+276"/>
@@ -3821,12 +4131,12 @@
     <message>
         <location line="+2"/>
         <source>Whether or not a watch-only address is involved in this transaction.</source>
-        <translation type="unfinished"></translation>
+        <translation>Apakah alamat hanya jam tangan terlibat dalam transaksi ini atau tidak.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>User-defined intent/purpose of the transaction.</source>
-        <translation type="unfinished"></translation>
+        <translation>Maksud/tujuan transaksi yang ditentukan pengguna.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -3960,12 +4270,12 @@
     <message>
         <location line="-175"/>
         <source>Copy transaction idem</source>
-        <translation type="unfinished"></translation>
+        <translation>Salin idem transaksi</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy raw transaction</source>
-        <translation type="unfinished"></translation>
+        <translation>Salin transaksi mentah</translation>
     </message>
     <message>
         <location line="+183"/>
@@ -3975,7 +4285,7 @@
     <message>
         <location line="+2"/>
         <source>Watch-only</source>
-        <translation type="unfinished"></translation>
+        <translation>Hanya tontonan</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4005,7 +4315,7 @@
     <message>
         <location line="+5"/>
         <source>There was an error trying to save the transaction history to %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Terjadi kesalahan saat mencoba menyimpan riwayat transaksi ke %1.</translation>
     </message>
     <message>
         <location line="+103"/>
@@ -4023,7 +4333,7 @@
     <message>
         <location filename="../nexagui.cpp" line="+117"/>
         <source>Unit to show amounts in. Click to select another unit.</source>
-        <translation type="unfinished"></translation>
+        <translation>Satuan untuk menampilkan jumlah masuk. Klik untuk memilih satuan lain.</translation>
     </message>
 </context>
 <context>
@@ -4031,100 +4341,100 @@
     <message>
         <location filename="../forms/unlimited.ui" line="+14"/>
         <source>Unlimited</source>
-        <translation type="unfinished"></translation>
+        <translation>Unlimited</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>&amp;Mining</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Pertambangan</translation>
     </message>
     <message>
         <location line="+8"/>
         <location line="+10"/>
         <source>The largest block that will be mined</source>
-        <translation type="unfinished"></translation>
+        <translation>Blok terbesar yang akan ditambang</translation>
     </message>
     <message>
         <location line="-7"/>
         <source>Maximum Generated Block Size (bytes) </source>
-        <translation type="unfinished"></translation>
+        <translation>Ukuran Blok Maksimum yang Dihasilkan (byte)</translation>
     </message>
     <message>
         <location line="+30"/>
         <source>&amp;Network</source>
-        <translation type="unfinished">&amp;Jaringan</translation>
+        <translation>&amp;Jaringan</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Bandwidth Restrictions in KBytes/sec (check to enable):</source>
-        <translation type="unfinished"></translation>
+        <translation>Pembatasan Bandwidth dalam KBytes/detik (centang untuk mengaktifkan):</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Send</source>
-        <translation type="unfinished"></translation>
+        <translation>Kirim</translation>
     </message>
     <message>
         <location line="+7"/>
         <location line="+71"/>
         <source>Max</source>
-        <translation type="unfinished"></translation>
+        <translation>Maks</translation>
     </message>
     <message>
         <location line="-35"/>
         <location line="+59"/>
         <source>Average</source>
-        <translation type="unfinished"></translation>
+        <translation>Rata-rata</translation>
     </message>
     <message>
         <location line="-31"/>
         <source>Receive</source>
-        <translation type="unfinished"></translation>
+        <translation>Menerima</translation>
     </message>
     <message>
         <location line="+86"/>
         <source>Active command-line options that override above options:</source>
-        <translation type="unfinished">Pilihan command-line yang aktif menimpa diatas opsi: </translation>
+        <translation>Pilihan command-line yang aktif menimpa diatas opsi: </translation>
     </message>
     <message>
         <location line="+43"/>
         <source>Reset all client options to default.</source>
-        <translation type="unfinished">Kembalikan semua pengaturan ke awal.</translation>
+        <translation>Kembalikan semua pengaturan ke awal.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Reset Options</source>
-        <translation type="unfinished">&amp;Reset Pilihan</translation>
+        <translation>&amp;Reset Pilihan</translation>
     </message>
     <message>
         <location line="+61"/>
         <source>&amp;OK</source>
-        <translation type="unfinished">&amp;YA</translation>
+        <translation>&amp;YA</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>&amp;Cancel</source>
-        <translation type="unfinished">&amp;Batal</translation>
+        <translation>&amp;Batal</translation>
     </message>
     <message>
         <location filename="../unlimiteddialog.cpp" line="-345"/>
         <source>Confirm options reset</source>
-        <translation type="unfinished">Memastikan reset pilihan</translation>
+        <translation>Memastikan reset pilihan</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This is a global reset of all settings!</source>
-        <translation type="unfinished"></translation>
+        <translation>Ini adalah pengaturan ulang global untuk semua pengaturan!</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Client restart required to activate changes.</source>
-        <translation type="unfinished">Restart klien diperlukan untuk mengaktifkan perubahan.</translation>
+        <translation>Restart klien diperlukan untuk mengaktifkan perubahan.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Client will be shut down. Do you want to proceed?</source>
-        <translation type="unfinished">Klien akan dimatikan, apakah anda hendak melanjutkan?</translation>
+        <translation>Klien akan dimatikan, apakah anda hendak melanjutkan?</translation>
     </message>
     <message>
         <location line="+60"/>
@@ -4132,7 +4442,7 @@
         <location line="+42"/>
         <location line="+42"/>
         <source>Upstream traffic shaping parameters can&apos;t be blank</source>
-        <translation type="unfinished"></translation>
+        <translation>Parameter pembentukan lalu lintas hulu wajib diisi</translation>
     </message>
     <message>
         <location line="-108"/>
@@ -4140,7 +4450,7 @@
         <location line="+43"/>
         <location line="+41"/>
         <source>Traffic shaping parameters have to be greater than 0.</source>
-        <translation type="unfinished"></translation>
+        <translation>Parameter pembentukan lalu lintas harus lebih besar dari 0.</translation>
     </message>
 </context>
 <context>
@@ -4162,7 +4472,7 @@
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+44"/>
+        <location filename="../walletview.cpp" line="+45"/>
         <source>&amp;Export</source>
         <translation>&amp;Ekspor</translation>
     </message>
@@ -4172,24 +4482,25 @@
         <translation>Ekspor data dalam tab sekarang ke sebuah berkas</translation>
     </message>
     <message>
-        <location line="+187"/>
+        <location line="+191"/>
         <source>Backup Wallet</source>
         <translation>Cadangkan Dompet</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location line="+21"/>
         <source>Wallet Data (*.dat)</source>
         <translation>Data Dompet (*.dat)</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-14"/>
         <source>Backup Failed</source>
         <translation>Cadangkgan Gagal</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>There was an error trying to save the wallet data to %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Terjadi kesalahan saat mencoba menyimpan data dompet ke %1.</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -4200,6 +4511,21 @@
         <location line="+0"/>
         <source>Backup Successful</source>
         <translation>Cadangkan Berhasil </translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Restore Wallet</source>
+        <translation>Pulihkan Dompet</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Restore Failed</source>
+        <translation>Pemulihan Gagal</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>There was an error trying to restore the wallet data to %1.</source>
+        <translation>Terjadi kesalahan saat mencoba memulihkan data dompet ke %1.</translation>
     </message>
 </context>
 <context>
@@ -4215,7 +4541,16 @@
         <translation>Peringatan: Kami tidak bersetujuh dengan peer-peer kami! Kemungkinan Anda harus upgrade, atau node-node lain yang harus diupgrade.</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+8"/>
+        <source>You can not run &quot;-salvagewallet&quot; as an HD wallet.
+
+Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
+        <translation>Anda tidak dapat menjalankan &quot;-salvagewallet&quot; sebagai dompet HD.
+
+Silakan luncurkan kembali Nexa dengan &quot;-usehd=0&quot;.</translation>
+    </message>
+    <message>
+        <location line="+28"/>
         <source>Corrupted block database detected</source>
         <translation>Menemukan database blok yang rusak </translation>
     </message>
@@ -4245,7 +4580,7 @@
         <translation>Gagal: Hard disk hampir terisi!</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Importing...</source>
         <translation>mengimpor...</translation>
     </message>
@@ -4255,7 +4590,7 @@
         <translation>Tidak bisa cari blok pertama, atau blok pertama salah. Salah direktori untuk jaringan?</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Invalid -onion address: &apos;%s&apos;</source>
         <translation>Alamat -onion salah: &apos;%s&apos;</translation>
     </message>
@@ -4265,7 +4600,12 @@
         <translation>Deskripsi berkas tidak tersedia dengan cukup.</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+12"/>
+        <source>Signing token transaction failed</source>
+        <translation>Penandatanganan transaksi token gagal</translation>
+    </message>
+    <message>
+        <location line="+19"/>
         <source>Verifying blocks...</source>
         <translation>Blok-blok sedang diverifikasi...</translation>
     </message>
@@ -4277,7 +4617,7 @@
     <message>
         <location line="+1"/>
         <source>Waiting for Genesis Block...</source>
-        <translation type="unfinished"></translation>
+        <translation>Menunggu Genesis Block...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4285,34 +4625,34 @@
         <translation>Dompet %s ada diluar direktori data %s</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-71"/>
         <source>Cannot resolve -whitebind address: &apos;%s&apos;</source>
         <translation>Tidak dapat menyelesaikan alamat -whitebind: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+22"/>
         <source>Information</source>
         <translation>Informasi</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+28"/>
         <source>Signing transaction failed</source>
         <translation>Tandatangani transaksi tergagal</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Starting txindex</source>
-        <translation type="unfinished"></translation>
+        <translation>Memulai txindex</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The transaction amount is too small to pay the fee</source>
-        <translation type="unfinished"></translation>
+        <translation>Jumlah transaksi terlalu kecil untuk membayar biaya</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This is experimental software.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ini adalah perangkat lunak eksperimental.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4330,7 +4670,7 @@
         <translation>Peringatan</translation>
     </message>
     <message>
-        <location line="-39"/>
+        <location line="-41"/>
         <source>Loading addresses...</source>
         <translation>Memuat alamat...</translation>
     </message>
@@ -4340,39 +4680,39 @@
         <translation>Alamat -proxy salah: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+27"/>
+        <location line="+29"/>
         <source>Transaction has %d outputs. Maximum outputs allowed is %d</source>
-        <translation type="unfinished"></translation>
+        <translation>Transaksi memiliki %d keluaran. Output maksimum yang diperbolehkan adalah %d</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Transaction of %d bytes is too large. Maximum allowed is %d bytes</source>
-        <translation type="unfinished"></translation>
+        <translation>Transaksi %d byte terlalu besar. Maksimum yang diperbolehkan adalah %d byte</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Transaction too large for fee policy</source>
-        <translation type="unfinished"></translation>
+        <translation>Transaksi terlalu besar untuk kebijakan biaya</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Turn off auto consolidate and try sending again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Matikan konsolidasi otomatis dan coba kirim lagi.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation type="unfinished"></translation>
+        <translation>Tidak dapat mengikat ke %s di komputer ini (pengikatan menghasilkan kesalahan %s)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tidak dapat mengikat ke %s di komputer ini. %s mungkin sudah berjalan.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unable to start RPC services. See debug log for details.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tidak dapat memulai layanan RPC. Lihat log debug untuk detailnya.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4380,7 +4720,7 @@
         <translation>Jaringan tidak diketahui yang ditentukan dalam -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-61"/>
+        <location line="-65"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Tidak dapat menyelesaikan alamat -bind: &apos;%s&apos;</translation>
     </message>
@@ -4390,7 +4730,7 @@
         <translation>Tidak dapat menyelesaikan alamat -externalip: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+35"/>
         <source>Loading block index...</source>
         <translation>Memuat indeks blok...</translation>
     </message>
@@ -4400,64 +4740,64 @@
         <translation>Memuat dompet...</translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-38"/>
         <source>Cannot downgrade wallet</source>
         <translation>Tidak dapat menurunkan versi dompet</translation>
     </message>
     <message>
-        <location line="-125"/>
+        <location line="-131"/>
         <source>Nexa</source>
-        <translation type="unfinished">Nexa</translation>
+        <translation>Nexa</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The %s developers</source>
-        <translation type="unfinished"></translation>
+        <translation>Pengembang %s</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Bitcoin Bitcoin XT and Bitcoin Unlimited</source>
-        <translation type="unfinished"></translation>
+        <translation>Bitcoin Bitcoin XT dan Bitcoin Unlimited</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>-wallet.maxTxFee is set very high! Fees this large could be paid on a single transaction.</source>
-        <translation type="unfinished"></translation>
+        <translation>-wallet.maxTxFee disetel sangat tinggi! Biaya sebesar ini dapat dibayarkan dalam satu transaksi.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>-wallet.payTxFee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished"></translation>
+        <translation>-wallet.payTxFee disetel sangat tinggi! Ini adalah biaya transaksi yang akan Anda bayarkan jika Anda mengirim transaksi.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tidak dapat memperoleh kunci pada direktori data %s. %s mungkin sudah berjalan.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Could not locate RPC credentials. No authentication cookie could be found, and no rpcpassword is set in the configuration file (%s)</source>
-        <translation type="unfinished"></translation>
+        <translation>Tidak dapat menemukan kredensial RPC. Tidak ada cookie autentikasi yang ditemukan, dan tidak ada kata sandi rpc yang disetel di file konfigurasi (%s)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Deployment configuration file &apos;%s&apos; contained invalid data - see debug.log</source>
-        <translation type="unfinished"></translation>
+        <translation>File konfigurasi penerapan &apos;%s&apos; berisi data yang tidak valid - lihat debug.log</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
-        <translation type="unfinished"></translation>
+        <translation>Didistribusikan di bawah lisensi perangkat lunak MIT, lihat file terlampir COPYING atau &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Error loading %s: You can&apos;t enable HD on a already existing non-HD wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Kesalahan saat memuat %s: Anda tidak dapat mengaktifkan HD pada dompet non-HD yang sudah ada</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished"></translation>
+        <translation>Kesalahan membaca %s! Semua kunci terbaca dengan benar, namun data transaksi atau entri buku alamat mungkin hilang atau salah.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -4465,172 +4805,181 @@
 Details: %s
 
 Do you want to reindex on the next restart?</source>
-        <translation type="unfinished"></translation>
+        <translation>Kesalahan membaca dari database koin.
+Detail: %s
+
+Apakah Anda ingin mengindeks ulang pada restart berikutnya?</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation type="unfinished"></translation>
+        <translation>Kesalahan: Gagal mendengarkan koneksi masuk (kesalahan mendengarkan kembali %s)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Failed to listen on all P2P ports. Failing as requested by -bindallorfail.</source>
-        <translation type="unfinished"></translation>
+        <translation>Gagal mendengarkan di semua port P2P. Gagal seperti yang diminta oleh -bindallorfail.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Fee: %ld is larger than configured maximum allowed fee of : %ld.  To change, set &apos;wallet.maxTxFee&apos;.</source>
-        <translation type="unfinished"></translation>
+        <translation>Biaya: %ld lebih besar dari biaya maksimum yang diizinkan yang dikonfigurasi sebesar : %ld. Untuk mengubahnya, setel &apos;wallet.maxTxFee&apos;.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Invalid amount for -wallet.maxTxFee=&lt;amount&gt;: &apos;%u&apos; (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
-        <translation type="unfinished"></translation>
+        <translation>Jumlah tidak valid untuk -wallet.maxTxFee=&lt;amount&gt;: &apos;%u&apos; (minimal harus berupa biaya minrelay sebesar %s untuk mencegah transaksi macet)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Invalid amount for -wallet.payTxFee=&lt;amount&gt;: &apos;%u&apos; (must be at least %s)</source>
-        <translation type="unfinished"></translation>
+        <translation>Jumlah tidak valid untuk -wallet.payTxFee=&lt;amount&gt;: &apos;%u&apos; (minimal harus %s)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Please check that your computer&apos;s date and time are correct! If your clock is wrong, %s will not work properly.</source>
-        <translation type="unfinished"></translation>
+        <translation>Silakan periksa apakah tanggal dan waktu komputer Anda sudah benar! Jika jam Anda salah, %s tidak akan berfungsi dengan baik.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pangkas dikonfigurasikan di bawah minimum %d MiB. Silakan gunakan angka yang lebih tinggi.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
-        <translation type="unfinished"></translation>
+        <translation>Pangkas: sinkronisasi dompet terakhir lebih dari sekadar data yang dipangkas. Anda perlu -mengindeks ulang (unduh kembali seluruh blockchain jika ada node yang dipangkas)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Reducing -maxconnections from %d to %d because of file descriptor limitations (unix) or winsocket fd_set limitations (windows). If you are a windows user there is a hard upper limit of 1024 which cannot be changed by adjusting the node&apos;s configuration.</source>
-        <translation type="unfinished"></translation>
+        <translation>Mengurangi -maxconnections dari %d menjadi %d karena batasan deskriptor file (unix) atau batasan winsocket fd_set (windows). Jika Anda adalah pengguna windows, ada batas atas 1024 yang tidak dapat diubah dengan menyesuaikan konfigurasi node.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pemindaian ulang tidak dapat dilakukan dalam mode pemangkasan. Anda perlu menggunakan -reindex yang akan mengunduh kembali seluruh blockchain.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer&apos;s date and time being set incorrectly. Only rebuild the block database if you are sure that your computer&apos;s date and time are correct</source>
-        <translation type="unfinished"></translation>
+        <translation>Basis data blok berisi blok yang tampaknya berasal dari masa depan. Hal ini mungkin disebabkan oleh pengaturan tanggal dan waktu komputer Anda yang salah. Hanya membangun kembali database blok jika Anda yakin bahwa tanggal dan waktu komputer Anda sudah benar</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
-        <translation type="unfinished"></translation>
+        <translation>Jumlah transaksi terlalu kecil untuk dikirim setelah dipotong biaya</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation type="unfinished"></translation>
+        <translation>Ini adalah uji coba pra-rilis - gunakan dengan risiko Anda sendiri - jangan gunakan untuk aplikasi penambangan atau pedagang</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation type="unfinished"></translation>
+        <translation>Produk ini mencakup perangkat lunak yang dikembangkan oleh Proyek OpenSSL untuk digunakan dalam OpenSSL Toolkit &lt;https://www.openssl.org/&gt; dan perangkat lunak kriptografi yang ditulis oleh Eric Young dan perangkat lunak UPnP yang ditulis oleh Thomas Bernard.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Total length of network version string with uacomments added exceeded the maximum length (%i) and have been truncated.  Reduce the number or size of uacomments to avoid truncation.</source>
-        <translation type="unfinished"></translation>
+        <translation>Panjang total string versi jaringan dengan uakomentar yang ditambahkan melebihi panjang maksimum (%i) dan telah terpotong. Kurangi jumlah atau ukuran komentar untuk menghindari pemotongan.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Transaction has %d inputs and %d outputs. Maximum inputs allowed are %d and maximum outputs are %d</source>
-        <translation type="unfinished"></translation>
+        <translation>Transaksi memiliki %d masukan dan %d keluaran. Masukan maksimum yang diperbolehkan adalah %d dan keluaran maksimum adalah %d</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Transaction has %d inputs. Maximum inputs allowed is %d. Try reducing inputs by transferring a smaller amount.</source>
-        <translation type="unfinished"></translation>
+        <translation>Transaksi memiliki %d input. Masukan maksimum yang diperbolehkan adalah %d. Coba kurangi masukan dengan mentransfer jumlah yang lebih kecil.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
-        <translation type="unfinished"></translation>
+        <translation>PERINGATAN: jumlah blok yang dihasilkan sangat tinggi, %d blok diterima dalam %d jam terakhir (%d diharapkan)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
-        <translation type="unfinished"></translation>
+        <translation>PERINGATAN: periksa koneksi jaringan Anda, %d blok diterima dalam %d jam terakhir (%d diharapkan)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Wallet is not password protected. Your funds may be at risk! Goto &quot;Settings&quot; and then select &quot;Encrypt Wallet&quot; to create a password.</source>
-        <translation type="unfinished"></translation>
+        <translation>Dompet tidak dilindungi kata sandi. Dana Anda mungkin berisiko! Buka &quot;Pengaturan&quot; lalu pilih &quot;Enkripsi Dompet&quot; untuk membuat kata sandi.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Warning: Could not open deployment configuration CSV file &apos;%s&apos; for reading</source>
-        <translation type="unfinished"></translation>
+        <translation>Peringatan: Tidak dapat membuka file CSV konfigurasi penerapan &apos;%s&apos; untuk dibaca</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Warning: Unknown block versions being mined! It&apos;s possible unknown rules are in effect</source>
-        <translation type="unfinished"></translation>
+        <translation>Peringatan: Versi blok tidak dikenal sedang ditambang! Ada kemungkinan aturan yang tidak diketahui sedang berlaku</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation type="unfinished"></translation>
+        <translation>Peringatan: File dompet rusak, data terselamatkan! %s asli disimpan sebagai %s di %s; jika saldo atau transaksi Anda salah sebaiknya Anda memulihkan dari cadangan.</translation>
     </message>
     <message>
         <location line="+7"/>
+        <source>You are trying to restore the same wallet which you are trying to replace.</source>
+        <translation>Anda mencoba memulihkan dompet yang sama dengan yang Anda coba ganti.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>You are trying to use -wallet.auto but neither -spendzeroconfchange nor -wallet.instant is turned on</source>
-        <translation type="unfinished"></translation>
+        <translation>Anda mencoba menggunakan -wallet.auto tetapi -spendzeroconfchange atau -wallet.instant tidak diaktifkan</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>You are trying to use wallet.fallbackFee which has been deprecated an no longer in  use - use wallet.payTxFee instead </source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>You are trying to use wallet.minTxFee which has been deprecated an no longer in  use - use wallet.payTxFee instead </source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+7"/>
         <source>You can not send free transactions if you have configured a -relay.limitFreeRelay of zero</source>
-        <translation type="unfinished"></translation>
+        <translation>Anda tidak dapat mengirim transaksi gratis jika Anda telah mengkonfigurasi -relay.limitFreeRelay nol</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
-        <translation type="unfinished"></translation>
+        <translation>Anda perlu membangun kembali database menggunakan -reindex untuk kembali ke mode tidak dipangkas. Ini akan mengunduh ulang seluruh blockchain</translation>
     </message>
     <message>
         <location line="+3"/>
+        <source>&quot;Restore Wallet&quot; succeeded and a backup of the previous wallet was saved to: %s.
+
+
+When you click &quot;OK&quot; Nexa will shutdown to complete the process.</source>
+        <translation>&quot;Pulihkan Dompet&quot; berhasil dan cadangan dompet sebelumnya disimpan ke: %s.
+
+
+Ketika Anda mengklik &quot;OK&quot; Nexa akan dimatikan untuk menyelesaikan proses.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>%s </source>
-        <translation type="unfinished"></translation>
+        <translation>%s </translation>
     </message>
     <message>
         <location line="+1"/>
         <source>%s corrupt, salvage failed</source>
-        <translation type="unfinished"></translation>
+        <translation>%s rusak, penyelamatan gagal</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>-maxtxpool must be at least %d MB</source>
-        <translation type="unfinished"></translation>
+        <translation>-maxtxpool minimal harus %d MB</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>-xthinbloomfiltersize must be at least %d Bytes</source>
-        <translation type="unfinished"></translation>
+        <translation>-xthinbloomfiltersize minimal harus %d Byte</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Activating best chain...</source>
-        <translation type="unfinished"></translation>
+        <translation>Mengaktifkan rantai terbaik...</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -4640,132 +4989,147 @@ Do you want to reindex on the next restart?</source>
     <message>
         <location line="+1"/>
         <source>CommitTransaction failed.</source>
-        <translation type="unfinished"></translation>
+        <translation>KomitTransaksi gagal.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copyright (C) 2015-%i The Bitcoin Unlimited Developers</source>
-        <translation type="unfinished"></translation>
+        <translation>Hak Cipta (C) 2015-%i Pengembang Bitcoin Unlimited</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Deployment configuration file &apos;%s&apos; not found</source>
-        <translation type="unfinished"></translation>
+        <translation>File konfigurasi penerapan &apos;%s&apos; tidak ditemukan</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Error loading %s</source>
-        <translation type="unfinished"></translation>
+        <translation>Terjadi kesalahan saat memuat %s</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error loading %s: Wallet corrupted</source>
-        <translation type="unfinished"></translation>
+        <translation>Kesalahan saat memuat %s: Dompet rusak</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error loading %s: Wallet requires newer version of %s</source>
-        <translation type="unfinished"></translation>
+        <translation>Kesalahan saat memuat %s: Dompet memerlukan versi %s yang lebih baru</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error loading %s: You can&apos;t disable HD on a already existing HD wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Kesalahan saat memuat %s: Anda tidak dapat menonaktifkan HD pada dompet HD yang sudah ada</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation type="unfinished"></translation>
+        <translation>Kesalahan: Terjadi kesalahan internal yang fatal, lihat debug.log untuk detailnya</translation>
     </message>
     <message>
         <location line="+2"/>
+        <source>Error: Keypool ran out, please call keypoolrefill first</source>
+        <translation>Error: Keypool habis, harap hubungi keypoolrefill terlebih dahulu</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation type="unfinished"></translation>
+        <translation>Gagal mendengarkan di port mana pun. Gunakan -listen=0 jika Anda menginginkan ini.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Initialization sanity check failed. %s is shutting down.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pemeriksaan kewarasan inisialisasi gagal. %s dimatikan.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Insufficient funds for this token.  Need %d more.</source>
+        <translation>Dana tidak mencukupi untuk token ini. Perlu %d lagi.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Insufficient funds or funds not confirmed</source>
-        <translation type="unfinished"></translation>
+        <translation>Dana tidak mencukupi atau dana tidak dikonfirmasi</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Invalid netmask specified in -whitelist: &apos;%s&apos;</source>
-        <translation type="unfinished"></translation>
+        <translation>Netmask tidak valid yang ditentukan dalam -daftar putih: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Keypool ran out, please call keypoolrefill first</source>
-        <translation type="unfinished"></translation>
+        <translation>Keypool habis, harap menghubungi keypoolrefill terlebih dahulu</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Loading Orphanpool</source>
-        <translation type="unfinished"></translation>
+        <translation>Memuat Orphanpool</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Loading TxPool</source>
-        <translation type="unfinished"></translation>
+        <translation>Memuat TxPool</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Loading banlist...</source>
-        <translation type="unfinished"></translation>
+        <translation>Memuat daftar larangan...</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Need to specify a port with -whitebind: &apos;%s&apos;</source>
-        <translation type="unfinished"></translation>
+        <translation>Perlu menentukan port dengan -whitebind: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Opening Block database...</source>
-        <translation type="unfinished"></translation>
+        <translation>Membuka Blokir basis data...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Opening Coins Cache database...</source>
-        <translation type="unfinished"></translation>
+        <translation>Membuka basis data Cache Koin...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Opening Token Description database...</source>
+        <translation>Membuka database Deskripsi Token...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Opening UTXO database...</source>
-        <translation type="unfinished"></translation>
+        <translation>Membuka basis data UTXO...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Portions Copyright (C) 2009-%i The Bitcoin Core Developers</source>
-        <translation type="unfinished"></translation>
+        <translation>Bagian Hak Cipta (C) 2009-%i Pengembang Inti Bitcoin</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Portions Copyright (C) 2014-%i The Bitcoin XT Developers</source>
-        <translation type="unfinished"></translation>
+        <translation>Bagian Hak Cipta (C) 2014-%i Pengembang Bitcoin XT</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Prune cannot be configured with a negative value.</source>
-        <translation type="unfinished"></translation>
+        <translation>Prune tidak dapat dikonfigurasi dengan nilai negatif.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Prune mode is incompatible with -txindex.</source>
-        <translation type="unfinished"></translation>
+        <translation>Mode pemangkasan tidak kompatibel dengan -txindex.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Pruning blockstore...</source>
-        <translation type="unfinished"></translation>
+        <translation>Memangkas toko blok...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Reaccepting Wallet Transactions</source>
-        <translation type="unfinished"></translation>
+        <translation>Menerima Kembali Transaksi Wallet</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4773,32 +5137,37 @@ Do you want to reindex on the next restart?</source>
         <translation>Memindai ulang...</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+16"/>
         <source>Upgrading block database...This could take a while.</source>
-        <translation type="unfinished"></translation>
+        <translation>Memutakhirkan basis data blok...Ini mungkin memakan waktu cukup lama.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Upgrading txindex database </source>
-        <translation type="unfinished"></translation>
+        <translation>Meningkatkan basis data txindex</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Upgrading txindex database...</source>
-        <translation type="unfinished"></translation>
+        <translation>Meningkatkan basis data txindex...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>User Agent comment (%s) contains unsafe characters.</source>
-        <translation type="unfinished"></translation>
+        <translation>Komentar Agen Pengguna (%s) berisi karakter yang tidak aman.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
-        <translation type="unfinished"></translation>
+        <translation>Dompet perlu ditulis ulang: mulai ulang %s hingga selesai</translation>
     </message>
     <message>
-        <location line="-61"/>
+        <location line="+2"/>
+        <source>Zapping all transactions from wallet...</source>
+        <translation>Menghapus semua transaksi dari dompet...</translation>
+    </message>
+    <message>
+        <location line="-67"/>
         <source>Done loading</source>
         <translation>Memuat selesai</translation>
     </message>

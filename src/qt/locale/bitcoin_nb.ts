@@ -210,12 +210,7 @@
         <translation>Er du sikker på at du vil kryptere lommeboken?</translation>
     </message>
     <message>
-        <location line="+15"/>
-        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>VIKTIG: Tidligere sikkerhetskopier av din lommebokfil bør erstattes med den nylig genererte og krypterte filen, da de blir ugyldiggjort av sikkerhetshensyn så snart du begynner å bruke den nye krypterte lommeboken.</translation>
-    </message>
-    <message>
-        <location line="+104"/>
+        <location line="+119"/>
         <location line="+29"/>
         <source>Warning: The Caps Lock key is on!</source>
         <translation>Advarsel: Caps Lock er på!</translation>
@@ -239,10 +234,15 @@
     <message>
         <location line="+55"/>
         <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your coins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 lukkes nå for å fullføre krypteringsprosessen. Husk at kryptering av lommeboken din ikke kan fullstendig beskytte myntene dine mot å bli stjålet av skadelig programvare som infiserer datamaskinen din.</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+5"/>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons you should no longer keep previous unencrypted backups as your funds will be at risk if someone gains access to them.</source>
+        <translation>VIKTIG: Eventuelle tidligere sikkerhetskopier du har laget av lommebokfilen bør erstattes med den nylig genererte, krypterte lommebokfilen. Av sikkerhetsgrunner bør du ikke lenger beholde tidligere ukrypterte sikkerhetskopier, da pengene dine vil være i fare hvis noen får tilgang til dem.</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <location line="+8"/>
         <location line="+42"/>
         <location line="+6"/>
@@ -298,28 +298,28 @@
     <message>
         <location line="+0"/>
         <source>User Agent</source>
-        <translation type="unfinished">Brukeragent</translation>
+        <translation>Brukeragent</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Ban Reason</source>
-        <translation type="unfinished"></translation>
+        <translation>Grunn til forbud</translation>
     </message>
 </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../nexagui.cpp" line="+318"/>
+        <location filename="../nexagui.cpp" line="+336"/>
         <source>Sign &amp;message...</source>
         <translation>Signer &amp;melding...</translation>
     </message>
     <message>
-        <location line="+411"/>
+        <location line="+425"/>
         <source>Synchronizing with network...</source>
         <translation>Synkroniserer med nettverk...</translation>
     </message>
     <message>
-        <location line="-500"/>
+        <location line="-531"/>
         <source>&amp;Overview</source>
         <translation>&amp;Oversikt</translation>
     </message>
@@ -336,7 +336,7 @@
     <message>
         <location line="+20"/>
         <source>Request payments (generates QR codes and %1: URIs)</source>
-        <translation type="unfinished"></translation>
+        <translation>Be om betaling (genererer QR-koder og %1: URIer)</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -349,7 +349,17 @@
         <translation>Vis transaksjonshistorikk</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+6"/>
+        <source>&amp;Tokens</source>
+        <translation>&amp;Tokens</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Browse or Send Tokens</source>
+        <translation>Bla gjennom eller send tokens</translation>
+    </message>
+    <message>
+        <location line="+32"/>
         <source>E&amp;xit</source>
         <translation>&amp;Avslutt</translation>
     </message>
@@ -361,12 +371,12 @@
     <message>
         <location line="+4"/>
         <source>&amp;About %1</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Om %1</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Show information about %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Vis informasjon om %1</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -386,20 +396,20 @@
     <message>
         <location line="+1"/>
         <source>Modify configuration options for %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Endre konfigurasjonsalternativer for %1</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>&amp;Unlimited...</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Unlimited...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Modify Bitcoin Unlimited Options</source>
-        <translation type="unfinished"></translation>
+        <translation>Endre Bitcoin Unlimited Options</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Krypter Lommebok...</translation>
     </message>
@@ -409,7 +419,17 @@
         <translation>Lag &amp;Sikkerhetskopi av Lommebok...</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
+        <source>&amp;Restore Wallet...</source>
+        <translation>&amp;Gjenopprett Wallet...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Restore wallet from another location</source>
+        <translation>Gjenopprett lommeboken fra et annet sted</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>&amp;Change Passphrase...</source>
         <translation>&amp;Endre Adgangsfrase...</translation>
     </message>
@@ -429,7 +449,7 @@
         <translation>Åpne &amp;URI...</translation>
     </message>
     <message>
-        <location line="+397"/>
+        <location line="+411"/>
         <source>Importing blocks from disk...</source>
         <translation>Importere blokker...</translation>
     </message>
@@ -439,17 +459,17 @@
         <translation>Reindekserer blokker på harddisk...</translation>
     </message>
     <message>
-        <location line="-498"/>
+        <location line="-529"/>
         <source>Send coins to a Nexa address</source>
         <translation>Send til en Nexa-adresse</translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+92"/>
         <source>Backup wallet to another location</source>
         <translation>Sikkerhetskopier lommebok til annet sted</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+5"/>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Endre adgangsfrasen brukt for kryptering av lommebok</translation>
     </message>
@@ -469,12 +489,12 @@
         <translation>&amp;Verifiser melding...</translation>
     </message>
     <message>
-        <location line="+495"/>
+        <location line="+509"/>
         <source>Nexa</source>
         <translation>Nexa</translation>
     </message>
     <message>
-        <location line="-726"/>
+        <location line="-757"/>
         <source>Wallet</source>
         <translation>Lommebok</translation>
     </message>
@@ -489,7 +509,7 @@
         <translation>&amp;Motta</translation>
     </message>
     <message>
-        <location line="+53"/>
+        <location line="+69"/>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Vis / Skjul</translation>
     </message>
@@ -499,12 +519,12 @@
         <translation>Vis eller skjul hovedvinduet</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+8"/>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation>Krypter de private nøklene som tilhører lommeboken din</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+10"/>
         <source>Sign messages with your Nexa addresses to prove you own them</source>
         <translation>Signer en melding med Nexa-adressene dine for å bevise at du eier dem</translation>
     </message>
@@ -514,12 +534,12 @@
         <translation>Bekreft meldinger for å være sikker på at de ble signert av en angitt Nexa-adresse</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+64"/>
         <source>&amp;File</source>
         <translation>&amp;Fil</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+15"/>
         <source>&amp;Settings</source>
         <translation>&amp;Innstillinger</translation>
     </message>
@@ -534,7 +554,7 @@
         <translation>Verktøylinje for faner</translation>
     </message>
     <message>
-        <location line="-93"/>
+        <location line="-95"/>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Vis listen av brukte utsendingsadresser og merkelapper</translation>
     </message>
@@ -549,7 +569,7 @@
         <translation>&amp;Kommandolinjevalg</translation>
     </message>
     <message numerus="yes">
-        <location line="+366"/>
+        <location line="+380"/>
         <source>%n active connection(s) to Nexa network</source>
         <translation>
             <numerusform>%n aktiv forbindelse til Nexa-nettverket</numerusform>
@@ -605,22 +625,22 @@
         <translation>Oppdatert</translation>
     </message>
     <message>
-        <location line="-417"/>
+        <location line="-431"/>
         <source>Open a %1: URI or payment request</source>
-        <translation type="unfinished"></translation>
+        <translation>Åpne en %1: URI eller betalingsforespørsel</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Show the %1 help message to get a list with possible Nexa command-line options</source>
-        <translation type="unfinished"></translation>
+        <translation>Vis hjelpemeldingen %1 for å få en liste med mulige Nexa-kommandolinjealternativer</translation>
     </message>
     <message>
-        <location line="+185"/>
+        <location line="+191"/>
         <source>%1 client</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 klient</translation>
     </message>
     <message>
-        <location line="+251"/>
+        <location line="+259"/>
         <source>Catching up...</source>
         <translation>Laster ned...</translation>
     </message>
@@ -672,12 +692,12 @@
     <message>
         <location line="+54"/>
         <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>HD-nøkkelgenerering er &lt;b&gt;aktivert&lt;/b&gt;</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>HD-nøkkelgenerering er &lt;b&gt;deaktivert&lt;/b&gt;</translation>
     </message>
     <message>
         <location line="+20"/>
@@ -1083,7 +1103,7 @@
     <message>
         <location line="+5"/>
         <source>About %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Om %1</translation>
     </message>
     <message>
         <location line="+21"/>
@@ -1111,17 +1131,17 @@
     <message>
         <location line="+9"/>
         <source>Welcome to %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Velkommen til %1.</translation>
     </message>
     <message>
         <location line="+26"/>
         <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
-        <translation type="unfinished"></translation>
+        <translation>Siden dette er første gang programmet startes, kan du velge hvor %1 skal lagre dataene.</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>%1 will download and store a copy of the Nexa block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 vil laste ned og lagre en kopi av Nexa-blokkkjeden. Minst %2 GB data vil bli lagret i denne katalogen, og den vil vokse over tid. Lommeboken vil også bli lagret i denne katalogen.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1165,7 +1185,7 @@
     <message>
         <location filename="../unlimiteddialog.cpp" line="+486"/>
         <source>Upstream traffic shaping parameters can&apos;t be blank</source>
-        <translation type="unfinished"></translation>
+        <translation>Parametere for utforming av oppstrøms trafikk kan ikke være tomme</translation>
     </message>
 </context>
 <context>
@@ -1173,84 +1193,84 @@
     <message>
         <location filename="../forms/modaloverlay.ui" line="+14"/>
         <source>Form</source>
-        <translation type="unfinished">Skjema</translation>
+        <translation>Skjema</translation>
     </message>
     <message>
         <location line="+119"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Nexa network after a connection is established, but this process has not completed yet. This means that recent transactions will not be visible, and the balance will not be up-to-date until this process has completed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Den viste informasjonen kan være utdatert. Lommeboken din synkroniseres automatisk med Nexa-nettverket etter at en tilkobling er opprettet, men denne prosessen er ikke fullført ennå. Dette betyr at nylige transaksjoner ikke vil være synlige, og saldoen vil ikke være oppdatert før denne prosessen er fullført.</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>Spending coins may not be possible during that phase!</source>
-        <translation type="unfinished"></translation>
+        <translation>Det er kanskje ikke mulig å bruke mynter i den fasen!</translation>
     </message>
     <message>
         <location line="+63"/>
         <source>Amount of blocks left</source>
-        <translation type="unfinished"></translation>
+        <translation>Antall blokker igjen</translation>
     </message>
     <message>
         <location line="+7"/>
         <location line="+26"/>
         <source>unknown...</source>
-        <translation type="unfinished"></translation>
+        <translation>ukjent...</translation>
     </message>
     <message>
         <location line="-13"/>
         <source>Last block time</source>
-        <translation type="unfinished">Tidspunkt for siste blokk</translation>
+        <translation>Tidspunkt for siste blokk</translation>
     </message>
     <message>
         <location line="+26"/>
         <source>Progress</source>
-        <translation type="unfinished"></translation>
+        <translation>Framgang</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>~</source>
-        <translation type="unfinished"></translation>
+        <translation>~</translation>
     </message>
     <message>
         <location line="+22"/>
         <source>Progress increase per Hour</source>
-        <translation type="unfinished"></translation>
+        <translation>Fremdriftsøkning per time</translation>
     </message>
     <message>
         <location line="+7"/>
         <location line="+20"/>
         <source>calculating...</source>
-        <translation type="unfinished"></translation>
+        <translation>beregner...</translation>
     </message>
     <message>
         <location line="-7"/>
         <source>Estimated time left until synced</source>
-        <translation type="unfinished"></translation>
+        <translation>Beregnet tid igjen til synkronisering</translation>
     </message>
     <message>
         <location line="+37"/>
         <source>Hide</source>
-        <translation type="unfinished">Skjul</translation>
+        <translation>Skjul</translation>
     </message>
     <message>
         <location filename="../modaloverlay.cpp" line="+140"/>
         <source>Unknown. Reindexing (%1)...</source>
-        <translation type="unfinished"></translation>
+        <translation>Ukjent. Reindekserer (%1)...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unknown. Reindexing...</source>
-        <translation type="unfinished"></translation>
+        <translation>Ukjent. Reindekserer...</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Unknown. Syncing Headers (%1)...</source>
-        <translation type="unfinished"></translation>
+        <translation>Ukjent. Synkroniserer overskrifter (%1)...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unknown. Syncing Headers...</source>
-        <translation type="unfinished"></translation>
+        <translation>Ukjent. Synkroniserer overskrifter...</translation>
     </message>
 </context>
 <context>
@@ -1378,25 +1398,30 @@
     <message>
         <location line="+13"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When Instant Transactions is enabled you can spend unconfirmed transactions immediately.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Når Instant Transactions er aktivert, kan du bruke ubekreftede transaksjoner umiddelbart.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Instant Transactions</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Øyeblikkelige transaksjoner</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When creating and sending transactions, auto consolidate will, if required, automatically create a chain of transactions which have inputs no greater than the consensus input limit.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Når du oppretter og sender transaksjoner, vil automatisk konsolidering, om nødvendig, automatisk opprette en kjede av transaksjoner som har innganger som ikke er større enn grensen for konsensusinndata.&lt;/p&gt;&lt;/body &gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Auto Consolidate</source>
-        <translation type="unfinished"></translation>
+        <translation>Automatisk konsolidering</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+39"/>
+        <source>&amp;Rescan wallet on startup</source>
+        <translation>&amp;Sann lommebok på nytt ved oppstart</translation>
+    </message>
+    <message>
+        <location line="+15"/>
         <source>Automatically open the Nexa client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Åpne automatisk Nexa klientporten på ruteren. Dette virker kun om din ruter støtter UPnP og dette er påslått.</translation>
     </message>
@@ -1408,7 +1433,7 @@
     <message>
         <location line="+7"/>
         <source>Accept connections from outside.</source>
-        <translation type="unfinished"></translation>
+        <translation>Godta forbindelser utenfra.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1501,7 +1526,7 @@
     <message>
         <location line="+13"/>
         <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Brukergrensesnittspråket kan stilles inn her. Denne innstillingen trer i kraft etter omstart av %1.</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -1521,29 +1546,29 @@
     <message>
         <location line="-121"/>
         <source>Automatically start %1 after logging in to the system.</source>
-        <translation type="unfinished"></translation>
+        <translation>Start %1 automatisk etter å ha logget på systemet.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Start %1 on system login</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Start %1 ved systempålogging</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Automatically initiate a, one time only, full database reindex on the next startup.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Start automatisk en, kun én gang, fullstendig databasereindeksering ved neste oppstart.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Reindex on startup</source>
-        <translation type="unfinished"></translation>
+        <translation>Reindekser ved oppstart</translation>
     </message>
     <message>
         <location line="+333"/>
         <location line="+23"/>
         <location line="+23"/>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
-        <translation type="unfinished"></translation>
+        <translation>Viser om den medfølgende standard SOCKS5-proxyen brukes til å nå jevnaldrende via denne nettverkstypen.</translation>
     </message>
     <message>
         <location line="+387"/>
@@ -1556,17 +1581,17 @@
         <translation>&amp;Avbryt</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+118"/>
+        <location filename="../optionsdialog.cpp" line="+123"/>
         <source>default</source>
         <translation>standardverdi</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+57"/>
         <source>none</source>
         <translation>ingen</translation>
     </message>
     <message>
-        <location line="+73"/>
+        <location line="+75"/>
         <source>Confirm options reset</source>
         <translation>Bekreft tilbakestilling av innstillinger</translation>
     </message>
@@ -1738,7 +1763,7 @@
     <message>
         <location line="-443"/>
         <source>Cannot start click-to-pay handler</source>
-        <translation type="unfinished"></translation>
+        <translation>Kan ikke starte klikk for å betale-behandler</translation>
     </message>
     <message>
         <location line="+95"/>
@@ -1840,7 +1865,7 @@
     <message>
         <location filename="../guiutil.cpp" line="+135"/>
         <source>Enter a NEXA address (e.g. %1)</source>
-        <translation type="unfinished"></translation>
+        <translation>Skriv inn en NEXA-adresse (f.eks. %1)</translation>
     </message>
     <message>
         <location line="+832"/>
@@ -1881,23 +1906,23 @@
     <message numerus="yes">
         <location line="+19"/>
         <source>%n seconds(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n secund</numerusform>
+            <numerusform>%n secunder</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location line="+4"/>
         <source>%n minutes(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n minutt</numerusform>
+            <numerusform>%n minutter</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location line="+4"/>
         <source>%n hour(s)</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n time</numerusform>
             <numerusform>%n timer</numerusform>
         </translation>
@@ -1905,7 +1930,7 @@
     <message numerus="yes">
         <location line="+4"/>
         <source>%n day(s)</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n dag</numerusform>
             <numerusform>%n dager</numerusform>
         </translation>
@@ -1914,7 +1939,7 @@
         <location line="+4"/>
         <location line="+8"/>
         <source>%n week(s)</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n uke</numerusform>
             <numerusform>%n uker</numerusform>
         </translation>
@@ -1922,12 +1947,12 @@
     <message>
         <location line="-2"/>
         <source>%1 and %2</source>
-        <translation type="unfinished">%1 og %2</translation>
+        <translation>%1 og %2</translation>
     </message>
     <message numerus="yes">
         <location line="+1"/>
         <source>%n year(s)</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n år</numerusform>
             <numerusform>%n år</numerusform>
         </translation>
@@ -2123,113 +2148,113 @@
     <message>
         <location line="-2370"/>
         <source>Datadir</source>
-        <translation type="unfinished"></translation>
+        <translation>Datadir</translation>
     </message>
     <message>
         <location line="+35"/>
         <source>Last block time (time since)</source>
-        <translation type="unfinished"></translation>
+        <translation>Siste blokkeringstid (tid siden)</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Last block size</source>
-        <translation type="unfinished"></translation>
+        <translation>Siste blokkstørrelse</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Transactions in Tx pool</source>
-        <translation type="unfinished"></translation>
+        <translation>Transaksjoner i Tx pool</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Transactions in Orphan pool</source>
-        <translation type="unfinished"></translation>
+        <translation>Transaksjoner i foreldreløs pool</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Messages in CAPD pool</source>
-        <translation type="unfinished"></translation>
+        <translation>Meldinger i CAPD-pool</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Tx pool - usage</source>
-        <translation type="unfinished"></translation>
+        <translation>Tx pool - bruk</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Tx pool - txns per second</source>
-        <translation type="unfinished"></translation>
+        <translation>Tx pool - txns per sekund</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>XThin (Totals)</source>
-        <translation type="unfinished"></translation>
+        <translation>XThin (Totalt)</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>XThin (24-Hour Averages)</source>
-        <translation type="unfinished"></translation>
+        <translation>XThin (24-timers gjennomsnitt)</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Compact (Totals)</source>
-        <translation type="unfinished"></translation>
+        <translation>Compact (Totalt)</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Compact (24-Hour Averages)</source>
-        <translation type="unfinished"></translation>
+        <translation>Compact (24-timers gjennomsnitt)</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Graphene (Totals)</source>
-        <translation type="unfinished"></translation>
+        <translation>Graphene (Totalt)</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Graphene (24-Hour Averages)</source>
-        <translation type="unfinished"></translation>
+        <translation>Graphene (24-timers gjennomsnitt)</translation>
     </message>
     <message>
         <location line="+32"/>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation type="unfinished"></translation>
+        <translation>Åpne feilsøkingsloggfilen %1 fra gjeldende datakatalog. Dette kan ta noen sekunder for store loggfiler.</translation>
     </message>
     <message>
         <location line="+130"/>
         <source>Block Propagation</source>
-        <translation type="unfinished"></translation>
+        <translation>Blokkforplantning</translation>
     </message>
     <message>
         <location line="+94"/>
         <source>Transaction Pools</source>
-        <translation type="unfinished"></translation>
+        <translation>Transaksjonspooler</translation>
     </message>
     <message>
         <location line="+246"/>
         <source>Decrease font size</source>
-        <translation type="unfinished"></translation>
+        <translation>Reduser skriftstørrelsen</translation>
     </message>
     <message>
         <location line="+32"/>
         <source>Increase font size</source>
-        <translation type="unfinished"></translation>
+        <translation>Øk skriftstørrelsen</translation>
     </message>
     <message>
         <location line="+380"/>
         <source>&amp;Transaction Rate</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Transaksjonsrate</translation>
     </message>
     <message>
         <location line="+58"/>
         <source>Instantaneous Rate (1s)</source>
-        <translation type="unfinished"></translation>
+        <translation>Øyeblikkelig frekvens (1s)</translation>
     </message>
     <message>
         <location line="+8"/>
         <location line="+536"/>
         <source>Peak</source>
-        <translation type="unfinished"></translation>
+        <translation>Topp</translation>
     </message>
     <message>
         <location line="-463"/>
@@ -2237,7 +2262,7 @@
         <location line="+279"/>
         <location line="+257"/>
         <source>Runtime</source>
-        <translation type="unfinished"></translation>
+        <translation>Kjøretid</translation>
     </message>
     <message>
         <location line="-713"/>
@@ -2245,7 +2270,7 @@
         <location line="+279"/>
         <location line="+257"/>
         <source>24-Hours</source>
-        <translation type="unfinished"></translation>
+        <translation>24 timer</translation>
     </message>
     <message>
         <location line="-713"/>
@@ -2253,18 +2278,18 @@
         <location line="+279"/>
         <location line="+257"/>
         <source>Displayed</source>
-        <translation type="unfinished"></translation>
+        <translation>Vises</translation>
     </message>
     <message>
         <location line="-769"/>
         <location line="+536"/>
         <source>Average</source>
-        <translation type="unfinished"></translation>
+        <translation>Gjennomsnitt</translation>
     </message>
     <message>
         <location line="-265"/>
         <source>Smoothed Rate (60s)</source>
-        <translation type="unfinished"></translation>
+        <translation>Utjevnet Rate (60s)</translation>
     </message>
     <message>
         <location line="+769"/>
@@ -2397,7 +2422,7 @@
     <message>
         <location line="+118"/>
         <source>Welcome to the %1 RPC console.</source>
-        <translation type="unfinished"></translation>
+        <translation>Velkommen til %1 RPC-konsollen.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2417,7 +2442,7 @@
         <location line="+28"/>
         <location line="+1"/>
         <source>Disabled</source>
-        <translation type="unfinished"></translation>
+        <translation>funksjonshemmet</translation>
     </message>
     <message>
         <location line="+110"/>
@@ -2555,12 +2580,12 @@
     <message>
         <location line="+148"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Coin freezing locks coins to make them temporarily unspendable. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Myntfrysing låser mynter for å gjøre dem midlertidig ubrukelige. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Coin &amp;Freeze</source>
-        <translation type="unfinished"></translation>
+        <translation>Mynt og frys</translation>
     </message>
     <message>
         <location line="+71"/>
@@ -2585,7 +2610,7 @@
     <message>
         <location filename="../receivecoinsdialog.cpp" line="+53"/>
         <source>Copy URI</source>
-        <translation type="unfinished"></translation>
+        <translation>Kopier URI</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2727,7 +2752,7 @@
     <message>
         <location line="+2"/>
         <source>Freeze until</source>
-        <translation type="unfinished"></translation>
+        <translation>Frys til</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -2782,7 +2807,7 @@
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+627"/>
+        <location filename="../sendcoinsdialog.cpp" line="+633"/>
         <source>Send Coins</source>
         <translation>Send Coins</translation>
     </message>
@@ -2792,7 +2817,12 @@
         <translation>Myntkontroll Funksjoner</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+17"/>
+        <source>Select specific coins you want to use in this transaction</source>
+        <translation>Velg spesifikke mynter du vil bruke i denne transaksjonen</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Inputs...</source>
         <translation>Inndata...</translation>
     </message>
@@ -2848,16 +2878,22 @@
     </message>
     <message>
         <location line="+3"/>
+        <location line="+16"/>
         <source>Custom change address</source>
         <translation>Egendefinert adresse for veksel</translation>
     </message>
     <message>
-        <location line="+206"/>
+        <location line="+193"/>
         <source>Transaction Fee:</source>
         <translation>Transaksjonsgebyr:</translation>
     </message>
     <message>
         <location line="+14"/>
+        <source>Choose your transaction fee.</source>
+        <translation>Velg transaksjonsgebyr.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Choose...</source>
         <translation>Velg...</translation>
     </message>
@@ -2888,7 +2924,12 @@
         <translation>minstebeløp</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+10"/>
+        <source>Custom fee amount</source>
+        <translation>Egendefinert gebyrbeløp</translation>
+    </message>
+    <message>
+        <location line="+24"/>
         <location line="+13"/>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for nexa transactions than the network can process.</source>
         <translation>Betaling av bare minimumsavgiften går helt fint så lenge det er mindre transaksjonsvolum enn plass i blokkene. Men vær klar over at dette kan ende opp i en transaksjon som aldri blir bekreftet når det er mer etterspørsel etter Nexa-transaksjoner enn nettverket kan behandle.</translation>
@@ -2900,11 +2941,21 @@
     </message>
     <message>
         <location line="+29"/>
+        <source>Use the recommended fee amount.  You can select a faster or slower confirmation time by moving the &quot;Confirmation Time&quot; slider.</source>
+        <translation>Bruk det anbefalte gebyrbeløpet. Du kan velge en raskere eller langsommere bekreftelsestid ved å flytte &quot;Bekreftelsestid&quot;-glidebryteren.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Recommended:</source>
         <translation>Anbefalt:</translation>
     </message>
     <message>
         <location line="+30"/>
+        <source>Choose a custom fee amount</source>
+        <translation>Velg et egendefinert gebyrbeløp</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Custom:</source>
         <translation>Egendefinert:</translation>
     </message>
@@ -2915,11 +2966,17 @@
     </message>
     <message>
         <location line="+29"/>
+        <location line="+33"/>
+        <source>Transaction confirmation time</source>
+        <translation>Transaksjonsbekreftelsestid</translation>
+    </message>
+    <message>
+        <location line="-30"/>
         <source>Confirmation time:</source>
         <translation>Bekreftelsestid:</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+63"/>
         <source>normal</source>
         <translation>normal</translation>
     </message>
@@ -2954,22 +3011,27 @@
         <translation>Fjern alle felter fra skjemaet.</translation>
     </message>
     <message>
-        <location line="-858"/>
+        <location line="-880"/>
         <source>Dust:</source>
         <translation>Støv:</translation>
     </message>
     <message>
-        <location line="+861"/>
+        <location line="+883"/>
         <source>Clear &amp;All</source>
         <translation>Fjern &amp;Alt</translation>
     </message>
     <message>
         <location line="+55"/>
+        <source>Current Balance</source>
+        <translation>Nåværende saldo</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Balance:</source>
         <translation>Saldo:</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-87"/>
         <source>Confirm the send action</source>
         <translation>Bekreft sending</translation>
     </message>
@@ -2992,7 +3054,7 @@
         <translation>%1 til %2</translation>
     </message>
     <message>
-        <location line="-283"/>
+        <location line="-289"/>
         <source>Copy quantity</source>
         <translation>Kopier mengde</translation>
     </message>
@@ -3027,14 +3089,14 @@
         <translation>Kopier veksel</translation>
     </message>
     <message>
-        <location line="+247"/>
+        <location line="+253"/>
         <source>&lt;b&gt;Public label:&lt;/b&gt; %1</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;Offentlig etikett:&lt;/b&gt; %1</translation>
     </message>
     <message>
         <location line="+33"/>
         <source>&lt;br&gt;&lt;br&gt;&lt;b&gt;WARNING!!! DESTINATION IS A FREEZE ADDRESS&lt;br&gt;UNSPENDABLE UNTIL&lt;/b&gt; %1 &lt;br&gt;*************************************************&lt;br&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;br&gt;&lt;br&gt;&lt;b&gt;ADVARSEL!!! DESTINASJON ER EN FRYSADRESSE&lt;br&gt;KAN IKKE BRUGE TIL&lt;/b&gt; %1 &lt;br&gt;********************************* ******************&lt;br&gt;</translation>
     </message>
     <message>
         <location line="+36"/>
@@ -3084,15 +3146,15 @@
     <message>
         <location line="+4"/>
         <source>Public Label exeeds limit of </source>
-        <translation type="unfinished"></translation>
+        <translation>Public Label overskrider grensen på</translation>
     </message>
     <message>
-        <location line="+105"/>
+        <location line="+102"/>
         <source>Pay only the required fee of %1</source>
         <translation>Betal kun påkrevd gebyr på %1</translation>
     </message>
     <message>
-        <location line="-139"/>
+        <location line="-136"/>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation>Mottakeradressen er ikke gyldig. Vennligst kontroller på nytt.</translation>
     </message>
@@ -3102,19 +3164,19 @@
         <translation>Gjenbruk av adresse funnet: adresser skal bare brukes en gang hver.</translation>
     </message>
     <message>
-        <location line="+255"/>
+        <location line="+252"/>
         <source>Warning: Invalid Nexa address</source>
         <translation>Advarsel: Ugyldig Nexa-adresse</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Confirm custom change address</source>
-        <translation type="unfinished"></translation>
+        <translation>Bekreft tilpasset endringsadresse</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
-        <translation type="unfinished"></translation>
+        <translation>Adressen du valgte for endring er ikke en del av denne lommeboken. Alle eller alle midler i lommeboken din kan sendes til denne adressen. Er du sikker?</translation>
     </message>
     <message>
         <location line="+24"/>
@@ -3127,12 +3189,12 @@
         <translation>Advarsel: Ukjent adresse for veksel</translation>
     </message>
     <message>
-        <location line="-781"/>
+        <location line="-784"/>
         <source>Copy dust</source>
         <translation>Kopier støv</translation>
     </message>
     <message>
-        <location line="+292"/>
+        <location line="+298"/>
         <source>Are you sure you want to send?</source>
         <translation>Er du sikker på at du vil sende?</translation>
     </message>
@@ -3145,14 +3207,14 @@
 <context>
     <name>SendCoinsEntry</name>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="+82"/>
-        <location line="+650"/>
-        <location line="+533"/>
+        <location filename="../forms/sendcoinsentry.ui" line="+86"/>
+        <location line="+677"/>
+        <location line="+560"/>
         <source>A&amp;mount:</source>
         <translation>&amp;Beløp:</translation>
     </message>
     <message>
-        <location line="-1170"/>
+        <location line="-1224"/>
         <source>Pay &amp;To:</source>
         <translation>Betal &amp;Til:</translation>
     </message>
@@ -3162,19 +3224,14 @@
         <translation>Velg tidligere brukt adresse</translation>
     </message>
     <message>
-        <location line="-106"/>
-        <source>This is a normal payment.</source>
-        <translation>Dette er en normal betaling.</translation>
-    </message>
-    <message>
-        <location line="+38"/>
+        <location line="-68"/>
         <source>Private Description:</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Private &amp;Label:</source>
-        <translation type="unfinished"></translation>
+        <translation>Privat &amp;etikett:</translation>
     </message>
     <message>
         <location line="+51"/>
@@ -3198,13 +3255,13 @@
     </message>
     <message>
         <location line="+7"/>
-        <location line="+526"/>
-        <location line="+533"/>
+        <location line="+553"/>
+        <location line="+560"/>
         <source>Remove this entry</source>
         <translation>Fjern denne oppføringen</translation>
     </message>
     <message>
-        <location line="-1185"/>
+        <location line="-1239"/>
         <source>The fee will be deducted from the amount being sent. The recipient will receive less coins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
         <translation>Gebyret vil bli trukket fra beløpet som blir sendt. Mottakeren vil motta mindre coins enn det du skriver inn i beløpsfeltet. Hvis det er valgt flere mottakere, deles gebyret likt.</translation>
     </message>
@@ -3214,57 +3271,62 @@
         <translation>T&amp;rekk fra gebyr fra beløp</translation>
     </message>
     <message>
-        <location line="+616"/>
+        <location line="+643"/>
         <source>This is an unauthenticated payment request.</source>
         <translation>Dette er en uautorisert betalingsetterspørring.</translation>
     </message>
     <message>
-        <location line="+529"/>
+        <location line="+556"/>
         <source>This is an authenticated payment request.</source>
         <translation>Dette er en autorisert betalingsetterspørring.</translation>
     </message>
     <message>
-        <location line="-1000"/>
+        <location line="-1054"/>
         <source>A message that was attached to the coin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Nexa network.</source>
         <translation>En melding som var tilknyttet coinen: URI vil bli lagret med transaksjonen for din oversikt. Denne meldingen vil ikke bli sendt over Nexa-nettverket.</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="-155"/>
+        <source>Amount to send</source>
+        <translation>Beløp som skal sendes</translation>
+    </message>
+    <message>
+        <location line="+167"/>
         <source>Enter a private label for this address to add it to the list of used addresses</source>
-        <translation type="unfinished"></translation>
+        <translation>Skriv inn en privat etikett for denne adressen for å legge den til i listen over brukte adresser</translation>
     </message>
     <message>
         <location line="+11"/>
         <location filename="../sendcoinsentry.cpp" line="+43"/>
         <source>Enter a public label for this transaction</source>
-        <translation type="unfinished"></translation>
+        <translation>Angi en offentlig etikett for denne transaksjonen</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Public Label:</source>
-        <translation type="unfinished"></translation>
+        <translation>Offentlig merkelapp:</translation>
     </message>
     <message>
-        <location line="+454"/>
-        <location line="+529"/>
+        <location line="+481"/>
+        <location line="+556"/>
         <source>Pay To:</source>
         <translation>Betal Til:</translation>
     </message>
     <message>
-        <location line="-495"/>
-        <location line="+533"/>
+        <location line="-522"/>
+        <location line="+560"/>
         <source>Memo:</source>
         <translation>Memo:</translation>
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="-12"/>
         <source>A message that was attached to the %1 URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Nexa network.</source>
-        <translation type="unfinished">En melding som var tilknyttet %1 URI vil bli lagret med transaksjonen for din oversikt. Denne meldingen vil ikke bli sendt over Nexa-nettverket.</translation>
+        <translation>En melding som var tilknyttet %1 URI vil bli lagret med transaksjonen for din oversikt. Denne meldingen vil ikke bli sendt over Nexa-nettverket.</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Enter a private label for this address to add it to your address book</source>
-        <translation type="unfinished"></translation>
+        <translation>Skriv inn en privat etikett for denne adressen for å legge den til i adresseboken din</translation>
     </message>
 </context>
 <context>
@@ -3272,7 +3334,7 @@
     <message>
         <location filename="../utilitydialog.cpp" line="+76"/>
         <source>%1 is shutting down...</source>
-        <translation type="unfinished"></translation>
+        <translation>% 1 slår seg av...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3420,6 +3482,220 @@
     </message>
 </context>
 <context>
+    <name>TokenDescDialog</name>
+    <message>
+        <location filename="../forms/tokendescdialog.ui" line="+17"/>
+        <source>Token details</source>
+        <translation>Token detaljer</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This pane shows a detailed description of the token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Denne ruten viser en detaljert beskrivelse av tokenet&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+</context>
+<context>
+    <name>TokensViewDialog</name>
+    <message>
+        <location filename="../forms/tokensviewdialog.ui" line="+14"/>
+        <source>Tokens</source>
+        <translation>Tokens</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Amount: </source>
+        <translation>Beløp: </translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The number of tokens to send&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Antall tokens som skal sendes&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>  Pay To: </source>
+        <translation>  Betal Til: </translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>The Nexa address to send the payment to</source>
+        <translation>Nexa-adressen betalingen skal sendes til</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Choose previously used address</source>
+        <translation>Velg tidligere brukt adresse</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Alt+A</source>
+        <translation>Alt+A</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Paste address from clipboard</source>
+        <translation>Lim inn adresse fra utklippstavlen</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Alt+P</source>
+        <translation>Alt+P</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Remove this entry</source>
+        <translation>Fjern denne oppføringen</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send tokens&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send tokens&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Send</source>
+        <translation>Sende</translation>
+    </message>
+    <message>
+        <location line="+56"/>
+        <source>Token ID</source>
+        <translation>Token ID</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>The unique token identifier</source>
+        <translation>Den unike token-identifikatoren</translation>
+    </message>
+    <message>
+        <location line="-45"/>
+        <source>The token group identifier</source>
+        <translation>Tokengruppeidentifikatoren</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Name</source>
+        <translation>Navn</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The name of the token</source>
+        <translation>Navnet på tokenet</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Ticker</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The token ticker symbol</source>
+        <translation>Token ticker-symbolet</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Balance</source>
+        <translation>Saldo</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Confirmed token balance</source>
+        <translation>Bekreftet tokenbalanse</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Pending</source>
+        <translation>Under behandling</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Unconfirmed token balance</source>
+        <translation>Ubekreftet tokenbalanse</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Sub</source>
+        <translation>Under</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>If checked then this item is a subgroup.</source>
+        <translation>Hvis det er merket av, er dette elementet en undergruppe.</translation>
+    </message>
+    <message>
+        <location filename="../tokensviewdialog.cpp" line="+391"/>
+        <location line="+7"/>
+        <location line="+4"/>
+        <source>Data</source>
+        <translation>Data</translation>
+    </message>
+    <message>
+        <location line="-11"/>
+        <source>string</source>
+        <translation>streng</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location line="+4"/>
+        <source>num</source>
+        <translation>antall</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>NaN</source>
+        <translation>NaN</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Name:</source>
+        <translation>Navn:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ticker:</source>
+        <translation>Ticker:</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>URL:</source>
+        <translation>URL:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Hash:</source>
+        <translation>Hasj:</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Decimals:</source>
+        <translation>Desimaler:</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Balance:</source>
+        <translation>Saldo:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pending:</source>
+        <translation>Under behandling:</translation>
+    </message>
+    <message>
+        <location line="+79"/>
+        <source>Are you sure you want to send?</source>
+        <translation>Er du sikker på at du vil sende?</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&lt;b&gt;Token(s)&lt;/b&gt;</source>
+        <translation>&lt;b&gt;Token(s)&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Confirm send tokens</source>
+        <translation>Bekreft sende-tokens</translation>
+    </message>
+</context>
+<context>
     <name>TrafficGraphWidget</name>
     <message>
         <location filename="../trafficgraphwidget.cpp" line="+74"/>
@@ -3430,7 +3706,7 @@
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+34"/>
+        <location filename="../transactiondesc.cpp" line="+35"/>
         <source>Open until %1</source>
         <translation>Åpen til %1</translation>
     </message>
@@ -3500,17 +3776,17 @@
     <message>
         <location line="-215"/>
         <source>double spent</source>
-        <translation type="unfinished"></translation>
+        <translation>dobbelt brukt</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>abandoned</source>
-        <translation type="unfinished"></translation>
+        <translation>forlatt</translation>
     </message>
     <message>
         <location line="+70"/>
         <source>change address</source>
-        <translation type="unfinished"></translation>
+        <translation>adresse for veksel</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -3536,24 +3812,24 @@
         <location line="+48"/>
         <location line="+71"/>
         <source>Public label:</source>
-        <translation type="unfinished"></translation>
+        <translation>Offentlig merkelapp:</translation>
     </message>
     <message>
         <location line="-167"/>
         <source>Freeze until</source>
-        <translation type="unfinished"></translation>
+        <translation>Frys til</translation>
     </message>
     <message>
         <location line="+18"/>
         <location line="+41"/>
         <location line="+63"/>
         <location line="+47"/>
-        <location line="+74"/>
+        <location line="+134"/>
         <source>Credit</source>
         <translation>Kredit</translation>
     </message>
     <message numerus="yes">
-        <location line="-222"/>
+        <location line="-282"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>blir moden om %n blokk</numerusform>
@@ -3568,12 +3844,12 @@
     <message>
         <location line="+102"/>
         <location line="+31"/>
-        <location line="+79"/>
+        <location line="+139"/>
         <source>Debit</source>
         <translation>Debet</translation>
     </message>
     <message>
-        <location line="-98"/>
+        <location line="-158"/>
         <source>Total debit</source>
         <translation>Total debet</translation>
     </message>
@@ -3606,12 +3882,12 @@
     <message>
         <location line="+2"/>
         <source>Transaction Idem</source>
-        <translation type="unfinished"></translation>
+        <translation>Transaksjonsidem</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Transaction size</source>
-        <translation type="unfinished"></translation>
+        <translation>Transaksjonsstørrelse</translation>
     </message>
     <message>
         <location line="+20"/>
@@ -3624,7 +3900,41 @@
         <translation>Genererte coins må modnes %1 blokker før de kan brukes. Da du genererte denne blokken ble den kringkastet på nettverket for å bli lagt til i kjeden av blokker. Hvis den ikke kommer med i kjeden vil den endre seg til &quot;ikke akseptert&quot; og pengene vil ikke kunne brukes. Dette vil noen ganger skje hvis en annen node genererer en blokk noen sekunder i tid fra din egen.</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+25"/>
+        <location line="+25"/>
+        <source>Token ID</source>
+        <translation>Token ID</translation>
+    </message>
+    <message>
+        <location line="-20"/>
+        <location line="+25"/>
+        <source>Ticker</source>
+        <translation>Ticker</translation>
+    </message>
+    <message>
+        <location line="-24"/>
+        <location line="+25"/>
+        <source>Name</source>
+        <translation>Navn</translation>
+    </message>
+    <message>
+        <location line="-21"/>
+        <location line="+25"/>
+        <source>Decimals</source>
+        <translation>Desimaler</translation>
+    </message>
+    <message>
+        <location line="-23"/>
+        <source>Amount Sent</source>
+        <translation>Sendt beløp</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Amount Received</source>
+        <translation>Mengde mottatt</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Debug information</source>
         <translation>Informasjon for feilsøk</translation>
     </message>
@@ -3656,7 +3966,7 @@
         <translation>usann</translation>
     </message>
     <message>
-        <location line="-357"/>
+        <location line="-417"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, har ikke blitt kringkastet med hell enda</translation>
     </message>
@@ -3692,7 +4002,7 @@
     <message>
         <location filename="../transactiongraphwidget.cpp" line="+148"/>
         <source>tps</source>
-        <translation type="unfinished"></translation>
+        <translation>tps</translation>
     </message>
 </context>
 <context>
@@ -3723,7 +4033,7 @@
     <message>
         <location line="-60"/>
         <source>Address or Label</source>
-        <translation type="unfinished"></translation>
+        <translation>Adresse eller etikett</translation>
     </message>
     <message>
         <location line="+63"/>
@@ -3768,12 +4078,12 @@
     <message>
         <location line="+3"/>
         <source>Double Spent</source>
-        <translation type="unfinished"></translation>
+        <translation>Dobbelt brukt</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Abandoned</source>
-        <translation type="unfinished"></translation>
+        <translation>Forlatt</translation>
     </message>
     <message>
         <location line="+51"/>
@@ -3803,12 +4113,12 @@
     <message>
         <location line="+2"/>
         <source>Public label</source>
-        <translation type="unfinished"></translation>
+        <translation>Offentlig merkelapp</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Other</source>
-        <translation type="unfinished">Andre</translation>
+        <translation>Andre</translation>
     </message>
     <message>
         <location line="+30"/>
@@ -3987,7 +4297,7 @@
     <message>
         <location line="-175"/>
         <source>Copy transaction idem</source>
-        <translation type="unfinished"></translation>
+        <translation>Kopier transaksjonsidem</translation>
     </message>
     <message>
         <location line="+184"/>
@@ -4043,100 +4353,100 @@
     <message>
         <location filename="../forms/unlimited.ui" line="+14"/>
         <source>Unlimited</source>
-        <translation type="unfinished"></translation>
+        <translation>Unlimited...</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>&amp;Mining</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Gruvedrift</translation>
     </message>
     <message>
         <location line="+8"/>
         <location line="+10"/>
         <source>The largest block that will be mined</source>
-        <translation type="unfinished"></translation>
+        <translation>Den største blokken som skal utvinnes</translation>
     </message>
     <message>
         <location line="-7"/>
         <source>Maximum Generated Block Size (bytes) </source>
-        <translation type="unfinished"></translation>
+        <translation>Maksimal generert blokkstørrelse (byte)</translation>
     </message>
     <message>
         <location line="+30"/>
         <source>&amp;Network</source>
-        <translation type="unfinished">&amp;Nettverk</translation>
+        <translation>&amp;Nettverk</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Bandwidth Restrictions in KBytes/sec (check to enable):</source>
-        <translation type="unfinished"></translation>
+        <translation>Båndbreddebegrensninger i KBytes/sek (merk av for å aktivere):</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Send</source>
-        <translation type="unfinished"></translation>
+        <translation>Sende</translation>
     </message>
     <message>
         <location line="+7"/>
         <location line="+71"/>
         <source>Max</source>
-        <translation type="unfinished"></translation>
+        <translation>Maks</translation>
     </message>
     <message>
         <location line="-35"/>
         <location line="+59"/>
         <source>Average</source>
-        <translation type="unfinished"></translation>
+        <translation>Gjennomsnitt</translation>
     </message>
     <message>
         <location line="-31"/>
         <source>Receive</source>
-        <translation type="unfinished"></translation>
+        <translation>Motta</translation>
     </message>
     <message>
         <location line="+86"/>
         <source>Active command-line options that override above options:</source>
-        <translation type="unfinished">Aktive kommandolinjevalg som overstyrer valgene ovenfor:</translation>
+        <translation>Aktive kommandolinjevalg som overstyrer valgene ovenfor:</translation>
     </message>
     <message>
         <location line="+43"/>
         <source>Reset all client options to default.</source>
-        <translation type="unfinished">Tilbakestill alle klient valg til standard</translation>
+        <translation>Tilbakestill alle klient valg til standard</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Reset Options</source>
-        <translation type="unfinished">&amp;Tilbakestill Instillinger</translation>
+        <translation>&amp;Tilbakestill Instillinger</translation>
     </message>
     <message>
         <location line="+61"/>
         <source>&amp;OK</source>
-        <translation type="unfinished">&amp;OK</translation>
+        <translation>&amp;OK</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>&amp;Cancel</source>
-        <translation type="unfinished">&amp;Avbryt</translation>
+        <translation>&amp;Avbryt</translation>
     </message>
     <message>
         <location filename="../unlimiteddialog.cpp" line="-345"/>
         <source>Confirm options reset</source>
-        <translation type="unfinished">Bekreft tilbakestilling av innstillinger</translation>
+        <translation>Bekreft tilbakestilling av innstillinger</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This is a global reset of all settings!</source>
-        <translation type="unfinished"></translation>
+        <translation>Dette er en global tilbakestilling av alle innstillinger!</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Client restart required to activate changes.</source>
-        <translation type="unfinished">Omstart av klienten er nødvendig for å aktivere endringene.</translation>
+        <translation>Omstart av klienten er nødvendig for å aktivere endringene.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Client will be shut down. Do you want to proceed?</source>
-        <translation type="unfinished">Klienten vil bli lukket. Ønsker du å gå videre?</translation>
+        <translation>Klienten vil bli lukket. Ønsker du å gå videre?</translation>
     </message>
     <message>
         <location line="+60"/>
@@ -4144,7 +4454,7 @@
         <location line="+42"/>
         <location line="+42"/>
         <source>Upstream traffic shaping parameters can&apos;t be blank</source>
-        <translation type="unfinished"></translation>
+        <translation>Parametere for utforming av oppstrøms trafikk kan ikke være tomme</translation>
     </message>
     <message>
         <location line="-108"/>
@@ -4152,7 +4462,7 @@
         <location line="+43"/>
         <location line="+41"/>
         <source>Traffic shaping parameters have to be greater than 0.</source>
-        <translation type="unfinished"></translation>
+        <translation>Trafikkformingsparametere må være større enn 0.</translation>
     </message>
 </context>
 <context>
@@ -4174,7 +4484,7 @@
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+44"/>
+        <location filename="../walletview.cpp" line="+45"/>
         <source>&amp;Export</source>
         <translation>&amp;Eksporter</translation>
     </message>
@@ -4184,17 +4494,18 @@
         <translation>Eksporter data fra nåværende fane til fil</translation>
     </message>
     <message>
-        <location line="+187"/>
+        <location line="+191"/>
         <source>Backup Wallet</source>
         <translation>Sikkerhetskopier Lommebok</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location line="+21"/>
         <source>Wallet Data (*.dat)</source>
         <translation>Lommebokdata (*.dat)</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-14"/>
         <source>Backup Failed</source>
         <translation>Sikkerhetskopiering Feilet</translation>
     </message>
@@ -4212,6 +4523,21 @@
         <location line="+0"/>
         <source>Backup Successful</source>
         <translation>Sikkerhetskopiering Fullført</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Restore Wallet</source>
+        <translation>Gjenopprett Wallet...</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Restore Failed</source>
+        <translation>Gjenopprett Feilet</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>There was an error trying to restore the wallet data to %1.</source>
+        <translation>Det oppsto en feil under forsøk på å gjenopprette lommebokdataene til %1.</translation>
     </message>
 </context>
 <context>
@@ -4232,17 +4558,17 @@
         <translation>Omsøk er ikke mulig i beskjært modus. Du vil måtte bruke -reindex som vil laste nede hele blokkjeden på nytt.</translation>
     </message>
     <message>
-        <location line="+90"/>
+        <location line="+96"/>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Feil: En fatal intern feil oppstod, se debug.log for detaljer</translation>
     </message>
     <message>
-        <location line="+27"/>
+        <location line="+30"/>
         <source>Pruning blockstore...</source>
         <translation>Beskjærer blokklageret...</translation>
     </message>
     <message>
-        <location line="-155"/>
+        <location line="-164"/>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>Distribuert under MIT programvarelisensen, se medfølgende fil COPYING eller &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
@@ -4277,7 +4603,16 @@
         <translation>Advarsel: Vi ser ikke ut til å være enige med våre noder! Du må oppgradere, eller andre noder må oppgradere.</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+8"/>
+        <source>You can not run &quot;-salvagewallet&quot; as an HD wallet.
+
+Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
+        <translation>Du kan ikke kjøre &quot;-salvagewallet&quot; som en HD-lommebok.
+
+Vennligst start Nexa på nytt med &quot;-usehd=0&quot;.</translation>
+    </message>
+    <message>
+        <location line="+28"/>
         <source>Corrupted block database detected</source>
         <translation>Oppdaget korrupt blokkdatabase</translation>
     </message>
@@ -4307,7 +4642,7 @@
         <translation>Feil: Lite ledig lagringsplass!</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Kunne ikke lytte på noen port. Bruk -listen=0 hvis det er dette du vil.</translation>
     </message>
@@ -4322,7 +4657,7 @@
         <translation>Ugyldig eller ingen skaperblokk funnet. Feil datamappe for nettverk?</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Invalid -onion address: &apos;%s&apos;</source>
         <translation>Ugyldig -onion adresse: &apos;%s&apos;</translation>
     </message>
@@ -4332,7 +4667,7 @@
         <translation>For få fildeskriptorer tilgjengelig.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>Beskjæringsmodus kan ikke konfigureres med en negativ verdi.</translation>
     </message>
@@ -4342,7 +4677,12 @@
         <translation>Beskjæringsmodus er ikke kompatibel med -txindex.</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+4"/>
+        <source>Signing token transaction failed</source>
+        <translation>Signering av tokentransaksjonen mislyktes</translation>
+    </message>
+    <message>
+        <location line="+18"/>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>User Agent kommentar (%s) inneholder utrygge tegn.</translation>
     </message>
@@ -4359,7 +4699,7 @@
     <message>
         <location line="+1"/>
         <source>Waiting for Genesis Block...</source>
-        <translation type="unfinished"></translation>
+        <translation>Venter på Genesis Block...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4367,7 +4707,7 @@
         <translation>Lommebok %s befinner seg utenfor datamappe %s</translation>
     </message>
     <message>
-        <location line="-166"/>
+        <location line="-176"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Feil: Lytting etter innkommende tilkoblinger feilet (lytting returnerte feil %s)</translation>
     </message>
@@ -4387,7 +4727,7 @@
         <translation>Du må gjenoppbygge databasen ved hjelp av -reindex for å gå tilbake til ubeskåret modus. Dette vil laste ned hele blokkjeden på nytt.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+13"/>
         <source>Activating best chain...</source>
         <translation>Aktiverer beste kjede...</translation>
     </message>
@@ -4402,12 +4742,12 @@
         <translation>Copyright (C) 2015-%i utviklerne av Bitcoin Unlimited</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+19"/>
         <source>Information</source>
         <translation>Informasjon</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Invalid netmask specified in -whitelist: &apos;%s&apos;</source>
         <translation>Ugyldig nettmaske spesifisert i -whitelist: &apos;%s&apos;</translation>
     </message>
@@ -4417,14 +4757,14 @@
         <translation>Må oppgi en port med -whitebind: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+14"/>
         <source>Signing transaction failed</source>
         <translation>Signering av transaksjon feilet</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Starting txindex</source>
-        <translation type="unfinished"></translation>
+        <translation>Starter txindex</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4449,12 +4789,12 @@
     <message>
         <location line="+1"/>
         <source>Transaction has %d outputs. Maximum outputs allowed is %d</source>
-        <translation type="unfinished"></translation>
+        <translation>Transaksjonen har %d utganger. Maksimal tillatt utgang er %d</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Transaction of %d bytes is too large. Maximum allowed is %d bytes</source>
-        <translation type="unfinished"></translation>
+        <translation>Transaksjonen på %d byte er for stor. Maksimalt tillatt er %d byte</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4472,7 +4812,7 @@
         <translation>Advarsel</translation>
     </message>
     <message>
-        <location line="-39"/>
+        <location line="-41"/>
         <source>Loading addresses...</source>
         <translation>Laster adresser...</translation>
     </message>
@@ -4482,12 +4822,12 @@
         <translation>Ugyldig -proxy adresse: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+36"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Ukjent nettverk angitt i -onlynet &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-61"/>
+        <location line="-65"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Kunne ikke slå opp -bind adresse: &apos;%s&apos;</translation>
     </message>
@@ -4497,7 +4837,7 @@
         <translation>Kunne ikke slå opp -externalip adresse: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+35"/>
         <source>Loading block index...</source>
         <translation>Laster blokkindeks...</translation>
     </message>
@@ -4507,59 +4847,59 @@
         <translation>Laster lommebok...</translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-38"/>
         <source>Cannot downgrade wallet</source>
         <translation>Kan ikke nedgradere lommebok</translation>
     </message>
     <message>
-        <location line="-125"/>
+        <location line="-131"/>
         <source>Nexa</source>
-        <translation type="unfinished">Nexa</translation>
+        <translation>Nexa</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The %s developers</source>
-        <translation type="unfinished"></translation>
+        <translation>%s-utviklerne</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Bitcoin Bitcoin XT and Bitcoin Unlimited</source>
-        <translation type="unfinished"></translation>
+        <translation>Bitcoin Bitcoin XT and Bitcoin Unlimited</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>-wallet.maxTxFee is set very high! Fees this large could be paid on a single transaction.</source>
-        <translation type="unfinished"></translation>
+        <translation>-wallet.maxTxFee er satt veldig høyt! Så store gebyrer kan betales for en enkelt transaksjon.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>-wallet.payTxFee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished"></translation>
+        <translation>-wallet.payTxFee er satt veldig høyt! Dette er transaksjonsgebyret du betaler hvis du sender en transaksjon.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
-        <translation type="unfinished"></translation>
+        <translation>Kan ikke få en lås på datakatalogen %s. %s kjører sannsynligvis allerede.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Could not locate RPC credentials. No authentication cookie could be found, and no rpcpassword is set in the configuration file (%s)</source>
-        <translation type="unfinished"></translation>
+        <translation>Kunne ikke finne RPC-legitimasjonen. Ingen autentiseringsinformasjonskapsel ble funnet, og ingen rpcpassword er satt i konfigurasjonsfilen (%s)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Deployment configuration file &apos;%s&apos; contained invalid data - see debug.log</source>
-        <translation type="unfinished"></translation>
+        <translation>Implementeringskonfigurasjonsfilen &apos;%s&apos; inneholdt ugyldige data - se debug.log</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Error loading %s: You can&apos;t enable HD on a already existing non-HD wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Feil ved innlasting av %s: Du kan ikke aktivere HD på en allerede eksisterende lommebok som ikke er HD</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished"></translation>
+        <translation>Feil ved lesing av %s! Alle nøkler leses riktig, men transaksjonsdata eller adressebokoppføringer kan mangle eller være feil.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -4567,112 +4907,121 @@
 Details: %s
 
 Do you want to reindex on the next restart?</source>
-        <translation type="unfinished"></translation>
+        <translation>Feil ved lesing fra myntdatabasen.
+Detaljer: %s
+
+Vil du indeksere på nytt ved neste omstart?</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Failed to listen on all P2P ports. Failing as requested by -bindallorfail.</source>
-        <translation type="unfinished"></translation>
+        <translation>Kunne ikke lytte på alle P2P-porter. Mislykkes som forespurt av -bindallorfail.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Fee: %ld is larger than configured maximum allowed fee of : %ld.  To change, set &apos;wallet.maxTxFee&apos;.</source>
-        <translation type="unfinished"></translation>
+        <translation>Gebyr: %ld er større enn konfigurert maksimalt tillatt gebyr på: %ld. For å endre, sett &apos;wallet.maxTxFee&apos;.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Invalid amount for -wallet.maxTxFee=&lt;amount&gt;: &apos;%u&apos; (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
-        <translation type="unfinished"></translation>
+        <translation>Ugyldig beløp for -wallet.maxTxFee=&lt;beløp&gt;: &apos;%u&apos; (må minst være minrelay-avgiften på %s for å forhindre fastkjørte transaksjoner)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Invalid amount for -wallet.payTxFee=&lt;amount&gt;: &apos;%u&apos; (must be at least %s)</source>
-        <translation type="unfinished"></translation>
+        <translation>Ugyldig beløp for -wallet.payTxFee=&lt;beløp&gt;: &apos;%u&apos; (må være minst %s)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Please check that your computer&apos;s date and time are correct! If your clock is wrong, %s will not work properly.</source>
-        <translation type="unfinished"></translation>
+        <translation>Vennligst sjekk at datamaskinens dato og klokkeslett er riktig! Hvis klokken er feil, vil ikke %s fungere som den skal.</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Reducing -maxconnections from %d to %d because of file descriptor limitations (unix) or winsocket fd_set limitations (windows). If you are a windows user there is a hard upper limit of 1024 which cannot be changed by adjusting the node&apos;s configuration.</source>
-        <translation type="unfinished"></translation>
+        <translation>Reduserer -maxconnections fra %d til %d på grunn av fildeskriptorbegrensninger (unix) eller winsocket fd_set-begrensninger (windows). Hvis du er en Windows-bruker er det en hard øvre grense på 1024 som ikke kan endres ved å justere nodens konfigurasjon.</translation>
     </message>
     <message>
         <location line="+22"/>
         <source>Total length of network version string with uacomments added exceeded the maximum length (%i) and have been truncated.  Reduce the number or size of uacomments to avoid truncation.</source>
-        <translation type="unfinished"></translation>
+        <translation>Den totale lengden på nettverksversjonsstrengen med ua-kommentarer lagt til overskred maksimal lengde (%i) og har blitt avkortet. Reduser antallet eller størrelsen på ua-kommentarer for å unngå trunkering.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Transaction has %d inputs and %d outputs. Maximum inputs allowed are %d and maximum outputs are %d</source>
-        <translation type="unfinished"></translation>
+        <translation>Transaksjonen har %d innganger og %d utganger. Maksimum tillatte innganger er %d og maksimale utganger er %d</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Transaction has %d inputs. Maximum inputs allowed is %d. Try reducing inputs by transferring a smaller amount.</source>
-        <translation type="unfinished"></translation>
+        <translation>Transaksjonen har %d innganger. Maksimalt tillatte innganger er %d. Prøv å redusere inngangene ved å overføre et mindre beløp.</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Wallet is not password protected. Your funds may be at risk! Goto &quot;Settings&quot; and then select &quot;Encrypt Wallet&quot; to create a password.</source>
-        <translation type="unfinished"></translation>
+        <translation>Lommeboken er ikke passordbeskyttet. Midlene dine kan være i fare! Gå til &quot;Innstillinger&quot; og velg deretter &quot;Krypter lommebok&quot; for å opprette et passord.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Warning: Could not open deployment configuration CSV file &apos;%s&apos; for reading</source>
-        <translation type="unfinished"></translation>
+        <translation>Advarsel: Kunne ikke åpne CSV-filen «%s» for distribusjonskonfigurasjon for lesing</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Warning: Unknown block versions being mined! It&apos;s possible unknown rules are in effect</source>
-        <translation type="unfinished"></translation>
+        <translation>Advarsel: Ukjente blokkversjoner blir minelagt! Det er mulig ukjente regler er i kraft</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation type="unfinished"></translation>
+        <translation>Advarsel: Lommebokfilen er korrupt, data reddet! Original %s lagret som %s i %s; hvis saldoen eller transaksjonene er feil, bør du gjenopprette fra en sikkerhetskopi.</translation>
     </message>
     <message>
         <location line="+7"/>
+        <source>You are trying to restore the same wallet which you are trying to replace.</source>
+        <translation>Du prøver å gjenopprette den samme lommeboken som du prøver å erstatte.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>You are trying to use -wallet.auto but neither -spendzeroconfchange nor -wallet.instant is turned on</source>
-        <translation type="unfinished"></translation>
+        <translation>Du prøver å bruke -wallet.auto, men verken -spendzeroconfchange eller -wallet.instant er slått på</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>You are trying to use wallet.fallbackFee which has been deprecated an no longer in  use - use wallet.payTxFee instead </source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>You are trying to use wallet.minTxFee which has been deprecated an no longer in  use - use wallet.payTxFee instead </source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+7"/>
         <source>You can not send free transactions if you have configured a -relay.limitFreeRelay of zero</source>
-        <translation type="unfinished"></translation>
+        <translation>Du kan ikke sende gratis transaksjoner hvis du har konfigurert et -relay.limitFreeRelay på null</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&quot;Restore Wallet&quot; succeeded and a backup of the previous wallet was saved to: %s.
+
+
+When you click &quot;OK&quot; Nexa will shutdown to complete the process.</source>
+        <translation>&quot;Gjenopprett lommebok&quot; lyktes og en sikkerhetskopi av den forrige lommeboken ble lagret til: %s.
+
+
+Når du klikker &quot;OK&quot; vil Nexa slå seg av for å fullføre prosessen.</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>%s </source>
-        <translation type="unfinished"></translation>
+        <translation>%s </translation>
     </message>
     <message>
         <location line="+1"/>
         <source>%s corrupt, salvage failed</source>
-        <translation type="unfinished"></translation>
+        <translation>%s korrupt, berging mislyktes</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>-maxtxpool must be at least %d MB</source>
-        <translation type="unfinished"></translation>
+        <translation>-maxtxpool må være minst %d MB</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>-xthinbloomfiltersize must be at least %d Bytes</source>
-        <translation type="unfinished"></translation>
+        <translation>-xthinbloomfiltersize må være minst %d byte</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -4682,92 +5031,107 @@ Do you want to reindex on the next restart?</source>
     <message>
         <location line="+1"/>
         <source>CommitTransaction failed.</source>
-        <translation type="unfinished"></translation>
+        <translation>CommitTransaction mislyktes.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Deployment configuration file &apos;%s&apos; not found</source>
-        <translation type="unfinished"></translation>
+        <translation>Finner ikke distribusjonskonfigurasjonsfilen &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Error loading %s</source>
-        <translation type="unfinished"></translation>
+        <translation>Feil ved innlasting av %s</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error loading %s: Wallet corrupted</source>
-        <translation type="unfinished"></translation>
+        <translation>Feil ved innlasting av %s: Lommeboken er ødelagt</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error loading %s: Wallet requires newer version of %s</source>
-        <translation type="unfinished"></translation>
+        <translation>Feil ved innlasting av %s: Wallet krever nyere versjon av %s</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error loading %s: You can&apos;t disable HD on a already existing HD wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Feil ved innlasting av %s: Du kan ikke deaktivere HD på en allerede eksisterende HD-lommebok</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+5"/>
+        <source>Error: Keypool ran out, please call keypoolrefill first</source>
+        <translation>Feil: Keypool gikk tom, vennligst ring keypoolrefill først</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Initialization sanity check failed. %s is shutting down.</source>
-        <translation type="unfinished"></translation>
+        <translation>Initialiseringskontrollen mislyktes. %s slår seg av.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Insufficient funds for this token.  Need %d more.</source>
+        <translation>Ikke nok midler for dette tokenet. Trenger %d til.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Insufficient funds or funds not confirmed</source>
-        <translation type="unfinished"></translation>
+        <translation>Utilstrekkelige midler eller midler ikke bekreftet</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Keypool ran out, please call keypoolrefill first</source>
-        <translation type="unfinished"></translation>
+        <translation>Keypool gikk tom, vennligst ring keypoolrefill først</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Loading Orphanpool</source>
-        <translation type="unfinished"></translation>
+        <translation>Laster inn Orphanpool</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Loading TxPool</source>
-        <translation type="unfinished"></translation>
+        <translation>Laster inn TxPool</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Loading banlist...</source>
-        <translation type="unfinished"></translation>
+        <translation>Laster inn banliste...</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Opening Block database...</source>
-        <translation type="unfinished"></translation>
+        <translation>Åpner blokkdatabase...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Opening Coins Cache database...</source>
-        <translation type="unfinished"></translation>
+        <translation>Åpner Coins Cache-database...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Opening Token Description database...</source>
+        <translation>Åpner Token Description-databasen...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Opening UTXO database...</source>
-        <translation type="unfinished"></translation>
+        <translation>Åpner UTXO-database...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Portions Copyright (C) 2009-%i The Bitcoin Core Developers</source>
-        <translation type="unfinished"></translation>
+        <translation>Deler Copyright (C) 2009-%i Bitcoin Core Developers</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Portions Copyright (C) 2014-%i The Bitcoin XT Developers</source>
-        <translation type="unfinished"></translation>
+        <translation>Deler Copyright (C) 2014-%i Bitcoin XT-utviklerne</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Reaccepting Wallet Transactions</source>
-        <translation type="unfinished"></translation>
+        <translation>Godta Wallet-transaksjoner</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4775,42 +5139,47 @@ Do you want to reindex on the next restart?</source>
         <translation>Leser gjennom...</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+11"/>
         <source>Turn off auto consolidate and try sending again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Slå av automatisk konsolidering og prøv å sende på nytt.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
-        <translation type="unfinished"></translation>
+        <translation>Kan ikke binde til %s på denne datamaskinen. %s kjører sannsynligvis allerede.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unable to start RPC services. See debug log for details.</source>
-        <translation type="unfinished"></translation>
+        <translation>Kan ikke starte RPC-tjenester. Se feilsøkingsloggen for detaljer.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Upgrading block database...This could take a while.</source>
-        <translation type="unfinished"></translation>
+        <translation>Oppgraderer blokkdatabase...Dette kan ta en stund.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Upgrading txindex database </source>
-        <translation type="unfinished"></translation>
+        <translation>Oppgradering av txindex database</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Upgrading txindex database...</source>
-        <translation type="unfinished"></translation>
+        <translation>Oppgraderer txindex-database...</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
-        <translation type="unfinished"></translation>
+        <translation>Lommeboken måtte skrives om: start %s på nytt for å fullføre</translation>
     </message>
     <message>
-        <location line="-61"/>
+        <location line="+2"/>
+        <source>Zapping all transactions from wallet...</source>
+        <translation>Zapper alle transaksjoner fra lommeboken...</translation>
+    </message>
+    <message>
+        <location line="-67"/>
         <source>Done loading</source>
         <translation>Ferdig med lasting</translation>
     </message>

@@ -210,12 +210,7 @@
         <translation>Cüzdanınızı şifrelemek istediğinizden emin misiniz?</translation>
     </message>
     <message>
-        <location line="+15"/>
-        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>ÖNEMLİ: Önceden yapmış olduğunuz cüzdan dosyası yedeklemelerinin yeni oluşturulan şifrelenmiş cüzdan dosyası ile değiştirilmeleri gerekir. Güvenlik nedenleriyle yeni, şifrelenmiş cüzdanı kullanmaya başladığınızda eski şifrelenmemiş cüzdan dosyaları işe yaramaz hale gelecektir.</translation>
-    </message>
-    <message>
-        <location line="+104"/>
+        <location line="+119"/>
         <location line="+29"/>
         <source>Warning: The Caps Lock key is on!</source>
         <translation>Uyarı: Caps Lock tuşu faal durumda!</translation>
@@ -242,7 +237,12 @@
         <translation>%1, şifreleme işlemini tamamlamak için şimdi kapanacak. Cüzdanınızı şifrelemenin, madeni paralarınızı bilgisayarınıza bulaşan kötü amaçlı yazılımlar tarafından çalınmaya karşı tam olarak koruyamayacağını unutmayın.</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+5"/>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons you should no longer keep previous unencrypted backups as your funds will be at risk if someone gains access to them.</source>
+        <translation>ÖNEMLİ: M-cüzdan dosyanızda yaptığınız önceki yedeklemeler, yeni oluşturulan, şifrelenmiş cüzdan dosyasıyla değiştirilmelidir. Güvenlik nedeniyle, daha önce şifrelenmemiş yedekleri artık saklamamalısınız; çünkü birisi bunlara erişim kazanırsa fonlarınız risk altında olacaktır.</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <location line="+8"/>
         <location line="+42"/>
         <location line="+6"/>
@@ -309,17 +309,17 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../nexagui.cpp" line="+318"/>
+        <location filename="../nexagui.cpp" line="+336"/>
         <source>Sign &amp;message...</source>
         <translation>&amp;Mesaj imzala...</translation>
     </message>
     <message>
-        <location line="+411"/>
+        <location line="+425"/>
         <source>Synchronizing with network...</source>
         <translation>Şebeke ile senkronizasyon...</translation>
     </message>
     <message>
-        <location line="-500"/>
+        <location line="-531"/>
         <source>&amp;Overview</source>
         <translation>&amp;Genel bakış</translation>
     </message>
@@ -349,7 +349,17 @@
         <translation>Muamele tarihçesini tara</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+6"/>
+        <source>&amp;Tokens</source>
+        <translation>&amp;Jetonlar</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Browse or Send Tokens</source>
+        <translation>Jetonlara Göz Atın veya Gönderin</translation>
+    </message>
+    <message>
+        <location line="+32"/>
         <source>E&amp;xit</source>
         <translation>&amp;Çık</translation>
     </message>
@@ -399,7 +409,7 @@
         <translation>Bitcoin Sınırsız Seçeneklerini Değiştirin</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>&amp;Encrypt Wallet...</source>
         <translation>Cüzdanı &amp;şifrele...</translation>
     </message>
@@ -409,7 +419,17 @@
         <translation>Cüzdanı &amp;yedekle...</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
+        <source>&amp;Restore Wallet...</source>
+        <translation>&amp;Cüzdanı Geri Yükle...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Restore wallet from another location</source>
+        <translation>Cüzdanı başka bir konumdan geri yükleyin</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>&amp;Change Passphrase...</source>
         <translation>Parolayı &amp;değiştir...</translation>
     </message>
@@ -429,7 +449,7 @@
         <translation>&amp;URI aç...</translation>
     </message>
     <message>
-        <location line="+397"/>
+        <location line="+411"/>
         <source>Importing blocks from disk...</source>
         <translation>Bloklar diskten içe aktarılıyor...</translation>
     </message>
@@ -439,17 +459,17 @@
         <translation>Diskteki bloklar yeniden endeksleniyor...</translation>
     </message>
     <message>
-        <location line="-498"/>
+        <location line="-529"/>
         <source>Send coins to a Nexa address</source>
         <translation>Bir Nexa adresine Nexa yolla</translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+92"/>
         <source>Backup wallet to another location</source>
         <translation>Cüzdanı diğer bir konumda yedekle</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+5"/>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Cüzdan şifrelemesi için kullanılan parolayı değiştir</translation>
     </message>
@@ -469,12 +489,12 @@
         <translation>Mesaj &amp;kontrol et...</translation>
     </message>
     <message>
-        <location line="+495"/>
+        <location line="+509"/>
         <source>Nexa</source>
         <translation>Nexa</translation>
     </message>
     <message>
-        <location line="-726"/>
+        <location line="-757"/>
         <source>Wallet</source>
         <translation>Cüzdan</translation>
     </message>
@@ -489,7 +509,7 @@
         <translation>&amp;Al</translation>
     </message>
     <message>
-        <location line="+53"/>
+        <location line="+69"/>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Göster / Sakla</translation>
     </message>
@@ -499,12 +519,12 @@
         <translation>Ana pencereyi görüntüle ya da sakla</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+8"/>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation>Cüzdanınızın özel anahtarlarını şifrele</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+10"/>
         <source>Sign messages with your Nexa addresses to prove you own them</source>
         <translation>Mesajları adreslerin size ait olduğunu ispatlamak için Nexa adresleri ile imzala</translation>
     </message>
@@ -514,12 +534,12 @@
         <translation>Belirtilen Nexa adresleri ile imzalandıklarından emin olmak için mesajları kontrol et</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+64"/>
         <source>&amp;File</source>
         <translation>&amp;Dosya</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+15"/>
         <source>&amp;Settings</source>
         <translation>&amp;Ayarlar</translation>
     </message>
@@ -534,7 +554,7 @@
         <translation>Sekme araç çubuğu</translation>
     </message>
     <message>
-        <location line="-93"/>
+        <location line="-95"/>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Kullanılmış gönderme adresleri ve etiketlerin listesini göster</translation>
     </message>
@@ -549,7 +569,7 @@
         <translation>&amp;Komut satırı seçenekleri</translation>
     </message>
     <message numerus="yes">
-        <location line="+366"/>
+        <location line="+380"/>
         <source>%n active connection(s) to Nexa network</source>
         <translation>
             <numerusform>Nexa şebekesine %n faal bağlantı</numerusform>
@@ -603,7 +623,7 @@
         <translation>Güncel</translation>
     </message>
     <message>
-        <location line="-417"/>
+        <location line="-431"/>
         <source>Open a %1: URI or payment request</source>
         <translation>Bir %1: URI veya ödeme isteği açın</translation>
     </message>
@@ -613,12 +633,12 @@
         <translation>Olası Nexa komut satırı seçeneklerini içeren bir liste almak için %1 yardım mesajını gösterin</translation>
     </message>
     <message>
-        <location line="+185"/>
+        <location line="+191"/>
         <source>%1 client</source>
         <translation>%1 müşteri</translation>
     </message>
     <message>
-        <location line="+251"/>
+        <location line="+259"/>
         <source>Catching up...</source>
         <translation>Aralık kapatılıyor...</translation>
     </message>
@@ -1392,7 +1412,12 @@
         <translation>Otomatik Birleştirme</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+39"/>
+        <source>&amp;Rescan wallet on startup</source>
+        <translation>&amp;Başlangıçta cüzdanı yeniden tarayın</translation>
+    </message>
+    <message>
+        <location line="+15"/>
         <source>Automatically open the Nexa client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Yönlendiricide Nexa istemci portlarını otomatik olarak açar. Bu, sadece yönlendiricinizin UPnP desteği bulunuyorsa ve etkinse çalışabilir.</translation>
     </message>
@@ -1552,17 +1577,17 @@
         <translation>&amp;İptal</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+118"/>
+        <location filename="../optionsdialog.cpp" line="+123"/>
         <source>default</source>
         <translation>varsayılan</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+57"/>
         <source>none</source>
         <translation>boş</translation>
     </message>
     <message>
-        <location line="+73"/>
+        <location line="+75"/>
         <source>Confirm options reset</source>
         <translation>Seçeneklerin sıfırlanmasını teyit et</translation>
     </message>
@@ -2772,7 +2797,7 @@
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+627"/>
+        <location filename="../sendcoinsdialog.cpp" line="+633"/>
         <source>Send Coins</source>
         <translation>Coin yolla</translation>
     </message>
@@ -2782,7 +2807,12 @@
         <translation>Para kontrolü özellikleri</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+17"/>
+        <source>Select specific coins you want to use in this transaction</source>
+        <translation>Bu işlemde kullanmak istediğiniz belirli paraları seçin</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Inputs...</source>
         <translation>Girdiler...</translation>
     </message>
@@ -2838,16 +2868,22 @@
     </message>
     <message>
         <location line="+3"/>
+        <location line="+16"/>
         <source>Custom change address</source>
         <translation>Özel para üstü adresi</translation>
     </message>
     <message>
-        <location line="+206"/>
+        <location line="+193"/>
         <source>Transaction Fee:</source>
         <translation>Muamele ücreti:</translation>
     </message>
     <message>
         <location line="+14"/>
+        <source>Choose your transaction fee.</source>
+        <translation>İşlem ücretinizi seçin.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Choose...</source>
         <translation>Seç...</translation>
     </message>
@@ -2878,7 +2914,12 @@
         <translation>toplam asgari</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+10"/>
+        <source>Custom fee amount</source>
+        <translation>Özel ücret tutarı</translation>
+    </message>
+    <message>
+        <location line="+24"/>
         <location line="+13"/>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for nexa transactions than the network can process.</source>
         <translation>Asgari ücreti ödemek, bloklarda boşluktan daha az muamele hacmi olduğu sürece bir sorun çıkarmaz. Fakat şebekenin işleyecebileceğinden daha çok nexa muameleleri talebi olduğunda bunun asla teyit edilmeyen bir muamele olabileceğinin farkında olmalısınız.</translation>
@@ -2890,11 +2931,21 @@
     </message>
     <message>
         <location line="+29"/>
+        <source>Use the recommended fee amount.  You can select a faster or slower confirmation time by moving the &quot;Confirmation Time&quot; slider.</source>
+        <translation>Önerilen ücret tutarını kullanın. &quot;Onay Süresi&quot; kaydırıcısını hareket ettirerek daha hızlı veya daha yavaş bir onay süresi seçebilirsiniz.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Recommended:</source>
         <translation>Tavsiye edilen:</translation>
     </message>
     <message>
         <location line="+30"/>
+        <source>Choose a custom fee amount</source>
+        <translation>Özel bir ücret tutarı seçin</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Custom:</source>
         <translation>Özel:</translation>
     </message>
@@ -2905,11 +2956,17 @@
     </message>
     <message>
         <location line="+29"/>
+        <location line="+33"/>
+        <source>Transaction confirmation time</source>
+        <translation>İşlem onay süresi</translation>
+    </message>
+    <message>
+        <location line="-30"/>
         <source>Confirmation time:</source>
         <translation>Teyit süresi:</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+63"/>
         <source>normal</source>
         <translation>normal</translation>
     </message>
@@ -2944,22 +3001,27 @@
         <translation>Formdaki tüm alanları temizle.</translation>
     </message>
     <message>
-        <location line="-858"/>
+        <location line="-880"/>
         <source>Dust:</source>
         <translation>Toz:</translation>
     </message>
     <message>
-        <location line="+861"/>
+        <location line="+883"/>
         <source>Clear &amp;All</source>
         <translation>Tümünü &amp;temizle</translation>
     </message>
     <message>
         <location line="+55"/>
+        <source>Current Balance</source>
+        <translation>Cari Bakiye</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Balance:</source>
         <translation>Bakiye:</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-87"/>
         <source>Confirm the send action</source>
         <translation>Yollama etkinliğini teyit ediniz</translation>
     </message>
@@ -2982,7 +3044,7 @@
         <translation>%1 öğesinden %2 unsuruna</translation>
     </message>
     <message>
-        <location line="-283"/>
+        <location line="-289"/>
         <source>Copy quantity</source>
         <translation>Miktarı kopyala</translation>
     </message>
@@ -3017,7 +3079,7 @@
         <translation>Para üstünü kopyala</translation>
     </message>
     <message>
-        <location line="+247"/>
+        <location line="+253"/>
         <source>&lt;b&gt;Public label:&lt;/b&gt; %1</source>
         <translation>&lt;b&gt;Genel etiket:&lt;/b&gt; %1</translation>
     </message>
@@ -3077,12 +3139,12 @@
         <translation>Genel Etiket şu sınırı aşıyor </translation>
     </message>
     <message>
-        <location line="+105"/>
+        <location line="+102"/>
         <source>Pay only the required fee of %1</source>
         <translation>Sadece gerekli ücret olan %1 tutarını öde</translation>
     </message>
     <message>
-        <location line="-139"/>
+        <location line="-136"/>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation>Alıcı adresi geçerli değildir. Lütfen denetleyiniz.</translation>
     </message>
@@ -3092,7 +3154,7 @@
         <translation>Çift adres bulundu: adresler herbiri için sadece bir kez kullanılmalıdır.</translation>
     </message>
     <message>
-        <location line="+255"/>
+        <location line="+252"/>
         <source>Warning: Invalid Nexa address</source>
         <translation>Uyarı: geçersiz Nexa adresi</translation>
     </message>
@@ -3117,12 +3179,12 @@
         <translation>Uyarı: geçersiz para üstü adresi</translation>
     </message>
     <message>
-        <location line="-781"/>
+        <location line="-784"/>
         <source>Copy dust</source>
         <translation>Tozu kopyala</translation>
     </message>
     <message>
-        <location line="+292"/>
+        <location line="+298"/>
         <source>Are you sure you want to send?</source>
         <translation>Göndermek istediğinizden emin misiniz?</translation>
     </message>
@@ -3135,14 +3197,14 @@
 <context>
     <name>SendCoinsEntry</name>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="+82"/>
-        <location line="+650"/>
-        <location line="+533"/>
+        <location filename="../forms/sendcoinsentry.ui" line="+86"/>
+        <location line="+677"/>
+        <location line="+560"/>
         <source>A&amp;mount:</source>
         <translation>Mebla&amp;ğ:</translation>
     </message>
     <message>
-        <location line="-1170"/>
+        <location line="-1224"/>
         <source>Pay &amp;To:</source>
         <translation>&amp;Şu adrese öde:</translation>
     </message>
@@ -3152,12 +3214,7 @@
         <translation>Önceden kullanılmış adres seç</translation>
     </message>
     <message>
-        <location line="-106"/>
-        <source>This is a normal payment.</source>
-        <translation>Bu, normal bir ödemedir.</translation>
-    </message>
-    <message>
-        <location line="+38"/>
+        <location line="-68"/>
         <source>Private Description:</source>
         <translation>Özel Açıklama:</translation>
     </message>
@@ -3188,13 +3245,13 @@
     </message>
     <message>
         <location line="+7"/>
-        <location line="+526"/>
-        <location line="+533"/>
+        <location line="+553"/>
+        <location line="+560"/>
         <source>Remove this entry</source>
         <translation>Bu unsuru kaldır</translation>
     </message>
     <message>
-        <location line="-1037"/>
+        <location line="-1091"/>
         <source>A message that was attached to the coin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Nexa network.</source>
         <translation>Madeni paraya iliştirilmiş bir mesaj: Referansınız için işlemle birlikte saklanacak olan URI. Not: Bu mesaj Nexa ağı üzerinden gönderilmeyecektir.</translation>
     </message>
@@ -3220,17 +3277,22 @@
         <translation>Ücret yollanan meblağdan alınacaktır. Alıcı meblağ alanında girdiğinizden daha az coin alacaktır.  Eğer birden çok alıcı seçiliyse ücret eşit olarak bölünecektir.</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-7"/>
+        <source>Amount to send</source>
+        <translation>Gönderilecek tutar</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>S&amp;ubtract fee from amount</source>
         <translation>Ücreti meblağdan düş</translation>
     </message>
     <message>
-        <location line="+616"/>
+        <location line="+643"/>
         <source>This is an unauthenticated payment request.</source>
         <translation>Bu, kimliği doğrulanmamış bir ödeme talebidir.</translation>
     </message>
     <message>
-        <location line="+529"/>
+        <location line="+556"/>
         <source>This is an authenticated payment request.</source>
         <translation>Bu, kimliği doğrulanmış bir ödeme talebidir.</translation>
     </message>
@@ -3245,14 +3307,14 @@
         <translation>Adres defterinize eklemek için bu adres için özel bir etiket girin</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="-514"/>
-        <location line="+529"/>
+        <location filename="../forms/sendcoinsentry.ui" line="-541"/>
+        <location line="+556"/>
         <source>Pay To:</source>
         <translation>Şu adrese öde:</translation>
     </message>
     <message>
-        <location line="-495"/>
-        <location line="+533"/>
+        <location line="-522"/>
+        <location line="+560"/>
         <source>Memo:</source>
         <translation>Not:</translation>
     </message>
@@ -3410,6 +3472,220 @@
     </message>
 </context>
 <context>
+    <name>TokenDescDialog</name>
+    <message>
+        <location filename="../forms/tokendescdialog.ui" line="+17"/>
+        <source>Token details</source>
+        <translation>Jeton ayrıntıları</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This pane shows a detailed description of the token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Bu bölmede belirtecin ayrıntılı bir açıklaması gösterilir&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+</context>
+<context>
+    <name>TokensViewDialog</name>
+    <message>
+        <location filename="../forms/tokensviewdialog.ui" line="+14"/>
+        <source>Tokens</source>
+        <translation>Jetonlar</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Amount: </source>
+        <translation>Meblağ: </translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The number of tokens to send&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Gönderilecek jeton sayısı&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>  Pay To: </source>
+        <translation>  Şu adrese öde: </translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>The Nexa address to send the payment to</source>
+        <translation>Ödemenin yollanacağı Nexa adresi</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Choose previously used address</source>
+        <translation>Önceden kullanılmış adres seç</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Alt+A</source>
+        <translation>Alt+A</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Paste address from clipboard</source>
+        <translation>Panodan adres yapıştır</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Alt+P</source>
+        <translation>Alt+P</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Remove this entry</source>
+        <translation>Bu unsuru kaldır</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send tokens&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Jeton gönder&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Send</source>
+        <translation>sevketmek</translation>
+    </message>
+    <message>
+        <location line="+56"/>
+        <source>Token ID</source>
+        <translation>Jeton Kimliği</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>The unique token identifier</source>
+        <translation>Benzersiz belirteç tanımlayıcısı</translation>
+    </message>
+    <message>
+        <location line="-45"/>
+        <source>The token group identifier</source>
+        <translation>Belirteç grubu tanımlayıcısı</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Name</source>
+        <translation>İsim</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The name of the token</source>
+        <translation>Tokenin adı</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Ticker</source>
+        <translation>Sembol</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The token ticker symbol</source>
+        <translation>Belirteç şeridi sembolü</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Balance</source>
+        <translation>Bakiye</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Confirmed token balance</source>
+        <translation>Onaylanmış jeton bakiyesi</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Pending</source>
+        <translation>Beklemede</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Unconfirmed token balance</source>
+        <translation>Onaylanmamış jeton bakiyesi</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Sub</source>
+        <translation>Alt</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>If checked then this item is a subgroup.</source>
+        <translation>İşaretlenirse bu öğe bir alt gruptur.</translation>
+    </message>
+    <message>
+        <location filename="../tokensviewdialog.cpp" line="+391"/>
+        <location line="+7"/>
+        <location line="+4"/>
+        <source>Data</source>
+        <translation>Veri</translation>
+    </message>
+    <message>
+        <location line="-11"/>
+        <source>string</source>
+        <translation>dizesi</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location line="+4"/>
+        <source>num</source>
+        <translation>sayı</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>NaN</source>
+        <translation>NaN</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Name:</source>
+        <translation>İsim:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ticker:</source>
+        <translation>Sembol:</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>URL:</source>
+        <translation>URL:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Hash:</source>
+        <translation>Hash:</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Decimals:</source>
+        <translation>Ondalık Sayılar:</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Balance:</source>
+        <translation>Bakiye:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pending:</source>
+        <translation>Beklemede:</translation>
+    </message>
+    <message>
+        <location line="+79"/>
+        <source>Are you sure you want to send?</source>
+        <translation>Göndermek istediğinizden emin misiniz?</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&lt;b&gt;Token(s)&lt;/b&gt;</source>
+        <translation>&lt;b&gt;Jeton(lar)&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Confirm send tokens</source>
+        <translation>Jeton göndermeyi onaylayın</translation>
+    </message>
+</context>
+<context>
     <name>TrafficGraphWidget</name>
     <message>
         <location filename="../trafficgraphwidget.cpp" line="+74"/>
@@ -3420,7 +3696,7 @@
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+34"/>
+        <location filename="../transactiondesc.cpp" line="+35"/>
         <source>Open until %1</source>
         <translation>%1 değerine dek açık</translation>
     </message>
@@ -3537,12 +3813,12 @@
         <location line="+41"/>
         <location line="+63"/>
         <location line="+47"/>
-        <location line="+74"/>
+        <location line="+134"/>
         <source>Credit</source>
         <translation>Gider</translation>
     </message>
     <message numerus="yes">
-        <location line="-222"/>
+        <location line="-282"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>%n ek blok sonrasında olgunlaşacak</numerusform>
@@ -3556,12 +3832,12 @@
     <message>
         <location line="+102"/>
         <location line="+31"/>
-        <location line="+79"/>
+        <location line="+139"/>
         <source>Debit</source>
         <translation>Gelir</translation>
     </message>
     <message>
-        <location line="-98"/>
+        <location line="-158"/>
         <source>Total debit</source>
         <translation>Toplam gider</translation>
     </message>
@@ -3612,7 +3888,41 @@
         <translation>Oluşturulan coin&apos;lerin harcanabilmelerinden önce %1 blok beklemeleri gerekmektedir. Bu blok, oluşturduğunuzda, blok zincirine eklenmesi için ağda yayınlandı. Zincire eklenmesi başarısız olursa, durumu &quot;kabul edilmedi&quot; olarak değiştirilecek ve harcanamayacaktır. Bu, bazen başka bir düğüm sizden birkaç saniye önce ya da sonra blok oluşturursa meydana gelebilir.</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+25"/>
+        <location line="+25"/>
+        <source>Token ID</source>
+        <translation>Jeton Kimliği</translation>
+    </message>
+    <message>
+        <location line="-20"/>
+        <location line="+25"/>
+        <source>Ticker</source>
+        <translation>Sembol</translation>
+    </message>
+    <message>
+        <location line="-24"/>
+        <location line="+25"/>
+        <source>Name</source>
+        <translation>İsim</translation>
+    </message>
+    <message>
+        <location line="-21"/>
+        <location line="+25"/>
+        <source>Decimals</source>
+        <translation>Ondalık Sayılar</translation>
+    </message>
+    <message>
+        <location line="-23"/>
+        <source>Amount Sent</source>
+        <translation>Gönderilen Tutar</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Amount Received</source>
+        <translation>Alınan Tutar</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Debug information</source>
         <translation>Hata ayıklama verileri</translation>
     </message>
@@ -3644,7 +3954,7 @@
         <translation>yanlış</translation>
     </message>
     <message>
-        <location line="-357"/>
+        <location line="-417"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, henüz başarılı bir şekilde yayınlanmadı</translation>
     </message>
@@ -4160,7 +4470,7 @@
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+44"/>
+        <location filename="../walletview.cpp" line="+45"/>
         <source>&amp;Export</source>
         <translation>&amp;Dışa aktar</translation>
     </message>
@@ -4170,17 +4480,18 @@
         <translation>Güncel sekmedeki verileri bir dosyaya aktar</translation>
     </message>
     <message>
-        <location line="+187"/>
+        <location line="+191"/>
         <source>Backup Wallet</source>
         <translation>Cüzdanı Yedekle</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location line="+21"/>
         <source>Wallet Data (*.dat)</source>
         <translation>Cüzdan verileri (*.dat)</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-14"/>
         <source>Backup Failed</source>
         <translation>Yedekleme başarısız oldu</translation>
     </message>
@@ -4198,6 +4509,21 @@
         <location line="+0"/>
         <source>Backup Successful</source>
         <translation>Yedekleme başarılı</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Restore Wallet</source>
+        <translation>Cüzdanı Geri Yükle</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Restore Failed</source>
+        <translation>Geri Yükleme Başarısız Oldu</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>There was an error trying to restore the wallet data to %1.</source>
+        <translation>M-cüzdan verilerini %1&apos;e geri yüklemeye çalışırken bir hata oluştu.</translation>
     </message>
 </context>
 <context>
@@ -4218,17 +4544,17 @@
         <translation>Tekrar taramalar budanmış kipte mümkün değildir. Tüm blok zincirini tekrar indirecek olan -reindex seçeneğini kullanmanız gerekecektir.</translation>
     </message>
     <message>
-        <location line="+90"/>
+        <location line="+96"/>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Hata: Ölümcül dahili bir hata meydana geldi, ayrıntılar için debug.log dosyasına bakınız</translation>
     </message>
     <message>
-        <location line="+27"/>
+        <location line="+30"/>
         <source>Pruning blockstore...</source>
         <translation>Blockstore budanıyor...</translation>
     </message>
     <message>
-        <location line="-155"/>
+        <location line="-164"/>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>MIT yazılım lisansı kapsamında yayınlanmıştır, ekteki COPYING dosyasına ya da &lt;http://www.opensource.org/licenses/mit-license.php&gt; adresine bakınız.</translation>
     </message>
@@ -4263,7 +4589,16 @@
         <translation>Uyarı: eşlerimizle tamamen mutabık değiliz gibi görünüyor! Güncelleme yapmanız gerekebilir ya da diğer düğümlerin güncelleme yapmaları gerekebilir.</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+8"/>
+        <source>You can not run &quot;-salvagewallet&quot; as an HD wallet.
+
+Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
+        <translation>&quot;-salvagewallet&quot; uygulamasını HD cüzdan olarak çalıştıramazsınız.
+
+Lütfen Nexa&apos;yı &quot;-usehd=0&quot; ile yeniden başlatın.</translation>
+    </message>
+    <message>
+        <location line="+28"/>
         <source>Corrupted block database detected</source>
         <translation>Bozuk blok veritabanı tespit edildi</translation>
     </message>
@@ -4293,7 +4628,7 @@
         <translation>Hata: Disk alanı düşük!</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Herhangi bir portun dinlenmesi başarısız oldu. Bunu istiyorsanız -listen=0 seçeneğini kullanınız.</translation>
     </message>
@@ -4308,7 +4643,7 @@
         <translation>Yanlış ya da bulunamamış doğuş bloku. Şebeke için yanlış veri klasörü mü?</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Invalid -onion address: &apos;%s&apos;</source>
         <translation>Geçersiz -onion adresi: &apos;%s&apos;</translation>
     </message>
@@ -4318,7 +4653,7 @@
         <translation>Kafi derecede dosya tanımlayıcıları mevcut değil.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>Budama negatif bir değerle yapılandırılamaz.</translation>
     </message>
@@ -4328,7 +4663,12 @@
         <translation>Budama kipi -txindex ile uyumsuzdur.</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+4"/>
+        <source>Signing token transaction failed</source>
+        <translation>İmzalama jetonu işlemi başarısız oldu</translation>
+    </message>
+    <message>
+        <location line="+18"/>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>Kullanıcı Aracı açıklaması (%s) güvensiz karakterler içermektedir.</translation>
     </message>
@@ -4353,7 +4693,7 @@
         <translation>%s cüzdan %s veri klasörünün dışında bulunuyor</translation>
     </message>
     <message>
-        <location line="-166"/>
+        <location line="-176"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Hata: İçeri gelen bağlantıların dinlenmesi başarısız oldu (dinleme %s hatasını verdi)</translation>
     </message>
@@ -4373,7 +4713,7 @@
         <translation>Budama olmayan kipe dönmek için veritabanını -reindex ile tekrar derlemeniz gerekir. Bu, tüm blok zincirini tekrar indirecektir</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+13"/>
         <source>Activating best chain...</source>
         <translation>En iyi zincir etkinleştiriliyor...</translation>
     </message>
@@ -4388,12 +4728,12 @@
         <translation>Telif hakkı 2015-%i Bitcoin Çekirdeği Geliştiricileri</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+19"/>
         <source>Information</source>
         <translation>Bilgi</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Invalid netmask specified in -whitelist: &apos;%s&apos;</source>
         <translation>-whitelist: &apos;%s&apos; unsurunda geçersiz bir ağ maskesi belirtildi</translation>
     </message>
@@ -4403,7 +4743,7 @@
         <translation>-whitebind: &apos;%s&apos; ile bir port belirtilmesi lazımdır</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+14"/>
         <source>Signing transaction failed</source>
         <translation>Muamelenin imzalanması başarısız oldu</translation>
     </message>
@@ -4458,7 +4798,7 @@
         <translation>Uyarı</translation>
     </message>
     <message>
-        <location line="-39"/>
+        <location line="-41"/>
         <source>Loading addresses...</source>
         <translation>Adresler yükleniyor...</translation>
     </message>
@@ -4468,12 +4808,12 @@
         <translation>Geçersiz -proxy adresi: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+36"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>-onlynet için bilinmeyen bir şebeke belirtildi: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-61"/>
+        <location line="-65"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>-bind adresi çözümlenemedi: &apos;%s&apos;</translation>
     </message>
@@ -4483,7 +4823,7 @@
         <translation>-externalip adresi çözümlenemedi: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+35"/>
         <source>Loading block index...</source>
         <translation>Blok indeksi yükleniyor...</translation>
     </message>
@@ -4493,12 +4833,12 @@
         <translation>Cüzdan yükleniyor...</translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-38"/>
         <source>Cannot downgrade wallet</source>
         <translation>Cüzdan eski biçime geri alınamaz</translation>
     </message>
     <message>
-        <location line="-125"/>
+        <location line="-131"/>
         <source>Nexa</source>
         <translation>Nexa</translation>
     </message>
@@ -4625,23 +4965,29 @@ Bir sonraki yeniden başlatmada yeniden indekslemek istiyor musunuz?</translatio
     </message>
     <message>
         <location line="+7"/>
+        <source>You are trying to restore the same wallet which you are trying to replace.</source>
+        <translation>Değiştirmeye çalıştığınız cüzdanın aynısını geri yüklemeye çalışıyorsunuz.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>You are trying to use -wallet.auto but neither -spendzeroconfchange nor -wallet.instant is turned on</source>
         <translation>-wallet.auto&apos;yu kullanmaya çalışıyorsunuz ama ne -spendzeroconfchange ne de -wallet.instant açık değil</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>You are trying to use wallet.fallbackFee which has been deprecated an no longer in  use - use wallet.payTxFee instead </source>
-        <translation>Kullanımdan kaldırılmış ve artık kullanılmayan wallet.fallbackFee&apos;yi kullanmaya çalışıyorsunuz - bunun yerine wallet.payTxFee kullanın </translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>You are trying to use wallet.minTxFee which has been deprecated an no longer in  use - use wallet.payTxFee instead </source>
-        <translation>Kullanımdan kaldırılmış ve artık kullanılmayan wallet.minTxFee&apos;yi kullanmaya çalışıyorsunuz - bunun yerine wallet.payTxFee kullanın </translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+7"/>
         <source>You can not send free transactions if you have configured a -relay.limitFreeRelay of zero</source>
         <translation>-relay.limitFreeRelay&apos;i sıfır olarak yapılandırdıysanız, ücretsiz işlemler gönderemezsiniz.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&quot;Restore Wallet&quot; succeeded and a backup of the previous wallet was saved to: %s.
+
+
+When you click &quot;OK&quot; Nexa will shutdown to complete the process.</source>
+        <translation>&quot;Cüzdanı Geri Yükle&quot; başarılı oldu ve önceki cüzdanın bir yedeği şu klasöre kaydedildi: %s.
+
+
+&quot;Tamam&quot;a tıkladığınızda Nexa işlemi tamamlamak için kapanacaktır.</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -4699,9 +5045,19 @@ Bir sonraki yeniden başlatmada yeniden indekslemek istiyor musunuz?</translatio
         <translation>%s yüklenirken hata oluştu: Mevcut bir HD cüzdanında HD&apos;yi devre dışı bırakamazsınız</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+5"/>
+        <source>Error: Keypool ran out, please call keypoolrefill first</source>
+        <translation>Hata: Anahtar havuzu bitti, lütfen önce keypoolrefill&apos;i arayın</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Initialization sanity check failed. %s is shutting down.</source>
         <translation>Başlatma sağlamlık kontrolü başarısız oldu. %s kapatılıyor.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Insufficient funds for this token.  Need %d more.</source>
+        <translation>Bu token için yeterli bakiye yok. %d tane daha lazım.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4740,6 +5096,11 @@ Bir sonraki yeniden başlatmada yeniden indekslemek istiyor musunuz?</translatio
     </message>
     <message>
         <location line="+1"/>
+        <source>Opening Token Description database...</source>
+        <translation>Token Açıklama veritabanı açılıyor...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation>UTXO veritabanı açılıyor...</translation>
     </message>
@@ -4764,7 +5125,7 @@ Bir sonraki yeniden başlatmada yeniden indekslemek istiyor musunuz?</translatio
         <translation>Yeniden tarama...</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+11"/>
         <source>Turn off auto consolidate and try sending again.</source>
         <translation>Otomatik birleştirmeyi kapatın ve yeniden göndermeyi deneyin.</translation>
     </message>
@@ -4799,7 +5160,12 @@ Bir sonraki yeniden başlatmada yeniden indekslemek istiyor musunuz?</translatio
         <translation>Cüzdanın yeniden yazılması gerekiyor: tamamlamak için %s&apos;yi yeniden başlatın</translation>
     </message>
     <message>
-        <location line="-61"/>
+        <location line="+2"/>
+        <source>Zapping all transactions from wallet...</source>
+        <translation>Cüzdandaki tüm işlemler iptal ediliyor...</translation>
+    </message>
+    <message>
+        <location line="-67"/>
         <source>Done loading</source>
         <translation>Yükleme tamamlandı</translation>
     </message>

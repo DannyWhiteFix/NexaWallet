@@ -220,7 +220,6 @@ qt/nexaamountfield.h
 qt/nexa.cpp
 qt/nexagui.cpp
 qt/nexagui.h
-qt/nexastrings.cpp
 qt/nexaunits.cpp
 qt/nexaunits.h
 qt/clientmodel.cpp
