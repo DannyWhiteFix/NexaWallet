@@ -210,12 +210,7 @@
         <translation>Si è sicuri di voler cifrare il portamonete?</translation>
     </message>
     <message>
-        <location line="+15"/>
-        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>IMPORTANTE: qualsiasi backup del file portamonete effettuato in precedenza dovrà essere sostituito con il file del portamonete cifrato appena generato. Per ragioni di sicurezza, i precedenti backup del file del portamonete non cifrato diventeranno inservibili non appena si inizierà ad utilizzare il nuovo portamonete cifrato.</translation>
-    </message>
-    <message>
-        <location line="+104"/>
+        <location line="+119"/>
         <location line="+29"/>
         <source>Warning: The Caps Lock key is on!</source>
         <translation>Attenzione: il tasto Blocco maiuscole è attivo!</translation>
@@ -242,7 +237,12 @@
         <translation>%1 verrà chiuso ora per completare il processo di crittografia. Ricorda che la crittografia del tuo portafoglio non può proteggere completamente le tue monete dal furto da parte di malware che infettano il tuo computer.</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+5"/>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons you should no longer keep previous unencrypted backups as your funds will be at risk if someone gains access to them.</source>
+        <translation>IMPORTANTE: eventuali backup precedenti effettuati del file del portafoglio devono essere sostituiti con il file del portafoglio crittografato appena generato. Per motivi di sicurezza non dovresti più conservare i backup precedenti non crittografati poiché i tuoi fondi saranno a rischio se qualcuno riesce ad accedervi.</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <location line="+8"/>
         <location line="+42"/>
         <location line="+6"/>
@@ -309,17 +309,17 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../nexagui.cpp" line="+318"/>
+        <location filename="../nexagui.cpp" line="+336"/>
         <source>Sign &amp;message...</source>
         <translation>Firma &amp;messaggio...</translation>
     </message>
     <message>
-        <location line="+411"/>
+        <location line="+425"/>
         <source>Synchronizing with network...</source>
         <translation>Sincronizzazione con la rete in corso...</translation>
     </message>
     <message>
-        <location line="-500"/>
+        <location line="-531"/>
         <source>&amp;Overview</source>
         <translation>&amp;Sintesi</translation>
     </message>
@@ -349,7 +349,17 @@
         <translation>Mostra la cronologia delle transazioni</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+6"/>
+        <source>&amp;Tokens</source>
+        <translation>&amp;Gettoni</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Browse or Send Tokens</source>
+        <translation>Sfoglia o invia token</translation>
+    </message>
+    <message>
+        <location line="+32"/>
         <source>E&amp;xit</source>
         <translation>&amp;Esci</translation>
     </message>
@@ -399,7 +409,7 @@
         <translation>Modifica le opzioni di Bitcoin Unlimited</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Cifra il portamonete...</translation>
     </message>
@@ -409,7 +419,17 @@
         <translation>&amp;Backup portamonete...</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
+        <source>&amp;Restore Wallet...</source>
+        <translation>&amp;Ripristina portafoglio...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Restore wallet from another location</source>
+        <translation>Ripristina il portafoglio da un&apos;altra posizione</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>&amp;Change Passphrase...</source>
         <translation>&amp;Cambia passphrase...</translation>
     </message>
@@ -429,7 +449,7 @@
         <translation>Apri &amp;URI...</translation>
     </message>
     <message>
-        <location line="+397"/>
+        <location line="+411"/>
         <source>Importing blocks from disk...</source>
         <translation>Importazione blocchi dal disco...</translation>
     </message>
@@ -439,17 +459,17 @@
         <translation>Re-indicizzazione blocchi su disco...</translation>
     </message>
     <message>
-        <location line="-498"/>
+        <location line="-529"/>
         <source>Send coins to a Nexa address</source>
         <translation>Invia fondi ad un indirizzo Nexa</translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+92"/>
         <source>Backup wallet to another location</source>
         <translation>Effettua il backup del portamonete</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+5"/>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Cambia la passphrase utilizzata per la cifratura del portamonete</translation>
     </message>
@@ -469,12 +489,12 @@
         <translation>&amp;Verifica messaggio...</translation>
     </message>
     <message>
-        <location line="+495"/>
+        <location line="+509"/>
         <source>Nexa</source>
         <translation>Nexa</translation>
     </message>
     <message>
-        <location line="-726"/>
+        <location line="-757"/>
         <source>Wallet</source>
         <translation>Portamonete</translation>
     </message>
@@ -489,7 +509,7 @@
         <translation>&amp;Ricevi</translation>
     </message>
     <message>
-        <location line="+53"/>
+        <location line="+69"/>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Mostra / Nascondi</translation>
     </message>
@@ -499,12 +519,12 @@
         <translation>Mostra o nascondi la Finestra principale</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+8"/>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation>Cifra le chiavi private che appartengono al tuo portamonete</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+10"/>
         <source>Sign messages with your Nexa addresses to prove you own them</source>
         <translation>Firma messaggi con i tuoi indirizzi Nexa per dimostrarne il possesso</translation>
     </message>
@@ -514,12 +534,12 @@
         <translation>Verifica che i messaggi siano stati firmati con gli indirizzi Nexa specificati</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+64"/>
         <source>&amp;File</source>
         <translation>&amp;File</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+15"/>
         <source>&amp;Settings</source>
         <translation>&amp;Impostazioni</translation>
     </message>
@@ -534,7 +554,7 @@
         <translation>Barra degli strumenti</translation>
     </message>
     <message>
-        <location line="-93"/>
+        <location line="-95"/>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Mostra la lista degli indirizzi di invio utilizzati</translation>
     </message>
@@ -549,7 +569,7 @@
         <translation>Opzioni della riga di &amp;comando</translation>
     </message>
     <message numerus="yes">
-        <location line="+366"/>
+        <location line="+380"/>
         <source>%n active connection(s) to Nexa network</source>
         <translation>
             <numerusform>%n connessione attiva alla rete Nexa</numerusform>
@@ -605,7 +625,7 @@
         <translation>Aggiornato</translation>
     </message>
     <message>
-        <location line="-417"/>
+        <location line="-431"/>
         <source>Open a %1: URI or payment request</source>
         <translation>Apri un %1: URI o richiesta di pagamento</translation>
     </message>
@@ -615,12 +635,12 @@
         <translation>Mostra il messaggio di aiuto di %1 per ottenere un elenco con le possibili opzioni della riga di comando di Nexa</translation>
     </message>
     <message>
-        <location line="+185"/>
+        <location line="+191"/>
         <source>%1 client</source>
         <translation>%1 cliente</translation>
     </message>
     <message>
-        <location line="+251"/>
+        <location line="+259"/>
         <source>Catching up...</source>
         <translation>In aggiornamento...</translation>
     </message>
@@ -1397,7 +1417,12 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Consolidamento automatico</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+39"/>
+        <source>&amp;Rescan wallet on startup</source>
+        <translation>&amp;Nuova scansione del portafoglio all&apos;avvio</translation>
+    </message>
+    <message>
+        <location line="+15"/>
         <source>Automatically open the Nexa client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Apri automaticamente la porta del client Nexa sul router. Il protocollo UPnP deve essere supportato da parte del router ed attivo.</translation>
     </message>
@@ -1557,17 +1582,17 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>&amp;Cancella</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+118"/>
+        <location filename="../optionsdialog.cpp" line="+123"/>
         <source>default</source>
         <translation>predefinito</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+57"/>
         <source>none</source>
         <translation>nessuno</translation>
     </message>
     <message>
-        <location line="+73"/>
+        <location line="+75"/>
         <source>Confirm options reset</source>
         <translation>Conferma ripristino opzioni</translation>
     </message>
@@ -2783,7 +2808,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+627"/>
+        <location filename="../sendcoinsdialog.cpp" line="+633"/>
         <source>Send Coins</source>
         <translation>Invia coin</translation>
     </message>
@@ -2793,7 +2818,12 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Funzionalità di Coin Control</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+17"/>
+        <source>Select specific coins you want to use in this transaction</source>
+        <translation>Seleziona le monete specifiche che desideri utilizzare in questa transazione</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Inputs...</source>
         <translation>Input...</translation>
     </message>
@@ -2849,16 +2879,22 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
     </message>
     <message>
         <location line="+3"/>
+        <location line="+16"/>
         <source>Custom change address</source>
         <translation>Personalizza indirizzo di resto</translation>
     </message>
     <message>
-        <location line="+206"/>
+        <location line="+193"/>
         <source>Transaction Fee:</source>
         <translation>Commissione di Transazione:</translation>
     </message>
     <message>
         <location line="+14"/>
+        <source>Choose your transaction fee.</source>
+        <translation>Scegli la commissione di transazione.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Choose...</source>
         <translation>Scegli...</translation>
     </message>
@@ -2889,7 +2925,12 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>somma almeno</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+10"/>
+        <source>Custom fee amount</source>
+        <translation>Importo della tariffa personalizzata</translation>
+    </message>
+    <message>
+        <location line="+24"/>
         <location line="+13"/>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for nexa transactions than the network can process.</source>
         <translation>Non vi è alcuna controindicazione a pagare la commissione minima, a patto che il volume delle transazioni sia inferiore allo spazio disponibile nei blocchi. Occorre comunque essere consapevoli che ciò potrebbe impedire la conferma delle transazioni nel caso in cui la rete risultasse satura.</translation>
@@ -2901,11 +2942,21 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
     </message>
     <message>
         <location line="+29"/>
+        <source>Use the recommended fee amount.  You can select a faster or slower confirmation time by moving the &quot;Confirmation Time&quot; slider.</source>
+        <translation>Utilizza l&apos;importo della tariffa consigliata. Puoi selezionare un tempo di conferma più veloce o più lento spostando il cursore &quot;Tempo di conferma&quot;.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Recommended:</source>
         <translation>Raccomandata:</translation>
     </message>
     <message>
         <location line="+30"/>
+        <source>Choose a custom fee amount</source>
+        <translation>Scegli un importo di commissione personalizzato</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Custom:</source>
         <translation>Personalizzata:</translation>
     </message>
@@ -2916,11 +2967,17 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
     </message>
     <message>
         <location line="+29"/>
+        <location line="+33"/>
+        <source>Transaction confirmation time</source>
+        <translation>Orario di conferma della transazione</translation>
+    </message>
+    <message>
+        <location line="-30"/>
         <source>Confirmation time:</source>
         <translation>Tempo di conferma:</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+63"/>
         <source>normal</source>
         <translation>normale</translation>
     </message>
@@ -2955,22 +3012,27 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Cancellare tutti i campi del modulo.</translation>
     </message>
     <message>
-        <location line="-858"/>
+        <location line="-880"/>
         <source>Dust:</source>
         <translation>Trascurabile:</translation>
     </message>
     <message>
-        <location line="+861"/>
+        <location line="+883"/>
         <source>Clear &amp;All</source>
         <translation>Cancella &amp;tutto</translation>
     </message>
     <message>
         <location line="+55"/>
+        <source>Current Balance</source>
+        <translation>Bilancio corrente</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Balance:</source>
         <translation>Saldo:</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-87"/>
         <source>Confirm the send action</source>
         <translation>Conferma l&apos;azione di invio</translation>
     </message>
@@ -2993,7 +3055,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>%1 a %2</translation>
     </message>
     <message>
-        <location line="-283"/>
+        <location line="-289"/>
         <source>Copy quantity</source>
         <translation>Copia quantità</translation>
     </message>
@@ -3028,7 +3090,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Copia resto</translation>
     </message>
     <message>
-        <location line="+247"/>
+        <location line="+253"/>
         <source>&lt;b&gt;Public label:&lt;/b&gt; %1</source>
         <translation>&lt;b&gt;Etichetta pubblica:&lt;/b&gt; %1</translation>
     </message>
@@ -3088,12 +3150,12 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>L&apos;etichetta pubblica supera il limite di </translation>
     </message>
     <message>
-        <location line="+105"/>
+        <location line="+102"/>
         <source>Pay only the required fee of %1</source>
         <translation>Paga solamente la commissione richiesta di %1</translation>
     </message>
     <message>
-        <location line="-139"/>
+        <location line="-136"/>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation>L&apos;indirizzo del beneficiario non è valido. Si prega di ricontrollare.</translation>
     </message>
@@ -3103,7 +3165,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Rilevato un indirizzo duplicato Ciascun indirizzo dovrebbe essere utilizzato una sola volta.</translation>
     </message>
     <message>
-        <location line="+255"/>
+        <location line="+252"/>
         <source>Warning: Invalid Nexa address</source>
         <translation>Attenzione: Indirizzo Nexa non valido</translation>
     </message>
@@ -3128,12 +3190,12 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Attenzione: Indirizzo per il resto sconosciuto</translation>
     </message>
     <message>
-        <location line="-781"/>
+        <location line="-784"/>
         <source>Copy dust</source>
         <translation>Copia trascurabile</translation>
     </message>
     <message>
-        <location line="+292"/>
+        <location line="+298"/>
         <source>Are you sure you want to send?</source>
         <translation>Sei sicuro di voler inviare?</translation>
     </message>
@@ -3146,14 +3208,14 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
 <context>
     <name>SendCoinsEntry</name>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="+82"/>
-        <location line="+650"/>
-        <location line="+533"/>
+        <location filename="../forms/sendcoinsentry.ui" line="+86"/>
+        <location line="+677"/>
+        <location line="+560"/>
         <source>A&amp;mount:</source>
         <translation>&amp;Importo:</translation>
     </message>
     <message>
-        <location line="-1170"/>
+        <location line="-1224"/>
         <source>Pay &amp;To:</source>
         <translation>Paga &amp;a:</translation>
     </message>
@@ -3163,12 +3225,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Scegli un indirizzo usato precedentemente</translation>
     </message>
     <message>
-        <location line="-106"/>
-        <source>This is a normal payment.</source>
-        <translation>Questo è un normale pagamento.</translation>
-    </message>
-    <message>
-        <location line="+38"/>
+        <location line="-68"/>
         <source>Private Description:</source>
         <translation>Descrizione privata:</translation>
     </message>
@@ -3199,13 +3256,13 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
     </message>
     <message>
         <location line="+7"/>
-        <location line="+526"/>
-        <location line="+533"/>
+        <location line="+553"/>
+        <location line="+560"/>
         <source>Remove this entry</source>
         <translation>Rimuovi questa voce</translation>
     </message>
     <message>
-        <location line="-1037"/>
+        <location line="-1091"/>
         <source>A message that was attached to the coin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Nexa network.</source>
         <translation>Un messaggio che è stato allegato alla moneta: URI che verrà memorizzato con la transazione come riferimento. Nota: questo messaggio non verrà inviato sulla rete Nexa.</translation>
     </message>
@@ -3231,17 +3288,22 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>La commissione sarà sottratta dall&apos;importo che si sta inviando. Il beneficiario riceverà un totale di coin inferiore al valore digitato. Nel caso in cui siano stati selezionati più beneficiari la commissione sarà suddivisa in parti uguali.</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-7"/>
+        <source>Amount to send</source>
+        <translation>Importo da inviare</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>S&amp;ubtract fee from amount</source>
         <translation>S&amp;ottrae la commissione dall&apos;importo</translation>
     </message>
     <message>
-        <location line="+616"/>
+        <location line="+643"/>
         <source>This is an unauthenticated payment request.</source>
         <translation>Questa è una richiesta di pagamento non autenticata.</translation>
     </message>
     <message>
-        <location line="+529"/>
+        <location line="+556"/>
         <source>This is an authenticated payment request.</source>
         <translation>Questa è una richiesta di pagamento autenticata.</translation>
     </message>
@@ -3256,14 +3318,14 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Inserisci un&apos;etichetta privata per questo indirizzo per aggiungerlo alla tua rubrica</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="-514"/>
-        <location line="+529"/>
+        <location filename="../forms/sendcoinsentry.ui" line="-541"/>
+        <location line="+556"/>
         <source>Pay To:</source>
         <translation>Pagare a:</translation>
     </message>
     <message>
-        <location line="-495"/>
-        <location line="+533"/>
+        <location line="-522"/>
+        <location line="+560"/>
         <source>Memo:</source>
         <translation>Memo:</translation>
     </message>
@@ -3421,6 +3483,220 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
     </message>
 </context>
 <context>
+    <name>TokenDescDialog</name>
+    <message>
+        <location filename="../forms/tokendescdialog.ui" line="+17"/>
+        <source>Token details</source>
+        <translation>Dettagli del gettone</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This pane shows a detailed description of the token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&gt;&lt;body&gt;&lt;p&gt;Questo riquadro mostra una descrizione dettagliata del token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+</context>
+<context>
+    <name>TokensViewDialog</name>
+    <message>
+        <location filename="../forms/tokensviewdialog.ui" line="+14"/>
+        <source>Tokens</source>
+        <translation>Gettoni</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Amount: </source>
+        <translation>Importo: </translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The number of tokens to send&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&gt;&lt;body&gt;&lt;p&gt;Il numero di token da inviare&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>  Pay To: </source>
+        <translation>  Pagare a: </translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>The Nexa address to send the payment to</source>
+        <translation>L&apos;indirizzo Nexa a cui vuoi inviare il pagamento</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Choose previously used address</source>
+        <translation>Scegli un indirizzo usato precedentemente</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Alt+A</source>
+        <translation>Alt+A</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Paste address from clipboard</source>
+        <translation>Incollare l&apos;indirizzo dagli appunti</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Alt+P</source>
+        <translation>Alt+P</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Remove this entry</source>
+        <translation>Rimuovi questa voce</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send tokens&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&gt;&lt;body&gt;&lt;p&gt;Invia token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Send</source>
+        <translation>Inviare</translation>
+    </message>
+    <message>
+        <location line="+56"/>
+        <source>Token ID</source>
+        <translation>Codice identificativo del token</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>The unique token identifier</source>
+        <translation>L&apos;identificatore univoco del token</translation>
+    </message>
+    <message>
+        <location line="-45"/>
+        <source>The token group identifier</source>
+        <translation>L&apos;identificatore del gruppo token</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Name</source>
+        <translation>Nome</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The name of the token</source>
+        <translation>Il nome del token</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Ticker</source>
+        <translation>Ticker</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The token ticker symbol</source>
+        <translation>Il simbolo del token</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Balance</source>
+        <translation>Saldo</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Confirmed token balance</source>
+        <translation>Saldo del gettone confermato</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Pending</source>
+        <translation>In attesa</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Unconfirmed token balance</source>
+        <translation>Saldo gettoni non confermato</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Sub</source>
+        <translation>Sotto</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>If checked then this item is a subgroup.</source>
+        <translation>Se selezionato, questo elemento è un sottogruppo.</translation>
+    </message>
+    <message>
+        <location filename="../tokensviewdialog.cpp" line="+391"/>
+        <location line="+7"/>
+        <location line="+4"/>
+        <source>Data</source>
+        <translation>Dati</translation>
+    </message>
+    <message>
+        <location line="-11"/>
+        <source>string</source>
+        <translation>stringa</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location line="+4"/>
+        <source>num</source>
+        <translation>numero</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>NaN</source>
+        <translation>NaN</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Name:</source>
+        <translation>Nome:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ticker:</source>
+        <translation>Ticker:</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>URL:</source>
+        <translation>URL:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Hash:</source>
+        <translation>Hash:</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Decimals:</source>
+        <translation>Decimali:</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Balance:</source>
+        <translation>Saldo:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pending:</source>
+        <translation>In attesa:</translation>
+    </message>
+    <message>
+        <location line="+79"/>
+        <source>Are you sure you want to send?</source>
+        <translation>Sei sicuro di voler inviare?</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&lt;b&gt;Token(s)&lt;/b&gt;</source>
+        <translation>&lt;b&gt;Token(i)&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Confirm send tokens</source>
+        <translation>Conferma token di invio</translation>
+    </message>
+</context>
+<context>
     <name>TrafficGraphWidget</name>
     <message>
         <location filename="../trafficgraphwidget.cpp" line="+74"/>
@@ -3431,7 +3707,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+34"/>
+        <location filename="../transactiondesc.cpp" line="+35"/>
         <source>Open until %1</source>
         <translation>Aperto fino a %1</translation>
     </message>
@@ -3549,12 +3825,12 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <location line="+41"/>
         <location line="+63"/>
         <location line="+47"/>
-        <location line="+74"/>
+        <location line="+134"/>
         <source>Credit</source>
         <translation>Credito</translation>
     </message>
     <message numerus="yes">
-        <location line="-222"/>
+        <location line="-282"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>matura tra %n blocco</numerusform>
@@ -3569,12 +3845,12 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
     <message>
         <location line="+102"/>
         <location line="+31"/>
-        <location line="+79"/>
+        <location line="+139"/>
         <source>Debit</source>
         <translation>Debito</translation>
     </message>
     <message>
-        <location line="-98"/>
+        <location line="-158"/>
         <source>Total debit</source>
         <translation>Debito totale</translation>
     </message>
@@ -3625,7 +3901,41 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>È necessario attendere %1 blocchi prima che i coin generati possano essere spesi. Al momento della generazione questo blocco è stato trasmesso alla rete in modo da poter essere aggiunto alla block chain. Se l&apos;inserimento avrà esito negativo lo stato del blocco sarà modificato in &quot;non accettato&quot; ed esso risulterà non spendibile. Ciò può verificarsi occasionalmente nel caso in cui un altro blocco sia stato generato entro pochi secondi dal tuo.</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+25"/>
+        <location line="+25"/>
+        <source>Token ID</source>
+        <translation>Codice identificativo del token</translation>
+    </message>
+    <message>
+        <location line="-20"/>
+        <location line="+25"/>
+        <source>Ticker</source>
+        <translation>Ticker</translation>
+    </message>
+    <message>
+        <location line="-24"/>
+        <location line="+25"/>
+        <source>Name</source>
+        <translation>Nome</translation>
+    </message>
+    <message>
+        <location line="-21"/>
+        <location line="+25"/>
+        <source>Decimals</source>
+        <translation>Decimali</translation>
+    </message>
+    <message>
+        <location line="-23"/>
+        <source>Amount Sent</source>
+        <translation>Importo inviato</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Amount Received</source>
+        <translation>Quantità ricevuta</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Debug information</source>
         <translation>Informazione di debug</translation>
     </message>
@@ -3657,7 +3967,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>falso</translation>
     </message>
     <message>
-        <location line="-357"/>
+        <location line="-417"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, non è ancora stata trasmessa con successo</translation>
     </message>
@@ -4175,7 +4485,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+44"/>
+        <location filename="../walletview.cpp" line="+45"/>
         <source>&amp;Export</source>
         <translation>&amp;Esporta</translation>
     </message>
@@ -4185,17 +4495,18 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Esporta su file i dati contenuti nella tabella corrente</translation>
     </message>
     <message>
-        <location line="+187"/>
+        <location line="+191"/>
         <source>Backup Wallet</source>
         <translation>Backup Portamonete</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location line="+21"/>
         <source>Wallet Data (*.dat)</source>
         <translation>Dati Portamonete (*.dat)</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-14"/>
         <source>Backup Failed</source>
         <translation>Backup Fallito</translation>
     </message>
@@ -4213,6 +4524,21 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <location line="+0"/>
         <source>Backup Successful</source>
         <translation>Backup eseguito con successo</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Restore Wallet</source>
+        <translation>Ripristina portafoglio</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Restore Failed</source>
+        <translation>Ripristino non riuscito</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>There was an error trying to restore the wallet data to %1.</source>
+        <translation>Si è verificato un errore durante il tentativo di ripristinare i dati del portafoglio su %1.</translation>
     </message>
 </context>
 <context>
@@ -4233,17 +4559,17 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Non è possibile un Rescan in modalità pruned. Sarà necessario utilizzare -reindex che farà scaricare nuovamente tutta la blockchain.</translation>
     </message>
     <message>
-        <location line="+90"/>
+        <location line="+96"/>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Errore: si è presentato un errore interno fatale, consulta il file debug.log per maggiori dettagli</translation>
     </message>
     <message>
-        <location line="+27"/>
+        <location line="+30"/>
         <source>Pruning blockstore...</source>
         <translation>Pruning del blockstore...</translation>
     </message>
     <message>
-        <location line="-155"/>
+        <location line="-164"/>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>Distribuito secondo la licenza software MIT, vedi il file COPYING incluso oppure &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
@@ -4278,7 +4604,21 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Attenzione: Sembra che non vi sia pieno consenso con i nostri peer! Un aggiornamento da parte tua o degli altri nodi potrebbe essere necessario.</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+3"/>
+        <source>You are trying to restore the same wallet which you are trying to replace.</source>
+        <translation>Stai tentando di ripristinare lo stesso portafoglio che stai tentando di sostituire.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>You can not run &quot;-salvagewallet&quot; as an HD wallet.
+
+Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
+        <translation>Non è possibile eseguire &quot;-salvagewallet&quot; come portafoglio HD.
+
+Riavvia Nexa con &quot;-usehd=0&quot;.</translation>
+    </message>
+    <message>
+        <location line="+28"/>
         <source>Corrupted block database detected</source>
         <translation>Rilevato database blocchi corrotto</translation>
     </message>
@@ -4308,7 +4648,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Errore: la spazio libero sul disco è insufficiente!</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Nessuna porta disponibile per l&apos;ascolto. Usa -listen=0 se vuoi procedere comunque.</translation>
     </message>
@@ -4323,7 +4663,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Blocco genesi non corretto o non trovato. È possibile che la cartella dati appartenga ad un&apos;altra rete.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Invalid -onion address: &apos;%s&apos;</source>
         <translation>Indirizzo -onion non valido: &apos;%s&apos;</translation>
     </message>
@@ -4333,7 +4673,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Non ci sono abbastanza descrittori di file disponibili.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>La modalità prune non può essere configurata con un valore negativo.</translation>
     </message>
@@ -4343,7 +4683,12 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>La modalità prune è incompatibile con l&apos;opzione -txindex.</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+4"/>
+        <source>Signing token transaction failed</source>
+        <translation>La transazione del token non è riuscita</translation>
+    </message>
+    <message>
+        <location line="+18"/>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>Il commento del User Agent (%s) contiene caratteri non sicuri.</translation>
     </message>
@@ -4368,7 +4713,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Il portamonete %s si trova al di fuori dalla cartella dati %s</translation>
     </message>
     <message>
-        <location line="-166"/>
+        <location line="-176"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Errore: attesa per connessioni in arrivo fallita (errore riportato %s)</translation>
     </message>
@@ -4388,7 +4733,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Per ritornare alla modalità unpruned sarà necessario ricostruire il database utilizzando l&apos;opzione -reindex. L&apos;intera blockchain sarà riscaricata.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+13"/>
         <source>Activating best chain...</source>
         <translation>Attivazione della blockchain migliore...</translation>
     </message>
@@ -4403,12 +4748,12 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Copyright (C) 2015-%i Gli sviluppatori di Bitcoin Unlimited</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+19"/>
         <source>Information</source>
         <translation>Informazioni</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Invalid netmask specified in -whitelist: &apos;%s&apos;</source>
         <translation>Netmask non valida specificata in -whitelist: &apos;%s&apos;</translation>
     </message>
@@ -4418,7 +4763,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>È necessario specificare una porta con -whitebind: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+14"/>
         <source>Signing transaction failed</source>
         <translation>Firma transazione fallita</translation>
     </message>
@@ -4473,7 +4818,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Attenzione</translation>
     </message>
     <message>
-        <location line="-39"/>
+        <location line="-41"/>
         <source>Loading addresses...</source>
         <translation>Caricamento indirizzi...</translation>
     </message>
@@ -4483,12 +4828,12 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Indirizzo -proxy non valido: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+36"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Rete sconosciuta specificata in -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-61"/>
+        <location line="-65"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Impossibile risolvere indirizzo -bind: &apos;%s&apos;</translation>
     </message>
@@ -4498,7 +4843,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Impossibile risolvere indirizzo -externalip: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+35"/>
         <source>Loading block index...</source>
         <translation>Caricamento dell&apos;indice dei blocchi...</translation>
     </message>
@@ -4508,12 +4853,12 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Caricamento portamonete...</translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-38"/>
         <source>Cannot downgrade wallet</source>
         <translation>Non è possibile effettuare il downgrade del portamonete</translation>
     </message>
     <message>
-        <location line="-125"/>
+        <location line="-131"/>
         <source>Nexa</source>
         <translation>Nexa</translation>
     </message>
@@ -4634,24 +4979,25 @@ Vuoi reindicizzare al prossimo riavvio?</translation>
         <translation>Avviso: file del portafoglio danneggiato, dati salvati! Originale %s salvato come %s in %s; se il saldo o le transazioni non sono corretti, è necessario eseguire il ripristino da un backup.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+9"/>
         <source>You are trying to use -wallet.auto but neither -spendzeroconfchange nor -wallet.instant is turned on</source>
         <translation>Stai tentando di utilizzare -wallet.auto ma né -spendzeroconfchange né -wallet.instant sono attivi</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>You are trying to use wallet.fallbackFee which has been deprecated an no longer in  use - use wallet.payTxFee instead </source>
-        <translation>Stai tentando di utilizzare wallet.fallbackFee che è stato deprecato e non più in uso - usa invece wallet.payTxFee </translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>You are trying to use wallet.minTxFee which has been deprecated an no longer in  use - use wallet.payTxFee instead </source>
-        <translation>Stai tentando di utilizzare wallet.minTxFee che è stato deprecato e non più in uso - usa invece wallet.payTxFee </translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+7"/>
         <source>You can not send free transactions if you have configured a -relay.limitFreeRelay of zero</source>
         <translation>Non puoi inviare transazioni gratuite se hai configurato un -relay.limitFreeRelay pari a zero</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&quot;Restore Wallet&quot; succeeded and a backup of the previous wallet was saved to: %s.
+
+
+When you click &quot;OK&quot; Nexa will shutdown to complete the process.</source>
+        <translation>&quot;Ripristina portafoglio&quot; è riuscito e un backup del portafoglio precedente è stato salvato in: %s.
+
+
+Quando fai clic su &quot;OK&quot; Nexa si spegnerà per completare il processo.</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -4709,9 +5055,19 @@ Vuoi reindicizzare al prossimo riavvio?</translation>
         <translation>Errore durante il caricamento di %s: non puoi disabilitare HD su un portafoglio HD già esistente</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+5"/>
+        <source>Error: Keypool ran out, please call keypoolrefill first</source>
+        <translation>Errore: Keypool esaurito, chiamare prima keypoolrefill</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Initialization sanity check failed. %s is shutting down.</source>
         <translation>Il controllo di integrità dell&apos;inizializzazione non è riuscito. %s si sta chiudendo.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Insufficient funds for this token.  Need %d more.</source>
+        <translation>Fondi insufficienti per questo token. Ne servono %d in più.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4750,6 +5106,11 @@ Vuoi reindicizzare al prossimo riavvio?</translation>
     </message>
     <message>
         <location line="+1"/>
+        <source>Opening Token Description database...</source>
+        <translation>Apertura del database Descrizione token...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation>Apertura database UTXO...</translation>
     </message>
@@ -4774,7 +5135,7 @@ Vuoi reindicizzare al prossimo riavvio?</translation>
         <translation>Ripetizione scansione...</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+11"/>
         <source>Turn off auto consolidate and try sending again.</source>
         <translation>Disattiva il consolidamento automatico e riprova a inviare.</translation>
     </message>
@@ -4809,7 +5170,12 @@ Vuoi reindicizzare al prossimo riavvio?</translation>
         <translation>Il portafoglio doveva essere riscritto: riavvia %s per completare</translation>
     </message>
     <message>
-        <location line="-61"/>
+        <location line="+2"/>
+        <source>Zapping all transactions from wallet...</source>
+        <translation>Eliminazione di tutte le transazioni dal portafoglio...</translation>
+    </message>
+    <message>
+        <location line="-67"/>
         <source>Done loading</source>
         <translation>Caricamento completato</translation>
     </message>
@@ -4819,7 +5185,7 @@ Vuoi reindicizzare al prossimo riavvio?</translation>
         <translation>Errore</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-62"/>
         <source>Wallet is not password protected. Your funds may be at risk! Goto &quot;Settings&quot; and then select &quot;Encrypt Wallet&quot; to create a password.</source>
         <translation>Il portafoglio non è protetto da password. I tuoi fondi potrebbero essere a rischio! Vai a &quot;Impostazioni&quot; e poi seleziona &quot;Cifra il portamonete&quot; per creare una password.</translation>
     </message>

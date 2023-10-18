@@ -220,12 +220,7 @@
         <translation>Magsasara ngayon ang %1 upang tapusin ang proseso ng pag-encrypt. Tandaan na ang pag-encrypt ng iyong wallet ay hindi maaaring ganap na maprotektahan ang iyong mga barya mula sa pagnanakaw ng malware na nakakahawa sa iyong computer.</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>Mayalaga: Reng milabas a backups a gewa mu gamit ing wallet file mu dapat lamung mialilan bayung gawang encrypted wallet file. Para keng seguridad , reng milabas a backups dareng ali maka encrypt a wallet file ma-ala nala istung inumpisan mu nalang gamitan reng bayu, at me encrypt a wallet. </translation>
-    </message>
-    <message>
-        <location line="+104"/>
+        <location line="+109"/>
         <location line="+29"/>
         <source>Warning: The Caps Lock key is on!</source>
         <translation>Kapabaluan: Makabuklat ya ing Caps Lock key!</translation>
@@ -242,7 +237,12 @@
         <translation>Ilagay ang bagong passphrase sa wallet.&lt;br/&gt;Mangyaring gumamit ng passphrase na &lt;b&gt;sampu o higit pang random na character&lt;/b&gt;, o &lt;b&gt;walong o higit pang salita&lt;/b&gt;.</translation>
     </message>
     <message>
-        <location line="+93"/>
+        <location line="+84"/>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons you should no longer keep previous unencrypted backups as your funds will be at risk if someone gains access to them.</source>
+        <translation>MAHALAGA: Anumang mga nakaraang backup na ginawa mo sa iyong wallet file ay dapat mapalitan ng bagong nabuo, naka-encrypt na wallet file. Para sa mga kadahilanang pangseguridad, hindi mo na dapat itago ang mga nakaraang hindi naka-encrypt na backup dahil ang iyong mga pondo ay nasa panganib kung may makakakuha ng access sa kanila.</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <location line="+8"/>
         <location line="+42"/>
         <location line="+6"/>
@@ -309,17 +309,17 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../nexagui.cpp" line="+318"/>
+        <location filename="../nexagui.cpp" line="+336"/>
         <source>Sign &amp;message...</source>
         <translation>I-sign ing &amp;mensayi</translation>
     </message>
     <message>
-        <location line="+411"/>
+        <location line="+425"/>
         <source>Synchronizing with network...</source>
         <translation>Mag-sychronize ne king network...</translation>
     </message>
     <message>
-        <location line="-500"/>
+        <location line="-531"/>
         <source>&amp;Overview</source>
         <translation>&amp;Overview</translation>
     </message>
@@ -359,7 +359,17 @@
         <translation>Lawan ing kasalesayan ning transaksion</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+6"/>
+        <source>&amp;Tokens</source>
+        <translation>&amp;Mga token</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Browse or Send Tokens</source>
+        <translation>Mag-browse o Magpadala ng mga Token</translation>
+    </message>
+    <message>
+        <location line="+32"/>
         <source>E&amp;xit</source>
         <translation>L&amp;umwal</translation>
     </message>
@@ -409,7 +419,7 @@
         <translation>Baguhin ang Bitcoin Unlimited na Opsyon</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>&amp;Encrypt Wallet...</source>
         <translation>I-&amp;Encrypt in Wallet...</translation>
     </message>
@@ -424,7 +434,17 @@
         <translation>I-&amp;Backup ing Wallet...</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
+        <source>&amp;Restore Wallet...</source>
+        <translation>&amp;Ibalik ang Wallet...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Restore wallet from another location</source>
+        <translation>Ibalik ang wallet mula sa ibang lokasyon</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>&amp;Change Passphrase...</source>
         <translation>&amp;Alilan ing Passphrase...</translation>
     </message>
@@ -454,17 +474,17 @@
         <translation>Address king pamag-Tanggap</translation>
     </message>
     <message>
-        <location line="-95"/>
+        <location line="-112"/>
         <source>Send coins to a Nexa address</source>
         <translation>Magpadalang barya king Nexa address</translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+92"/>
         <source>Backup wallet to another location</source>
         <translation>I-backup ing wallet king aliwang lugal</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+5"/>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Alilan ya ing passphrase a gagamitan para king wallet encryption</translation>
     </message>
@@ -484,17 +504,17 @@
         <translation>&amp;Beripikan ing message...</translation>
     </message>
     <message>
-        <location line="+495"/>
+        <location line="+509"/>
         <source>Nexa</source>
         <translation>Nexa</translation>
     </message>
     <message>
-        <location line="-726"/>
+        <location line="-757"/>
         <source>Wallet</source>
         <translation>Wallet</translation>
     </message>
     <message>
-        <location line="+212"/>
+        <location line="+228"/>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Ipalto / Isalikut</translation>
     </message>
@@ -504,7 +524,7 @@
         <translation>Ipalto o isalikut ing pun a awang</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+32"/>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>Ipakita ang listahan ng ginamit na mga address at label sa pagtanggap</translation>
     </message>
@@ -524,12 +544,12 @@
         <translation>Ipakita ang %1 na mensahe ng tulong upang makakuha ng listahan na may mga posibleng opsyon sa command-line ng Nexa</translation>
     </message>
     <message>
-        <location line="+42"/>
+        <location line="+43"/>
         <source>&amp;File</source>
         <translation>&amp;File</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+15"/>
         <source>&amp;Settings</source>
         <translation>&amp;Pamag-ayus</translation>
     </message>
@@ -544,17 +564,17 @@
         <translation>Gamit para king Tabs</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-86"/>
         <source>&amp;Command-line options</source>
         <translation>Pipamilian command-line</translation>
     </message>
     <message>
-        <location line="+188"/>
+        <location line="+194"/>
         <source>%1 client</source>
         <translation>%1 kliyente</translation>
     </message>
     <message numerus="yes">
-        <location line="+178"/>
+        <location line="+186"/>
         <source>%n active connection(s) to Nexa network</source>
         <translation>
             <numerusform>%n (mga) aktibong koneksyon sa Nexa network</numerusform>
@@ -1369,7 +1389,12 @@
         <translation>Awtomatiko pagsamahin</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+39"/>
+        <source>&amp;Rescan wallet on startup</source>
+        <translation>&amp;I-scan muli ang wallet sa startup</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>&amp;Network</source>
         <translation>&amp;Network</translation>
     </message>
@@ -1551,17 +1576,17 @@
         <translation>I-&amp;Cancel</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+118"/>
+        <location filename="../optionsdialog.cpp" line="+123"/>
         <source>default</source>
         <translation>default</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+57"/>
         <source>none</source>
         <translation>wala</translation>
     </message>
     <message>
-        <location line="+73"/>
+        <location line="+75"/>
         <source>Confirm options reset</source>
         <translation>Kumpirmahin ang pag-reset ng mga opsyon</translation>
     </message>
@@ -1748,7 +1773,7 @@
     <message>
         <location line="+11"/>
         <source>Payment request expired.</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Nag-expire ang kahilingan sa pagbabayad.</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2787,7 +2812,12 @@
         <translation>Mga Tampok ng Coin Control</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+17"/>
+        <source>Select specific coins you want to use in this transaction</source>
+        <translation>Pumili ng mga partikular na barya na gusto mong gamitin sa transaksyong ito</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Inputs...</source>
         <translation>Mga input...</translation>
     </message>
@@ -2848,16 +2878,22 @@
     </message>
     <message>
         <location line="+3"/>
+        <location line="+16"/>
         <source>Custom change address</source>
         <translation>Pasadyang pagbabago ng address</translation>
     </message>
     <message>
-        <location line="+206"/>
+        <location line="+193"/>
         <source>Transaction Fee:</source>
         <translation>Bayad king Transaksion:</translation>
     </message>
     <message>
         <location line="+14"/>
+        <source>Choose your transaction fee.</source>
+        <translation>Piliin ang iyong bayad sa transaksyon.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Choose...</source>
         <translation>Pilinan...</translation>
     </message>
@@ -2888,7 +2924,12 @@
         <translation>kabuuang hindi bababa sa</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+10"/>
+        <source>Custom fee amount</source>
+        <translation>Pasadyang halaga ng bayad</translation>
+    </message>
+    <message>
+        <location line="+24"/>
         <location line="+13"/>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for nexa transactions than the network can process.</source>
         <translation>Ang pagbabayad lamang ng pinakamababang bayad ay ayos lang hangga&apos;t may mas kaunting dami ng transaksyon kaysa sa espasyo sa mga bloke. Ngunit magkaroon ng kamalayan na ito ay maaaring mauwi sa isang transaksyong hindi kailanman nagkukumpirma kapag may higit na pangangailangan para sa mga transaksyong nexa kaysa sa maaaring iproseso ng network.</translation>
@@ -2900,11 +2941,21 @@
     </message>
     <message>
         <location line="+29"/>
+        <source>Use the recommended fee amount.  You can select a faster or slower confirmation time by moving the &quot;Confirmation Time&quot; slider.</source>
+        <translation>Gamitin ang inirekumendang halaga ng bayad. Maaari kang pumili ng mas mabilis o mas mabagal na oras ng pagkumpirma sa pamamagitan ng paggalaw sa slider ng &quot;Oras ng Pagkumpirma.&quot;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Recommended:</source>
         <translation>Inirerekomenda:</translation>
     </message>
     <message>
         <location line="+30"/>
+        <source>Choose a custom fee amount</source>
+        <translation>Pumili ng custom na halaga ng bayad</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Custom:</source>
         <translation>Custom:</translation>
     </message>
@@ -2915,11 +2966,17 @@
     </message>
     <message>
         <location line="+29"/>
+        <location line="+33"/>
+        <source>Transaction confirmation time</source>
+        <translation>Oras ng pagkumpirma ng transaksyon</translation>
+    </message>
+    <message>
+        <location line="-30"/>
         <source>Confirmation time:</source>
         <translation>Oras ng pagkumpirma:</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+63"/>
         <source>normal</source>
         <translation>normal</translation>
     </message>
@@ -2960,11 +3017,16 @@
     </message>
     <message>
         <location line="+55"/>
+        <source>Current Balance</source>
+        <translation>Kasalukuyang balanse</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Balance:</source>
         <translation>Balanse:</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-87"/>
         <source>Confirm the send action</source>
         <translation>Kumpirman ing aksion king pamagpadala</translation>
     </message>
@@ -3140,24 +3202,24 @@
 <context>
     <name>SendCoinsEntry</name>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="+82"/>
-        <location line="+650"/>
-        <location line="+533"/>
+        <location filename="../forms/sendcoinsentry.ui" line="+86"/>
+        <location line="+677"/>
+        <location line="+560"/>
         <source>A&amp;mount:</source>
         <translation>A&amp;laga:</translation>
     </message>
     <message>
-        <location line="-1170"/>
+        <location line="-1224"/>
         <source>Pay &amp;To:</source>
         <translation>Ibayad &amp;kang:</translation>
     </message>
     <message>
-        <location line="-74"/>
-        <source>This is a normal payment.</source>
-        <translation>Ito ay isang normal na pagbabayad.</translation>
+        <location line="-55"/>
+        <source>Amount to send</source>
+        <translation>Halagang ipapadala</translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+7"/>
         <source>The fee will be deducted from the amount being sent. The recipient will receive less coins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
         <translation>Ang bayad ay ibabawas mula sa halagang ipinadala. Ang tatanggap ay makakatanggap ng mas kaunting mga barya kaysa sa inilagay mo sa field ng halaga. Kung maraming tatanggap ang napili, ang bayad ay hahatiin nang pantay.</translation>
     </message>
@@ -3203,13 +3265,13 @@
     </message>
     <message>
         <location line="+7"/>
-        <location line="+526"/>
-        <location line="+533"/>
+        <location line="+553"/>
+        <location line="+560"/>
         <source>Remove this entry</source>
         <translation>Alisin ang entry na ito</translation>
     </message>
     <message>
-        <location line="-1037"/>
+        <location line="-1091"/>
         <source>A message that was attached to the coin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Nexa network.</source>
         <translation>Isang mensahe na naka-attach sa coin: URI na maiimbak kasama ng transaksyon para sa iyong sanggunian. Tandaan: Ang mensaheng ito ay hindi ipapadala sa network ng Nexa.</translation>
     </message>
@@ -3230,13 +3292,13 @@
         <translation>Pampublikong Label:</translation>
     </message>
     <message>
-        <location line="+439"/>
+        <location line="+466"/>
         <source>This is an unauthenticated payment request.</source>
         <translation>Ito ay isang hindi napatotohanang kahilingan sa pagbabayad.</translation>
     </message>
     <message>
         <location line="+49"/>
-        <location line="+533"/>
+        <location line="+560"/>
         <source>Memo:</source>
         <translation>Memo:</translation>
     </message>
@@ -3246,8 +3308,8 @@
         <translation>Ito ay isang napatunayang kahilingan sa pagbabayad.</translation>
     </message>
     <message>
-        <location line="-514"/>
-        <location line="+529"/>
+        <location line="-541"/>
+        <location line="+556"/>
         <source>Pay To:</source>
         <translation>Ibayad kang:</translation>
     </message>
@@ -3415,6 +3477,220 @@
     </message>
 </context>
 <context>
+    <name>TokenDescDialog</name>
+    <message>
+        <location filename="../forms/tokendescdialog.ui" line="+17"/>
+        <source>Token details</source>
+        <translation>Mga detalye ng token</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This pane shows a detailed description of the token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ang pane na ito ay nagpapakita ng detalyadong paglalarawan ng token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+</context>
+<context>
+    <name>TokensViewDialog</name>
+    <message>
+        <location filename="../forms/tokensviewdialog.ui" line="+14"/>
+        <source>Tokens</source>
+        <translation>Mga token</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Amount: </source>
+        <translation>Alaga: </translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The number of tokens to send&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ang bilang ng mga token na ipapadala&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>  Pay To: </source>
+        <translation>  Ibayad kang: </translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>The Nexa address to send the payment to</source>
+        <translation>Ang address ng Nexa kung saan ipadala ang bayad</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Choose previously used address</source>
+        <translation>Piliin ang dating ginamit na address</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Alt+A</source>
+        <translation>Alt+A</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Paste address from clipboard</source>
+        <translation>Idikit ing address menibat king clipboard</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Alt+P</source>
+        <translation>Alt+P</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Remove this entry</source>
+        <translation>Alisin ang entry na ito</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send tokens&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Magpadala ng mga token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Send</source>
+        <translation>Ipadala</translation>
+    </message>
+    <message>
+        <location line="+56"/>
+        <source>Token ID</source>
+        <translation>Mga token ID</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>The unique token identifier</source>
+        <translation>Ang natatanging token identifier</translation>
+    </message>
+    <message>
+        <location line="-45"/>
+        <source>The token group identifier</source>
+        <translation>Ang pagkakakilanlan ng pangkat ng token</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Name</source>
+        <translation>Pangalan</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The name of the token</source>
+        <translation>Ang pangalan ng token</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Ticker</source>
+        <translation>Ticker</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The token ticker symbol</source>
+        <translation>Ang simbolo ng token ticker</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Balance</source>
+        <translation>Balanse</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Confirmed token balance</source>
+        <translation>Nakumpirmang balanse ng token</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Pending</source>
+        <translation>Nakabinbin</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Unconfirmed token balance</source>
+        <translation>Hindi kumpirmadong balanse ng token</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Sub</source>
+        <translation>Sub</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>If checked then this item is a subgroup.</source>
+        <translation>Kung nilagyan ng check, ang item na ito ay isang subgroup.</translation>
+    </message>
+    <message>
+        <location filename="../tokensviewdialog.cpp" line="+391"/>
+        <location line="+7"/>
+        <location line="+4"/>
+        <source>Data</source>
+        <translation>Datos</translation>
+    </message>
+    <message>
+        <location line="-11"/>
+        <source>string</source>
+        <translation>string</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location line="+4"/>
+        <source>num</source>
+        <translation>num</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>NaN</source>
+        <translation>NaN</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Name:</source>
+        <translation>Pangalan:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ticker:</source>
+        <translation>Ticker:</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>URL:</source>
+        <translation>URL:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Hash:</source>
+        <translation>Hash:</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Decimals:</source>
+        <translation>Mga decimal:</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Balance:</source>
+        <translation>Balanse:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pending:</source>
+        <translation>Nakabinbin:</translation>
+    </message>
+    <message>
+        <location line="+79"/>
+        <source>Are you sure you want to send?</source>
+        <translation>Sigurado ka bang gusto mong magpadala?</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&lt;b&gt;Token(s)&lt;/b&gt;</source>
+        <translation>&lt;b&gt;Token(s)&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Confirm send tokens</source>
+        <translation>Kumpirmahin ang pagpapadala ng mga token</translation>
+    </message>
+</context>
+<context>
     <name>TrafficGraphWidget</name>
     <message>
         <location filename="../trafficgraphwidget.cpp" line="+74"/>
@@ -3425,7 +3701,7 @@
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+34"/>
+        <location filename="../transactiondesc.cpp" line="+35"/>
         <source>Open until %1</source>
         <translation>Makabuklat anggang %1</translation>
     </message>
@@ -3551,12 +3827,12 @@
         <location line="+41"/>
         <location line="+63"/>
         <location line="+47"/>
-        <location line="+74"/>
+        <location line="+134"/>
         <source>Credit</source>
         <translation>Credit</translation>
     </message>
     <message numerus="yes">
-        <location line="-222"/>
+        <location line="-282"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>mature sa %n pang bloke</numerusform>
@@ -3571,12 +3847,12 @@
     <message>
         <location line="+102"/>
         <location line="+31"/>
-        <location line="+79"/>
+        <location line="+139"/>
         <source>Debit</source>
         <translation>Debit</translation>
     </message>
     <message>
-        <location line="-98"/>
+        <location line="-158"/>
         <source>Total debit</source>
         <translation>Kabuuang debit</translation>
     </message>
@@ -3627,7 +3903,41 @@
         <translation>Ang mga nabuong barya ay dapat mag-mature ng %1 na bloke bago sila magastos. Noong nabuo mo ang block na ito, na-broadcast ito sa network upang maidagdag sa block chain. Kung mabibigo itong makapasok sa chain, magbabago ang estado nito sa &quot;hindi tinatanggap&quot; at hindi ito magagastos. Ito ay maaaring mangyari paminsan-minsan kung ang isa pang node ay bubuo ng isang bloke sa loob ng ilang segundo ng sa iyo.</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+25"/>
+        <location line="+25"/>
+        <source>Token ID</source>
+        <translation>Mga token ID</translation>
+    </message>
+    <message>
+        <location line="-20"/>
+        <location line="+25"/>
+        <source>Ticker</source>
+        <translation>Ticker</translation>
+    </message>
+    <message>
+        <location line="-24"/>
+        <location line="+25"/>
+        <source>Name</source>
+        <translation>Pangalan</translation>
+    </message>
+    <message>
+        <location line="-21"/>
+        <location line="+25"/>
+        <source>Decimals</source>
+        <translation>Mga decimal</translation>
+    </message>
+    <message>
+        <location line="-23"/>
+        <source>Amount Sent</source>
+        <translation>Halaga ng Ipinadala</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Amount Received</source>
+        <translation>Halaga na Natanggap</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Debug information</source>
         <translation>Impormasion ning Debug</translation>
     </message>
@@ -3659,7 +3969,7 @@
         <translation>e tutu</translation>
     </message>
     <message>
-        <location line="-357"/>
+        <location line="-417"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, eya matagumpeng mibalita</translation>
     </message>
@@ -4169,7 +4479,7 @@
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+44"/>
+        <location filename="../walletview.cpp" line="+45"/>
         <source>&amp;Export</source>
         <translation>&amp;l-export</translation>
     </message>
@@ -4179,17 +4489,18 @@
         <translation>I-export ang data sa kasalukuyang tab sa isang file</translation>
     </message>
     <message>
-        <location line="+187"/>
+        <location line="+191"/>
         <source>Backup Wallet</source>
         <translation>I-Backup ing Wallet...</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location line="+21"/>
         <source>Wallet Data (*.dat)</source>
         <translation>Data ng Wallet (*.dat)</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-14"/>
         <source>Backup Failed</source>
         <translation>Nabigo ang pag-backup</translation>
     </message>
@@ -4208,11 +4519,26 @@
         <source>The wallet data was successfully saved to %1.</source>
         <translation>Ang data ng pitaka ay matagumpay na na-save sa %1.</translation>
     </message>
+    <message>
+        <location line="+8"/>
+        <source>Restore Wallet</source>
+        <translation>Ibalik ang Wallet</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Restore Failed</source>
+        <translation>Nabigo ang Pag-restore</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>There was an error trying to restore the wallet data to %1.</source>
+        <translation>Nagkaroon ng error sa pagsubok na ibalik ang data ng pitaka sa %1.</translation>
+    </message>
 </context>
 <context>
     <name>nexa</name>
     <message>
-        <location filename="../nexastrings.cpp" line="+144"/>
+        <location filename="../nexastrings.cpp" line="+150"/>
         <source>Corrupted block database detected</source>
         <translation>Mekapansin lang me-corrupt a block database</translation>
     </message>
@@ -4237,37 +4563,51 @@
         <translation>Kamalian: Mababa ne ing espasyu king disk!</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Memali ya ing pamakiramdam kareng gang nanung port. Gamita me ini -listen=0 nung buri me ini.</translation>
     </message>
     <message>
-        <location line="-18"/>
+        <location line="-19"/>
         <source>Cannot resolve -whitebind address: &apos;%s&apos;</source>
         <translation>Eya me-resolve ing -whitebind address: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+22"/>
         <source>Information</source>
         <translation>&amp;Impormasion</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+51"/>
         <source>Warning</source>
         <translation>Kapabaluan</translation>
     </message>
     <message>
-        <location line="-39"/>
+        <location line="-41"/>
         <source>Loading addresses...</source>
         <translation>Lo-load da ne ing address...</translation>
     </message>
     <message>
-        <location line="-5"/>
+        <location line="-56"/>
+        <source>You can not run &quot;-salvagewallet&quot; as an HD wallet.
+
+Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
+        <translation>Hindi mo maaaring patakbuhin ang &quot;-salvagewallet&quot; bilang HD wallet.
+
+Pakilunsad muli ang Nexa gamit ang &quot;-usehd=0&quot;.</translation>
+    </message>
+    <message>
+        <location line="+51"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>Ali katanggap-tanggap a -proxy addresss: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+22"/>
+        <source>Signing token transaction failed</source>
+        <translation>Nabigo ang pagpirma ng transaksyon sa token</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Signing transaction failed</source>
         <translation>Nabigo ang pagpirma ng transaksyon</translation>
     </message>
@@ -4337,7 +4677,7 @@
         <translation>E kilalang network ing mepili king -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-61"/>
+        <location line="-65"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Eya me-resolve ing -bind address: &apos;%s&apos;</translation>
     </message>
@@ -4347,7 +4687,7 @@
         <translation>Eya me-resolve ing -externalip address: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+35"/>
         <source>Loading block index...</source>
         <translation>Lo-load dane ing block index...</translation>
     </message>
@@ -4357,12 +4697,12 @@
         <translation>Lo-load dane ing wallet...</translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-38"/>
         <source>Cannot downgrade wallet</source>
         <translation>Ali ya magsilbing i-downgrade ing wallet</translation>
     </message>
     <message>
-        <location line="-125"/>
+        <location line="-131"/>
         <source>Nexa</source>
         <translation>Nexa</translation>
     </message>
@@ -4554,21 +4894,16 @@ Gusto mo bang mag-reindex sa susunod na pag-restart?</translation>
     </message>
     <message>
         <location line="+3"/>
+        <source>You are trying to restore the same wallet which you are trying to replace.</source>
+        <translation>Sinusubukan mong ibalik ang parehong wallet na sinusubukan mong palitan.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>You are trying to use -wallet.auto but neither -spendzeroconfchange nor -wallet.instant is turned on</source>
         <translation>Sinusubukan mong gamitin ang -wallet.auto ngunit hindi naka-on ang -spendzeroconfchange o -wallet.instant</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>You are trying to use wallet.fallbackFee which has been deprecated an no longer in  use - use wallet.payTxFee instead </source>
-        <translation>Sinusubukan mong gamitin ang wallet.fallbackFee na hindi na ginagamit at hindi na ginagamit - gamitin na lang ang wallet.payTxFee</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>You are trying to use wallet.minTxFee which has been deprecated an no longer in  use - use wallet.payTxFee instead </source>
-        <translation>Sinusubukan mong gumamit ng wallet.minTxFee na hindi na ginagamit at hindi na ginagamit - gumamit na lang ng wallet.payTxFee</translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+7"/>
         <source>You can not send free transactions if you have configured a -relay.limitFreeRelay of zero</source>
         <translation>Hindi ka maaaring magpadala ng mga libreng transaksyon kung na-configure mo ang isang -relay.limitFreeRelay na zero</translation>
     </message>
@@ -4579,6 +4914,17 @@ Gusto mo bang mag-reindex sa susunod na pag-restart?</translation>
     </message>
     <message>
         <location line="+3"/>
+        <source>&quot;Restore Wallet&quot; succeeded and a backup of the previous wallet was saved to: %s.
+
+
+When you click &quot;OK&quot; Nexa will shutdown to complete the process.</source>
+        <translation>Nagtagumpay ang &quot;Ibalik ang Wallet&quot; at na-save ang backup ng nakaraang wallet sa: %s.
+
+
+Kapag na-click mo ang &quot;OK&quot; ang Nexa ay magsasara upang makumpleto ang proseso.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>%s </source>
         <translation>%s </translation>
     </message>
@@ -4653,7 +4999,12 @@ Gusto mo bang mag-reindex sa susunod na pag-restart?</translation>
         <translation>Error: Isang malalang internal na error ang naganap, tingnan ang debug.log para sa mga detalye</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
+        <source>Error: Keypool ran out, please call keypoolrefill first</source>
+        <translation>Error: Naubos ang keypool, mangyaring tawagan muna ang keypoolrefill</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Importing...</source>
         <translation>Importing...</translation>
     </message>
@@ -4666,6 +5017,11 @@ Gusto mo bang mag-reindex sa susunod na pag-restart?</translation>
         <location line="+2"/>
         <source>Initialization sanity check failed. %s is shutting down.</source>
         <translation>Nabigo ang initialization sanity check. Nagsasara ang %s.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Insufficient funds for this token.  Need %d more.</source>
+        <translation>Hindi sapat na pondo para sa token na ito. Kailangan ng %d pa.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4724,6 +5080,11 @@ Gusto mo bang mag-reindex sa susunod na pag-restart?</translation>
     </message>
     <message>
         <location line="+1"/>
+        <source>Opening Token Description database...</source>
+        <translation>Binubuksan ang database ng Paglalarawan ng Token...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation>Binubuksan ang database ng UTXO...</translation>
     </message>
@@ -4763,7 +5124,7 @@ Gusto mo bang mag-reindex sa susunod na pag-restart?</translation>
         <translation>I-scan deng pasibayu...</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+16"/>
         <source>Upgrading block database...This could take a while.</source>
         <translation>Ina-upgrade ang block database...Maaaring magtagal ito.</translation>
     </message>
@@ -4808,7 +5169,12 @@ Gusto mo bang mag-reindex sa susunod na pag-restart?</translation>
         <translation>Kailangang muling isulat ang pitaka: i-restart ang %s upang makumpleto</translation>
     </message>
     <message>
-        <location line="-61"/>
+        <location line="+2"/>
+        <source>Zapping all transactions from wallet...</source>
+        <translation>I-zapping ang lahat ng transaksyon mula sa wallet...</translation>
+    </message>
+    <message>
+        <location line="-67"/>
         <source>Done loading</source>
         <translation>Yari ne ing pamag-load</translation>
     </message>
