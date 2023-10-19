@@ -202,7 +202,7 @@ void CoinControlDialog::buttonSelectAllClicked()
     ui->treeWidget->setEnabled(false);
     for (int i = 0; i < ui->treeWidget->topLevelItemCount(); i++)
     {
-        if (i >= MAX_TX_NUM_VIN && !ui->radioTreeMode->isChecked())
+        if (i >= (int)MAX_TX_NUM_VIN && !ui->radioTreeMode->isChecked())
             break;
 
         if (ui->treeWidget->topLevelItem(i)->checkState(COLUMN_CHECKBOX) != state)
