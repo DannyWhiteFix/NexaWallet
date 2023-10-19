@@ -13,6 +13,9 @@
 #include "stdint.h"
 #include <stdbool.h>
 
+// cashlib version
+SLAPI int cashlibVersion();
+
 /** Sign data (compatible with BCH OP_CHECKDATASIG) */
 SLAPI int SignHashEDCSA(const unsigned char *data,
     int datalen,
@@ -156,8 +159,8 @@ SLAPI void getWorkFromDifficultyBits(unsigned long int nBits, unsigned char* res
 SLAPI int encode64(const unsigned char* data, int size, char* result, int resultMaxLen);
 SLAPI int decode64(const char* data, unsigned char* result, int resultMaxLen);
 
-/** Create a bloom filter 
-The size of the result array must be allocated to be at least 32 bytes bigger than maxSize to account for the 
+/** Create a bloom filter
+The size of the result array must be allocated to be at least 32 bytes bigger than maxSize to account for the
 serialization overhead.
 */
 SLAPI int createBloomFilter(const unsigned char* data, unsigned int len, unsigned int elemLen, double falsePosRate, int capacity, int maxSize, int flags, int tweak, unsigned char* result);

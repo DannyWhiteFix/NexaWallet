@@ -61,6 +61,15 @@
 
 #endif
 
+// clang-format off
+#define MAJOR(major)       1000000 * major
+#define MINOR(minor)       1000 * minor
+#define REVISION(revision) 1 * revision
+static const int CASHLIB_VERSION = MAJOR(1) + MINOR(0) + REVISION(0);
+// clang-format on
+
+SLAPI int cashlibVersion() { return CASHLIB_VERSION; }
+
 // in headervalidation.cpp
 bool CheckBlockHeader(const Consensus::Params &consensusParams,
     const CBlockHeader &block,
@@ -77,7 +86,6 @@ ECCVerifyHandle *verifyContext = nullptr;
 CChainParams *cashlibParams = nullptr;
 
 const int CLIENT_VERSION = 0; // 0 because app should report its version, not this lib
-// TODO - this lib needs versioning
 
 bool CheckBlockHeader(const Consensus::Params &consensusParams,
     const CBlockHeader &block,
@@ -1623,6 +1631,11 @@ jbyteArray makeJByteArray(JNIEnv *env, std::vector<unsigned char> &buf)
     memcpy(dest, &buf[0], buf.size());
     env->ReleaseByteArrayElements(bArray, dest, 0);
     return bArray;
+}
+
+extern "C" JNIEXPORT jint JNICALL Java_org_nexa_libnexakotlin_cashlibVersion(JNIEnv *env, jobject ths)
+{
+    return CASHLIB_VERSION;
 }
 
 #ifndef LIGHT
