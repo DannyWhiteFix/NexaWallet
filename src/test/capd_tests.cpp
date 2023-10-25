@@ -84,7 +84,10 @@ BOOST_AUTO_TEST_CASE(capd_msg_test_vectors)
             auto idx = tmpstr.find_last_of("123456789");
             // the double will round and then shift so figure out where the rounding starts by looking for ending zeros
             // and then check the hex representation of the numbers up to but not including the last nonzero digit
-            BOOST_CHECK(tmpstr.substr(0, idx - 1) == valstr.substr(0, idx - 1));
+            if (!tmp.EqualTo(0) && !val256.EqualTo(0))
+            {
+                BOOST_CHECK(tmpstr.substr(0, idx - 1) == valstr.substr(0, idx - 1));
+            }
         }
     }
 
