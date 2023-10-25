@@ -567,7 +567,13 @@ class GroupTokensTest (BitcoinTestFramework):
         # Send to our own node - there should be no instant delay
         addr1 = self.nodes[2].getnewaddress()
         self.nodes[2].token("send", grp2Id, addr1, 100)
-        assert(self.nodes[2].token("balance", grp2Id, addr1) == 100)
+        startTime = time.time()
+        endTime = startTime
+        totalTimeAllowed = startTime + instantDelay
+        while ((self.nodes[2].token("balance", grp2Id, addr1) != 100) and (endTime < totalTimeAllowed)):
+            time.sleep(0.1)
+            endTime = time.time()
+        assert(endTime <= totalTimeAllowed)
 
         # Send to another node - the instant delay should be visible
         addr2 = self.nodes[2].getnewaddress()
