@@ -978,14 +978,20 @@ bool RestoreWallet(const CWallet &wallet, const string &strSrc)
             }
         }
         else
+        {
+            LOGA("error restoring wallet - nothing to do\n");
             return false;
+        }
     }
 
     // Copy selected wallet to wallet.dat and then reload
     fs::path pathDest = GetDataDir() / wallet.strWalletFile;
     fs::path pathSrc(strSrc);
     if (fs::is_directory(pathSrc))
+    {
+        LOGA("error restoring wallet - can not restore a directory\n");
         return false;
+    }
 
     if (pathSrc == pathDest)
     {
@@ -1007,24 +1013,32 @@ bool RestoreWallet(const CWallet &wallet, const string &strSrc)
     // Initiate a rescan of the wallet by setting the rescan flag and then
     // loading the wallet into memory.  Once done we can initiate a shutdown
     // which will save the updated wallet to disk.
-    if (!SoftSetBoolArg("-rescan", true))
-        return false;
-    bool ret = InitLoadWallet();
-    if (!ret)
+    SetBoolArg("-rescan", true);
+    try
     {
-        return false;
-    }
-    else
-    {
-        bool fRet = uiInterface.ThreadSafeMessageBox(
-            strprintf(_("\"Restore Wallet\" succeeded and a backup of the previous wallet was saved to: "
-                        "%s.\n\n\nWhen you click \"OK\" Nexa will shutdown to complete the process."),
-                pathBak),
-            "", CClientUIInterface::MSG_INFORMATION | CClientUIInterface::BTN_OK | CClientUIInterface::MODAL);
-        if (fRet)
+        bool ret = InitLoadWallet();
+        if (!ret)
         {
-            StartShutdown();
+            LOGA("error restoring wallet - InitLoadWallet() failed\n");
+            return false;
         }
+        else
+        {
+            bool fRet = uiInterface.ThreadSafeMessageBox(
+                strprintf(_("\"Restore Wallet\" succeeded and a backup of the previous wallet was saved to: "
+                            "%s.\n\n\nWhen you click \"OK\" Nexa will shutdown to complete the process."),
+                    pathBak),
+                "", CClientUIInterface::MSG_INFORMATION | CClientUIInterface::BTN_OK | CClientUIInterface::MODAL);
+            if (fRet)
+            {
+                StartShutdown();
+            }
+        }
+    }
+    catch (std::runtime_error &e)
+    {
+        LOGA("Could not InitLoadWallet() %s - %s\n", pathSrc.string(), e.what());
+        return false;
     }
 
     return true;

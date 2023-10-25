@@ -11,6 +11,7 @@
 #include "chainparams.h"
 #include "dbwrapper.h"
 #include "fs.h"
+#include "init.h"
 #include "main.h"
 #include "sequential_files.h"
 #include "ui_interface.h"
@@ -857,7 +858,10 @@ bool FlushStateToDisk(CValidationState &state, FlushStateMode mode)
     }
     catch (const std::runtime_error &e)
     {
-        return AbortNode(state, std::string("System error while flushing: ") + e.what());
+        if (ShutdownRequested())
+            return false;
+        else
+            return AbortNode(state, std::string("System error while flushing: ") + e.what());
     }
 }
 
