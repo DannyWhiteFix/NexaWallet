@@ -131,7 +131,7 @@ bool CZMQPublishHashBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
     char data[32];
     for (unsigned int i = 0; i < 32; i++)
         data[31 - i] = hash.begin()[i];
-    int rc = zmq_send_multipart(psocket, "hashblock", 9, data, 32, 0);
+    int rc = zmq_send_multipart(psocket, "hashblock", (size_t)9, data, (size_t)32, nullptr);
     return rc == 0;
 }
 
@@ -145,7 +145,7 @@ bool CZMQPublishHashTransactionNotifier::NotifyTransaction(const CTransactionRef
         char data[32];
         for (unsigned int i = 0; i < 32; i++)
             data[31 - i] = hash.begin()[i];
-        rc = zmq_send_multipart(psocket, "txid", 4, data, 32, 0);
+        rc = zmq_send_multipart(psocket, "txid", (size_t)4, data, (size_t)32, nullptr);
     }
 
     {
@@ -154,7 +154,7 @@ bool CZMQPublishHashTransactionNotifier::NotifyTransaction(const CTransactionRef
         char data[32];
         for (unsigned int i = 0; i < 32; i++)
             data[31 - i] = hash.begin()[i];
-        rc |= zmq_send_multipart(psocket, "txidem", 6, data, 32, 0);
+        rc |= zmq_send_multipart(psocket, "txidem", (size_t)6, data, (size_t)32, nullptr);
     }
 
     return rc == 0;
@@ -169,7 +169,7 @@ bool CZMQPublishHashDoubleSpendNotifier::NotifyDoubleSpend(const CTransactionRef
         char data[32];
         for (unsigned int i = 0; i < 32; i++)
             data[31 - i] = hash.begin()[i];
-        rc = zmq_send_multipart(psocket, "dsid", 4, data, 32, 0);
+        rc = zmq_send_multipart(psocket, "dsid", (size_t)4, data, (size_t)32, nullptr);
     }
 
     {
@@ -178,7 +178,7 @@ bool CZMQPublishHashDoubleSpendNotifier::NotifyDoubleSpend(const CTransactionRef
         char data[32];
         for (unsigned int i = 0; i < 32; i++)
             data[31 - i] = hash.begin()[i];
-        rc |= zmq_send_multipart(psocket, "dsidem", 6, data, 32, 0);
+        rc |= zmq_send_multipart(psocket, "dsidem", (size_t)6, data, (size_t)32, nullptr);
         return rc == 0;
     }
 }
@@ -201,7 +201,7 @@ bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
         ss << *pblock;
     }
 
-    int rc = zmq_send_multipart(psocket, "rawblock", 8, &(*ss.begin()), ss.size(), 0);
+    int rc = zmq_send_multipart(psocket, "rawblock", (size_t)8, &(*ss.begin()), ss.size(), nullptr);
     return rc == 0;
 }
 
@@ -212,7 +212,7 @@ bool CZMQPublishRawTransactionNotifier::NotifyTransaction(const CTransactionRef 
     LOG(ZMQ, "zmq: Publish rawtx %s (%s)\n", id.GetHex(), idem.GetHex());
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << *ptx;
-    int rc = zmq_send_multipart(psocket, "rawtx", 5, &(*ss.begin()), ss.size(), 0);
+    int rc = zmq_send_multipart(psocket, "rawtx", (size_t)5, &(*ss.begin()), ss.size(), nullptr);
     return rc == 0;
 }
 
@@ -223,6 +223,6 @@ bool CZMQPublishRawDoubleSpendNotifier::NotifyDoubleSpend(const CTransactionRef 
     LOG(ZMQ, "zmq: Publish rawds %s (%s)\n", id.GetHex(), idem.GetHex());
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << ptx;
-    int rc = zmq_send_multipart(psocket, "rawds", 5, &(*ss.begin()), ss.size(), 0);
+    int rc = zmq_send_multipart(psocket, "rawds", (size_t)5, &(*ss.begin()), ss.size(), nullptr);
     return rc == 0;
 }
