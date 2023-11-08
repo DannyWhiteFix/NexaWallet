@@ -309,17 +309,17 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../nexagui.cpp" line="+336"/>
+        <location filename="../nexagui.cpp" line="+351"/>
         <source>Sign &amp;message...</source>
         <translation>&amp;Подписать сообщение...</translation>
     </message>
     <message>
-        <location line="+425"/>
+        <location line="+435"/>
         <source>Synchronizing with network...</source>
         <translation>Синхронизация с сетью...</translation>
     </message>
     <message>
-        <location line="-531"/>
+        <location line="-556"/>
         <source>&amp;Overview</source>
         <translation>&amp;Обзор</translation>
     </message>
@@ -359,7 +359,17 @@
         <translation>Просмотрите или отправьте токены</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+10"/>
+        <source>&amp;Token History</source>
+        <translation>История токена</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Browse Token History</source>
+        <translation>Просмотр истории токенов</translation>
+    </message>
+    <message>
+        <location line="+36"/>
         <source>E&amp;xit</source>
         <translation>В&amp;ыход</translation>
     </message>
@@ -449,7 +459,7 @@
         <translation>Открыть &amp;URI...</translation>
     </message>
     <message>
-        <location line="+411"/>
+        <location line="+421"/>
         <source>Importing blocks from disk...</source>
         <translation>Импортируются блоки с диска...</translation>
     </message>
@@ -459,12 +469,12 @@
         <translation>Идёт переиндексация блоков на диске...</translation>
     </message>
     <message>
-        <location line="-529"/>
+        <location line="-554"/>
         <source>Send coins to a Nexa address</source>
         <translation>Отправить монеты на указанный адрес Nexa</translation>
     </message>
     <message>
-        <location line="+92"/>
+        <location line="+107"/>
         <source>Backup wallet to another location</source>
         <translation>Сделать резервную копию бумажника в другом месте</translation>
     </message>
@@ -489,12 +499,12 @@
         <translation>&amp;Проверить сообщение...</translation>
     </message>
     <message>
-        <location line="+509"/>
+        <location line="+522"/>
         <source>Nexa</source>
         <translation>Nexa</translation>
     </message>
     <message>
-        <location line="-757"/>
+        <location line="-785"/>
         <source>Wallet</source>
         <translation>Бумажник</translation>
     </message>
@@ -509,7 +519,7 @@
         <translation>&amp;Получить</translation>
     </message>
     <message>
-        <location line="+69"/>
+        <location line="+84"/>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Показать / Скрыть</translation>
     </message>
@@ -569,7 +579,7 @@
         <translation>&amp;Параметры командной строки</translation>
     </message>
     <message numerus="yes">
-        <location line="+380"/>
+        <location line="+390"/>
         <source>%n active connection(s) to Nexa network</source>
         <translation>
             <numerusform>%n активных соединений с сетью Nexa</numerusform>
@@ -592,7 +602,7 @@
         </translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+27"/>
         <source>%1 behind</source>
         <translation>%1 позади</translation>
     </message>
@@ -607,7 +617,7 @@
         <translation>Транзакции после него пока не будут видны.</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+29"/>
         <source>Error</source>
         <translation>Ошибка</translation>
     </message>
@@ -622,12 +632,12 @@
         <translation>Информация</translation>
     </message>
     <message>
-        <location line="-85"/>
+        <location line="-86"/>
         <source>Up to date</source>
         <translation>Синхронизировано</translation>
     </message>
     <message>
-        <location line="-431"/>
+        <location line="-443"/>
         <source>Open a %1: URI or payment request</source>
         <translation>Откройте %1: URI или платежный запрос</translation>
     </message>
@@ -637,17 +647,17 @@
         <translation>Покажите справочное сообщение %1, чтобы получить список возможных параметров командной строки Nexa</translation>
     </message>
     <message>
-        <location line="+191"/>
+        <location line="+194"/>
         <source>%1 client</source>
         <translation>%1 клиент</translation>
     </message>
     <message>
-        <location line="+259"/>
+        <location line="+268"/>
         <source>Catching up...</source>
         <translation>Синхронизируется...</translation>
     </message>
     <message>
-        <location line="+163"/>
+        <location line="+164"/>
         <source>Date: %1
 </source>
         <translation>Дата: %1
@@ -2115,7 +2125,7 @@
     <message>
         <location line="+57"/>
         <location filename="../rpcconsole.cpp" line="+311"/>
-        <location line="+855"/>
+        <location line="+856"/>
         <source>Select a peer to view detailed information.</source>
         <translation>Выберите участника для просмотра подробностей.</translation>
     </message>
@@ -3505,6 +3515,342 @@
     </message>
 </context>
 <context>
+    <name>TokenHistoryView</name>
+    <message>
+        <location filename="../tokenhistoryview.cpp" line="+78"/>
+        <location line="+19"/>
+        <source>All</source>
+        <translation>Все</translation>
+    </message>
+    <message>
+        <location line="-18"/>
+        <source>Today</source>
+        <translation>Сегодня</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This week</source>
+        <translation>На этой неделе</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This month</source>
+        <translation>В этом месяце</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last month</source>
+        <translation>В прошлом месяце</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This year</source>
+        <translation>В этом году</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Range...</source>
+        <translation>Промежуток...</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Received with</source>
+        <translation>Получено на</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Sent</source>
+        <translation>Отправлено</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>To yourself</source>
+        <translation>Отправленные себе</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Mint</source>
+        <translation>чеканить</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Other</source>
+        <translation>Другое</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Enter token ID to search</source>
+        <translation>Введите идентификатор токена для поиска</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Min amount</source>
+        <translation>Мин. сумма</translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>Copy token id</source>
+        <translation>Скопировать идентификатор токена</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy amount</source>
+        <translation>Скопировать сумму</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy transaction idem</source>
+        <translation>копировать транзакцию то же</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy raw transaction</source>
+        <translation>Скопировать исходную транзакции</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show transaction details</source>
+        <translation>Показать подробности транзакции</translation>
+    </message>
+    <message>
+        <location line="+162"/>
+        <source>Export Token History</source>
+        <translation>Экспортировать историю токенов</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Текст, разделённый запятыми (*.csv)</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Confirmed</source>
+        <translation>Подтверждено</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Watch-only</source>
+        <translation>Для наблюдения</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Date</source>
+        <translation>Дата</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Type</source>
+        <translation>Тип</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Label</source>
+        <translation>Метка</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Address</source>
+        <translation>Адрес</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transaction ID</source>
+        <translation>ID транзакции</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Token ID</source>
+        <translation>Идентификатор токена</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Token Amount</source>
+        <translation>Сумма токена</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Exporting Failed</source>
+        <translation>Экспорт не удался</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>There was an error trying to save the token history to %1.</source>
+        <translation>Произошла ошибка при попытке сохранить историю токенов в %1.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Exporting Successful</source>
+        <translation>Экспорт успешно завершён</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The token history was successfully saved to %1.</source>
+        <translation>История токенов успешно сохранена в %1.</translation>
+    </message>
+    <message>
+        <location line="+53"/>
+        <source>Range:</source>
+        <translation>Промежуток от:</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>to</source>
+        <translation>до</translation>
+    </message>
+</context>
+<context>
+    <name>TokenTableModel</name>
+    <message>
+        <location filename="../tokentablemodel.cpp" line="+245"/>
+        <source>Date</source>
+        <translation>Дата</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Type</source>
+        <translation>Тип</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Token ID</source>
+        <translation>Идентификатор токена</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Net Amount</source>
+        <translation>Чистая сумма</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+49"/>
+        <source>Open for %n more block(s)</source>
+        <translation>
+            <numerusform>Открыто для ещё %n блока</numerusform>
+            <numerusform>Открыто для ещё %n блоков</numerusform>
+            <numerusform>Открыто для ещё %n блоков</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Open until %1</source>
+        <translation>Открыто до %1</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Offline</source>
+        <translation>Нет активных соединений с сетью</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Unconfirmed</source>
+        <translation>Неподтверждено</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Confirming (%1 of %2 recommended confirmations)</source>
+        <translation>Подтверждено(%1 подтверждений, рекомендуется %2 подтверждений)</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Confirmed (%1 confirmations)</source>
+        <translation>Подтверждено (%1 подтверждений)</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Conflicted</source>
+        <translation>В противоречии</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Double Spent</source>
+        <translation>Двойная трата</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Abandoned</source>
+        <translation>Заброшенный</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Immature (%1 confirmations, will be available after %2)</source>
+        <translation>Незрелый (%1 подтверждений, будет доступен после %2)</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>This block was not received by any other nodes and will probably not be accepted!</source>
+        <translation>Этот блок не был получен другими узлами и, возможно, не будет принят!</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Generated but not accepted</source>
+        <translation>Сгенерированно, но не подтверждено</translation>
+    </message>
+    <message>
+        <location line="+40"/>
+        <source>Received with</source>
+        <translation>Получено на</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Received from</source>
+        <translation>Получено от</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Sent</source>
+        <translation>Отправлено</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Payment to yourself</source>
+        <translation>Отправлено себе</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Mint</source>
+        <translation>чеканить</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Public label</source>
+        <translation>Общедоступная этикетка</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Other</source>
+        <translation>Другое</translation>
+    </message>
+    <message>
+        <location line="+337"/>
+        <source>Transaction status. Hover over this field to show number of confirmations.</source>
+        <translation>Статус транзакции. Подведите курсор к нужному полю для того, чтобы увидеть количество подтверждений.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Date and time that the transaction was received.</source>
+        <translation>Дата и время, когда транзакция была получена.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Type of transaction.</source>
+        <translation>Тип транзакции.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Whether or not a watch-only address is involved in this transaction.</source>
+        <translation>Использовался ли в транзакции адрес для наблюдения.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>User-defined intent/purpose of the transaction.</source>
+        <translation>Определяемое пользователем намерение/цель транзакции.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Amount removed from or added to balance.</source>
+        <translation>Сумма, добавленная, или снятая с баланса.</translation>
+    </message>
+</context>
+<context>
     <name>TokensViewDialog</name>
     <message>
         <location filename="../forms/tokensviewdialog.ui" line="+14"/>
@@ -3632,7 +3978,7 @@
         <translation>Если флажок установлен, этот элемент является подгруппой.</translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+391"/>
+        <location filename="../tokensviewdialog.cpp" line="+366"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -4490,7 +4836,7 @@
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+287"/>
+        <location filename="../walletmodel.cpp" line="+291"/>
         <source>Send Coins</source>
         <translation>Отправка</translation>
     </message>
@@ -4498,17 +4844,19 @@
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+45"/>
+        <location filename="../walletview.cpp" line="+46"/>
+        <location line="+20"/>
         <source>&amp;Export</source>
         <translation>&amp;Экспорт</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-19"/>
+        <location line="+20"/>
         <source>Export the data in the current tab to a file</source>
         <translation>Экспортировать данные из вкладки в файл</translation>
     </message>
     <message>
-        <location line="+191"/>
+        <location line="+196"/>
         <source>Backup Wallet</source>
         <translation>Сделать резервную копию бумажника</translation>
     </message>

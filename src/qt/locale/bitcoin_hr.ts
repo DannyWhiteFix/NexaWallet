@@ -309,17 +309,17 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../nexagui.cpp" line="+336"/>
+        <location filename="../nexagui.cpp" line="+351"/>
         <source>Sign &amp;message...</source>
         <translation>P&amp;otpišite poruku...</translation>
     </message>
     <message>
-        <location line="+425"/>
+        <location line="+435"/>
         <source>Synchronizing with network...</source>
         <translation>Usklađivanje s mrežom ...</translation>
     </message>
     <message>
-        <location line="-531"/>
+        <location line="-556"/>
         <source>&amp;Overview</source>
         <translation>&amp;Pregled</translation>
     </message>
@@ -359,7 +359,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+10"/>
+        <source>&amp;Token History</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Browse Token History</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+36"/>
         <source>E&amp;xit</source>
         <translation>&amp;Izlaz</translation>
     </message>
@@ -449,7 +459,7 @@
         <translation>Otvori &amp;URI...</translation>
     </message>
     <message>
-        <location line="+411"/>
+        <location line="+421"/>
         <source>Importing blocks from disk...</source>
         <translation>Importiranje blokova sa diska...</translation>
     </message>
@@ -459,12 +469,12 @@
         <translation>Re-indeksiranje blokova na disku...</translation>
     </message>
     <message>
-        <location line="-529"/>
+        <location line="-554"/>
         <source>Send coins to a Nexa address</source>
         <translation>Slanje novca na Nexa adresu</translation>
     </message>
     <message>
-        <location line="+92"/>
+        <location line="+107"/>
         <source>Backup wallet to another location</source>
         <translation>Napravite sigurnosnu kopiju novčanika na drugoj lokaciji</translation>
     </message>
@@ -489,12 +499,12 @@
         <translation>&amp;Potvrdite poruku...</translation>
     </message>
     <message>
-        <location line="+509"/>
+        <location line="+522"/>
         <source>Nexa</source>
         <translation>Nexa</translation>
     </message>
     <message>
-        <location line="-757"/>
+        <location line="-785"/>
         <source>Wallet</source>
         <translation>Novčanik</translation>
     </message>
@@ -509,7 +519,7 @@
         <translation>Pri&amp;mi</translation>
     </message>
     <message>
-        <location line="+69"/>
+        <location line="+84"/>
         <source>&amp;Show / Hide</source>
         <translation>Po&amp;kaži / Sakrij</translation>
     </message>
@@ -569,7 +579,7 @@
         <translation>Opcije &amp;naredbene linije</translation>
     </message>
     <message numerus="yes">
-        <location line="+380"/>
+        <location line="+390"/>
         <source>%n active connection(s) to Nexa network</source>
         <translation>
             <numerusform>%n aktivna veza na Nexa mrežu</numerusform>
@@ -587,7 +597,7 @@
         </translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+51"/>
         <source>Last received block was generated %1 ago.</source>
         <translation>Zadnji primljeni blok je bio ustvaren prije %1.</translation>
     </message>
@@ -597,7 +607,7 @@
         <translation>Transakcije izvršene za tim blokom nisu još prikazane.</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+29"/>
         <source>Error</source>
         <translation>Greška</translation>
     </message>
@@ -612,12 +622,12 @@
         <translation>Informacija</translation>
     </message>
     <message>
-        <location line="-85"/>
+        <location line="-86"/>
         <source>Up to date</source>
         <translation>Ažurno</translation>
     </message>
     <message>
-        <location line="-431"/>
+        <location line="-443"/>
         <source>Open a %1: URI or payment request</source>
         <translation type="unfinished"></translation>
     </message>
@@ -627,17 +637,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+191"/>
+        <location line="+194"/>
         <source>%1 client</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+220"/>
+        <location line="+227"/>
         <source>No block source available...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+36"/>
         <source>%1 behind</source>
         <translation type="unfinished"></translation>
     </message>
@@ -647,7 +657,7 @@
         <translation>Ažuriranje...</translation>
     </message>
     <message>
-        <location line="+163"/>
+        <location line="+164"/>
         <source>Date: %1
 </source>
         <translation>Datum: %1
@@ -2277,7 +2287,7 @@
     <message>
         <location line="+57"/>
         <location filename="../rpcconsole.cpp" line="+311"/>
-        <location line="+855"/>
+        <location line="+856"/>
         <source>Select a peer to view detailed information.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3505,6 +3515,342 @@
     </message>
 </context>
 <context>
+    <name>TokenHistoryView</name>
+    <message>
+        <location filename="../tokenhistoryview.cpp" line="+78"/>
+        <location line="+19"/>
+        <source>All</source>
+        <translation type="unfinished">Sve</translation>
+    </message>
+    <message>
+        <location line="-18"/>
+        <source>Today</source>
+        <translation type="unfinished">Danas</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This week</source>
+        <translation type="unfinished">Ovaj tjedan</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This month</source>
+        <translation type="unfinished">Ovaj mjesec</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last month</source>
+        <translation type="unfinished">Prošli mjesec</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This year</source>
+        <translation type="unfinished">Ove godine</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Range...</source>
+        <translation type="unfinished">Raspon...</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Received with</source>
+        <translation type="unfinished">Primljeno s</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Sent</source>
+        <translation type="unfinished">Poslano</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>To yourself</source>
+        <translation type="unfinished">Samom sebi</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Mint</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Other</source>
+        <translation type="unfinished">Ostalo</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Enter token ID to search</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Min amount</source>
+        <translation type="unfinished">Min iznos</translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>Copy token id</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy amount</source>
+        <translation type="unfinished">Kopiraj iznos</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy transaction idem</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy raw transaction</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show transaction details</source>
+        <translation type="unfinished">Prikaži detalje transakcije</translation>
+    </message>
+    <message>
+        <location line="+162"/>
+        <source>Export Token History</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Comma separated file (*.csv)</source>
+        <translation type="unfinished">Datoteka podataka odvojenih zarezima (*.csv)</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Confirmed</source>
+        <translation type="unfinished">Potvrđeno</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Watch-only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Date</source>
+        <translation type="unfinished">Datum</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Type</source>
+        <translation type="unfinished">Tip</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Label</source>
+        <translation type="unfinished">Oznaka</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Address</source>
+        <translation type="unfinished">Adresa</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transaction ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Token ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Token Amount</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Exporting Failed</source>
+        <translation type="unfinished">Izvoz neuspješan</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>There was an error trying to save the token history to %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Exporting Successful</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The token history was successfully saved to %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+53"/>
+        <source>Range:</source>
+        <translation type="unfinished">Raspon:</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>to</source>
+        <translation type="unfinished">za</translation>
+    </message>
+</context>
+<context>
+    <name>TokenTableModel</name>
+    <message>
+        <location filename="../tokentablemodel.cpp" line="+245"/>
+        <source>Date</source>
+        <translation type="unfinished">Datum</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Type</source>
+        <translation type="unfinished">Tip</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Token ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Net Amount</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+49"/>
+        <source>Open for %n more block(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Open until %1</source>
+        <translation type="unfinished">Otvoren do %1</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Offline</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Unconfirmed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Confirming (%1 of %2 recommended confirmations)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Confirmed (%1 confirmations)</source>
+        <translation type="unfinished">Potvrđen (%1 potvrda)</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Conflicted</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Double Spent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Abandoned</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Immature (%1 confirmations, will be available after %2)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>This block was not received by any other nodes and will probably not be accepted!</source>
+        <translation type="unfinished">Ovaj blok nije bio primljen od strane bilo kojeg drugog čvora i vjerojatno neće biti prihvaćen!</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Generated but not accepted</source>
+        <translation type="unfinished">Generirano, ali nije prihvaćeno</translation>
+    </message>
+    <message>
+        <location line="+40"/>
+        <source>Received with</source>
+        <translation type="unfinished">Primljeno s</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Received from</source>
+        <translation type="unfinished">Primljeno od</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Sent</source>
+        <translation type="unfinished">Poslano</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Payment to yourself</source>
+        <translation type="unfinished">Plaćanje samom sebi</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Mint</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Public label</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Other</source>
+        <translation type="unfinished">Ostalo</translation>
+    </message>
+    <message>
+        <location line="+337"/>
+        <source>Transaction status. Hover over this field to show number of confirmations.</source>
+        <translation type="unfinished">Status transakcije</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Date and time that the transaction was received.</source>
+        <translation type="unfinished">Datum i vrijeme kad je transakcija primljena</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Type of transaction.</source>
+        <translation type="unfinished">Vrsta transakcije.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Whether or not a watch-only address is involved in this transaction.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>User-defined intent/purpose of the transaction.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Amount removed from or added to balance.</source>
+        <translation type="unfinished">Iznos odbijen od ili dodan k saldu.</translation>
+    </message>
+</context>
+<context>
     <name>TokensViewDialog</name>
     <message>
         <location filename="../forms/tokensviewdialog.ui" line="+14"/>
@@ -3632,7 +3978,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+391"/>
+        <location filename="../tokensviewdialog.cpp" line="+366"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -4490,7 +4836,7 @@
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+287"/>
+        <location filename="../walletmodel.cpp" line="+291"/>
         <source>Send Coins</source>
         <translation>Slanje novca</translation>
     </message>
@@ -4498,17 +4844,19 @@
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+45"/>
+        <location filename="../walletview.cpp" line="+46"/>
+        <location line="+20"/>
         <source>&amp;Export</source>
         <translation>&amp;Izvoz</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-19"/>
+        <location line="+20"/>
         <source>Export the data in the current tab to a file</source>
         <translation>Izvoz podataka iz trenutnog taba u datoteku</translation>
     </message>
     <message>
-        <location line="+191"/>
+        <location line="+196"/>
         <source>Backup Wallet</source>
         <translation>Arhiviranje novčanika</translation>
     </message>

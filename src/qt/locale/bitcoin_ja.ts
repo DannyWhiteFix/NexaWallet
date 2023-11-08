@@ -116,7 +116,7 @@
     <message>
         <location line="+14"/>
         <source>Exporting Failed</source>
-        <translation>エクスポート失敗</translation>
+        <translation>エクスポートに失敗しました</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -309,17 +309,17 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../nexagui.cpp" line="+336"/>
+        <location filename="../nexagui.cpp" line="+351"/>
         <source>Sign &amp;message...</source>
         <translation>メッセージの署名... (&amp;m)</translation>
     </message>
     <message>
-        <location line="+425"/>
+        <location line="+435"/>
         <source>Synchronizing with network...</source>
         <translation>ネットワークに同期中……</translation>
     </message>
     <message>
-        <location line="-531"/>
+        <location line="-556"/>
         <source>&amp;Overview</source>
         <translation>概要(&amp;O)</translation>
     </message>
@@ -359,7 +359,17 @@
         <translation>トークンの参照または送信</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+10"/>
+        <source>&amp;Token History</source>
+        <translation>トークン履歴</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Browse Token History</source>
+        <translation>トークン履歴を参照する</translation>
+    </message>
+    <message>
+        <location line="+36"/>
         <source>E&amp;xit</source>
         <translation>終了(&amp;E)</translation>
     </message>
@@ -449,7 +459,7 @@
         <translation>URI を開く (&amp;U)...</translation>
     </message>
     <message>
-        <location line="+411"/>
+        <location line="+421"/>
         <source>Importing blocks from disk...</source>
         <translation>ディスクからブロックをインポートしています...</translation>
     </message>
@@ -459,12 +469,12 @@
         <translation>ディスク上のブロックのインデックスを再作成中...</translation>
     </message>
     <message>
-        <location line="-529"/>
+        <location line="-554"/>
         <source>Send coins to a Nexa address</source>
         <translation>Nexa アドレスにコインを送る</translation>
     </message>
     <message>
-        <location line="+92"/>
+        <location line="+107"/>
         <source>Backup wallet to another location</source>
         <translation>ウォレットを他の場所にバックアップ</translation>
     </message>
@@ -489,12 +499,12 @@
         <translation>メッセージの検証... (&amp;V)</translation>
     </message>
     <message>
-        <location line="+509"/>
+        <location line="+522"/>
         <source>Nexa</source>
         <translation>Nexa</translation>
     </message>
     <message>
-        <location line="-757"/>
+        <location line="-785"/>
         <source>Wallet</source>
         <translation>ウォレット</translation>
     </message>
@@ -509,7 +519,7 @@
         <translation>入金 (&amp;R)</translation>
     </message>
     <message>
-        <location line="+69"/>
+        <location line="+84"/>
         <source>&amp;Show / Hide</source>
         <translation>見る/隠す (&amp;S)</translation>
     </message>
@@ -569,7 +579,7 @@
         <translation>コマンドラインオプション (&amp;C)</translation>
     </message>
     <message numerus="yes">
-        <location line="+380"/>
+        <location line="+390"/>
         <source>%n active connection(s) to Nexa network</source>
         <translation>
             <numerusform>%n の Nexa ネットワークへのアクティブな接続</numerusform>
@@ -588,7 +598,7 @@
         </translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+27"/>
         <source>%1 behind</source>
         <translation>%1 遅延</translation>
     </message>
@@ -603,7 +613,7 @@
         <translation>この後の取引はまだ表示されません。</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+29"/>
         <source>Error</source>
         <translation>エラー</translation>
     </message>
@@ -618,12 +628,12 @@
         <translation>情報</translation>
     </message>
     <message>
-        <location line="-85"/>
+        <location line="-86"/>
         <source>Up to date</source>
         <translation>バージョンは最新です</translation>
     </message>
     <message>
-        <location line="-431"/>
+        <location line="-443"/>
         <source>Open a %1: URI or payment request</source>
         <translation>%1: URI または支払い要求を開く</translation>
     </message>
@@ -633,17 +643,17 @@
         <translation>%1 ヘルプ メッセージを表示して、可能な Nexa コマンドライン オプションのリストを取得します</translation>
     </message>
     <message>
-        <location line="+191"/>
+        <location line="+194"/>
         <source>%1 client</source>
         <translation>%1 クライアント</translation>
     </message>
     <message>
-        <location line="+259"/>
+        <location line="+268"/>
         <source>Catching up...</source>
         <translation>追跡中...</translation>
     </message>
     <message>
-        <location line="+163"/>
+        <location line="+164"/>
         <source>Date: %1
 </source>
         <translation>日付: %1
@@ -2095,7 +2105,7 @@
     <message>
         <location line="+57"/>
         <location filename="../rpcconsole.cpp" line="+311"/>
-        <location line="+855"/>
+        <location line="+856"/>
         <source>Select a peer to view detailed information.</source>
         <translation>詳しい情報を見たいピアを選択してください。</translation>
     </message>
@@ -3485,6 +3495,340 @@
     </message>
 </context>
 <context>
+    <name>TokenHistoryView</name>
+    <message>
+        <location filename="../tokenhistoryview.cpp" line="+78"/>
+        <location line="+19"/>
+        <source>All</source>
+        <translation>すべて</translation>
+    </message>
+    <message>
+        <location line="-18"/>
+        <source>Today</source>
+        <translation>今日</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This week</source>
+        <translation>今週</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This month</source>
+        <translation>今月</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last month</source>
+        <translation>先月</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This year</source>
+        <translation>今年</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Range...</source>
+        <translation>期間...</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Received with</source>
+        <translation>で受信</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Sent</source>
+        <translation>送金</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>To yourself</source>
+        <translation>自分自身</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Mint</source>
+        <translation>ミント</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Other</source>
+        <translation>その他</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Enter token ID to search</source>
+        <translation>トークンIDを入力して検索します</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Min amount</source>
+        <translation>最小の額</translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>Copy token id</source>
+        <translation>トークンIDをコピーする</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy amount</source>
+        <translation>総額のコピー</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy transaction idem</source>
+        <translation>取引同上をコピー</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy raw transaction</source>
+        <translation>生トランザクションをコピー</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show transaction details</source>
+        <translation>取引の詳細を表示</translation>
+    </message>
+    <message>
+        <location line="+162"/>
+        <source>Export Token History</source>
+        <translation>トークン履歴のエクスポート</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Comma separated file (*.csv)</source>
+        <translation>CSVファイル (*.csv)</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Confirmed</source>
+        <translation>検証済み</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Watch-only</source>
+        <translation>監視限定</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Date</source>
+        <translation>日付</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Type</source>
+        <translation>タイプ</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Label</source>
+        <translation>ラベル</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Address</source>
+        <translation>アドレス</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transaction ID</source>
+        <translation>トランザクションID</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Token ID</source>
+        <translation>トークンID</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Token Amount</source>
+        <translation>トークンの量</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Exporting Failed</source>
+        <translation>エクスポートに失敗しました</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>There was an error trying to save the token history to %1.</source>
+        <translation>トークン履歴を %1 に保存しようとしてエラーが発生しました。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Exporting Successful</source>
+        <translation>エクスポートに成功しました</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The token history was successfully saved to %1.</source>
+        <translation>トークン履歴は %1 に正常に保存されました。</translation>
+    </message>
+    <message>
+        <location line="+53"/>
+        <source>Range:</source>
+        <translation>期間:</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>to</source>
+        <translation>から</translation>
+    </message>
+</context>
+<context>
+    <name>TokenTableModel</name>
+    <message>
+        <location filename="../tokentablemodel.cpp" line="+245"/>
+        <source>Date</source>
+        <translation>日付</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Type</source>
+        <translation>タイプ</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Token ID</source>
+        <translation>トークンID</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Net Amount</source>
+        <translation>正味金額</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+49"/>
+        <source>Open for %n more block(s)</source>
+        <translation>
+            <numerusform>%n 以上のブロックを開く</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Open until %1</source>
+        <translation>ユニット %1 を開く</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Offline</source>
+        <translation>オフライン</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Unconfirmed</source>
+        <translation>未検証</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Confirming (%1 of %2 recommended confirmations)</source>
+        <translation>検証中（%2の推奨検証数のうち、%1検証が完了）</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Confirmed (%1 confirmations)</source>
+        <translation>検証されました (%1 検証済み)</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Conflicted</source>
+        <translation>衝突</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Double Spent</source>
+        <translation>二重支出</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Abandoned</source>
+        <translation>捨てられた</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Immature (%1 confirmations, will be available after %2)</source>
+        <translation>未成熟（%1検証。%2検証完了後に使用可能となります）</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>This block was not received by any other nodes and will probably not be accepted!</source>
+        <translation>このブロックは他のどのノードによっても受け取られないで、多分受け入れられないでしょう！</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Generated but not accepted</source>
+        <translation>生成されましたが承認されませんでした</translation>
+    </message>
+    <message>
+        <location line="+40"/>
+        <source>Received with</source>
+        <translation>で受信</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Received from</source>
+        <translation>送り主</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Sent</source>
+        <translation>送金</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Payment to yourself</source>
+        <translation>自分自身への支払い</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Mint</source>
+        <translation>ミント</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Public label</source>
+        <translation>パブリックラベル</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Other</source>
+        <translation>その他</translation>
+    </message>
+    <message>
+        <location line="+337"/>
+        <source>Transaction status. Hover over this field to show number of confirmations.</source>
+        <translation>取引の状況。このフィールドの上にカーソルを置くと検証の数を表示します。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Date and time that the transaction was received.</source>
+        <translation>取引を受信した日時。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Type of transaction.</source>
+        <translation>取引の種類。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Whether or not a watch-only address is involved in this transaction.</source>
+        <translation>監視限定アドレスがこのトランザクションに含まれているかどうか</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>User-defined intent/purpose of the transaction.</source>
+        <translation>ユーザ定義のトランザクションの意図や目的。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Amount removed from or added to balance.</source>
+        <translation>残高に追加または削除された総額。</translation>
+    </message>
+</context>
+<context>
     <name>TokensViewDialog</name>
     <message>
         <location filename="../forms/tokensviewdialog.ui" line="+14"/>
@@ -3612,7 +3956,7 @@
         <translation>チェックすると、この項目はサブグループになります。</translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+391"/>
+        <location filename="../tokensviewdialog.cpp" line="+366"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -4074,7 +4418,7 @@
     <message>
         <location line="+51"/>
         <source>Received with</source>
-        <translation>受け取り</translation>
+        <translation>で受信</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -4183,7 +4527,7 @@
     <message>
         <location line="+14"/>
         <source>Received with</source>
-        <translation>送り主</translation>
+        <translation>で受信</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -4462,7 +4806,7 @@
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+287"/>
+        <location filename="../walletmodel.cpp" line="+291"/>
         <source>Send Coins</source>
         <translation>コインを送る</translation>
     </message>
@@ -4470,17 +4814,19 @@
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+45"/>
+        <location filename="../walletview.cpp" line="+46"/>
+        <location line="+20"/>
         <source>&amp;Export</source>
         <translation>エクスポート (&amp;E)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-19"/>
+        <location line="+20"/>
         <source>Export the data in the current tab to a file</source>
         <translation>ファイルに現在のタブのデータをエクスポート</translation>
     </message>
     <message>
-        <location line="+191"/>
+        <location line="+196"/>
         <source>Backup Wallet</source>
         <translation>ウォレットのバックアップ</translation>
     </message>

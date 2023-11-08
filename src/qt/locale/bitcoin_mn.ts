@@ -309,17 +309,17 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../nexagui.cpp" line="+336"/>
+        <location filename="../nexagui.cpp" line="+351"/>
         <source>Sign &amp;message...</source>
         <translation>&amp;Зурвас хавсаргах...</translation>
     </message>
     <message>
-        <location line="+425"/>
+        <location line="+435"/>
         <source>Synchronizing with network...</source>
         <translation>Сүлжээтэй тааруулж байна...</translation>
     </message>
     <message>
-        <location line="-667"/>
+        <location line="-692"/>
         <source>Node</source>
         <translation>Нод</translation>
     </message>
@@ -374,7 +374,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+10"/>
+        <source>&amp;Token History</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Browse Token History</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+36"/>
         <source>E&amp;xit</source>
         <translation>Гарах</translation>
     </message>
@@ -509,17 +519,17 @@
         <translation>Оношилгоо ба засварын консолыг онгойлго</translation>
     </message>
     <message>
-        <location line="+505"/>
+        <location line="+518"/>
         <source>Nexa</source>
         <translation>Биткойн</translation>
     </message>
     <message>
-        <location line="-757"/>
+        <location line="-785"/>
         <source>Wallet</source>
         <translation>Түрүйвч</translation>
     </message>
     <message>
-        <location line="+228"/>
+        <location line="+243"/>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Харуул / Нуу</translation>
     </message>
@@ -569,12 +579,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+108"/>
+        <location line="+111"/>
         <source>%1 client</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location line="+186"/>
+        <location line="+193"/>
         <source>%n active connection(s) to Nexa network</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -605,7 +615,7 @@
         </translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+27"/>
         <source>%1 behind</source>
         <translation type="unfinished"></translation>
     </message>
@@ -625,7 +635,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+29"/>
         <source>Error</source>
         <translation>Алдаа</translation>
     </message>
@@ -640,12 +650,12 @@
         <translation>Мэдээллэл</translation>
     </message>
     <message>
-        <location line="-85"/>
+        <location line="-86"/>
         <source>Up to date</source>
         <translation>Шинэчлэгдсэн</translation>
     </message>
     <message>
-        <location line="+188"/>
+        <location line="+189"/>
         <source>Date: %1
 </source>
         <translation type="unfinished"></translation>
@@ -2257,7 +2267,7 @@
     <message>
         <location line="+57"/>
         <location filename="../rpcconsole.cpp" line="+311"/>
-        <location line="+855"/>
+        <location line="+856"/>
         <source>Select a peer to view detailed information.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3490,6 +3500,341 @@
     </message>
 </context>
 <context>
+    <name>TokenHistoryView</name>
+    <message>
+        <location filename="../tokenhistoryview.cpp" line="+78"/>
+        <location line="+19"/>
+        <source>All</source>
+        <translation type="unfinished">Бүгд</translation>
+    </message>
+    <message>
+        <location line="-18"/>
+        <source>Today</source>
+        <translation type="unfinished">Ѳнѳѳдѳр</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This week</source>
+        <translation type="unfinished">Энэ долоо хоног</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This month</source>
+        <translation type="unfinished">Энэ сар</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last month</source>
+        <translation type="unfinished">Ѳнгѳрсѳн сар</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This year</source>
+        <translation type="unfinished">Энэ жил</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Range...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Received with</source>
+        <translation type="unfinished">Хүлээн авсан хаяг</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Sent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>To yourself</source>
+        <translation type="unfinished">Ѳѳрлүүгээ</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Mint</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Other</source>
+        <translation type="unfinished">Бусад</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Enter token ID to search</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Min amount</source>
+        <translation type="unfinished">Хамгийн бага хэмжээ</translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>Copy token id</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy amount</source>
+        <translation type="unfinished">Хэмжээг санах</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy transaction idem</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy raw transaction</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show transaction details</source>
+        <translation type="unfinished">Гүйлгээний дэлгэрэнгүйг харуул</translation>
+    </message>
+    <message>
+        <location line="+162"/>
+        <source>Export Token History</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Comma separated file (*.csv)</source>
+        <translation type="unfinished">Таслалаар тусгаарлагдсан хүснэгтэн файл (.csv)</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Confirmed</source>
+        <translation type="unfinished">Баталгаажлаа</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Watch-only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Date</source>
+        <translation type="unfinished">Огноо</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Type</source>
+        <translation type="unfinished">Тѳрѳл</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Label</source>
+        <translation type="unfinished">Шошго</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Address</source>
+        <translation type="unfinished">Хаяг</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transaction ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Token ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Token Amount</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Exporting Failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>There was an error trying to save the token history to %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Exporting Successful</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The token history was successfully saved to %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+53"/>
+        <source>Range:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>to</source>
+        <translation type="unfinished">-рүү/руу</translation>
+    </message>
+</context>
+<context>
+    <name>TokenTableModel</name>
+    <message>
+        <location filename="../tokentablemodel.cpp" line="+245"/>
+        <source>Date</source>
+        <translation type="unfinished">Огноо</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Type</source>
+        <translation type="unfinished">Тѳрѳл</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Token ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Net Amount</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+49"/>
+        <source>Open for %n more block(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Open until %1</source>
+        <translation type="unfinished">%1 хүртэл нээлттэй</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Offline</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Unconfirmed</source>
+        <translation type="unfinished">Баталгаажаагүй</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Confirming (%1 of %2 recommended confirmations)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Confirmed (%1 confirmations)</source>
+        <translation type="unfinished">Баталгаажлаа (%1 баталгаажилт)</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Conflicted</source>
+        <translation type="unfinished">Зѳрчилдлѳѳ</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Double Spent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Abandoned</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Immature (%1 confirmations, will be available after %2)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>This block was not received by any other nodes and will probably not be accepted!</source>
+        <translation type="unfinished">Энэ блокийг аль ч нод хүлээн авсангүй ба ер нь зѳвшѳѳрѳгдѳхгүй байж мэднэ!</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Generated but not accepted</source>
+        <translation type="unfinished">Үүсгэгдсэн гэхдээ хүлээн авагдаагүй</translation>
+    </message>
+    <message>
+        <location line="+40"/>
+        <source>Received with</source>
+        <translation type="unfinished">Хүлээн авсан хаяг</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Received from</source>
+        <translation type="unfinished">Хүлээн авагдсан хаяг</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Sent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Payment to yourself</source>
+        <translation type="unfinished">Ѳѳрлүүгээ хийсэн тѳлбѳр</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Mint</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Public label</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Other</source>
+        <translation type="unfinished">Бусад</translation>
+    </message>
+    <message>
+        <location line="+337"/>
+        <source>Transaction status. Hover over this field to show number of confirmations.</source>
+        <translation type="unfinished">Гүйлгээний байдал. Энд хулганыг авчирч баталгаажуулалтын тоог харна уу.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Date and time that the transaction was received.</source>
+        <translation type="unfinished">Гүйлгээг хүлээн авсан огноо ба цаг.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Type of transaction.</source>
+        <translation type="unfinished">Гүйлгээний тѳрѳл</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Whether or not a watch-only address is involved in this transaction.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>User-defined intent/purpose of the transaction.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Amount removed from or added to balance.</source>
+        <translation type="unfinished">Балансаас авагдсан болон нэмэгдсэн хэмжээ.</translation>
+    </message>
+</context>
+<context>
     <name>TokensViewDialog</name>
     <message>
         <location filename="../forms/tokensviewdialog.ui" line="+14"/>
@@ -3617,7 +3962,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+391"/>
+        <location filename="../tokensviewdialog.cpp" line="+366"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -4471,7 +4816,7 @@
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+287"/>
+        <location filename="../walletmodel.cpp" line="+291"/>
         <source>Send Coins</source>
         <translation>Зоос явуулах</translation>
     </message>
@@ -4479,17 +4824,19 @@
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+45"/>
+        <location filename="../walletview.cpp" line="+46"/>
+        <location line="+20"/>
         <source>&amp;Export</source>
         <translation>&amp;Экспортдлох</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-19"/>
+        <location line="+20"/>
         <source>Export the data in the current tab to a file</source>
         <translation>Сонгогдсон таб дээрхи дата-г экспортлох</translation>
     </message>
     <message>
-        <location line="+191"/>
+        <location line="+196"/>
         <source>Backup Wallet</source>
         <translation type="unfinished"></translation>
     </message>

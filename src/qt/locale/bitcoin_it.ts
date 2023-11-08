@@ -309,17 +309,17 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../nexagui.cpp" line="+336"/>
+        <location filename="../nexagui.cpp" line="+351"/>
         <source>Sign &amp;message...</source>
         <translation>Firma &amp;messaggio...</translation>
     </message>
     <message>
-        <location line="+425"/>
+        <location line="+435"/>
         <source>Synchronizing with network...</source>
         <translation>Sincronizzazione con la rete in corso...</translation>
     </message>
     <message>
-        <location line="-531"/>
+        <location line="-556"/>
         <source>&amp;Overview</source>
         <translation>&amp;Sintesi</translation>
     </message>
@@ -359,7 +359,17 @@
         <translation>Sfoglia o invia token</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+10"/>
+        <source>&amp;Token History</source>
+        <translation>&amp;Cronologia dei token</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Browse Token History</source>
+        <translation>Sfoglia la cronologia dei token</translation>
+    </message>
+    <message>
+        <location line="+36"/>
         <source>E&amp;xit</source>
         <translation>&amp;Esci</translation>
     </message>
@@ -449,7 +459,7 @@
         <translation>Apri &amp;URI...</translation>
     </message>
     <message>
-        <location line="+411"/>
+        <location line="+421"/>
         <source>Importing blocks from disk...</source>
         <translation>Importazione blocchi dal disco...</translation>
     </message>
@@ -459,12 +469,12 @@
         <translation>Re-indicizzazione blocchi su disco...</translation>
     </message>
     <message>
-        <location line="-529"/>
+        <location line="-554"/>
         <source>Send coins to a Nexa address</source>
         <translation>Invia fondi ad un indirizzo Nexa</translation>
     </message>
     <message>
-        <location line="+92"/>
+        <location line="+107"/>
         <source>Backup wallet to another location</source>
         <translation>Effettua il backup del portamonete</translation>
     </message>
@@ -489,12 +499,12 @@
         <translation>&amp;Verifica messaggio...</translation>
     </message>
     <message>
-        <location line="+509"/>
+        <location line="+522"/>
         <source>Nexa</source>
         <translation>Nexa</translation>
     </message>
     <message>
-        <location line="-757"/>
+        <location line="-785"/>
         <source>Wallet</source>
         <translation>Portamonete</translation>
     </message>
@@ -509,7 +519,7 @@
         <translation>&amp;Ricevi</translation>
     </message>
     <message>
-        <location line="+69"/>
+        <location line="+84"/>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Mostra / Nascondi</translation>
     </message>
@@ -569,7 +579,7 @@
         <translation>Opzioni della riga di &amp;comando</translation>
     </message>
     <message numerus="yes">
-        <location line="+380"/>
+        <location line="+390"/>
         <source>%n active connection(s) to Nexa network</source>
         <translation>
             <numerusform>%n connessione attiva alla rete Nexa</numerusform>
@@ -590,7 +600,7 @@
         </translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+27"/>
         <source>%1 behind</source>
         <translation>Indietro di %1</translation>
     </message>
@@ -605,7 +615,7 @@
         <translation>Le transazioni effettuate successivamente non sono ancora visibili.</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+29"/>
         <source>Error</source>
         <translation>Errore</translation>
     </message>
@@ -620,12 +630,12 @@
         <translation>Informazioni</translation>
     </message>
     <message>
-        <location line="-85"/>
+        <location line="-86"/>
         <source>Up to date</source>
         <translation>Aggiornato</translation>
     </message>
     <message>
-        <location line="-431"/>
+        <location line="-443"/>
         <source>Open a %1: URI or payment request</source>
         <translation>Apri un %1: URI o richiesta di pagamento</translation>
     </message>
@@ -635,17 +645,17 @@
         <translation>Mostra il messaggio di aiuto di %1 per ottenere un elenco con le possibili opzioni della riga di comando di Nexa</translation>
     </message>
     <message>
-        <location line="+191"/>
+        <location line="+194"/>
         <source>%1 client</source>
         <translation>%1 cliente</translation>
     </message>
     <message>
-        <location line="+259"/>
+        <location line="+268"/>
         <source>Catching up...</source>
         <translation>In aggiornamento...</translation>
     </message>
     <message>
-        <location line="+163"/>
+        <location line="+164"/>
         <source>Date: %1
 </source>
         <translation>Data: %1
@@ -2106,7 +2116,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
     <message>
         <location line="+57"/>
         <location filename="../rpcconsole.cpp" line="+311"/>
-        <location line="+855"/>
+        <location line="+856"/>
         <source>Select a peer to view detailed information.</source>
         <translation>Seleziona un peer per visualizzare informazioni più dettagliate.</translation>
     </message>
@@ -3496,6 +3506,341 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
     </message>
 </context>
 <context>
+    <name>TokenHistoryView</name>
+    <message>
+        <location filename="../tokenhistoryview.cpp" line="+78"/>
+        <location line="+19"/>
+        <source>All</source>
+        <translation>Tutti</translation>
+    </message>
+    <message>
+        <location line="-18"/>
+        <source>Today</source>
+        <translation>Oggi</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This week</source>
+        <translation>Questa settimana</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This month</source>
+        <translation>Questo mese</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last month</source>
+        <translation>Il mese scorso</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This year</source>
+        <translation>Quest&apos;anno</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Range...</source>
+        <translation>Intervallo...</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Received with</source>
+        <translation>Ricevuto tramite</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Sent</source>
+        <translation>Inviato</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>To yourself</source>
+        <translation>A te stesso</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Mint</source>
+        <translation>Coniare</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Other</source>
+        <translation>Altro</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Enter token ID to search</source>
+        <translation>Inserisci l&apos;ID token per eseguire la ricerca</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Min amount</source>
+        <translation>Importo minimo</translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>Copy token id</source>
+        <translation>Copia l&apos;ID del token</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy amount</source>
+        <translation>Copia importo</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy transaction idem</source>
+        <translation>Copia transazione idem</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy raw transaction</source>
+        <translation>Copia la transazione raw</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show transaction details</source>
+        <translation>Mostra i dettagli della transazione</translation>
+    </message>
+    <message>
+        <location line="+162"/>
+        <source>Export Token History</source>
+        <translation>Esporta cronologia token</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Testo CSV (*.csv)</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Confirmed</source>
+        <translation>Confermato</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Watch-only</source>
+        <translation>Sola lettura</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Date</source>
+        <translation>Data</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Type</source>
+        <translation>Tipo</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Label</source>
+        <translation>Etichetta</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Address</source>
+        <translation>Indirizzo</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transaction ID</source>
+        <translation>ID della transazione</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Token ID</source>
+        <translation>Codice identificativo del token</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Token Amount</source>
+        <translation>Importo del gettone</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Exporting Failed</source>
+        <translation>Esportazione Fallita.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>There was an error trying to save the token history to %1.</source>
+        <translation>Si è verificato un errore durante il tentativo di salvare la cronologia del token su %1.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Exporting Successful</source>
+        <translation>Esportazione Riuscita</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The token history was successfully saved to %1.</source>
+        <translation>La cronologia del token è stata salvata correttamente in %1.</translation>
+    </message>
+    <message>
+        <location line="+53"/>
+        <source>Range:</source>
+        <translation>Intervallo:</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>to</source>
+        <translation>a</translation>
+    </message>
+</context>
+<context>
+    <name>TokenTableModel</name>
+    <message>
+        <location filename="../tokentablemodel.cpp" line="+245"/>
+        <source>Date</source>
+        <translation>Data</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Type</source>
+        <translation>Tipo</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Token ID</source>
+        <translation>Codice identificativo del token</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Net Amount</source>
+        <translation>Importo netto</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+49"/>
+        <source>Open for %n more block(s)</source>
+        <translation>
+            <numerusform>Aperto per %n altro blocco</numerusform>
+            <numerusform>Aperto per altri %n blocchi</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Open until %1</source>
+        <translation>Aperto fino a %1</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Offline</source>
+        <translation>Offline</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Unconfirmed</source>
+        <translation>Non confermata</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Confirming (%1 of %2 recommended confirmations)</source>
+        <translation>In conferma (%1 di %2 conferme raccomandate)</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Confirmed (%1 confirmations)</source>
+        <translation>Confermata (%1 conferme)</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Conflicted</source>
+        <translation>In conflitto</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Double Spent</source>
+        <translation>Doppia Spesa</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Abandoned</source>
+        <translation>Abbandonato</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Immature (%1 confirmations, will be available after %2)</source>
+        <translation>Immaturo (%1 conferme, sarà disponibile fra %2)</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>This block was not received by any other nodes and will probably not be accepted!</source>
+        <translation>Questo blocco non è stato ricevuto da alcun altro nodo e probabilmente non sarà accettato!</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Generated but not accepted</source>
+        <translation>Generati, ma non accettati</translation>
+    </message>
+    <message>
+        <location line="+40"/>
+        <source>Received with</source>
+        <translation>Ricevuto tramite</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Received from</source>
+        <translation>Ricevuto da</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Sent</source>
+        <translation>Inviato</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Payment to yourself</source>
+        <translation>Pagamento a te stesso</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Mint</source>
+        <translation>Coniare</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Public label</source>
+        <translation>Etichetta pubblica</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Other</source>
+        <translation>Altro</translation>
+    </message>
+    <message>
+        <location line="+337"/>
+        <source>Transaction status. Hover over this field to show number of confirmations.</source>
+        <translation>Stato della transazione. Passare con il mouse su questo campo per visualizzare il numero di conferme.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Date and time that the transaction was received.</source>
+        <translation>Data e ora in cui la transazione è stata ricevuta.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Type of transaction.</source>
+        <translation>Tipo di transazione.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Whether or not a watch-only address is involved in this transaction.</source>
+        <translation>Indica se un indirizzo di sola lettura sia o meno coinvolto in questa transazione.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>User-defined intent/purpose of the transaction.</source>
+        <translation>Intento/scopo della transazione definito dall&apos;utente.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Amount removed from or added to balance.</source>
+        <translation>Importo rimosso o aggiunto al saldo.</translation>
+    </message>
+</context>
+<context>
     <name>TokensViewDialog</name>
     <message>
         <location filename="../forms/tokensviewdialog.ui" line="+14"/>
@@ -3623,7 +3968,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Se selezionato, questo elemento è un sottogruppo.</translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+391"/>
+        <location filename="../tokensviewdialog.cpp" line="+366"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -4477,7 +4822,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+287"/>
+        <location filename="../walletmodel.cpp" line="+291"/>
         <source>Send Coins</source>
         <translation>Invia coin</translation>
     </message>
@@ -4485,17 +4830,19 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+45"/>
+        <location filename="../walletview.cpp" line="+46"/>
+        <location line="+20"/>
         <source>&amp;Export</source>
         <translation>&amp;Esporta</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-19"/>
+        <location line="+20"/>
         <source>Export the data in the current tab to a file</source>
         <translation>Esporta su file i dati contenuti nella tabella corrente</translation>
     </message>
     <message>
-        <location line="+191"/>
+        <location line="+196"/>
         <source>Backup Wallet</source>
         <translation>Backup Portamonete</translation>
     </message>
