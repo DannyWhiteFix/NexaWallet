@@ -227,11 +227,12 @@ void TxToJSON(const CTransaction &tx, const int64_t txTime, const uint256 hashBl
         CBlockIndex *pindex = LookupBlockIndex(hashBlock);
         if (pindex)
         {
+            entry.pushKV("blockindex", pindex->height());
+            entry.pushKV("blocktime", pindex->GetBlockTime());
+            entry.pushKV("time", pindex->GetBlockTime());
             if (chainActive.Contains(pindex))
             {
                 entry.pushKV("confirmations", 1 + chainActive.Height() - pindex->height());
-                entry.pushKV("time", pindex->GetBlockTime());
-                entry.pushKV("blocktime", pindex->GetBlockTime());
                 confs = true;
             }
         }

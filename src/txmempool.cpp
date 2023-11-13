@@ -600,7 +600,7 @@ CTxMemPool::CTxMemPool() : nTransactionsUpdated(0), m_dspStorage(new DoubleSpend
 CTxMemPool::~CTxMemPool() { delete minerPolicyEstimator; }
 bool CTxMemPool::isSpent(const COutPoint &outpoint)
 {
-    AssertWriteLockHeld(cs_txmempool);
+    AssertLockHeld(cs_txmempool);
     return mapNextTx.count(outpoint);
 }
 

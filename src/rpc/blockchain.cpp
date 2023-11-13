@@ -1166,46 +1166,53 @@ UniValue evicttransaction(const UniValue &params, bool fHelp)
 
 UniValue gettxout(const UniValue &params, bool fHelp)
 {
-    if (fHelp || params.size() < 2 || params.size() > 3)
-        throw runtime_error("gettxout \"txidem\" n ( includetxpool )\n"
-                            "\nReturns details about an unspent transaction output.\n"
-                            "\nArguments:\n"
-                            "1. \"txidem\"       (string, required) The transaction idem\n"
-                            "2. n              (numeric, required) vout value\n"
-                            "3. includetxpool  (boolean, optional) Whether to included the mem pool\n"
-                            "\nResult:\n"
-                            "{\n"
-                            "  \"bestblock\" : \"hash\",    (string) the block hash\n"
-                            "  \"confirmations\" : n,       (numeric) The number of confirmations\n"
-                            "  \"value\" : x.xxx,           (numeric) The transaction value in " +
-                            CURRENCY_UNIT +
-                            "\n"
-                            "  \"scriptPubKey\" : {         (json object)\n"
-                            "     \"asm\" : \"code\",       (string) \n"
-                            "     \"hex\" : \"hex\",        (string) \n"
-                            "     \"reqSigs\" : n,          (numeric) Number of required signatures\n"
-                            "     \"type\" : \"pubkeyhash\", (string) The type, eg pubkeyhash\n"
-                            "     \"addresses\" : [          (array of string) array of nexa addresses\n"
-                            "        \"nexaaddress\"     (string) nexa address\n"
-                            "        ,...\n"
-                            "     ]\n"
-                            "  },\n"
-                            "  \"version\" : n,            (numeric) The version\n"
-                            "  \"coinbase\" : true|false   (boolean) Coinbase or not\n"
-                            "}\n"
+    if (fHelp || params.size() < 1 || params.size() > 3)
+        throw runtime_error(
+            "gettxout \"txidem\" n ( includetxpool )\n"
+            "\nReturns details about an unspent transaction output.\n"
+            "\nArguments:\n"
+            "1. \"txidem or outpoint\"       (string, required) The transaction idem or outpoint hash\n"
+            "2. n              (numeric, optional) vout value if idem provided, pass -1 or nothing if outpoint\n"
+            "3. includetxpool  (boolean, optional) Whether to included the mem pool\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"bestblock\" : \"hash\",    (string) the block hash\n"
+            "  \"confirmations\" : n,       (numeric) The number of confirmations\n"
+            "  \"value\" : x.xxx,           (numeric) The transaction value in " +
+            CURRENCY_UNIT +
+            "\n"
+            "  \"scriptPubKey\" : {         (json object)\n"
+            "     \"asm\" : \"code\",       (string) \n"
+            "     \"hex\" : \"hex\",        (string) \n"
+            "     \"reqSigs\" : n,          (numeric) Number of required signatures\n"
+            "     \"type\" : \"pubkeyhash\", (string) The type, eg pubkeyhash\n"
+            "     \"addresses\" : [          (array of string) array of nexa addresses\n"
+            "        \"nexaaddress\"     (string) nexa address\n"
+            "        ,...\n"
+            "     ]\n"
+            "  },\n"
+            "  \"version\" : n,            (numeric) The version\n"
+            "  \"coinbase\" : true|false   (boolean) Coinbase or not\n"
+            "}\n"
 
-                            "\nExamples:\n"
-                            "\nGet unspent transactions\n" +
-                            HelpExampleCli("listunspent", "") + "\nView the details\n" +
-                            HelpExampleCli("gettxout", "\"txidem\" 1") + "\nAs a json rpc call\n" +
-                            HelpExampleRpc("gettxout", "\"txidem\", 1"));
+            "\nExamples:\n"
+            "\nGet unspent transactions\n" +
+            HelpExampleCli("listunspent", "") + "\nView the details\n" + HelpExampleCli("gettxout", "\"txidem\" 1") +
+            "\nAs a json rpc call\n" + HelpExampleRpc("gettxout", "\"txidem\", 1"));
 
     UniValue ret(UniValue::VOBJ);
 
     std::string strHash = params[0].get_str();
     uint256 hash(uint256S(strHash));
-    int n = params[1].get_int();
-    COutPoint out(hash, n);
+    int n = -1;
+    if (params.size() > 1)
+        n = params[1].get_int();
+
+    COutPoint out;
+    if (n == -1)
+        out = COutPoint(hash); // its an outpoint hash
+    else
+        out = COutPoint(hash, n);
     bool fMempool = true;
     if (params.size() > 2)
         fMempool = params[2].get_bool();
@@ -1230,6 +1237,7 @@ UniValue gettxout(const UniValue &params, bool fHelp)
     }
 
     CBlockIndex *pindex = LookupBlockIndex(pcoinsTip->GetBestBlock());
+    ret.pushKV("outpoint", out.GetHex());
     ret.pushKV("bestblock", pindex->GetBlockHash().GetHex());
     if (coin.nHeight == MEMPOOL_HEIGHT)
     {
