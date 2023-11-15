@@ -30,6 +30,7 @@ class BlockchainTest(BitcoinTestFramework):
         - gettxpoolinfo
         - getorphanpoolinfo
         - getraworphanpool
+        - gettxout
 
     """
 
@@ -48,6 +49,7 @@ class BlockchainTest(BitcoinTestFramework):
         self.sync_all()
 
     def run_test(self):
+        self._test_gettxout()
         self._test_getblockchaininfo()
         self._test_gettxoutsetinfo()
         self._test_getblockheader()
@@ -113,6 +115,39 @@ class BlockchainTest(BitcoinTestFramework):
         # now nodes 2 and 3 should reorganize to the longer (more work) side
         waitFor(30, lambda: self.nodes[2].getbestblockhash() == winningHashes[-1])
         waitFor(30, lambda: self.nodes[3].getbestblockhash() == winningHashes[-1])
+
+    def _test_gettxout(self):
+        node = self.nodes[0]
+        tiphash = node.getbestblockhash()
+        blockdetails = node.getblock(tiphash)
+        idem = blockdetails["txidem"][0]
+        idd = blockdetails["txid"][0]
+
+        txjson = node.getrawtransaction(idem, True)
+
+        vout = txjson["vout"][0]
+        outpoint = vout["outpoint"]
+
+        utxo = node.gettxout(outpoint)
+        assert_equal(utxo["outpoint"], outpoint)
+        utxo1 = node.gettxout(outpoint, -1)
+        assert_equal(utxo1["outpoint"], outpoint)
+        utxo2 = node.gettxout(idem, 0)
+        assert_equal(utxo2["outpoint"], outpoint)
+
+        assert_equal(utxo["bestblock"],tiphash)
+        assert_equal(utxo["value"], Decimal('5000000.00')) # only because we are near the genesis block in this test
+        assert_equal(utxo["confirmations"], 1) # because we grabbed the tip
+
+        # the 3 different access methods should have produced the same value
+        assert_equal(utxo, utxo1)
+        assert_equal(utxo, utxo2)
+
+        # grab the txout for bogus hash
+        noutxo = node.gettxout(outpoint[1:] + "0")
+        # check that we get nothing back
+        assert_equal(noutxo, None)
+
 
     def _test_getblockchaininfo(self):
         logging.info("Test getblockchaininfo")
