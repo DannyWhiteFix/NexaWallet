@@ -12,7 +12,11 @@
 #include "txadmission.h"
 #include "utilstrencodings.h"
 #include "validation/validation.h"
+
+#ifdef ENABLE_WALLET
 #include "wallet/grouptokenwallet.h"
+#endif
+
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(grouptoken_tests, BasicTestingSetup)

@@ -34,10 +34,8 @@
 #include "utilstrencodings.h"
 #include "validation/validation.h"
 #include "validation/verifydb.h"
-#include "wallet/grouptokenwallet.h"
 
 #include <stdint.h>
-
 #include <univalue.h>
 
 #include <boost/algorithm/string.hpp>
