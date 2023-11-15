@@ -706,7 +706,12 @@ UniValue importwallet(const UniValue &params, bool fHelp)
         }
         pwalletMain->mapKeyMetadata[keyid].nCreateTime = nTime;
         if (fLabel)
-            pwalletMain->SetAddressBook(keyid, strLabel, "receive");
+        {
+            ScriptTemplateDestination dest(P2pktOutput(key.GetPubKey()));
+            pwalletMain->SetAddressBook(dest, strLabel, "receive");
+
+            std::string strAddr = EncodeDestination(dest);
+        }
         nTimeBegin = std::min(nTimeBegin, nTime);
     }
     file.close();
@@ -720,8 +725,11 @@ UniValue importwallet(const UniValue &params, bool fHelp)
         pwalletMain->nTimeFirstKey = nTimeBegin;
 
     LOGA("Rescanning last %i blocks\n", chainActive.Height() - pindex->height() + 1);
-    pwalletMain->ScanForWalletTransactions(pindex);
     pwalletMain->MarkDirty();
+    pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
+    pwalletMain->ReacceptWalletTransactions();
+    pwalletMain->RedetermineIfMine();
+    pwalletMain->Flush();
 
     if (!fGood)
         throw JSONRPCError(RPC_WALLET_ERROR, "Error adding some keys to wallet");
