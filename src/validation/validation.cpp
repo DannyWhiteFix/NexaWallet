@@ -29,7 +29,10 @@
 #include "util.h"
 #include "utilstrencodings.h"
 #include "validationinterface.h"
+
+#ifdef ENABLE_WALLET
 #include "wallet/grouptokenwallet.h"
+#endif
 
 #include <algorithm>
 #include <boost/scope_exit.hpp>
