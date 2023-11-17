@@ -26,6 +26,7 @@
 #include "merkleblock.h"
 #include "policy/policy.h"
 #include "random.h"
+#include "script/scripttemplate.h"
 #include "script/sign.h"
 #include "streams.h"
 #include "tinyformat.h"
@@ -62,10 +63,25 @@
 #endif
 
 // clang-format off
-#define MAJOR(major)       1000000 * major
-#define MINOR(minor)       1000 * minor
+
+// Major version MUST be incremented if any backward incompatible changes are
+// introduced to the public API. It MAY also include minor and revision level changes.
+// Minor and revision versions MUST be reset to 0 when major version is incremented.
+#define MAJOR(major) 1000000 * major
+
+// Minor version MUST be incremented if new, backward compatible functionality is
+// introduced to the public API. It MUST be incremented if any public API
+// functionality is marked as deprecated. It MAY be incremented if substantial
+// new functionality or improvements are introduced within the private code.
+// It MAY include patch level changes. Revision version MUST be reset to 0 when
+// minor version is incremented.
+#define MINOR(minor) 1000 * minor
+
+// Revision version MUST be incremented if only backward compatible bug fixes are
+// introduced. A bug fix is defined as an internal change that fixes incorrect behavior.
 #define REVISION(revision) 1 * revision
-static const int CASHLIB_VERSION = MAJOR(1) + MINOR(0) + REVISION(0);
+static const int CASHLIB_VERSION = MAJOR(1) + MINOR(1) + REVISION(0);
+
 // clang-format on
 
 SLAPI int cashlibVersion() { return CASHLIB_VERSION; }
@@ -177,14 +193,14 @@ struct ForkDeploymentInfo
 struct ForkDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_BITS_DEPLOYMENTS];
 
 // Must match the equivalent object in calling language code (e.g. PayAddressType)
+// Matches the CashAddrType enum used for address types in cashaddrenc.h with the addition of NONE
 typedef enum
 {
-    PayAddressTypeNONE = 0,
-    PayAddressTypeP2PUBKEY = 1,
-    PayAddressTypeP2PKH = 2,
-    PayAddressTypeP2SH = 3,
-    PayAddressTypeTEMPLATE = 4, // Generalized pay to script template
-    PayAddressTypeP2PKT = 5 // Pay to well-known script template 1 (pay-to-pub-key-template)
+    PayAddressTypeP2PKH = 0,
+    PayAddressTypeP2SH = 1,
+    PayAddressTypeGROUP = 11, // This defines a group (not a destination address), is a placeholder only
+    PayAddressTypeTEMPLATE = 19, // Generalized pay to script template
+    PayAddressTypeNONE = 255 // arbitrary, use max value to signify no destination
 } PayAddressType;
 
 // Must match the equivalent object in calling language code (e.g. ChainSelector)
@@ -952,7 +968,7 @@ SLAPI int encodeCashAddr(int chainSelector, int typ, const unsigned char *data, 
             dst = CScriptID(tmp);
         }
     }
-    else if ((typ == PayAddressTypeTEMPLATE) || (typ == PayAddressTypeP2PKT))
+    else if (typ == PayAddressTypeTEMPLATE)
     {
         // A PayAddress contains a serialized script
         // Really the "right" way to do this is to just encode the exact bytes without stripping off
@@ -978,7 +994,7 @@ SLAPI int encodeCashAddr(int chainSelector, int typ, const unsigned char *data, 
     int sz = addrAsStr.size();
     if (sz >= resultMaxLen)
         return -sz;
-    strncpy(result, addrAsStr.c_str(), resultMaxLen);
+    strncpy(result, addrAsStr.c_str(), sz);
     return sz;
 }
 
@@ -990,16 +1006,64 @@ SLAPI int decodeCashAddr(int chainSelector, const char *addrstr, unsigned char *
     {
         return 0;
     }
-
     CTxDestination dst = DecodeCashAddr(addrstr, *cp);
     std::vector<unsigned char> resultv;
     std::visit(PubkeyExtractor(resultv, *cp), dst);
     int sz = resultv.size();
     if (sz > resultMaxLen)
+    {
         return -sz;
+    }
     memcpy(result, &resultv[0], sz);
     return sz;
 }
+
+SLAPI int decodeCashAddrContent(int chainSelector,
+    const char *addrstr,
+    unsigned char *result,
+    int resultMaxLen,
+    unsigned char *type)
+{
+    const CChainParams *cp = GetChainParams((ChainSelector)chainSelector);
+    if (cp == nullptr)
+    {
+        return 0;
+    }
+    CashAddrContent content = DecodeCashAddrContent(addrstr, *cp);
+    const int hash_size = content.hash.size();
+    if (hash_size > resultMaxLen)
+    {
+        return -hash_size;
+    }
+    memcpy(result, &content.hash[0], hash_size);
+    memcpy(type, &content.type, 1);
+    return hash_size;
+}
+
+SLAPI int serializeScript(const uint8_t *script, const int lenScript, uint8_t *result, int resultMaxLen)
+{
+    std::vector<uint8_t> vec(script, script + lenScript);
+    CDataStream ssData(SER_NETWORK, PROTOCOL_VERSION);
+    ssData << vec;
+    const int data_size = ssData.size();
+    std::memcpy(result, ssData.data(), data_size);
+    return data_size;
+}
+
+// TODO - add support for creating a script template destination that includes a specific group / amount
+SLAPI int pubkeyToScriptTemplate(const unsigned char *pubkey, int lenPubkey, unsigned char *result, int resultMaxLen)
+{
+    // CScript P2pktOutput(const CPubKey &pubkey, const CGroupTokenID &group = NoGroup, CAmount grpQuantity = 0);
+    const CScript scriptTemplate = P2pktOutput(CPubKey(&pubkey[0], &pubkey[0] + lenPubkey));
+    const int scriptTemplateSize = scriptTemplate.size();
+    if (scriptTemplateSize > resultMaxLen)
+    {
+        return -scriptTemplateSize;
+    }
+    std::memcpy(result, &scriptTemplate[0], scriptTemplateSize);
+    return scriptTemplateSize;
+}
+
 
 SLAPI int groupIdToAddr(int chainSelector, const unsigned char *data, int len, char *result, int resultMaxLen)
 {
@@ -2380,7 +2444,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_org_nexa_libnexakotlin_Native_encodeCa
             dst = CScriptID(tmp);
         }
     }
-    else if ((typ == PayAddressTypeTEMPLATE) || (typ == PayAddressTypeP2PKT))
+    else if (typ == PayAddressTypeTEMPLATE)
     {
         // A PayAddress contains a serialized script
         // Really the "right" way to do this is to just encode the exact bytes without stripping off
