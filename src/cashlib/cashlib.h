@@ -179,6 +179,9 @@ SLAPI int hd44DeriveChildKey(const unsigned char *secretSeed,
 SLAPI bool verifyBlockHeader(int chainSelector, const unsigned char *serializedHeader, int serLen);
 SLAPI int encodeCashAddr(int chainSelector, int typ, const unsigned char *data, int len, char *result, int resultMaxLen);
 SLAPI int decodeCashAddr(int chainSelector, const char *addrstr, unsigned char *result, int resultMaxLen);
+SLAPI int decodeCashAddrContent(int chainSelector, const char* addrstr, unsigned char *result, int resultMaxLen, unsigned char *type);
+SLAPI int serializeScript(const uint8_t *script, const int lenScript, uint8_t *result, int resultMaxLen);
+SLAPI int pubkeyToScriptTemplate(const unsigned char *pubkey, int lenPubkey, unsigned char *result, int resultMaxLen);
 SLAPI int groupIdFromAddr(int chainSelector,  const char *addrstr, unsigned char *result, int resultMaxLen);
 SLAPI int groupIdToAddr(int chainSelector, const unsigned char *data, int len, char *result, int resultMaxLen);
 
