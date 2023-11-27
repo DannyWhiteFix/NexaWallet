@@ -3692,7 +3692,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
 <context>
     <name>TokenTableModel</name>
     <message>
-        <location filename="../tokentablemodel.cpp" line="+245"/>
+        <location filename="../tokentablemodel.cpp" line="+244"/>
         <source>Date</source>
         <translation>Data</translation>
     </message>
@@ -3775,7 +3775,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Generati, ma non accettati</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+51"/>
         <source>Received with</source>
         <translation>Ricevuto tramite</translation>
     </message>
@@ -3801,6 +3801,11 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
     </message>
     <message>
         <location line="+2"/>
+        <source>Melt</source>
+        <translation>Sciolto</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Public label</source>
         <translation>Etichetta pubblica</translation>
     </message>
@@ -3810,7 +3815,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Altro</translation>
     </message>
     <message>
-        <location line="+337"/>
+        <location line="+318"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Stato della transazione. Passare con il mouse su questo campo per visualizzare il numero di conferme.</translation>
     </message>
@@ -3991,42 +3996,55 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>NaN</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+3"/>
+        <location line="+42"/>
+        <source>Total Mintage:</source>
+        <translation>Conio totale:</translation>
+    </message>
+    <message>
+        <location line="-35"/>
+        <location line="+21"/>
         <source>Name:</source>
         <translation>Nome:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-20"/>
+        <location line="+21"/>
         <source>Ticker:</source>
         <translation>Ticker:</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-16"/>
+        <location line="+21"/>
         <source>URL:</source>
         <translation>URL:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-20"/>
+        <location line="+21"/>
         <source>Hash:</source>
         <translation>Hash:</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-17"/>
+        <location line="+21"/>
         <source>Decimals:</source>
         <translation>Decimali:</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-17"/>
+        <location line="+23"/>
         <source>Balance:</source>
         <translation>Saldo:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-22"/>
+        <location line="+23"/>
         <source>Pending:</source>
         <translation>In attesa:</translation>
     </message>
     <message>
-        <location line="+79"/>
+        <location line="+88"/>
         <source>Are you sure you want to send?</source>
         <translation>Sei sicuro di voler inviare?</translation>
     </message>
@@ -4170,12 +4188,12 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <location line="+41"/>
         <location line="+63"/>
         <location line="+47"/>
-        <location line="+134"/>
+        <location line="+213"/>
         <source>Credit</source>
         <translation>Credito</translation>
     </message>
     <message numerus="yes">
-        <location line="-282"/>
+        <location line="-361"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>matura tra %n blocco</numerusform>
@@ -4190,12 +4208,12 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
     <message>
         <location line="+102"/>
         <location line="+31"/>
-        <location line="+139"/>
+        <location line="+218"/>
         <source>Debit</source>
         <translation>Debito</translation>
     </message>
     <message>
-        <location line="-158"/>
+        <location line="-237"/>
         <source>Total debit</source>
         <translation>Debito totale</translation>
     </message>
@@ -4246,41 +4264,56 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>È necessario attendere %1 blocchi prima che i coin generati possano essere spesi. Al momento della generazione questo blocco è stato trasmesso alla rete in modo da poter essere aggiunto alla block chain. Se l&apos;inserimento avrà esito negativo lo stato del blocco sarà modificato in &quot;non accettato&quot; ed esso risulterà non spendibile. Ciò può verificarsi occasionalmente nel caso in cui un altro blocco sia stato generato entro pochi secondi dal tuo.</translation>
     </message>
     <message>
-        <location line="+25"/>
-        <location line="+25"/>
+        <location line="+66"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Token ID</source>
         <translation>Codice identificativo del token</translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+25"/>
+        <location line="-50"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Ticker</source>
         <translation>Ticker</translation>
     </message>
     <message>
-        <location line="-24"/>
-        <location line="+25"/>
+        <location line="-54"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Name</source>
         <translation>Nome</translation>
     </message>
     <message>
-        <location line="-21"/>
-        <location line="+25"/>
+        <location line="-51"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Decimals</source>
         <translation>Decimali</translation>
     </message>
     <message>
-        <location line="-23"/>
+        <location line="-53"/>
+        <source>Melt</source>
+        <translation>Sciolto</translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <location line="+34"/>
+        <source>Mint</source>
+        <translation>Coniare</translation>
+    </message>
+    <message>
+        <location line="-32"/>
         <source>Amount Sent</source>
         <translation>Importo inviato</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+27"/>
         <source>Amount Received</source>
         <translation>Quantità ricevuta</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+17"/>
         <source>Debug information</source>
         <translation>Informazione di debug</translation>
     </message>
@@ -4295,7 +4328,10 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Input</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="-95"/>
+        <location line="+28"/>
+        <location line="+34"/>
+        <location line="+55"/>
         <source>Amount</source>
         <translation>Importo</translation>
     </message>
@@ -4312,7 +4348,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>falso</translation>
     </message>
     <message>
-        <location line="-417"/>
+        <location line="-496"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, non è ancora stata trasmessa con successo</translation>
     </message>
@@ -4911,12 +4947,12 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Errore: si è presentato un errore interno fatale, consulta il file debug.log per maggiori dettagli</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+31"/>
         <source>Pruning blockstore...</source>
         <translation>Pruning del blockstore...</translation>
     </message>
     <message>
-        <location line="-164"/>
+        <location line="-165"/>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>Distribuito secondo la licenza software MIT, vedi il file COPYING incluso oppure &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
@@ -5020,7 +5056,7 @@ Riavvia Nexa con &quot;-usehd=0&quot;.</translation>
         <translation>Non ci sono abbastanza descrittori di file disponibili.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>La modalità prune non può essere configurata con un valore negativo.</translation>
     </message>
@@ -5060,7 +5096,7 @@ Riavvia Nexa con &quot;-usehd=0&quot;.</translation>
         <translation>Il portamonete %s si trova al di fuori dalla cartella dati %s</translation>
     </message>
     <message>
-        <location line="-176"/>
+        <location line="-177"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Errore: attesa per connessioni in arrivo fallita (errore riportato %s)</translation>
     </message>
@@ -5110,7 +5146,7 @@ Riavvia Nexa con &quot;-usehd=0&quot;.</translation>
         <translation>È necessario specificare una porta con -whitebind: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+15"/>
         <source>Signing transaction failed</source>
         <translation>Firma transazione fallita</translation>
     </message>
@@ -5165,7 +5201,7 @@ Riavvia Nexa con &quot;-usehd=0&quot;.</translation>
         <translation>Attenzione</translation>
     </message>
     <message>
-        <location line="-41"/>
+        <location line="-42"/>
         <source>Loading addresses...</source>
         <translation>Caricamento indirizzi...</translation>
     </message>
@@ -5175,12 +5211,12 @@ Riavvia Nexa con &quot;-usehd=0&quot;.</translation>
         <translation>Indirizzo -proxy non valido: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+37"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Rete sconosciuta specificata in -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-65"/>
+        <location line="-66"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Impossibile risolvere indirizzo -bind: &apos;%s&apos;</translation>
     </message>
@@ -5458,6 +5494,11 @@ Quando fai clic su &quot;OK&quot; Nexa si spegnerà per completare il processo.<
     </message>
     <message>
         <location line="+1"/>
+        <source>Opening Token Mintage database...</source>
+        <translation>Apertura del database di conio dei token in corso...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation>Apertura database UTXO...</translation>
     </message>
@@ -5522,7 +5563,7 @@ Quando fai clic su &quot;OK&quot; Nexa si spegnerà per completare il processo.<
         <translation>Eliminazione di tutte le transazioni dal portafoglio...</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-68"/>
         <source>Done loading</source>
         <translation>Caricamento completato</translation>
     </message>

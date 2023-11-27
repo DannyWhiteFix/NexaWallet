@@ -3692,7 +3692,7 @@
 <context>
     <name>TokenTableModel</name>
     <message>
-        <location filename="../tokentablemodel.cpp" line="+245"/>
+        <location filename="../tokentablemodel.cpp" line="+244"/>
         <source>Date</source>
         <translation>Fecha</translation>
     </message>
@@ -3775,7 +3775,7 @@
         <translation>Generado pero no aceptado</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+51"/>
         <source>Received with</source>
         <translation>Recibido con</translation>
     </message>
@@ -3801,6 +3801,11 @@
     </message>
     <message>
         <location line="+2"/>
+        <source>Melt</source>
+        <translation>Derretir</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Public label</source>
         <translation>Etiqueta pública</translation>
     </message>
@@ -3810,7 +3815,7 @@
         <translation>Otra</translation>
     </message>
     <message>
-        <location line="+337"/>
+        <location line="+318"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Estado de transacción. Pasa el ratón sobre este campo para ver el número de confirmaciones.</translation>
     </message>
@@ -3991,42 +3996,55 @@
         <translation>NaN</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+3"/>
+        <location line="+42"/>
+        <source>Total Mintage:</source>
+        <translation>Acuñación total:</translation>
+    </message>
+    <message>
+        <location line="-35"/>
+        <location line="+21"/>
         <source>Name:</source>
         <translation>Nombre:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-20"/>
+        <location line="+21"/>
         <source>Ticker:</source>
         <translation>Corazón:</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-16"/>
+        <location line="+21"/>
         <source>URL:</source>
         <translation>URL:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-20"/>
+        <location line="+21"/>
         <source>Hash:</source>
         <translation>Hash:</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-17"/>
+        <location line="+21"/>
         <source>Decimals:</source>
         <translation>Decimales:</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-17"/>
+        <location line="+23"/>
         <source>Balance:</source>
         <translation>Saldo:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-22"/>
+        <location line="+23"/>
         <source>Pending:</source>
         <translation>Pendiente:</translation>
     </message>
     <message>
-        <location line="+79"/>
+        <location line="+88"/>
         <source>Are you sure you want to send?</source>
         <translation>¿Está seguro que desea enviar?</translation>
     </message>
@@ -4170,12 +4188,12 @@
         <location line="+41"/>
         <location line="+63"/>
         <location line="+47"/>
-        <location line="+134"/>
+        <location line="+213"/>
         <source>Credit</source>
         <translation>Crédito</translation>
     </message>
     <message numerus="yes">
-        <location line="-282"/>
+        <location line="-361"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>disponible en %n bloque más</numerusform>
@@ -4190,12 +4208,12 @@
     <message>
         <location line="+102"/>
         <location line="+31"/>
-        <location line="+139"/>
+        <location line="+218"/>
         <source>Debit</source>
         <translation>Débito</translation>
     </message>
     <message>
-        <location line="-158"/>
+        <location line="-237"/>
         <source>Total debit</source>
         <translation>Débito total</translation>
     </message>
@@ -4246,41 +4264,56 @@
         <translation>Los coins generados deben madurar %1 bloques antes de que puedan gastarse. Cuando generó este bloque, se transmitió a la red para que se añadiera a la cadena de bloques. Si no consigue entrar en la cadena, su estado cambiará a &quot;no aceptado&quot; y ya no se podrá gastar. Esto puede ocurrir ocasionalmente si otro nodo genera un bloque a pocos segundos del suyo.</translation>
     </message>
     <message>
-        <location line="+25"/>
-        <location line="+25"/>
+        <location line="+66"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Token ID</source>
         <translation>identificación del token</translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+25"/>
+        <location line="-50"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Ticker</source>
         <translation>Corazón</translation>
     </message>
     <message>
-        <location line="-24"/>
-        <location line="+25"/>
+        <location line="-54"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Name</source>
         <translation>Nombre</translation>
     </message>
     <message>
-        <location line="-21"/>
-        <location line="+25"/>
+        <location line="-51"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Decimals</source>
         <translation>Decimales</translation>
     </message>
     <message>
-        <location line="-23"/>
+        <location line="-53"/>
+        <source>Melt</source>
+        <translation>Derretir</translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <location line="+34"/>
+        <source>Mint</source>
+        <translation>Acuñar</translation>
+    </message>
+    <message>
+        <location line="-32"/>
         <source>Amount Sent</source>
         <translation>Cantidad enviada</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+27"/>
         <source>Amount Received</source>
         <translation>Cantidad recibida</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+17"/>
         <source>Debug information</source>
         <translation>Información de depuración</translation>
     </message>
@@ -4295,7 +4328,10 @@
         <translation>entradas</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="-95"/>
+        <location line="+28"/>
+        <location line="+34"/>
+        <location line="+55"/>
         <source>Amount</source>
         <translation>Cantidad</translation>
     </message>
@@ -4312,7 +4348,7 @@
         <translation>falso</translation>
     </message>
     <message>
-        <location line="-417"/>
+        <location line="-496"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, todavía no se ha sido difundido satisfactoriamente</translation>
     </message>
@@ -4911,12 +4947,12 @@
         <translation>Un error interno fatal ocurrió, ver debug.log para detalles</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+31"/>
         <source>Pruning blockstore...</source>
         <translation>Poda blockstore ...</translation>
     </message>
     <message>
-        <location line="-164"/>
+        <location line="-165"/>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>Distribuido bajo la licencia de software MIT, vea la copia del archivo adjunto o &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
@@ -5020,7 +5056,7 @@ Reinicie Nexa con &quot;-usehd=0&quot;.</translation>
         <translation>No hay suficientes descriptores de archivo disponibles. </translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>Pode no se puede configurar con un valor negativo.</translation>
     </message>
@@ -5060,7 +5096,7 @@ Reinicie Nexa con &quot;-usehd=0&quot;.</translation>
         <translation>El monedero %s se encuentra fuera del directorio de datos %s</translation>
     </message>
     <message>
-        <location line="-176"/>
+        <location line="-177"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Error: la escucha para conexiones entrantes falló (la escucha regresó el error %s)</translation>
     </message>
@@ -5110,7 +5146,7 @@ Reinicie Nexa con &quot;-usehd=0&quot;.</translation>
         <translation>Necesita especificar un puerto con -whitebind: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+15"/>
         <source>Signing transaction failed</source>
         <translation>Transacción falló</translation>
     </message>
@@ -5165,7 +5201,7 @@ Reinicie Nexa con &quot;-usehd=0&quot;.</translation>
         <translation>Aviso</translation>
     </message>
     <message>
-        <location line="-41"/>
+        <location line="-42"/>
         <source>Loading addresses...</source>
         <translation>Cargando direcciones...</translation>
     </message>
@@ -5175,12 +5211,12 @@ Reinicie Nexa con &quot;-usehd=0&quot;.</translation>
         <translation>Dirección -proxy inválida: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+37"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>La red especificada en -onlynet &apos;%s&apos; es desconocida</translation>
     </message>
     <message>
-        <location line="-65"/>
+        <location line="-66"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>No se puede resolver la dirección de -bind: &apos;%s&apos;</translation>
     </message>
@@ -5458,6 +5494,11 @@ Cuando haga clic en &quot;Aceptar&quot;, Nexa se apagará para completar el proc
     </message>
     <message>
         <location line="+1"/>
+        <source>Opening Token Mintage database...</source>
+        <translation>Abriendo la base de datos de Token Mintage...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation>Abriendo base de datos UTXO...</translation>
     </message>
@@ -5522,7 +5563,7 @@ Cuando haga clic en &quot;Aceptar&quot;, Nexa se apagará para completar el proc
         <translation>Eliminando todas las transacciones de la billetera...</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-68"/>
         <source>Done loading</source>
         <translation>Se terminó de cargar</translation>
     </message>

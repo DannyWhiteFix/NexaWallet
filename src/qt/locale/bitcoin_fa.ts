@@ -3676,7 +3676,7 @@
 <context>
     <name>TokenTableModel</name>
     <message>
-        <location filename="../tokentablemodel.cpp" line="+245"/>
+        <location filename="../tokentablemodel.cpp" line="+244"/>
         <source>Date</source>
         <translation type="unfinished">تاریخ</translation>
     </message>
@@ -3758,7 +3758,7 @@
         <translation type="unfinished">تولید شده ولی قبول نشده</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+51"/>
         <source>Received with</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3784,6 +3784,11 @@
     </message>
     <message>
         <location line="+2"/>
+        <source>Melt</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Public label</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3793,7 +3798,7 @@
         <translation type="unfinished">دیگر</translation>
     </message>
     <message>
-        <location line="+337"/>
+        <location line="+318"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation type="unfinished">وضعیت تراکنش. نشانگر را روی این فیلد نگه دارید تا تعداد تأییدیه‌ها نشان داده شود.</translation>
     </message>
@@ -3974,42 +3979,55 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+3"/>
+        <location line="+42"/>
+        <source>Total Mintage:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-35"/>
+        <location line="+21"/>
         <source>Name:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-20"/>
+        <location line="+21"/>
         <source>Ticker:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-16"/>
+        <location line="+21"/>
         <source>URL:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-20"/>
+        <location line="+21"/>
         <source>Hash:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-17"/>
+        <location line="+21"/>
         <source>Decimals:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-17"/>
+        <location line="+23"/>
         <source>Balance:</source>
         <translation type="unfinished">تزار:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-22"/>
+        <location line="+23"/>
         <source>Pending:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+79"/>
+        <location line="+88"/>
         <source>Are you sure you want to send?</source>
         <translation type="unfinished">آیا مطمئن هستید که می خواهید ارسال کنید؟</translation>
     </message>
@@ -4152,12 +4170,12 @@
         <location line="+41"/>
         <location line="+63"/>
         <location line="+47"/>
-        <location line="+134"/>
+        <location line="+213"/>
         <source>Credit</source>
         <translation>بدهی</translation>
     </message>
     <message numerus="yes">
-        <location line="-282"/>
+        <location line="-361"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>بلوغ در %n بلوک دیگر</numerusform>
@@ -4171,12 +4189,12 @@
     <message>
         <location line="+102"/>
         <location line="+31"/>
-        <location line="+139"/>
+        <location line="+218"/>
         <source>Debit</source>
         <translation>اعتبار</translation>
     </message>
     <message>
-        <location line="-158"/>
+        <location line="-237"/>
         <source>Total debit</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4227,41 +4245,56 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+25"/>
-        <location line="+25"/>
+        <location line="+66"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Token ID</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+25"/>
+        <location line="-50"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Ticker</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-24"/>
-        <location line="+25"/>
+        <location line="-54"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Name</source>
         <translation type="unfinished">اسم</translation>
     </message>
     <message>
-        <location line="-21"/>
-        <location line="+25"/>
+        <location line="-51"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Decimals</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-23"/>
+        <location line="-53"/>
+        <source>Melt</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <location line="+34"/>
+        <source>Mint</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-32"/>
         <source>Amount Sent</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+27"/>
         <source>Amount Received</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+17"/>
         <source>Debug information</source>
         <translation>اطلاعات اشکال‌زدایی</translation>
     </message>
@@ -4276,7 +4309,10 @@
         <translation>ورودی‌ها</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="-95"/>
+        <location line="+28"/>
+        <location line="+34"/>
+        <location line="+55"/>
         <source>Amount</source>
         <translation>مبلغ</translation>
     </message>
@@ -4293,7 +4329,7 @@
         <translation>نادرست</translation>
     </message>
     <message>
-        <location line="-417"/>
+        <location line="-496"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>، هنوز با موفقیت ارسال نشده</translation>
     </message>
@@ -4917,7 +4953,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>در حال پیاده‌سازی...</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+30"/>
         <source>Signing token transaction failed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5017,17 +5053,17 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>در حال بازبینی کیف پول...</translation>
     </message>
     <message>
-        <location line="-47"/>
+        <location line="-48"/>
         <source>Information</source>
         <translation>اطلاعات</translation>
     </message>
     <message>
-        <location line="+51"/>
+        <location line="+52"/>
         <source>Warning</source>
         <translation>هشدار</translation>
     </message>
     <message>
-        <location line="-41"/>
+        <location line="-42"/>
         <source>Loading addresses...</source>
         <translation>بار گیری آدرس ها</translation>
     </message>
@@ -5037,12 +5073,12 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>آدرس پراکسی اشتباه %s</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+37"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>شبکه مشخص شده غیرقابل شناسایی در onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-65"/>
+        <location line="-66"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>آدرس قابل اتصال- شناسایی نیست %s</translation>
     </message>
@@ -5439,6 +5475,11 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
     </message>
     <message>
         <location line="+1"/>
+        <source>Opening Token Mintage database...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5498,7 +5539,7 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-68"/>
         <source>Done loading</source>
         <translation>بار گیری انجام شده است</translation>
     </message>
