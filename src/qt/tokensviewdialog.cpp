@@ -440,6 +440,14 @@ void TokensViewDialog::on_tokenTable_itemDoubleClicked()
 
 void TokensViewDialog::on_sendButton_clicked()
 {
+    // Check if wallet is unlocked and if not ask for passphrase
+    WalletModel::UnlockContext ctx(model->requestUnlock());
+    if (!ctx.isValid())
+    {
+        // Unlock wallet was cancelled
+        return;
+    }
+
     // Get group id from the table
     QList selectedItems = ui->tokenTable->selectedItems();
     if (selectedItems.empty())
