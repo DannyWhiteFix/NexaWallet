@@ -239,7 +239,7 @@
     <message>
         <location line="+5"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons you should no longer keep previous unencrypted backups as your funds will be at risk if someone gains access to them.</source>
-        <translation type="unfinished"></translation>
+        <translation>VIGTIGT: Eventuelle tidligere sikkerhedskopier, du har lavet af din tegnebogsfil, skal erstattes med den nyligt genererede, krypterede tegnebogsfil. Af sikkerhedsmæssige årsager bør du ikke længere beholde tidligere ukrypterede sikkerhedskopier, da dine penge vil være i fare, hvis nogen får adgang til dem.</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -351,22 +351,22 @@
     <message>
         <location line="+6"/>
         <source>&amp;Tokens</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Tokens</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Browse or Send Tokens</source>
-        <translation type="unfinished"></translation>
+        <translation>Gennemse eller send tokens</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>&amp;Token History</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Tokenhistorie</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Browse Token History</source>
-        <translation type="unfinished"></translation>
+        <translation>Gennemse tokenhistorik</translation>
     </message>
     <message>
         <location line="+36"/>
@@ -431,12 +431,12 @@
     <message>
         <location line="+2"/>
         <source>&amp;Restore Wallet...</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Gendan tegnebog...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Restore wallet from another location</source>
-        <translation type="unfinished"></translation>
+        <translation>Gendan tegnebogen fra et andet sted</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1428,7 +1428,7 @@
     <message>
         <location line="+39"/>
         <source>&amp;Rescan wallet on startup</source>
-        <translation type="unfinished"></translation>
+        <translation>Scan tegnebogen igen ved opstart</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -2829,7 +2829,7 @@
     <message>
         <location line="+17"/>
         <source>Select specific coins you want to use in this transaction</source>
-        <translation type="unfinished"></translation>
+        <translation>Vælg specifikke mønter, du vil bruge i denne transaktion</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -2900,7 +2900,7 @@
     <message>
         <location line="+14"/>
         <source>Choose your transaction fee.</source>
-        <translation type="unfinished"></translation>
+        <translation>Vælg dit transaktionsgebyr.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2936,7 +2936,7 @@
     <message>
         <location line="+10"/>
         <source>Custom fee amount</source>
-        <translation type="unfinished"></translation>
+        <translation>Tilpasset gebyrbeløb</translation>
     </message>
     <message>
         <location line="+24"/>
@@ -2952,7 +2952,7 @@
     <message>
         <location line="+29"/>
         <source>Use the recommended fee amount.  You can select a faster or slower confirmation time by moving the &quot;Confirmation Time&quot; slider.</source>
-        <translation type="unfinished"></translation>
+        <translation>Brug det anbefalede gebyrbeløb. Du kan vælge en hurtigere eller langsommere bekræftelsestid ved at flytte skyderen &quot;Bekræftelsestid&quot;.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2962,7 +2962,7 @@
     <message>
         <location line="+30"/>
         <source>Choose a custom fee amount</source>
-        <translation type="unfinished"></translation>
+        <translation>Vælg et tilpasset gebyrbeløb</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2978,7 +2978,7 @@
         <location line="+29"/>
         <location line="+33"/>
         <source>Transaction confirmation time</source>
-        <translation type="unfinished"></translation>
+        <translation>Transaktionsbekræftelsestid</translation>
     </message>
     <message>
         <location line="-30"/>
@@ -3033,7 +3033,7 @@
     <message>
         <location line="+55"/>
         <source>Current Balance</source>
-        <translation type="unfinished"></translation>
+        <translation>Nuværende balance</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -3299,7 +3299,7 @@
     <message>
         <location line="-7"/>
         <source>Amount to send</source>
-        <translation type="unfinished"></translation>
+        <translation>Beløb, der skal sendes</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -3496,12 +3496,12 @@
     <message>
         <location filename="../forms/tokendescdialog.ui" line="+17"/>
         <source>Token details</source>
-        <translation type="unfinished"></translation>
+        <translation>Token detaljer</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This pane shows a detailed description of the token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Denne rude viser en detaljeret beskrivelse af tokenet&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
 </context>
 <context>
@@ -3510,210 +3510,210 @@
         <location filename="../tokenhistoryview.cpp" line="+78"/>
         <location line="+19"/>
         <source>All</source>
-        <translation type="unfinished">Alle</translation>
+        <translation>Alle</translation>
     </message>
     <message>
         <location line="-18"/>
         <source>Today</source>
-        <translation type="unfinished">I dag</translation>
+        <translation>I dag</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This week</source>
-        <translation type="unfinished">Denne uge</translation>
+        <translation>Denne uge</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This month</source>
-        <translation type="unfinished">Denne måned</translation>
+        <translation>Denne måned</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Last month</source>
-        <translation type="unfinished">Sidste måned</translation>
+        <translation>Sidste måned</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This year</source>
-        <translation type="unfinished">Dette år</translation>
+        <translation>Dette år</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Range...</source>
-        <translation type="unfinished">Interval…</translation>
+        <translation>Interval…</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Received with</source>
-        <translation type="unfinished">Modtaget med</translation>
+        <translation>Modtaget med</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Sent</source>
-        <translation type="unfinished">Sendt</translation>
+        <translation>Sendt</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>To yourself</source>
-        <translation type="unfinished">Til dig selv</translation>
+        <translation>Til dig selv</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Mint</source>
-        <translation type="unfinished"></translation>
+        <translation>Præge</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Other</source>
-        <translation type="unfinished">Andet</translation>
+        <translation>Andet</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Enter token ID to search</source>
-        <translation type="unfinished"></translation>
+        <translation>Indtast token-id for at søge</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Min amount</source>
-        <translation type="unfinished">Minimumsbeløb</translation>
+        <translation>Minimumsbeløb</translation>
     </message>
     <message>
         <location line="+41"/>
         <source>Copy token id</source>
-        <translation type="unfinished"></translation>
+        <translation>Kopiér token-id</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy amount</source>
-        <translation type="unfinished"></translation>
+        <translation>Kopiér beløb</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy transaction idem</source>
-        <translation type="unfinished">Kopiér transaktionsidem</translation>
+        <translation>Kopiér transaktionsidem</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy raw transaction</source>
-        <translation type="unfinished">Kopiér rå transaktion</translation>
+        <translation>Kopiér rå transaktion</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Show transaction details</source>
-        <translation type="unfinished">Vis transaktionsdetaljer</translation>
+        <translation>Vis transaktionsdetaljer</translation>
     </message>
     <message>
         <location line="+162"/>
         <source>Export Token History</source>
-        <translation type="unfinished"></translation>
+        <translation>Eksporter tokenhistorik</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Comma separated file (*.csv)</source>
-        <translation type="unfinished">Kommasepareret fil (*.csv)</translation>
+        <translation>Kommasepareret fil (*.csv)</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Confirmed</source>
-        <translation type="unfinished">Bekræftet</translation>
+        <translation>Bekræftet</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Watch-only</source>
-        <translation type="unfinished">Kigge</translation>
+        <translation>Kigge</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Date</source>
-        <translation type="unfinished">Dato</translation>
+        <translation>Dato</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Type</source>
-        <translation type="unfinished">Type</translation>
+        <translation>Type</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Label</source>
-        <translation type="unfinished">Mærkat</translation>
+        <translation>Mærkat</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Address</source>
-        <translation type="unfinished">Adresse</translation>
+        <translation>Adresse</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Transaction ID</source>
-        <translation type="unfinished"></translation>
+        <translation>Transaktions ID</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Token ID</source>
-        <translation type="unfinished"></translation>
+        <translation>Token-id</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Token Amount</source>
-        <translation type="unfinished"></translation>
+        <translation>Token beløb</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Exporting Failed</source>
-        <translation type="unfinished">Eksport mislykkedes</translation>
+        <translation>Eksport mislykkedes</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>There was an error trying to save the token history to %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Der opstod en fejl under forsøget på at gemme tokenhistorikken til %1.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Exporting Successful</source>
-        <translation type="unfinished">Eksport problemfri</translation>
+        <translation>Eksport problemfri</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The token history was successfully saved to %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tokenhistorikken blev gemt i %1.</translation>
     </message>
     <message>
         <location line="+53"/>
         <source>Range:</source>
-        <translation type="unfinished">Interval:</translation>
+        <translation>Interval:</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>to</source>
-        <translation type="unfinished">til</translation>
+        <translation>til</translation>
     </message>
 </context>
 <context>
     <name>TokenTableModel</name>
     <message>
-        <location filename="../tokentablemodel.cpp" line="+245"/>
+        <location filename="../tokentablemodel.cpp" line="+244"/>
         <source>Date</source>
-        <translation type="unfinished">Dato</translation>
+        <translation>Dato</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Type</source>
-        <translation type="unfinished">Type</translation>
+        <translation>Type</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Token ID</source>
-        <translation type="unfinished"></translation>
+        <translation>Token-id</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Net Amount</source>
-        <translation type="unfinished"></translation>
+        <translation>Nettobeløb</translation>
     </message>
     <message numerus="yes">
         <location line="+49"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>Åbn yderligere %n blok</numerusform>
             <numerusform>Åbn yderligere %n blokke</numerusform>
         </translation>
@@ -3721,122 +3721,127 @@
     <message>
         <location line="+3"/>
         <source>Open until %1</source>
-        <translation type="unfinished">Åben indtil %1</translation>
+        <translation>Åben indtil %1</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Offline</source>
-        <translation type="unfinished">Offline</translation>
+        <translation>Offline</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Unconfirmed</source>
-        <translation type="unfinished">Ubekræftet</translation>
+        <translation>Ubekræftet</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation type="unfinished">Bekræfter (%1 af %2 anbefalede bekræftelser)</translation>
+        <translation>Bekræfter (%1 af %2 anbefalede bekræftelser)</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Confirmed (%1 confirmations)</source>
-        <translation type="unfinished">Bekræftet (%1 bekræftelser)</translation>
+        <translation>Bekræftet (%1 bekræftelser)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Conflicted</source>
-        <translation type="unfinished">Konflikt</translation>
+        <translation>Konflikt</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Double Spent</source>
-        <translation type="unfinished">Dobbelt brugt</translation>
+        <translation>Dobbelt brugt</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Abandoned</source>
-        <translation type="unfinished">Forladt</translation>
+        <translation>Forladt</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation type="unfinished">Umoden (%1 bekræftelser; vil være tilgængelig efter %2)</translation>
+        <translation>Umoden (%1 bekræftelser; vil være tilgængelig efter %2)</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation type="unfinished">Denne blok blev ikke modtaget af nogen andre knuder og vil formentlig ikke blive accepteret!</translation>
+        <translation>Denne blok blev ikke modtaget af nogen andre knuder og vil formentlig ikke blive accepteret!</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Generated but not accepted</source>
-        <translation type="unfinished">Genereret, men ikke accepteret</translation>
+        <translation>Genereret, men ikke accepteret</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+51"/>
         <source>Received with</source>
-        <translation type="unfinished">Modtaget med</translation>
+        <translation>Modtaget med</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Received from</source>
-        <translation type="unfinished">Modtaget fra</translation>
+        <translation>Modtaget fra</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Sent</source>
-        <translation type="unfinished">Sendt</translation>
+        <translation>Sendt</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Payment to yourself</source>
-        <translation type="unfinished">Betaling til dig selv</translation>
+        <translation>Betaling til dig selv</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Mint</source>
-        <translation type="unfinished"></translation>
+        <translation>Præge</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Melt</source>
+        <translation>Smelte</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Public label</source>
-        <translation type="unfinished">Offentligt mærke</translation>
+        <translation>Offentligt mærke</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Other</source>
-        <translation type="unfinished">Andet</translation>
+        <translation>Andet</translation>
     </message>
     <message>
-        <location line="+337"/>
+        <location line="+318"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation type="unfinished">Transaktionsstatus. Hold musen over dette felt for at vise antallet af bekræftelser.</translation>
+        <translation>Transaktionsstatus. Hold musen over dette felt for at vise antallet af bekræftelser.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Date and time that the transaction was received.</source>
-        <translation type="unfinished">Dato og klokkeslæt for modtagelse af transaktionen.</translation>
+        <translation>Dato og klokkeslæt for modtagelse af transaktionen.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Type of transaction.</source>
-        <translation type="unfinished">Transaktionstype.</translation>
+        <translation>Transaktionstype.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Whether or not a watch-only address is involved in this transaction.</source>
-        <translation type="unfinished">Afgør hvorvidt en kigge-adresse er involveret i denne transaktion.</translation>
+        <translation>Afgør hvorvidt en kigge-adresse er involveret i denne transaktion.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>User-defined intent/purpose of the transaction.</source>
-        <translation type="unfinished">Brugerdefineret hensigt/formål med transaktionen.</translation>
+        <translation>Brugerdefineret hensigt/formål med transaktionen.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Amount removed from or added to balance.</source>
-        <translation type="unfinished">Beløb trukket fra eller tilføjet balance.</translation>
+        <translation>Beløb trukket fra eller tilføjet balance.</translation>
     </message>
 </context>
 <context>
@@ -3844,200 +3849,213 @@
     <message>
         <location filename="../forms/tokensviewdialog.ui" line="+14"/>
         <source>Tokens</source>
-        <translation type="unfinished"></translation>
+        <translation>Tokens</translation>
     </message>
     <message>
         <location line="+18"/>
         <source>Amount: </source>
-        <translation type="unfinished"></translation>
+        <translation>Beløb:</translation>
     </message>
     <message>
         <location line="+25"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The number of tokens to send&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Antallet af tokens, der skal sendes&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>  Pay To: </source>
-        <translation type="unfinished"></translation>
+        <translation>  Betal til: </translation>
     </message>
     <message>
         <location line="+13"/>
         <source>The Nexa address to send the payment to</source>
-        <translation type="unfinished">Nexa-adresse, som betalingen skal sendes til</translation>
+        <translation>Nexa-adresse, som betalingen skal sendes til</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Choose previously used address</source>
-        <translation type="unfinished">Vælg tidligere brugt adresse</translation>
+        <translation>Vælg tidligere brugt adresse</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>Alt+A</source>
-        <translation type="unfinished">Alt+A</translation>
+        <translation>Alt+A</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Paste address from clipboard</source>
-        <translation type="unfinished">Indsæt adresse fra udklipsholderen</translation>
+        <translation>Indsæt adresse fra udklipsholderen</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>Alt+P</source>
-        <translation type="unfinished">Alt+P</translation>
+        <translation>Alt+P</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Remove this entry</source>
-        <translation type="unfinished">Fjern denne indgang</translation>
+        <translation>Fjern denne indgang</translation>
     </message>
     <message>
         <location line="+25"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send tokens&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send tokens&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Send</source>
-        <translation type="unfinished">Sende</translation>
+        <translation>Sende</translation>
     </message>
     <message>
         <location line="+56"/>
         <source>Token ID</source>
-        <translation type="unfinished"></translation>
+        <translation>Token-id</translation>
     </message>
     <message>
         <location line="+48"/>
         <source>The unique token identifier</source>
-        <translation type="unfinished"></translation>
+        <translation>Den unikke token-id</translation>
     </message>
     <message>
         <location line="-45"/>
         <source>The token group identifier</source>
-        <translation type="unfinished"></translation>
+        <translation>Tokengruppe-id&apos;et</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Name</source>
-        <translation type="unfinished">Navn</translation>
+        <translation>Navn</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>The name of the token</source>
-        <translation type="unfinished"></translation>
+        <translation>Navnet på tokenet</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Ticker</source>
-        <translation type="unfinished"></translation>
+        <translation>Symbol</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>The token ticker symbol</source>
-        <translation type="unfinished"></translation>
+        <translation>Token ticker-symbolet</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Balance</source>
-        <translation type="unfinished"></translation>
+        <translation>Saldo</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Confirmed token balance</source>
-        <translation type="unfinished"></translation>
+        <translation>Bekræftet token-balance</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Pending</source>
-        <translation type="unfinished"></translation>
+        <translation>Afventende</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Unconfirmed token balance</source>
-        <translation type="unfinished"></translation>
+        <translation>Ubekræftet token-saldo</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Sub</source>
-        <translation type="unfinished"></translation>
+        <translation>Under</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>If checked then this item is a subgroup.</source>
-        <translation type="unfinished"></translation>
+        <translation>Hvis dette er markeret, er dette element en undergruppe.</translation>
     </message>
     <message>
         <location filename="../tokensviewdialog.cpp" line="+366"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
-        <translation type="unfinished"></translation>
+        <translation>Data</translation>
     </message>
     <message>
         <location line="-11"/>
         <source>string</source>
-        <translation type="unfinished"></translation>
+        <translation>streng</translation>
     </message>
     <message>
         <location line="+7"/>
         <location line="+4"/>
         <source>num</source>
-        <translation type="unfinished"></translation>
+        <translation>num</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>NaN</source>
-        <translation type="unfinished"></translation>
+        <translation>NaN</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+3"/>
+        <location line="+42"/>
+        <source>Total Mintage:</source>
+        <translation>Samlet oplag:</translation>
+    </message>
+    <message>
+        <location line="-35"/>
+        <location line="+21"/>
         <source>Name:</source>
-        <translation type="unfinished"></translation>
+        <translation>Navn:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-20"/>
+        <location line="+21"/>
         <source>Ticker:</source>
-        <translation type="unfinished"></translation>
+        <translation>Symbol:</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-16"/>
+        <location line="+21"/>
         <source>URL:</source>
-        <translation type="unfinished"></translation>
+        <translation>URL:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-20"/>
+        <location line="+21"/>
         <source>Hash:</source>
-        <translation type="unfinished"></translation>
+        <translation>Hash:</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-17"/>
+        <location line="+21"/>
         <source>Decimals:</source>
-        <translation type="unfinished"></translation>
+        <translation>Decimaler:</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-17"/>
+        <location line="+23"/>
         <source>Balance:</source>
-        <translation type="unfinished">Saldo:</translation>
+        <translation>Saldo:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-22"/>
+        <location line="+23"/>
         <source>Pending:</source>
-        <translation type="unfinished">Afventende:</translation>
+        <translation>Afventende:</translation>
     </message>
     <message>
-        <location line="+79"/>
+        <location line="+88"/>
         <source>Are you sure you want to send?</source>
-        <translation type="unfinished">Er du sikker på, at du vil sende?</translation>
+        <translation>Er du sikker på, at du vil sende?</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&lt;b&gt;Token(s)&lt;/b&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;Token(s)&lt;/b&gt;</translation>
     </message>
     <message>
         <location line="+27"/>
         <source>Confirm send tokens</source>
-        <translation type="unfinished"></translation>
+        <translation>Bekræft sende-tokens</translation>
     </message>
 </context>
 <context>
@@ -4169,12 +4187,12 @@
         <location line="+41"/>
         <location line="+63"/>
         <location line="+47"/>
-        <location line="+134"/>
+        <location line="+213"/>
         <source>Credit</source>
         <translation>Kredit</translation>
     </message>
     <message numerus="yes">
-        <location line="-282"/>
+        <location line="-361"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>modner efter yderligere %n blok</numerusform>
@@ -4189,12 +4207,12 @@
     <message>
         <location line="+102"/>
         <location line="+31"/>
-        <location line="+139"/>
+        <location line="+218"/>
         <source>Debit</source>
         <translation>Debet</translation>
     </message>
     <message>
-        <location line="-158"/>
+        <location line="-237"/>
         <source>Total debit</source>
         <translation>Total debet</translation>
     </message>
@@ -4245,41 +4263,56 @@
         <translation>Minede coins skal modne %1 blokke, før de kan bruges. Da du genererede denne blok, blev den transmitteret til netværket for at blive føjet til blokkæden. Hvis det ikke lykkes at få den i kæden, vil dens tilstand ændres til &quot;ikke accepteret&quot;, og den vil ikke kunne bruges. Dette kan ske nu og da, hvis en anden knude udvinder en blok inden for nogle få sekunder fra din.</translation>
     </message>
     <message>
-        <location line="+25"/>
-        <location line="+25"/>
+        <location line="+66"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Token ID</source>
-        <translation type="unfinished"></translation>
+        <translation>Token-id</translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+25"/>
+        <location line="-50"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Ticker</source>
-        <translation type="unfinished"></translation>
+        <translation>Symbol</translation>
     </message>
     <message>
-        <location line="-24"/>
-        <location line="+25"/>
+        <location line="-54"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Name</source>
-        <translation type="unfinished">Navn</translation>
+        <translation>Navn</translation>
     </message>
     <message>
-        <location line="-21"/>
-        <location line="+25"/>
+        <location line="-51"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Decimals</source>
-        <translation type="unfinished"></translation>
+        <translation>Decimaler</translation>
     </message>
     <message>
-        <location line="-23"/>
+        <location line="-53"/>
+        <source>Melt</source>
+        <translation>Smelte</translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <location line="+34"/>
+        <source>Mint</source>
+        <translation>Præge</translation>
+    </message>
+    <message>
+        <location line="-32"/>
         <source>Amount Sent</source>
-        <translation type="unfinished"></translation>
+        <translation>Sendt beløb</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+27"/>
         <source>Amount Received</source>
-        <translation type="unfinished"></translation>
+        <translation>Beløb modtaget</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+17"/>
         <source>Debug information</source>
         <translation>Fejlsøgningsinformation</translation>
     </message>
@@ -4294,7 +4327,10 @@
         <translation>Input</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="-95"/>
+        <location line="+28"/>
+        <location line="+34"/>
+        <location line="+55"/>
         <source>Amount</source>
         <translation>Beløb</translation>
     </message>
@@ -4311,7 +4347,7 @@
         <translation>falsk</translation>
     </message>
     <message>
-        <location line="-417"/>
+        <location line="-496"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, er ikke blevet transmitteret endnu</translation>
     </message>
@@ -4874,17 +4910,17 @@
     <message>
         <location line="+8"/>
         <source>Restore Wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Gendan tegnebog...</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Restore Failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Gendannelse mislykkedes</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>There was an error trying to restore the wallet data to %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Der opstod en fejl under forsøget på at gendanne tegnebogens data til %1.</translation>
     </message>
 </context>
 <context>
@@ -4910,12 +4946,12 @@
         <translation>Fejl: En alvorlig intern fejl er opstået. Se debug.log for detaljer</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+31"/>
         <source>Pruning blockstore...</source>
         <translation>Beskærer bloklager…</translation>
     </message>
     <message>
-        <location line="-164"/>
+        <location line="-165"/>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>Distribueret under MIT-softwarelicensen; se den vedlagte fil COPYING eller &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
@@ -4954,7 +4990,9 @@
         <source>You can not run &quot;-salvagewallet&quot; as an HD wallet.
 
 Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>Du kan ikke køre &quot;-salvagewallet&quot; som en HD-pung.
+
+Genstart venligst Nexa med &quot;-usehd=0&quot;.</translation>
     </message>
     <message>
         <location line="+28"/>
@@ -5012,7 +5050,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>For få tilgængelige fildeskriptorer.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>Beskæring kan ikke opsættes med en negativ værdi.</translation>
     </message>
@@ -5024,7 +5062,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
     <message>
         <location line="+4"/>
         <source>Signing token transaction failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Signering af tokentransaktion mislykkedes</translation>
     </message>
     <message>
         <location line="+18"/>
@@ -5052,7 +5090,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Tegnebog %s findes uden for datamappe %s</translation>
     </message>
     <message>
-        <location line="-176"/>
+        <location line="-177"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Fejl: Lytning efter indkommende forbindelser mislykkedes (lytning resultarede i fejl %s)</translation>
     </message>
@@ -5102,7 +5140,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Nødt til at angive en port med -whitebinde: &quot;%s&quot;</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+15"/>
         <source>Signing transaction failed</source>
         <translation>Underskrift af transaktion mislykkedes</translation>
     </message>
@@ -5157,7 +5195,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Advarsel</translation>
     </message>
     <message>
-        <location line="-41"/>
+        <location line="-42"/>
         <source>Loading addresses...</source>
         <translation>Indlæser adresser…</translation>
     </message>
@@ -5167,12 +5205,12 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Ugyldig -proxy adresse: &quot;%s&quot;</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+37"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Ukendt netværk anført i -onlynet: &quot;%s&quot;</translation>
     </message>
     <message>
-        <location line="-65"/>
+        <location line="-66"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Kan ikke finde -bind adressen: &quot;%s&quot;</translation>
     </message>
@@ -5325,7 +5363,7 @@ Vil du genindeksere ved næste genstart?</translation>
     <message>
         <location line="+7"/>
         <source>You are trying to restore the same wallet which you are trying to replace.</source>
-        <translation type="unfinished"></translation>
+        <translation>Du forsøger at gendanne den samme tegnebog, som du forsøger at erstatte.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -5343,7 +5381,10 @@ Vil du genindeksere ved næste genstart?</translation>
 
 
 When you click &quot;OK&quot; Nexa will shutdown to complete the process.</source>
-        <translation type="unfinished"></translation>
+        <translation>&quot;Gendan tegnebog&quot; lykkedes, og en sikkerhedskopi af den tidligere tegnebog blev gemt i: %s.
+
+
+Når du klikker på &quot;OK&quot; lukker Nexa ned for at fuldføre processen.</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -5403,7 +5444,7 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
     <message>
         <location line="+5"/>
         <source>Error: Keypool ran out, please call keypoolrefill first</source>
-        <translation type="unfinished"></translation>
+        <translation>Fejl: Keypool løb tør, ring venligst først til keypoolrefill</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -5413,7 +5454,7 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
     <message>
         <location line="+1"/>
         <source>Insufficient funds for this token.  Need %d more.</source>
-        <translation type="unfinished"></translation>
+        <translation>Utilstrækkelige midler til dette token. Har brug for %d mere.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5453,7 +5494,12 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
     <message>
         <location line="+1"/>
         <source>Opening Token Description database...</source>
-        <translation type="unfinished"></translation>
+        <translation>Åbner tokenbeskrivelsesdatabase...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Opening Token Mintage database...</source>
+        <translation>Åbner Token Mintage-database...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5518,10 +5564,10 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
     <message>
         <location line="+2"/>
         <source>Zapping all transactions from wallet...</source>
-        <translation type="unfinished"></translation>
+        <translation>Zapper alle transaktioner fra tegnebogen...</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-68"/>
         <source>Done loading</source>
         <translation>Indlæsning gennemført</translation>
     </message>

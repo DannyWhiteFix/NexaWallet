@@ -3683,7 +3683,7 @@
 <context>
     <name>TokenTableModel</name>
     <message>
-        <location filename="../tokentablemodel.cpp" line="+245"/>
+        <location filename="../tokentablemodel.cpp" line="+244"/>
         <source>Date</source>
         <translation>Tanggal</translation>
     </message>
@@ -3765,7 +3765,7 @@
         <translation>Terbuat tetapi tidak diterima</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+51"/>
         <source>Received with</source>
         <translation>Diterima dengan</translation>
     </message>
@@ -3791,6 +3791,11 @@
     </message>
     <message>
         <location line="+2"/>
+        <source>Melt</source>
+        <translation>Meleleh</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Public label</source>
         <translation>Label publik</translation>
     </message>
@@ -3800,7 +3805,7 @@
         <translation>Lainnya</translation>
     </message>
     <message>
-        <location line="+337"/>
+        <location line="+318"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Status transaksi. Arahkan ke bagian ini untuk menampilkan jumlah konfrimasi.</translation>
     </message>
@@ -3981,42 +3986,55 @@
         <translation>NaN</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+3"/>
+        <location line="+42"/>
+        <source>Total Mintage:</source>
+        <translation>Total Cetakan:</translation>
+    </message>
+    <message>
+        <location line="-35"/>
+        <location line="+21"/>
         <source>Name:</source>
         <translation>Nama:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-20"/>
+        <location line="+21"/>
         <source>Ticker:</source>
         <translation>Simbol:</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-16"/>
+        <location line="+21"/>
         <source>URL:</source>
         <translation>URL:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-20"/>
+        <location line="+21"/>
         <source>Hash:</source>
         <translation>Hash:</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-17"/>
+        <location line="+21"/>
         <source>Decimals:</source>
         <translation>Desimal:</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-17"/>
+        <location line="+23"/>
         <source>Balance:</source>
         <translation>Saldo:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-22"/>
+        <location line="+23"/>
         <source>Pending:</source>
         <translation>Ditunda:</translation>
     </message>
     <message>
-        <location line="+79"/>
+        <location line="+88"/>
         <source>Are you sure you want to send?</source>
         <translation>Apakah Anda yakin ingin kirim?</translation>
     </message>
@@ -4159,12 +4177,12 @@
         <location line="+41"/>
         <location line="+63"/>
         <location line="+47"/>
-        <location line="+134"/>
+        <location line="+213"/>
         <source>Credit</source>
         <translation>Kredit</translation>
     </message>
     <message numerus="yes">
-        <location line="-282"/>
+        <location line="-361"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>cukup tua sesudah %n blok lagi</numerusform>
@@ -4178,12 +4196,12 @@
     <message>
         <location line="+102"/>
         <location line="+31"/>
-        <location line="+139"/>
+        <location line="+218"/>
         <source>Debit</source>
         <translation>Debet</translation>
     </message>
     <message>
-        <location line="-158"/>
+        <location line="-237"/>
         <source>Total debit</source>
         <translation>Jumlah debet</translation>
     </message>
@@ -4234,41 +4252,56 @@
         <translation>Koin yang dihasilkan harus matang %1 blok sebelum dapat dibelanjakan. Saat Anda membuat blok ini, blok ini disiarkan ke jaringan untuk ditambahkan ke rantai blok. Jika gagal masuk ke dalam rantai, statusnya akan berubah menjadi &quot;tidak diterima&quot; dan tidak dapat dibelanjakan. Hal ini terkadang terjadi jika node lain menghasilkan blok dalam beberapa detik dari node Anda.</translation>
     </message>
     <message>
-        <location line="+25"/>
-        <location line="+25"/>
+        <location line="+66"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Token ID</source>
         <translation>ID Token</translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+25"/>
+        <location line="-50"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Ticker</source>
         <translation>Simbol</translation>
     </message>
     <message>
-        <location line="-24"/>
-        <location line="+25"/>
+        <location line="-54"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Name</source>
         <translation>Nama</translation>
     </message>
     <message>
-        <location line="-21"/>
-        <location line="+25"/>
+        <location line="-51"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Decimals</source>
         <translation>Desimal</translation>
     </message>
     <message>
-        <location line="-23"/>
+        <location line="-53"/>
+        <source>Melt</source>
+        <translation>Meleleh</translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <location line="+34"/>
+        <source>Mint</source>
+        <translation>Mint</translation>
+    </message>
+    <message>
+        <location line="-32"/>
         <source>Amount Sent</source>
         <translation>Jumlah yang Dikirim</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+27"/>
         <source>Amount Received</source>
         <translation>Jumlah yang Diterima</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+17"/>
         <source>Debug information</source>
         <translation>Informasi debug</translation>
     </message>
@@ -4283,7 +4316,10 @@
         <translation>Masukan</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="-95"/>
+        <location line="+28"/>
+        <location line="+34"/>
+        <location line="+55"/>
         <source>Amount</source>
         <translation>Nilai</translation>
     </message>
@@ -4300,7 +4336,7 @@
         <translation>salah</translation>
     </message>
     <message>
-        <location line="-417"/>
+        <location line="-496"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, belum berhasil disiarkan</translation>
     </message>
@@ -4946,7 +4982,7 @@ Silakan luncurkan kembali Nexa dengan &quot;-usehd=0&quot;.</translation>
         <translation>Deskripsi berkas tidak tersedia dengan cukup.</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+13"/>
         <source>Signing token transaction failed</source>
         <translation>Penandatanganan transaksi token gagal</translation>
     </message>
@@ -4971,7 +5007,7 @@ Silakan luncurkan kembali Nexa dengan &quot;-usehd=0&quot;.</translation>
         <translation>Dompet %s ada diluar direktori data %s</translation>
     </message>
     <message>
-        <location line="-71"/>
+        <location line="-72"/>
         <source>Cannot resolve -whitebind address: &apos;%s&apos;</source>
         <translation>Tidak dapat menyelesaikan alamat -whitebind: &apos;%s&apos;</translation>
     </message>
@@ -4981,7 +5017,7 @@ Silakan luncurkan kembali Nexa dengan &quot;-usehd=0&quot;.</translation>
         <translation>Informasi</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+29"/>
         <source>Signing transaction failed</source>
         <translation>Tandatangani transaksi tergagal</translation>
     </message>
@@ -5016,7 +5052,7 @@ Silakan luncurkan kembali Nexa dengan &quot;-usehd=0&quot;.</translation>
         <translation>Peringatan</translation>
     </message>
     <message>
-        <location line="-41"/>
+        <location line="-42"/>
         <source>Loading addresses...</source>
         <translation>Memuat alamat...</translation>
     </message>
@@ -5026,7 +5062,7 @@ Silakan luncurkan kembali Nexa dengan &quot;-usehd=0&quot;.</translation>
         <translation>Alamat -proxy salah: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+30"/>
         <source>Transaction has %d outputs. Maximum outputs allowed is %d</source>
         <translation>Transaksi memiliki %d keluaran. Output maksimum yang diperbolehkan adalah %d</translation>
     </message>
@@ -5066,7 +5102,7 @@ Silakan luncurkan kembali Nexa dengan &quot;-usehd=0&quot;.</translation>
         <translation>Jaringan tidak diketahui yang ditentukan dalam -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-65"/>
+        <location line="-66"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Tidak dapat menyelesaikan alamat -bind: &apos;%s&apos;</translation>
     </message>
@@ -5444,6 +5480,11 @@ Ketika Anda mengklik &quot;OK&quot; Nexa akan dimatikan untuk menyelesaikan pros
     </message>
     <message>
         <location line="+1"/>
+        <source>Opening Token Mintage database...</source>
+        <translation>Membuka database Token Mintage...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation>Membuka basis data UTXO...</translation>
     </message>
@@ -5513,7 +5554,7 @@ Ketika Anda mengklik &quot;OK&quot; Nexa akan dimatikan untuk menyelesaikan pros
         <translation>Menghapus semua transaksi dari dompet...</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-68"/>
         <source>Done loading</source>
         <translation>Memuat selesai</translation>
     </message>

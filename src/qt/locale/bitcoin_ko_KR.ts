@@ -3681,7 +3681,7 @@
 <context>
     <name>TokenTableModel</name>
     <message>
-        <location filename="../tokentablemodel.cpp" line="+245"/>
+        <location filename="../tokentablemodel.cpp" line="+244"/>
         <source>Date</source>
         <translation type="unfinished">날짜</translation>
     </message>
@@ -3763,7 +3763,7 @@
         <translation type="unfinished">생성되었으나 거절됨</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+51"/>
         <source>Received with</source>
         <translation type="unfinished">보낸 주소</translation>
     </message>
@@ -3789,6 +3789,11 @@
     </message>
     <message>
         <location line="+2"/>
+        <source>Melt</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Public label</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3798,7 +3803,7 @@
         <translation type="unfinished">기타</translation>
     </message>
     <message>
-        <location line="+337"/>
+        <location line="+318"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation type="unfinished">거래상황. 마우스를 올리면 승인횟수가 표시됩니다.</translation>
     </message>
@@ -3979,42 +3984,55 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+3"/>
+        <location line="+42"/>
+        <source>Total Mintage:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-35"/>
+        <location line="+21"/>
         <source>Name:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-20"/>
+        <location line="+21"/>
         <source>Ticker:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-16"/>
+        <location line="+21"/>
         <source>URL:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-20"/>
+        <location line="+21"/>
         <source>Hash:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-17"/>
+        <location line="+21"/>
         <source>Decimals:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-17"/>
+        <location line="+23"/>
         <source>Balance:</source>
         <translation type="unfinished">잔액:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-22"/>
+        <location line="+23"/>
         <source>Pending:</source>
         <translation type="unfinished">미확정</translation>
     </message>
     <message>
-        <location line="+79"/>
+        <location line="+88"/>
         <source>Are you sure you want to send?</source>
         <translation type="unfinished">정말로 보내시겠습니까?</translation>
     </message>
@@ -4164,12 +4182,12 @@
         <location line="+41"/>
         <location line="+63"/>
         <location line="+47"/>
-        <location line="+134"/>
+        <location line="+213"/>
         <source>Credit</source>
         <translation>예금</translation>
     </message>
     <message numerus="yes">
-        <location line="-282"/>
+        <location line="-361"/>
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -4183,12 +4201,12 @@
     <message>
         <location line="+102"/>
         <location line="+31"/>
-        <location line="+139"/>
+        <location line="+218"/>
         <source>Debit</source>
         <translation>차변</translation>
     </message>
     <message>
-        <location line="-158"/>
+        <location line="-237"/>
         <source>Total debit</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4239,41 +4257,56 @@
         <translation>신규 채굴된 코인이 사용되기 위해서는 %1 개의 블럭이 경과되어야 합니다. 블럭을 생성할 때 블럭체인에 추가되도록 네트워크에 전파되는 과정을 거치는데, 블럭체인에 포함되지 못하고 실패한다면 해당 블럭의 상태는 &apos;미승인&apos;으로 표현되고 비트코인 또한 사용될 수 없습니다. 이 현상은 다른 노드가 비슷한 시간대에 동시에 블럭을 생성할 때 종종 발생할 수 있습니다. </translation>
     </message>
     <message>
-        <location line="+25"/>
-        <location line="+25"/>
+        <location line="+66"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Token ID</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+25"/>
+        <location line="-50"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Ticker</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-24"/>
-        <location line="+25"/>
+        <location line="-54"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Name</source>
         <translation type="unfinished">이름</translation>
     </message>
     <message>
-        <location line="-21"/>
-        <location line="+25"/>
+        <location line="-51"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Decimals</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-23"/>
+        <location line="-53"/>
+        <source>Melt</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <location line="+34"/>
+        <source>Mint</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-32"/>
         <source>Amount Sent</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+27"/>
         <source>Amount Received</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+17"/>
         <source>Debug information</source>
         <translation>디버깅 정보</translation>
     </message>
@@ -4288,7 +4321,10 @@
         <translation>입력</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="-95"/>
+        <location line="+28"/>
+        <location line="+34"/>
+        <location line="+55"/>
         <source>Amount</source>
         <translation>거래량</translation>
     </message>
@@ -4305,7 +4341,7 @@
         <translation>거짓</translation>
     </message>
     <message>
-        <location line="-417"/>
+        <location line="-496"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>. 아직 성공적으로 통보하지 않음</translation>
     </message>
@@ -4952,7 +4988,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>사용 가능한 파일 디스크립터-File Descriptor-가 부족합니다. </translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+13"/>
         <source>Signing token transaction failed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4977,7 +5013,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>지갑 %s는 데이터 디렉토리 %s 밖에 위치합니다.</translation>
     </message>
     <message>
-        <location line="-71"/>
+        <location line="-72"/>
         <source>Cannot resolve -whitebind address: &apos;%s&apos;</source>
         <translation>-whitebind 주소를 확인할 수 없습니다: &apos;%s&apos;</translation>
     </message>
@@ -4987,7 +5023,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>정보</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+29"/>
         <source>Signing transaction failed</source>
         <translation>거래를 서명하는것을 실패하였습니다.</translation>
     </message>
@@ -5022,7 +5058,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>경고</translation>
     </message>
     <message>
-        <location line="-41"/>
+        <location line="-42"/>
         <source>Loading addresses...</source>
         <translation>주소를 불러오는 중...</translation>
     </message>
@@ -5032,7 +5068,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>잘못된 -proxy 주소입니다: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+30"/>
         <source>Transaction has %d outputs. Maximum outputs allowed is %d</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5072,7 +5108,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>-onlynet에 지정한 네트워크를 알 수 없습니다: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-65"/>
+        <location line="-66"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>-bind 주소를 확인할 수 없습니다: &apos;%s&apos;</translation>
     </message>
@@ -5434,6 +5470,11 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
     </message>
     <message>
         <location line="+1"/>
+        <source>Opening Token Mintage database...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5503,7 +5544,7 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-68"/>
         <source>Done loading</source>
         <translation>로딩 완료</translation>
     </message>

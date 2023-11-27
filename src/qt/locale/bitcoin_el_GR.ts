@@ -3694,7 +3694,7 @@
 <context>
     <name>TokenTableModel</name>
     <message>
-        <location filename="../tokentablemodel.cpp" line="+245"/>
+        <location filename="../tokentablemodel.cpp" line="+244"/>
         <source>Date</source>
         <translation type="unfinished">Ημερομηνία</translation>
     </message>
@@ -3777,7 +3777,7 @@
         <translation type="unfinished">Δημιουργήθηκε αλλά απορρίφθηκε</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+51"/>
         <source>Received with</source>
         <translation type="unfinished">Ελήφθη με</translation>
     </message>
@@ -3803,6 +3803,11 @@
     </message>
     <message>
         <location line="+2"/>
+        <source>Melt</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Public label</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3812,7 +3817,7 @@
         <translation type="unfinished">Άλλο</translation>
     </message>
     <message>
-        <location line="+337"/>
+        <location line="+318"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation type="unfinished">Κατάσταση συναλλαγής. Πηγαίνετε το ποντίκι πάνω από αυτό το πεδίο για να δείτε τον αριθμό των επικυρώσεων</translation>
     </message>
@@ -3993,42 +3998,55 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+3"/>
+        <location line="+42"/>
+        <source>Total Mintage:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-35"/>
+        <location line="+21"/>
         <source>Name:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-20"/>
+        <location line="+21"/>
         <source>Ticker:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-16"/>
+        <location line="+21"/>
         <source>URL:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-20"/>
+        <location line="+21"/>
         <source>Hash:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-17"/>
+        <location line="+21"/>
         <source>Decimals:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-17"/>
+        <location line="+23"/>
         <source>Balance:</source>
         <translation type="unfinished">Υπόλοιπο:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-22"/>
+        <location line="+23"/>
         <source>Pending:</source>
         <translation type="unfinished">Εκκρεμούν:</translation>
     </message>
     <message>
-        <location line="+79"/>
+        <location line="+88"/>
         <source>Are you sure you want to send?</source>
         <translation type="unfinished">Είστε βέβαιοι για την αποστολή;</translation>
     </message>
@@ -4180,12 +4198,12 @@
         <location line="+41"/>
         <location line="+63"/>
         <location line="+47"/>
-        <location line="+134"/>
+        <location line="+213"/>
         <source>Credit</source>
         <translation>Πίστωση </translation>
     </message>
     <message numerus="yes">
-        <location line="-282"/>
+        <location line="-361"/>
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -4200,12 +4218,12 @@
     <message>
         <location line="+102"/>
         <location line="+31"/>
-        <location line="+139"/>
+        <location line="+218"/>
         <source>Debit</source>
         <translation>Debit</translation>
     </message>
     <message>
-        <location line="-158"/>
+        <location line="-237"/>
         <source>Total debit</source>
         <translation>Σύνολο χρέωσης</translation>
     </message>
@@ -4256,41 +4274,56 @@
         <translation>Πρέπει να περιμένετε %1 μπλοκ πριν μπορέσετε να χρησιμοποιήσετε τα νομίσματα που έχετε δημιουργήσει. Το μπλοκ που δημιουργήσατε μεταδόθηκε στο δίκτυο για να συμπεριληφθεί στην αλυσίδα των μπλοκ. Αν δεν μπει σε αυτή θα μετατραπεί σε &quot;μη αποδεκτό&quot; και δε θα μπορεί να καταναλωθεί. Αυτό συμβαίνει σπάνια όταν κάποιος άλλος κόμβος δημιουργήσει ένα μπλοκ λίγα δευτερόλεπτα πριν από εσάς.</translation>
     </message>
     <message>
-        <location line="+25"/>
-        <location line="+25"/>
+        <location line="+66"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Token ID</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+25"/>
+        <location line="-50"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Ticker</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-24"/>
-        <location line="+25"/>
+        <location line="-54"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Name</source>
         <translation type="unfinished">Όνομα</translation>
     </message>
     <message>
-        <location line="-21"/>
-        <location line="+25"/>
+        <location line="-51"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Decimals</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-23"/>
+        <location line="-53"/>
+        <source>Melt</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <location line="+34"/>
+        <source>Mint</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-32"/>
         <source>Amount Sent</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+27"/>
         <source>Amount Received</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+17"/>
         <source>Debug information</source>
         <translation>Πληροφορίες αποσφαλμάτωσης</translation>
     </message>
@@ -4305,7 +4338,10 @@
         <translation>εισροές </translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="-95"/>
+        <location line="+28"/>
+        <location line="+34"/>
+        <location line="+55"/>
         <source>Amount</source>
         <translation>Ποσό</translation>
     </message>
@@ -4322,7 +4358,7 @@
         <translation>αναληθής </translation>
     </message>
     <message>
-        <location line="-417"/>
+        <location line="-496"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, δεν έχει ακόμα μεταδοθεί μ&apos; επιτυχία</translation>
     </message>
@@ -4955,7 +4991,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Δεν ειναι αρκετες περιγραφες αρχείων διαθέσιμες.</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+13"/>
         <source>Signing token transaction failed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4980,12 +5016,12 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Το πορτοφόλι %s βρίσκεται έξω από το φάκελο δεδομένων %s</translation>
     </message>
     <message>
-        <location line="-49"/>
+        <location line="-50"/>
         <source>Information</source>
         <translation>Πληροφορία</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+29"/>
         <source>Signing transaction failed</source>
         <translation>Η υπογραφή συναλλαγής απέτυχε </translation>
     </message>
@@ -5020,7 +5056,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Προειδοποίηση</translation>
     </message>
     <message>
-        <location line="-41"/>
+        <location line="-42"/>
         <source>Loading addresses...</source>
         <translation>Φόρτωση διευθύνσεων...</translation>
     </message>
@@ -5030,12 +5066,12 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Δεν είναι έγκυρη η διεύθυνση διαμεσολαβητή: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+37"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Άγνωστo δίκτυο ορίζεται σε onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-65"/>
+        <location line="-66"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Δεν μπορώ να γράψω την προεπιλεγμένη διεύθυνση: &apos;%s&apos;</translation>
     </message>
@@ -5417,6 +5453,11 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
     </message>
     <message>
         <location line="+1"/>
+        <source>Opening Token Mintage database...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5521,7 +5562,7 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-68"/>
         <source>Done loading</source>
         <translation>Η φόρτωση ολοκληρώθηκε</translation>
     </message>

@@ -3686,7 +3686,7 @@
 <context>
     <name>TokenTableModel</name>
     <message>
-        <location filename="../tokentablemodel.cpp" line="+245"/>
+        <location filename="../tokentablemodel.cpp" line="+244"/>
         <source>Date</source>
         <translation>Kaaldauan</translation>
     </message>
@@ -3769,7 +3769,7 @@
         <translation>Me-generate ya oneng ali ya metanggap</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+51"/>
         <source>Received with</source>
         <translation>Atanggap kayabe ning</translation>
     </message>
@@ -3795,6 +3795,11 @@
     </message>
     <message>
         <location line="+2"/>
+        <source>Melt</source>
+        <translation>Matunaw</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Public label</source>
         <translation>Pampublikong label</translation>
     </message>
@@ -3804,7 +3809,7 @@
         <translation>Aliwa</translation>
     </message>
     <message>
-        <location line="+337"/>
+        <location line="+318"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Status ning Transaksion: Itapat me babo na ning field a ini ban ipakit dala reng bilang dareng me-kumpirma na</translation>
     </message>
@@ -3985,42 +3990,55 @@
         <translation>NaN</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+3"/>
+        <location line="+42"/>
+        <source>Total Mintage:</source>
+        <translation>Kabuuang Paggawa:</translation>
+    </message>
+    <message>
+        <location line="-35"/>
+        <location line="+21"/>
         <source>Name:</source>
         <translation>Pangalan:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-20"/>
+        <location line="+21"/>
         <source>Ticker:</source>
         <translation>Ticker:</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-16"/>
+        <location line="+21"/>
         <source>URL:</source>
         <translation>URL:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-20"/>
+        <location line="+21"/>
         <source>Hash:</source>
         <translation>Hash:</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-17"/>
+        <location line="+21"/>
         <source>Decimals:</source>
         <translation>Mga decimal:</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-17"/>
+        <location line="+23"/>
         <source>Balance:</source>
         <translation>Balanse:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-22"/>
+        <location line="+23"/>
         <source>Pending:</source>
         <translation>Nakabinbin:</translation>
     </message>
     <message>
-        <location line="+79"/>
+        <location line="+88"/>
         <source>Are you sure you want to send?</source>
         <translation>Sigurado ka bang gusto mong magpadala?</translation>
     </message>
@@ -4172,12 +4190,12 @@
         <location line="+41"/>
         <location line="+63"/>
         <location line="+47"/>
-        <location line="+134"/>
+        <location line="+213"/>
         <source>Credit</source>
         <translation>Credit</translation>
     </message>
     <message numerus="yes">
-        <location line="-282"/>
+        <location line="-361"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>mature sa %n pang bloke</numerusform>
@@ -4192,12 +4210,12 @@
     <message>
         <location line="+102"/>
         <location line="+31"/>
-        <location line="+139"/>
+        <location line="+218"/>
         <source>Debit</source>
         <translation>Debit</translation>
     </message>
     <message>
-        <location line="-158"/>
+        <location line="-237"/>
         <source>Total debit</source>
         <translation>Kabuuang debit</translation>
     </message>
@@ -4248,41 +4266,56 @@
         <translation>Ang mga nabuong barya ay dapat mag-mature ng %1 na bloke bago sila magastos. Noong nabuo mo ang block na ito, na-broadcast ito sa network upang maidagdag sa block chain. Kung mabibigo itong makapasok sa chain, magbabago ang estado nito sa &quot;hindi tinatanggap&quot; at hindi ito magagastos. Ito ay maaaring mangyari paminsan-minsan kung ang isa pang node ay bubuo ng isang bloke sa loob ng ilang segundo ng sa iyo.</translation>
     </message>
     <message>
-        <location line="+25"/>
-        <location line="+25"/>
+        <location line="+66"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Token ID</source>
         <translation>Mga token ID</translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+25"/>
+        <location line="-50"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Ticker</source>
         <translation>Ticker</translation>
     </message>
     <message>
-        <location line="-24"/>
-        <location line="+25"/>
+        <location line="-54"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Name</source>
         <translation>Pangalan</translation>
     </message>
     <message>
-        <location line="-21"/>
-        <location line="+25"/>
+        <location line="-51"/>
+        <location line="+24"/>
+        <location line="+31"/>
         <source>Decimals</source>
         <translation>Mga decimal</translation>
     </message>
     <message>
-        <location line="-23"/>
+        <location line="-53"/>
+        <source>Melt</source>
+        <translation>Matunaw</translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <location line="+34"/>
+        <source>Mint</source>
+        <translation>Mint</translation>
+    </message>
+    <message>
+        <location line="-32"/>
         <source>Amount Sent</source>
         <translation>Halaga ng Ipinadala</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+27"/>
         <source>Amount Received</source>
         <translation>Halaga na Natanggap</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+17"/>
         <source>Debug information</source>
         <translation>Impormasion ning Debug</translation>
     </message>
@@ -4297,7 +4330,10 @@
         <translation>Mga input</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="-95"/>
+        <location line="+28"/>
+        <location line="+34"/>
+        <location line="+55"/>
         <source>Amount</source>
         <translation>Alaga</translation>
     </message>
@@ -4314,7 +4350,7 @@
         <translation>e tutu</translation>
     </message>
     <message>
-        <location line="-417"/>
+        <location line="-496"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, eya matagumpeng mibalita</translation>
     </message>
@@ -4925,12 +4961,12 @@
         <translation>&amp;Impormasion</translation>
     </message>
     <message>
-        <location line="+51"/>
+        <location line="+52"/>
         <source>Warning</source>
         <translation>Kapabaluan</translation>
     </message>
     <message>
-        <location line="-41"/>
+        <location line="-42"/>
         <source>Loading addresses...</source>
         <translation>Lo-load da ne ing address...</translation>
     </message>
@@ -4949,7 +4985,7 @@ Pakilunsad muli ang Nexa gamit ang &quot;-usehd=0&quot;.</translation>
         <translation>Ali katanggap-tanggap a -proxy addresss: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+23"/>
         <source>Signing token transaction failed</source>
         <translation>Nabigo ang pagpirma ng transaksyon sa token</translation>
     </message>
@@ -5024,7 +5060,7 @@ Pakilunsad muli ang Nexa gamit ang &quot;-usehd=0&quot;.</translation>
         <translation>E kilalang network ing mepili king -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-65"/>
+        <location line="-66"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Eya me-resolve ing -bind address: &apos;%s&apos;</translation>
     </message>
@@ -5432,6 +5468,11 @@ Kapag na-click mo ang &quot;OK&quot; ang Nexa ay magsasara upang makumpleto ang 
     </message>
     <message>
         <location line="+1"/>
+        <source>Opening Token Mintage database...</source>
+        <translation>Binubuksan ang database ng Token Mintage...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation>Binubuksan ang database ng UTXO...</translation>
     </message>
@@ -5521,7 +5562,7 @@ Kapag na-click mo ang &quot;OK&quot; ang Nexa ay magsasara upang makumpleto ang 
         <translation>I-zapping ang lahat ng transaksyon mula sa wallet...</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-68"/>
         <source>Done loading</source>
         <translation>Yari ne ing pamag-load</translation>
     </message>
