@@ -16,6 +16,8 @@ extern CChain chainActive;
 extern CTweak<uint64_t> maxSigChecks;
 extern CTweak<uint64_t> maxAllowedNetMessage;
 extern CTweak<uint64_t> nextMaxBlockSize;
+extern std::atomic<uint64_t> nLargestNextMaxBlockSize;
+
 
 static const unsigned int ONE_MEGABYTE = 1000000;
 static const unsigned int ONE_DAY_OF_BLOCKS = 144 * 5; // average number of blocks mined per day
@@ -118,21 +120,40 @@ enum
     LOCKTIME_MEDIAN_TIME_PAST = (1 << 1),
 };
 
+// Set the atomic value for largest next max blocksize
+inline void SetLargestNextMaxBlockSize(uint64_t desired)
+{
+    uint64_t expected = nLargestNextMaxBlockSize.load();
+    if (desired > expected)
+    {
+        while (!nLargestNextMaxBlockSize.compare_exchange_weak(expected, desired))
+        {
+            expected = nLargestNextMaxBlockSize.load();
+            if (desired < expected)
+                break;
+        }
+    }
+}
 // Max allowed message assumes that the next block size will be
 // the largest message plus 1MB of additional padding.
 inline uint64_t GetMaxAllowedNetMessage()
 {
-    // Used in testing only!
-    if (maxAllowedNetMessage.Value())
-        return maxAllowedNetMessage.Value();
+    uint64_t nLargestNextMax = nLargestNextMaxBlockSize.load();
 
-    // Return the max net message value based on the next
-    // expected max block size plus some additional padding
-    uint64_t nMaxSize = 0;
-    CBlockIndex *tip = chainActive.Tip();
-    if (tip)
-        nMaxSize = tip->GetNextMaxBlockSize();
+    {
+        // These tweakable values would only be set during some kind of scalenet test.
+        if (maxAllowedNetMessage.Value())
+        {
+            return maxAllowedNetMessage.Value();
+        }
+        if (nextMaxBlockSize.Value() > nLargestNextMax)
+        {
+            return nextMaxBlockSize.Value() * 2;
+        }
+    }
 
-    return nMaxSize + ONE_MEGABYTE;
+    // No network message should be larger than the current largest block size allowed
+    // but we multiply by 2 just to be allow for any error
+    return nLargestNextMax * 2;
 }
 #endif // NEXA_CONSENSUS_CONSENSUS_H

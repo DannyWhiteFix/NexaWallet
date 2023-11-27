@@ -464,6 +464,9 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 pindexNew->nTimeReceived = diskindex.nTimeReceived;
                 pindexNew->nNextMaxBlockSize = diskindex.nNextMaxBlockSize;
 
+                // Update the global atomic value
+                SetLargestNextMaxBlockSize(diskindex.nNextMaxBlockSize);
+
                 if (!CheckProofOfWork(pindexNew->header.GetMiningHash(), pindexNew->tgtBits(), Params().GetConsensus()))
                     return error("LoadBlockIndex(): CheckProofOfWork failed: %s", pindexNew->ToString());
 
