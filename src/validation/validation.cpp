@@ -366,6 +366,9 @@ CBlockIndex *AddToBlockIndex(const CChainParams &chainparams, const CBlockHeader
     pindexNew->nNextMaxBlockSize = CalculateNextMaxBlockSize(pindexNew->pprev, block.size);
     pindexNew->nChainTx = (pindexNew->pprev ? pindexNew->pprev->nChainTx : 0) + block.txCount;
 
+    // Update the global atomic value
+    SetLargestNextMaxBlockSize(pindexNew->nNextMaxBlockSize);
+
     auto expectedWork =
         ArithToUint256((pindexNew->pprev ? pindexNew->pprev->chainWork() : 0) + GetBlockProof(*pindexNew));
     if (pindexNew->header.chainWork != expectedWork)

@@ -78,6 +78,9 @@ LockData lockdata;
 // this flag is set to true when a wallet rescan has been invoked.
 std::atomic<bool> fRescan{false};
 
+/** The largest next max block size found in the block index */
+std::atomic<uint64_t> nLargestNextMaxBlockSize{0};
+
 CStatusString statusStrings;
 // main.cpp CriticalSections:
 CCriticalSection cs_LastBlockFile;

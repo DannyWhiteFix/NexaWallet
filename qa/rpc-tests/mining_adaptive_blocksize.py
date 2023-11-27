@@ -121,6 +121,8 @@ class AdaptiveBlockSizeTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getblockstats(self.nodes[0].getbestblockhash())["nextmaxblocksize"], 100000)
         assert_equal(self.nodes[0].getblockcount(), 151)
 
+        # Check max allowed network message
+        assert_equal(self.nodes[0].getnetworkinfo()['maxallowednetmsg'], self.nodes[0].getmininginfo()['currentmaxblocksize'] * 2)
 
         # We now have two larger blocks in our window.  Add more blocks that are greater than 10KB in size so we can
         # get the median (and the next max blocksize) on the short window to rise.
@@ -148,6 +150,9 @@ class AdaptiveBlockSizeTest(BitcoinTestFramework):
         assert_greater_than(117500, self.nodes[0].getblockstats(self.nodes[0].getbestblockhash())["nextmaxblocksize"])
         assert_equal(self.nodes[0].getblockcount(), 225)
 
+        # Check max allowed network message
+        assert_equal(self.nodes[0].getnetworkinfo()['maxallowednetmsg'], self.nodes[0].getmininginfo()['currentmaxblocksize'] * 2)
+
         # Mine larger blocks until we get another median increase
         logging.info("Test second block size increase")
         for i in range(72):
@@ -167,6 +172,10 @@ class AdaptiveBlockSizeTest(BitcoinTestFramework):
         assert_greater_than(122600, self.nodes[0].getblockstats(self.nodes[0].getbestblockhash())["nextmaxblocksize"])
         assert_equal(self.nodes[0].getblockcount(), 298)
 
+        # Check max allowed network message
+        nLargestMaxBlockSizeSeen = self.nodes[0].getmininginfo()['currentmaxblocksize']
+        assert_equal(self.nodes[0].getnetworkinfo()['maxallowednetmsg'], self.nodes[0].getmininginfo()['currentmaxblocksize'] * 2)
+
         # Mine another large block, as many as can fit in the next max block size
         self.MineBlock(self.nodes[0], 120000, 10, 11000)
         nextblocksize = self.nodes[0].getblockstats(self.nodes[0].getbestblockhash())["nextmaxblocksize"];
@@ -181,7 +190,11 @@ class AdaptiveBlockSizeTest(BitcoinTestFramework):
         # end up mining just a small block but we will also clear the memory pool of transactions.
         self.nodes[0].set("test.nextMaxBlockSize=10000000")
         self.nodes[0].generate(1)
+        assert_equal(self.nodes[0].getnetworkinfo()['maxallowednetmsg'], 10000000 * 2)
+        self.nodes[0].set("test.nextMaxBlockSize=10000")
+        assert_equal(self.nodes[0].getnetworkinfo()['maxallowednetmsg'], nLargestMaxBlockSizeSeen * 2)
         self.nodes[0].set("test.nextMaxBlockSize=0")
+        assert_equal(self.nodes[0].getnetworkinfo()['maxallowednetmsg'], nLargestMaxBlockSizeSeen * 2)
 
         # Mine more blocks until get a median decrease
         logging.info("Test first block size decrease")
@@ -192,6 +205,7 @@ class AdaptiveBlockSizeTest(BitcoinTestFramework):
         self.sync_blocks()
         assert_greater_than(self.nodes[0].getblockstats(self.nodes[0].getbestblockhash())["nextmaxblocksize"], 116300)
         assert_greater_than(117500, self.nodes[0].getblockstats(self.nodes[0].getbestblockhash())["nextmaxblocksize"])
+        assert_equal(self.nodes[0].getnetworkinfo()['maxallowednetmsg'], nLargestMaxBlockSizeSeen * 2)
 
         # Mine more small blocks until get another median decrease
         logging.info("Test second block size decrease")
@@ -201,6 +215,7 @@ class AdaptiveBlockSizeTest(BitcoinTestFramework):
             self.nodes[0].generate(1)
         self.sync_blocks()
         assert_equal(self.nodes[0].getblockstats(self.nodes[0].getbestblockhash())["nextmaxblocksize"], 100000)
+        assert_equal(self.nodes[0].getnetworkinfo()['maxallowednetmsg'], nLargestMaxBlockSizeSeen * 2)
 
         # Increase the next max block size on node1 and mine a larger block than would be allowed on node0.
         # This should cause node0 to reject the block and then disconnect from node1.

@@ -584,6 +584,8 @@ UniValue getnetworkinfo(const UniValue &params, bool fHelp)
             "sat/kB\n"
             "  \"limitfreerelay\": x.xxxx,            (numeric) The maximum number of free transactions (in KB) that "
             "can enter the txpool per minute\n"
+            "  \"maxallowednetmsg\" xxxx              (numeric) The maximum message size in bytes that will be accepted"
+            " by our node\n"
             "  \"localaddresses\": [                  (array) list of local addresses\n"
             "    {\n"
             "      \"address\": \"xxxx\",               (string) network address\n"
@@ -614,6 +616,7 @@ UniValue getnetworkinfo(const UniValue &params, bool fHelp)
     obj.pushKV("networks", GetNetworksInfo());
     obj.pushKV("relayfee", ::minRelayTxFee.GetFeePerK());
     obj.pushKV("limitfreerelay", strprintf("%ld", limitFreeRelay.Value()));
+    obj.pushKV("maxallowednetmsg", GetMaxAllowedNetMessage());
     UniValue localAddresses(UniValue::VARR);
     {
         LOCK(cs_mapLocalHost);
