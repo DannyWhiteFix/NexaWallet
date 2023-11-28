@@ -1841,7 +1841,6 @@ void ListTransactions(const CWalletTxRef wtx,
     string strSentAccount;
     list<CGroupedOutputEntry> listReceived;
     list<CGroupedOutputEntry> listSent;
-
     wtx->GetAmounts(listReceived, listSent, nFee, strSentAccount, filter);
 
     bool fAllAccounts = (strAccount == string("*"));

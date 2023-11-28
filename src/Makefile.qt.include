@@ -154,7 +154,9 @@ QT_MOC_CPP = \
   qt/moc_signverifymessagedialog.cpp \
   qt/moc_splashscreen.cpp \
   qt/moc_tokendescdialog.cpp \
+  qt/moc_tokenhistoryview.cpp \
   qt/moc_tokensviewdialog.cpp \
+  qt/moc_tokentablemodel.cpp \
   qt/moc_trafficgraphwidget.cpp \
   qt/moc_transactiondesc.cpp \
   qt/moc_transactiondescdialog.cpp \
@@ -231,7 +233,9 @@ NEXA_QT_H = \
   qt/signverifymessagedialog.h \
   qt/splashscreen.h \
   qt/tokendescdialog.h \
+  qt/tokenhistoryview.h \
   qt/tokensviewdialog.h \
+  qt/tokentablemodel.h \
   qt/trafficgraphwidget.h \
   qt/transactiondesc.h \
   qt/transactiondescdialog.h \
@@ -352,7 +356,9 @@ NEXA_QT_CPP += \
   qt/sendcoinsentry.cpp \
   qt/signverifymessagedialog.cpp \
   qt/tokendescdialog.cpp \
+  qt/tokenhistoryview.cpp \
   qt/tokensviewdialog.cpp \
+  qt/tokentablemodel.cpp \
   qt/transactiondesc.cpp \
   qt/transactiondescdialog.cpp \
   qt/transactionfilterproxy.cpp \

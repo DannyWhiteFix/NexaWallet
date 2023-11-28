@@ -135,6 +135,13 @@ void WalletFrame::gotoTokensPage()
         i.value()->gotoTokensPage();
 }
 
+void WalletFrame::gotoTokenHistoryPage()
+{
+    QMap<QString, WalletView *>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->gotoTokenHistoryPage();
+}
+
 void WalletFrame::gotoSignMessageTab(QString addr)
 {
     WalletView *walletView = currentWalletView();

@@ -16,6 +16,7 @@
 #include "receivecoinsdialog.h"
 #include "sendcoinsdialog.h"
 #include "signverifymessagedialog.h"
+#include "tokenhistoryview.h"
 #include "tokensviewdialog.h"
 #include "transactiontablemodel.h"
 #include "transactionview.h"
@@ -57,6 +58,22 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, const Config *cfg, Q
     sendCoinsPage = new SendCoinsDialog(platformStyle);
     tokensPage = new TokensViewDialog(platformStyle, cfg);
 
+    tokenHistoryPage = new QWidget(this);
+    tokenHistoryView = new TokenHistoryView(platformStyle, this);
+    QVBoxLayout *vbox2 = new QVBoxLayout();
+    QHBoxLayout *hbox_buttons2 = new QHBoxLayout();
+    vbox2->addWidget(tokenHistoryView);
+    QPushButton *exportButton2 = new QPushButton(tr("&Export"), this);
+    exportButton2->setToolTip(tr("Export the data in the current tab to a file"));
+    if (platformStyle->getImagesOnButtons())
+    {
+        exportButton2->setIcon(platformStyle->SingleColorIcon(":/icons/export"));
+    }
+    hbox_buttons2->addStretch();
+    hbox_buttons2->addWidget(exportButton2);
+    vbox2->addLayout(hbox_buttons2);
+    tokenHistoryPage->setLayout(vbox2);
+
     usedSendingAddressesPage =
         new AddressBookPage(platformStyle, AddressBookPage::ForEditing, AddressBookPage::SendingTab, this);
     usedReceivingAddressesPage =
@@ -67,6 +84,7 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, const Config *cfg, Q
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
     addWidget(tokensPage);
+    addWidget(tokenHistoryPage);
 
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
     connect(
@@ -76,8 +94,14 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, const Config *cfg, Q
     // Double-clicking on a transaction on the transaction history page shows details
     connect(transactionView, SIGNAL(doubleClicked(QModelIndex)), transactionView, SLOT(showDetails()));
 
+    // Double-clicking on a token on the token history page shows details
+    connect(tokenHistoryView, SIGNAL(doubleClicked(QModelIndex)), tokenHistoryView, SLOT(showDetails()));
+
     // Clicking on "Export" allows to export the transaction list
     connect(exportButton, SIGNAL(clicked()), transactionView, SLOT(exportClicked()));
+
+    // Clicking on "Export" allows to export the tokens list
+    connect(exportButton2, SIGNAL(clicked()), tokenHistoryView, SLOT(exportClicked()));
 
     // Pass through messages from sendCoinsPage
     connect(sendCoinsPage, SIGNAL(message(QString, QString, unsigned int)), this,
@@ -129,6 +153,7 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
     receiveCoinsPage->setModel(_walletModel);
     sendCoinsPage->setModel(_walletModel);
     tokensPage->setModel(_walletModel);
+    tokenHistoryView->setModel(_walletModel);
     usedReceivingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
     usedSendingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
 
@@ -188,6 +213,7 @@ void WalletView::gotoSendCoinsPage(QString addr)
         sendCoinsPage->setAddress(addr);
 }
 void WalletView::gotoTokensPage() { setCurrentWidget(tokensPage); }
+void WalletView::gotoTokenHistoryPage() { setCurrentWidget(tokenHistoryPage); }
 
 void WalletView::gotoSignMessageTab(QString addr)
 {

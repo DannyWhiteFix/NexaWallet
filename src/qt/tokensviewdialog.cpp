@@ -12,6 +12,7 @@
 #include "platformstyle.h"
 #include "qt/guiconstants.h"
 #include "qt/guiutil.h"
+#include "qt/transactionrecord.h"
 #include "wallet/grouptokenwallet.h"
 #include "wallet/wallet.h"
 
@@ -28,32 +29,6 @@ extern std::atomic<bool> fReindex;
 extern bool IsChainNearlySyncd();
 extern CTweak<bool> instantTxns;
 extern CTweak<uint32_t> instantTxnsDelay;
-
-
-static uint32_t GetDecimal(CGroupTokenID _grpID)
-{
-    // Get the parent group so we can get the correct decimal
-    if (_grpID.isSubgroup())
-    {
-        _grpID = _grpID.parentGroup();
-    }
-
-    // Get decimals
-    auto desc = tokencache.GetTokenDesc(_grpID);
-    uint32_t nDecimal = 0;
-    if (desc.size() >= 5)
-    {
-        try
-        {
-            nDecimal = stoi(desc[4]);
-        }
-        catch (...)
-        {
-            nDecimal = 0;
-        }
-    }
-    return nDecimal;
-}
 
 static void RefreshTokenWallet(TokensViewDialog *tokenwallet, CWallet *wallet, const uint256 &hash, ChangeType status)
 {
@@ -88,6 +63,14 @@ TokensViewDialog::TokensViewDialog(const PlatformStyle *_platformStyle, const Co
     GUIUtil::setupAddressWidget(ui->payTo, this);
     GUIUtil::setupAmountWidget(ui->payAmount, this, 0);
 
+    // This timer will be fired repeatedly to update the table balances
+    // and taking into account whether instant transaction is turned on or not.
+    fForceCheckBalanceChanged = true;
+    fInstantTransactions = instantTxns.Value();
+    nStartCheck = GetTime();
+    fRunOnce = true;
+    nCurrentRowCount = 0;
+
     // The first sort must be done after the first refresh. This
     // ensures that when the token wallet is opened the first time that
     // the tokes are arranged in sort order by "name"
@@ -96,13 +79,6 @@ TokensViewDialog::TokensViewDialog(const PlatformStyle *_platformStyle, const Co
         ui->tokenTable->sortByColumn(1, Qt::AscendingOrder);
     }
 
-    // This timer will be fired repeatedly to update the table balances
-    // and taking into account whether instant transaction is turned on or not.
-    fForceCheckBalanceChanged = true;
-    fInstantTransactions = instantTxns.Value();
-    nStartCheck = GetTime();
-    fRunOnce = true;
-    nCurrentRowCount = 0;
     pollTimer = new QTimer(this);
     connect(pollTimer, SIGNAL(timeout()), this, SLOT(checkBalanceChanged()));
     pollTimer->start(MODEL_UPDATE_DELAY1);

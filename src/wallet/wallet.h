@@ -269,6 +269,7 @@ private:
     const CWallet *pwallet;
 
 public:
+    std::vector<CMerkleTx> vtxPrev; //! Used for identifying grouptoken inputs only, otherwise it will remain empty.
     mapValue_t mapValue;
     std::vector<std::pair<std::string, std::string> > vOrderForm;
     unsigned int fTimeReceivedIsTxTime;
@@ -359,8 +360,7 @@ public:
         }
 
         READWRITE(*(CMerkleTx *)this);
-        std::vector<CMerkleTx> vUnused; //! Used to be vtxPrev
-        READWRITE(vUnused);
+        READWRITE(vtxPrev);
         READWRITE(mapValue);
         READWRITE(vOrderForm);
         READWRITE(fTimeReceivedIsTxTime);
@@ -425,6 +425,15 @@ public:
         CAmount &nFee,
         std::string &strSentAccount,
         const isminefilter &filter) const;
+
+    // Get all transaction amounts, including group information for
+    // the token history page in the QT wallet.
+    void GetAmountsForTokenWalletDisplay(std::list<CGroupedOutputEntry> &listReceived,
+        std::list<CGroupedOutputEntry> &listSent,
+        CAmount &nFee,
+        std::string &strSentAccount,
+        const isminefilter &filter,
+        CAmount &nTokenInputs) const;
 
     // Get transactions for the passed group
     void GetGroupAmounts(const CGroupTokenID &grp,

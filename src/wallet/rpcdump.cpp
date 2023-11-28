@@ -178,6 +178,8 @@ UniValue importprivkey(const UniValue &params, bool fHelp)
         if (fRescanLocal)
         {
             pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
+            pwalletMain->ReacceptWalletTransactions();
+            pwalletMain->Flush();
         }
         pwalletMain->RedetermineIfMine();
     }
@@ -373,6 +375,7 @@ UniValue importaddress(const UniValue &params, bool fHelp)
     {
         pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
         pwalletMain->ReacceptWalletTransactions();
+        pwalletMain->Flush();
     }
 
     return NullUniValue;
@@ -721,8 +724,11 @@ UniValue importwallet(const UniValue &params, bool fHelp)
     while (pindex && pindex->pprev && pindex->GetBlockTime() > nTimeBegin - 7200)
         pindex = pindex->pprev;
 
+    // TODO: Trying to be smart and skip entries doesn't work with the token wallet.
+    //       Why do we have to scan from beginning for the token wallet?
     if (!pwalletMain->nTimeFirstKey || nTimeBegin < pwalletMain->nTimeFirstKey)
         pwalletMain->nTimeFirstKey = nTimeBegin;
+    pwalletMain->nTimeFirstKey = 1; // Only default to "1" will work when importing with tokens.
 
     LOGA("Rescanning last %i blocks\n", chainActive.Height() - pindex->height() + 1);
     pwalletMain->MarkDirty();

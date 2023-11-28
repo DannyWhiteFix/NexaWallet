@@ -11,8 +11,34 @@
 #include "timedata.h"
 #include "txadmission.h"
 #include "validation/validation.h"
+#include "wallet/grouptokenwallet.h"
 
 #include <stdint.h>
+
+uint32_t GetDecimal(CGroupTokenID _grpID)
+{
+    // Get the parent group so we can get the correct decimal
+    if (_grpID.isSubgroup())
+    {
+        _grpID = _grpID.parentGroup();
+    }
+
+    // Get decimals
+    auto desc = tokencache.GetTokenDesc(_grpID);
+    uint32_t nDecimal = 0;
+    if (desc.size() >= 5)
+    {
+        try
+        {
+            nDecimal = stoi(desc[4]);
+        }
+        catch (...)
+        {
+            nDecimal = 0;
+        }
+    }
+    return nDecimal;
+}
 
 /* Return positive answer if transaction should be shown in list.
  */
@@ -41,6 +67,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     CAmount nNet = nCredit - nDebit;
     uint256 hash = wtx.GetIdem();
     std::map<std::string, std::string> mapValue = wtx.mapValue;
+    std::list<TokenRecord> tokens;
 
     if (nNet > 0 || wtx.IsCoinBase())
     {
@@ -82,7 +109,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 }
                 else if (ExtractDestination(txout.scriptPubKey, address) && wallet->IsMine(address))
                 {
-                    // Received by Bitcoin Address
+                    // Received by Nexa Address
                     sub.type = TransactionRecord::RecvWithAddress;
                     if (labelPublic == "")
                         sub.addresses.push_back(std::make_pair(EncodeDestination(address), txout.scriptPubKey));
@@ -175,7 +202,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     continue;
                 else if (ExtractDestination(txout.scriptPubKey, address))
                 {
-                    // Sent to Bitcoin Address
+                    // Sent to Nexa Address
                     sub.type = TransactionRecord::SendToAddress;
                     sub.addresses.push_back(std::make_pair(EncodeDestination(address), txout.scriptPubKey));
                 }
@@ -206,6 +233,92 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, listAllAddresses, nNet, 0));
             parts.last().involvesWatchAddress = involvesWatchAddress;
         }
+    }
+
+
+    // Get all Token information
+    std::list<CGroupedOutputEntry> listReceived;
+    std::list<CGroupedOutputEntry> listSent;
+    CAmount nGroupFee = 0;
+    std::string strSentAccount;
+    CAmount nTokenInputs = 0;
+    wtx.GetAmountsForTokenWalletDisplay(listReceived, listSent, nGroupFee, strSentAccount, ISMINE_ALL, nTokenInputs);
+
+    TokenRecord record;
+    bool fHasTokens = false;
+
+    // Token Mint
+    if (nTokenInputs == 0)
+    {
+        record.type = TokenRecord::Mint;
+    }
+
+    // Token Melt
+    CAmount nTokenOutputs = 0;
+    CGroupTokenInfo meltInfo;
+    for (const CTxOut &txout : wtx.vout)
+    {
+        CGroupTokenInfo tg(txout.scriptPubKey);
+        if (tg.associatedGroup != NoGroup && !tg.isAuthority())
+        {
+            nTokenOutputs += tg.quantity;
+        }
+        if (tg.isAuthority())
+        {
+            meltInfo = tg;
+        }
+    }
+    if (meltInfo.associatedGroup != NoGroup && meltInfo.allowsMelt() && nTokenInputs > nTokenOutputs)
+    {
+        fHasTokens = true;
+        record.type = TokenRecord::Melt;
+        record.grpID = meltInfo.associatedGroup;
+        record.decimal = GetDecimal(record.grpID);
+        record.debit = nTokenInputs;
+        record.credit = nTokenOutputs;
+    }
+
+    // Tokens Sent
+    if (!listSent.empty())
+    {
+        for (const CGroupedOutputEntry &sent : listSent)
+        {
+            if (sent.grp != NoGroup)
+            {
+                if (!fHasTokens)
+                {
+                    fHasTokens = true;
+                    record.grpID = sent.grp;
+                    record.decimal = GetDecimal(sent.grp);
+                }
+
+                record.debit += sent.grpAmount;
+            }
+        }
+    }
+
+    // Tokens Received
+    if (!listReceived.empty())
+    {
+        for (const CGroupedOutputEntry &recv : listReceived)
+        {
+            if (recv.grp != NoGroup)
+            {
+                if (!fHasTokens)
+                {
+                    fHasTokens = true;
+                    record.grpID = recv.grp;
+                    record.decimal = GetDecimal(recv.grp);
+                }
+
+                record.credit += recv.grpAmount;
+            }
+        }
+    }
+
+    if (fHasTokens)
+    {
+        parts.last().mapTokens.emplace(record.grpID, record);
     }
 
     return parts;

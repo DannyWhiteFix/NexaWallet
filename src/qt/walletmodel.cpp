@@ -10,6 +10,7 @@
 #include "guiutil.h"
 #include "paymentserver.h"
 #include "recentrequeststablemodel.h"
+#include "tokentablemodel.h"
 #include "transactiontablemodel.h"
 
 #include "dstencode.h"
@@ -39,8 +40,8 @@ WalletModel::WalletModel(const PlatformStyle *platformStyle,
     OptionsModel *_optionsModel,
     QObject *parent)
     : QObject(parent), wallet(_wallet), optionsModel(_optionsModel), addressTableModel(0), transactionTableModel(0),
-      recentRequestsTableModel(0), cachedBalance(0), cachedUnconfirmedBalance(0), cachedImmatureBalance(0),
-      cachedEncryptionStatus(Unencrypted), cachedNumBlocks(0)
+      tokenTableModel(0), recentRequestsTableModel(0), cachedBalance(0), cachedUnconfirmedBalance(0),
+      cachedImmatureBalance(0), cachedEncryptionStatus(Unencrypted), cachedNumBlocks(0)
 {
     fHaveWatchOnly = wallet->HaveWatchOnly() || getWatchBalance() > 0;
     fForceCheckBalanceChanged = false;
@@ -48,6 +49,7 @@ WalletModel::WalletModel(const PlatformStyle *platformStyle,
 
     addressTableModel = new AddressTableModel(wallet, this);
     transactionTableModel = new TransactionTableModel(platformStyle, wallet, this);
+    tokenTableModel = new TokenTableModel(platformStyle, wallet, this);
     recentRequestsTableModel = new RecentRequestsTableModel(wallet, this);
 
     // This timer will be fired repeatedly to update the balance
@@ -114,6 +116,8 @@ void WalletModel::pollBalanceChanged()
         checkBalanceChanged();
         if (transactionTableModel)
             transactionTableModel->updateConfirmations();
+        if (tokenTableModel)
+            tokenTableModel->updateConfirmations();
     }
 }
 
@@ -383,6 +387,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
 
 OptionsModel *WalletModel::getOptionsModel() { return optionsModel; }
 AddressTableModel *WalletModel::getAddressTableModel() { return addressTableModel; }
+TokenTableModel *WalletModel::getTokenTableModel() { return tokenTableModel; }
 TransactionTableModel *WalletModel::getTransactionTableModel() { return transactionTableModel; }
 RecentRequestsTableModel *WalletModel::getRecentRequestsTableModel() { return recentRequestsTableModel; }
 WalletModel::EncryptionStatus WalletModel::getEncryptionStatus() const
