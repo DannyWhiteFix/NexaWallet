@@ -20,6 +20,7 @@ class AddressTableModel;
 class OptionsModel;
 class PlatformStyle;
 class RecentRequestsTableModel;
+class TokenTableModel;
 class TransactionTableModel;
 class WalletModelTransaction;
 
@@ -116,7 +117,7 @@ public:
     }
 };
 
-/** Interface to Bitcoin wallet from Qt view code. */
+/** Interface to Nexa wallet from Qt view code. */
 class WalletModel : public QObject
 {
     Q_OBJECT
@@ -152,6 +153,7 @@ public:
 
     OptionsModel *getOptionsModel();
     AddressTableModel *getAddressTableModel();
+    TokenTableModel *getTokenTableModel();
     TransactionTableModel *getTransactionTableModel();
     RecentRequestsTableModel *getRecentRequestsTableModel();
 
@@ -244,6 +246,7 @@ private:
 
     AddressTableModel *addressTableModel;
     TransactionTableModel *transactionTableModel;
+    TokenTableModel *tokenTableModel;
     RecentRequestsTableModel *recentRequestsTableModel;
 
     // Cache some values to be able to detect changes

@@ -1,5 +1,5 @@
 // Copyright (c) 2011-2013 The Bitcoin Core developers
-// Copyright (c) 2015-2022 The Bitcoin Unlimited developers
+// Copyright (c) 2015-2023 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,10 +15,14 @@
 
 class CWallet;
 class CWalletTx;
+class CGroupTokenID;
 
 // Addresses need to preserve their txout order for accurate display so implemented as list (instead of map)
 typedef std::pair<std::string, CScript> Address;
 typedef std::list<Address> AddressList;
+
+// Get the decimals from th token description
+uint32_t GetDecimal(CGroupTokenID _grpID);
 
 /** UI model for transaction status. The transaction status is the part of a transaction that will change over time.
  */
@@ -72,6 +76,54 @@ public:
     int cur_num_blocks;
 };
 
+/** Each TransactionRecord may also have one or a number of TokenRecords associated with it */
+class TokenRecord
+{
+public:
+    enum Type
+    {
+        Other,
+        Generated,
+        SendToAddress,
+        SendToOther,
+        RecvWithAddress,
+        RecvFromOther,
+        SendToSelf,
+        PublicLabel,
+        Mint,
+        Melt
+    };
+
+    TokenRecord() : grpID(), time(0), type(Other), debit(0), credit(0), decimal(0) {}
+    TokenRecord(CGroupTokenID _grpID, qint64 _time)
+        : grpID(_grpID), time(_time), type(Other), debit(0), credit(0), decimal(0)
+    {
+    }
+
+    TokenRecord(CGroupTokenID _grpID,
+        qint64 _time,
+        Type _type,
+        const CAmount &_debit,
+        const CAmount &_credit,
+        uint32_t &_decimal)
+        : grpID(_grpID), time(_time), type(_type), debit(_debit), credit(_credit), decimal(_decimal)
+    {
+    }
+
+    bool operator==(const TokenRecord &a) const { return a.grpID == grpID; }
+
+    /** @name Immutable token attributes
+      @{*/
+    CGroupTokenID grpID;
+    qint64 time;
+    Type type;
+    CAmount debit;
+    CAmount credit;
+    uint32_t decimal;
+    /**@}*/
+};
+
+
 /** UI model for a transaction. A core transaction can be represented by multiple UI transactions if it has
     multiple outputs.
  */
@@ -87,7 +139,9 @@ public:
         RecvWithAddress,
         RecvFromOther,
         SendToSelf,
-        PublicLabel
+        PublicLabel,
+        Mint,
+        Melt
     };
 
     /** Number of confirmation recommended for accepting a transaction */
@@ -124,6 +178,9 @@ public:
     AddressList addresses;
     CAmount debit;
     CAmount credit;
+
+    std::map<CGroupTokenID, TokenRecord> mapTokens;
+
     /**@}*/
 
     /** Subtransaction index, for sort key */

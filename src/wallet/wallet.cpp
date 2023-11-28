@@ -922,6 +922,28 @@ bool CWallet::AddToWallet(CWalletTxRef wtx, bool fFromLoadWallet, CWalletDB *pwa
                 if (mine != ISMINE_NO)
                     mapWallet[wtx->OutpointAt(i)] = COutput(wtx, i, mine);
             }
+            // Find the inputs (prevouts) in the mapWalletUnspent.  We only care
+            // about minting or melting which we would only do from our own wallet
+            // so we don't need to look in pcointTip.
+            //
+            // Then determine if any have tokens and if so add them to vtxPrev.
+            for (const CTxIn &txin : wtx->vin)
+            {
+                auto it = mapWalletUnspent.find(txin.prevout);
+                if (it != mapWalletUnspent.end())
+                {
+                    const CTxOut &txout = it->second.GetTxOut();
+                    CGroupTokenInfo tg(txout);
+                    if (tg.associatedGroup != NoGroup)
+                    {
+                        // Create the partial merkletx's which get added a walletTx which can be later
+                        // used for looking up grouptoken mint/melt operations from each prev outputs's scriptPubKey.
+                        CMutableTransaction mTx;
+                        mTx.vout.push_back(txout);
+                        wtx->vtxPrev.push_back(CMerkleTx(mTx));
+                    }
+                }
+            }
 
             wtx->nTimeReceived = GetAdjustedTime();
             assert(wtx->nOrderPos != -1);
@@ -1688,6 +1710,100 @@ void CWalletTx::GetAmounts(list<CGroupedOutputEntry> &listReceived,
     }
 }
 
+void CWalletTx::GetAmountsForTokenWalletDisplay(list<CGroupedOutputEntry> &listReceived,
+    list<CGroupedOutputEntry> &listSent,
+    CAmount &nFee,
+    string &strSentAccount,
+    const isminefilter &filter,
+    CAmount &nTokenInputs) const
+{
+    nFee = 0;
+    nTokenInputs = 0;
+    listReceived.clear();
+    listSent.clear();
+    strSentAccount = strFromAccount;
+
+    // Compute fee:
+    CAmount nDebit = GetDebit(filter);
+    if (nDebit > 0) // debit>0 means we signed/sent this transaction
+    {
+        CAmount nValueOut = GetValueOut();
+        nFee = nDebit - nValueOut;
+    }
+
+
+    // Find the amount of token inputs there are for this transaction
+    if (vtxPrev.size() == 0)
+    {
+        // If there were no inputs present and stored then we can return
+        // a negative.  If there are no inputs available then this could
+        // not have been a MINT.
+        nTokenInputs = -1;
+    }
+    else
+    {
+        for (const CMerkleTx &mtx : vtxPrev)
+        {
+            for (const CTxOut &out : mtx.vout)
+            {
+                CGroupTokenInfo tg(out.scriptPubKey);
+                if (tg.associatedGroup != NoGroup && !tg.isAuthority())
+                {
+                    nTokenInputs += tg.quantity;
+                }
+            }
+        }
+        if (nTokenInputs < 0)
+            nTokenInputs = 0;
+    }
+
+    // Sent/received.
+    for (unsigned int i = 0; i < vout.size(); ++i)
+    {
+        const CTxOut &txout = vout[i];
+        isminetype fIsMine = pwallet->IsMine(txout);
+
+        // Only need to handle txouts if AT LEAST one of these is true:
+        //   1) they debit from us (sent)
+        //   2) the output is to us (received)
+        if (nDebit > 0)
+        {
+            // Don't report 'change' txouts
+            if (pwallet->IsChange(txout))
+                continue;
+        }
+        else if (!(fIsMine & filter))
+            continue;
+
+        // In either case, we need to get the destination address
+        CTxDestination address;
+        txnouttype whichType;
+        if (!ExtractDestinationAndType(txout.scriptPubKey, address, whichType) && !txout.scriptPubKey.IsUnspendable())
+        {
+            LOGA("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n", this->GetId().ToString());
+            address = CNoDestination();
+        }
+
+        CGroupTokenInfo txgrp(txout.scriptPubKey); // If group is invalid, txgrp zeros its members.
+        CGroupedOutputEntry output(txgrp.associatedGroup, txgrp.quantity, address, txout.nValue, (int)i);
+
+        if (txgrp.associatedGroup != NoGroup && !txgrp.isAuthority())
+        {
+            // If we are debited by the transaction, add the output as a "sent" entry
+            if (nDebit > 0)
+            {
+                listSent.push_back(output);
+            }
+
+            // If we are receiving the output, add it as a "received" entry
+            if (fIsMine & filter)
+            {
+                listReceived.push_back(output);
+            }
+        }
+    }
+}
+
 
 void CWalletTx::GetAccountAmounts(const string &strAccount,
     CAmount &nReceived,
@@ -1796,6 +1912,7 @@ int CWallet::ScanForWalletTransactions(CBlockIndex *pindexStart, bool fUpdate)
                 fRescan = false;
                 return 0;
             }
+
             int txIdx = 0;
             for (const auto &ptx : pblock->vtx)
             {

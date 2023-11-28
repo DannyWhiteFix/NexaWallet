@@ -102,6 +102,8 @@ private:
     QAction *historyAction;
     QAction *tokensAction;
     QAction *tokensMenuAction;
+    QAction *tokensHistoryAction;
+    QAction *tokensHistoryMenuAction;
     QAction *quitAction;
     QAction *sendCoinsAction;
     QAction *sendCoinsMenuAction;
@@ -212,6 +214,8 @@ private Q_SLOTS:
     void gotoSendCoinsPage(QString addr = "");
     /** Switch to tokens page */
     void gotoTokensPage();
+    /** Switch to token history page */
+    void gotoTokenHistoryPage();
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");

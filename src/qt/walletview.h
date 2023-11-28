@@ -16,6 +16,7 @@ class OverviewPage;
 class PlatformStyle;
 class ReceiveCoinsDialog;
 class SendCoinsDialog;
+class TokenHistoryView;
 class TokensViewDialog;
 class SendCoinsRecipient;
 class TransactionView;
@@ -64,9 +65,11 @@ private:
 
     OverviewPage *overviewPage;
     QWidget *transactionsPage;
+    QWidget *tokenHistoryPage;
     ReceiveCoinsDialog *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
     TokensViewDialog *tokensPage;
+    TokenHistoryView *tokenHistoryView;
     AddressBookPage *usedSendingAddressesPage;
     AddressBookPage *usedReceivingAddressesPage;
 
@@ -86,6 +89,8 @@ public Q_SLOTS:
     void gotoSendCoinsPage(QString addr = "");
     /** Switch to Tokens page */
     void gotoTokensPage();
+    /** Switch to Token History page */
+    void gotoTokenHistoryPage();
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");

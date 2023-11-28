@@ -1195,7 +1195,8 @@ extern UniValue token(const UniValue &params, bool fHelp)
             CReserveKey renewAuthorityKey(wallet);
             totalBchNeeded += RenewAuthority(chosenCoins[0], outputs, renewAuthorityKey);
 
-            { // Construct the new authority
+            // Construct the new authority
+            {
                 CScript script = GetScriptForDestination(dst, grpID, (CAmount)auth);
                 CRecipient recipient = {script, GROUPED_SATOSHI_AMT, false};
                 outputs.push_back(recipient);
@@ -1327,10 +1328,6 @@ extern UniValue token(const UniValue &params, bool fHelp)
         for (auto &out : outputs)
             totalBchNeeded += out.nAmount;
 
-        CCoinControl coinControl;
-        coinControl.fAllowOtherInputs = true; // Allow a normal nexa input for change
-        std::string strError;
-
         // Now find a mint authority
         std::vector<COutput> coins;
         int nOptions = wallet->FilterCoins(coins,
@@ -1365,6 +1362,7 @@ extern UniValue token(const UniValue &params, bool fHelp)
 
         if (nOptions == 0)
         {
+            std::string strError;
             strError = strprintf("To mint coins, an authority output with mint capability is needed.");
             throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strError);
         }

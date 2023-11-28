@@ -379,12 +379,77 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
     //
     std::list<CGroupedOutputEntry> listReceived;
     std::list<CGroupedOutputEntry> listSent;
-    CAmount nGroupFee;
+    CAmount nGroupFee = 0;
     std::string strSentAccount;
-    wtx.GetAmounts(listReceived, listSent, nGroupFee, strSentAccount, ISMINE_ALL);
+    CAmount nTokenInputs = 0;
+    wtx.GetAmountsForTokenWalletDisplay(listReceived, listSent, nGroupFee, strSentAccount, ISMINE_ALL, nTokenInputs);
 
-    // Tokens Sent
-    if (!listSent.empty())
+    // When minting to an address not in our wallet,
+    // we need to know if we are sending to ourselves or not.
+    //
+    // Also need to know if we have melt authority to display any melting of tokens.
+    bool fAllowsMelt = false;
+    bool fAllToMe = true;
+    for (const CTxOut &txout : wtx.vout)
+    {
+        isminetype mine = wallet->IsMine(txout);
+        if (fAllToMe > mine)
+            fAllToMe = mine;
+
+        CGroupTokenInfo tg(txout.scriptPubKey);
+        if (tg.isAuthority() && tg.allowsMelt())
+        {
+            fAllowsMelt = true;
+        }
+    }
+
+    // Check for Token Mint
+    bool fIsMint = false;
+    if (nTokenInputs == 0)
+        fIsMint = true;
+    if (nTokenInputs == -1)
+        fIsMint = false;
+
+    // Check for Token Melt
+    if (fAllowsMelt && fAllToMe && !fIsMint && listSent.empty() && listReceived.empty())
+    {
+        // Find the melt amount
+        CAmount nMeltAmount = nTokenInputs;
+        CGroupTokenID grpID;
+        for (const CTxOut &txout : wtx.vout)
+        {
+            CGroupTokenInfo tg(txout.scriptPubKey);
+            if (tg.associatedGroup != NoGroup && !tg.isAuthority())
+            {
+                nMeltAmount -= tg.quantity;
+            }
+            if (tg.isAuthority())
+            {
+                grpID = tg.associatedGroup;
+            }
+        }
+
+        if (grpID != NoGroup)
+        {
+            strHTML += "<br>";
+            strHTML += "<b>" + tr("Token ID") + ": </b>" + EncodeGroupToken(grpID).c_str() + "<br>";
+
+            auto info = tokencache.GetTokenDesc(grpID);
+            if (info.size() >= 4)
+            {
+                strHTML += "<b>" + tr("Ticker") + ": </b>" + info[0].c_str() + "<br>";
+                strHTML += "<b>" + tr("Name") + ": </b>" + info[1].c_str() + "<br>";
+            }
+            if (info.size() >= 5)
+            {
+                strHTML += "<b>" + tr("Decimals") + ": </b>" + info[4].c_str() + "<br>";
+            }
+            strHTML += "<b>" + tr("Melt") + " " + tr("Amount") + ": </b>" + QString::number(nMeltAmount) + "<br>";
+        }
+    }
+
+    // Only show the sent amount. (This could be a mint but to a non-local address).
+    if (!listSent.empty() && (!fAllToMe || nTokenInputs > 0))
     {
         strHTML += "<br>";
         for (const CGroupedOutputEntry &sent : listSent)
@@ -402,6 +467,12 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
                 if (info.size() >= 5)
                 {
                     strHTML += "<b>" + tr("Decimals") + ": </b>" + info[4].c_str() + "<br>";
+                }
+
+                if (listReceived.empty() && fIsMint)
+                {
+                    strHTML +=
+                        "<b>" + tr("Mint") + " " + tr("Amount") + ": </b>" + QString::number(sent.grpAmount) + "<br>";
                 }
                 strHTML += "<b>" + tr("Amount Sent") + ": </b>" + QString::number(sent.grpAmount) + "<br>";
             }
@@ -428,7 +499,15 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
                 {
                     strHTML += "<b>" + tr("Decimals") + ": </b>" + info[4].c_str() + "<br>";
                 }
-                strHTML += "<b>" + tr("Amount Received") + ": </b>" + QString::number(recv.grpAmount) + "<br>";
+                if (!fIsMint)
+                {
+                    strHTML += "<b>" + tr("Amount Received") + ": </b>" + QString::number(recv.grpAmount) + "<br>";
+                }
+                else
+                {
+                    strHTML +=
+                        "<b>" + tr("Mint") + " " + tr("Amount") + ": </b>" + QString::number(recv.grpAmount) + "<br>";
+                }
             }
         }
     }

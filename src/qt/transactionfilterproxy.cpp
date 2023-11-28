@@ -5,6 +5,7 @@
 
 #include "transactionfilterproxy.h"
 
+#include "tokentablemodel.h"
 #include "transactionrecord.h"
 #include "transactiontablemodel.h"
 
@@ -34,6 +35,7 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &
     QString label = index.data(TransactionTableModel::LabelRole).toString();
     qint64 amount = llabs(index.data(TransactionTableModel::AmountRole).toLongLong());
     int status = index.data(TransactionTableModel::StatusRole).toInt();
+
 
     if (!showInactive && status == TransactionStatus::Conflicted)
         return false;
@@ -92,6 +94,99 @@ void TransactionFilterProxy::setShowInactive(bool _showInactive)
 }
 
 int TransactionFilterProxy::rowCount(const QModelIndex &parent) const
+{
+    if (limitRows != -1)
+    {
+        return std::min(QSortFilterProxyModel::rowCount(parent), limitRows);
+    }
+    else
+    {
+        return QSortFilterProxyModel::rowCount(parent);
+    }
+}
+
+
+// Earliest date that can be represented (far in the past)
+const QDateTime TokenFilterProxy::MIN_DATE = QDateTime::fromTime_t(0);
+// Last date that can be represented (far in the future)
+const QDateTime TokenFilterProxy::MAX_DATE = QDateTime::fromTime_t(0xFFFFFFFF);
+
+TokenFilterProxy::TokenFilterProxy(QObject *parent)
+    : QSortFilterProxyModel(parent), dateFrom(MIN_DATE), dateTo(MAX_DATE), addrPrefix(), typeFilter(ALL_TYPES),
+      watchOnlyFilter(WatchOnlyFilter_All), minAmount(-1e20), limitRows(-1), showInactive(true)
+{
+}
+
+bool TokenFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const
+{
+    QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
+
+    int type = index.data(TokenTableModel::TypeRole).toInt();
+    QDateTime datetime = index.data(TokenTableModel::DateRole).toDateTime();
+    bool involvesWatchAddress = index.data(TokenTableModel::WatchonlyRole).toBool();
+    QString address = index.data(TokenTableModel::AddressRole).toString();
+    QString label = index.data(TokenTableModel::LabelRole).toString();
+    QString amount = index.data(TokenTableModel::FormattedAmountRole).toString();
+    int status = index.data(TokenTableModel::StatusRole).toInt();
+
+
+    if (!showInactive && status == TransactionStatus::Conflicted)
+        return false;
+    if (!(TYPE(type) & typeFilter))
+        return false;
+    if (involvesWatchAddress && watchOnlyFilter == WatchOnlyFilter_No)
+        return false;
+    if (!involvesWatchAddress && watchOnlyFilter == WatchOnlyFilter_Yes)
+        return false;
+    if (datetime < dateFrom || datetime > dateTo)
+        return false;
+    if (!address.contains(addrPrefix, Qt::CaseInsensitive) && !label.contains(addrPrefix, Qt::CaseInsensitive))
+        return false;
+    if (amount.toDouble() < minAmount)
+        return false;
+
+    return true;
+}
+
+void TokenFilterProxy::setDateRange(const QDateTime &from, const QDateTime &to)
+{
+    this->dateFrom = from;
+    this->dateTo = to;
+    invalidateFilter();
+}
+
+void TokenFilterProxy::setAddressPrefix(const QString &_addrPrefix)
+{
+    this->addrPrefix = _addrPrefix;
+    invalidateFilter();
+}
+
+void TokenFilterProxy::setTypeFilter(quint32 modes)
+{
+    this->typeFilter = modes;
+    invalidateFilter();
+}
+
+void TokenFilterProxy::setMinAmount(const double &minimum)
+{
+    this->minAmount = minimum;
+    invalidateFilter();
+}
+
+void TokenFilterProxy::setWatchOnlyFilter(WatchOnlyFilter filter)
+{
+    this->watchOnlyFilter = filter;
+    invalidateFilter();
+}
+
+void TokenFilterProxy::setLimit(int limit) { this->limitRows = limit; }
+void TokenFilterProxy::setShowInactive(bool _showInactive)
+{
+    this->showInactive = _showInactive;
+    invalidateFilter();
+}
+
+int TokenFilterProxy::rowCount(const QModelIndex &parent) const
 {
     if (limitRows != -1)
     {
