@@ -1498,11 +1498,9 @@ SLAPI void getWorkFromDifficultyBits(unsigned long int nBits, unsigned char *res
     memcpy(result, ui.begin(), 32);
 }
 
-
 /** Create a bloom filter */
 SLAPI int createBloomFilter(const unsigned char *data,
     unsigned int len,
-    unsigned int elemLen,
     double falsePosRate,
     unsigned int capacity,
     unsigned int maxSize,
@@ -1522,9 +1520,12 @@ SLAPI int createBloomFilter(const unsigned char *data,
     CBloomFilter bloom(maxx, falsePosRate, tweak, flags, maxSize);
 
     const unsigned char *elemData = data;
-    for (size_t i = 0; i < len; i++, elemData += elemLen)
+    while (elemData - data < len)
     {
+        int elemLen = *elemData; // first byte is the length of the element
+        elemData++;
         bloom.insert(std::vector<unsigned char>(elemData, elemData + elemLen));
+        elemData += elemLen;
     }
 
     CDataStream serializer(SER_NETWORK, PROTOCOL_VERSION);

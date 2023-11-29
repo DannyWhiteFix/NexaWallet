@@ -163,7 +163,7 @@ SLAPI int decode64(const char* data, unsigned char* result, int resultMaxLen);
 The size of the result array must be allocated to be at least 32 bytes bigger than maxSize to account for the
 serialization overhead.
 */
-SLAPI int createBloomFilter(const unsigned char* data, unsigned int len, unsigned int elemLen, double falsePosRate, int capacity, int maxSize, int flags, int tweak, unsigned char* result);
+SLAPI int createBloomFilter(const unsigned char* data, unsigned int len, double falsePosRate, int capacity, int maxSize, int flags, int tweak, unsigned char* result);
 
 /** Derive a BIP-0044 heirarchial deterministic wallet key */
 SLAPI int hd44DeriveChildKey(const unsigned char *secretSeed,
