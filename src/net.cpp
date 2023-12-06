@@ -695,7 +695,8 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes)
         if (IsMessageOversized(msg))
         {
             fDisconnect = true;
-            LOG(NET, "Oversized message from peer=%i, disconnecting\n", GetId());
+            LOG(NET, "Oversized message (%ld bytes vs %ld allowed) from peer=%i, disconnecting\n", msg.hdr.nMessageSize,
+                GetMaxAllowedNetMessage(), GetId());
             return false;
         }
 
