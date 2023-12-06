@@ -1298,7 +1298,22 @@ bool AppInit2(Config &config)
 #endif // ENABLE_WALLET
     // ********************************************************* Step 6: load block chain
 
+    bool fResync = GetBoolArg("-resync", false);
+    if (fResync)
+    {
+        // Doing a full resync of the chain so removing all blockchain files and folders
+        fs::path blocksDir = GetDataDir() / "blocks";
+        fs::path chainstateDir = GetDataDir() / "chainstate";
+        fs::path indexesDir = GetDataDir() / "indexes";
+
+        fs::remove_all(blocksDir);
+        fs::remove_all(chainstateDir);
+        fs::remove_all(indexesDir);
+    }
+
+
     fReindex = GetBoolArg("-reindex", DEFAULT_REINDEX);
+
     int64_t requested_block_mode = GetArg("-useblockdb", DEFAULT_BLOCK_DB_MODE);
     if (requested_block_mode >= 0 && requested_block_mode < END_STORAGE_OPTIONS)
     {

@@ -31,6 +31,7 @@ public:
     {
         StartAtStartup, // bool
         ReindexOnStartup, // bool
+        ResyncOnStartup, // bool
         MinimizeToTray, // bool
         MapPortUPnP, // bool
         MinimizeOnClose, // bool

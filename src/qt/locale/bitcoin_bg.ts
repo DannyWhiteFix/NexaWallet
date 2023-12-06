@@ -1329,7 +1329,17 @@
         <translation>Брой на скриптове и &amp;нишки за потвърждение</translation>
     </message>
     <message>
-        <location line="+195"/>
+        <location line="+60"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Automatically initiate a full blockchain resynchronization on the next startup (one time only).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Resynchronize block data on startup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+148"/>
         <source>Allow incoming connections</source>
         <translation>Позволи входящите връзки</translation>
     </message>
@@ -1545,7 +1555,7 @@
         <translation>Дали да покаже възможностите за контрол на монетите или не.</translation>
     </message>
     <message>
-        <location line="-121"/>
+        <location line="-137"/>
         <source>Automatically start %1 after logging in to the system.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1570,7 +1580,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+559"/>
+        <location line="+575"/>
         <location line="+13"/>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation type="unfinished"></translation>
@@ -1591,7 +1601,7 @@
         <translation>Отказ</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+123"/>
+        <location filename="../optionsdialog.cpp" line="+124"/>
         <source>default</source>
         <translation>подразбиране</translation>
     </message>
@@ -1601,7 +1611,7 @@
         <translation>нищо</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+77"/>
         <source>Confirm options reset</source>
         <translation>Потвърдете отмяната на настройките.</translation>
     </message>
@@ -3814,7 +3824,7 @@
         <translation type="unfinished">Други</translation>
     </message>
     <message>
-        <location line="+318"/>
+        <location line="+323"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation type="unfinished">Състояние на транзакцията. Задръжте върху това поле за брой потвърждения.</translation>
     </message>
@@ -3972,7 +3982,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+366"/>
+        <location filename="../tokensviewdialog.cpp" line="+367"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -3995,55 +4005,42 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
-        <location line="+42"/>
-        <source>Total Mintage:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="-35"/>
-        <location line="+21"/>
+        <location line="+14"/>
         <source>Name:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Ticker:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-16"/>
-        <location line="+21"/>
+        <location line="+5"/>
         <source>URL:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Hash:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+21"/>
+        <location line="+4"/>
         <source>Decimals:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+23"/>
+        <location line="+4"/>
         <source>Balance:</source>
         <translation type="unfinished">Баланс:</translation>
     </message>
     <message>
-        <location line="-22"/>
-        <location line="+23"/>
+        <location line="+1"/>
         <source>Pending:</source>
         <translation type="unfinished">Изчакващо:</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+87"/>
         <source>Are you sure you want to send?</source>
         <translation type="unfinished">Наистина ли искате да изпратите?</translation>
     </message>
@@ -5036,7 +5033,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5161,7 +5158,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-72"/>
+        <location line="-71"/>
         <source>Copyright (C) 2015-%i The Bitcoin Unlimited Developers</source>
         <translation>Всички права запазени (C) 2015-%i Доставчиците на Биткойн ядрото</translation>
     </message>
@@ -5178,7 +5175,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Информация</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+31"/>
         <source>This is experimental software.</source>
         <translation>Това е експериментален софтуер.</translation>
     </message>
@@ -5198,7 +5195,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Предупреждение</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-41"/>
         <source>Loading addresses...</source>
         <translation>Зареждане на адреси...</translation>
     </message>
@@ -5218,12 +5215,12 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Зареждане на портфейла...</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+13"/>
         <source>Rescanning...</source>
         <translation>Преразглеждане на последовтелността от блокове...</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-41"/>
         <source>Done loading</source>
         <translation>Зареждането е завършено</translation>
     </message>
@@ -5544,12 +5541,7 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
         <translation>Грешка</translation>
     </message>
     <message>
-        <location line="+26"/>
-        <source>Opening Token Mintage database...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+9"/>
+        <location line="+34"/>
         <source>Signing token transaction failed</source>
         <translation type="unfinished"></translation>
     </message>

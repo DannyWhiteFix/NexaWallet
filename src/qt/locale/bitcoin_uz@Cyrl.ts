@@ -1324,7 +1324,7 @@
         <translation>Мавзуларни &amp;тўғрилаш скрипти миқдори</translation>
     </message>
     <message>
-        <location line="+195"/>
+        <location line="+211"/>
         <source>Allow incoming connections</source>
         <translation>Кирувчи уланишларга рухсат бериш</translation>
     </message>
@@ -1345,7 +1345,7 @@
         <translation>Тармоқ</translation>
     </message>
     <message>
-        <location line="-220"/>
+        <location line="-236"/>
         <source>Automatically start %1 after logging in to the system.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1370,7 +1370,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+29"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Automatically initiate a full blockchain resynchronization on the next startup (one time only).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Resynchronize block data on startup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>W&amp;allet</source>
         <translation>Ҳамён</translation>
     </message>
@@ -1586,7 +1596,7 @@
         <translation>&amp;Бекор қилиш</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+123"/>
+        <location filename="../optionsdialog.cpp" line="+124"/>
         <source>default</source>
         <translation>стандарт</translation>
     </message>
@@ -1596,7 +1606,7 @@
         <translation>йўқ</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+77"/>
         <source>Confirm options reset</source>
         <translation>Тасдиқлаш танловларини рад қилиш</translation>
     </message>
@@ -3809,7 +3819,7 @@
         <translation type="unfinished">Бошка</translation>
     </message>
     <message>
-        <location line="+318"/>
+        <location line="+323"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation type="unfinished">Ўтказма ҳолати. Ушбу майдон бўйлаб тасдиқлашлар сонини кўрсатиш.</translation>
     </message>
@@ -3967,7 +3977,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+366"/>
+        <location filename="../tokensviewdialog.cpp" line="+367"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -3990,55 +4000,42 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
-        <location line="+42"/>
-        <source>Total Mintage:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="-35"/>
-        <location line="+21"/>
+        <location line="+14"/>
         <source>Name:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Ticker:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-16"/>
-        <location line="+21"/>
+        <location line="+5"/>
         <source>URL:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Hash:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+21"/>
+        <location line="+4"/>
         <source>Decimals:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+23"/>
+        <location line="+4"/>
         <source>Balance:</source>
         <translation type="unfinished">Баланс</translation>
     </message>
     <message>
-        <location line="-22"/>
-        <location line="+23"/>
+        <location line="+1"/>
         <source>Pending:</source>
         <translation type="unfinished">Кутилмоқда:</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+87"/>
         <source>Are you sure you want to send?</source>
         <translation type="unfinished">Жўнатишни хоҳлашингизга ишончингиз комилми?</translation>
     </message>
@@ -4926,7 +4923,7 @@
         <translation>Маълумот</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+27"/>
         <source>Signing token transaction failed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4936,7 +4933,7 @@
         <translation>Диққат</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-41"/>
         <source>Loading addresses...</source>
         <translation>Манзиллар юкланмоқда...</translation>
     </message>
@@ -4978,7 +4975,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Opening UTXO database...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5018,7 +5015,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Қайта текшириб чиқилмоқда...</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-41"/>
         <source>Done loading</source>
         <translation>Юклаш тайёр</translation>
     </message>
@@ -5436,11 +5433,6 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
     <message>
         <location line="+7"/>
         <source>Opening Token Description database...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Opening Token Mintage database...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

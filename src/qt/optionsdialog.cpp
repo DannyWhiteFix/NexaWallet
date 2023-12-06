@@ -50,6 +50,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet)
     ui->threadsScriptVerif->setMinimum(-GetNumCores());
     ui->threadsScriptVerif->setMaximum(MAX_SCRIPTCHECK_THREADS);
     ui->reindexOnStartup->setEnabled(true);
+    ui->resyncOnStartup->setEnabled(true);
     ui->rescanOnStartup->setEnabled(true);
 
 /* Network elements init */
@@ -193,6 +194,7 @@ void OptionsDialog::setModel(OptionsModel *_model)
     /* Main */
     connect(ui->threadsScriptVerif, SIGNAL(valueChanged(int)), this, SLOT(showRestartWarning()));
     connect(ui->reindexOnStartup, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
+    connect(ui->resyncOnStartup, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     /* Wallet */
     connect(ui->spendZeroConfChange, SIGNAL(clicked(bool)), this, SLOT(setZeroConf()));
     connect(ui->instantTransactions, SIGNAL(clicked(bool)), this, SLOT(setInstant()));
@@ -213,6 +215,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->bitcoinAtStartup, OptionsModel::StartAtStartup);
     mapper->addMapping(ui->threadsScriptVerif, OptionsModel::ThreadsScriptVerif);
     mapper->addMapping(ui->reindexOnStartup, OptionsModel::ReindexOnStartup);
+    mapper->addMapping(ui->resyncOnStartup, OptionsModel::ResyncOnStartup);
 
     /* Wallet */
     mapper->addMapping(ui->spendZeroConfChange, OptionsModel::SpendZeroConfChange);
