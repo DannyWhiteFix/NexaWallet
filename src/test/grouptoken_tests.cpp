@@ -1546,26 +1546,31 @@ BOOST_FIXTURE_TEST_CASE(grouptoken_blockchain, TestChain100Setup)
 BOOST_AUTO_TEST_CASE(grouptoken_descriptions)
 {
     // Test that all labels can be encoded in OP_RETURN and retrieved successfully.
-    std::string name = "NexaToken";
     std::string ticker = "NEXT";
+    std::string name = "NexaToken";
     std::string url = "http://nexa.org";
-    std::string urlHex = "a0b0123489c8";
+    std::string urlZipFileHex = "e2769b09e784f32f62ef849763d4f45b98e07ba658647343b915ff832b110436";
+    std::string decimals = "4";
 
-    std::vector<std::vector<unsigned char> > desc;
-    desc.push_back(std::vector<unsigned char>(name.begin(), name.end()));
-    desc.push_back(std::vector<unsigned char>(ticker.begin(), ticker.end()));
-    desc.push_back(std::vector<unsigned char>(url.begin(), url.end()));
-    desc.push_back(std::vector<unsigned char>(urlHex.begin(), urlHex.end()));
+    UniValue params(UniValue::VARR);
+    params.push_back(ticker);
+    params.push_back(name);
+    params.push_back(url);
+    params.push_back(urlZipFileHex);
+    params.push_back(decimals);
+    unsigned int curparam = 0;
+    auto desc = ParseGroupDescParams(params, curparam);
 
     CScript opretScript;
     opretScript = BuildTokenDescScript(desc);
 
     std::vector<std::string> vLabels;
     vLabels = GetTokenDescription(opretScript);
-    BOOST_CHECK_EQUAL(name, vLabels[0]);
-    BOOST_CHECK_EQUAL(ticker, vLabels[1]);
+    BOOST_CHECK_EQUAL(ticker, vLabels[0]);
+    BOOST_CHECK_EQUAL(name, vLabels[1]);
     BOOST_CHECK_EQUAL(url, vLabels[2]);
-    BOOST_CHECK_EQUAL(urlHex, vLabels[3]);
+    BOOST_CHECK_EQUAL(urlZipFileHex, vLabels[3]);
+    BOOST_CHECK_EQUAL(decimals, vLabels[4]);
 
     // Test that OP_RETURN must have 88888888 as group id or it will return empty labels
     // see https: github.com/bitcoincashorg/bitcoincash.org/blob/master/etc/protocols.csv
