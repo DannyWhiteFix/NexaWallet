@@ -940,7 +940,7 @@ extern UniValue token(const UniValue &params, bool fHelp)
 
     if (fHelp || params.size() < 1)
         throw std::runtime_error(
-            "token [info, new, mint, melt, send] \n"
+            "token [info, new, mint, melt, balance, send, authority, subgroup, mintage] \n"
             "\nToken functions.\n"
             "'info' returns a list of all tokens with their groupId and associated token-name token-ticker "
             "and descUrl or descHash, but only for tokens created for addresses in this wallet\n"
@@ -951,6 +951,8 @@ extern UniValue token(const UniValue &params, bool fHelp)
             "'send' sends tokens to a new address. args: groupId address quantity [address quantity...]\n"
             "'authority create' creates a new authority args: groupId address [mint melt nochild rescript]\n"
             "'subgroup' translates a group and additional data into a subgroup identifier. args: groupId data\n"
+            "'mintage' returns the current mintage of a token. args: groupId data\n"
+
             "Note: As this interface is often used for scripting, all balances are accepted and reported as integers\n"
             "      specified in the token's finest unit (the 'decimals' field in the token information is ignored).\n"
             "\nArguments:\n"
@@ -1463,6 +1465,9 @@ extern UniValue token(const UniValue &params, bool fHelp)
                 else
                     entry.pushKV("balance", "0");
 
+                entry.pushKV("mintage", tokenmint.GetTokenMint(item.first));
+
+                // encode all items for each individual group id
                 ret.pushKV(EncodeGroupToken(item.first), entry);
             }
             return ret;
@@ -1539,6 +1544,20 @@ extern UniValue token(const UniValue &params, bool fHelp)
         GroupMelt(wtx, grpID, totalNeeded, wallet);
         return wtx.GetIdem().GetHex();
     }
+    else if (operation == "mintage")
+    {
+        if (params.size() <= 1 || params.size() >= 3)
+        {
+            throw std::runtime_error("Invalid number of argument to token mintage");
+        }
+        CGroupTokenID grpID = DecodeGroupToken(params[1].get_str());
+        if (!grpID.isUserGroup())
+        {
+            throw JSONRPCError(RPC_INVALID_PARAMS, "Invalid parameter 1: No group specified");
+        }
+        return UniValue(tokenmint.GetTokenMint(grpID));
+    }
+
     else
     {
         throw JSONRPCError(RPC_INVALID_REQUEST, "Unknown group operation");
@@ -1999,12 +2018,172 @@ void CTokenDescCache::ProcessTokenDescriptions(CTransactionRef ptx)
                 if (out2.scriptPubKey[0] == OP_RETURN)
                 {
                     const auto tokenDesc = GetTokenDescription(out2.scriptPubKey);
-                    tokencache.AddTokenDesc(tg.associatedGroup, tokenDesc);
+                    AddTokenDesc(tg.associatedGroup, tokenDesc);
                     break;
                 }
             }
 
             break;
         }
+    }
+}
+
+// Token Mint Cache methods
+void CTokenMintCache::AddToCache(const CGroupTokenID &_grpID, const CAmount _mint)
+{
+    AssertLockHeld(cs_tokenmint);
+
+    // Limit the size of cache.  If the cache size is exceeded, which is unlikely, then
+    // we erase the first value and add the new one to the cache. This way any items with
+    // high cache hits will always be in memory since mintage lookups could become quite
+    // common for some type of tokens such as "game itmes" used multiplayer video games.
+    while (cache.size() >= nMaxCacheSize)
+    {
+        // remove a random element
+        auto iter = cache.begin();
+        std::advance(iter, GetRand(cache.size() - 1));
+        cache.erase(iter);
+    }
+    cache[_grpID] = _mint;
+}
+
+void CTokenMintCache::AddTokenMint(const CGroupTokenID &_grpID, const CAmount _mint)
+{
+    LOCK(cs_tokenmint);
+    CAmount nCurrentMint = GetTokenMint(_grpID) + _mint;
+    if (nCurrentMint > 0)
+    {
+        AddToCache(_grpID, nCurrentMint);
+        ptokenMint->WriteMint(_grpID, nCurrentMint);
+    }
+}
+
+void CTokenMintCache::RemoveTokenMint(const CGroupTokenID &_grpID, const CAmount _melt)
+{
+    LOCK(cs_tokenmint);
+    CAmount nCurrentMint = GetTokenMint(_grpID);
+    if (nCurrentMint >= _melt)
+    {
+        nCurrentMint -= _melt;
+    }
+    else
+    {
+        DbgAssert(nCurrentMint >= _melt, );
+        return;
+    }
+
+    AddToCache(_grpID, nCurrentMint);
+    ptokenMint->WriteMint(_grpID, nCurrentMint);
+}
+
+uint64_t CTokenMintCache::GetTokenMint(const CGroupTokenID &_grpID)
+{
+    CAmount nMint;
+
+    LOCK(cs_tokenmint);
+    if (cache.count(_grpID))
+    {
+        return cache[_grpID];
+    }
+    else if (ptokenMint->ReadMint(_grpID, nMint))
+    {
+        AddToCache(_grpID, nMint);
+        return nMint;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+void CTokenMintCache::AccumulateTokenMintages(CTransactionRef ptx,
+    CCoinsViewCache &view,
+    std::map<CGroupTokenID, CAmount> &accumulatedMintages)
+{
+    struct Amounts
+    {
+        CAmount nTokenInputs = 0;
+        CAmount nTokenOutputs = 0;
+    };
+    std::map<CGroupTokenID, Amounts> mintages;
+
+    // Get the inputs
+    for (const CTxIn &txin : ptx->vin)
+    {
+        Coin coin;
+        view.GetCoin(txin.prevout, coin);
+        if (!coin.IsSpent())
+        {
+            const CTxOut &txout = coin.out;
+            CGroupTokenInfo tg(txout);
+            if (tg.associatedGroup != NoGroup && !tg.isAuthority())
+            {
+                mintages[tg.associatedGroup].nTokenInputs += tg.quantity;
+            }
+        }
+        else
+        {
+            DbgAssert(!coin.IsSpent(), );
+        }
+    }
+
+    // Get the outputs.
+    for (size_t i = 0; i < ptx->vout.size(); i++)
+    {
+        const CTxOut &out = ptx->vout[i];
+        CGroupTokenInfo tg(out.scriptPubKey);
+        if ((tg.associatedGroup != NoGroup) && !tg.isAuthority())
+        {
+            mintages[tg.associatedGroup].nTokenOutputs += tg.quantity;
+        }
+    }
+
+    // If inputs for a group id equals zero and ouputs > 0, then it's a MINT.
+    // if intputs > outputs, then it's a MELT.
+    for (auto &it : mintages)
+    {
+        CAmount &nTokenInputs = it.second.nTokenInputs;
+        CAmount &nTokenOutputs = it.second.nTokenOutputs;
+
+        // Check for Mint
+        if (nTokenInputs == 0 && nTokenOutputs > 0)
+        {
+            if (!accumulatedMintages.count(it.first))
+                accumulatedMintages[it.first] = nTokenOutputs;
+            else
+                accumulatedMintages[it.first] += nTokenOutputs;
+        }
+
+        // Check for Melt
+        if (nTokenInputs > nTokenOutputs)
+        {
+            CAmount nMeltAmount = nTokenInputs - nTokenOutputs;
+            if (!accumulatedMintages.count(it.first))
+                accumulatedMintages[it.first] = -nMeltAmount;
+            else
+                accumulatedMintages[it.first] -= nMeltAmount;
+        }
+    }
+}
+
+void CTokenMintCache::ApplyTokenMintages(std::map<CGroupTokenID, CAmount> &accumulatedMintages)
+{
+    for (auto &it : accumulatedMintages)
+    {
+        if (it.second > 0)
+            AddTokenMint(it.first, it.second);
+        else
+            RemoveTokenMint(it.first, abs(it.second));
+    }
+}
+
+void CTokenMintCache::RemoveTokenMintages(std::map<CGroupTokenID, CAmount> &accumulatedMintages)
+{
+    for (auto &it : accumulatedMintages)
+    {
+        if (it.second > 0)
+            RemoveTokenMint(it.first, it.second);
+        else
+            AddTokenMint(it.first, abs(it.second));
     }
 }

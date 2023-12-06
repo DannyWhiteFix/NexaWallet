@@ -129,6 +129,7 @@ extern CWaitableCriticalSection csBestBlock;
 extern CConditionVariable cvBlockChange;
 extern std::atomic<bool> fImporting;
 extern std::atomic<bool> fReindex;
+extern std::atomic<bool> fVerifyDB;
 extern bool fTxIndex;
 extern bool fBlocksOnly;
 extern bool fIsBareMultisigStd;
@@ -274,6 +275,8 @@ extern CBlockTreeDB *pblocktree;
 extern CBlockTreeDB *pblocktreeother;
 /** Global variable that points to the token description database (protected by tokencache.cs_tokencache) */
 extern CTokenDescriptionDB *ptokenDesc;
+/** Global variable that points to the token mintage database (protected by tokenmint.cs_tokenmint) */
+extern CTokenMintageDB *ptokenMint;
 
 extern std::vector<CBlockFileInfo> vinfoBlockFile;
 extern int nLastBlockFile;

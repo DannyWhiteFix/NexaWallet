@@ -79,6 +79,7 @@
 
 std::atomic<bool> fImporting{false};
 std::atomic<bool> fReindex{false};
+std::atomic<bool> fVerifyDB{false};
 
 bool fBlocksOnly = false;
 bool fTxIndex = false;
@@ -214,6 +215,7 @@ CCoinsViewCache *pcoinsTip = nullptr;
 CBlockTreeDB *pblocktree = nullptr;
 CBlockTreeDB *pblocktreeother = nullptr;
 CTokenDescriptionDB *ptokenDesc = nullptr;
+CTokenMintageDB *ptokenMint = nullptr;
 
 bool TestLockPointValidity(const LockPoints *lp)
 {

@@ -360,7 +360,6 @@ void TokensViewDialog::on_tokenTable_itemDoubleClicked()
     QString infoString;
     if (grpID.isSubgroup())
     {
-        auto info = tokencache.GetTokenDesc(grpID);
         infoString.append("<b> Token ID:</b>  " + selectedItems[0]->text() + "<br>");
         std::vector<unsigned char> vData = grpID.getSubgroupData();
         std::string strData(vData.begin(), vData.end());
@@ -377,35 +376,55 @@ void TokensViewDialog::on_tokenTable_itemDoubleClicked()
         {
             infoString.append("<b> " + tr("Data") + " </b>(" + tr("num") + "):  <i>" + tr("NaN") + "</i><br>");
         }
+        infoString.append(
+            "<b> " + tr("Total Mintage:") + "</b>  " + QString::number(tokenmint.GetTokenMint(grpID)) + "<br>");
         infoString.append("<br>");
 
         // Get the parent group and display it.  Also re-assign the grpID to be the parent group
         // which will be used down below to get the token descriptions.
-        grpID = grpID.parentGroup();
-        infoString.append("<b> Parent ID:</b>  " + QString(EncodeGroupToken(grpID).c_str()) + "<br>");
+        infoString.append("<b> Parent ID:</b>  " + QString(EncodeGroupToken(grpID.parentGroup()).c_str()) + "<br>");
+
+        infoString.append("<b> " + tr("Name:") + "</b>  " + selectedItems[1]->text() + "<br>");
+        infoString.append("<b> " + tr("Ticker:") + "</b>  " + selectedItems[2]->text() + "<br>");
+
+        auto info = tokencache.GetTokenDesc(grpID.parentGroup());
+        if (info.size() >= 4)
+        {
+            infoString.append("<b> " + tr("URL:") + "</b>  " + QString(info[2].c_str()) + "<br>");
+            infoString.append("<b> " + tr("Hash:") + "</b>  " + QString(info[3].c_str()) + "<br>");
+        }
+        if (info.size() >= 5)
+        {
+            infoString.append("<b> " + tr("Decimals:") + "</b>  " + QString(info[4].c_str()) + "<br>");
+        }
+
+        infoString.append("<hr></hr>");
+        infoString.append("<b> " + tr("Balance:") + "</b>  " + selectedItems[3]->text() + "<br>");
+        infoString.append("<b> " + tr("Pending:") + "</b>  " + selectedItems[4]->text() + "<br>");
     }
     else
     {
         infoString.append("<b> Token ID:</b>  " + selectedItems[0]->text() + "<br>");
-    }
+        infoString.append("<b> " + tr("Name:") + "</b>  " + selectedItems[1]->text() + "<br>");
+        infoString.append("<b> " + tr("Ticker:") + "</b>  " + selectedItems[2]->text() + "<br>");
 
-    infoString.append("<b> " + tr("Name:") + "</b>  " + selectedItems[1]->text() + "<br>");
-    infoString.append("<b> " + tr("Ticker:") + "</b>  " + selectedItems[2]->text() + "<br>");
+        auto info = tokencache.GetTokenDesc(grpID);
+        if (info.size() >= 4)
+        {
+            infoString.append("<b> " + tr("URL:") + "</b>  " + QString(info[2].c_str()) + "<br>");
+            infoString.append("<b> " + tr("Hash:") + "</b>  " + QString(info[3].c_str()) + "<br>");
+        }
+        if (info.size() >= 5)
+        {
+            infoString.append("<b> " + tr("Decimals:") + "</b>  " + QString(info[4].c_str()) + "<br>");
+        }
+        infoString.append(
+            "<b> " + tr("Total Mintage:") + "</b>  " + QString::number(tokenmint.GetTokenMint(grpID)) + "<br>");
 
-    auto info = tokencache.GetTokenDesc(grpID);
-    if (info.size() >= 4)
-    {
-        infoString.append("<b> " + tr("URL:") + "</b>  " + QString(info[2].c_str()) + "<br>");
-        infoString.append("<b> " + tr("Hash:") + "</b>  " + QString(info[3].c_str()) + "<br>");
+        infoString.append("<hr></hr>");
+        infoString.append("<b> " + tr("Balance:") + "</b>  " + selectedItems[3]->text() + "<br>");
+        infoString.append("<b> " + tr("Pending:") + "</b>  " + selectedItems[4]->text() + "<br>");
     }
-    if (info.size() >= 5)
-    {
-        infoString.append("<b> " + tr("Decimals:") + "</b>  " + QString(info[4].c_str()) + "<br>");
-    }
-
-    infoString.append("<hr></hr>");
-    infoString.append("<b> " + tr("Balance:") + "</b>  " + selectedItems[3]->text() + "<br>");
-    infoString.append("<b> " + tr("Pending:") + "</b>  " + selectedItems[4]->text() + "<br>");
 
     if (!uiTokenDesc || !uiTokenDesc->isVisible())
     {

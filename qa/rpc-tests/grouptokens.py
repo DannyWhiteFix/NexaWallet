@@ -29,12 +29,18 @@ class GroupTokensTest (BitcoinTestFramework):
         # Number of nodes to initialize ----------> ^
 
     def setup_network(self, split=False):
-        self.nodes = start_nodes(3, self.options.tmpdir)
+        #self.nodes = start_nodes(3, self.options.tmpdir)
+
+        self.nodes = []
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug=mempool"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug=mempool"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug=mempool"]))
 
         # Now interconnect the nodes
-        connect_nodes_bi(self.nodes, 0, 1)
-        connect_nodes_bi(self.nodes, 0, 2)
-        connect_nodes_bi(self.nodes, 1, 2)
+        #connect_nodes_bi(self.nodes, 0, 1)
+        #connect_nodes_bi(self.nodes, 0, 2)
+        #connect_nodes_bi(self.nodes, 1, 2)
+        interconnect_nodes(self.nodes)
         self.is_network_split = False
         self.sync_blocks()
 
@@ -59,7 +65,7 @@ class GroupTokensTest (BitcoinTestFramework):
                     assert bytes.fromhex(asm[4]).decode() == url
                     assert bytes.fromhex(asm[5])[::-1] == bytes.fromhex(sha)
 
-    def checkTokenInfo(self, node, grpId, ticker="", name="", url="", url_hash="", balance="0"):
+    def checkTokenInfo(self, node, grpId, ticker="", name="", url="", url_hash="", balance="0", mintage=0):
         info = node.token("info")
         if (grpId not in info):
             raise Exception("Group Id not found")
@@ -69,6 +75,7 @@ class GroupTokensTest (BitcoinTestFramework):
         assert_equal(info[grpId]['url'], url)
         assert_equal(info[grpId]['hash'], url_hash)
         assert_equal(info[grpId]['balance'], balance)
+        assert_equal(info[grpId]['mintage'], mintage)
 
         info = node.token("info", grpId)
         if (len(info) != 1):
@@ -81,6 +88,7 @@ class GroupTokensTest (BitcoinTestFramework):
         assert_equal(info[grpId]['url'], url)
         assert_equal(info[grpId]['hash'], url_hash)
         assert_equal(info[grpId]['balance'], balance)
+        assert_equal(info[grpId]['mintage'], mintage)
 
 
     def examineTx(self, tx, node):
@@ -110,10 +118,15 @@ class GroupTokensTest (BitcoinTestFramework):
         addr2 = self.nodes[2].getnewaddress()
 
         # mint 100 tokens for node 2
+        waitFor(30, lambda: self.nodes[0].token("mintage", sg1a), 0);
         tx = self.nodes[0].token("mint",sg1a, addr2, 100)
         waitFor(30, lambda: tx in self.nodes[2].getrawtxpool())  # If this fails, remember that there's a very rare chance that a tx won't propagate due to an inv bloom filter collision.
         assert_equal(self.nodes[2].token("balance", sg1a), 100)
         assert_equal(self.nodes[2].token("balance", grp1), 0)
+
+        # check mintages are correct
+        waitFor(30, lambda: self.nodes[0].token("mintage", sg1a), 100);
+        waitFor(30, lambda: self.nodes[2].token("mintage", sg1a), 100);
 
         try: # node 2 doesn't have melt auth on the group or subgroup
             tx = self.nodes[2].token("melt",sg1a, 50)
@@ -419,7 +432,6 @@ class GroupTokensTest (BitcoinTestFramework):
             self.nodes[2].token("melt", grp2Id, 0)
             assert(0)
         except JSONRPCException as e:
-            print(str(e.error["message"]))
             assert("Token melt amount must be greater than zero" in e.error["message"])
 
         try:  # melt too little
@@ -487,8 +499,8 @@ class GroupTokensTest (BitcoinTestFramework):
             assert False
         except:
             pass
-        self.checkTokenInfo(self.nodes[2], grp2Id, "","","","", 800)
-        self.checkTokenInfo(self.nodes[0], grpId, "","","","", 3000)
+        self.checkTokenInfo(self.nodes[2], grp2Id, "","","","", 800, 1100)
+        self.checkTokenInfo(self.nodes[0], grpId, "","","","", 3000, 4000)
         # This should fail because the grp2Id was created for an address on node[0]
         try:
             self.checkTokenInfo(self.nodes[1], grpId, "","","","", 1000)
@@ -538,6 +550,10 @@ class GroupTokensTest (BitcoinTestFramework):
         # no effect on any tokens in the wallet
         logging.info("Consolidating " + str(len(self.nodes[0].listunspent(0))))
         self.nodes[0].consolidate(5000, 1)
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        self.nodes[2].generate(1)
+        self.sync_blocks()
 
         # melt some of my tokens
         logging.info("melt")
@@ -559,6 +575,12 @@ class GroupTokensTest (BitcoinTestFramework):
         #    the sourc of the tokens is ourselves and is trusted.
         # 2) Send a token from one node to another. The instant delay should be in effect.
         logging.info("testing instant transactions")
+        self.sync_all()
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        self.nodes[0].generate(2)
+        self.sync_blocks()
+
         instantDelay = 3
         self.nodes[0].set("wallet.instantDelay=3");
         self.nodes[1].set("wallet.instantDelay=3");
@@ -574,14 +596,19 @@ class GroupTokensTest (BitcoinTestFramework):
             time.sleep(0.1)
             endTime = time.time()
         assert(endTime <= totalTimeAllowed)
+        self.sync_all()
 
         # Send to another node - the instant delay should be visible
         addr2 = self.nodes[2].getnewaddress()
+        self.nodes[0].generate(1)
+        self.sync_blocks()
         self.nodes[0].token("send", grp0Id, addr2, 10)
-        time.sleep(instantDelay - 1) # wait until just before the delay expires
-        assert(self.nodes[2].token("balance", grp0Id, addr2) == 0)
-        time.sleep(1) # wait the last second and the balance should update
-        assert(self.nodes[2].token("balance", grp0Id, addr2) == 10)
+        while (self.nodes[2].gettxpoolinfo()['size'] == 0):
+            time.sleep(.1)
+        time.sleep(instantDelay - 1.5) # wait until just before the delay expires
+        assert_equal(self.nodes[2].token("balance", grp0Id, addr2), 0)
+        time.sleep(1.5) # wait the last second and the balance should update (wait just a little longer for the tx to get into the txpool)
+        assert_equal(self.nodes[2].token("balance", grp0Id, addr2), 10)
 
 
         ### Test instant transactions for tokens can be turned off.
@@ -593,12 +620,202 @@ class GroupTokensTest (BitcoinTestFramework):
 
         addr3 = self.nodes[0].getnewaddress()
         self.nodes[2].token("send", grp0Id, addr3, 25)
+        self.sync_all()
         time.sleep(instantDelay + 1) # wait one second extra to be sure
         assert(self.nodes[0].token("balance", grp0Id, addr3) == 0)
-        
+
         # generate a block and the balance should now update
         self.nodes[0].generate(1)
         assert(self.nodes[0].token("balance", grp0Id, addr3) == 25)
+
+
+        # Check mint/melt is updated correctly
+        #
+        # When minting or melting the "mintage" value should not update until a block is mined.
+        # Also need to check that rolling back blocks updates the "mintage" correctly
+        logging.info("testing mintage tracking")
+
+        # create 2 new groups to use
+        t = self.nodes[0].token("new")
+        grp_node0 = t["groupIdentifier"]
+        t = self.nodes[2].token("new")
+        grp_node2 = t["groupIdentifier"]
+ 
+
+        # check mintages are correct for single mint
+        mintage0 = self.nodes[0].token("mintage", grp_node0)
+        self.nodes[0].token("mint", grp_node0, mint0_0, 100)
+        waitFor(30, lambda: self.nodes[0].token("mintage", grp_node0) == mintage0 + 0)
+        waitFor(30, lambda: self.nodes[2].token("mintage", grp_node0) == mintage0 + 0)
+        mintage0 = self.nodes[0].token("mintage", grp_node0)
+        self.nodes[0].generate(1);
+        waitFor(30, lambda: self.nodes[0].token("mintage", grp_node0) == mintage0 + 100)
+        waitFor(30, lambda: self.nodes[2].token("mintage", grp_node0) == mintage0 + 100)
+
+        # check mintages are correct for single melt
+        mintage0 = self.nodes[0].token("mintage", grp_node0)
+        self.nodes[0].token("melt", grp_node0, 10)
+        waitFor(30, lambda: self.nodes[0].token("mintage", grp_node0) == mintage0 + 0)
+        waitFor(30, lambda: self.nodes[2].token("mintage", grp_node0) == mintage0 + 0)
+        mintage0 = self.nodes[0].token("mintage", grp_node0)
+        self.nodes[0].generate(1);
+        waitFor(30, lambda: self.nodes[0].token("mintage", grp_node0) == mintage0 - 10)
+        waitFor(30, lambda: self.nodes[2].token("mintage", grp_node0) == mintage0 - 10)
+
+
+        # check mintages are correct for multiple mints
+        mintage0 = self.nodes[0].token("mintage", grp_node0)
+        mintage2 = self.nodes[2].token("mintage", grp_node2)
+        self.nodes[0].token("mint", grp_node0, mint0_0, 100)
+        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()['size'] == 1)
+        self.nodes[0].token("mint", grp_node0, mint0_0, 1)
+        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()['size'] == 2)
+        self.nodes[2].token("mint", grp_node2, mint2_0, 1400)
+        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()['size'] == 3)
+        self.nodes[2].token("mint", grp_node2, mint2_0, 100)
+        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()['size'] == 4)
+        waitFor(30, lambda: self.nodes[0].token("mintage", grp_node0) == mintage0 + 0)
+        waitFor(30, lambda: self.nodes[2].token("mintage", grp_node0) == mintage0 + 0)
+        waitFor(30, lambda: self.nodes[0].token("mintage", grp_node2) == mintage2 + 0)
+        waitFor(30, lambda: self.nodes[2].token("mintage", grp_node2) == mintage2 + 0)
+        mintage0 = self.nodes[0].token("mintage", grp_node0)
+        mintage2 = self.nodes[2].token("mintage", grp_node2)
+
+        self.sync_all()
+        self.nodes[0].generate(1);
+        self.sync_blocks()
+        self.nodes[2].generate(1);
+        self.sync_blocks()
+
+        waitFor(30, lambda: self.nodes[0].token("mintage", grp_node0) == mintage0 + 101)
+        waitFor(30, lambda: self.nodes[2].token("mintage", grp_node0) == mintage0 + 101)
+        waitFor(30, lambda: self.nodes[0].token("mintage", grp_node2) == mintage2 + 1500)
+        waitFor(30, lambda: self.nodes[2].token("mintage", grp_node2) == mintage2 + 1500)
+
+        # check mintages are correct for multiple mints/melts
+        mintage0 = self.nodes[0].token("mintage", grp_node0)
+        mintage2 = self.nodes[2].token("mintage", grp_node2)
+        # Need to add small waits or checks to the mempool because after mint/melt we need the
+        # authority to be in the txpool so we can create the next mint or melt.
+        self.nodes[0].token("mint", grp_node0, mint0_0, 100)
+        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()['size'] == 1)
+        self.nodes[0].token("melt", grp_node0, 99)
+        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()['size'] == 2)
+        self.nodes[0].token("mint", grp_node0, mint0_0, 10)
+        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()['size'] == 3)
+        self.nodes[0].token("melt", grp_node0, 2)
+        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()['size'] == 4)
+        self.nodes[2].token("melt", grp_node2, 10)
+        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()['size'] == 5)
+        self.nodes[2].token("mint", grp_node2, mint2_0, 1400)
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'] == 6)
+        self.nodes[2].token("melt", grp_node2, 10)
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'] == 7)
+        self.nodes[2].token("melt", grp_node2, 10)
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'] == 8)
+        self.nodes[2].token("melt", grp_node2, 13)
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'] == 9)
+        self.nodes[2].token("mint", grp_node2, mint2_0, 100)
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'] == 10)
+        waitFor(30, lambda: self.nodes[0].token("mintage", grp_node0) == mintage0 + 0)
+        waitFor(30, lambda: self.nodes[2].token("mintage", grp_node0) == mintage0 + 0)
+        waitFor(30, lambda: self.nodes[0].token("mintage", grp_node2) == mintage2 + 0)
+        waitFor(30, lambda: self.nodes[2].token("mintage", grp_node2) == mintage2 + 0)
+        mintage0 = self.nodes[0].token("mintage", grp_node0)
+        mintage2 = self.nodes[2].token("mintage", grp_node2)
+
+        self.sync_all()
+        self.nodes[0].generate(1);
+        self.sync_blocks()
+        self.nodes[2].generate(1);
+        self.sync_blocks()
+
+        waitFor(30, lambda: self.nodes[0].token("mintage", grp_node0) == mintage0 + 9)
+        waitFor(30, lambda: self.nodes[2].token("mintage", grp_node0) == mintage0 + 9)
+        waitFor(30, lambda: self.nodes[0].token("mintage", grp_node2) == mintage2 + 1457)
+        waitFor(30, lambda: self.nodes[2].token("mintage", grp_node2) == mintage2 + 1457)
+
+        # stop and start nodes and make sure mintages are still available
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+        self.nodes = start_nodes(3, self.options.tmpdir)
+        interconnect_nodes(self.nodes)
+        self.sync_blocks()
+        waitFor(30, lambda: self.nodes[0].token("mintage", grp_node0) == mintage0 + 9)
+        waitFor(30, lambda: self.nodes[2].token("mintage", grp_node0) == mintage0 + 9)
+        waitFor(30, lambda: self.nodes[0].token("mintage", grp_node2) == mintage2 + 1457)
+        waitFor(30, lambda: self.nodes[2].token("mintage", grp_node2) == mintage2 + 1457)
+
+
+        # Melt all tokens
+        balance0 = self.nodes[0].token("balance", grp_node0)
+        mintage0 = self.nodes[0].token("mintage", grp_node0)
+
+        balance2 = self.nodes[2].token("balance", grp_node2)
+        mintage2 = self.nodes[2].token("mintage", grp_node2)
+        assert_equal(balance0, mintage0);
+        assert_equal(balance2, mintage2);
+
+        self.nodes[0].token("melt", grp_node0, balance0)
+        self.nodes[2].token("melt", grp_node2, balance2)
+        self.sync_all()
+        self.nodes[0].generate(1);
+        self.sync_blocks()
+        self.nodes[2].generate(1);
+        self.sync_blocks()
+        waitFor(30, lambda: self.nodes[0].token("mintage", grp_node0) == 0)
+        waitFor(30, lambda: self.nodes[0].token("mintage", grp_node2) == 0)
+
+        logging.info("testing mintage tracking with rollback and reorg")
+
+        self.nodes[2].token("mint", grp_node2, mint2_0, 1500)
+        self.nodes[2].generate(1);
+        waitFor(30, lambda: self.nodes[2].token("mintage", grp_node2) == 1500)
+        self.nodes[2].token("mint", grp_node2, mint2_0, 100)
+        self.nodes[2].generate(1);
+        waitFor(30, lambda: self.nodes[2].token("mintage", grp_node2) == 1600)
+        self.nodes[2].token("melt", grp_node2, 5)
+        self.nodes[2].generate(1);
+        waitFor(30, lambda: self.nodes[2].token("mintage", grp_node2) == 1595)
+        self.nodes[2].token("melt", grp_node2, 10)
+        self.nodes[2].generate(1);
+        waitFor(30, lambda: self.nodes[2].token("mintage", grp_node2) == 1585)
+
+        # undo the last melts of coins on node2
+        mintage = self.nodes[2].token("mintage", grp_node2)
+        self.nodes[2].invalidateblock(self.nodes[2].getbestblockhash())
+        mintageafter = self.nodes[2].token("mintage", grp_node2)
+        waitFor(10, lambda: self.nodes[2].token("mintage", grp_node2) == mintage + 10)
+
+        mintage = self.nodes[2].token("mintage", grp_node2)
+        self.nodes[2].invalidateblock(self.nodes[2].getbestblockhash())
+        mintageafter = self.nodes[2].token("mintage", grp_node2)
+        waitFor(10, lambda: self.nodes[2].token("mintage", grp_node2) == mintage + 5)
+
+        # undo the last mints of coins on node2
+        mintage = self.nodes[2].token("mintage", grp_node2)
+        self.nodes[2].invalidateblock(self.nodes[2].getbestblockhash())
+        mintageafter = self.nodes[2].token("mintage", grp_node2)
+        waitFor(10, lambda: self.nodes[2].token("mintage", grp_node2) == mintage - 100)
+
+        mintage = self.nodes[2].token("mintage", grp_node2)
+        self.nodes[2].invalidateblock(self.nodes[2].getbestblockhash())
+        mintageafter = self.nodes[2].token("mintage", grp_node2)
+        waitFor(10, lambda: self.nodes[2].token("mintage", grp_node2) == mintage - 1500)
+        waitFor(10, lambda: self.nodes[2].token("mintage", grp_node2) == 0)
+
+        # create a new chain by mining a block.  The 4 mint/melt transactions will be
+        # in the txpool and when mined will return the mintage for this token to its value
+        # before we started invalidating blocks.
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'] == 4)
+        self.nodes[2].generate(1);
+        mintageafter = self.nodes[2].token("mintage", grp_node2)
+        waitFor(30, lambda: self.nodes[2].token("mintage", grp_node2) == 1585)
+
+        # Now finally invalidate this last block which has all 4 mint/melt txns
+        # Result:  we should be back to a mintage of zero!
+        self.nodes[2].invalidateblock(self.nodes[2].getbestblockhash())
+        waitFor(10, lambda: self.nodes[2].token("mintage", grp_node2) == 0)
 
 
         logging.info("test complete")
