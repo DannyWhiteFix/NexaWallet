@@ -274,6 +274,16 @@ class GroupTokensTest (BitcoinTestFramework):
         except JSONRPCException as e:
             pass
         try:
+            t = self.nodes[0].token("new", "TICK2", "AnotherNameGoesHere", "https://www.nexa.org/smthing", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a6") # missing one character to the uint256 hash
+            assert False  # should be an invalid uint256 message
+        except JSONRPCException as e:
+            assert("is not a uint256" in e.error['message'])
+        try:
+            t = self.nodes[0].token("new", "TICK2", "AnotherNameGoesHere", "https://www.nexa.org/smthing", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a6aa") # one character too many for the uint256 hash
+            assert False  # should be an invalid uint256 message
+        except JSONRPCException as e:
+            assert("is not a uint256" in e.error['message'])
+        try:
             t = self.nodes[0].token("new", "TICK2", "AnotherNameGoesHere")
         except JSONRPCException as e:
             assert False  # this param combination should work

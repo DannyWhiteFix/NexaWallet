@@ -180,8 +180,17 @@ std::vector<std::string> GetTokenDescription(const CScript &script)
         {
             if (count != 4)
             {
-                std::string s(vchRet.begin(), vchRet.end());
-                vTokenDesc.push_back(s);
+                if (count == 3)
+                {
+                    // Convert hash stored as a vector of unsigned chars to a string.
+                    uint256 hash(&vchRet.data()[0]);
+                    vTokenDesc.push_back(hash.ToString());
+                }
+                else
+                {
+                    std::string s(vchRet.begin(), vchRet.end());
+                    vTokenDesc.push_back(s);
+                }
             }
             else // 5th parameter in op return is the number of decimals
             {
@@ -876,6 +885,12 @@ std::vector<std::vector<unsigned char> > ParseGroupDescParams(const UniValue &pa
     }
 
     std::string hexDocHash = params[curparam].get_str();
+    if (hexDocHash.size() != 64)
+    {
+        std::string strError = strprintf("Parameter %s is not a uint256", hexDocHash);
+        throw JSONRPCError(RPC_INVALID_PARAMS, strError);
+    }
+
     uint256 docHash;
     docHash.SetHex(hexDocHash);
     ret.push_back(std::vector<unsigned char>(docHash.begin(), docHash.end()));
@@ -1438,19 +1453,7 @@ extern UniValue token(const UniValue &params, bool fHelp)
                     entry.pushKV("ticker", info[0]);
                     entry.pushKV("name", info[1]);
                     entry.pushKV("url", info[2]);
-
-                    std::string s = info[3];
-                    if (s.size() != 32)
-                    {
-                        entry.pushKV("hash", "");
-                    }
-                    else
-                    {
-                        std::vector<unsigned char> vHash(s.begin(), s.end());
-                        uint256 dochash(vHash);
-                        if (!dochash.IsNull())
-                            entry.pushKV("hash", dochash.ToString());
-                    }
+                    entry.pushKV("hash", info[3]);
                 }
 
                 if (info.size() >= 5)

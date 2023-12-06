@@ -65,6 +65,7 @@ CGroupTokenID findGroupId(const COutPoint &input,
 CScript GetScriptForDestination(const CTxDestination &dest, const CGroupTokenID &group, const CAmount &amount);
 
 //* Create and retrieve token descriptions using an OP_RETURN
+std::vector<std::vector<unsigned char> > ParseGroupDescParams(const UniValue &params, unsigned int &curparam);
 std::vector<std::string> GetTokenDescription(const CScript &script);
 CScript BuildTokenDescScript(const std::vector<std::vector<unsigned char> > &desc);
 

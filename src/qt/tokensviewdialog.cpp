@@ -410,7 +410,7 @@ void TokensViewDialog::on_tokenTable_itemDoubleClicked()
     if (!uiTokenDesc || !uiTokenDesc->isVisible())
     {
         uiTokenDesc = new TokenDescDialog(&infoString, this);
-        uiTokenDesc->show();
+        uiTokenDesc->exec();
     }
 }
 
