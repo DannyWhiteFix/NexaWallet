@@ -217,6 +217,16 @@ public:
     bool WriteDesc(const CGroupTokenID &grpID, const std::vector<std::string> &desc);
 };
 
+/** Access to the token mintage database (indexes/tokenmint */
+class CTokenMintageDB : public CDBWrapper
+{
+public:
+    CTokenMintageDB(size_t n_cache_size, bool fMemory = false, bool fWipe = false);
+
+    bool ReadMint(const CGroupTokenID &grpID, CAmount &mint) const;
+    bool WriteMint(const CGroupTokenID &grpID, const CAmount mint);
+};
+
 /**
  * Access to the txindex database (indexes/txindex/)
  *

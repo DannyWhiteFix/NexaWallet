@@ -1354,8 +1354,10 @@ bool AppInit2(Config &config)
     LOGA("* Using %.1fMiB for chain state database\n", cacheConfig.nCoinDBCache * (1.0 / 1024 / 1024));
     LOGA("* Using %.1fMiB for in-memory UTXO set\n", nCoinCacheMaxSize * (1.0 / 1024 / 1024));
 
-    bool fLoaded = false;
+    // Set the flag so we don't processing token mintages during the startup where we check blocks.
+    fVerifyDB.store(true);
 
+    bool fLoaded = false;
     while (!fLoaded)
     {
         bool fReset = fReindex;
@@ -1390,6 +1392,10 @@ bool AppInit2(Config &config)
 
                 uiInterface.InitMessage(_("Opening Token Description database..."));
                 ptokenDesc = new CTokenDescriptionDB(cacheConfig.nBlockTreeDBCache, false, fReindex);
+
+                uiInterface.InitMessage(_("Opening Token Mintage database..."));
+                ptokenMint = new CTokenMintageDB(cacheConfig.nBlockTreeDBCache, false, fReindex);
+
 
                 InitTxAdmission();
 
@@ -1795,6 +1801,9 @@ bool AppInit2(Config &config)
     if (GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION))
         StartTorControl();
 
+
+    // Now we can start processing mintages again
+    fVerifyDB.store(false);
 
     StartNode();
 

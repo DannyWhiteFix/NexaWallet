@@ -27,6 +27,7 @@ static const char DB_OUTPOINT_INDEX = 'p';
 static const char DB_TXINDEX_BLOCK = 'T';
 static const char DB_BLOCK_INDEX = 'b';
 static const char DB_TOKEN_DESC = 'D';
+static const char DB_TOKEN_MINT = 'M';
 
 static const char DB_BEST_BLOCK = 'B';
 static const char DB_FLAG = 'F';
@@ -845,6 +846,23 @@ bool CTokenDescriptionDB::WriteDesc(const CGroupTokenID &grpID, const std::vecto
 {
     return Write(std::make_pair(DB_TOKEN_DESC, grpID), desc);
 }
+
+CTokenMintageDB::CTokenMintageDB(size_t n_cache_size, bool f_memory, bool f_wipe)
+    : CDBWrapper(GetDataDir() / "indexes" / "tokenmint", n_cache_size, f_memory, f_wipe)
+{
+}
+
+bool CTokenMintageDB::ReadMint(const CGroupTokenID &grpID, CAmount &mint) const
+{
+    // Store group id keys as uint256 so that they are all the same size.
+    return Read(std::make_pair(DB_TOKEN_MINT, SerializeHash(grpID)), mint);
+}
+
+bool CTokenMintageDB::WriteMint(const CGroupTokenID &grpID, const CAmount mint)
+{
+    return Write(std::make_pair(DB_TOKEN_MINT, SerializeHash(grpID)), mint);
+}
+
 
 TxIndexDB::TxIndexDB(size_t n_cache_size, bool f_memory, bool f_wipe)
     : CDBWrapper(GetDataDir() / "indexes" / "txindex", n_cache_size, f_memory, f_wipe)

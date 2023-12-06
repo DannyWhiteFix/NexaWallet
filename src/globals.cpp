@@ -230,6 +230,7 @@ CTxMemPool mempool;
 CTxOrphanPool orphanpool;
 #ifdef ENABLE_WALLET
 CTokenDescCache tokencache;
+CTokenMintCache tokenmint;
 #endif
 
 std::list<CStatBase *> mallocedStats;

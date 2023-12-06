@@ -2099,6 +2099,21 @@ DisconnectResult DisconnectBlock(const ConstCBlockRef pblock, const CBlockIndex 
         // At this point, all of txundo.vprevout should have been moved out.
     }
 
+#ifdef ENABLE_WALLET
+    if (!fVerifyDB.load())
+    {
+        // Before removing the outputs check through the block again for
+        // any token mint/melt transactions and undo them
+        std::map<CGroupTokenID, CAmount> accumulatedMintages;
+        for (unsigned int i = 1; i < pblock->vtx.size(); i++)
+        {
+            tokenmint.AccumulateTokenMintages(pblock->vtx[i], view, accumulatedMintages);
+        }
+        // Remove token mintages if there are any
+        tokenmint.RemoveTokenMintages(accumulatedMintages);
+    }
+#endif
+
     // remove outputs
     for (unsigned int i = 0; i < pblock->vtx.size(); i++)
     {
@@ -2222,7 +2237,8 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
     bool fScriptChecks,
     CAmount &nFees,
     CBlockUndo &blockundo,
-    std::vector<std::pair<uint256, CDiskTxPos> > &vPos)
+    std::vector<std::pair<uint256, CDiskTxPos> > &vPos,
+    std::map<CGroupTokenID, CAmount> &accumulatedMintages)
 {
     nFees = 0;
     int64_t nTime2 = GetStopwatchMicros();
@@ -2264,6 +2280,7 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
      *********************************************************************************************/
     if (fParallel)
         LEAVE_CRITICAL_SECTION(cs_main);
+
 
     // Begin Section for Boost Scope Guard
     {
@@ -2316,6 +2333,7 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
         // a chance to process in parallel. This is crucial for parallel validation to work.
         // NOTE: the only place where cs_main is needed is if we hit PV->ChainWorkHasChanged, which
         //       internally grabs the cs_main lock when needed.
+
         bool fPVtest = pvtest.Value();
         for (unsigned int i = 0; i < pblock->vtx.size(); i++)
         {
@@ -2326,6 +2344,13 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
 
             if (!tx.IsCoinBase())
             {
+#ifdef ENABLE_WALLET
+                if (!fJustCheck && !fVerifyDB.load())
+                {
+                    tokenmint.AccumulateTokenMintages(txref, view, accumulatedMintages);
+                }
+#endif
+
                 const char *errCode = nullptr;
                 // Check that transaction is BIP68 final
                 // BIP68 lock checks (as opposed to nLockTime checks) must
@@ -2508,8 +2533,8 @@ bool ConnectBlock(ConstCBlockRef pblock,
         return true;
     }
 
-    /** BU: Start Section to validate inputs - if there are parallel blocks being checked
-     *      then the winner of this race will get to update the UTXO.
+    /** Start Section to validate inputs - if there are parallel blocks being checked
+     *  then the winner of this race will get to update the UTXO.
      */
     AssertLockHeld(cs_main); // for setDirtyBlockIndex (et al)
     // Section for boost scoped lock on the scriptcheck_mutex
@@ -2541,9 +2566,10 @@ bool ConnectBlock(ConstCBlockRef pblock,
     CBlockUndo blockundo;
     std::vector<std::pair<uint256, CDiskTxPos> > vPos;
     vPos.reserve(pblock->vtx.size());
+    std::map<CGroupTokenID, CAmount> accumulatedMintages;
 
-    if (!ConnectBlockCanonicalOrdering(
-            pblock, state, pindex, view, chainparams, fJustCheck, fParallel, fScriptChecks, nFees, blockundo, vPos))
+    if (!ConnectBlockCanonicalOrdering(pblock, state, pindex, view, chainparams, fJustCheck, fParallel, fScriptChecks,
+            nFees, blockundo, vPos, accumulatedMintages))
     {
         return false;
     }
@@ -2629,6 +2655,12 @@ bool ConnectBlock(ConstCBlockRef pblock,
     {
         txRecentlyInBlock.insert(ptx->GetId());
     }
+
+#ifdef ENABLE_WALLET
+    // Apply token mintages if there are any
+    if (!fVerifyDB.load())
+        tokenmint.ApplyTokenMintages(accumulatedMintages);
+#endif
 
     return true;
 }

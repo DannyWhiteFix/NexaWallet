@@ -104,4 +104,46 @@ public:
 };
 extern CTokenDescCache tokencache;
 
+// A cache class for storing token mintages with a finite sized cached.
+class CTokenMintCache
+{
+private:
+    mutable CCriticalSection cs_tokenmint;
+
+    /** an in memory cache of blocks */
+    std::map<const CGroupTokenID, CAmount> cache GUARDED_BY(cs_tokenmint);
+
+    /** Maximum number of cache elements */
+    size_t nMaxCacheSize GUARDED_BY(cs_tokenmint) = 10000;
+
+    /** Add to the in memory cache */
+    void AddToCache(const CGroupTokenID &_grpID, const CAmount _mint);
+
+    /** Add a token mintage to the database and cache */
+    void AddTokenMint(const CGroupTokenID &_grpID, const CAmount _mint);
+
+    /** Delete a token mintage (melt) from the database and cache */
+    void RemoveTokenMint(const CGroupTokenID &_grpID, const CAmount _melt);
+
+public:
+    CTokenMintCache(){};
+
+    /** Find and return a token mintage description from the cache */
+    uint64_t GetTokenMint(const CGroupTokenID &_grpID);
+
+    /** Find token mintages from new transactions that have arrived either
+     *  through txadmission or from new blocks, and save them to apply when
+     *  and if the block is confirmed.
+     */
+    void AccumulateTokenMintages(CTransactionRef ptx,
+        CCoinsViewCache &view,
+        std::map<CGroupTokenID, CAmount> &accumulatedMintages);
+
+    /** Add the saved token mints and melts, and apply them to the cache and the mintage database */
+    void ApplyTokenMintages(std::map<CGroupTokenID, CAmount> &accumulatedMintages);
+    /** Remove the saved token mints and melts, and apply them to the cache and the mintage database */
+    void RemoveTokenMintages(std::map<CGroupTokenID, CAmount> &accumulatedMintages);
+};
+extern CTokenMintCache tokenmint;
+
 #endif
