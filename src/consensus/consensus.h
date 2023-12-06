@@ -153,7 +153,11 @@ inline uint64_t GetMaxAllowedNetMessage()
     }
 
     // No network message should be larger than the current largest block size allowed
-    // but we multiply by 2 just to be allow for any error
-    return nLargestNextMax * 2;
+    // but we multiply by 2 just to allow for any large error.
+    //
+    // In additions add at least two megabytes extra in the case where the next max block size is low
+    // because we still need to allow for enough size allowance to download maximum sized inventory messages
+    // which can be 50000 * 36 = 1.8MB
+    return (ONE_MEGABYTE + nLargestNextMax) * 2;
 }
 #endif // NEXA_CONSENSUS_CONSENSUS_H
