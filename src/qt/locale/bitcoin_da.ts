@@ -1329,7 +1329,7 @@
         <translation>Antallet af script&amp;verificeringstråde</translation>
     </message>
     <message>
-        <location line="+195"/>
+        <location line="+211"/>
         <source>Allow incoming connections</source>
         <translation>Tillad indkommende forbindelser</translation>
     </message>
@@ -1376,12 +1376,12 @@
         <translation>&amp;Netværk</translation>
     </message>
     <message>
-        <location line="-145"/>
+        <location line="-161"/>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
         <translation>(0 = auto, &lt;0 = efterlad så mange kerner fri)</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+38"/>
         <source>W&amp;allet</source>
         <translation>&amp;Tegnebog</translation>
     </message>
@@ -1554,7 +1554,7 @@
         <translation>Hvorvidt egenskaber for coin-styring skal vises eller ej.</translation>
     </message>
     <message>
-        <location line="-121"/>
+        <location line="-137"/>
         <source>Automatically start %1 after logging in to the system.</source>
         <translation>Start automatisk %1 efter at have logget på systemet.</translation>
     </message>
@@ -1574,7 +1574,17 @@
         <translation>Genindeks ved opstart</translation>
     </message>
     <message>
-        <location line="+333"/>
+        <location line="+85"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Automatically initiate a full blockchain resynchronization on the next startup (one time only).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Start automatisk en fuld blockchain-resynkronisering ved næste opstart (kun én gang).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Resynchronize block data on startup</source>
+        <translation>Gensynkroniser blokdata ved opstart</translation>
+    </message>
+    <message>
+        <location line="+261"/>
         <location line="+23"/>
         <location line="+23"/>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
@@ -1591,7 +1601,7 @@
         <translation>&amp;Annullér</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+123"/>
+        <location filename="../optionsdialog.cpp" line="+124"/>
         <source>default</source>
         <translation>standard</translation>
     </message>
@@ -1601,7 +1611,7 @@
         <translation>ingen</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+77"/>
         <source>Confirm options reset</source>
         <translation>Bekræft nulstilling af indstillinger</translation>
     </message>
@@ -3814,7 +3824,7 @@
         <translation>Andet</translation>
     </message>
     <message>
-        <location line="+318"/>
+        <location line="+323"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Transaktionsstatus. Hold musen over dette felt for at vise antallet af bekræftelser.</translation>
     </message>
@@ -3972,7 +3982,7 @@
         <translation>Hvis dette er markeret, er dette element en undergruppe.</translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+366"/>
+        <location filename="../tokensviewdialog.cpp" line="+367"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -3995,55 +4005,42 @@
         <translation>NaN</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <location line="+42"/>
-        <source>Total Mintage:</source>
-        <translation>Samlet oplag:</translation>
-    </message>
-    <message>
-        <location line="-35"/>
-        <location line="+21"/>
+        <location line="+14"/>
         <source>Name:</source>
         <translation>Navn:</translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Ticker:</source>
         <translation>Symbol:</translation>
     </message>
     <message>
-        <location line="-16"/>
-        <location line="+21"/>
+        <location line="+5"/>
         <source>URL:</source>
         <translation>URL:</translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Hash:</source>
         <translation>Hash:</translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+21"/>
+        <location line="+4"/>
         <source>Decimals:</source>
         <translation>Decimaler:</translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+23"/>
+        <location line="+4"/>
         <source>Balance:</source>
         <translation>Saldo:</translation>
     </message>
     <message>
-        <location line="-22"/>
-        <location line="+23"/>
+        <location line="+1"/>
         <source>Pending:</source>
         <translation>Afventende:</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+87"/>
         <source>Are you sure you want to send?</source>
         <translation>Er du sikker på, at du vil sende?</translation>
     </message>
@@ -4946,12 +4943,12 @@
         <translation>Fejl: En alvorlig intern fejl er opstået. Se debug.log for detaljer</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+30"/>
         <source>Pruning blockstore...</source>
         <translation>Beskærer bloklager…</translation>
     </message>
     <message>
-        <location line="-165"/>
+        <location line="-164"/>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>Distribueret under MIT-softwarelicensen; se den vedlagte fil COPYING eller &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
@@ -5050,7 +5047,7 @@ Genstart venligst Nexa med &quot;-usehd=0&quot;.</translation>
         <translation>For få tilgængelige fildeskriptorer.</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+7"/>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>Beskæring kan ikke opsættes med en negativ værdi.</translation>
     </message>
@@ -5090,7 +5087,7 @@ Genstart venligst Nexa med &quot;-usehd=0&quot;.</translation>
         <translation>Tegnebog %s findes uden for datamappe %s</translation>
     </message>
     <message>
-        <location line="-177"/>
+        <location line="-176"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Fejl: Lytning efter indkommende forbindelser mislykkedes (lytning resultarede i fejl %s)</translation>
     </message>
@@ -5140,7 +5137,7 @@ Genstart venligst Nexa med &quot;-usehd=0&quot;.</translation>
         <translation>Nødt til at angive en port med -whitebinde: &quot;%s&quot;</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+14"/>
         <source>Signing transaction failed</source>
         <translation>Underskrift af transaktion mislykkedes</translation>
     </message>
@@ -5195,7 +5192,7 @@ Genstart venligst Nexa med &quot;-usehd=0&quot;.</translation>
         <translation>Advarsel</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-41"/>
         <source>Loading addresses...</source>
         <translation>Indlæser adresser…</translation>
     </message>
@@ -5205,12 +5202,12 @@ Genstart venligst Nexa med &quot;-usehd=0&quot;.</translation>
         <translation>Ugyldig -proxy adresse: &quot;%s&quot;</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+36"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Ukendt netværk anført i -onlynet: &quot;%s&quot;</translation>
     </message>
     <message>
-        <location line="-66"/>
+        <location line="-65"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Kan ikke finde -bind adressen: &quot;%s&quot;</translation>
     </message>
@@ -5498,11 +5495,6 @@ Når du klikker på &quot;OK&quot; lukker Nexa ned for at fuldføre processen.</
     </message>
     <message>
         <location line="+1"/>
-        <source>Opening Token Mintage database...</source>
-        <translation>Åbner Token Mintage-database...</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation>Åbner UTXO-database...</translation>
     </message>
@@ -5567,7 +5559,7 @@ Når du klikker på &quot;OK&quot; lukker Nexa ned for at fuldføre processen.</
         <translation>Zapper alle transaktioner fra tegnebogen...</translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-67"/>
         <source>Done loading</source>
         <translation>Indlæsning gennemført</translation>
     </message>

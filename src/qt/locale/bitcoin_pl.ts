@@ -1333,7 +1333,7 @@
         <translation>Liczba wątków &amp;weryfikacji skryptu</translation>
     </message>
     <message>
-        <location line="+195"/>
+        <location line="+211"/>
         <source>Allow incoming connections</source>
         <translation>Zezwól na połączenia przychodzące</translation>
     </message>
@@ -1380,12 +1380,12 @@
         <translation>&amp;Sieć</translation>
     </message>
     <message>
-        <location line="-145"/>
+        <location line="-161"/>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
         <translation>(0 = automatycznie, &lt;0 = zostaw tyle wolnych rdzeni)</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+38"/>
         <source>W&amp;allet</source>
         <translation>Portfel</translation>
     </message>
@@ -1553,7 +1553,7 @@
         <translation>Wybierz pokazywanie lub nie funkcji kontroli monet.</translation>
     </message>
     <message>
-        <location line="-121"/>
+        <location line="-137"/>
         <source>Automatically start %1 after logging in to the system.</source>
         <translation>Automatycznie uruchom %1 po zalogowaniu do systemu.</translation>
     </message>
@@ -1573,7 +1573,17 @@
         <translation>Ponowne indeksowanie przy starcie</translation>
     </message>
     <message>
-        <location line="+320"/>
+        <location line="+85"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Automatically initiate a full blockchain resynchronization on the next startup (one time only).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Automatycznie inicjuj pełną resynchronizację łańcucha bloków przy następnym uruchomieniu (tylko jednorazowo).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Resynchronize block data on startup</source>
+        <translation>Ponowna synchronizacja przy uruchomieniu</translation>
+    </message>
+    <message>
+        <location line="+248"/>
         <source>Used for reaching peers via:</source>
         <translation>Służy do dotarcia do rówieśników poprzez:</translation>
     </message>
@@ -1595,7 +1605,7 @@
         <translation>&amp;Anuluj</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+123"/>
+        <location filename="../optionsdialog.cpp" line="+124"/>
         <source>default</source>
         <translation>domyślny</translation>
     </message>
@@ -1605,7 +1615,7 @@
         <translation>żaden</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+77"/>
         <source>Confirm options reset</source>
         <translation>Potwierdź reset ustawień</translation>
     </message>
@@ -3825,7 +3835,7 @@
         <translation>Inne</translation>
     </message>
     <message>
-        <location line="+318"/>
+        <location line="+323"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Status transakcji. Najedź na pole, aby zobaczyć liczbę potwierdzeń.</translation>
     </message>
@@ -3983,7 +3993,7 @@
         <translation>Jeżeli zaznaczone, to ten element jest podgrupą.</translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+366"/>
+        <location filename="../tokensviewdialog.cpp" line="+367"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -4006,55 +4016,42 @@
         <translation>NaN</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <location line="+42"/>
-        <source>Total Mintage:</source>
-        <translation>Całkowity nakład:</translation>
-    </message>
-    <message>
-        <location line="-35"/>
-        <location line="+21"/>
+        <location line="+14"/>
         <source>Name:</source>
         <translation>Nazwa:</translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Ticker:</source>
         <translation>Symbol giełdowy:</translation>
     </message>
     <message>
-        <location line="-16"/>
-        <location line="+21"/>
+        <location line="+5"/>
         <source>URL:</source>
         <translation>URL:</translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Hash:</source>
         <translation>Hashuj:</translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+21"/>
+        <location line="+4"/>
         <source>Decimals:</source>
         <translation>Dziesiętne:</translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+23"/>
+        <location line="+4"/>
         <source>Balance:</source>
         <translation>Saldo:</translation>
     </message>
     <message>
-        <location line="-22"/>
-        <location line="+23"/>
+        <location line="+1"/>
         <source>Pending:</source>
         <translation>W toku:</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+87"/>
         <source>Are you sure you want to send?</source>
         <translation>Czy na pewno chcesz wysłać?</translation>
     </message>
@@ -4946,12 +4943,12 @@
         <translation>Błąd: Wystąpił fatalny błąd wewnętrzny, sprawdź szczegóły w debug.log</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+30"/>
         <source>Pruning blockstore...</source>
         <translation>Przycinanie zapisu bloków...</translation>
     </message>
     <message>
-        <location line="-165"/>
+        <location line="-164"/>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>Rozprowadzane na licencji MIT, zobacz dołączony plik COPYING lub &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
@@ -5045,7 +5042,7 @@ Uruchom ponownie Nexę z &quot;-usehd=0&quot;.</translation>
         <translation>Brak wystarczającej liczby deskryptorów plików.</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+7"/>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>Przycinanie nie może być skonfigurowane z negatywną wartością.</translation>
     </message>
@@ -5080,7 +5077,7 @@ Uruchom ponownie Nexę z &quot;-usehd=0&quot;.</translation>
         <translation>Portfel %s znajduje się poza folderem danych %s</translation>
     </message>
     <message>
-        <location line="-177"/>
+        <location line="-176"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Błąd: Nasłuchiwanie połączeń przychodzących nie powiodło się (nasłuch zwrócił błąd %s)</translation>
     </message>
@@ -5125,7 +5122,7 @@ Uruchom ponownie Nexę z &quot;-usehd=0&quot;.</translation>
         <translation>Musisz określić port z -whitebind: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+14"/>
         <source>Signing transaction failed</source>
         <translation>Podpisywanie transakcji nie powiodło się</translation>
     </message>
@@ -5180,7 +5177,7 @@ Uruchom ponownie Nexę z &quot;-usehd=0&quot;.</translation>
         <translation>Ostrzeżenie</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-41"/>
         <source>Loading addresses...</source>
         <translation>Wczytywanie adresów...</translation>
     </message>
@@ -5190,12 +5187,12 @@ Uruchom ponownie Nexę z &quot;-usehd=0&quot;.</translation>
         <translation>Nieprawidłowy adres -proxy: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+36"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Nieznana sieć w -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-66"/>
+        <location line="-65"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Nie można uzyskać adresu -bind: &apos;%s&apos;</translation>
     </message>
@@ -5509,11 +5506,6 @@ Po kliknięciu „OK” Nexa wyłączy się, aby zakończyć proces.</translatio
     </message>
     <message>
         <location line="+1"/>
-        <source>Opening Token Mintage database...</source>
-        <translation>Otwieram bazę danych Token Mintage...</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation>Otwieranie bazy danych UTXO...</translation>
     </message>
@@ -5583,7 +5575,7 @@ Po kliknięciu „OK” Nexa wyłączy się, aby zakończyć proces.</translatio
         <translation>Blokowanie wszystkich transakcji z portfela...</translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-67"/>
         <source>Done loading</source>
         <translation>Wczytywanie zakończone</translation>
     </message>

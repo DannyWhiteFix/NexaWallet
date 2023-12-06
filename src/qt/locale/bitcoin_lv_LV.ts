@@ -1328,7 +1328,7 @@
         <translation>Skriptu &amp;pārbaudes pavedienu skaits</translation>
     </message>
     <message>
-        <location line="+195"/>
+        <location line="+211"/>
         <source>Allow incoming connections</source>
         <translation>Atļaut ienākošos savienojumus</translation>
     </message>
@@ -1375,7 +1375,7 @@
         <translation>&amp;Tīkls</translation>
     </message>
     <message>
-        <location line="-220"/>
+        <location line="-236"/>
         <source>Automatically start %1 after logging in to the system.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1400,7 +1400,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+38"/>
         <source>W&amp;allet</source>
         <translation>&amp;Maciņš</translation>
     </message>
@@ -1580,7 +1580,17 @@
         <translation>Vai rādīt coin kontroles funkcijas vai nē.</translation>
     </message>
     <message>
-        <location line="+664"/>
+        <location line="-33"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Automatically initiate a full blockchain resynchronization on the next startup (one time only).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Resynchronize block data on startup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+694"/>
         <source>&amp;OK</source>
         <translation>&amp;Labi</translation>
     </message>
@@ -1590,7 +1600,7 @@
         <translation>&amp;Atcelt</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+123"/>
+        <location filename="../optionsdialog.cpp" line="+124"/>
         <source>default</source>
         <translation>pēc noklusēšanas</translation>
     </message>
@@ -1600,7 +1610,7 @@
         <translation>neviena</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+77"/>
         <source>Confirm options reset</source>
         <translation>Apstiprināt iestatījumu atiestatīšanu</translation>
     </message>
@@ -3820,7 +3830,7 @@
         <translation type="unfinished">Cits</translation>
     </message>
     <message>
-        <location line="+318"/>
+        <location line="+323"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation type="unfinished">Transakcijas statuss. Turiet peli virs šī lauka, lai redzētu apstiprinājumu skaitu.</translation>
     </message>
@@ -3978,7 +3988,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+366"/>
+        <location filename="../tokensviewdialog.cpp" line="+367"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -4001,55 +4011,42 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
-        <location line="+42"/>
-        <source>Total Mintage:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="-35"/>
-        <location line="+21"/>
+        <location line="+14"/>
         <source>Name:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Ticker:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-16"/>
-        <location line="+21"/>
+        <location line="+5"/>
         <source>URL:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Hash:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+21"/>
+        <location line="+4"/>
         <source>Decimals:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+23"/>
+        <location line="+4"/>
         <source>Balance:</source>
         <translation type="unfinished">Bilance:</translation>
     </message>
     <message>
-        <location line="-22"/>
-        <location line="+23"/>
+        <location line="+1"/>
         <source>Pending:</source>
         <translation type="unfinished">Neizšķirts:</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+87"/>
         <source>Are you sure you want to send?</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4946,7 +4943,7 @@
         <translation>Importē...</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+29"/>
         <source>Signing token transaction failed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5031,7 +5028,7 @@
         <translation>Pārbauda maciņu...</translation>
     </message>
     <message>
-        <location line="-70"/>
+        <location line="-69"/>
         <source>Cannot resolve -whitebind address: &apos;%s&apos;</source>
         <translation>Nevar atrisināt -whitebind adresi: &apos;%s&apos;</translation>
     </message>
@@ -5048,7 +5045,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Informācija</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+28"/>
         <source>Signing transaction failed</source>
         <translation>Transakcijas parakstīšana neizdevās</translation>
     </message>
@@ -5068,7 +5065,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Brīdinājums</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-41"/>
         <source>Loading addresses...</source>
         <translation>Ielādē adreses...</translation>
     </message>
@@ -5078,12 +5075,12 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Nederīga -proxy adrese: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+36"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>-onlynet komandā norādīts nepazīstams tīkls: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-66"/>
+        <location line="-65"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Nevar uzmeklēt -bind adresi: &apos;%s&apos;</translation>
     </message>
@@ -5505,11 +5502,6 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
     </message>
     <message>
         <location line="+1"/>
-        <source>Opening Token Mintage database...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5569,7 +5561,7 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-67"/>
         <source>Done loading</source>
         <translation>Ielāde pabeigta</translation>
     </message>

@@ -1329,7 +1329,7 @@
         <translation>Número de threads do script de &amp;verificação</translation>
     </message>
     <message>
-        <location line="+195"/>
+        <location line="+211"/>
         <source>Allow incoming connections</source>
         <translation>Permitir conexões de entrada</translation>
     </message>
@@ -1376,12 +1376,12 @@
         <translation>Rede</translation>
     </message>
     <message>
-        <location line="-145"/>
+        <location line="-161"/>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
         <translation>(0 = automático, &lt;0 = número de cores deixados livres)</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+38"/>
         <source>W&amp;allet</source>
         <translation>C&amp;arteira</translation>
     </message>
@@ -1554,7 +1554,7 @@
         <translation>Mostrar ou não opções de controle da moeda.</translation>
     </message>
     <message>
-        <location line="-121"/>
+        <location line="-137"/>
         <source>Automatically start %1 after logging in to the system.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1574,7 +1574,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+333"/>
+        <location line="+85"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Automatically initiate a full blockchain resynchronization on the next startup (one time only).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Resynchronize block data on startup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+261"/>
         <location line="+23"/>
         <location line="+23"/>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
@@ -1591,7 +1601,7 @@
         <translation>&amp;Cancelar</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+123"/>
+        <location filename="../optionsdialog.cpp" line="+124"/>
         <source>default</source>
         <translation>padrão</translation>
     </message>
@@ -1601,7 +1611,7 @@
         <translation>Nenhum</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+77"/>
         <source>Confirm options reset</source>
         <translation>Confirmar redefinição de opções</translation>
     </message>
@@ -3814,7 +3824,7 @@
         <translation type="unfinished">Outro</translation>
     </message>
     <message>
-        <location line="+318"/>
+        <location line="+323"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation type="unfinished">Status da transação. Passe o mouse sobre este campo para mostrar o número de confirmações.</translation>
     </message>
@@ -3972,7 +3982,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+366"/>
+        <location filename="../tokensviewdialog.cpp" line="+367"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -3995,55 +4005,42 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
-        <location line="+42"/>
-        <source>Total Mintage:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="-35"/>
-        <location line="+21"/>
+        <location line="+14"/>
         <source>Name:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Ticker:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-16"/>
-        <location line="+21"/>
+        <location line="+5"/>
         <source>URL:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Hash:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+21"/>
+        <location line="+4"/>
         <source>Decimals:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+23"/>
+        <location line="+4"/>
         <source>Balance:</source>
         <translation type="unfinished">Saldo:</translation>
     </message>
     <message>
-        <location line="-22"/>
-        <location line="+23"/>
+        <location line="+1"/>
         <source>Pending:</source>
         <translation type="unfinished">Pendente:</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+87"/>
         <source>Are you sure you want to send?</source>
         <translation type="unfinished">Tem certeza que quer enviar?</translation>
     </message>
@@ -4946,12 +4943,12 @@
         <translation>Erro: Um erro interno fatal ocorreu, veja debug.log para detalhes</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+30"/>
         <source>Pruning blockstore...</source>
         <translation>Prunando os blocos existentes...</translation>
     </message>
     <message>
-        <location line="-165"/>
+        <location line="-164"/>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>Distribuido sob a licença MIT software license. Veja os termos em &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
@@ -5048,7 +5045,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Decriptadores de arquivos disponíveis insuficientes.</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+7"/>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>O modo Prune não pode ser configurado com um valor negativo.</translation>
     </message>
@@ -5088,7 +5085,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Carteira %s reside fora do diretório de dados %s</translation>
     </message>
     <message>
-        <location line="-177"/>
+        <location line="-176"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Erro: Aceitar conexões de entrada falhou (retornou erro %s)</translation>
     </message>
@@ -5138,7 +5135,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Necessário informar uma porta com -whitebind: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+14"/>
         <source>Signing transaction failed</source>
         <translation>Assinatura de transação falhou</translation>
     </message>
@@ -5193,7 +5190,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Atenção</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-41"/>
         <source>Loading addresses...</source>
         <translation>Carregando endereços...</translation>
     </message>
@@ -5203,12 +5200,12 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Endereço -proxy inválido: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+36"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Rede desconhecida especificada em -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-66"/>
+        <location line="-65"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Impossível encontrar o endereço -bind: &apos;%s&apos;</translation>
     </message>
@@ -5490,11 +5487,6 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
     </message>
     <message>
         <location line="+1"/>
-        <source>Opening Token Mintage database...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5559,7 +5551,7 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-67"/>
         <source>Done loading</source>
         <translation>Carregamento terminado</translation>
     </message>

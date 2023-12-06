@@ -1349,7 +1349,17 @@
         <translation>(0 = auto, &lt;0 = iwanang libre ang maraming core)</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+29"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Automatically initiate a full blockchain resynchronization on the next startup (one time only).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Awtomatikong magpasimula ng buong blockchain resynchronization sa susunod na startup (isang beses lang).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Resynchronize block data on startup</source>
+        <translation>Muling i-synchronize ang block data sa startup</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>W&amp;allet</source>
         <translation>W&amp;allet</translation>
     </message>
@@ -1586,7 +1596,7 @@
         <translation>I-&amp;Cancel</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+123"/>
+        <location filename="../optionsdialog.cpp" line="+124"/>
         <source>default</source>
         <translation>default</translation>
     </message>
@@ -1596,7 +1606,7 @@
         <translation>wala</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+77"/>
         <source>Confirm options reset</source>
         <translation>Kumpirmahin ang pag-reset ng mga opsyon</translation>
     </message>
@@ -3809,7 +3819,7 @@
         <translation>Aliwa</translation>
     </message>
     <message>
-        <location line="+318"/>
+        <location line="+323"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Status ning Transaksion: Itapat me babo na ning field a ini ban ipakit dala reng bilang dareng me-kumpirma na</translation>
     </message>
@@ -3967,7 +3977,7 @@
         <translation>Kung nilagyan ng check, ang item na ito ay isang subgroup.</translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+366"/>
+        <location filename="../tokensviewdialog.cpp" line="+367"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -3990,55 +4000,42 @@
         <translation>NaN</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <location line="+42"/>
-        <source>Total Mintage:</source>
-        <translation>Kabuuang Paggawa:</translation>
-    </message>
-    <message>
-        <location line="-35"/>
-        <location line="+21"/>
+        <location line="+14"/>
         <source>Name:</source>
         <translation>Pangalan:</translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Ticker:</source>
         <translation>Ticker:</translation>
     </message>
     <message>
-        <location line="-16"/>
-        <location line="+21"/>
+        <location line="+5"/>
         <source>URL:</source>
         <translation>URL:</translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Hash:</source>
         <translation>Hash:</translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+21"/>
+        <location line="+4"/>
         <source>Decimals:</source>
         <translation>Mga decimal:</translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+23"/>
+        <location line="+4"/>
         <source>Balance:</source>
         <translation>Balanse:</translation>
     </message>
     <message>
-        <location line="-22"/>
-        <location line="+23"/>
+        <location line="+1"/>
         <source>Pending:</source>
         <translation>Nakabinbin:</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+87"/>
         <source>Are you sure you want to send?</source>
         <translation>Sigurado ka bang gusto mong magpadala?</translation>
     </message>
@@ -4961,12 +4958,12 @@
         <translation>&amp;Impormasion</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+51"/>
         <source>Warning</source>
         <translation>Kapabaluan</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-41"/>
         <source>Loading addresses...</source>
         <translation>Lo-load da ne ing address...</translation>
     </message>
@@ -4985,7 +4982,7 @@ Pakilunsad muli ang Nexa gamit ang &quot;-usehd=0&quot;.</translation>
         <translation>Ali katanggap-tanggap a -proxy addresss: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+22"/>
         <source>Signing token transaction failed</source>
         <translation>Nabigo ang pagpirma ng transaksyon sa token</translation>
     </message>
@@ -5060,7 +5057,7 @@ Pakilunsad muli ang Nexa gamit ang &quot;-usehd=0&quot;.</translation>
         <translation>E kilalang network ing mepili king -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-66"/>
+        <location line="-65"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Eya me-resolve ing -bind address: &apos;%s&apos;</translation>
     </message>
@@ -5468,11 +5465,6 @@ Kapag na-click mo ang &quot;OK&quot; ang Nexa ay magsasara upang makumpleto ang 
     </message>
     <message>
         <location line="+1"/>
-        <source>Opening Token Mintage database...</source>
-        <translation>Binubuksan ang database ng Token Mintage...</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation>Binubuksan ang database ng UTXO...</translation>
     </message>
@@ -5562,7 +5554,7 @@ Kapag na-click mo ang &quot;OK&quot; ang Nexa ay magsasara upang makumpleto ang 
         <translation>I-zapping ang lahat ng transaksyon mula sa wallet...</translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-67"/>
         <source>Done loading</source>
         <translation>Yari ne ing pamag-load</translation>
     </message>

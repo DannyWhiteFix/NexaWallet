@@ -1333,7 +1333,7 @@
         <translation>Numărul de thread-uri de &amp;verificare</translation>
     </message>
     <message>
-        <location line="+195"/>
+        <location line="+211"/>
         <source>Allow incoming connections</source>
         <translation>Permite conexiuni de intrare</translation>
     </message>
@@ -1380,12 +1380,12 @@
         <translation>Reţea</translation>
     </message>
     <message>
-        <location line="-145"/>
+        <location line="-161"/>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
         <translation>(0 = automat, &lt;0 = lasă atîtea nuclee libere)</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+38"/>
         <source>W&amp;allet</source>
         <translation>Portofel</translation>
     </message>
@@ -1565,7 +1565,7 @@
         <translation>Arată controlul caracteristicilor monedei sau nu.</translation>
     </message>
     <message>
-        <location line="-121"/>
+        <location line="-137"/>
         <source>Automatically start %1 after logging in to the system.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1585,7 +1585,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+766"/>
+        <location line="+85"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Automatically initiate a full blockchain resynchronization on the next startup (one time only).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Resynchronize block data on startup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+694"/>
         <source>&amp;OK</source>
         <translation>&amp;OK</translation>
     </message>
@@ -1595,7 +1605,7 @@
         <translation>Renunţă</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+123"/>
+        <location filename="../optionsdialog.cpp" line="+124"/>
         <source>default</source>
         <translation>iniţial</translation>
     </message>
@@ -1605,7 +1615,7 @@
         <translation>nimic</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+77"/>
         <source>Confirm options reset</source>
         <translation>Confirmă resetarea opţiunilor</translation>
     </message>
@@ -3825,7 +3835,7 @@
         <translation type="unfinished">Altele</translation>
     </message>
     <message>
-        <location line="+318"/>
+        <location line="+323"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation type="unfinished">Starea tranzacţiei. Treceţi cu mouse-ul peste acest cîmp pentru afişarea numărului de confirmări.</translation>
     </message>
@@ -3983,7 +3993,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+366"/>
+        <location filename="../tokensviewdialog.cpp" line="+367"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -4006,55 +4016,42 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
-        <location line="+42"/>
-        <source>Total Mintage:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="-35"/>
-        <location line="+21"/>
+        <location line="+14"/>
         <source>Name:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Ticker:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-16"/>
-        <location line="+21"/>
+        <location line="+5"/>
         <source>URL:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Hash:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+21"/>
+        <location line="+4"/>
         <source>Decimals:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+23"/>
+        <location line="+4"/>
         <source>Balance:</source>
         <translation type="unfinished">Balanţă:</translation>
     </message>
     <message>
-        <location line="-22"/>
-        <location line="+23"/>
+        <location line="+1"/>
         <source>Pending:</source>
         <translation type="unfinished">În aşteptare:</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+87"/>
         <source>Are you sure you want to send?</source>
         <translation type="unfinished">Sigur doriţi să trimiteţi?</translation>
     </message>
@@ -5023,7 +5020,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Nu sînt destule descriptoare disponibile.</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+12"/>
         <source>Signing token transaction failed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5048,7 +5045,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Portofelul %s se află în afara dosarului de date %s</translation>
     </message>
     <message>
-        <location line="-139"/>
+        <location line="-138"/>
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
         <translation>Acest produs include programe dezvoltate de către Proiectul OpenSSL pentru a fi folosite în OpenSSL Toolkit &lt;https://www.openssl.org/&gt; şi programe criptografice scrise de către Eric Young şi programe UPnP scrise de către Thomas Bernard.</translation>
     </message>
@@ -5078,7 +5075,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Trebuie să specificaţi un port cu -whitebind: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+14"/>
         <source>Signing transaction failed</source>
         <translation>Nu s-a reuşit semnarea tranzacţiei</translation>
     </message>
@@ -5133,7 +5130,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Avertisment</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-41"/>
         <source>Loading addresses...</source>
         <translation>Încărcare adrese...</translation>
     </message>
@@ -5143,12 +5140,12 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Adresa -proxy nevalidă: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+36"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Reţeaua specificată în -onlynet este necunoscută: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-66"/>
+        <location line="-65"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Nu se poate rezolva adresa -bind: &apos;%s&apos;</translation>
     </message>
@@ -5485,11 +5482,6 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
     </message>
     <message>
         <location line="+1"/>
-        <source>Opening Token Mintage database...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5574,7 +5566,7 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-67"/>
         <source>Done loading</source>
         <translation>Încărcare terminată</translation>
     </message>

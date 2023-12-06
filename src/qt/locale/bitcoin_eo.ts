@@ -1324,7 +1324,7 @@
         <translation>Ĉ&amp;efa</translation>
     </message>
     <message>
-        <location line="+251"/>
+        <location line="+267"/>
         <source>Allow incoming connections</source>
         <translation>Permesi envenantajn konektojn</translation>
     </message>
@@ -1360,7 +1360,7 @@
         <translation>&amp;Reto</translation>
     </message>
     <message>
-        <location line="-220"/>
+        <location line="-236"/>
         <source>Automatically start %1 after logging in to the system.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1390,7 +1390,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+38"/>
         <source>W&amp;allet</source>
         <translation>Monujo</translation>
     </message>
@@ -1581,7 +1581,17 @@
         <translation>Ĉu montri detalan adres-regilon, aŭ ne.</translation>
     </message>
     <message>
-        <location line="+664"/>
+        <location line="-33"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Automatically initiate a full blockchain resynchronization on the next startup (one time only).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Resynchronize block data on startup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+694"/>
         <source>&amp;OK</source>
         <translation>&amp;Bone</translation>
     </message>
@@ -1591,7 +1601,7 @@
         <translation>&amp;Nuligi</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+123"/>
+        <location filename="../optionsdialog.cpp" line="+124"/>
         <source>default</source>
         <translation>defaŭlta</translation>
     </message>
@@ -1601,7 +1611,7 @@
         <translation>neniu</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+77"/>
         <source>Confirm options reset</source>
         <translation>Konfirmi reŝargo de agordoj</translation>
     </message>
@@ -3814,7 +3824,7 @@
         <translation type="unfinished">Aliaj</translation>
     </message>
     <message>
-        <location line="+318"/>
+        <location line="+323"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation type="unfinished">Transakcia stato. Ŝvebi super tiu ĉi kampo por montri la nombron de konfirmoj.</translation>
     </message>
@@ -3972,7 +3982,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+366"/>
+        <location filename="../tokensviewdialog.cpp" line="+367"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -3995,55 +4005,42 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
-        <location line="+42"/>
-        <source>Total Mintage:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="-35"/>
-        <location line="+21"/>
+        <location line="+14"/>
         <source>Name:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Ticker:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-16"/>
-        <location line="+21"/>
+        <location line="+5"/>
         <source>URL:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Hash:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+21"/>
+        <location line="+4"/>
         <source>Decimals:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+23"/>
+        <location line="+4"/>
         <source>Balance:</source>
         <translation type="unfinished">Saldo:</translation>
     </message>
     <message>
-        <location line="-22"/>
-        <location line="+23"/>
+        <location line="+1"/>
         <source>Pending:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+87"/>
         <source>Are you sure you want to send?</source>
         <translation type="unfinished">Ĉu vi certas, ke vi volas sendi?</translation>
     </message>
@@ -4998,7 +4995,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Nesufiĉa nombro de dosierpriskribiloj disponeblas.</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+12"/>
         <source>Signing token transaction failed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5023,7 +5020,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Monujo %s troviĝas ekster la dosierujo por datumoj %s</translation>
     </message>
     <message>
-        <location line="-72"/>
+        <location line="-71"/>
         <source>Cannot resolve -whitebind address: &apos;%s&apos;</source>
         <translation>Ne eblas trovi la adreson -whitebind: &apos;%s&apos;</translation>
     </message>
@@ -5033,7 +5030,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Informoj</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+28"/>
         <source>Signing transaction failed</source>
         <translation>Subskriba transakcio fiaskis</translation>
     </message>
@@ -5068,7 +5065,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Averto</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-41"/>
         <source>Loading addresses...</source>
         <translation>Ŝarĝante adresojn...</translation>
     </message>
@@ -5078,7 +5075,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Nevalid adreso -proxy: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+29"/>
         <source>Transaction has %d outputs. Maximum outputs allowed is %d</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5118,7 +5115,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Nekonata reto specifita en -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-66"/>
+        <location line="-65"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Ne eblas trovi la adreson -bind: &apos;%s&apos;</translation>
     </message>
@@ -5485,11 +5482,6 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
     </message>
     <message>
         <location line="+1"/>
-        <source>Opening Token Mintage database...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5559,7 +5551,7 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-67"/>
         <source>Done loading</source>
         <translation>Ŝargado finiĝis</translation>
     </message>

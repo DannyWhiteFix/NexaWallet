@@ -1349,7 +1349,17 @@
         <translation>(0 = outo, &lt;0 = laat soveel kerns vry)</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+29"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Automatically initiate a full blockchain resynchronization on the next startup (one time only).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Inisieer outomaties &apos;n volledige blokketting-hersinchronisasie met die volgende opstart (slegs een keer).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Resynchronize block data on startup</source>
+        <translation>Hersinkroniseer blokdata tydens opstart</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>W&amp;allet</source>
         <translation>B&amp;eursie</translation>
     </message>
@@ -1586,7 +1596,7 @@
         <translation>&amp;Kanselleer</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+123"/>
+        <location filename="../optionsdialog.cpp" line="+124"/>
         <source>default</source>
         <translation>verstek</translation>
     </message>
@@ -1596,7 +1606,7 @@
         <translation>geen</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+77"/>
         <source>Confirm options reset</source>
         <translation>Bevestig opsies-terugstelling</translation>
     </message>
@@ -3809,7 +3819,7 @@
         <translation>Ander</translation>
     </message>
     <message>
-        <location line="+318"/>
+        <location line="+323"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Transaksie status. Beweeg oor hierdie veld om die aantal bevestigings te wys.</translation>
     </message>
@@ -3967,7 +3977,7 @@
         <translation>As dit gemerk is, is hierdie item &apos;n subgroep.</translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+366"/>
+        <location filename="../tokensviewdialog.cpp" line="+367"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -3990,55 +4000,42 @@
         <translation>NaN</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <location line="+42"/>
-        <source>Total Mintage:</source>
-        <translation>Totale oplage:</translation>
-    </message>
-    <message>
-        <location line="-35"/>
-        <location line="+21"/>
+        <location line="+14"/>
         <source>Name:</source>
         <translation>Naam:</translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Ticker:</source>
         <translation>Tikker:</translation>
     </message>
     <message>
-        <location line="-16"/>
-        <location line="+21"/>
+        <location line="+5"/>
         <source>URL:</source>
         <translation>URL:</translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Hash:</source>
         <translation>Hasj:</translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+21"/>
+        <location line="+4"/>
         <source>Decimals:</source>
         <translation>Desimale:</translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+23"/>
+        <location line="+4"/>
         <source>Balance:</source>
         <translation>Saldo:</translation>
     </message>
     <message>
-        <location line="-22"/>
-        <location line="+23"/>
+        <location line="+1"/>
         <source>Pending:</source>
         <translation>Hangende:</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+87"/>
         <source>Are you sure you want to send?</source>
         <translation>Is jy seker jy wil stuur?</translation>
     </message>
@@ -5395,11 +5392,6 @@ Wanneer jy op &quot;OK&quot; klik, sal Nexa afskakel om die proses te voltooi.</
         <location line="+1"/>
         <source>Opening Token Description database...</source>
         <translation>Maak tans Tokenbeskrywing-databasis oop...</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Opening Token Mintage database...</source>
-        <translation>Maak tans Token Mintage-databasis oop...</translation>
     </message>
     <message>
         <location line="+1"/>

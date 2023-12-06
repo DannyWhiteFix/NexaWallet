@@ -1325,7 +1325,7 @@
         <translation>스크립트 인증 쓰레드의 개수</translation>
     </message>
     <message>
-        <location line="+195"/>
+        <location line="+211"/>
         <source>Allow incoming connections</source>
         <translation>연결 요청을 허용합니다.</translation>
     </message>
@@ -1367,7 +1367,7 @@
         <translation>네트워크(&amp;N)</translation>
     </message>
     <message>
-        <location line="-220"/>
+        <location line="-236"/>
         <source>Automatically start %1 after logging in to the system.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1392,7 +1392,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+38"/>
         <source>W&amp;allet</source>
         <translation>지갑</translation>
     </message>
@@ -1577,7 +1577,17 @@
         <translation>코인 상세 제어기능에 대한 표시 여부를 선택할 수 있습니다.</translation>
     </message>
     <message>
-        <location line="+664"/>
+        <location line="-33"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Automatically initiate a full blockchain resynchronization on the next startup (one time only).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Resynchronize block data on startup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+694"/>
         <source>&amp;OK</source>
         <translation>확인(&amp;O)</translation>
     </message>
@@ -1587,7 +1597,7 @@
         <translation>취소(&amp;C)</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+123"/>
+        <location filename="../optionsdialog.cpp" line="+124"/>
         <source>default</source>
         <translation>기본값</translation>
     </message>
@@ -1597,7 +1607,7 @@
         <translation>없음</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+77"/>
         <source>Confirm options reset</source>
         <translation>옵션 초기화를 확인</translation>
     </message>
@@ -3803,7 +3813,7 @@
         <translation type="unfinished">기타</translation>
     </message>
     <message>
-        <location line="+318"/>
+        <location line="+323"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation type="unfinished">거래상황. 마우스를 올리면 승인횟수가 표시됩니다.</translation>
     </message>
@@ -3961,7 +3971,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+366"/>
+        <location filename="../tokensviewdialog.cpp" line="+367"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -3984,55 +3994,42 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
-        <location line="+42"/>
-        <source>Total Mintage:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="-35"/>
-        <location line="+21"/>
+        <location line="+14"/>
         <source>Name:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Ticker:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-16"/>
-        <location line="+21"/>
+        <location line="+5"/>
         <source>URL:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Hash:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+21"/>
+        <location line="+4"/>
         <source>Decimals:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+23"/>
+        <location line="+4"/>
         <source>Balance:</source>
         <translation type="unfinished">잔액:</translation>
     </message>
     <message>
-        <location line="-22"/>
-        <location line="+23"/>
+        <location line="+1"/>
         <source>Pending:</source>
         <translation type="unfinished">미확정</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+87"/>
         <source>Are you sure you want to send?</source>
         <translation type="unfinished">정말로 보내시겠습니까?</translation>
     </message>
@@ -4988,7 +4985,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>사용 가능한 파일 디스크립터-File Descriptor-가 부족합니다. </translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+12"/>
         <source>Signing token transaction failed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5013,7 +5010,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>지갑 %s는 데이터 디렉토리 %s 밖에 위치합니다.</translation>
     </message>
     <message>
-        <location line="-72"/>
+        <location line="-71"/>
         <source>Cannot resolve -whitebind address: &apos;%s&apos;</source>
         <translation>-whitebind 주소를 확인할 수 없습니다: &apos;%s&apos;</translation>
     </message>
@@ -5023,7 +5020,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>정보</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+28"/>
         <source>Signing transaction failed</source>
         <translation>거래를 서명하는것을 실패하였습니다.</translation>
     </message>
@@ -5058,7 +5055,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>경고</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-41"/>
         <source>Loading addresses...</source>
         <translation>주소를 불러오는 중...</translation>
     </message>
@@ -5068,7 +5065,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>잘못된 -proxy 주소입니다: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+29"/>
         <source>Transaction has %d outputs. Maximum outputs allowed is %d</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5108,7 +5105,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>-onlynet에 지정한 네트워크를 알 수 없습니다: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-66"/>
+        <location line="-65"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>-bind 주소를 확인할 수 없습니다: &apos;%s&apos;</translation>
     </message>
@@ -5470,11 +5467,6 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
     </message>
     <message>
         <location line="+1"/>
-        <source>Opening Token Mintage database...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5544,7 +5536,7 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-67"/>
         <source>Done loading</source>
         <translation>로딩 완료</translation>
     </message>

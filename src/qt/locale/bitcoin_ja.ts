@@ -1325,7 +1325,7 @@
         <translation>スクリプト検証用スレッド数 (&amp;V)</translation>
     </message>
     <message>
-        <location line="+195"/>
+        <location line="+211"/>
         <source>Allow incoming connections</source>
         <translation>外部からの接続を許可する</translation>
     </message>
@@ -1372,12 +1372,12 @@
         <translation>ネットワーク (&amp;N)</translation>
     </message>
     <message>
-        <location line="-145"/>
+        <location line="-161"/>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
         <translation>(0 = 自動、0以上 = 指定した数のコアをフリーにする)</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+38"/>
         <source>W&amp;allet</source>
         <translation>ウォレット (&amp;A)</translation>
     </message>
@@ -1550,7 +1550,7 @@
         <translation>コインコントロール機能を表示するかどうか。</translation>
     </message>
     <message>
-        <location line="-121"/>
+        <location line="-137"/>
         <source>Automatically start %1 after logging in to the system.</source>
         <translation>システムにログインした後、%1 を自動的に起動します。</translation>
     </message>
@@ -1570,7 +1570,17 @@
         <translation>起動時に再インデックス</translation>
     </message>
     <message>
-        <location line="+333"/>
+        <location line="+85"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Automatically initiate a full blockchain resynchronization on the next startup (one time only).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;次回の起動時に完全なブロックチェーンの再同期を自動的に開始します (1 回のみ)。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Resynchronize block data on startup</source>
+        <translation>起動時にブロックデータを再同期する</translation>
+    </message>
+    <message>
+        <location line="+261"/>
         <location line="+23"/>
         <location line="+23"/>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
@@ -1587,7 +1597,7 @@
         <translation>キャンセル (&amp;C)</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+123"/>
+        <location filename="../optionsdialog.cpp" line="+124"/>
         <source>default</source>
         <translation>初期値</translation>
     </message>
@@ -1597,7 +1607,7 @@
         <translation>なし</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+77"/>
         <source>Confirm options reset</source>
         <translation>オプションのリセットの確認</translation>
     </message>
@@ -3803,7 +3813,7 @@
         <translation>その他</translation>
     </message>
     <message>
-        <location line="+318"/>
+        <location line="+323"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>取引の状況。このフィールドの上にカーソルを置くと検証の数を表示します。</translation>
     </message>
@@ -3961,7 +3971,7 @@
         <translation>チェックすると、この項目はサブグループになります。</translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+366"/>
+        <location filename="../tokensviewdialog.cpp" line="+367"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -3984,55 +3994,42 @@
         <translation>数字ではありません</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <location line="+42"/>
-        <source>Total Mintage:</source>
-        <translation>総鋳造数:</translation>
-    </message>
-    <message>
-        <location line="-35"/>
-        <location line="+21"/>
+        <location line="+14"/>
         <source>Name:</source>
         <translation>名前:</translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Ticker:</source>
         <translation>ティッカー:</translation>
     </message>
     <message>
-        <location line="-16"/>
-        <location line="+21"/>
+        <location line="+5"/>
         <source>URL:</source>
         <translation>URL:</translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Hash:</source>
         <translation>ハッシュ:</translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+21"/>
+        <location line="+4"/>
         <source>Decimals:</source>
         <translation>ティッカー:</translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+23"/>
+        <location line="+4"/>
         <source>Balance:</source>
         <translation>残高:</translation>
     </message>
     <message>
-        <location line="-22"/>
-        <location line="+23"/>
+        <location line="+1"/>
         <source>Pending:</source>
         <translation>検証待ち:</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+87"/>
         <source>Are you sure you want to send?</source>
         <translation>送ってよろしいですか？</translation>
     </message>
@@ -4931,12 +4928,12 @@
         <translation>エラー：致命的な内部エラーが発生しました。詳細はdebug.logを参照してください</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+30"/>
         <source>Pruning blockstore...</source>
         <translation>ブロックデータを剪定しています……</translation>
     </message>
     <message>
-        <location line="-165"/>
+        <location line="-164"/>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>MITソフトウェアライセンスのもとで配布されています。付属のCOPYINGファイルまたは&lt;http://www.opensource.org/licenses/mit-license.php&gt;を参照してください。</translation>
     </message>
@@ -5035,7 +5032,7 @@ Nexa を「-usehd=0」で再起動してください。</translation>
         <translation>使用可能なファイルディスクリプタが不足しています。</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+7"/>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>剪定値は負の値に設定できません。</translation>
     </message>
@@ -5075,7 +5072,7 @@ Nexa を「-usehd=0」で再起動してください。</translation>
         <translation>財布 %s はデータ・ディレクトリ%sの外にあります</translation>
     </message>
     <message>
-        <location line="-177"/>
+        <location line="-176"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>エラー: 内向きの接続をリッスンするのに失敗しました (エラー %s が返却されました)</translation>
     </message>
@@ -5125,7 +5122,7 @@ Nexa を「-usehd=0」で再起動してください。</translation>
         <translation>-whitebind を用いてポートを指定する必要があります: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+14"/>
         <source>Signing transaction failed</source>
         <translation>取引の署名に失敗しました</translation>
     </message>
@@ -5180,7 +5177,7 @@ Nexa を「-usehd=0」で再起動してください。</translation>
         <translation>警告</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-41"/>
         <source>Loading addresses...</source>
         <translation>アドレスを読み込んでいます...</translation>
     </message>
@@ -5190,12 +5187,12 @@ Nexa を「-usehd=0」で再起動してください。</translation>
         <translation>無効な -proxy アドレス: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+36"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>-onlynet で指定された &apos;%s&apos; は未知のネットワークです</translation>
     </message>
     <message>
-        <location line="-66"/>
+        <location line="-65"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>-bind のアドレス &apos;%s&apos; を解決できません</translation>
     </message>
@@ -5483,11 +5480,6 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
     </message>
     <message>
         <location line="+1"/>
-        <source>Opening Token Mintage database...</source>
-        <translation>トークン ミンテージ データベースを開いています...</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation>UTXO データベースを開いています...</translation>
     </message>
@@ -5552,7 +5544,7 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
         <translation>ウォレットからすべてのトランザクションをザッピングします...</translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-67"/>
         <source>Done loading</source>
         <translation>読み込み完了</translation>
     </message>

@@ -1325,7 +1325,7 @@
         <translation>脚本验证线程数(&amp;V)</translation>
     </message>
     <message>
-        <location line="+195"/>
+        <location line="+211"/>
         <source>Allow incoming connections</source>
         <translation>允许流入连接</translation>
     </message>
@@ -1372,12 +1372,12 @@
         <translation>网络(&amp;N)</translation>
     </message>
     <message>
-        <location line="-145"/>
+        <location line="-161"/>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
         <translation>(0 = 自动, &lt;0 = 预留此数量的核心)</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+38"/>
         <source>W&amp;allet</source>
         <translation>钱包(&amp;A)</translation>
     </message>
@@ -1550,7 +1550,7 @@
         <translation>是否需要交易源地址控制功能。</translation>
     </message>
     <message>
-        <location line="-121"/>
+        <location line="-137"/>
         <source>Automatically start %1 after logging in to the system.</source>
         <translation>登錄系統後自動啟動 %1。</translation>
     </message>
@@ -1570,7 +1570,17 @@
         <translation>啟動時重建索引</translation>
     </message>
     <message>
-        <location line="+333"/>
+        <location line="+85"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Automatically initiate a full blockchain resynchronization on the next startup (one time only).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;在下次啟動時自動啟動完整的區塊鏈重新同步（僅一次）。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Resynchronize block data on startup</source>
+        <translation>啟動時重新同步區塊數據</translation>
+    </message>
+    <message>
+        <location line="+261"/>
         <location line="+23"/>
         <location line="+23"/>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
@@ -1587,7 +1597,7 @@
         <translation>取消(&amp;C)</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+123"/>
+        <location filename="../optionsdialog.cpp" line="+124"/>
         <source>default</source>
         <translation>默认</translation>
     </message>
@@ -1597,7 +1607,7 @@
         <translation>无</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+77"/>
         <source>Confirm options reset</source>
         <translation>确认恢复缺省设置</translation>
     </message>
@@ -3803,7 +3813,7 @@
         <translation>其他</translation>
     </message>
     <message>
-        <location line="+318"/>
+        <location line="+323"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>交易状态。 鼠标移到此区域可显示确认项数量。</translation>
     </message>
@@ -3961,7 +3971,7 @@
         <translation>如果選中，則該項目是一個子群組。</translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+366"/>
+        <location filename="../tokensviewdialog.cpp" line="+367"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -3984,55 +3994,42 @@
         <translation>NaN</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <location line="+42"/>
-        <source>Total Mintage:</source>
-        <translation>總發行量：</translation>
-    </message>
-    <message>
-        <location line="-35"/>
-        <location line="+21"/>
+        <location line="+14"/>
         <source>Name:</source>
         <translation>姓名：</translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Ticker:</source>
         <translation>象徵：</translation>
     </message>
     <message>
-        <location line="-16"/>
-        <location line="+21"/>
+        <location line="+5"/>
         <source>URL:</source>
         <translation>網址：</translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Hash:</source>
         <translation>哈希：</translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+21"/>
+        <location line="+4"/>
         <source>Decimals:</source>
         <translation>小數點：</translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+23"/>
+        <location line="+4"/>
         <source>Balance:</source>
         <translation>余额：</translation>
     </message>
     <message>
-        <location line="-22"/>
-        <location line="+23"/>
+        <location line="+1"/>
         <source>Pending:</source>
         <translation>等待中的余额：</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+87"/>
         <source>Are you sure you want to send?</source>
         <translation>您确定要发出吗？</translation>
     </message>
@@ -4926,12 +4923,12 @@
         <translation>错误：发生了致命的内部错误，详情见 debug.log 文件</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+30"/>
         <source>Pruning blockstore...</source>
         <translation>正在修剪区块存储...</translation>
     </message>
     <message>
-        <location line="-165"/>
+        <location line="-164"/>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
@@ -5030,7 +5027,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>没有足够的文件描述符可用。</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+7"/>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>修剪不能配置一个负数。</translation>
     </message>
@@ -5065,7 +5062,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>钱包 %s 在外部的数据目录 %s</translation>
     </message>
     <message>
-        <location line="-177"/>
+        <location line="-176"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>错误：监听外部连接失败 (监听返回错误 %s)</translation>
     </message>
@@ -5110,7 +5107,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>-whitebind: &apos;%s&apos; 需要指定一个端口</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+14"/>
         <source>Signing transaction failed</source>
         <translation>签署交易失败</translation>
     </message>
@@ -5165,7 +5162,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>警告</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-41"/>
         <source>Loading addresses...</source>
         <translation>正在加载地址簿...</translation>
     </message>
@@ -5175,12 +5172,12 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>无效的代理地址：%s</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+36"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>-onlynet 指定的是未知网络：%s</translation>
     </message>
     <message>
-        <location line="-66"/>
+        <location line="-65"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>无法解析 -bind 端口地址: &apos;%s&apos;</translation>
     </message>
@@ -5478,11 +5475,6 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
     </message>
     <message>
         <location line="+1"/>
-        <source>Opening Token Mintage database...</source>
-        <translation>打開代幣發行量資料庫...</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation>正在打開 UTXO 數據庫...</translation>
     </message>
@@ -5552,7 +5544,7 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
         <translation>刪除錢包中的所有交易...</translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-67"/>
         <source>Done loading</source>
         <translation>加载完成</translation>
     </message>

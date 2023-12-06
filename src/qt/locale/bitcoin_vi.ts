@@ -1348,7 +1348,17 @@
         <translation>(0 = tự động, &lt;0 = để trống nhiều lõi đó)</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+29"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Automatically initiate a full blockchain resynchronization on the next startup (one time only).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Tự động bắt đầu quá trình đồng bộ lại toàn bộ chuỗi khối vào lần khởi động tiếp theo (chỉ một lần).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Resynchronize block data on startup</source>
+        <translation>Đồng bộ lại dữ liệu khối khi khởi động</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>W&amp;allet</source>
         <translation>Cái ví</translation>
     </message>
@@ -1585,7 +1595,7 @@
         <translation>Hủy bỏ</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+123"/>
+        <location filename="../optionsdialog.cpp" line="+124"/>
         <source>default</source>
         <translation>mặc định</translation>
     </message>
@@ -1595,7 +1605,7 @@
         <translation>không có</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+77"/>
         <source>Confirm options reset</source>
         <translation>Xác nhận đặt lại tùy chọn</translation>
     </message>
@@ -1782,7 +1792,7 @@
     <message>
         <location line="+11"/>
         <source>Payment request expired.</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Yêu cầu thanh toán đã hết hạn.</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2682,7 +2692,7 @@
     <message>
         <location line="+25"/>
         <source>&amp;OK</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">ĐƯỢC RỒI</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -3801,7 +3811,7 @@
         <translation>Khác</translation>
     </message>
     <message>
-        <location line="+318"/>
+        <location line="+323"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Trạng thái giao dịch. Di chuột qua trường này để hiển thị số lượng xác nhận.</translation>
     </message>
@@ -3959,7 +3969,7 @@
         <translation>Nếu được chọn thì mục này là một nhóm con.</translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+366"/>
+        <location filename="../tokensviewdialog.cpp" line="+367"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -3982,55 +3992,42 @@
         <translation>NaN</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <location line="+42"/>
-        <source>Total Mintage:</source>
-        <translation>Tổng số tiền:</translation>
-    </message>
-    <message>
-        <location line="-35"/>
-        <location line="+21"/>
+        <location line="+14"/>
         <source>Name:</source>
         <translation>Tên:</translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Ticker:</source>
         <translation>Biểu tượng:</translation>
     </message>
     <message>
-        <location line="-16"/>
-        <location line="+21"/>
+        <location line="+5"/>
         <source>URL:</source>
         <translation>URL:</translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Hash:</source>
         <translation>Băm:</translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+21"/>
+        <location line="+4"/>
         <source>Decimals:</source>
         <translation>Số thập phân:</translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+23"/>
+        <location line="+4"/>
         <source>Balance:</source>
         <translation>Cân bằng:</translation>
     </message>
     <message>
-        <location line="-22"/>
-        <location line="+23"/>
+        <location line="+1"/>
         <source>Pending:</source>
         <translation>Chưa giải quyết:</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+87"/>
         <source>Are you sure you want to send?</source>
         <translation>Bạn có chắc chắn muốn gửi không?</translation>
     </message>
@@ -5383,11 +5380,6 @@ Khi bạn nhấp vào &quot;OK&quot; Nexa sẽ tắt để hoàn tất quá trì
         <location line="+1"/>
         <source>Opening Token Description database...</source>
         <translation>Đang mở cơ sở dữ liệu Mô tả mã thông báo...</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Opening Token Mintage database...</source>
-        <translation>Đang mở cơ sở dữ liệu Token Mintage...</translation>
     </message>
     <message>
         <location line="+1"/>

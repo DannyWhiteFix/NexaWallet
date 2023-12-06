@@ -95,6 +95,13 @@ void OptionsModel::Init(bool resetSettings)
         addOverriddenOption("-reindex");
     settings.setValue("fReindexOnStartup", false);
 
+    // Start resync and then turn off the resync checkbox so that we do it only one time
+    if (!settings.contains("fResyncOnStartup"))
+        settings.setValue("fResyncOnStartup", false);
+    if (!SoftSetArg("-resync", settings.value("fResyncOnStartup").toString().toStdString()))
+        addOverriddenOption("-resync");
+    settings.setValue("fResyncOnStartup", false);
+
 // Wallet
 #ifdef ENABLE_WALLET
     // Start wallet rescan and then turn off the rescan checkbox so that we do it only one time
@@ -220,6 +227,8 @@ QVariant OptionsModel::data(const QModelIndex &index, int role) const
             return GUIUtil::GetStartOnSystemStartup();
         case ReindexOnStartup:
             return settings.value("fReindexOnStartup");
+        case ResyncOnStartup:
+            return settings.value("fResyncOnStartup");
         case MinimizeToTray:
             return fMinimizeToTray;
         case MapPortUPnP:
@@ -332,6 +341,10 @@ bool OptionsModel::setData(const QModelIndex &index, const QVariant &value, int 
             break;
         case ReindexOnStartup:
             settings.setValue("fReindexOnStartup", value);
+            setRestartRequired(true);
+            break;
+        case ResyncOnStartup:
+            settings.setValue("fResyncOnStartup", value);
             setRestartRequired(true);
             break;
         case MinimizeToTray:

@@ -1329,7 +1329,7 @@
         <translation>Aantal threads voor &amp;scriptverificatie</translation>
     </message>
     <message>
-        <location line="+195"/>
+        <location line="+211"/>
         <source>Allow incoming connections</source>
         <translation>Sta inkomende verbindingen toe</translation>
     </message>
@@ -1376,12 +1376,12 @@
         <translation>&amp;Netwerk</translation>
     </message>
     <message>
-        <location line="-145"/>
+        <location line="-161"/>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
         <translation>(0 = auto, &lt;0 = laat dit aantal kernen vrij)</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+38"/>
         <source>W&amp;allet</source>
         <translation>W&amp;allet</translation>
     </message>
@@ -1554,7 +1554,7 @@
         <translation>Munt controle functies weergeven of niet.</translation>
     </message>
     <message>
-        <location line="-121"/>
+        <location line="-137"/>
         <source>Automatically start %1 after logging in to the system.</source>
         <translation>%1 automatisch starten na inloggen op het systeem.</translation>
     </message>
@@ -1574,7 +1574,17 @@
         <translation>Opnieuw indexeren bij opstarten</translation>
     </message>
     <message>
-        <location line="+333"/>
+        <location line="+85"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Automatically initiate a full blockchain resynchronization on the next startup (one time only).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Initieer automatisch een volledige blockchain-hersynchronisatie bij de volgende keer opstarten (slechts eenmalig).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Resynchronize block data on startup</source>
+        <translation>Synchroniseer blokgegevens opnieuw bij het opstarten</translation>
+    </message>
+    <message>
+        <location line="+261"/>
         <location line="+23"/>
         <location line="+23"/>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
@@ -1591,7 +1601,7 @@
         <translation>&amp;Annuleren</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+123"/>
+        <location filename="../optionsdialog.cpp" line="+124"/>
         <source>default</source>
         <translation>standaard</translation>
     </message>
@@ -1601,7 +1611,7 @@
         <translation>geen</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+77"/>
         <source>Confirm options reset</source>
         <translation>Bevestig reset opties</translation>
     </message>
@@ -3814,7 +3824,7 @@
         <translation>Anders</translation>
     </message>
     <message>
-        <location line="+318"/>
+        <location line="+323"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Transactiestatus. Houd de muiscursor boven dit veld om het aantal bevestigingen te laten zien.</translation>
     </message>
@@ -3972,7 +3982,7 @@
         <translation>Indien aangevinkt, is dit item een subgroep.</translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+366"/>
+        <location filename="../tokensviewdialog.cpp" line="+367"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -3995,55 +4005,42 @@
         <translation>NaN</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <location line="+42"/>
-        <source>Total Mintage:</source>
-        <translation>Totale oplage:</translation>
-    </message>
-    <message>
-        <location line="-35"/>
-        <location line="+21"/>
+        <location line="+14"/>
         <source>Name:</source>
         <translation>Naam:</translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Ticker:</source>
         <translation>Tikker:</translation>
     </message>
     <message>
-        <location line="-16"/>
-        <location line="+21"/>
+        <location line="+5"/>
         <source>URL:</source>
         <translation>URL:</translation>
     </message>
     <message>
-        <location line="-20"/>
-        <location line="+21"/>
+        <location line="+1"/>
         <source>Hash:</source>
         <translation>Hasj:</translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+21"/>
+        <location line="+4"/>
         <source>Decimals:</source>
         <translation>Decimalen:</translation>
     </message>
     <message>
-        <location line="-17"/>
-        <location line="+23"/>
+        <location line="+4"/>
         <source>Balance:</source>
         <translation>Saldo:</translation>
     </message>
     <message>
-        <location line="-22"/>
-        <location line="+23"/>
+        <location line="+1"/>
         <source>Pending:</source>
         <translation>Afwachtend:</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+87"/>
         <source>Are you sure you want to send?</source>
         <translation>Weet u zeker dat u wilt versturen?</translation>
     </message>
@@ -4946,12 +4943,12 @@
         <translation>Fout: er is een fout opgetreden,  zie debug.log voor details</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+30"/>
         <source>Pruning blockstore...</source>
         <translation>Snoei blokopslag...</translation>
     </message>
     <message>
-        <location line="-165"/>
+        <location line="-164"/>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>Uitgegeven onder de MIT-softwarelicentie, zie het bijgevoegde bestand COPYING of &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
@@ -5050,7 +5047,7 @@ Start Nexa opnieuw met &quot;-usehd=0&quot;.</translation>
         <translation>Niet genoeg file descriptors beschikbaar.</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+7"/>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>Snoeien kan niet worden geconfigureerd met een negatieve waarde.</translation>
     </message>
@@ -5090,7 +5087,7 @@ Start Nexa opnieuw met &quot;-usehd=0&quot;.</translation>
         <translation>Portemonnee %s bevindt zich buiten de gegevensmap %s</translation>
     </message>
     <message>
-        <location line="-177"/>
+        <location line="-176"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Fout: luisteren naar binnenkomende verbindingen mislukt (luisteren gaf foutmelding %s)</translation>
     </message>
@@ -5140,7 +5137,7 @@ Start Nexa opnieuw met &quot;-usehd=0&quot;.</translation>
         <translation>Verplicht een poort met -whitebind op te geven: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+14"/>
         <source>Signing transaction failed</source>
         <translation>Ondertekenen van transactie mislukt</translation>
     </message>
@@ -5195,7 +5192,7 @@ Start Nexa opnieuw met &quot;-usehd=0&quot;.</translation>
         <translation>Waarschuwing</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-41"/>
         <source>Loading addresses...</source>
         <translation>Adressen aan het laden...</translation>
     </message>
@@ -5205,12 +5202,12 @@ Start Nexa opnieuw met &quot;-usehd=0&quot;.</translation>
         <translation>Ongeldig -proxy adres: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+36"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Onbekend netwerk gespecificeerd in -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-66"/>
+        <location line="-65"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Kan -bind adres niet herleiden: &apos;%s&apos;</translation>
     </message>
@@ -5498,11 +5495,6 @@ Wanneer u op &quot;OK&quot; klikt, wordt Nexa afgesloten om het proces te voltoo
     </message>
     <message>
         <location line="+1"/>
-        <source>Opening Token Mintage database...</source>
-        <translation>Token Mintage-database openen...</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation>UTXO-database openen...</translation>
     </message>
@@ -5567,7 +5559,7 @@ Wanneer u op &quot;OK&quot; klikt, wordt Nexa afgesloten om het proces te voltoo
         <translation>Alle transacties uit portemonnee zappen...</translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-67"/>
         <source>Done loading</source>
         <translation>Klaar met laden</translation>
     </message>
