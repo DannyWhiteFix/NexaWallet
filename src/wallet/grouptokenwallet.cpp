@@ -1493,7 +1493,12 @@ extern UniValue token(const UniValue &params, bool fHelp)
         {
             throw JSONRPCError(RPC_INVALID_PARAMS, "Invalid parameter 1: No group specified");
         }
-        return UniValue(tokenmint.GetTokenMint(grpID));
+
+        if (tokenmint.GetSyncFlag())
+            return UniValue(tokenmint.GetTokenMint(grpID));
+        else
+            throw JSONRPCError(
+                RPC_INVALID_REQUEST, "Token mintage is unavailable because the database needs a reindex");
     }
 
     else

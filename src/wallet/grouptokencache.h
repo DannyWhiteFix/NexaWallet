@@ -38,6 +38,14 @@ public:
     /** Remove a token description from the cache */
     void EraseTokenDesc(const CGroupTokenID &_grpID);
 
+    /** Set the sync flag.
+     * This sync flag indicates whether we created the tokendesc db from the genesis block or not.
+     */
+    void SetSyncFlag(const bool fSet);
+
+    /** Get the sync flag. */
+    bool GetSyncFlag();
+
     /** Find token descriptions from new transactions, that have arrived either
      *  through txadmission or from new blocks, and store them to cache
      */
@@ -84,6 +92,14 @@ public:
     void ApplyTokenMintages(std::map<CGroupTokenID, CAmount> &accumulatedMintages);
     /** Remove the saved token mints and melts, and apply them to the cache and the mintage database */
     void RemoveTokenMintages(std::map<CGroupTokenID, CAmount> &accumulatedMintages);
+
+    /** Set the sync flag.
+     * This sync flag indicates whether we created the tokendesc db from the genesis block or not.
+     */
+    void SetSyncFlag(const bool fSet);
+
+    /** Get the sync flag. */
+    bool GetSyncFlag();
 };
 extern CTokenMintCache tokenmint;
 

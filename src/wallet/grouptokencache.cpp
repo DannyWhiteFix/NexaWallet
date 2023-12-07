@@ -114,6 +114,21 @@ void CTokenDescCache::EraseTokenDesc(const CGroupTokenID &_grpID)
     cache.erase(_grpID);
 }
 
+void CTokenDescCache::SetSyncFlag(const bool fSet)
+{
+    LOCK(cs_tokencache);
+    ptokenDesc->WriteSyncFlag(fSet);
+}
+
+bool CTokenDescCache::GetSyncFlag()
+{
+    bool fSet = false;
+    LOCK(cs_tokencache);
+    ptokenDesc->ReadSyncFlag(fSet);
+
+    return fSet;
+}
+
 void CTokenDescCache::ProcessTokenDescriptions(CTransactionRef ptx)
 {
     for (size_t i = 0; i < ptx->vout.size(); i++)
@@ -301,4 +316,19 @@ void CTokenMintCache::RemoveTokenMintages(std::map<CGroupTokenID, CAmount> &accu
         else
             AddTokenMint(it.first, abs(it.second));
     }
+}
+
+void CTokenMintCache::SetSyncFlag(const bool fSet)
+{
+    LOCK(cs_tokenmint);
+    ptokenDesc->WriteSyncFlag(fSet);
+}
+
+bool CTokenMintCache::GetSyncFlag()
+{
+    bool fSet = false;
+    LOCK(cs_tokenmint);
+    ptokenDesc->ReadSyncFlag(fSet);
+
+    return fSet;
 }

@@ -81,6 +81,7 @@ TestingSetup::TestingSetup(const std::string &chainName) : BasicTestingSetup(cha
     pcoinsdbview = new CCoinsViewDB(1 << 23, true);
     pcoinsTip = new CCoinsViewCache(pcoinsdbview);
     txCommitQ = new std::map<uint256, CTxCommitData>();
+    ptokenDesc = new CTokenDescriptionDB(1 << 20, false, false);
     ptokenMint = new CTokenMintageDB(1 << 20, false, false);
 
     bool worked = InitBlockIndex(chainparams);
@@ -112,6 +113,7 @@ TestingSetup::~TestingSetup()
     delete pcoinsTip;
     delete pcoinsdbview;
     delete pblocktree;
+    delete ptokenDesc;
     delete ptokenMint;
     fs::remove_all(pathTemp);
 }

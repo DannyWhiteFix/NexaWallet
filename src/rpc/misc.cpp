@@ -16,6 +16,7 @@
 #include "timedata.h"
 #include "util.h"
 #include "utilstrencodings.h"
+#include "wallet/grouptokencache.h"
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
@@ -127,6 +128,8 @@ UniValue getinfo(const UniValue &params, bool fHelp)
     obj.pushKV("relayfee", ::minRelayTxFee.GetFeePerK());
     obj.pushKV("status", statusStrings.GetPrintable());
     obj.pushKV("txindex", IsTxIndexReady() ? (curHeight == TxIndexSyncHeight() ? "synced" : "trailing") : "not ready");
+    obj.pushKV("tokendesc", tokencache.GetSyncFlag() ? "synced" : "needs reindex");
+    obj.pushKV("tokenmint", tokenmint.GetSyncFlag() ? "synced" : "needs reindex");
     obj.pushKV("errors", GetWarnings("statusbar"));
 
     return obj;

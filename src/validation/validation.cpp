@@ -3128,6 +3128,12 @@ bool ConnectTip(CValidationState &state,
         {
             tokencache.ProcessTokenDescriptions(ptx);
         }
+        if (pindexNew->height() == 1)
+        {
+            // Set the flag so we know we created the token indexes from genesis
+            tokencache.SetSyncFlag(true);
+            tokenmint.SetSyncFlag(true);
+        }
 
         // Write the chain state to disk, if necessary. This should be done after UpdateTip to make sure the tip
         // is set correctly when calling FlushStateToDisk(); this is because the automatic -cache.dbcache adjustment

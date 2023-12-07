@@ -215,6 +215,8 @@ public:
 
     bool ReadDesc(const CGroupTokenID &grpID, std::vector<std::string> &desc) const;
     bool WriteDesc(const CGroupTokenID &grpID, const std::vector<std::string> &desc);
+    bool ReadSyncFlag(bool &fSyncFlag) const;
+    bool WriteSyncFlag(const bool fSyncFlag);
 };
 
 /** Access to the token mintage database (indexes/tokenmint */
@@ -225,6 +227,8 @@ public:
 
     bool ReadMint(const CGroupTokenID &grpID, CAmount &mint) const;
     bool WriteMint(const CGroupTokenID &grpID, const CAmount mint);
+    bool ReadSyncFlag(bool &fSyncFlag) const;
+    bool WriteSyncFlag(const bool fSyncFlag);
 };
 
 /**
