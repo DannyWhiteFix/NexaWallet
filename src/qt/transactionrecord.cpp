@@ -11,6 +11,7 @@
 #include "timedata.h"
 #include "txadmission.h"
 #include "validation/validation.h"
+#include "wallet/grouptokencache.h"
 #include "wallet/grouptokenwallet.h"
 
 #include <stdint.h>

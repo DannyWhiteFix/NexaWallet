@@ -13,6 +13,7 @@
 #include "qt/guiconstants.h"
 #include "qt/guiutil.h"
 #include "qt/transactionrecord.h"
+#include "wallet/grouptokencache.h"
 #include "wallet/grouptokenwallet.h"
 #include "wallet/wallet.h"
 

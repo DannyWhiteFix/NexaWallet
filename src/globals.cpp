@@ -54,6 +54,9 @@
 #include "version.h"
 #include "versionbits.h"
 
+// The group token cache can and should be compiled even when the wallet is disabled.
+#include "wallet/grouptokencache.h"
+
 #ifdef ENABLE_WALLET
 #include "wallet/grouptokenwallet.h"
 #include "wallet/wallet.h"
@@ -228,10 +231,8 @@ boost::asio::io_service stat_io_service;
 CBlockCache blockcache;
 CTxMemPool mempool;
 CTxOrphanPool orphanpool;
-#ifdef ENABLE_WALLET
 CTokenDescCache tokencache;
 CTokenMintCache tokenmint;
-#endif
 
 std::list<CStatBase *> mallocedStats;
 CStatMap statistics;

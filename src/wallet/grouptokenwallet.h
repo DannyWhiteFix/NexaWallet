@@ -64,86 +64,12 @@ CGroupTokenID findGroupId(const COutPoint &input,
 //* Group script helper function
 CScript GetScriptForDestination(const CTxDestination &dest, const CGroupTokenID &group, const CAmount &amount);
 
-//* Create and retrieve token descriptions using an OP_RETURN
+//* Create token descriptions using an OP_RETURN
 std::vector<std::vector<unsigned char> > ParseGroupDescParams(const UniValue &params, unsigned int &curparam);
-std::vector<std::string> GetTokenDescription(const CScript &script);
 CScript BuildTokenDescScript(const std::vector<std::vector<unsigned char> > &desc);
 
 void GetAllGroupDescriptions(const CWallet *wallet,
     std::unordered_map<CGroupTokenID, std::vector<std::string> > &desc,
     const CGroupTokenID &grpID);
-
-// A cache class for storing token descriptions with a finite sized cached.
-class CTokenDescCache
-{
-private:
-    mutable CCriticalSection cs_tokencache;
-
-    /** an in memory cache of blocks */
-    std::map<const CGroupTokenID, const std::vector<std::string> > cache GUARDED_BY(cs_tokencache);
-
-    /** Maximum number of cache elements */
-    size_t nMaxCacheSize GUARDED_BY(cs_tokencache) = 1000;
-
-public:
-    CTokenDescCache(){};
-
-    /** Add a token description to the cache */
-    void AddTokenDesc(const CGroupTokenID &_grpID, const std::vector<std::string> &_desc);
-
-    /** Find and return a token description from the cache */
-    const std::vector<std::string> GetTokenDesc(const CGroupTokenID &_grpID);
-
-    /** Remove a token description from the cache */
-    void EraseTokenDesc(const CGroupTokenID &_grpID);
-
-    /** Find token descriptions from new transactions, that have arrived either
-     *  through txadmission or from new blocks, and store them to cache
-     */
-    void ProcessTokenDescriptions(CTransactionRef ptx);
-};
-extern CTokenDescCache tokencache;
-
-// A cache class for storing token mintages with a finite sized cached.
-class CTokenMintCache
-{
-private:
-    mutable CCriticalSection cs_tokenmint;
-
-    /** an in memory cache of blocks */
-    std::map<const CGroupTokenID, CAmount> cache GUARDED_BY(cs_tokenmint);
-
-    /** Maximum number of cache elements */
-    size_t nMaxCacheSize GUARDED_BY(cs_tokenmint) = 10000;
-
-    /** Add to the in memory cache */
-    void AddToCache(const CGroupTokenID &_grpID, const CAmount _mint);
-
-    /** Add a token mintage to the database and cache */
-    void AddTokenMint(const CGroupTokenID &_grpID, const CAmount _mint);
-
-    /** Delete a token mintage (melt) from the database and cache */
-    void RemoveTokenMint(const CGroupTokenID &_grpID, const CAmount _melt);
-
-public:
-    CTokenMintCache(){};
-
-    /** Find and return a token mintage description from the cache */
-    uint64_t GetTokenMint(const CGroupTokenID &_grpID);
-
-    /** Find token mintages from new transactions that have arrived either
-     *  through txadmission or from new blocks, and save them to apply when
-     *  and if the block is confirmed.
-     */
-    void AccumulateTokenMintages(CTransactionRef ptx,
-        CCoinsViewCache &view,
-        std::map<CGroupTokenID, CAmount> &accumulatedMintages);
-
-    /** Add the saved token mints and melts, and apply them to the cache and the mintage database */
-    void ApplyTokenMintages(std::map<CGroupTokenID, CAmount> &accumulatedMintages);
-    /** Remove the saved token mints and melts, and apply them to the cache and the mintage database */
-    void RemoveTokenMintages(std::map<CGroupTokenID, CAmount> &accumulatedMintages);
-};
-extern CTokenMintCache tokenmint;
 
 #endif

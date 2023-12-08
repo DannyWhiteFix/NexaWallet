@@ -18,6 +18,7 @@
 #include "txadmission.h"
 #include "util.h"
 #include "wallet/db.h"
+#include "wallet/grouptokencache.h"
 #include "wallet/grouptokenwallet.h"
 #include "wallet/wallet.h"
 

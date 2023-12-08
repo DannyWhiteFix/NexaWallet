@@ -30,6 +30,9 @@
 #include "utilstrencodings.h"
 #include "validationinterface.h"
 
+// The group token cache can and should be compiled even when the wallet is disabled.
+#include "wallet/grouptokencache.h"
+
 #ifdef ENABLE_WALLET
 #include "wallet/grouptokenwallet.h"
 #endif
@@ -2099,7 +2102,6 @@ DisconnectResult DisconnectBlock(const ConstCBlockRef pblock, const CBlockIndex 
         // At this point, all of txundo.vprevout should have been moved out.
     }
 
-#ifdef ENABLE_WALLET
     if (!fVerifyDB.load())
     {
         // Before removing the outputs check through the block again for
@@ -2112,7 +2114,6 @@ DisconnectResult DisconnectBlock(const ConstCBlockRef pblock, const CBlockIndex 
         // Remove token mintages if there are any
         tokenmint.RemoveTokenMintages(accumulatedMintages);
     }
-#endif
 
     // remove outputs
     for (unsigned int i = 0; i < pblock->vtx.size(); i++)
@@ -2344,12 +2345,10 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
 
             if (!tx.IsCoinBase())
             {
-#ifdef ENABLE_WALLET
                 if (!fJustCheck && !fVerifyDB.load())
                 {
                     tokenmint.AccumulateTokenMintages(txref, view, accumulatedMintages);
                 }
-#endif
 
                 const char *errCode = nullptr;
                 // Check that transaction is BIP68 final
@@ -2656,11 +2655,9 @@ bool ConnectBlock(ConstCBlockRef pblock,
         txRecentlyInBlock.insert(ptx->GetId());
     }
 
-#ifdef ENABLE_WALLET
     // Apply token mintages if there are any
     if (!fVerifyDB.load())
         tokenmint.ApplyTokenMintages(accumulatedMintages);
-#endif
 
     return true;
 }
@@ -3126,13 +3123,12 @@ bool ConnectTip(CValidationState &state,
             g_txindex->BlockConnected();
         }
 
-#ifdef ENABLE_WALLET
         // Gather token descriptions if any - TODO: this should be in it's own thread.
         for (const CTransactionRef ptx : pblock->vtx)
         {
             tokencache.ProcessTokenDescriptions(ptx);
         }
-#endif
+
         // Write the chain state to disk, if necessary. This should be done after UpdateTip to make sure the tip
         // is set correctly when calling FlushStateToDisk(); this is because the automatic -cache.dbcache adjustment
         // mechanism gets triggered when the chain is synced completely detemined by when the best header matches

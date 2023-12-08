@@ -28,6 +28,9 @@
 #include "validation/validation.h"
 #include "validationinterface.h"
 
+// The group token cache can and should be compiled even when the wallet is disabled.
+#include "wallet/grouptokencache.h"
+
 #ifdef ENABLE_WALLET
 #include "wallet/grouptokenwallet.h"
 #include "wallet/wallet.h"
@@ -313,10 +316,8 @@ void CommitTxToMempool()
             // Indicate that this tx was fully processed/accepted and can now be removed from the req mgr.
             requester.Received(CInv(MSG_TX, data.hash), nullptr);
 
-#ifdef ENABLE_WALLET
             // Update the token description cache if there are any token authorities in this transaction
             tokencache.ProcessTokenDescriptions(data.entry.GetSharedTx());
-#endif
         }
     }
 #ifdef ENABLE_WALLET
