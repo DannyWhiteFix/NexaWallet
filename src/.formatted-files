@@ -413,6 +413,8 @@ wallet/db.h
 wallet/rpcdump.cpp
 wallet/rpcwallet.cpp
 wallet/rpcwallet.h
+wallet/grouptokencache.cpp
+wallet/grouptokencache.h
 wallet/grouptokenwallet.cpp
 wallet/grouptokenwallet.h
 wallet/wallet.cpp

@@ -260,6 +260,7 @@ BITCOIN_CORE_H = \
   wallet/rpcwallet.h \
   wallet/wallet.h \
   wallet/walletdb.h \
+  wallet/grouptokencache.h \
   wallet/grouptokenwallet.h \
   zmq/zmqabstractnotifier.h \
   zmq/zmqconfig.h\
@@ -365,6 +366,7 @@ libnexa_server_a_SOURCES = \
   validation/verifydb.cpp \
   validationinterface.cpp \
   versionbits.cpp \
+  wallet/grouptokencache.cpp \
   $(BITCOIN_CORE_H)
 
 if ENABLE_ZMQ

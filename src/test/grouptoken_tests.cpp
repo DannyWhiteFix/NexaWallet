@@ -13,6 +13,8 @@
 #include "utilstrencodings.h"
 #include "validation/validation.h"
 
+#include "wallet/grouptokencache.h"
+
 #ifdef ENABLE_WALLET
 #include "wallet/grouptokenwallet.h"
 #endif
