@@ -377,8 +377,16 @@ void TokensViewDialog::on_tokenTable_itemDoubleClicked()
         {
             infoString.append("<b> " + tr("Data") + " </b>(" + tr("num") + "):  <i>" + tr("NaN") + "</i><br>");
         }
-        infoString.append(
-            "<b> " + tr("Total Mintage:") + "</b>  " + QString::number(tokenmint.GetTokenMint(grpID)) + "<br>");
+        if (tokenmint.GetSyncFlag())
+        {
+            infoString.append(
+                "<b> " + tr("Total Mintage:") + "</b>  " + QString::number(tokenmint.GetTokenMint(grpID)) + "<br>");
+        }
+        else
+        {
+            infoString.append("<b> " + tr("Total Mintage:") + "</b><i>  (" +
+                              tr("Token mintage is unavailable because the database needs a reindex") + ")</i><br>");
+        }
         infoString.append("<br>");
 
         // Get the parent group and display it.  Also re-assign the grpID to be the parent group
@@ -419,8 +427,16 @@ void TokensViewDialog::on_tokenTable_itemDoubleClicked()
         {
             infoString.append("<b> " + tr("Decimals:") + "</b>  " + QString(info[4].c_str()) + "<br>");
         }
-        infoString.append(
-            "<b> " + tr("Total Mintage:") + "</b>  " + QString::number(tokenmint.GetTokenMint(grpID)) + "<br>");
+        if (tokenmint.GetSyncFlag())
+        {
+            infoString.append(
+                "<b> " + tr("Total Mintage:") + "</b>  " + QString::number(tokenmint.GetTokenMint(grpID)) + "<br>");
+        }
+        else
+        {
+            infoString.append("<b> " + tr("Total Mintage:") + "</b><i>  (" +
+                              tr("Token mintage is unavailable because the database needs a reindex") + ")</i><br>");
+        }
 
         infoString.append("<hr></hr>");
         infoString.append("<b> " + tr("Balance:") + "</b>  " + selectedItems[3]->text() + "<br>");
