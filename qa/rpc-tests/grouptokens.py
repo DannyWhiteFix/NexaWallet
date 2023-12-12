@@ -827,6 +827,171 @@ class GroupTokensTest (BitcoinTestFramework):
         self.nodes[2].invalidateblock(self.nodes[2].getbestblockhash())
         waitFor(10, lambda: self.nodes[2].token("mintage", grp_node2) == 0)
 
+        ### Check authority tracking is updated correctly
+
+        # Check new creation authority shows up
+        logging.info("testing authority tracking")
+        self.nodes[2].reconsidermostworkchain()
+        self.sync_blocks()
+
+        # Create basic token and check that the authority is tracked
+        authGrpId1 = self.nodes[2].token("new", "NEXA", "NEXA.org" "" "" "2")["groupIdentifier"]  
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 1)
+        try:
+            self.nodes[2].token("authority", "count", authGrpId1)["mint"]
+            assert(0)  # should have raised exception
+        except JSONRPCException as e:
+            assert("Could not find authority information for the token id given" in e.error["message"])
+        self.nodes[2].generate(1) # must mine a block for tracking to update
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId1)["mint"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId1)["melt"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId1)["renew"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId1)["rescript"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId1)["subgroup"], "1")
+
+        addr2 = self.nodes[2].getnewaddress()
+        self.nodes[2].token("mint", authGrpId1, addr2, 1000)
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 1)
+        self.nodes[2].token("mint", authGrpId1, addr2, 1200)
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 2)
+        self.nodes[2].token("mint", authGrpId1, addr2, 100)
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 3)
+        self.nodes[2].token("melt", authGrpId1, 150)
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 4)
+        self.nodes[2].generate(1) # must mine a block for tracking to update
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId1)["mint"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId1)["melt"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId1)["renew"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId1)["rescript"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId1)["subgroup"], "1")
+
+        # The new token creation transaction is in the same block as the first mint
+        authGrpId2 = self.nodes[2].token("new")["groupIdentifier"]  
+        authGrpId3 = self.nodes[2].token("new")["groupIdentifier"]  
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 2)
+
+        addr2 = self.nodes[2].getnewaddress()
+        self.nodes[2].token("mint", authGrpId2, addr2, 100)
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 1)
+        self.nodes[2].generate(1); # must mine a block for tracking to update
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["mint"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["melt"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["renew"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["rescript"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["subgroup"], "1")
+
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId3)["mint"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId3)["melt"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId3)["renew"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId3)["rescript"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId3)["subgroup"], "1")
+
+        # Create other authorities and check the counts
+        addr2 = self.nodes[2].getnewaddress()
+        self.nodes[2].token("authority", "create", authGrpId2, addr2, "mint", "nochild", "rescript")
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 1)
+        self.nodes[2].generate(1); # must mine a block for tracking to update
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["mint"], "2")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["melt"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["renew"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["rescript"], "2")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["subgroup"], "1")
+
+        addr2 = self.nodes[2].getnewaddress()
+        self.nodes[2].token("authority", "create", authGrpId2, addr2, "melt", "rescript")
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 1)
+        self.nodes[2].generate(1) # must mine a block for tracking to update
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["mint"], "2")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["melt"], "2")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["renew"], "2")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["rescript"], "3")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["subgroup"], "1")
+
+        # create authority with same receiving address
+        self.nodes[2].token("authority", "create", authGrpId2, addr2, "mint", "melt")
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 1)
+        self.nodes[2].generate(1) # must mine a block for tracking to update
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["mint"], "3")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["melt"], "3")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["renew"], "3")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["rescript"], "3")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["subgroup"], "1")
+
+        # Check the other group id and its authorities are unaffected by the changes above
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId1)["mint"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId1)["melt"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId1)["renew"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId1)["rescript"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId1)["subgroup"], "1")
+
+        # create a token authority to an address on another peer
+        addr0 = self.nodes[0].getnewaddress()
+        self.nodes[2].token("authority", "create", authGrpId2, addr0, "mint", "melt", "nochild")
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 1)
+        self.nodes[2].generate(1) # must mine a block for tracking to update
+        self.sync_blocks()
+        assert_equal(self.nodes[0].token("authority", "count", authGrpId1)["mint"], "1")
+        assert_equal(self.nodes[0].token("authority", "count", authGrpId1)["melt"], "1")
+        assert_equal(self.nodes[0].token("authority", "count", authGrpId1)["renew"], "1")
+        assert_equal(self.nodes[0].token("authority", "count", authGrpId1)["rescript"], "1")
+        assert_equal(self.nodes[0].token("authority", "count", authGrpId1)["subgroup"], "1")
+
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId1)["mint"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId1)["melt"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId1)["renew"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId1)["rescript"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId1)["subgroup"], "1")
+
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["mint"], "4")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["melt"], "4")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["renew"], "3")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["rescript"], "3")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["subgroup"], "1")
+
+        assert_equal(self.nodes[0].token("authority", "count", authGrpId2)["mint"], "4")
+        assert_equal(self.nodes[0].token("authority", "count", authGrpId2)["melt"], "4")
+        assert_equal(self.nodes[0].token("authority", "count", authGrpId2)["renew"], "3")
+        assert_equal(self.nodes[0].token("authority", "count", authGrpId2)["rescript"], "3")
+        assert_equal(self.nodes[0].token("authority", "count", authGrpId2)["subgroup"], "1")
+
+        assert_equal(self.nodes[0].token("authority", "count", authGrpId3)["mint"], "1")
+        assert_equal(self.nodes[0].token("authority", "count", authGrpId3)["melt"], "1")
+        assert_equal(self.nodes[0].token("authority", "count", authGrpId3)["renew"], "1")
+        assert_equal(self.nodes[0].token("authority", "count", authGrpId3)["rescript"], "1")
+        assert_equal(self.nodes[0].token("authority", "count", authGrpId3)["subgroup"], "1")
+
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId3)["mint"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId3)["melt"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId3)["renew"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId3)["rescript"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId3)["subgroup"], "1")
+
+        logging.info("testing authority tracking with rollback and reorg")
+        self.nodes[2].rollbackchain(self.nodes[2].getblockcount() - 1)
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["mint"], "3")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["melt"], "3")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["renew"], "3")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["rescript"], "3")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["subgroup"], "1")
+
+        self.nodes[2].rollbackchain(self.nodes[2].getblockcount() - 1)
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["mint"], "2")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["melt"], "2")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["renew"], "2")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["rescript"], "3")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["subgroup"], "1")
+
+        self.nodes[2].rollbackchain(self.nodes[2].getblockcount() - 1)
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["mint"], "2")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["melt"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["renew"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["rescript"], "2")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["subgroup"], "1")
+
+
+        logging.info("testing authority tracking after destroying an authority")
+
+
 
         logging.info("test complete")
 

@@ -1599,13 +1599,22 @@ BOOST_AUTO_TEST_CASE(grouptoken_descriptions)
     vLabels = GetTokenDescription(ret2);
     BOOST_CHECK(vLabels.empty());
 
-    // Test that not data returns empty
+    // Test that not data returns with a nulled description string
     OpRetGroupId = 88888888;
 
     CScript ret3;
     ret3 << OP_RETURN << OpRetGroupId;
     vLabels = GetTokenDescription(ret3);
-    BOOST_CHECK(vLabels.empty());
+    BOOST_CHECK_EQUAL(vLabels[0], "");
+    BOOST_CHECK_EQUAL(vLabels[1], "");
+    BOOST_CHECK_EQUAL(vLabels[2], "");
+    BOOST_CHECK_EQUAL(vLabels[3], "");
+    BOOST_CHECK_EQUAL(vLabels[4], "0");
+    BOOST_CHECK_EQUAL(vLabels[5], "0");
+    BOOST_CHECK_EQUAL(vLabels[6], "0");
+    BOOST_CHECK_EQUAL(vLabels[7], "0");
+    BOOST_CHECK_EQUAL(vLabels[8], "0");
+    BOOST_CHECK_EQUAL(vLabels[9], "0");
 }
 #endif
 

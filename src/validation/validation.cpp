@@ -2107,12 +2107,15 @@ DisconnectResult DisconnectBlock(const ConstCBlockRef pblock, const CBlockIndex 
         // Before removing the outputs check through the block again for
         // any token mint/melt transactions and undo them
         std::map<CGroupTokenID, CAmount> accumulatedMintages;
+        std::map<CGroupTokenID, CTokenDescCache::CAuth> accumulatedAuthorities;
         for (unsigned int i = 1; i < pblock->vtx.size(); i++)
         {
             tokenmint.AccumulateTokenMintages(pblock->vtx[i], view, accumulatedMintages);
+            tokencache.AccumulateTokenAuthorities(pblock->vtx[i], view, accumulatedAuthorities);
         }
-        // Remove token mintages if there are any
+        // Remove token mintages and authorities if there are any
         tokenmint.RemoveTokenMintages(accumulatedMintages);
+        tokencache.RemoveTokenAuthorities(accumulatedAuthorities);
     }
 
     // remove outputs
@@ -2239,7 +2242,8 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
     CAmount &nFees,
     CBlockUndo &blockundo,
     std::vector<std::pair<uint256, CDiskTxPos> > &vPos,
-    std::map<CGroupTokenID, CAmount> &accumulatedMintages)
+    std::map<CGroupTokenID, CAmount> &accumulatedMintages,
+    std::map<CGroupTokenID, CTokenDescCache::CAuth> &accumulatedAuthorities)
 {
     nFees = 0;
     int64_t nTime2 = GetStopwatchMicros();
@@ -2347,7 +2351,10 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
             {
                 if (!fJustCheck && !fVerifyDB.load())
                 {
+                    // TODO: these two functions could be combined such that we parse through
+                    //       each transaction only once instead of twice.
                     tokenmint.AccumulateTokenMintages(txref, view, accumulatedMintages);
+                    tokencache.AccumulateTokenAuthorities(txref, view, accumulatedAuthorities);
                 }
 
                 const char *errCode = nullptr;
@@ -2566,9 +2573,10 @@ bool ConnectBlock(ConstCBlockRef pblock,
     std::vector<std::pair<uint256, CDiskTxPos> > vPos;
     vPos.reserve(pblock->vtx.size());
     std::map<CGroupTokenID, CAmount> accumulatedMintages;
+    std::map<CGroupTokenID, CTokenDescCache::CAuth> accumulatedAuthorities;
 
     if (!ConnectBlockCanonicalOrdering(pblock, state, pindex, view, chainparams, fJustCheck, fParallel, fScriptChecks,
-            nFees, blockundo, vPos, accumulatedMintages))
+            nFees, blockundo, vPos, accumulatedMintages, accumulatedAuthorities))
     {
         return false;
     }
@@ -2657,8 +2665,10 @@ bool ConnectBlock(ConstCBlockRef pblock,
 
     // Apply token mintages if there are any
     if (!fVerifyDB.load())
+    {
         tokenmint.ApplyTokenMintages(accumulatedMintages);
-
+        tokencache.ApplyTokenAuthorities(accumulatedAuthorities);
+    }
     return true;
 }
 
@@ -3123,11 +3133,6 @@ bool ConnectTip(CValidationState &state,
             g_txindex->BlockConnected();
         }
 
-        // Gather token descriptions if any - TODO: this should be in it's own thread.
-        for (const CTransactionRef ptx : pblock->vtx)
-        {
-            tokencache.ProcessTokenDescriptions(ptx);
-        }
         if (pindexNew->height() == 1)
         {
             // Set the flag so we know we created the token indexes from genesis
