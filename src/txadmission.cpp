@@ -315,9 +315,6 @@ void CommitTxToMempool()
 
             // Indicate that this tx was fully processed/accepted and can now be removed from the req mgr.
             requester.Received(CInv(MSG_TX, data.hash), nullptr);
-
-            // Update the token description cache if there are any token authorities in this transaction
-            tokencache.ProcessTokenDescriptions(data.entry.GetSharedTx());
         }
     }
 #ifdef ENABLE_WALLET

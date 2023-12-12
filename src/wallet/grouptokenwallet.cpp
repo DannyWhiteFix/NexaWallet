@@ -206,7 +206,7 @@ void GetAllGroupDescriptions(const CWallet *wallet,
         // If there is no OP_RETURN then just return empty strings for the token descriptions
         if (!fOpReturn && !desc.count(tg.associatedGroup))
         {
-            desc[tg.associatedGroup] = std::vector<std::string>({"", "", "", "", ""});
+            desc[tg.associatedGroup] = std::vector<std::string>({"", "", "", "", "", "", "", "", "", ""});
         }
     }
 }
@@ -804,9 +804,9 @@ std::vector<std::vector<unsigned char> > ParseGroupDescParams(const UniValue &pa
 
     std::string url = params[curparam].get_str();
     // we could do a complete URL validity check here but for now just check for :
-    if (url.find(":") == std::string::npos)
+    if (url.size() > 0 && url.find(":") == std::string::npos)
     {
-        std::string strError = strprintf("Parameter %s is not a URL, missing colon", url);
+        std::string strError = strprintf("Parameter \"%s\" is not a URL, missing colon", url);
         throw JSONRPCError(RPC_INVALID_PARAMS, strError);
     }
     ret.push_back(std::vector<unsigned char>(url.begin(), url.end()));
@@ -820,9 +820,19 @@ std::vector<std::vector<unsigned char> > ParseGroupDescParams(const UniValue &pa
     }
 
     std::string hexDocHash = params[curparam].get_str();
-    if (hexDocHash.size() != 64)
+    if (url.size() > 0 && hexDocHash.size() != 64 && hexDocHash.size() != 0)
     {
-        std::string strError = strprintf("Parameter %s is not a uint256", hexDocHash);
+        std::string strError = strprintf("Parameter \"%s\" is not a uint256", hexDocHash);
+        throw JSONRPCError(RPC_INVALID_PARAMS, strError);
+    }
+    if (url.size() == 0 && hexDocHash.size() > 0)
+    {
+        std::string strError = strprintf("Can not pass a hash value without a URL defined");
+        throw JSONRPCError(RPC_INVALID_PARAMS, strError);
+    }
+    if (url.size() > 0 && hexDocHash.size() == 0)
+    {
+        std::string strError = strprintf("Can not pass a URL value without a hash defined");
         throw JSONRPCError(RPC_INVALID_PARAMS, strError);
     }
 
@@ -884,24 +894,22 @@ CGroupTokenID findGroupId(const COutPoint &input,
 
 extern UniValue token(const UniValue &params, bool fHelp)
 {
-    CWallet *wallet = pwalletMain;
-    if (!EnsureWalletIsAvailable(fHelp))
-        return NullUniValue;
-
     if (fHelp || params.size() < 1)
         throw std::runtime_error(
             "token [info, new, mint, melt, balance, send, authority, subgroup, mintage] \n"
             "\nToken functions.\n"
-            "'info' returns a list of all tokens with their groupId and associated token-name token-ticker "
-            "and descUrl or descHash, but only for tokens created for addresses in this wallet\n"
+            "'info' returns a list of all tokens with their groupId and associated token-name, token-ticker "
+            "descUrl, descHash, the number of mint/melt/renew/rescript/subgroup authorities, and also "
+            "the balance and mintage numbers for this token, but only for tokens created in this wallet\n"
             "'new' creates a new token type. args: [address] [token-ticker token-name [descUrl descHash decimals]]\n"
             "'mint' creates new tokens. args: groupId address quantity\n"
             "'melt' removes tokens from circulation. args: groupId quantity\n"
             "'balance' reports quantity of this token, in the finest unit. args: groupId [address]\n"
             "'send' sends tokens to a new address. args: groupId address quantity [address quantity...]\n"
             "'authority create' creates a new authority args: groupId address [mint melt nochild rescript]\n"
+            "'authority count' returns a list of all authorities and their current counts. args: groupId\n"
             "'subgroup' translates a group and additional data into a subgroup identifier. args: groupId data\n"
-            "'mintage' returns the current mintage of a token. args: groupId data\n"
+            "'mintage' returns the current mintage of a token. args: groupId\n"
 
             "Note: As this interface is often used for scripting, all balances are accepted and reported as integers\n"
             "      specified in the token's finest unit (the 'decimals' field in the token information is ignored).\n"
@@ -948,13 +956,35 @@ extern UniValue token(const UniValue &params, bool fHelp)
             HelpExampleCli("token",
                 "authority create nexa:tpyte9hwr6ew0agt67a0y2fnnccc0d8r62lwryq44rfhzmv7ngqqqza82qdu0 "
                 "nexa:nqtsq5g5t8hqv7gflfp3gshvck0srh2a0ktd53kzc97c26w0 mint melt nochild rescript") +
+            "\nMake new authority\n" +
+            HelpExampleCli(
+                "token", "authority count nexa:tpyte9hwr6ew0agt67a0y2fnnccc0d8r62lwryq44rfhzmv7ngqqqza82qdu0") +
             "\nMake subgroups\n " +
-            HelpExampleCli("token", "subgroup nexa:tpyte9hwr6ew0agt67a0y2fnnccc0d8r62lwryq44rfhzmv7ngqqqza82qdum 1"));
+            HelpExampleCli("token", "subgroup nexa:tpyte9hwr6ew0agt67a0y2fnnccc0d8r62lwryq44rfhzmv7ngqqqza82qdum 1") +
+            "\nGet token mintage\n " +
+            HelpExampleCli("token", "mintage nexa:tpyte9hwr6ew0agt67a0y2fnnccc0d8r62lwryq44rfhzmv7ngqqqza82qdum"));
+
+    CWallet *wallet = pwalletMain;
 
     std::string operation;
     std::string p0 = params[0].get_str();
     std::transform(p0.begin(), p0.end(), std::back_inserter(operation), ::tolower);
-    EnsureWalletIsUnlocked();
+
+    // Wallet does not have to be available or unlocked to get mintages or the list of authorities
+    std::string subop;
+    if (operation == "authority")
+    {
+        unsigned int curparam = 1;
+        std::string p1 = params[curparam].get_str();
+        std::transform(p1.begin(), p1.end(), std::back_inserter(subop), ::tolower);
+    }
+    if (operation != "mintage" && subop != "count")
+    {
+        if (!EnsureWalletIsAvailable(fHelp))
+            return NullUniValue;
+
+        EnsureWalletIsUnlocked();
+    }
 
     // Initialize the minimum amount to fill a group output.
     if (GROUPED_SATOSHI_AMT == 0)
@@ -1054,6 +1084,39 @@ extern UniValue token(const UniValue &params, bool fHelp)
         std::string p1 = params[curparam].get_str();
         std::transform(p1.begin(), p1.end(), std::back_inserter(suboperation), ::tolower);
         curparam++;
+        if (suboperation == "count")
+        {
+            // Get the group id from the command line
+            CGroupTokenID grpID;
+            grpID = DecodeGroupToken(params[curparam].get_str());
+            if (!grpID.isUserGroup())
+            {
+                throw JSONRPCError(RPC_INVALID_PARAMS, "Invalid parameter: No group specified");
+            }
+
+            if (!tokencache.GetSyncFlag())
+            {
+                throw JSONRPCError(
+                    RPC_INVALID_REQUEST, "Token authority count is unavailable because the database needs a reindex");
+            }
+
+            auto info = tokencache.GetTokenDesc(grpID.parentGroup());
+            if (info.size() >= 10)
+            {
+                UniValue ret(UniValue::VOBJ);
+
+                ret.pushKV("mint", info[5]);
+                ret.pushKV("melt", info[6]);
+                ret.pushKV("renew", info[7]);
+                ret.pushKV("rescript", info[8]);
+                ret.pushKV("subgroup", info[9]);
+
+                return ret;
+            }
+            else
+                throw JSONRPCError(
+                    RPC_INVALID_PARAMS, "ERROR: Could not find authority information for the token id given");
+        }
         if (suboperation == "create")
         {
             CGroupTokenID grpID;
@@ -1159,6 +1222,10 @@ extern UniValue token(const UniValue &params, bool fHelp)
             ConstructTx(wtx, chosenCoins, outputs, totalBchAvailable, totalBchNeeded, 0, 0, grpID, wallet);
             renewAuthorityKey.KeepKey();
             return wtx.GetIdem().GetHex();
+        }
+        else
+        {
+            throw JSONRPCError(RPC_INVALID_PARAMS, "Missing or incorrect authority parameters");
         }
     }
     else if (operation == "new")

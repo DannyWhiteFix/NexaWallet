@@ -67,7 +67,15 @@ std::vector<std::string> GetTokenDescription(const CScript &script)
         count++;
     }
 
-    return vTokenDesc;
+    if (!vTokenDesc.empty())
+    {
+        return vTokenDesc;
+    }
+    else
+    {
+        std::vector<std::string> vEmptyDesc{"", "", "", "", "0", "0", "0", "0", "0", "0"};
+        return vEmptyDesc;
+    }
 }
 
 
@@ -79,6 +87,7 @@ void CTokenDescCache::AddTokenDesc(const CGroupTokenID &_grpID, const std::vecto
     // memory cache with values we know are needed for the token wallet.  These values would be pulled
     // into the cache during node startup so there is no real performance loss during normal wallet use.
     LOCK(cs_tokencache);
+    cache.erase(_grpID);
     ptokenDesc->WriteDesc(_grpID, _desc);
 }
 
@@ -131,6 +140,7 @@ bool CTokenDescCache::GetSyncFlag()
 
 void CTokenDescCache::ProcessTokenDescriptions(CTransactionRef ptx)
 {
+    bool fNewDesc = false;
     for (size_t i = 0; i < ptx->vout.size(); i++)
     {
         const CTxOut &out = ptx->vout[i];
@@ -147,16 +157,195 @@ void CTokenDescCache::ProcessTokenDescriptions(CTransactionRef ptx)
                 const CTxOut &out2 = ptx->vout[j];
                 if (out2.scriptPubKey[0] == OP_RETURN)
                 {
-                    const auto tokenDesc = GetTokenDescription(out2.scriptPubKey);
-                    AddTokenDesc(tg.associatedGroup, tokenDesc);
+                    auto vDesc = GetTokenDescription(out2.scriptPubKey);
+
+                    // return null authorites for now
+                    vDesc.push_back("0");
+                    vDesc.push_back("0");
+                    vDesc.push_back("0");
+                    vDesc.push_back("0");
+                    vDesc.push_back("0");
+
+                    AddTokenDesc(tg.associatedGroup, vDesc);
+                    fNewDesc = true;
                     break;
                 }
             }
-
-            break;
+            if (fNewDesc)
+                break;
         }
     }
 }
+
+void CTokenDescCache::AccumulateTokenAuthorities(CTransactionRef ptx,
+    CCoinsViewCache &view,
+    std::map<CGroupTokenID, CAuth> &accumulatedAuthorities)
+{
+    if (ptx->IsCoinBase())
+        return;
+
+    // Get the authorities in the inputs
+    CAuth authority;
+    for (const CTxIn &txin : ptx->vin)
+    {
+        Coin coin;
+        view.GetCoin(txin.prevout, coin);
+        if (!coin.IsSpent())
+        {
+            const CTxOut &txout = coin.out;
+            CGroupTokenInfo tg(txout);
+            if (tg.associatedGroup != NoGroup && tg.isAuthority())
+            {
+                if (accumulatedAuthorities.count(tg.associatedGroup))
+                {
+                    std::swap(authority, accumulatedAuthorities[tg.associatedGroup]);
+                }
+                authority.nMint -= tg.allowsMint();
+                authority.nMelt -= tg.allowsMelt();
+                authority.nRenew -= tg.allowsRenew();
+                authority.nRescript -= tg.allowsRescript();
+                authority.nSubgroup -= tg.allowsSubgroup();
+                accumulatedAuthorities[tg.associatedGroup] = authority;
+            }
+        }
+        else
+        {
+            DbgAssert(!coin.IsSpent(), );
+        }
+    }
+
+    // Get the authorities in the outputs.
+    bool fHaveAuthority = false;
+    bool fHaveOpReturn = false;
+    for (size_t i = 0; i < ptx->vout.size(); i++)
+    {
+        const CTxOut &out = ptx->vout[i];
+        if (out.scriptPubKey[0] == OP_RETURN)
+        {
+            fHaveOpReturn = true;
+            continue;
+        }
+
+        CGroupTokenInfo tg(out.scriptPubKey);
+        if ((tg.associatedGroup != NoGroup) && tg.isAuthority())
+        {
+            fHaveAuthority = true;
+
+            if (accumulatedAuthorities.count(tg.associatedGroup))
+            {
+                std::swap(authority, accumulatedAuthorities[tg.associatedGroup]);
+            }
+
+            authority.nMint += tg.allowsMint();
+            authority.nMelt += tg.allowsMelt();
+            authority.nRenew += tg.allowsRenew();
+            authority.nRescript += tg.allowsRescript();
+            authority.nSubgroup += tg.allowsSubgroup();
+            accumulatedAuthorities[tg.associatedGroup] = authority;
+        }
+    }
+
+    // if we have both an authority and op_return then look for and update
+    // the token description information
+    if (fHaveAuthority && fHaveOpReturn)
+    {
+        ProcessTokenDescriptions(ptx);
+    }
+}
+
+void CTokenDescCache::ApplyTokenAuthorities(std::map<CGroupTokenID, CAuth> &accumulatedAuthorities)
+{
+    LOCK(cs_tokencache);
+    for (auto &it : accumulatedAuthorities)
+    {
+        std::vector<std::string> vDescNone{"", "", "", "", "0", "0", "0", "0", "0", "0"};
+        std::vector<std::string> vDesc = tokencache.GetTokenDesc(it.first);
+
+        // Special case if the token was originally created "new" but without any
+        // ticker/name/url/hash/decimals defined.  It will not have had an OP_RETURN in
+        // which case there would not be an initial description string in the tracking database created
+        // so here we add one when we get our first authority to track.....
+        if (vDesc.empty())
+        {
+            std::swap(vDesc, vDescNone);
+        }
+
+        if (vDesc.size() >= 10)
+        {
+            // Get authorities
+            int nMint = 0;
+            int nMelt = 0;
+            int nRenew = 0;
+            int nRescript = 0;
+            int nSubgroup = 0;
+            try
+            {
+                nMint = stoi(vDesc[5]) + it.second.nMint;
+                nMelt = stoi(vDesc[6]) + it.second.nMelt;
+                nRenew = stoi(vDesc[7]) + it.second.nRenew;
+                nRescript = stoi(vDesc[8]) + it.second.nRescript;
+                nSubgroup = stoi(vDesc[9]) + it.second.nSubgroup;
+            }
+            catch (...)
+            {
+                DbgAssert(false, );
+            }
+
+            std::vector<std::string> vNewDesc = {vDesc[0], vDesc[1], vDesc[2], vDesc[3], vDesc[4]};
+            vNewDesc.push_back(std::to_string(nMint));
+            vNewDesc.push_back(std::to_string(nMelt));
+            vNewDesc.push_back(std::to_string(nRenew));
+            vNewDesc.push_back(std::to_string(nRescript));
+            vNewDesc.push_back(std::to_string(nSubgroup));
+
+            AddTokenDesc(it.first, vNewDesc);
+        }
+        else
+            DbgAssert(false, ); // should never happen
+    }
+}
+
+void CTokenDescCache::RemoveTokenAuthorities(std::map<CGroupTokenID, CAuth> &accumulatedAuthorities)
+{
+    LOCK(cs_tokencache);
+    for (auto &it : accumulatedAuthorities)
+    {
+        auto vDesc = tokencache.GetTokenDesc(it.first);
+        if (vDesc.size() >= 10)
+        {
+            // Get authorities
+            int nMint = 0;
+            int nMelt = 0;
+            int nRenew = 0;
+            int nRescript = 0;
+            int nSubgroup = 0;
+            try
+            {
+                nMint = stoi(vDesc[5]) - it.second.nMint;
+                nMelt = stoi(vDesc[6]) - it.second.nMelt;
+                nRenew = stoi(vDesc[7]) - it.second.nRenew;
+                nRescript = stoi(vDesc[8]) - it.second.nRescript;
+                nSubgroup = stoi(vDesc[9]) - it.second.nSubgroup;
+            }
+            catch (...)
+            {
+                DbgAssert(false, );
+            }
+
+            std::vector<std::string> vNewDesc = {vDesc[0], vDesc[1], vDesc[2], vDesc[3], vDesc[4]};
+            vNewDesc.push_back(std::to_string(nMint));
+            vNewDesc.push_back(std::to_string(nMelt));
+            vNewDesc.push_back(std::to_string(nRenew));
+            vNewDesc.push_back(std::to_string(nRescript));
+            vNewDesc.push_back(std::to_string(nSubgroup));
+
+            AddTokenDesc(it.first, vNewDesc);
+        }
+        else
+            DbgAssert(false, ); // should not happen
+    }
+}
+
 
 // Token Mint Cache methods
 void CTokenMintCache::AddToCache(const CGroupTokenID &_grpID, const CAmount _mint)
@@ -230,6 +419,9 @@ void CTokenMintCache::AccumulateTokenMintages(CTransactionRef ptx,
     CCoinsViewCache &view,
     std::map<CGroupTokenID, CAmount> &accumulatedMintages)
 {
+    if (ptx->IsCoinBase())
+        return;
+
     struct Amounts
     {
         CAmount nTokenInputs = 0;

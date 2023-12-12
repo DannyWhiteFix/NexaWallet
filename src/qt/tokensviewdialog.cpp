@@ -406,6 +406,28 @@ void TokensViewDialog::on_tokenTable_itemDoubleClicked()
         {
             infoString.append("<b> " + tr("Decimals:") + "</b>  " + QString(info[4].c_str()) + "<br>");
         }
+        // Authorities
+        if (info.size() >= 10 && tokencache.GetSyncFlag())
+        {
+            infoString.append("<br>");
+            infoString.append("<u><b> " + tr("Current Authorities:") + "</b></u><br><br>");
+            infoString.append(
+                "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + tr("Mint:") + "  " + QString(info[5].c_str()) + "<br>");
+            infoString.append(
+                "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + tr("Melt:") + "  " + QString(info[6].c_str()) + "<br>");
+            infoString.append(
+                "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + tr("Renew:") + "  " + QString(info[7].c_str()) + "<br>");
+            infoString.append(
+                "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + tr("Rescript:") + "  " + QString(info[8].c_str()) + "<br>");
+            infoString.append(
+                "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + tr("Subgroup:") + "  " + QString(info[9].c_str()) + "<br>");
+        }
+        else
+        {
+            infoString.append("<b> " + tr("Current Authorities:") + "</b><i>  (" +
+                              tr("Token authorities are unavailable because the database needs a reindex") +
+                              ")</i><br>");
+        }
 
         infoString.append("<hr></hr>");
         infoString.append("<b> " + tr("Balance:") + "</b>  " + selectedItems[3]->text() + "<br>");
@@ -437,6 +459,30 @@ void TokensViewDialog::on_tokenTable_itemDoubleClicked()
             infoString.append("<b> " + tr("Total Mintage:") + "</b><i>  (" +
                               tr("Token mintage is unavailable because the database needs a reindex") + ")</i><br>");
         }
+
+        // Authorities
+        if (info.size() >= 10 && tokencache.GetSyncFlag())
+        {
+            infoString.append("<br>");
+            infoString.append("<u><b> " + tr("Current Authorities:") + "</b></u><br><br>");
+            infoString.append(
+                "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + tr("Mint:") + "  " + QString(info[5].c_str()) + "<br>");
+            infoString.append(
+                "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + tr("Melt:") + "  " + QString(info[6].c_str()) + "<br>");
+            infoString.append(
+                "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + tr("Renew:") + "  " + QString(info[7].c_str()) + "<br>");
+            infoString.append(
+                "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + tr("Rescript:") + "  " + QString(info[8].c_str()) + "<br>");
+            infoString.append(
+                "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + tr("Subgroup:") + "  " + QString(info[9].c_str()) + "<br>");
+        }
+        else
+        {
+            infoString.append("<b> " + tr("Current Authorities:") + "</b><i>  (" +
+                              tr("Token authorities are unavailable because the database needs a reindex") +
+                              ")</i><br>");
+        }
+
 
         infoString.append("<hr></hr>");
         infoString.append("<b> " + tr("Balance:") + "</b>  " + selectedItems[3]->text() + "<br>");

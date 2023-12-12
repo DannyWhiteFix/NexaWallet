@@ -29,6 +29,15 @@ private:
 public:
     CTokenDescCache(){};
 
+    struct CAuth
+    {
+        int nMint = 0;
+        int nMelt = 0;
+        int nRenew = 0;
+        int nRescript = 0;
+        int nSubgroup = 0;
+    };
+
     /** Add a token description to the cache */
     void AddTokenDesc(const CGroupTokenID &_grpID, const std::vector<std::string> &_desc);
 
@@ -50,6 +59,18 @@ public:
      *  through txadmission or from new blocks, and store them to cache
      */
     void ProcessTokenDescriptions(CTransactionRef ptx);
+
+    /** Find and accumulate token authorities from new transactions, that have arrived either
+     *  through txadmission or from new blocks, and apply when and if the block is confirmed.
+     */
+    void AccumulateTokenAuthorities(CTransactionRef ptx,
+        CCoinsViewCache &view,
+        std::map<CGroupTokenID, CAuth> &accumulatedAuthorities);
+
+    /** Apply the accumulated token authories and add them to the cache and database */
+    void ApplyTokenAuthorities(std::map<CGroupTokenID, CAuth> &accumulatedAuthoriies);
+    /** Remove the accumulated token authories and remove them to the cache and database */
+    void RemoveTokenAuthorities(std::map<CGroupTokenID, CAuth> &accumulatedAuthorities);
 };
 extern CTokenDescCache tokencache;
 
