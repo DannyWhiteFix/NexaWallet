@@ -234,7 +234,12 @@ Nexa::Nexa() : QObject() {}
 void Nexa::handleRunawayException(const std::exception *e)
 {
     PrintExceptionContinue(e, "Runaway exception");
-    Q_EMIT runawayException(QString::fromStdString(strMiscWarning));
+    QString strWarning = QString::fromStdString(strMiscWarning);
+    if (e)
+    {
+        strWarning = QString::fromStdString(strprintf("EXCEPTION: %s       \n%s\n", typeid(*e).name(), e->what()));
+    }
+    Q_EMIT runawayException(strWarning);
 }
 
 void Nexa::initialize(Config *cfg)
@@ -823,7 +828,8 @@ int main(int argc, char *argv[])
     catch (const std::exception &e)
     {
         PrintExceptionContinue(&e, "Runaway exception");
-        app.handleRunawayException(QString::fromStdString(strMiscWarning));
+        QString strWarning = QString::fromStdString(strprintf("EXCEPTION: %s\n", e.what()));
+        app.handleRunawayException(strWarning);
     }
     catch (...)
     {
