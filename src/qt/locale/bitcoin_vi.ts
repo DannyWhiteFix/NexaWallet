@@ -3992,42 +3992,107 @@
         <translation>NaN</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+5"/>
+        <location line="+4"/>
+        <location line="+68"/>
+        <location line="+4"/>
+        <source>Total Mintage:</source>
+        <translation>Tổng số tiền:</translation>
+    </message>
+    <message>
+        <location line="-71"/>
+        <location line="+72"/>
+        <source>Token mintage is unavailable because the database needs a reindex</source>
+        <translation>Việc tạo mã thông báo không khả dụng vì cơ sở dữ liệu cần lập chỉ mục lại</translation>
+    </message>
+    <message>
+        <location line="-64"/>
+        <location line="+43"/>
         <source>Name:</source>
         <translation>Tên:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-42"/>
+        <location line="+43"/>
         <source>Ticker:</source>
         <translation>Biểu tượng:</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-38"/>
+        <location line="+43"/>
         <source>URL:</source>
         <translation>URL:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-42"/>
+        <location line="+43"/>
         <source>Hash:</source>
         <translation>Băm:</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-39"/>
+        <location line="+43"/>
         <source>Decimals:</source>
         <translation>Số thập phân:</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-37"/>
+        <location line="+14"/>
+        <location line="+40"/>
+        <location line="+14"/>
+        <source>Current Authorities:</source>
+        <translation>Cơ quan có thẩm quyền hiện tại:</translation>
+    </message>
+    <message>
+        <location line="-66"/>
+        <location line="+54"/>
+        <source>Mint:</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Melt:</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Renew:</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Rescript:</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Subgroup:</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-49"/>
+        <location line="+54"/>
+        <source>Token authorities are unavailable because the database needs a reindex</source>
+        <translation>Cơ quan quản lý mã thông báo không khả dụng vì cơ sở dữ liệu cần lập chỉ mục lại</translation>
+    </message>
+    <message>
+        <location line="-49"/>
+        <location line="+55"/>
         <source>Balance:</source>
         <translation>Cân bằng:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-54"/>
+        <location line="+55"/>
         <source>Pending:</source>
         <translation>Chưa giải quyết:</translation>
     </message>
     <message>
-        <location line="+87"/>
+        <location line="+88"/>
         <source>Are you sure you want to send?</source>
         <translation>Bạn có chắc chắn muốn gửi không?</translation>
     </message>
@@ -4053,7 +4118,7 @@
 <context>
     <name>TransactionDesc</name>
     <message numerus="yes">
-        <location filename="../transactiondesc.cpp" line="+33"/>
+        <location filename="../transactiondesc.cpp" line="+34"/>
         <source>Open for %n more block(s)</source>
         <translation>
             <numerusform>Mở thêm %n khối nữa</numerusform>
@@ -5380,6 +5445,11 @@ Khi bạn nhấp vào &quot;OK&quot; Nexa sẽ tắt để hoàn tất quá trì
         <location line="+1"/>
         <source>Opening Token Description database...</source>
         <translation>Đang mở cơ sở dữ liệu Mô tả mã thông báo...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Opening Token Mintage database...</source>
+        <translation>Đang mở cơ sở dữ liệu Token Mintage...</translation>
     </message>
     <message>
         <location line="+1"/>

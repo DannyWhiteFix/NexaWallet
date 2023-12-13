@@ -2654,12 +2654,12 @@
     <message>
         <location filename="../forms/receivefreezedialog.ui" line="+14"/>
         <source>Coin Freeze</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+24"/>
         <source>WARNING! Freezing coins means they will be UNSPENDABLE until the release date or block specified below.</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+45"/>
@@ -4006,42 +4006,107 @@
         <translation>NaN</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+5"/>
+        <location line="+4"/>
+        <location line="+68"/>
+        <location line="+4"/>
+        <source>Total Mintage:</source>
+        <translation>Acuñación total:</translation>
+    </message>
+    <message>
+        <location line="-71"/>
+        <location line="+72"/>
+        <source>Token mintage is unavailable because the database needs a reindex</source>
+        <translation>La acuñación de tokens no está disponible porque la base de datos necesita una reindexación</translation>
+    </message>
+    <message>
+        <location line="-64"/>
+        <location line="+43"/>
         <source>Name:</source>
         <translation>Nombre:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-42"/>
+        <location line="+43"/>
         <source>Ticker:</source>
         <translation>Corazón:</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-38"/>
+        <location line="+43"/>
         <source>URL:</source>
         <translation>URL:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-42"/>
+        <location line="+43"/>
         <source>Hash:</source>
         <translation>Hash:</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-39"/>
+        <location line="+43"/>
         <source>Decimals:</source>
         <translation>Decimales:</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-37"/>
+        <location line="+14"/>
+        <location line="+40"/>
+        <location line="+14"/>
+        <source>Current Authorities:</source>
+        <translation>Autoridades actuales:</translation>
+    </message>
+    <message>
+        <location line="-66"/>
+        <location line="+54"/>
+        <source>Mint:</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Melt:</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Renew:</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Rescript:</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Subgroup:</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-49"/>
+        <location line="+54"/>
+        <source>Token authorities are unavailable because the database needs a reindex</source>
+        <translation>Las autoridades de token no están disponibles porque la base de datos necesita una reindexación</translation>
+    </message>
+    <message>
+        <location line="-49"/>
+        <location line="+55"/>
         <source>Balance:</source>
         <translation>Saldo:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-54"/>
+        <location line="+55"/>
         <source>Pending:</source>
         <translation>Pendiente:</translation>
     </message>
     <message>
-        <location line="+87"/>
+        <location line="+88"/>
         <source>Are you sure you want to send?</source>
         <translation>¿Está seguro que desea enviar?</translation>
     </message>
@@ -4067,7 +4132,7 @@
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+35"/>
+        <location filename="../transactiondesc.cpp" line="+36"/>
         <source>Open until %1</source>
         <translation>Abierto hasta %1</translation>
     </message>
@@ -4944,12 +5009,12 @@
         <translation>Un error interno fatal ocurrió, ver debug.log para detalles</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+31"/>
         <source>Pruning blockstore...</source>
         <translation>Poda blockstore ...</translation>
     </message>
     <message>
-        <location line="-164"/>
+        <location line="-165"/>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>Distribuido bajo la licencia de software MIT, vea la copia del archivo adjunto o &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
@@ -5053,7 +5118,7 @@ Reinicie Nexa con &quot;-usehd=0&quot;.</translation>
         <translation>No hay suficientes descriptores de archivo disponibles. </translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>Pode no se puede configurar con un valor negativo.</translation>
     </message>
@@ -5093,7 +5158,7 @@ Reinicie Nexa con &quot;-usehd=0&quot;.</translation>
         <translation>El monedero %s se encuentra fuera del directorio de datos %s</translation>
     </message>
     <message>
-        <location line="-176"/>
+        <location line="-177"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Error: la escucha para conexiones entrantes falló (la escucha regresó el error %s)</translation>
     </message>
@@ -5143,7 +5208,7 @@ Reinicie Nexa con &quot;-usehd=0&quot;.</translation>
         <translation>Necesita especificar un puerto con -whitebind: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+15"/>
         <source>Signing transaction failed</source>
         <translation>Transacción falló</translation>
     </message>
@@ -5198,7 +5263,7 @@ Reinicie Nexa con &quot;-usehd=0&quot;.</translation>
         <translation>Aviso</translation>
     </message>
     <message>
-        <location line="-41"/>
+        <location line="-42"/>
         <source>Loading addresses...</source>
         <translation>Cargando direcciones...</translation>
     </message>
@@ -5208,12 +5273,12 @@ Reinicie Nexa con &quot;-usehd=0&quot;.</translation>
         <translation>Dirección -proxy inválida: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+37"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>La red especificada en -onlynet &apos;%s&apos; es desconocida</translation>
     </message>
     <message>
-        <location line="-65"/>
+        <location line="-66"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>No se puede resolver la dirección de -bind: &apos;%s&apos;</translation>
     </message>
@@ -5491,6 +5556,11 @@ Cuando haga clic en &quot;Aceptar&quot;, Nexa se apagará para completar el proc
     </message>
     <message>
         <location line="+1"/>
+        <source>Opening Token Mintage database...</source>
+        <translation>Abriendo la base de datos de Token Mintage...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation>Abriendo base de datos UTXO...</translation>
     </message>
@@ -5555,7 +5625,7 @@ Cuando haga clic en &quot;Aceptar&quot;, Nexa se apagará para completar el proc
         <translation>Eliminando todas las transacciones de la billetera...</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-68"/>
         <source>Done loading</source>
         <translation>Se terminó de cargar</translation>
     </message>

@@ -3994,42 +3994,107 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+5"/>
+        <location line="+4"/>
+        <location line="+68"/>
+        <location line="+4"/>
+        <source>Total Mintage:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-71"/>
+        <location line="+72"/>
+        <source>Token mintage is unavailable because the database needs a reindex</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-64"/>
+        <location line="+43"/>
         <source>Name:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-42"/>
+        <location line="+43"/>
         <source>Ticker:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-38"/>
+        <location line="+43"/>
         <source>URL:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-42"/>
+        <location line="+43"/>
         <source>Hash:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-39"/>
+        <location line="+43"/>
         <source>Decimals:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-37"/>
+        <location line="+14"/>
+        <location line="+40"/>
+        <location line="+14"/>
+        <source>Current Authorities:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-66"/>
+        <location line="+54"/>
+        <source>Mint:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Melt:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Renew:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Rescript:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Subgroup:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-49"/>
+        <location line="+54"/>
+        <source>Token authorities are unavailable because the database needs a reindex</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-49"/>
+        <location line="+55"/>
         <source>Balance:</source>
         <translation type="unfinished">餘額:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-54"/>
+        <location line="+55"/>
         <source>Pending:</source>
         <translation type="unfinished">未定金額:</translation>
     </message>
     <message>
-        <location line="+87"/>
+        <location line="+88"/>
         <source>Are you sure you want to send?</source>
         <translation type="unfinished">你確定要付錢出去嗎？</translation>
     </message>
@@ -4055,7 +4120,7 @@
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+35"/>
+        <location filename="../transactiondesc.cpp" line="+36"/>
         <source>Open until %1</source>
         <translation>到 %1 前可修改</translation>
     </message>
@@ -4928,12 +4993,12 @@
         <translation>錯誤: 發生了致命的內部錯誤，詳情請看 debug.log</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+31"/>
         <source>Pruning blockstore...</source>
         <translation>正在修剪區塊資料庫中...</translation>
     </message>
     <message>
-        <location line="-164"/>
+        <location line="-165"/>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>這套軟體是依據 MIT 軟體授權條款散布，詳情請見附帶的 COPYING 檔案，或是以下網站:  &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
@@ -5030,7 +5095,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>檔案描述元不足。</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>修剪值不能設定為負的。</translation>
     </message>
@@ -5070,7 +5135,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>錢包檔 %s 沒有在資料目錄 %s 裡面</translation>
     </message>
     <message>
-        <location line="-176"/>
+        <location line="-177"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>錯誤: 聽候外來連線失敗(回傳錯誤 %s)</translation>
     </message>
@@ -5115,7 +5180,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>指定 -whitebind 時必須包含通訊埠: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+15"/>
         <source>Signing transaction failed</source>
         <translation>簽署交易失敗</translation>
     </message>
@@ -5170,7 +5235,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>警告</translation>
     </message>
     <message>
-        <location line="-41"/>
+        <location line="-42"/>
         <source>Loading addresses...</source>
         <translation>正在載入位址資料...</translation>
     </message>
@@ -5180,12 +5245,12 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>無效的 -proxy 位址: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+37"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>在 -onlynet 指定了不明的網路別: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-65"/>
+        <location line="-66"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>沒辦法解析 -bind 位址: &apos;%s&apos;</translation>
     </message>
@@ -5472,6 +5537,11 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
     </message>
     <message>
         <location line="+1"/>
+        <source>Opening Token Mintage database...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5536,7 +5606,7 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-68"/>
         <source>Done loading</source>
         <translation>載入完成</translation>
     </message>

@@ -3989,42 +3989,107 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+5"/>
+        <location line="+4"/>
+        <location line="+68"/>
+        <location line="+4"/>
+        <source>Total Mintage:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-71"/>
+        <location line="+72"/>
+        <source>Token mintage is unavailable because the database needs a reindex</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-64"/>
+        <location line="+43"/>
         <source>Name:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-42"/>
+        <location line="+43"/>
         <source>Ticker:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-38"/>
+        <location line="+43"/>
         <source>URL:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-42"/>
+        <location line="+43"/>
         <source>Hash:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-39"/>
+        <location line="+43"/>
         <source>Decimals:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-37"/>
+        <location line="+14"/>
+        <location line="+40"/>
+        <location line="+14"/>
+        <source>Current Authorities:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-66"/>
+        <location line="+54"/>
+        <source>Mint:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Melt:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Renew:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Rescript:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Subgroup:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-49"/>
+        <location line="+54"/>
+        <source>Token authorities are unavailable because the database needs a reindex</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-49"/>
+        <location line="+55"/>
         <source>Balance:</source>
         <translation type="unfinished">تزار:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-54"/>
+        <location line="+55"/>
         <source>Pending:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+87"/>
+        <location line="+88"/>
         <source>Are you sure you want to send?</source>
         <translation type="unfinished">آیا مطمئن هستید که می خواهید ارسال کنید؟</translation>
     </message>
@@ -4050,7 +4115,7 @@
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+35"/>
+        <location filename="../transactiondesc.cpp" line="+36"/>
         <source>Open until %1</source>
         <translation>باز تا %1</translation>
     </message>
@@ -4950,7 +5015,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>در حال پیاده‌سازی...</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+30"/>
         <source>Signing token transaction failed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5050,17 +5115,17 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>در حال بازبینی کیف پول...</translation>
     </message>
     <message>
-        <location line="-47"/>
+        <location line="-48"/>
         <source>Information</source>
         <translation>اطلاعات</translation>
     </message>
     <message>
-        <location line="+51"/>
+        <location line="+52"/>
         <source>Warning</source>
         <translation>هشدار</translation>
     </message>
     <message>
-        <location line="-41"/>
+        <location line="-42"/>
         <source>Loading addresses...</source>
         <translation>بار گیری آدرس ها</translation>
     </message>
@@ -5070,12 +5135,12 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>آدرس پراکسی اشتباه %s</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+37"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>شبکه مشخص شده غیرقابل شناسایی در onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-65"/>
+        <location line="-66"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>آدرس قابل اتصال- شناسایی نیست %s</translation>
     </message>
@@ -5472,6 +5537,11 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
     </message>
     <message>
         <location line="+1"/>
+        <source>Opening Token Mintage database...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5531,7 +5601,7 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-68"/>
         <source>Done loading</source>
         <translation>بار گیری انجام شده است</translation>
     </message>

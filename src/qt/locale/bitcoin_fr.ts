@@ -4005,42 +4005,107 @@
         <translation>NaN</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+5"/>
+        <location line="+4"/>
+        <location line="+68"/>
+        <location line="+4"/>
+        <source>Total Mintage:</source>
+        <translation>Tirage total:</translation>
+    </message>
+    <message>
+        <location line="-71"/>
+        <location line="+72"/>
+        <source>Token mintage is unavailable because the database needs a reindex</source>
+        <translation>La frappe des jetons n&apos;est pas disponible car la base de données a besoin d&apos;une réindexation</translation>
+    </message>
+    <message>
+        <location line="-64"/>
+        <location line="+43"/>
         <source>Name:</source>
         <translation>Nom:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-42"/>
+        <location line="+43"/>
         <source>Ticker:</source>
         <translation>Téléscripteur:</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-38"/>
+        <location line="+43"/>
         <source>URL:</source>
         <translation>URL:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-42"/>
+        <location line="+43"/>
         <source>Hash:</source>
         <translation>Hachage:</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-39"/>
+        <location line="+43"/>
         <source>Decimals:</source>
         <translation>Décimales:</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-37"/>
+        <location line="+14"/>
+        <location line="+40"/>
+        <location line="+14"/>
+        <source>Current Authorities:</source>
+        <translation>Autorités actuelles&#xa0;:</translation>
+    </message>
+    <message>
+        <location line="-66"/>
+        <location line="+54"/>
+        <source>Mint:</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Melt:</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Renew:</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Rescript:</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Subgroup:</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-49"/>
+        <location line="+54"/>
+        <source>Token authorities are unavailable because the database needs a reindex</source>
+        <translation>Les autorités de jeton ne sont pas disponibles car la base de données a besoin d&apos;une réindexation</translation>
+    </message>
+    <message>
+        <location line="-49"/>
+        <location line="+55"/>
         <source>Balance:</source>
         <translation>Solde:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-54"/>
+        <location line="+55"/>
         <source>Pending:</source>
         <translation>En attente:</translation>
     </message>
     <message>
-        <location line="+87"/>
+        <location line="+88"/>
         <source>Are you sure you want to send?</source>
         <translation>Êtes-vous sûr de vouloir envoyer ?</translation>
     </message>
@@ -4066,7 +4131,7 @@
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+35"/>
+        <location filename="../transactiondesc.cpp" line="+36"/>
         <source>Open until %1</source>
         <translation>Ouvert jusqu&apos;à %1</translation>
     </message>
@@ -4943,12 +5008,12 @@
         <translation>Erreur : une erreur interne fatale s&apos;est produite. Voir debug.log pour plus de détails</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+31"/>
         <source>Pruning blockstore...</source>
         <translation>Élagage du magasin de blocs...</translation>
     </message>
     <message>
-        <location line="-164"/>
+        <location line="-165"/>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>Distribué sous la licence MIT d&apos;utilisation d&apos;un logiciel. Consultez le fichier joint COPYING ou &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
@@ -5052,7 +5117,7 @@ Veuillez relancer Nexa avec &quot;-usehd=0&quot;.</translation>
         <translation>Pas assez de descripteurs de fichiers proposés.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>L&apos;élagage ne peut pas être configuré avec une valeur négative.</translation>
     </message>
@@ -5092,7 +5157,7 @@ Veuillez relancer Nexa avec &quot;-usehd=0&quot;.</translation>
         <translation>Le portefeuille %s réside en dehors du répertoire de données %s</translation>
     </message>
     <message>
-        <location line="-176"/>
+        <location line="-177"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Erreur : l&apos;écoute des connexions entrantes a échoué (l&apos;écoute a retourné l&apos;erreur %s)</translation>
     </message>
@@ -5137,7 +5202,7 @@ Veuillez relancer Nexa avec &quot;-usehd=0&quot;.</translation>
         <translation>Un port doit être spécifié avec -whitebind : « %s »</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+15"/>
         <source>Signing transaction failed</source>
         <translation>La signature de la transaction a échoué</translation>
     </message>
@@ -5192,7 +5257,7 @@ Veuillez relancer Nexa avec &quot;-usehd=0&quot;.</translation>
         <translation>Avertissement</translation>
     </message>
     <message>
-        <location line="-41"/>
+        <location line="-42"/>
         <source>Loading addresses...</source>
         <translation>Chargement des adresses…</translation>
     </message>
@@ -5207,12 +5272,12 @@ Veuillez relancer Nexa avec &quot;-usehd=0&quot;.</translation>
         <translation>Adresse -proxy invalide&#xa0;: «&#xa0;%s&#xa0;»</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+37"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Réseau inconnu spécifié sur -onlynet&#xa0;: «&#xa0;%s&#xa0;»</translation>
     </message>
     <message>
-        <location line="-65"/>
+        <location line="-66"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Impossible de résoudre l&apos;adresse -bind&#xa0;: «&#xa0;%s&#xa0;»</translation>
     </message>
@@ -5496,6 +5561,11 @@ Lorsque vous cliquez sur « OK », Nexa s&apos;arrêtera pour terminer le proces
     </message>
     <message>
         <location line="+1"/>
+        <source>Opening Token Mintage database...</source>
+        <translation>Ouverture de la base de données Token Mintage...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation>Ouverture de la base de données UTXO...</translation>
     </message>
@@ -5560,7 +5630,7 @@ Lorsque vous cliquez sur « OK », Nexa s&apos;arrêtera pour terminer le proces
         <translation>Zapping toutes les transactions du portefeuille...</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-68"/>
         <source>Done loading</source>
         <translation>Chargement terminé</translation>
     </message>

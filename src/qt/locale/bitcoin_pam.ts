@@ -4000,42 +4000,107 @@
         <translation>NaN</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+5"/>
+        <location line="+4"/>
+        <location line="+68"/>
+        <location line="+4"/>
+        <source>Total Mintage:</source>
+        <translation>Kabuuang Paggawa:</translation>
+    </message>
+    <message>
+        <location line="-71"/>
+        <location line="+72"/>
+        <source>Token mintage is unavailable because the database needs a reindex</source>
+        <translation>Hindi available ang token mintage dahil kailangan ng database ng reindex</translation>
+    </message>
+    <message>
+        <location line="-64"/>
+        <location line="+43"/>
         <source>Name:</source>
         <translation>Pangalan:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-42"/>
+        <location line="+43"/>
         <source>Ticker:</source>
         <translation>Ticker:</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-38"/>
+        <location line="+43"/>
         <source>URL:</source>
         <translation>URL:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-42"/>
+        <location line="+43"/>
         <source>Hash:</source>
         <translation>Hash:</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-39"/>
+        <location line="+43"/>
         <source>Decimals:</source>
         <translation>Mga decimal:</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-37"/>
+        <location line="+14"/>
+        <location line="+40"/>
+        <location line="+14"/>
+        <source>Current Authorities:</source>
+        <translation>Kasalukuyang Awtoridad:</translation>
+    </message>
+    <message>
+        <location line="-66"/>
+        <location line="+54"/>
+        <source>Mint:</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Melt:</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Renew:</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Rescript:</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Subgroup:</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-49"/>
+        <location line="+54"/>
+        <source>Token authorities are unavailable because the database needs a reindex</source>
+        <translation>Ang mga awtoridad ng token ay hindi magagamit dahil ang database ay nangangailangan ng reindex</translation>
+    </message>
+    <message>
+        <location line="-49"/>
+        <location line="+55"/>
         <source>Balance:</source>
         <translation>Balanse:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-54"/>
+        <location line="+55"/>
         <source>Pending:</source>
         <translation>Nakabinbin:</translation>
     </message>
     <message>
-        <location line="+87"/>
+        <location line="+88"/>
         <source>Are you sure you want to send?</source>
         <translation>Sigurado ka bang gusto mong magpadala?</translation>
     </message>
@@ -4061,7 +4126,7 @@
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+35"/>
+        <location filename="../transactiondesc.cpp" line="+36"/>
         <source>Open until %1</source>
         <translation>Makabuklat anggang %1</translation>
     </message>
@@ -4958,12 +5023,12 @@
         <translation>&amp;Impormasion</translation>
     </message>
     <message>
-        <location line="+51"/>
+        <location line="+52"/>
         <source>Warning</source>
         <translation>Kapabaluan</translation>
     </message>
     <message>
-        <location line="-41"/>
+        <location line="-42"/>
         <source>Loading addresses...</source>
         <translation>Lo-load da ne ing address...</translation>
     </message>
@@ -4982,7 +5047,7 @@ Pakilunsad muli ang Nexa gamit ang &quot;-usehd=0&quot;.</translation>
         <translation>Ali katanggap-tanggap a -proxy addresss: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+23"/>
         <source>Signing token transaction failed</source>
         <translation>Nabigo ang pagpirma ng transaksyon sa token</translation>
     </message>
@@ -5057,7 +5122,7 @@ Pakilunsad muli ang Nexa gamit ang &quot;-usehd=0&quot;.</translation>
         <translation>E kilalang network ing mepili king -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-65"/>
+        <location line="-66"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Eya me-resolve ing -bind address: &apos;%s&apos;</translation>
     </message>
@@ -5465,6 +5530,11 @@ Kapag na-click mo ang &quot;OK&quot; ang Nexa ay magsasara upang makumpleto ang 
     </message>
     <message>
         <location line="+1"/>
+        <source>Opening Token Mintage database...</source>
+        <translation>Binubuksan ang database ng Token Mintage...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation>Binubuksan ang database ng UTXO...</translation>
     </message>
@@ -5554,7 +5624,7 @@ Kapag na-click mo ang &quot;OK&quot; ang Nexa ay magsasara upang makumpleto ang 
         <translation>I-zapping ang lahat ng transaksyon mula sa wallet...</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-68"/>
         <source>Done loading</source>
         <translation>Yari ne ing pamag-load</translation>
     </message>

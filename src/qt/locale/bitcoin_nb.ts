@@ -4005,42 +4005,107 @@
         <translation>NaN</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+5"/>
+        <location line="+4"/>
+        <location line="+68"/>
+        <location line="+4"/>
+        <source>Total Mintage:</source>
+        <translation>Totalt opplag:</translation>
+    </message>
+    <message>
+        <location line="-71"/>
+        <location line="+72"/>
+        <source>Token mintage is unavailable because the database needs a reindex</source>
+        <translation>Tokenopplag er utilgjengelig fordi databasen trenger en reindeksering</translation>
+    </message>
+    <message>
+        <location line="-64"/>
+        <location line="+43"/>
         <source>Name:</source>
         <translation>Navn:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-42"/>
+        <location line="+43"/>
         <source>Ticker:</source>
         <translation>Ticker:</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-38"/>
+        <location line="+43"/>
         <source>URL:</source>
         <translation>URL:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-42"/>
+        <location line="+43"/>
         <source>Hash:</source>
         <translation>Hasj:</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-39"/>
+        <location line="+43"/>
         <source>Decimals:</source>
         <translation>Desimaler:</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-37"/>
+        <location line="+14"/>
+        <location line="+40"/>
+        <location line="+14"/>
+        <source>Current Authorities:</source>
+        <translation>Nåværende myndigheter:</translation>
+    </message>
+    <message>
+        <location line="-66"/>
+        <location line="+54"/>
+        <source>Mint:</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Melt:</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Renew:</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Rescript:</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+54"/>
+        <source>Subgroup:</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-49"/>
+        <location line="+54"/>
+        <source>Token authorities are unavailable because the database needs a reindex</source>
+        <translation>Tokenautoriteter er utilgjengelige fordi databasen trenger en reindeksering</translation>
+    </message>
+    <message>
+        <location line="-49"/>
+        <location line="+55"/>
         <source>Balance:</source>
         <translation>Saldo:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-54"/>
+        <location line="+55"/>
         <source>Pending:</source>
         <translation>Under behandling:</translation>
     </message>
     <message>
-        <location line="+87"/>
+        <location line="+88"/>
         <source>Are you sure you want to send?</source>
         <translation>Er du sikker på at du vil sende?</translation>
     </message>
@@ -4066,7 +4131,7 @@
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+35"/>
+        <location filename="../transactiondesc.cpp" line="+36"/>
         <source>Open until %1</source>
         <translation>Åpen til %1</translation>
     </message>
@@ -4943,12 +5008,12 @@
         <translation>Feil: En fatal intern feil oppstod, se debug.log for detaljer</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+31"/>
         <source>Pruning blockstore...</source>
         <translation>Beskjærer blokklageret...</translation>
     </message>
     <message>
-        <location line="-164"/>
+        <location line="-165"/>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>Distribuert under MIT programvarelisensen, se medfølgende fil COPYING eller &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
@@ -5047,7 +5112,7 @@ Vennligst start Nexa på nytt med &quot;-usehd=0&quot;.</translation>
         <translation>For få fildeskriptorer tilgjengelig.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>Beskjæringsmodus kan ikke konfigureres med en negativ verdi.</translation>
     </message>
@@ -5087,7 +5152,7 @@ Vennligst start Nexa på nytt med &quot;-usehd=0&quot;.</translation>
         <translation>Lommebok %s befinner seg utenfor datamappe %s</translation>
     </message>
     <message>
-        <location line="-176"/>
+        <location line="-177"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Feil: Lytting etter innkommende tilkoblinger feilet (lytting returnerte feil %s)</translation>
     </message>
@@ -5137,7 +5202,7 @@ Vennligst start Nexa på nytt med &quot;-usehd=0&quot;.</translation>
         <translation>Må oppgi en port med -whitebind: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+15"/>
         <source>Signing transaction failed</source>
         <translation>Signering av transaksjon feilet</translation>
     </message>
@@ -5192,7 +5257,7 @@ Vennligst start Nexa på nytt med &quot;-usehd=0&quot;.</translation>
         <translation>Advarsel</translation>
     </message>
     <message>
-        <location line="-41"/>
+        <location line="-42"/>
         <source>Loading addresses...</source>
         <translation>Laster adresser...</translation>
     </message>
@@ -5202,12 +5267,12 @@ Vennligst start Nexa på nytt med &quot;-usehd=0&quot;.</translation>
         <translation>Ugyldig -proxy adresse: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+37"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Ukjent nettverk angitt i -onlynet &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-65"/>
+        <location line="-66"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Kunne ikke slå opp -bind adresse: &apos;%s&apos;</translation>
     </message>
@@ -5495,6 +5560,11 @@ Når du klikker &quot;OK&quot; vil Nexa slå seg av for å fullføre prosessen.<
     </message>
     <message>
         <location line="+1"/>
+        <source>Opening Token Mintage database...</source>
+        <translation>Åpner Token Mintage-database...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Opening UTXO database...</source>
         <translation>Åpner UTXO-database...</translation>
     </message>
@@ -5559,7 +5629,7 @@ Når du klikker &quot;OK&quot; vil Nexa slå seg av for å fullføre prosessen.<
         <translation>Zapper alle transaksjoner fra lommeboken...</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-68"/>
         <source>Done loading</source>
         <translation>Ferdig med lasting</translation>
     </message>
