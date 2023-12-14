@@ -1610,11 +1610,28 @@ BOOST_AUTO_TEST_CASE(grouptoken_descriptions)
     BOOST_CHECK_EQUAL(vLabels[2], "");
     BOOST_CHECK_EQUAL(vLabels[3], "");
     BOOST_CHECK_EQUAL(vLabels[4], "0");
-    BOOST_CHECK_EQUAL(vLabels[5], "0");
-    BOOST_CHECK_EQUAL(vLabels[6], "0");
-    BOOST_CHECK_EQUAL(vLabels[7], "0");
-    BOOST_CHECK_EQUAL(vLabels[8], "0");
-    BOOST_CHECK_EQUAL(vLabels[9], "0");
+
+    // Test that not data returns with only a partial description string
+    OpRetGroupId = 88888888;
+    std::vector<std::vector<unsigned char> > desc2;
+    std::string label("AAA");
+    desc2.push_back(std::vector<unsigned char>(label.begin(), label.end()));
+
+    CScript ret4;
+    ret4 << OP_RETURN << OpRetGroupId;
+    for (auto &d : desc2)
+    {
+        ret4 << d;
+    }
+
+    vLabels = GetTokenDescription(ret4);
+    BOOST_CHECK_EQUAL(vLabels.size(), 5);
+
+    BOOST_CHECK_EQUAL(vLabels[0], "AAA");
+    BOOST_CHECK_EQUAL(vLabels[1], "");
+    BOOST_CHECK_EQUAL(vLabels[2], "");
+    BOOST_CHECK_EQUAL(vLabels[3], "");
+    BOOST_CHECK_EQUAL(vLabels[4], "0");
 }
 #endif
 

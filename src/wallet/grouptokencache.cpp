@@ -69,11 +69,19 @@ std::vector<std::string> GetTokenDescription(const CScript &script)
 
     if (!vTokenDesc.empty())
     {
+        while (vTokenDesc.size() < 4)
+        {
+            vTokenDesc.push_back("");
+        }
+        while (vTokenDesc.size() < 5)
+        {
+            vTokenDesc.push_back("0");
+        }
         return vTokenDesc;
     }
     else
     {
-        std::vector<std::string> vEmptyDesc{"", "", "", "", "0", "0", "0", "0", "0", "0"};
+        std::vector<std::string> vEmptyDesc{"", "", "", "", "0"};
         return vEmptyDesc;
     }
 }
