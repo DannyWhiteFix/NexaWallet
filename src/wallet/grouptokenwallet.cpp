@@ -24,6 +24,7 @@
 #include "wallet/grouptokencache.h"
 
 #include <algorithm>
+#include <iostream>
 
 #include "main.h" // for BlockMap
 
@@ -275,15 +276,22 @@ static CAmount AmountFromIntegralValue(const UniValue &value)
 {
     if (!value.isNum() && !value.isStr())
         throw std::runtime_error("Amount is not a number or string");
+
     int64_t val = 0;
+    float float_val = 0;
     try
     {
         val = atoi64(value.getValStr());
+        float_val = atof(value.getValStr().c_str());
     }
     catch (...)
     {
         throw std::runtime_error("Could not convert univalue to integer");
     }
+
+    if (val != float_val)
+        throw std::runtime_error("Can not use decimals when sending tokens. Amount must be in satoshis.");
+
     CAmount amount = val;
     return amount;
 }
@@ -900,7 +908,8 @@ extern UniValue token(const UniValue &params, bool fHelp)
             "\nToken functions.\n"
             "'info' returns a list of all tokens with their groupId and associated token-name, token-ticker "
             "descUrl, descHash, the number of mint/melt/renew/rescript/subgroup authorities, and also "
-            "the balance and mintage numbers for this token, but only for tokens created in this wallet\n"
+            "the finest balance (in satoshis) and finest mintage numbers (in satoshis) for this token, but "
+            "only for tokens created in this wallet\n"
             "'new' creates a new token type. args: [address] [token-ticker token-name [descUrl descHash decimals]]\n"
             "'mint' creates new tokens. args: groupId address quantity\n"
             "'melt' removes tokens from circulation. args: groupId quantity\n"
@@ -1466,11 +1475,11 @@ extern UniValue token(const UniValue &params, bool fHelp)
                 }
 
                 if (balances.count(item.first))
-                    entry.pushKV("balance", balances[item.first]);
+                    entry.pushKV("balance_satoshis", balances[item.first]);
                 else
-                    entry.pushKV("balance", "0");
+                    entry.pushKV("balance_satoshis", "0");
 
-                entry.pushKV("mintage", tokenmint.GetTokenMint(item.first));
+                entry.pushKV("mintage_satoshis", tokenmint.GetTokenMint(item.first));
 
                 // encode all items for each individual group id
                 ret.pushKV(EncodeGroupToken(item.first), entry);
@@ -1484,6 +1493,11 @@ extern UniValue token(const UniValue &params, bool fHelp)
         {
             throw std::runtime_error("Invalid number of argument to token balance");
         }
+
+        CGroupTokenID dummyID;
+        std::unordered_map<CGroupTokenID, std::vector<std::string> > desc;
+        GetAllGroupDescriptions(wallet, desc, dummyID);
+
         if (params.size() == 1) // no group specified, show them all
         {
             std::unordered_map<CGroupTokenID, CAmount> balances;
@@ -1491,7 +1505,16 @@ extern UniValue token(const UniValue &params, bool fHelp)
             UniValue ret(UniValue::VOBJ);
             for (const auto &item : balances)
             {
-                ret.pushKV(EncodeGroupToken(item.first), item.second);
+                UniValue obj(UniValue::VOBJ);
+                obj.pushKV("balance_satoshis", item.second);
+
+                auto &info = desc[item.first];
+                if (info.size() >= 5)
+                    obj.pushKV("decimals", info[4]);
+                else
+                    obj.pushKV("decimals", "0");
+
+                ret.pushKV(EncodeGroupToken(item.first), obj);
             }
             return ret;
         }
@@ -1505,7 +1528,16 @@ extern UniValue token(const UniValue &params, bool fHelp)
         {
             dst = DecodeDestination(params[2].get_str(), Params());
         }
-        return UniValue(GetGroupBalance(grpID, dst, wallet));
+
+        UniValue ret(UniValue::VOBJ);
+        ret.pushKV("balance_satoshis", GetGroupBalance(grpID, dst, wallet));
+        auto &info = desc[grpID];
+        if (info.size() >= 5)
+            ret.pushKV("decimals", info[4]);
+        else
+            ret.pushKV("decimals", "0");
+
+        return ret;
     }
     else if (operation == "send")
     {
@@ -1562,7 +1594,21 @@ extern UniValue token(const UniValue &params, bool fHelp)
         }
 
         if (tokenmint.GetSyncFlag())
-            return UniValue(tokenmint.GetTokenMint(grpID));
+        {
+            CGroupTokenID dummyID;
+            std::unordered_map<CGroupTokenID, std::vector<std::string> > desc;
+            GetAllGroupDescriptions(wallet, desc, dummyID);
+
+            UniValue ret(UniValue::VOBJ);
+            ret.pushKV("mintage_satoshis", tokenmint.GetTokenMint(grpID));
+            auto &info = desc[grpID];
+            if (info.size() >= 5)
+                ret.pushKV("decimals", info[4]);
+            else
+                ret.pushKV("decimals", "0");
+
+            return ret;
+        }
         else
             throw JSONRPCError(
                 RPC_INVALID_REQUEST, "Token mintage is unavailable because the database needs a reindex");
