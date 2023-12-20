@@ -489,7 +489,8 @@ bool ConstructTx(CWalletTx &wtxNew,
             approxSize += inpSize;
         }
 
-        if (totalGroupedAvailable > totalGroupedNeeded) // need to make a group change output
+        // need to make a group change output
+        if (totalGroupedAvailable > totalGroupedNeeded)
         {
             CPubKey newKey;
 
@@ -917,6 +918,9 @@ extern UniValue token(const UniValue &params, bool fHelp)
             "'send' sends tokens to a new address. args: groupId address quantity [address quantity...]\n"
             "'authority create' creates a new authority args: groupId address [mint melt nochild rescript]\n"
             "'authority count' returns a list of all authorities and their current counts. args: groupId\n"
+            "'authority list'  returns a list of all authorities controlled by this wallet along with each\n"
+            "                  associated outpoint and the current authorities defined. args: [groupId]\n"
+            "'authority destroy'  Destroys all authorties associated with this outpoint. args: outpoint\n"
             "'subgroup' translates a group and additional data into a subgroup identifier. args: groupId data\n"
             "'mintage' returns the current mintage of a token. args: groupId\n"
 
@@ -1232,9 +1236,106 @@ extern UniValue token(const UniValue &params, bool fHelp)
             renewAuthorityKey.KeepKey();
             return wtx.GetIdem().GetHex();
         }
+        if (suboperation == "list")
+        {
+            CGroupTokenID grpID;
+            if (curparam < params.size()) // If flags are not specified, error.
+            {
+                grpID = DecodeGroupToken(params[curparam].get_str());
+                if (!grpID.isUserGroup())
+                {
+                    throw JSONRPCError(RPC_INVALID_PARAMS, "Token group specified is not valid.");
+                }
+            }
+
+            // Find all unspent coins that have an authority
+            std::vector<COutput> coins;
+            wallet->FilterCoins(coins,
+                [&grpID](const COutput &coin)
+                {
+                    CGroupTokenInfo tg(coin.GetScriptPubKey());
+                    if ((tg.associatedGroup != NoGroup) && tg.isAuthority())
+                    {
+                        if (!grpID.isUserGroup() || grpID == tg.associatedGroup)
+                            return true;
+                    }
+                    return false;
+                });
+
+            std::map<CGroupTokenID, std::vector<COutput> > vAuthorities;
+            {
+                for (auto &coin : coins)
+                {
+                    CGroupTokenInfo tg(coin.GetScriptPubKey());
+                    vAuthorities[tg.associatedGroup].push_back(coin);
+                }
+            }
+
+            UniValue ret(UniValue::VARR);
+            for (const auto &item : vAuthorities)
+            {
+                for (const auto &coin : item.second)
+                {
+                    CGroupTokenInfo tg(coin.GetScriptPubKey());
+
+                    UniValue entry(UniValue::VOBJ);
+                    entry.pushKV("groupIdentifier", EncodeGroupToken(tg.associatedGroup));
+                    entry.pushKV("outpoint", coin.GetOutPoint().GetHex());
+                    entry.pushKV("mint", tg.allowsMint());
+                    entry.pushKV("melt", tg.allowsMelt());
+                    entry.pushKV("renew", tg.allowsRenew());
+                    entry.pushKV("rescript", tg.allowsRescript());
+                    entry.pushKV("subgroup", tg.allowsSubgroup());
+                    ret.push_back(entry);
+                }
+            }
+            return ret;
+        }
+        if (suboperation == "destroy")
+        {
+            LOCK(wallet->cs_wallet);
+
+            CWalletTx wtx;
+            CGroupTokenID dummyGrpID;
+
+            uint256 outpoint = uint256S(params[curparam].get_str());
+            COutPoint authToDestroy(outpoint);
+
+            if (!wallet->mapWalletUnspent.count(authToDestroy))
+                throw JSONRPCError(RPC_INVALID_PARAMS, "Coin to be detroyed does not exist");
+
+            // create chosenCoins
+            COutput coin = wallet->mapWalletUnspent[authToDestroy];
+            CGroupTokenInfo tg(coin.GetScriptPubKey());
+            if ((tg.associatedGroup == NoGroup) || !tg.isAuthority())
+                throw JSONRPCError(RPC_INVALID_PARAMS, "Coin to be destoryed is not an authority.");
+            if (!coin.spendable())
+                throw JSONRPCError(RPC_INVALID_PARAMS, "Authority is not spendable.");
+            if (wallet->IsSpent(coin.GetOutPoint()))
+                throw JSONRPCError(RPC_INVALID_PARAMS, "Authority is already spent.");
+
+            chosenCoins.push_back(coin);
+
+            // Get an address we can spend to ourselves and create the outputs
+            CReserveKey myReservekey(pwalletMain);
+            CPubKey vchPubKey;
+            if (!myReservekey.GetReservedKey(vchPubKey))
+            {
+                throw JSONRPCError(RPC_INVALID_PARAMS, "Could not get a change address.");
+            }
+            CScript scriptPubKey = P2pktOutput(vchPubKey);
+            CRecipient recipient = {scriptPubKey, GROUPED_SATOSHI_AMT, false};
+            outputs.push_back(recipient);
+            CAmount totalNexaNeeded = recipient.nAmount;
+
+            CAmount totalNexaAvailable = coin.GetValue();
+
+            ConstructTx(wtx, chosenCoins, outputs, totalNexaAvailable, totalNexaNeeded, 0, 0, dummyGrpID, wallet);
+            return wtx.GetIdem().GetHex();
+        }
         else
         {
-            throw JSONRPCError(RPC_INVALID_PARAMS, "Missing or incorrect authority parameters");
+            throw JSONRPCError(RPC_INVALID_PARAMS, "Missing or incorrect authority parameters.");
         }
     }
     else if (operation == "new")

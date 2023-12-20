@@ -37,9 +37,6 @@ class GroupTokensTest (BitcoinTestFramework):
         self.nodes.append(start_node(2, self.options.tmpdir, ["-debug=mempool"]))
 
         # Now interconnect the nodes
-        #connect_nodes_bi(self.nodes, 0, 1)
-        #connect_nodes_bi(self.nodes, 0, 2)
-        #connect_nodes_bi(self.nodes, 1, 2)
         interconnect_nodes(self.nodes)
         self.is_network_split = False
         self.sync_blocks()
@@ -990,7 +987,46 @@ class GroupTokensTest (BitcoinTestFramework):
 
 
         logging.info("testing authority tracking after destroying an authority")
+        self.nodes[2].generate(80) # must mine a block for tracking to update and also need coins for fees
 
+        authGrpId4 = self.nodes[2].token("new", "NEXA", "NEXA.org" "" "" "2")["groupIdentifier"]  
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 1)
+        try:
+            self.nodes[2].token("authority", "count", authGrpId4)["mint"]
+            assert(0)  # should have raised exception
+        except JSONRPCException as e:
+            assert("Could not find authority information for the token id given" in e.error["message"])
+        self.nodes[2].generate(1) # must mine a block for tracking to update
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId4)["mint"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId4)["melt"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId4)["renew"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId4)["rescript"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId4)["subgroup"], "1")
+
+        self.nodes[2].token("authority","create", authGrpId4, addr2, "MELT", "NOCHILD")
+        self.nodes[2].token("authority","create", authGrpId4, addr2, "MINT", "NOCHILD")
+        self.nodes[2].token("authority","create", authGrpId4, addr2, "RESCRiPT", "NOCHILD")
+
+        self.nodes[2].generate(1) # must mine a block for tracking to update
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId4)["mint"], "2")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId4)["melt"], "2")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId4)["renew"], "1")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId4)["rescript"], "2")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId4)["subgroup"], "1")
+
+        # List authorities and destroy them
+        authorities = []
+        authorities = self.nodes[2].token("authority", "list", authGrpId4)
+        for auth in authorities:
+            self.nodes[2].token("authority", "destroy", auth['outpoint'])
+
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'] == 4)
+        self.nodes[2].generate(1) # must mine a block for tracking to update
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId4)["mint"], "0")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId4)["melt"], "0")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId4)["renew"], "0")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId4)["rescript"], "0")
+        assert_equal(self.nodes[2].token("authority", "count", authGrpId4)["subgroup"], "0")
 
 
         logging.info("test complete")
