@@ -2664,53 +2664,53 @@
     <message>
         <location line="+45"/>
         <source>Freeze until block :</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+19"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Specify the block when coins are released from the freeze. Coins are UNSPENDABLE until the freeze block.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+3"/>
         <location line="+99"/>
         <source>-</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="-57"/>
         <source>OR</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+26"/>
         <source>Freeze until date and time :</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+22"/>
         <source>Specify the future date and time when coins are released from the freeze. Coins are UNSPENDABLE until after the freeze date and time.</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+98"/>
         <source>&amp;Reset</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Alt+R</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+25"/>
         <source>&amp;OK</source>
-        <translation type="unfinished">&amp;Aceptar</translation>
+        <translation>&amp;Aceptar</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Alt+O</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
 </context>
 <context>
@@ -4006,21 +4006,23 @@
         <translation>NaN</translation>
     </message>
     <message>
+        <location line="+22"/>
         <location line="+5"/>
-        <location line="+4"/>
-        <location line="+68"/>
-        <location line="+4"/>
+        <location line="+5"/>
+        <location line="+84"/>
+        <location line="+5"/>
+        <location line="+5"/>
         <source>Total Mintage:</source>
         <translation>Acuñación total:</translation>
     </message>
     <message>
-        <location line="-71"/>
-        <location line="+72"/>
+        <location line="-93"/>
+        <location line="+94"/>
         <source>Token mintage is unavailable because the database needs a reindex</source>
         <translation>La acuñación de tokens no está disponible porque la base de datos necesita una reindexación</translation>
     </message>
     <message>
-        <location line="-64"/>
+        <location line="-86"/>
         <location line="+43"/>
         <source>Name:</source>
         <translation>Nombre:</translation>
@@ -4052,56 +4054,56 @@
     <message>
         <location line="-37"/>
         <location line="+14"/>
-        <location line="+40"/>
+        <location line="+62"/>
         <location line="+14"/>
         <source>Current Authorities:</source>
         <translation>Autoridades actuales:</translation>
     </message>
     <message>
-        <location line="-66"/>
-        <location line="+54"/>
+        <location line="-88"/>
+        <location line="+76"/>
         <source>Mint:</source>
         <translation></translation>
     </message>
     <message>
-        <location line="-52"/>
-        <location line="+54"/>
+        <location line="-74"/>
+        <location line="+76"/>
         <source>Melt:</source>
         <translation></translation>
     </message>
     <message>
-        <location line="-52"/>
-        <location line="+54"/>
+        <location line="-74"/>
+        <location line="+76"/>
         <source>Renew:</source>
         <translation></translation>
     </message>
     <message>
-        <location line="-52"/>
-        <location line="+54"/>
+        <location line="-74"/>
+        <location line="+76"/>
         <source>Rescript:</source>
         <translation></translation>
     </message>
     <message>
-        <location line="-52"/>
-        <location line="+54"/>
+        <location line="-74"/>
+        <location line="+76"/>
         <source>Subgroup:</source>
         <translation></translation>
     </message>
     <message>
-        <location line="-49"/>
-        <location line="+54"/>
+        <location line="-71"/>
+        <location line="+76"/>
         <source>Token authorities are unavailable because the database needs a reindex</source>
         <translation>Las autoridades de token no están disponibles porque la base de datos necesita una reindexación</translation>
     </message>
     <message>
-        <location line="-49"/>
-        <location line="+55"/>
+        <location line="-71"/>
+        <location line="+77"/>
         <source>Balance:</source>
         <translation>Saldo:</translation>
     </message>
     <message>
-        <location line="-54"/>
-        <location line="+55"/>
+        <location line="-76"/>
+        <location line="+77"/>
         <source>Pending:</source>
         <translation>Pendiente:</translation>
     </message>
@@ -4912,9 +4914,19 @@
 <context>
     <name>WalletFrame</name>
     <message>
-        <location filename="../walletframe.cpp" line="+26"/>
+        <location filename="../walletframe.cpp" line="+31"/>
         <source>No wallet has been loaded.</source>
         <translation>No se ha cargado ningún monedero</translation>
+    </message>
+    <message>
+        <location line="+109"/>
+        <source>Token Database Status</source>
+        <translation>Estado de la base de datos de tokens</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Token wallet not available because a -reindex is needed. Click &quot;Ok&quot; to perform a one time -reindex on the next startup. Then shutdown Nexa-Qt and restart to complete the process.</source>
+        <translation>La billetera de tokens no está disponible porque se necesita una reindexación. Haga clic en &quot;Aceptar&quot; para realizar una reindexación única en el siguiente inicio. Luego apague Nexa-Qt y reinícielo para completar el proceso.</translation>
     </message>
 </context>
 <context>

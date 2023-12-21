@@ -5,13 +5,18 @@
 
 #include "walletframe.h"
 
+
+#include "main.h"
 #include "nexagui.h"
+#include "wallet/grouptokencache.h"
 #include "walletview.h"
 
 #include <cstdio>
 
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QMessageBox>
+
 
 WalletFrame::WalletFrame(const PlatformStyle *_platformStyle, const Config *_cfg, BitcoinGUI *_gui)
     : QFrame(_gui), gui(_gui), platformStyle(_platformStyle), cfg(_cfg)
@@ -130,6 +135,25 @@ void WalletFrame::gotoSendCoinsPage(QString addr)
 
 void WalletFrame::gotoTokensPage()
 {
+    if (!tokencache.GetSyncFlag())
+    {
+        QMessageBox::StandardButton fRet = QMessageBox::warning(this, tr("Token Database Status"),
+            tr("Token wallet not available because a -reindex is needed. Click \"Ok\" to perform a one time -reindex "
+               "on the next startup. Then shutdown Nexa-Qt and restart to complete the process."),
+            QMessageBox::Ok | QMessageBox::Cancel, QMessageBox::Cancel);
+
+        if (fRet == QMessageBox::Ok)
+        {
+            // Schedule a -reindex on the next restart
+            if (pblocktree)
+            {
+                pblocktree->WriteReindexing(true);
+            }
+        }
+
+        return;
+    }
+
     QMap<QString, WalletView *>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
         i.value()->gotoTokensPage();

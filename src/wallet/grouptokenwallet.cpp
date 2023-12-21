@@ -914,7 +914,7 @@ extern UniValue token(const UniValue &params, bool fHelp)
             "'new' creates a new token type. args: [address] [token-ticker token-name [descUrl descHash decimals]]\n"
             "'mint' creates new tokens. args: groupId address quantity\n"
             "'melt' removes tokens from circulation. args: groupId quantity\n"
-            "'balance' reports quantity of this token, in the finest unit. args: groupId [address]\n"
+            "'balance' reports quantity of this token, in the finest unit (satoshis). args: groupId [address]\n"
             "'send' sends tokens to a new address. args: groupId address quantity [address quantity...]\n"
             "'authority create' creates a new authority args: groupId address [mint melt nochild rescript]\n"
             "'authority count' returns a list of all authorities and their current counts. args: groupId\n"
