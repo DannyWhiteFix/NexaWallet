@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include "electrum/rostrum.h"
 #include "chainparamsbase.h"
+#include "electrum/electrumserver.h"
 #include "extversionkeys.h"
 #include "extversionmessage.h"
 #include "netaddress.h"
@@ -221,7 +222,7 @@ std::vector<std::string> rostrum_args(int rpcport, int p2pport, const std::strin
 
 std::map<std::string, int64_t> fetch_rostrum_info()
 {
-    if (!GetBoolArg("-electrum", false))
+    if (!GetBoolArg("-electrum", true))
     {
         throw std::runtime_error("Electrum server is disabled");
     }
@@ -252,7 +253,8 @@ std::map<std::string, int64_t> fetch_rostrum_info()
 
 void set_extversion_flags(CExtversionMessage &xver, const std::string &network)
 {
-    if (!GetBoolArg("-electrum", false))
+    // If electrum is down, do not indicate its running
+    if (!ElectrumServer::Instance().IsRunning())
     {
         return;
     }

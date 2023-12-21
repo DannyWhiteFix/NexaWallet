@@ -35,24 +35,34 @@ Unpack the files into a directory and run:
 - `bin/nexa-qt` (GUI) or
 - `bin/nexad` (headless)
 
+If you plan to run also Rostrum along with Nexa full node you need to make sure that both `nexad` and `rostrum` binary are stored on the same folder.
+
+
+### Provide Blockchain Data Services to Everybody
+
+Allowing other computers and phones to ask your machine for Nexa blockchain information is an important part of true decentralized permissionless anonymous blockchains like Nexa.  If you are running Linux, your help is especially valuable because you can also provide blockchain synthesis/summary information to other people.  To to this, see the section "Port Forwarding" below.
+
+
 ## macOS
 
 Drag Nexa to your applications folder, and then run Nexa.
 
-[comment]: # (# Installing Ubuntu binaries from Bitcoin Unlimited Official BU repositories)
-[comment]: # ()
-[comment]: # (If you're running an Ubuntu system you can install Bitcoin Unlimited from the official BU repository.)
-[comment]: # (The repository will provide binaries and debug symbols for 4 different architectures: i386, amd64, armhf and arm64. From a terminal do)
-[comment]: # ()
-[comment]: # ()
-[comment]: # (```sh)
-[comment]: # (sudo apt-get install software-properties-common)
-[comment]: # (sudo add-apt-repository ppa:bitcoin-unlimited/bu-ppa)
-[comment]: # (sudo apt-get update)
-[comment]: # (sudo apt-get install nexad nexa-qt (# on headlesse server just install nexad))
-[comment]: # (```)
-[comment]: # ()
-[comment]: # (Once installed you can run `nexad` or `nexa-qt`)
+<!-- This is accepted as a comment too 
+# Installing Ubuntu binaries from Bitcoin Unlimited Official BU repositories)
+
+If you're running an Ubuntu system you can install Bitcoin Unlimited from the official BU repository.)
+The repository will provide binaries and debug symbols for 4 different architectures: i386, amd64, armhf and arm64. From a terminal do)
+
+
+```sh
+sudo apt-get install software-properties-common)
+sudo add-apt-repository ppa:bitcoin-unlimited/bu-ppa)
+sudo apt-get update)
+sudo apt-get install nexad nexa-qt (# on headlesse server just install nexad))
+```
+
+Once installed you can run `nexad` or `nexa-qt`
+-->
 
 
 # Building Nexa from source
@@ -78,7 +88,6 @@ sudo apt-get install qttools5-dev-tools qttools5-dev libprotobuf-dev protobuf-co
 
 ## Fetching the code and compile it
 
-```sh
 git clone https://gitlab.com/nexa/nexa.git nexa
 cd nexa
 git checkout release 	# or git checkout origin/dev
@@ -90,8 +99,7 @@ git checkout release 	# or git checkout origin/dev
 # otherwise if you need nexa-qt just issue
 ./configure
 
-export NUMCPUS=`grep -c '^processor' /proc/cpuinfo`
-make -j$NUMCPUS
+make -j`nproc`
 sudo make install #(will place them in /usr/local/bin, this step is to be considered optional.)
 ```
 
@@ -117,11 +125,11 @@ The most important configuration which impacts the speed of the initial sync is 
 
 However, even with the automatic configuration of the `cache.dbcache` setting it is recommended to set one manually if you haven't already done so (see the section below on Startup Configuration). This gives the node operator more control over memory use and in particular for non Windows setups, can further improve the performance of the initial sync.
 
-## Startup configuration:
+## Startup configuration
 
 There are dozens of configuration and node policy options available but the two most important for the initial blockchain sync are as follows.
 
-### dbcache:
+### dbcache
 
 As stated above, this setting is crucial to a fast initial sync. If you don't configure any value then the system
 will automatically adjust this size for you, more or less. On windows the auto adjustment works very well and will rise and fall with your nodes needs, however, on linux/maxOS the adjustments are not as granular and so if your a power user
@@ -131,30 +139,55 @@ You can set this value manually from the command line (or adding it to your nexa
 ```
 nexad -cache.dbcache=<your size in MB>
 ```
-For example, a 1GB dbcache would be 
+For example, a 1GB dbcache would be
 ```
 nexad -cache.dbcache=1000
 ```
 Similarly you can also add the setting to the nexa.conf file located in your installation folder. In the config file a simlilar entry would be
 
- > `cache.dbcache=1000`
+```
+cache.dbcache=1000`
+```
 
 When entering the size
 try to give it the maximum that your system can afford while still leaving enough memory for other processes.
 
-### Getting enough network connections:
+### Getting enough network connections
 
 It is generally fine to leave the default inbound/outbound connection settings for doing a sync, however, at times some users have reported issues with not being able to find any useful connections. This is often a problem because too many nodes are looking for outbound connections but node operators have forgotten to configure for allowing inbound connections (if nobody allows inbound connections then there would be no network connectivity for anyone).
 
 Note that you must have connections to the network in order to send or receive coins from you wallet!
 
-#### Port forwarding:
+#### Port Forwarding
 
-To get inbound connections for Nexa require that port 7228 be port forwarded
+To get inbound connections for Nexa require that port 7228 be port forwarded (TCP protocol).  Also forward port 20001 to enable Rostrum (blockchain data services for light clients).  If you don't know how to do this, see the next section!
 
-#### UPnP:
 
-Port forrwarding is considered the better option, but if you don't want to setup port fowarding then you need to configure your router with UPnP turned on and then also turn on UPnP on nexad (-upnp=1), however, UPnP can be a security risk and so it is usually turned off by default on your router.
+##### Port Forwarding Guide for Beginners
+
+To be a "full" member of the Nexa network, you'll want to configure your machine to provide blockchain data to wallets that need it.
+Typically, this is not much bandwidth since the load is distributed across everybody and since dedicated machines handle much of it.
+However, it is still useful for individuals to do this, because it will help resiliancy during network outages and it increases the
+proportion of anonymous honest nodes providing accurate data.
+
+To do this, you need to open certain ports in your internet router.  How to accomplish this is different for every router & there are very likely guides for your specific router on the internet that may do a better job than the following more general description:
+
+First, go to your router's management web page (hopefully you remember what you set your router password to!!!) and figure out what IP your computer is being assigned.  You'll often find this in a section called "network map" or "local network" or "clients".  Or you can find it by looking in the networking details on your computer itself.  Note your computer's MAC (looks like aa:bb:cc:dd:ee:ff) and IP address (looks like a.b.c.d, or maybe aaaa:bbbb:cccc:dddd....).
+
+Now your router typically assigns the same IP address to the same computer, but to guarantee that that happens, you want to look in your router's web page for a section called "DCHP" or "Address Reservation", and then add an entry containing the MAC and IP address of your computer.
+
+Next, look for something called "Port Forwarding", often located in the "gaming" or "NAT forwarding" section of your router's web site.
+
+Add an entry with your computer's IP address, "External Port" as 7228, "Internal Port" as 7228, and protocol as "TCP" (or all).
+Next add another entry, again with your computer's IP address, "External Port" as 20001, "Internal Port" as 20001, and protocol as "TCP" (or all).
+
+That's it!  External computers should now be able to ask you for Nexa blockchain data!  Thanks!
+
+
+#### UPnP
+
+Port forwarding is considered the better option, but if you don't want to setup port fowarding then you need to configure your router with UPnP turned on and then also turn on UPnP on nexad (-upnp=1), however, UPnP can be a security risk and so it is usually turned off by default on your router.
+
 
 ### Wallet Options
 
@@ -180,6 +213,13 @@ be spent to oneself with a higher fee and thus get quicker inclusion in a block 
 By default QT wallet users have instant transactions turned on whereas users running `nexad` will have it turned off by default. In order
 to turn on instant transactions you can add  `-wallet.instant=true` as one of your startup options.
 
+### Minimize Disk Usage
+
+If you are running Linux, its possible to minimize your disk usage by turning off Rostrum.  This prevents your node from providing light wallets
+with blockchain data, so only do this if you are just running the full node wallet.  To do this, add this line to your nexa.conf configuration file:
+```
+electrum=0
+```
 
 # Getting help
 

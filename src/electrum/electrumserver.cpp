@@ -63,13 +63,29 @@ ElectrumServer::~ElectrumServer()
 static void callb_logger(const std::string &line) { LOGA("Electrum: %s", line); }
 bool ElectrumServer::Start(int rpcport, int p2pport, const std::string &network)
 {
-    if (!GetBoolArg("-electrum", false))
+    if (mapArgs.count("-electrum")) // arg is explicitly specified
     {
-        LOGA("Electrum: Disabled. Not starting server.");
-        return true;
+        if (!GetBoolArg("-electrum", true))
+        {
+            LOGA("Electrum: Disabled. Not starting server.");
+            return true;
+        }
+        return Start(rostrum_path(), rostrum_args(rpcport, p2pport, network));
     }
-    return Start(rostrum_path(), rostrum_args(rpcport, p2pport, network));
+    else // arg is not specified, so run rostrum only if it exists
+    {
+        try
+        {
+            return Start(rostrum_path(), rostrum_args(rpcport, p2pport, network));
+        }
+        catch (std::runtime_error &e) // no rostrum found.  This is ok because the user did not explicitly ask to start
+        {
+            LOGA("Electrum NOT STARTED: Error %s.  On platforms unsupported by Rostrum this may be benign.", e.what());
+            return true;
+        }
+    }
 }
+
 bool ElectrumServer::Start(const std::string &path, const std::vector<std::string> &args)
 {
     stop_requested = false;
@@ -111,7 +127,7 @@ bool ElectrumServer::Start(const std::string &path, const std::vector<std::strin
     return started;
 }
 
-static void stop_server(SubProcess &p)
+static void stop_server(SubProcess &p, int timeoutInSeconds)
 {
     if (!p.IsRunning())
     {
@@ -133,7 +149,7 @@ static void stop_server(SubProcess &p)
     using namespace std::chrono_literals;
     using namespace std::chrono;
 
-    auto timeout = 60s;
+    auto timeout = seconds(timeoutInSeconds);
     auto start = system_clock::now();
     while (p.IsRunning())
     {
@@ -148,7 +164,7 @@ static void stop_server(SubProcess &p)
     }
 }
 
-void ElectrumServer::Stop()
+void ElectrumServer::Stop(int timeoutInSeconds)
 {
     stop_requested = true;
     if (!started)
@@ -158,7 +174,7 @@ void ElectrumServer::Stop()
     try
     {
         std::unique_lock<std::mutex> lock(process_cs);
-        stop_server(*process);
+        stop_server(*process, timeoutInSeconds);
     }
     catch (const std::exception &e)
     {
