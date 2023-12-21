@@ -1740,39 +1740,39 @@
     <message>
         <location line="-443"/>
         <source>Cannot start click-to-pay handler</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+95"/>
         <location line="+13"/>
         <location line="+10"/>
         <source>URI handling</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="-23"/>
         <source>Payment request fetch URL is invalid: %1</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Invalid payment address %1</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+11"/>
         <source>URI cannot be parsed! This can be caused by an invalid Nexa address or malformed URI parameters.</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+36"/>
         <source>Payment request file handling</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+65"/>
@@ -1782,73 +1782,73 @@
         <location line="+21"/>
         <location line="+98"/>
         <source>Payment request rejected</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="-177"/>
         <source>Payment request network doesn&apos;t match client network.</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Payment request expired.</source>
-        <translation type="unfinished">Yêu cầu thanh toán đã hết hạn.</translation>
+        <translation>Yêu cầu thanh toán đã hết hạn.</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Payment request is not initialized.</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+28"/>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+11"/>
         <location line="+21"/>
         <source>Invalid payment request.</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="-12"/>
         <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+60"/>
         <source>Refund from %1</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+51"/>
         <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Error communicating with %1: %2</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+18"/>
         <source>Payment request cannot be parsed!</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Bad response from server %1</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+22"/>
         <source>Network request error</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Payment acknowledged</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
 </context>
 <context>
@@ -2641,63 +2641,63 @@
     <message>
         <location filename="../forms/receivefreezedialog.ui" line="+14"/>
         <source>Coin Freeze</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+24"/>
         <source>WARNING! Freezing coins means they will be UNSPENDABLE until the release date or block specified below.</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+45"/>
         <source>Freeze until block :</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+19"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Specify the block when coins are released from the freeze. Coins are UNSPENDABLE until the freeze block.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+3"/>
         <location line="+99"/>
         <source>-</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="-57"/>
         <source>OR</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+26"/>
         <source>Freeze until date and time :</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+22"/>
         <source>Specify the future date and time when coins are released from the freeze. Coins are UNSPENDABLE until after the freeze date and time.</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+98"/>
         <source>&amp;Reset</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Alt+R</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+25"/>
         <source>&amp;OK</source>
-        <translation type="unfinished">ĐƯỢC RỒI</translation>
+        <translation>ĐƯỢC RỒI</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Alt+O</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
 </context>
 <context>
@@ -3992,21 +3992,23 @@
         <translation>NaN</translation>
     </message>
     <message>
+        <location line="+22"/>
         <location line="+5"/>
-        <location line="+4"/>
-        <location line="+68"/>
-        <location line="+4"/>
+        <location line="+5"/>
+        <location line="+84"/>
+        <location line="+5"/>
+        <location line="+5"/>
         <source>Total Mintage:</source>
         <translation>Tổng số tiền:</translation>
     </message>
     <message>
-        <location line="-71"/>
-        <location line="+72"/>
+        <location line="-93"/>
+        <location line="+94"/>
         <source>Token mintage is unavailable because the database needs a reindex</source>
         <translation>Việc tạo mã thông báo không khả dụng vì cơ sở dữ liệu cần lập chỉ mục lại</translation>
     </message>
     <message>
-        <location line="-64"/>
+        <location line="-86"/>
         <location line="+43"/>
         <source>Name:</source>
         <translation>Tên:</translation>
@@ -4038,56 +4040,56 @@
     <message>
         <location line="-37"/>
         <location line="+14"/>
-        <location line="+40"/>
+        <location line="+62"/>
         <location line="+14"/>
         <source>Current Authorities:</source>
         <translation>Cơ quan có thẩm quyền hiện tại:</translation>
     </message>
     <message>
-        <location line="-66"/>
-        <location line="+54"/>
+        <location line="-88"/>
+        <location line="+76"/>
         <source>Mint:</source>
         <translation></translation>
     </message>
     <message>
-        <location line="-52"/>
-        <location line="+54"/>
+        <location line="-74"/>
+        <location line="+76"/>
         <source>Melt:</source>
         <translation></translation>
     </message>
     <message>
-        <location line="-52"/>
-        <location line="+54"/>
+        <location line="-74"/>
+        <location line="+76"/>
         <source>Renew:</source>
         <translation></translation>
     </message>
     <message>
-        <location line="-52"/>
-        <location line="+54"/>
+        <location line="-74"/>
+        <location line="+76"/>
         <source>Rescript:</source>
         <translation></translation>
     </message>
     <message>
-        <location line="-52"/>
-        <location line="+54"/>
+        <location line="-74"/>
+        <location line="+76"/>
         <source>Subgroup:</source>
         <translation></translation>
     </message>
     <message>
-        <location line="-49"/>
-        <location line="+54"/>
+        <location line="-71"/>
+        <location line="+76"/>
         <source>Token authorities are unavailable because the database needs a reindex</source>
         <translation>Cơ quan quản lý mã thông báo không khả dụng vì cơ sở dữ liệu cần lập chỉ mục lại</translation>
     </message>
     <message>
-        <location line="-49"/>
-        <location line="+55"/>
+        <location line="-71"/>
+        <location line="+77"/>
         <source>Balance:</source>
         <translation>Cân bằng:</translation>
     </message>
     <message>
-        <location line="-54"/>
-        <location line="+55"/>
+        <location line="-76"/>
+        <location line="+77"/>
         <source>Pending:</source>
         <translation>Chưa giải quyết:</translation>
     </message>
@@ -4894,9 +4896,19 @@
 <context>
     <name>WalletFrame</name>
     <message>
-        <location filename="../walletframe.cpp" line="+26"/>
+        <location filename="../walletframe.cpp" line="+31"/>
         <source>No wallet has been loaded.</source>
         <translation>Không có ví nào được tải.</translation>
+    </message>
+    <message>
+        <location line="+109"/>
+        <source>Token Database Status</source>
+        <translation>Trạng thái cơ sở dữ liệu mã thông báo</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Token wallet not available because a -reindex is needed. Click &quot;Ok&quot; to perform a one time -reindex on the next startup. Then shutdown Nexa-Qt and restart to complete the process.</source>
+        <translation>Ví mã thông báo không có sẵn vì cần có -reindex. Nhấp vào &quot;Ok&quot; để thực hiện -reindex một lần trong lần khởi động tiếp theo. Sau đó tắt Nexa-Qt và khởi động lại để hoàn tất quá trình.</translation>
     </message>
 </context>
 <context>

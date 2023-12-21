@@ -2643,63 +2643,63 @@
     <message>
         <location filename="../forms/receivefreezedialog.ui" line="+14"/>
         <source>Coin Freeze</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+24"/>
         <source>WARNING! Freezing coins means they will be UNSPENDABLE until the release date or block specified below.</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+45"/>
         <source>Freeze until block :</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+19"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Specify the block when coins are released from the freeze. Coins are UNSPENDABLE until the freeze block.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+3"/>
         <location line="+99"/>
         <source>-</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="-57"/>
         <source>OR</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+26"/>
         <source>Freeze until date and time :</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+22"/>
         <source>Specify the future date and time when coins are released from the freeze. Coins are UNSPENDABLE until after the freeze date and time.</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+98"/>
         <source>&amp;Reset</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Alt+R</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+25"/>
         <source>&amp;OK</source>
-        <translation type="unfinished">确定(&amp;O)</translation>
+        <translation>确定(&amp;O)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Alt+O</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
 </context>
 <context>
@@ -3994,21 +3994,23 @@
         <translation>NaN</translation>
     </message>
     <message>
+        <location line="+22"/>
         <location line="+5"/>
-        <location line="+4"/>
-        <location line="+68"/>
-        <location line="+4"/>
+        <location line="+5"/>
+        <location line="+84"/>
+        <location line="+5"/>
+        <location line="+5"/>
         <source>Total Mintage:</source>
         <translation>總發行量：</translation>
     </message>
     <message>
-        <location line="-71"/>
-        <location line="+72"/>
+        <location line="-93"/>
+        <location line="+94"/>
         <source>Token mintage is unavailable because the database needs a reindex</source>
         <translation>代幣發行量不可用，因為資料庫需要重新索引</translation>
     </message>
     <message>
-        <location line="-64"/>
+        <location line="-86"/>
         <location line="+43"/>
         <source>Name:</source>
         <translation>姓名：</translation>
@@ -4040,56 +4042,56 @@
     <message>
         <location line="-37"/>
         <location line="+14"/>
-        <location line="+40"/>
+        <location line="+62"/>
         <location line="+14"/>
         <source>Current Authorities:</source>
         <translation>現任當局：</translation>
     </message>
     <message>
-        <location line="-66"/>
-        <location line="+54"/>
+        <location line="-88"/>
+        <location line="+76"/>
         <source>Mint:</source>
         <translation></translation>
     </message>
     <message>
-        <location line="-52"/>
-        <location line="+54"/>
+        <location line="-74"/>
+        <location line="+76"/>
         <source>Melt:</source>
         <translation></translation>
     </message>
     <message>
-        <location line="-52"/>
-        <location line="+54"/>
+        <location line="-74"/>
+        <location line="+76"/>
         <source>Renew:</source>
         <translation></translation>
     </message>
     <message>
-        <location line="-52"/>
-        <location line="+54"/>
+        <location line="-74"/>
+        <location line="+76"/>
         <source>Rescript:</source>
         <translation></translation>
     </message>
     <message>
-        <location line="-52"/>
-        <location line="+54"/>
+        <location line="-74"/>
+        <location line="+76"/>
         <source>Subgroup:</source>
         <translation></translation>
     </message>
     <message>
-        <location line="-49"/>
-        <location line="+54"/>
+        <location line="-71"/>
+        <location line="+76"/>
         <source>Token authorities are unavailable because the database needs a reindex</source>
         <translation>令牌權限不可用，因為資料庫需要重新索引</translation>
     </message>
     <message>
-        <location line="-49"/>
-        <location line="+55"/>
+        <location line="-71"/>
+        <location line="+77"/>
         <source>Balance:</source>
         <translation>余额：</translation>
     </message>
     <message>
-        <location line="-54"/>
-        <location line="+55"/>
+        <location line="-76"/>
+        <location line="+77"/>
         <source>Pending:</source>
         <translation>等待中的余额：</translation>
     </message>
@@ -4896,9 +4898,19 @@
 <context>
     <name>WalletFrame</name>
     <message>
-        <location filename="../walletframe.cpp" line="+26"/>
+        <location filename="../walletframe.cpp" line="+31"/>
         <source>No wallet has been loaded.</source>
         <translation>没有载入钱包。</translation>
+    </message>
+    <message>
+        <location line="+109"/>
+        <source>Token Database Status</source>
+        <translation>代幣資料庫狀態</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Token wallet not available because a -reindex is needed. Click &quot;Ok&quot; to perform a one time -reindex on the next startup. Then shutdown Nexa-Qt and restart to complete the process.</source>
+        <translation>令牌錢包不可用，因為需要 -reindex。 按一下「確定」以在下次啟動時執行一次性重建索引。 然後關閉 Nexa-Qt 並重新啟動以完成該過程。</translation>
     </message>
 </context>
 <context>

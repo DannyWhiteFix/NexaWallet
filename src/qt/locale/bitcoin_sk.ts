@@ -4017,21 +4017,23 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location line="+22"/>
         <location line="+5"/>
-        <location line="+4"/>
-        <location line="+68"/>
-        <location line="+4"/>
+        <location line="+5"/>
+        <location line="+84"/>
+        <location line="+5"/>
+        <location line="+5"/>
         <source>Total Mintage:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-71"/>
-        <location line="+72"/>
+        <location line="-93"/>
+        <location line="+94"/>
         <source>Token mintage is unavailable because the database needs a reindex</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-64"/>
+        <location line="-86"/>
         <location line="+43"/>
         <source>Name:</source>
         <translation type="unfinished"></translation>
@@ -4063,56 +4065,56 @@
     <message>
         <location line="-37"/>
         <location line="+14"/>
-        <location line="+40"/>
+        <location line="+62"/>
         <location line="+14"/>
         <source>Current Authorities:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-66"/>
-        <location line="+54"/>
+        <location line="-88"/>
+        <location line="+76"/>
         <source>Mint:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-52"/>
-        <location line="+54"/>
+        <location line="-74"/>
+        <location line="+76"/>
         <source>Melt:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-52"/>
-        <location line="+54"/>
+        <location line="-74"/>
+        <location line="+76"/>
         <source>Renew:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-52"/>
-        <location line="+54"/>
+        <location line="-74"/>
+        <location line="+76"/>
         <source>Rescript:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-52"/>
-        <location line="+54"/>
+        <location line="-74"/>
+        <location line="+76"/>
         <source>Subgroup:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-49"/>
-        <location line="+54"/>
+        <location line="-71"/>
+        <location line="+76"/>
         <source>Token authorities are unavailable because the database needs a reindex</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-49"/>
-        <location line="+55"/>
+        <location line="-71"/>
+        <location line="+77"/>
         <source>Balance:</source>
         <translation type="unfinished">Zostatok:</translation>
     </message>
     <message>
-        <location line="-54"/>
-        <location line="+55"/>
+        <location line="-76"/>
+        <location line="+77"/>
         <source>Pending:</source>
         <translation type="unfinished">Čakajúce potvrdenie:</translation>
     </message>
@@ -4927,9 +4929,19 @@
 <context>
     <name>WalletFrame</name>
     <message>
-        <location filename="../walletframe.cpp" line="+26"/>
+        <location filename="../walletframe.cpp" line="+31"/>
         <source>No wallet has been loaded.</source>
         <translation>Nie je načítaná peňaženka.</translation>
+    </message>
+    <message>
+        <location line="+109"/>
+        <source>Token Database Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Token wallet not available because a -reindex is needed. Click &quot;Ok&quot; to perform a one time -reindex on the next startup. Then shutdown Nexa-Qt and restart to complete the process.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
