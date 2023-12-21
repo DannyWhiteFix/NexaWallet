@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "electrum/electrumserver.h"
 #include "electrum/rostrum.h"
 #include "extversionkeys.h"
 #include "extversionmessage.h"
@@ -129,20 +130,36 @@ BOOST_AUTO_TEST_CASE(electrum_extversion)
     BOOST_CHECK_EQUAL(NOT_SET, ver->as_u64c(XVer::BU_ELECTRUM_WS_SERVER_PORT_TCP));
     BOOST_CHECK_EQUAL(NOT_SET, ver->as_u64c(XVer::BU_ELECTRUM_SERVER_PROTOCOL_VERSION));
 
-    // Electrum server enabled and on public network
+    // Electrum server enabled and on public network, but NOT ACTUALLY RUNNING
     SetArg("-electrum.host", "8.8.8.8");
     SetArg("-electrum.ws.host", "1.1.1.1");
     call_setter(ver);
-    BOOST_CHECK_EQUAL(PORT, ver->as_u64c(XVer::BU_ELECTRUM_SERVER_PORT_TCP));
-    BOOST_CHECK_EQUAL(WS_PORT, ver->as_u64c(XVer::BU_ELECTRUM_WS_SERVER_PORT_TCP));
-    BOOST_CHECK_EQUAL(1040300ULL, ver->as_u64c(XVer::BU_ELECTRUM_SERVER_PROTOCOL_VERSION));
 
-    // Special case: Listen on all IP's is treated as public
-    SetArg("-electrum.host", "0.0.0.0");
-    SetArg("-electrum.ws.host", "0.0.0.0");
-    call_setter(ver);
-    BOOST_CHECK_EQUAL(PORT, ver->as_u64c(XVer::BU_ELECTRUM_SERVER_PORT_TCP));
-    BOOST_CHECK_EQUAL(WS_PORT, ver->as_u64c(XVer::BU_ELECTRUM_WS_SERVER_PORT_TCP));
+    BOOST_CHECK_EQUAL(NOT_SET, ver->as_u64c(XVer::BU_ELECTRUM_SERVER_PORT_TCP));
+    BOOST_CHECK_EQUAL(NOT_SET, ver->as_u64c(XVer::BU_ELECTRUM_WS_SERVER_PORT_TCP));
+    BOOST_CHECK_EQUAL(NOT_SET, ver->as_u64c(XVer::BU_ELECTRUM_SERVER_PROTOCOL_VERSION));
+
+    try
+    {
+        electrum::ElectrumServer::Instance().Start(BaseParams().RPCPort(), GetListenPort(), "nexa");
+        sleep(2);
+        call_setter(ver);
+        BOOST_CHECK_EQUAL(PORT, ver->as_u64c(XVer::BU_ELECTRUM_SERVER_PORT_TCP));
+        BOOST_CHECK_EQUAL(WS_PORT, ver->as_u64c(XVer::BU_ELECTRUM_WS_SERVER_PORT_TCP));
+        BOOST_CHECK_EQUAL(1040300ULL, ver->as_u64c(XVer::BU_ELECTRUM_SERVER_PROTOCOL_VERSION));
+
+        // Special case: Listen on all IP's is treated as public
+        SetArg("-electrum.host", "0.0.0.0");
+        SetArg("-electrum.ws.host", "0.0.0.0");
+        call_setter(ver);
+        BOOST_CHECK_EQUAL(PORT, ver->as_u64c(XVer::BU_ELECTRUM_SERVER_PORT_TCP));
+        BOOST_CHECK_EQUAL(WS_PORT, ver->as_u64c(XVer::BU_ELECTRUM_WS_SERVER_PORT_TCP));
+    }
+    catch (std::runtime_error &e)
+    {
+        printf("Warning: Rostrum executable does not exist, so cannot test extversion as if its running\n");
+    }
+    electrum::ElectrumServer::Instance().Stop(2);
 }
 
 // Test case for gitlab issue #2221, passing boolean parameters did not work.

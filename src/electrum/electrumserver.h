@@ -25,7 +25,7 @@ public:
     // for allow overriding path/args for unit testing
     bool Start(const std::string& path, const std::vector<std::string>& args);
 
-    void Stop();
+    void Stop(int timeoutInSeconds = 60);
     bool IsRunning() const;
 
     // signal to the electrum server that a new block is avaialable.
