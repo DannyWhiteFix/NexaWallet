@@ -176,8 +176,57 @@ public:
             parent->endRemoveRows();
             break;
         case CT_UPDATED:
-            // Miscellaneous updates -- nothing to do, status update will take care of this, and is only computed for
-            // visible transactions.
+            // Miscellaneous updates
+
+            if (!inModel)
+            {
+                qWarning()
+                    << "TransactionTablePriv::updateWallet: Warning: Got CT_UPDATED, but transaction is not in model";
+                break;
+            }
+
+            LOCK2(cs_main, wallet->cs_wallet);
+            // Find transaction in wallet
+            CWalletTxRef wtx = wallet->GetWalletTx(hash);
+            if (!wtx)
+            {
+                qWarning()
+                    << "TransactionTablePriv::updateWallet: Warning: Got CT_NEW, but transaction is not in wallet";
+                break;
+            }
+
+            // Added -- insert at the right position
+            QList<TransactionRecord> tmp = TransactionRecord::decomposeTransaction(wallet, *wtx);
+            QList<TransactionRecord> toUpdate;
+            int idx = 0;
+            Q_FOREACH (const TransactionRecord &rec, tmp)
+            {
+                if (!cachedWallet.contains(rec) || toUpdate.contains(rec) || rec.mapTokens.empty())
+                    continue;
+
+                toUpdate.insert(idx, rec);
+                idx++;
+            }
+
+            if (!toUpdate.isEmpty()) /* only if something to update */
+            {
+                Q_FOREACH (const TransactionRecord &rec, toUpdate)
+                {
+                    QList<TransactionRecord>::iterator iter = std::find(cachedWallet.begin(), cachedWallet.end(), rec);
+                    if (iter != cachedWallet.end())
+                    {
+                        // There is an edge scenario where a new token was created and tokens minted before
+                        // the next block was mined. In this case we have to update the transaction record
+                        // to reflect the correct decimal value after the next block is mined.
+                        *iter = rec;
+
+                        // Update the amount field in the UI
+                        QModelIndex nIndex = parent->index(lowerIndex, TokenTableModel::Amount);
+                        parent->dataChanged(nIndex, nIndex);
+                    }
+                }
+            }
+
             break;
         }
     }
@@ -477,7 +526,8 @@ QString TokenTableModel::formatTxAmount(const TransactionRecord *wtx,
         {
             debits += it.second.debit;
         }
-        decimal = it.second.decimal;
+        if (decimal < it.second.decimal)
+            decimal = it.second.decimal;
     }
 
     QString str;

@@ -441,11 +441,20 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
                 strHTML += "<b>" + tr("Ticker") + ": </b>" + info[0].c_str() + "<br>";
                 strHTML += "<b>" + tr("Name") + ": </b>" + info[1].c_str() + "<br>";
             }
-            if (info.size() >= 5)
+
+            int nDecimal = GetDecimal(grpID);
+            strHTML += "<b>" + tr("Decimals") + ": </b>" + QString::number(nDecimal) + "<br>";
+
+            if (nDecimal)
             {
-                strHTML += "<b>" + tr("Decimals") + ": </b>" + info[4].c_str() + "<br>";
+                double nDisplayTokens = (double)(nMeltAmount) / pow(10, nDecimal);
+                QString strDisplayMintage = QString::number(nDisplayTokens, 'f', nDecimal);
+                strHTML += "<b>" + tr("Melt") + " " + tr("Amount") + ": </b>" + strDisplayMintage + "<br>";
             }
-            strHTML += "<b>" + tr("Melt") + " " + tr("Amount") + ": </b>" + QString::number(nMeltAmount) + "<br>";
+            else
+            {
+                strHTML += "<b>" + tr("Melt") + " " + tr("Amount") + ": </b>" + QString::number(nMeltAmount) + "<br>";
+            }
         }
     }
 
@@ -465,15 +474,22 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
                     strHTML += "<b>" + tr("Ticker") + ": </b>" + info[0].c_str() + "<br>";
                     strHTML += "<b>" + tr("Name") + ": </b>" + info[1].c_str() + "<br>";
                 }
-                if (info.size() >= 5)
-                {
-                    strHTML += "<b>" + tr("Decimals") + ": </b>" + info[4].c_str() + "<br>";
-                }
+                int nDecimal = GetDecimal(sent.grp);
+                strHTML += "<b>" + tr("Decimals") + ": </b>" + QString::number(nDecimal) + "<br>";
 
                 if (listReceived.empty() && fIsMint)
                 {
-                    strHTML +=
-                        "<b>" + tr("Mint") + " " + tr("Amount") + ": </b>" + QString::number(sent.grpAmount) + "<br>";
+                    if (nDecimal)
+                    {
+                        double nDisplayTokens = (double)(sent.grpAmount) / pow(10, nDecimal);
+                        QString strDisplayMintage = QString::number(nDisplayTokens, 'f', nDecimal);
+                        strHTML += "<b>" + tr("Mint") + " " + tr("Amount") + ": </b>" + strDisplayMintage + "<br>";
+                    }
+                    else
+                    {
+                        strHTML += "<b>" + tr("Mint") + " " + tr("Amount") + ": </b>" +
+                                   QString::number(sent.grpAmount) + "<br>";
+                    }
                 }
                 strHTML += "<b>" + tr("Amount Sent") + ": </b>" + QString::number(sent.grpAmount) + "<br>";
             }
@@ -496,18 +512,25 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
                     strHTML += "<b>" + tr("Ticker") + ": </b>" + info[0].c_str() + "<br>";
                     strHTML += "<b>" + tr("Name") + ": </b>" + info[1].c_str() + "<br>";
                 }
-                if (info.size() >= 5)
-                {
-                    strHTML += "<b>" + tr("Decimals") + ": </b>" + info[4].c_str() + "<br>";
-                }
+                int nDecimal = GetDecimal(recv.grp);
+                strHTML += "<b>" + tr("Decimals") + ": </b>" + QString::number(nDecimal) + "<br>";
                 if (!fIsMint)
                 {
                     strHTML += "<b>" + tr("Amount Received") + ": </b>" + QString::number(recv.grpAmount) + "<br>";
                 }
                 else
                 {
-                    strHTML +=
-                        "<b>" + tr("Mint") + " " + tr("Amount") + ": </b>" + QString::number(recv.grpAmount) + "<br>";
+                    if (nDecimal)
+                    {
+                        double nDisplayTokens = (double)(recv.grpAmount) / pow(10, nDecimal);
+                        QString strDisplayMintage = QString::number(nDisplayTokens, 'f', nDecimal);
+                        strHTML += "<b>" + tr("Mint") + " " + tr("Amount") + ": </b>" + strDisplayMintage + "<br>";
+                    }
+                    else
+                    {
+                        strHTML += "<b>" + tr("Mint") + " " + tr("Amount") + ": </b>" +
+                                   QString::number(recv.grpAmount) + "<br>";
+                    }
                 }
             }
         }
