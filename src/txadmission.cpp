@@ -265,6 +265,9 @@ void ThreadCommitToMempool()
                     pcoinsTip->Trim(nCoinCacheMaxSize * .95);
             }
 
+            // NOTE: In -regtest consistency checking is on by default and this markedly affects performance,
+            //       particuarly when loading a great deal of orphan transactions. If doing any performance testing
+            //       on -regest remember to turn off consistency checking for the mempool and blockindex.
             mempool.check(pcoinsTip);
         }
     }
