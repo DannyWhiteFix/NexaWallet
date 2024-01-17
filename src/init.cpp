@@ -1004,7 +1004,7 @@ bool AppInit2(Config &config)
 #ifdef ENABLE_WALLET
         if (GetBoolArg("-rescan", false))
         {
-            return InitError(_("Rescans are not possible in pruned mode. You will need to use -reindex which will "
+            return InitError(_("Rescans are not possible in pruned mode. You will need to use -resync which will "
                                "download the whole blockchain again."));
         }
 #endif
@@ -1448,8 +1448,8 @@ bool AppInit2(Config &config)
                 // in the past, but is now trying to run unpruned.
                 if (fHavePruned && !fPruneMode)
                 {
-                    strLoadError = _("You need to rebuild the database using -reindex to go back to unpruned mode.  "
-                                     "This will redownload the entire blockchain");
+                    strLoadError = _("You need to rebuild the database using -resync to go back to unpruned mode.  "
+                                     "This will redownload the entire blockchain.");
                     break;
                 }
 
