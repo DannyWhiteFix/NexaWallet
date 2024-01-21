@@ -364,10 +364,6 @@ public:
     // END section for atomic XVERSION variables
 
 
-    // This is shared-locked whenever messages are processed.
-    // Take it exclusive-locked to finish all ongoing processing
-    CSharedCriticalSection csMsgSerializer;
-
     // socket
     SOCKET hSocket;
 

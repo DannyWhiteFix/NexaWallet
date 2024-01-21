@@ -762,9 +762,6 @@ bool ProcessMessage(CNode *pfrom,
 
     else if (strCommand == NetMsgType::PING)
     {
-        LeaveCritical(&pfrom->csMsgSerializer);
-        EnterCritical("pfrom.csMsgSerializer", __FILE__, __LINE__, (void *)(&pfrom->csMsgSerializer),
-            LockType::SHARED_MUTEX, OwnershipType::EXCLUSIVE);
         uint64_t nonce = 0;
         vRecv >> nonce;
         // although PONG was enabled in BIP31, all clients should handle it at this point
@@ -781,9 +778,6 @@ bool ProcessMessage(CNode *pfrom,
         // seconds to respond to each, the 5th ping the remote sends would appear to
         // return very quickly.
         pfrom->PushMessageWithCookie(NetMsgType::PONG, msgCookie | 0xFFFF, nonce);
-        LeaveCritical(&pfrom->csMsgSerializer);
-        EnterCritical("pfrom.csMsgSerializer", __FILE__, __LINE__, (void *)(&pfrom->csMsgSerializer),
-            LockType::SHARED_MUTEX, OwnershipType::SHARED);
     }
 
     // ------------------------- END INITIAL COMMAND SET PROCESSING
@@ -2244,7 +2238,6 @@ bool ProcessMessages(CNode *pfrom)
     {
         CNodeRef noderef;
         bool fIsPriority = false;
-        READLOCK(pfrom->csMsgSerializer);
         CNetMessage msg;
         bool fUseLowPriorityMsg = true;
         bool fUsePriorityMsg = true;
