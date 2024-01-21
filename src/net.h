@@ -372,16 +372,16 @@ public:
     CCriticalSection cs_vSend;
     CDataStream ssSend GUARDED_BY(cs_vSend);
     size_t nSendOffset GUARDED_BY(cs_vSend); // offset inside the first vSendMsg already sent
-    uint64_t nSendBytes GUARDED_BY(cs_vSend);
     std::deque<CSerializeData> vSendMsg GUARDED_BY(cs_vSend);
     std::deque<CSerializeData> vLowPrioritySendMsg GUARDED_BY(cs_vSend);
     std::atomic<uint64_t> nSendSize; // total size in bytes of all vSendMsg entries
+    std::atomic<uint64_t> nSendBytes;
 
     CCriticalSection csRecvGetData;
     std::deque<CInv> vRecvGetData GUARDED_BY(csRecvGetData);
 
     CCriticalSection cs_vRecvMsg;
-    uint64_t nRecvBytes GUARDED_BY(cs_vRecvMsg);
+    std::atomic<uint64_t> nRecvBytes;
     std::deque<CNetMessage> vRecvMsg GUARDED_BY(cs_vRecvMsg);
     std::deque<CNetMessage> vRecvMsg_handshake GUARDED_BY(cs_vRecvMsg);
     // the next message we receive from the socket

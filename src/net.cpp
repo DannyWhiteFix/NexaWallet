@@ -553,14 +553,8 @@ void CNode::copyStats(CNodeStats &stats)
     X(cleanSubVer);
     X(fInbound);
     X(nStartingHeight);
-    {
-        LOCK(cs_vSend);
-        X(nSendBytes);
-    }
-    {
-        LOCK(cs_vRecvMsg);
-        X(nRecvBytes);
-    }
+    X(nSendBytes);
+    X(nRecvBytes);
     X(fWhitelisted);
     X(fSupportsCompactBlocks);
 

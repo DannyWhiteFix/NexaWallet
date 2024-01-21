@@ -53,15 +53,25 @@ public:
     void refreshPeers()
     {
         {
-            TRY_LOCK(cs_vNodes, lockNodes);
-            if (!lockNodes)
+            std::vector<CNode *> vNodesCopy;
             {
-                // skip the refresh if we can't immediately get the lock
-                return;
+                TRY_LOCK(cs_vNodes, lockNodes);
+                if (!lockNodes)
+                {
+                    // skip the refresh if we can't immediately get the lock
+                    return;
+                }
+
+                vNodesCopy = vNodes;
+                for (CNode *pnode : vNodes)
+                {
+                    pnode->AddRef();
+                }
             }
+
             cachedNodeStats.clear();
-            cachedNodeStats.reserve(vNodes.size());
-            Q_FOREACH (CNode *pnode, vNodes)
+            cachedNodeStats.reserve(vNodesCopy.size());
+            Q_FOREACH (CNode *pnode, vNodesCopy)
             {
                 CNodeCombinedStats stats;
                 stats.nodeStateStats.nMisbehavior = 0;
@@ -71,6 +81,10 @@ public:
                 pnode->copyStats(stats.nodeStats);
                 cachedNodeStats.append(stats);
             }
+
+            // release refs
+            for (CNode *pnode : vNodesCopy)
+                pnode->Release();
         }
 
         // Retrieve the CNodeStateStats for each node.
@@ -111,7 +125,7 @@ PeerTableModel::PeerTableModel(ClientModel *parent) : QAbstractTableModel(parent
     // set up timer for auto refresh
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), SLOT(refresh()));
-    timer->setInterval(MODEL_UPDATE_DELAY1);
+    timer->setInterval(MODEL_UPDATE_DELAY3);
 
     // load initial data
     refresh();
