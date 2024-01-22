@@ -89,6 +89,9 @@ extern CTweak<uint32_t> dataCarrierSize;
 extern CTweak<bool> dataCarrier;
 extern CTweak<int> maxConnections;
 
+extern uint64_t nReceiveBufferSize;
+extern uint64_t nSendBufferSize;
+
 using namespace std;
 
 bool fFeeEstimatesInitialized = false;
@@ -1047,6 +1050,10 @@ bool AppInit2(Config &config)
 
     connmgr->HandleCommandLine();
     dosMan.HandleCommandLine();
+
+    // message buffer sizes
+    nReceiveBufferSize = 1000 * GetArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER);
+    nSendBufferSize = 1000 * GetArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER);
 
     // mempool limits
     int64_t nMempoolSizeMax = maxTxPool.Value() * ONE_MEGABYTE;

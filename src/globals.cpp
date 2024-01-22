@@ -110,6 +110,10 @@ std::atomic<int64_t> nCoinCacheMaxSize{0};
 // our unit testing and checking for dirty vs non-dirty states.
 std::atomic<bool> fMempoolTests{false};
 
+// The maximum buffer sizes allowed when sending and receving net messages
+uint64_t nReceiveBufferSize = 0;
+uint64_t nSendBufferSize = 0;
+
 CChain chainActive; // chainActive.Tip() is lock free, other APIs take the internal lock cs_chainLock
 
 CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE); // lock free - has an internal atomic value
