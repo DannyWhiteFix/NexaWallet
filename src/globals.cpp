@@ -78,6 +78,8 @@ std::atomic<bool> lockdataDestructed{false};
 LockData lockdata;
 #endif
 
+CAmount GROUPED_SATOSHI_AMT = 0;
+
 // this flag is set to true when a wallet rescan has been invoked.
 std::atomic<bool> fRescan{false};
 
