@@ -88,6 +88,7 @@
 extern CTweak<uint32_t> dataCarrierSize;
 extern CTweak<bool> dataCarrier;
 extern CTweak<int> maxConnections;
+extern CAmount GROUPED_SATOSHI_AMT;
 
 extern uint64_t nReceiveBufferSize;
 extern uint64_t nSendBufferSize;
@@ -1145,6 +1146,9 @@ bool AppInit2(Config &config)
     if (nXthinBloomFilterSize < SMALLEST_MAX_BLOOM_FILTER_SIZE)
         return InitError(
             strprintf(_("-xthinbloomfiltersize must be at least %d Bytes"), SMALLEST_MAX_BLOOM_FILTER_SIZE));
+
+    // Intitialize the mininum amount needed for a group output
+    GROUPED_SATOSHI_AMT = CFeeRate().GetDust();
 
 
     // ********************************************************* Step 4: application initialization: dir lock,

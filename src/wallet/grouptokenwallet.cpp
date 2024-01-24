@@ -36,12 +36,11 @@
 #define TOKEN_EXTRA_FEE 10
 
 extern CChain chainActive;
+extern CAmount GROUPED_SATOSHI_AMT;
+
 bool EnsureWalletIsAvailable(bool avoidException);
 UniValue groupedlistsinceblock(const UniValue &params, bool fHelp);
 UniValue groupedlisttransactions(const UniValue &params, bool fHelp);
-
-// Number of satoshis we will put into a grouped output
-CAmount GROUPED_SATOSHI_AMT = 0;
 
 // Approximate size of signature in a script -- used for guessing fees
 const unsigned int TX_SIG_SCRIPT_LEN = 80 + 32; // sig + pubkey
@@ -1002,12 +1001,6 @@ extern UniValue token(const UniValue &params, bool fHelp)
             return NullUniValue;
 
         EnsureWalletIsUnlocked();
-    }
-
-    // Initialize the minimum amount to fill a group output.
-    if (GROUPED_SATOSHI_AMT == 0)
-    {
-        GROUPED_SATOSHI_AMT = CFeeRate().GetDust();
     }
 
     if (operation == "listsinceblock")
