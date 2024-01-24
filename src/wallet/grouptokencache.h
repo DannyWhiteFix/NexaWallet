@@ -10,9 +10,23 @@
 
 static const unsigned int DEFAULT_OP_RETURN_GROUP_ID = 88888888;
 
-// Retrieve token descriptions using an OP_RETURN
-std::vector<std::string> GetTokenDescription(const CScript &script);
+struct CAuth
+{
+    int nMint = 0;
+    int nMelt = 0;
+    int nRenew = 0;
+    int nRescript = 0;
+    int nSubgroup = 0;
+};
 
+// Retrieve token descriptions using an OP_RETURN
+bool GetTokenDescription(const CScript &script, std::vector<std::string> &_vDesc);
+
+// Accumulate token authorities and mintages which can then be apply to their respective caches
+void AccumulateTokenData(CTransactionRef ptx,
+    CCoinsViewCache &view,
+    std::map<CGroupTokenID, CAuth> &accumulatedAuthorities,
+    std::map<CGroupTokenID, CAmount> &accumulatedMintages);
 
 // A cache class for storing token descriptions with a finite sized cached.
 class CTokenDescCache
@@ -28,15 +42,6 @@ private:
 
 public:
     CTokenDescCache(){};
-
-    struct CAuth
-    {
-        int nMint = 0;
-        int nMelt = 0;
-        int nRenew = 0;
-        int nRescript = 0;
-        int nSubgroup = 0;
-    };
 
     /** Add a token description to the cache */
     void AddTokenDesc(const CGroupTokenID &_grpID, const std::vector<std::string> &_desc);
@@ -59,13 +64,6 @@ public:
      *  through txadmission or from new blocks, and store them to cache
      */
     void ProcessTokenDescriptions(CTransactionRef ptx);
-
-    /** Find and accumulate token authorities from new transactions, that have arrived either
-     *  through txadmission or from new blocks, and apply when and if the block is confirmed.
-     */
-    void AccumulateTokenAuthorities(CTransactionRef ptx,
-        CCoinsViewCache &view,
-        std::map<CGroupTokenID, CAuth> &accumulatedAuthorities);
 
     /** Apply the accumulated token authories and add them to the cache and database */
     void ApplyTokenAuthorities(std::map<CGroupTokenID, CAuth> &accumulatedAuthoriies);
@@ -100,14 +98,6 @@ public:
 
     /** Find and return a token mintage description from the cache */
     uint64_t GetTokenMint(const CGroupTokenID &_grpID);
-
-    /** Find token mintages from new transactions that have arrived either
-     *  through txadmission or from new blocks, and save them to apply when
-     *  and if the block is confirmed.
-     */
-    void AccumulateTokenMintages(CTransactionRef ptx,
-        CCoinsViewCache &view,
-        std::map<CGroupTokenID, CAmount> &accumulatedMintages);
 
     /** Add the saved token mints and melts, and apply them to the cache and the mintage database */
     void ApplyTokenMintages(std::map<CGroupTokenID, CAmount> &accumulatedMintages);

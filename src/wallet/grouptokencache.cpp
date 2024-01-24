@@ -5,9 +5,9 @@
 #include "consensus/grouptokens.h"
 #include "main.h"
 
-std::vector<std::string> GetTokenDescription(const CScript &script)
+bool GetTokenDescription(const CScript &script, std::vector<std::string> &_vDesc)
 {
-    std::vector<std::string> vTokenDesc;
+    _vDesc.clear();
 
     CScript::const_iterator pc = script.begin();
     opcodetype op;
@@ -16,7 +16,7 @@ std::vector<std::string> GetTokenDescription(const CScript &script)
     // Check we have an op_return
     script.GetOp(pc, op, vchRet);
     if (op != OP_RETURN)
-        return {};
+        return false;
 
     // Check for correct group id
     script.GetOp(pc, op, vchRet);
@@ -26,7 +26,7 @@ std::vector<std::string> GetTokenDescription(const CScript &script)
     ss << std::hex << HexStr(vchRet);
     ss >> grpId;
     if (grpId != DEFAULT_OP_RETURN_GROUP_ID)
-        return {};
+        return false;
 
     // Get labels
     int count = 0;
@@ -40,12 +40,12 @@ std::vector<std::string> GetTokenDescription(const CScript &script)
                 {
                     // Convert hash stored as a vector of unsigned chars to a string.
                     uint256 hash(&vchRet.data()[0]);
-                    vTokenDesc.push_back(hash.ToString());
+                    _vDesc.push_back(hash.ToString());
                 }
                 else
                 {
                     std::string s(vchRet.begin(), vchRet.end());
-                    vTokenDesc.push_back(s);
+                    _vDesc.push_back(s);
                 }
             }
             else // 5th parameter in op return is the number of decimals
@@ -59,33 +59,159 @@ std::vector<std::string> GetTokenDescription(const CScript &script)
                     amt = 0;
                 else
                     amt = op - OP_1 + 1;
-                vTokenDesc.push_back(std::to_string(amt));
+                _vDesc.push_back(std::to_string(amt));
             }
         }
         else
-            vTokenDesc.push_back("");
+            _vDesc.push_back("");
         count++;
     }
 
-    if (!vTokenDesc.empty())
+    if (!_vDesc.empty())
     {
-        while (vTokenDesc.size() < 4)
+        while (_vDesc.size() < 4)
         {
-            vTokenDesc.push_back("");
+            _vDesc.push_back("");
         }
-        while (vTokenDesc.size() < 5)
+        while (_vDesc.size() < 5)
         {
-            vTokenDesc.push_back("0");
+            _vDesc.push_back("0");
         }
-        return vTokenDesc;
     }
     else
     {
         std::vector<std::string> vEmptyDesc{"", "", "", "", "0"};
-        return vEmptyDesc;
+        _vDesc.swap(vEmptyDesc);
     }
+    return true;
 }
 
+void AccumulateTokenData(CTransactionRef ptx,
+    CCoinsViewCache &view,
+    std::map<CGroupTokenID, CAuth> &accumulatedAuthorities,
+    std::map<CGroupTokenID, CAmount> &accumulatedMintages)
+{
+    if (ptx->IsCoinBase())
+        return;
+
+    struct Amounts
+    {
+        CAmount nTokenInputs = 0;
+        CAmount nTokenOutputs = 0;
+    };
+    std::map<CGroupTokenID, Amounts> mintages;
+
+    // Get mintages/authorities from the inputs
+    CAuth authority;
+    for (const CTxIn &txin : ptx->vin)
+    {
+        Coin coin;
+        view.GetCoin(txin.prevout, coin);
+        if (!coin.IsSpent())
+        {
+            const CTxOut &txout = coin.out;
+            CGroupTokenInfo tg(txout);
+
+            // Get the mintages in the inputs
+            if (tg.associatedGroup != NoGroup && !tg.isAuthority())
+            {
+                mintages[tg.associatedGroup].nTokenInputs += tg.quantity;
+            }
+
+            // Get the authorities in the inputs
+            if (tg.associatedGroup != NoGroup && tg.isAuthority())
+            {
+                if (accumulatedAuthorities.count(tg.associatedGroup))
+                {
+                    std::swap(authority, accumulatedAuthorities[tg.associatedGroup]);
+                }
+                authority.nMint -= tg.allowsMint();
+                authority.nMelt -= tg.allowsMelt();
+                authority.nRenew -= tg.allowsRenew();
+                authority.nRescript -= tg.allowsRescript();
+                authority.nSubgroup -= tg.allowsSubgroup();
+                accumulatedAuthorities[tg.associatedGroup] = authority;
+            }
+        }
+        else
+        {
+            DbgAssert(!coin.IsSpent(), );
+        }
+    }
+
+    // Get the mintages/authorities in the outputs.
+    bool fHaveAuthority = false;
+    bool fHaveOpReturn = false;
+    for (size_t i = 0; i < ptx->vout.size(); i++)
+    {
+        const CTxOut &out = ptx->vout[i];
+        CGroupTokenInfo tg(out.scriptPubKey);
+
+        // Get mintages from the outputs
+        if ((tg.associatedGroup != NoGroup) && !tg.isAuthority())
+        {
+            mintages[tg.associatedGroup].nTokenOutputs += tg.quantity;
+        }
+
+        // Get authorities from the outputs
+        if (out.scriptPubKey[0] == OP_RETURN)
+        {
+            fHaveOpReturn = true;
+            continue;
+        }
+
+        if ((tg.associatedGroup != NoGroup) && tg.isAuthority())
+        {
+            fHaveAuthority = true;
+
+            if (accumulatedAuthorities.count(tg.associatedGroup))
+            {
+                std::swap(authority, accumulatedAuthorities[tg.associatedGroup]);
+            }
+
+            authority.nMint += tg.allowsMint();
+            authority.nMelt += tg.allowsMelt();
+            authority.nRenew += tg.allowsRenew();
+            authority.nRescript += tg.allowsRescript();
+            authority.nSubgroup += tg.allowsSubgroup();
+            accumulatedAuthorities[tg.associatedGroup] = authority;
+        }
+    }
+
+    // If inputs for a group id equals zero and ouputs > 0, then it's a MINT.
+    // if intputs > outputs, then it's a MELT.
+    for (auto &it : mintages)
+    {
+        CAmount &nTokenInputs = it.second.nTokenInputs;
+        CAmount &nTokenOutputs = it.second.nTokenOutputs;
+
+        // Check for Mint
+        if (nTokenInputs == 0 && nTokenOutputs > 0)
+        {
+            if (!accumulatedMintages.count(it.first))
+                accumulatedMintages[it.first] = nTokenOutputs;
+            else
+                accumulatedMintages[it.first] += nTokenOutputs;
+        }
+
+        // Check for Melt
+        if (nTokenInputs > nTokenOutputs)
+        {
+            CAmount nMeltAmount = nTokenInputs - nTokenOutputs;
+            if (!accumulatedMintages.count(it.first))
+                accumulatedMintages[it.first] = -nMeltAmount;
+            else
+                accumulatedMintages[it.first] -= nMeltAmount;
+        }
+    }
+
+    // if we have both an authority and op_return then look for and update
+    // the token description information
+    if (fHaveAuthority && fHaveOpReturn)
+    {
+        tokencache.ProcessTokenDescriptions(ptx);
+    }
+}
 
 // Token Description Cache methods
 void CTokenDescCache::AddTokenDesc(const CGroupTokenID &_grpID, const std::vector<std::string> &_desc)
@@ -165,7 +291,11 @@ void CTokenDescCache::ProcessTokenDescriptions(CTransactionRef ptx)
                 const CTxOut &out2 = ptx->vout[j];
                 if (out2.scriptPubKey[0] == OP_RETURN)
                 {
-                    auto vDesc = GetTokenDescription(out2.scriptPubKey);
+                    std::vector<std::string> vDesc;
+                    if (!GetTokenDescription(out2.scriptPubKey, vDesc))
+                    {
+                        return;
+                    }
 
                     // return null authorites for now
                     vDesc.push_back("0");
@@ -182,82 +312,6 @@ void CTokenDescCache::ProcessTokenDescriptions(CTransactionRef ptx)
             if (fNewDesc)
                 break;
         }
-    }
-}
-
-void CTokenDescCache::AccumulateTokenAuthorities(CTransactionRef ptx,
-    CCoinsViewCache &view,
-    std::map<CGroupTokenID, CAuth> &accumulatedAuthorities)
-{
-    if (ptx->IsCoinBase())
-        return;
-
-    // Get the authorities in the inputs
-    CAuth authority;
-    for (const CTxIn &txin : ptx->vin)
-    {
-        Coin coin;
-        view.GetCoin(txin.prevout, coin);
-        if (!coin.IsSpent())
-        {
-            const CTxOut &txout = coin.out;
-            CGroupTokenInfo tg(txout);
-            if (tg.associatedGroup != NoGroup && tg.isAuthority())
-            {
-                if (accumulatedAuthorities.count(tg.associatedGroup))
-                {
-                    std::swap(authority, accumulatedAuthorities[tg.associatedGroup]);
-                }
-                authority.nMint -= tg.allowsMint();
-                authority.nMelt -= tg.allowsMelt();
-                authority.nRenew -= tg.allowsRenew();
-                authority.nRescript -= tg.allowsRescript();
-                authority.nSubgroup -= tg.allowsSubgroup();
-                accumulatedAuthorities[tg.associatedGroup] = authority;
-            }
-        }
-        else
-        {
-            DbgAssert(!coin.IsSpent(), );
-        }
-    }
-
-    // Get the authorities in the outputs.
-    bool fHaveAuthority = false;
-    bool fHaveOpReturn = false;
-    for (size_t i = 0; i < ptx->vout.size(); i++)
-    {
-        const CTxOut &out = ptx->vout[i];
-        if (out.scriptPubKey[0] == OP_RETURN)
-        {
-            fHaveOpReturn = true;
-            continue;
-        }
-
-        CGroupTokenInfo tg(out.scriptPubKey);
-        if ((tg.associatedGroup != NoGroup) && tg.isAuthority())
-        {
-            fHaveAuthority = true;
-
-            if (accumulatedAuthorities.count(tg.associatedGroup))
-            {
-                std::swap(authority, accumulatedAuthorities[tg.associatedGroup]);
-            }
-
-            authority.nMint += tg.allowsMint();
-            authority.nMelt += tg.allowsMelt();
-            authority.nRenew += tg.allowsRenew();
-            authority.nRescript += tg.allowsRescript();
-            authority.nSubgroup += tg.allowsSubgroup();
-            accumulatedAuthorities[tg.associatedGroup] = authority;
-        }
-    }
-
-    // if we have both an authority and op_return then look for and update
-    // the token description information
-    if (fHaveAuthority && fHaveOpReturn)
-    {
-        ProcessTokenDescriptions(ptx);
     }
 }
 
@@ -420,79 +474,6 @@ uint64_t CTokenMintCache::GetTokenMint(const CGroupTokenID &_grpID)
     else
     {
         return 0;
-    }
-}
-
-void CTokenMintCache::AccumulateTokenMintages(CTransactionRef ptx,
-    CCoinsViewCache &view,
-    std::map<CGroupTokenID, CAmount> &accumulatedMintages)
-{
-    if (ptx->IsCoinBase())
-        return;
-
-    struct Amounts
-    {
-        CAmount nTokenInputs = 0;
-        CAmount nTokenOutputs = 0;
-    };
-    std::map<CGroupTokenID, Amounts> mintages;
-
-    // Get the inputs
-    for (const CTxIn &txin : ptx->vin)
-    {
-        Coin coin;
-        view.GetCoin(txin.prevout, coin);
-        if (!coin.IsSpent())
-        {
-            const CTxOut &txout = coin.out;
-            CGroupTokenInfo tg(txout);
-            if (tg.associatedGroup != NoGroup && !tg.isAuthority())
-            {
-                mintages[tg.associatedGroup].nTokenInputs += tg.quantity;
-            }
-        }
-        else
-        {
-            DbgAssert(!coin.IsSpent(), );
-        }
-    }
-
-    // Get the outputs.
-    for (size_t i = 0; i < ptx->vout.size(); i++)
-    {
-        const CTxOut &out = ptx->vout[i];
-        CGroupTokenInfo tg(out.scriptPubKey);
-        if ((tg.associatedGroup != NoGroup) && !tg.isAuthority())
-        {
-            mintages[tg.associatedGroup].nTokenOutputs += tg.quantity;
-        }
-    }
-
-    // If inputs for a group id equals zero and ouputs > 0, then it's a MINT.
-    // if intputs > outputs, then it's a MELT.
-    for (auto &it : mintages)
-    {
-        CAmount &nTokenInputs = it.second.nTokenInputs;
-        CAmount &nTokenOutputs = it.second.nTokenOutputs;
-
-        // Check for Mint
-        if (nTokenInputs == 0 && nTokenOutputs > 0)
-        {
-            if (!accumulatedMintages.count(it.first))
-                accumulatedMintages[it.first] = nTokenOutputs;
-            else
-                accumulatedMintages[it.first] += nTokenOutputs;
-        }
-
-        // Check for Melt
-        if (nTokenInputs > nTokenOutputs)
-        {
-            CAmount nMeltAmount = nTokenInputs - nTokenOutputs;
-            if (!accumulatedMintages.count(it.first))
-                accumulatedMintages[it.first] = -nMeltAmount;
-            else
-                accumulatedMintages[it.first] -= nMeltAmount;
-        }
     }
 }
 
