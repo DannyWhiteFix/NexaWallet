@@ -1100,36 +1100,6 @@ bool ParallelAcceptToMemoryPool(Snapshot &ss,
         }
 #endif
 
-        // Check again against just the consensus-critical mandatory script
-        // verification flags, in case of bugs in the standard flags that cause
-        // transactions to pass as valid when they're actually invalid. For
-        // instance the STRICTENC flag was incorrectly allowing certain
-        // CHECKSIG NOT scripts to pass, even though they were invalid.
-        //
-        // There is a similar check in CreateNewBlock() to prevent creating
-        // invalid blocks, however allowing such transactions into the mempool
-        // can be exploited as a DoS attack.
-        unsigned char sighashType2 = 0;
-        if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS | featureFlags, true, nullptr,
-                chainparams, nullptr, &sighashType2, debugger))
-        {
-            if (debugger && debugger->InputsCheck1IsValid())
-            {
-                debugger->AddInvalidReason("CheckInputs failed against mandatory but not standard flags");
-                debugger->mineable = false;
-                debugger->futureMineable = false;
-            }
-            else
-            {
-                if (state.GetDebugMessage() == "")
-                    state.SetDebugMessage("CheckInputs failed against mandatory but not standard flags");
-
-                return error(
-                    "%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
-                    __func__, id.ToString(), FormatStateMessage(state));
-            }
-        }
-
         // Check for repend before committing the tx to the mempool
         respend.SetValid(true);
         if (respend.IsRespend())
