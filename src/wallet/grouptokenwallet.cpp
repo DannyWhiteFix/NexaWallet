@@ -199,7 +199,12 @@ void GetAllGroupDescriptions(const CWallet *wallet,
             if (out.scriptPubKey[0] == OP_RETURN)
             {
                 fOpReturn = true;
-                desc[tg.associatedGroup] = GetTokenDescription(out.scriptPubKey);
+                std::vector<std::string> vDesc;
+                if (!GetTokenDescription(out.scriptPubKey, vDesc))
+                {
+                    return;
+                }
+                desc[tg.associatedGroup] = vDesc;
                 break;
             }
         }

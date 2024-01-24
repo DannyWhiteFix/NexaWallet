@@ -1567,7 +1567,7 @@ BOOST_AUTO_TEST_CASE(grouptoken_descriptions)
     opretScript = BuildTokenDescScript(desc);
 
     std::vector<std::string> vLabels;
-    vLabels = GetTokenDescription(opretScript);
+    GetTokenDescription(opretScript, vLabels);
     BOOST_CHECK_EQUAL(ticker, vLabels[0]);
     BOOST_CHECK_EQUAL(name, vLabels[1]);
     BOOST_CHECK_EQUAL(url, vLabels[2]);
@@ -1584,7 +1584,7 @@ BOOST_AUTO_TEST_CASE(grouptoken_descriptions)
     {
         ret1 << d;
     }
-    vLabels = GetTokenDescription(ret1);
+    GetTokenDescription(ret1, vLabels);
     BOOST_CHECK(vLabels.empty());
 
     // Test that OP_RETURN must be present in the script
@@ -1596,7 +1596,7 @@ BOOST_AUTO_TEST_CASE(grouptoken_descriptions)
     {
         ret2 << d;
     }
-    vLabels = GetTokenDescription(ret2);
+    GetTokenDescription(ret2, vLabels);
     BOOST_CHECK(vLabels.empty());
 
     // Test that not data returns with a nulled description string
@@ -1604,7 +1604,7 @@ BOOST_AUTO_TEST_CASE(grouptoken_descriptions)
 
     CScript ret3;
     ret3 << OP_RETURN << OpRetGroupId;
-    vLabels = GetTokenDescription(ret3);
+    GetTokenDescription(ret3, vLabels);
     BOOST_CHECK_EQUAL(vLabels[0], "");
     BOOST_CHECK_EQUAL(vLabels[1], "");
     BOOST_CHECK_EQUAL(vLabels[2], "");
@@ -1624,7 +1624,7 @@ BOOST_AUTO_TEST_CASE(grouptoken_descriptions)
         ret4 << d;
     }
 
-    vLabels = GetTokenDescription(ret4);
+    GetTokenDescription(ret4, vLabels);
     BOOST_CHECK_EQUAL(vLabels.size(), 5);
 
     BOOST_CHECK_EQUAL(vLabels[0], "AAA");
