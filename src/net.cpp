@@ -36,6 +36,8 @@
 #include "utilstrencodings.h"
 
 extern CTweak<bool> ignoreNetTimeouts;
+extern uint64_t nReceiveBufferSize;
+extern uint64_t nSendBufferSize;
 
 #ifdef WIN32
 #include <string.h>
@@ -3283,8 +3285,9 @@ bool CAddrDB::Read(CAddrMan &addr, CDataStream &ssPeers)
     return true;
 }
 
-unsigned int ReceiveFloodSize() { return 1000 * GetArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER); }
-unsigned int SendBufferSize() { return 1000 * GetArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER); }
+unsigned int ReceiveFloodSize() { return nReceiveBufferSize; }
+unsigned int SendBufferSize() { return nSendBufferSize; }
+
 CNode::CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNameIn, bool fInboundIn)
     : extversionEnabled(false), skipChecksum(false), ssSend(SER_NETWORK, INIT_PROTO_VERSION), id(connmgr->NextNodeId()),
       addrKnown(5000, 0.001)
