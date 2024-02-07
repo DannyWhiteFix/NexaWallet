@@ -629,14 +629,7 @@ public:
     std::atomic<bool> fDownloading{false};
     void LookAhead() EXCLUSIVE_LOCKS_REQUIRED(cs_vRecvMsg);
 
-    void SetRecvVersion(int nVersionIn)
-    {
-        LOCK(cs_vRecvMsg);
-        nRecvVersion = nVersionIn;
-        for (CNetMessage &message : vRecvMsg)
-            message.SetVersion(nVersionIn);
-    }
-
+    void SetRecvVersion(int nVersionIn) { nRecvVersion = nVersionIn; }
     const CMessageHeader::MessageStartChars &GetMagic(const CChainParams &params) const
     {
         if (netMagic.Value() != 0)
