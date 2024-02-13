@@ -1469,7 +1469,6 @@ void ThreadSocketHandler()
                     if (lockSend && (!pnode->vSendMsg.empty() || !pnode->vLowPrioritySendMsg.empty()))
                     {
                         FD_SET(hSocket, &fdsetSend);
-                        continue;
                     }
                 }
                 {
