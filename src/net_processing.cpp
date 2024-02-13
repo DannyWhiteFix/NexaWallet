@@ -980,12 +980,6 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
 
             // Track requests for our stuff.
             GetMainSignals().Inventory(inv.hash);
-
-            if (pfrom->nSendSize > (SendBufferSize() * 2))
-            {
-                dosMan.Misbehaving(pfrom, 50);
-                return error("send buffer size() = %u", pfrom->nSendSize);
-            }
         }
     }
 
