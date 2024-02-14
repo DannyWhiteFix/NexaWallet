@@ -4,6 +4,7 @@
 from ctypes import *
 from test_framework.nodemessages import *
 from test_framework.constants import *
+from test_framework.ripemd160 import *
 from test_framework.util import findBitcoind
 from binascii import hexlify, unhexlify
 from enum import IntEnum, IntFlag
@@ -92,9 +93,7 @@ def hash256(s):
 
 def hash160(msg):
     """RIPEMD160(SHA256(msg)) -> bytes"""
-    h = hashlib.new('ripemd160')
-    h.update(hashlib.sha256(msg).digest())
-    return h.digest()
+    return ripemd160(hashlib.sha256(msg).digest())
 
 
 def bin2hex(data):

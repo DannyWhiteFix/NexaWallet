@@ -49,6 +49,7 @@ from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
 # Constants for floweethehub (see floweeconst.py)
 from .floweeconst import *
+from .ripemd160 import *
 
 COVERAGE_DIR = None
 
@@ -93,9 +94,7 @@ def hash256(s):
 
 def hash160(msg):
     """RIPEME160(SHA256(msg)) -> bytes"""
-    h = hashlib.new('ripemd160')
-    h.update(hashlib.sha256(msg).digest())
-    return h.digest()
+    return ripemd160(hashlib.sha256(msg).digest())
 
 def deser_uint256(f):
     if isinstance(f, bytes):
