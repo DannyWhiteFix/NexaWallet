@@ -94,25 +94,25 @@ class WalletTest (BitcoinTestFramework):
         addr2 = n.getnewaddress("p2pkt")
         sig = n.signmessage(addr, "test message")
         assert n.verifymessage(addr, sig, "test message") == True
-        assert n.verifymessage(addr, sig, "test messag") == False
-        assert n.verifymessage(addr2, sig, "test message") == False
+        assert n.verifymessage(addr, sig, "test messag") != True
+        assert n.verifymessage(addr2, sig, "test message") != True
 
         # Node that didn't sign should be able to verify as well
         assert n2.verifymessage(addr, sig, "test message") == True
-        assert n2.verifymessage(addr, sig, "test messag") == False
-        assert n2.verifymessage(addr2, sig, "test message") == False
+        assert n2.verifymessage(addr, sig, "test messag") != True
+        assert n2.verifymessage(addr2, sig, "test message") != True
 
         addr = n.getnewaddress("p2pkh")
         addr2 = n.getnewaddress("p2pkh")
         sig = n.signmessage(addr, "test message")
         assert n.verifymessage(addr, sig, "test message") == True
-        assert n.verifymessage(addr, sig, "test messag") == False
-        assert n.verifymessage(addr2, sig, "test message") == False
+        assert n.verifymessage(addr, sig, "test messag") != True
+        assert n.verifymessage(addr2, sig, "test message") != True
 
         # Node that didn't sign should be able to verify as well
         assert n2.verifymessage(addr, sig, "test message") == True
-        assert n2.verifymessage(addr, sig, "test messag") == False
-        assert n2.verifymessage(addr2, sig, "test message") == False
+        assert n2.verifymessage(addr, sig, "test messag") != True
+        assert n2.verifymessage(addr2, sig, "test message") != True
 
     def run_test (self):
         addrType = self.options.addrType

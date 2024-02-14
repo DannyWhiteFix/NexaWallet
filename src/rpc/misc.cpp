@@ -496,7 +496,7 @@ UniValue verifymessage(const UniValue &params, bool fHelp)
     std::string error = "";
     if (!VerifyMessage(params, error))
     {
-        return false;
+        return error;
     }
     else
     {
