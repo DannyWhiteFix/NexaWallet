@@ -128,6 +128,7 @@ extern CFastFilter<4 * 1024 * 1024> incomingConflicts;
 extern CCriticalSection csTxInQ;
 extern CCond cvTxInQ;
 extern std::queue<CTxInputData> txInQ;
+extern std::queue<CTxInputData> txOrphanQ;
 
 // Transactions that cannot be processed in this round (may potentially conflict with other tx)
 // Guarded by csTxInQ
@@ -152,7 +153,7 @@ void StopTxAdmission();
 void FlushTxAdmission();
 
 /// Put the tx on the tx admission queue for processing
-void EnqueueTxForAdmission(CTxInputData &txd);
+void EnqueueTxForAdmission(CTxInputData &txd, bool fOrphan = false);
 
 /** (try to) add transaction to memory pool **/
 bool AcceptToMemoryPool(CTxMemPool &pool,

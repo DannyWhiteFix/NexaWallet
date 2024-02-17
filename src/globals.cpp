@@ -278,6 +278,7 @@ CFastFilter<4 * 1024 * 1024> incomingConflicts GUARDED_BY(csTxInQ);
 
 // Tranactions that are waiting for validation and are known not to conflict with others
 std::queue<CTxInputData> txInQ GUARDED_BY(csTxInQ);
+std::queue<CTxInputData> txOrphanQ GUARDED_BY(csTxInQ);
 
 // Transaction that cannot be processed in this round (may potentially conflict with other tx)
 std::queue<CTxInputData> txDeferQ GUARDED_BY(csTxInQ);

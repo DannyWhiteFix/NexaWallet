@@ -48,7 +48,7 @@ extern CTweak<uint32_t> limitFreeRelay;
 
 using namespace std;
 
-static void TestConflictEnqueueTx(CTxInputData &txd);
+static void TestConflictEnqueueTx(CTxInputData &txd, bool fOrphan = false);
 
 // The average commit batch size is used to limit the quantity of transactions that are moved from the defer queue
 // onto the inqueue.  Without this, if received transactions far outstrip processing capacity, transactions can be
@@ -112,7 +112,7 @@ void FlushTxAdmission()
         {
             {
                 LOCK(csTxInQ);
-                empty = txInQ.empty() & txDeferQ.empty();
+                empty = txInQ.empty() & txDeferQ.empty() & txOrphanQ.empty();
             }
             if (!empty)
                 MilliSleep(100);
@@ -130,7 +130,7 @@ void FlushTxAdmission()
             CORRAL(txProcessingCorral, CORRAL_TX_PAUSE);
             {
                 LOCK(csTxInQ);
-                empty = txInQ.empty() & txDeferQ.empty();
+                empty = txInQ.empty() & txDeferQ.empty() & txOrphanQ.empty();
             }
             {
                 std::unique_lock<std::mutex> lock(csCommitQ);
@@ -141,7 +141,7 @@ void FlushTxAdmission()
 }
 
 // Put the tx on the tx admission queue for processing
-void EnqueueTxForAdmission(CTxInputData &txd)
+void EnqueueTxForAdmission(CTxInputData &txd, bool fOrphan)
 {
     LOCK(csTxInQ);
     // If I have lots of deferred tx, its probably because there's too much volume, so defer new ones right away
@@ -151,11 +151,12 @@ void EnqueueTxForAdmission(CTxInputData &txd)
         return;
     }
 
+
     // Otherwise go ahead and put them on the queue
-    TestConflictEnqueueTx(txd);
+    TestConflictEnqueueTx(txd, fOrphan);
 }
 
-static void TestConflictEnqueueTx(CTxInputData &txd)
+static void TestConflictEnqueueTx(CTxInputData &txd, bool fOrphan)
 {
     bool conflict = false;
     for (auto &inp : txd.tx->vin)
@@ -173,9 +174,19 @@ static void TestConflictEnqueueTx(CTxInputData &txd)
     // transaction it conflicts with has been fully processed.
     if (!conflict)
     {
-        // LOG(MEMPOOL, "Enqueue for processing %x\n", txd.tx->GetId().ToString());
-        txInQ.push(txd); // add this transaction onto the processing queue.
+        // Add this transaction onto the processing queue.  Orphans are added to a separate
+        // queue so they can be processed first. This way as other txns that arrive and depend
+        // on this orphan will not cause the orphan pool to get filled up further.
+        if (fOrphan)
+        {
+            txOrphanQ.push(txd);
+        }
+        else
+        {
+            txInQ.push(txd);
+        }
         cvTxInQ.notify_one();
+        // LOG(MEMPOOL, "Enqueue for processing %x\n", txd.tx->GetId().ToString());
     }
     else
     {
@@ -387,7 +398,7 @@ void CommitTxToMempool()
         for (auto &it : mapWasDeferred)
         {
             // LOG(MEMPOOL, "attempt enqueue deferred %s\n", it.first.ToString());
-            TestConflictEnqueueTx(it.second);
+            TestConflictEnqueueTx(it.second, false);
         }
     }
 
@@ -437,7 +448,7 @@ void ThreadTxAdmission()
 
         {
             CCriticalBlock lock(csTxInQ, "csTxInQ", __FILE__, __LINE__, LockType::RECURSIVE_MUTEX);
-            while (txInQ.empty() && shutdown_threads.load() == false)
+            while (txInQ.empty() && txOrphanQ.empty() && shutdown_threads.load() == false)
             {
                 if (shutdown_threads.load() == true)
                 {
@@ -454,29 +465,44 @@ void ThreadTxAdmission()
         {
             CORRAL(txProcessingCorral, CORRAL_TX_PROCESSING);
 
+            bool fOrphansEmpty = false;
             for (unsigned int txPerRoundCount = 0; txPerRoundCount < maxTxPerRound; txPerRoundCount++)
             {
                 // tx must be popped within the TX_PROCESSING corral or the state break between processing
                 // and commitment will not be clean
+                bool fIsOrphan = false;
                 {
                     CCriticalBlock lock(csTxInQ, "csTxInQ", __FILE__, __LINE__, LockType::RECURSIVE_MUTEX);
-                    if (txInQ.empty())
+
+                    if (!txOrphanQ.empty())
                     {
-                        // speed up tx chunk processing when there is nothing else to do
-                        if (acceptedSomething)
-                            cvCommitQ.notify_all();
+                        txd = std::move(txOrphanQ.front());
+                        txOrphanQ.pop();
+                        fIsOrphan = true;
+
+                        // If the orphanQ is empty after processing at least one of them,
+                        // then We need to run the commitQ processing, so that we can get the txns
+                        // into the mempool and which will allow us to process the next batch of orphans.
+                        if (txOrphanQ.empty())
+                        {
+                            fOrphansEmpty = true;
+                        }
+                    }
+                    else if (!txInQ.empty())
+                    {
+                        txd = std::move(txInQ.front());
+                        txInQ.pop();
+                    }
+                    else
+                    {
                         break;
                     }
-
-                    // Make a copy so we can pop and release
-                    txd = txInQ.front();
-                    txInQ.pop();
                 }
 
                 CTransactionRef tx = txd.tx;
                 CInv inv(MSG_TX, tx->GetId());
 
-                if (!TxAlreadyHave(inv))
+                if (fIsOrphan || !TxAlreadyHave(inv))
                 {
                     std::vector<COutPoint> vCoinsToUncache;
                     bool isRespend = false;
@@ -568,9 +594,15 @@ void ThreadTxAdmission()
                         }
                     }
                 }
+                if (fOrphansEmpty)
+                    break;
+            } // end for
+            if (acceptedSomething)
+            {
+                cvCommitQ.notify_all();
             }
-        }
-    }
+        } // end corral
+    } // end while
 }
 
 
@@ -1263,7 +1295,7 @@ uint64_t ProcessOrphans(const std::vector<CTransactionRef> &vWorkQueue)
             }
         }
         for (auto &txd : vEnqueue)
-            EnqueueTxForAdmission(txd);
+            EnqueueTxForAdmission(txd, true);
     }
 
     return orphanpool.GetOrphanPoolSize();
