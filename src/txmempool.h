@@ -25,7 +25,7 @@
 #include <boost/thread/mutex.hpp>
 
 extern CTweak<uint32_t> txPoolExpiry;
-extern CTweak<uint32_t> maxTxPool;
+extern CTweak<uint64_t> maxTxPool;
 extern CTweak<bool> persistTxPool;
 
 /** Default -cache.persistTxPool */

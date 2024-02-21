@@ -628,7 +628,7 @@ CTweak<int> maxReorgDepth("blockchain.maxReorgDepth",
     DEFAULT_MAX_REORG_DEPTH);
 
 /** How large in MB do we allow in the transaction pool to get */
-CTweak<uint32_t> maxTxPool("cache.maxTxPool",
+CTweak<uint64_t> maxTxPool("cache.maxTxPool",
     strprintf("Keep the transaction memory pool below <n> megabytes (default: %u)", DEFAULT_MAX_MEMPOOL_SIZE),
     DEFAULT_MAX_MEMPOOL_SIZE);
 
