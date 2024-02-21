@@ -472,7 +472,7 @@ class BlockchainTest(BitcoinTestFramework):
     def _test_transaction_pools(self):
         node = self.nodes[0]
 
-        # main txn pool
+        # check main txpool
         res = node.gettxpoolinfo()
         assert_equal(res['size'], 0)
         assert_equal(res['bytes'], 0)
@@ -481,7 +481,12 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(res['maxtxpool'], 300000000)
         assert_equal(res['txpoolminfee'], Decimal('0E-8'))
 
-        # orphan pool
+        # check we can set a high txpool size greater than a uint32_t
+        node.set("cache.maxTxPool=7000")
+        res = node.gettxpoolinfo()
+        assert_equal(res['maxtxpool'], 7000000000)
+
+        # check orphan pool
         res2 = node.getorphanpoolinfo()
         assert_equal(res2['size'], 0)
         assert_equal(res2['bytes'], 0)

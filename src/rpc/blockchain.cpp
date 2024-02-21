@@ -1662,7 +1662,7 @@ UniValue mempoolInfoToJSON()
     ret.pushKV("size", (int64_t)mempool.size());
     ret.pushKV("bytes", (int64_t)mempool.GetTotalTxSize());
     ret.pushKV("usage", (int64_t)mempool.DynamicMemoryUsage());
-    ret.pushKV("maxtxpool", (int64_t)maxTxPool.Value() * ONE_MEGABYTE);
+    ret.pushKV("maxtxpool", maxTxPool.Value() * ONE_MEGABYTE);
     int64_t minfee = (int64_t)::minRelayTxFee.GetFeePerK();
     ret.pushKV("txpoolminfee", ValueFromAmount(minfee));
     double smoothedTps = 0.0, instantaneousTps = 0.0, peakTps = 0.0;
