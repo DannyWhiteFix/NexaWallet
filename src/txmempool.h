@@ -525,6 +525,13 @@ public:
 
     DoubleSpendProofStorage *doubleSpendProofStorage() const;
 
+    /** Returns the instantaneous tx per second rate as a uint64_t */
+    uint64_t GetInstantaneousTxPerSec()
+    {
+        std::lock_guard<std::mutex> lock(cs_txPerSec);
+        return nInstantaneousTxPerSec;
+    }
+
 private:
     typedef std::map<TxIdIter, setEntries, CompareIteratorById> cacheMap;
 
