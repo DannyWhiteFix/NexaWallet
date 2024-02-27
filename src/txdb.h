@@ -217,6 +217,7 @@ public:
     bool WriteDesc(const CGroupTokenID &grpID, const std::vector<std::string> &desc);
     bool ReadSyncFlag(bool &fSyncFlag) const;
     bool WriteSyncFlag(const bool fSyncFlag);
+    const std::vector<CGroupTokenID> GetAllTokenGroups();
 };
 
 /** Access to the token mintage database (indexes/tokenmint */
