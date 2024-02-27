@@ -854,6 +854,32 @@ bool CTokenDescriptionDB::ReadSyncFlag(bool &fSyncFlag) const { return Read(DB_T
 
 bool CTokenDescriptionDB::WriteSyncFlag(const bool fSyncFlag) { return Write(DB_TOKEN_DESC, fSyncFlag); }
 
+const std::vector<CGroupTokenID> CTokenDescriptionDB::GetAllTokenGroups()
+{
+    std::vector<CGroupTokenID> ret;
+    std::unique_ptr<CDBIterator> pcursor(NewIterator());
+    pcursor->Seek(make_pair(DB_TOKEN_DESC, std::vector<std::string>()));
+    // Load mapBlockIndex
+    while (pcursor->Valid())
+    {
+        if (shutdown_threads.load() == true)
+        {
+            return ret;
+        }
+        std::pair<char, CGroupTokenID> key;
+        if (pcursor->GetKey(key) && key.first == DB_TOKEN_DESC)
+        {
+            ret.emplace_back(std::move(key.second));
+            pcursor->Next();
+        }
+        else
+        {
+            break;
+        }
+    }
+    return ret;
+}
+
 CTokenMintageDB::CTokenMintageDB(size_t n_cache_size, bool f_memory, bool f_wipe)
     : CDBWrapper(GetDataDir() / "indexes" / "tokenmint", n_cache_size, f_memory, f_wipe)
 {

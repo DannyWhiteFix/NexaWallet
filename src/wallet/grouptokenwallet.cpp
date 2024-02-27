@@ -2110,3 +2110,53 @@ UniValue groupedlistsinceblock(const UniValue &params, bool fHelp)
 
     return ret;
 }
+
+UniValue dumptokenset(const UniValue &params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw std::runtime_error(
+            "dumptokenset \"filename\"\n"
+            "Dumps all generated group ids in the token description database, one per line using a comma separetad "
+            "format (json array)\n"
+            //"overwriting "
+            //"existing files is not permitted.\n"
+            //"\nArguments:\n"
+            //"1. \"filename\"    (string, required) The filename with path (either absolute or relative to nexad)\n"
+            "\nResult:\n"
+            //"{                           (json object)\n"
+            //"  \"filename\" : {        (string) The filename with full absolute path\n"
+            "[\n"
+            "group id 1,\n"
+            "...,\n"
+            "group id N\n"
+            "]\n"
+            //"}\n"
+            "\nExamples:\n" +
+            // HelpExampleCli("dumptokenset", "\"test\"") + HelpExampleRpc("dumptokenset", "\"test\""));
+            HelpExampleCli("dumptokenset", "") + HelpExampleRpc("dumptokenset", ""));
+
+    /*
+    fs::path filepath = params[0].get_str();
+    filepath = fs::absolute(filepath);
+
+    if (fs::exists(filepath))
+    {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+            filepath.string() + " already exists. if you are sure this is what you want, move it out of the way first");
+    }
+    std::ofstream file;
+    file.open(filepath.string().c_str());
+    if (!file.is_open())
+    {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open utxo dump file");
+    }
+    file.close();
+    */
+    UniValue ret(UniValue::VARR);
+    std::vector<CGroupTokenID> all_grps = ptokenDesc->GetAllTokenGroups();
+    for (const auto &grp : all_grps)
+    {
+        ret.push_back(EncodeGroupToken(grp));
+    }
+    return ret;
+}
