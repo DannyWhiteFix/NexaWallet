@@ -2115,8 +2115,8 @@ UniValue dumptokenset(const UniValue &params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw std::runtime_error(
-            "dumptokenset \"filename\"\n"
-            "Dumps all generated group ids in the token description database, one per line using a comma separetad "
+            "dumptokenset\n"
+            "Dumps all generated group ids in the token description database, one per line using a comma separated "
             "format (json array)\n"
             //"overwriting "
             //"existing files is not permitted.\n"
