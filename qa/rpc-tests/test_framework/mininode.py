@@ -528,7 +528,7 @@ class P2PDataStore(SingleNodeConnCB):
         if not self.block_store:
             return
 
-        headers_list = [self.block_store[self.last_block_hash]]
+        headers_list = [CBlockHeader(self.block_store[self.last_block_hash])]
         maxheaders = 2000
         while headers_list[-1].gethash() not in locator.vHave:
             # Walk back through the block store, adding headers to headers_list
