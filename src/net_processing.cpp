@@ -35,7 +35,7 @@
 
 extern std::atomic<int64_t> nTimeBestReceived;
 extern std::atomic<int> nPreferredDownload;
-extern int nSyncStarted;
+extern std::atomic<int> nSyncStarted;
 extern CTweak<unsigned int> maxBlocksInTransitPerPeer;
 extern CTweak<uint64_t> grapheneMinVersionSupported;
 extern CTweak<uint64_t> grapheneMaxVersionSupported;

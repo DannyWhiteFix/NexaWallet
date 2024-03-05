@@ -1717,50 +1717,50 @@ struct CompareBlocksByHeight
 
 void MarkAllContainingChainsInvalid(CBlockIndex *invalidBlock)
 {
-    LOCK(cs_main); // setDirtyBlockIndex
-    READLOCK(cs_mapBlockIndex);
-
     bool dirty = false;
-    DbgAssert(invalidBlock->nStatus & BLOCK_FAILED_MASK, return);
-
-    // Find all the chain tips:
-    std::set<CBlockIndex *, CompareBlocksByHeight> setTips;
-    std::set<CBlockIndex *> setOrphans;
-    std::set<CBlockIndex *> setPrevs;
-
-    for (const PAIRTYPE(const uint256, CBlockIndex *) & item : mapBlockIndex)
     {
-        if (!chainActive.Contains(item.second))
-        {
-            setOrphans.insert(item.second);
-            setPrevs.insert(item.second->pprev);
-        }
-    }
+        READLOCK(cs_mapBlockIndex);
+        DbgAssert(invalidBlock->nStatus & BLOCK_FAILED_MASK, return);
 
-    for (std::set<CBlockIndex *>::iterator it = setOrphans.begin(); it != setOrphans.end(); ++it)
-    {
-        if (setPrevs.erase(*it) == 0)
-        {
-            setTips.insert(*it);
-        }
-    }
+        // Find all the chain tips:
+        std::set<CBlockIndex *, CompareBlocksByHeight> setTips;
+        std::set<CBlockIndex *> setOrphans;
+        std::set<CBlockIndex *> setPrevs;
 
-    // Always report the currently active tip.
-    setTips.insert(chainActive.Tip());
-
-    for (CBlockIndex *tip : setTips)
-    {
-        if (tip->GetAncestor(invalidBlock->height()) == invalidBlock)
+        for (const PAIRTYPE(const uint256, CBlockIndex *) & item : mapBlockIndex)
         {
-            for (CBlockIndex *blk = tip; blk != invalidBlock; blk = blk->pprev)
+            if (!chainActive.Contains(item.second))
             {
-                blk->nStatus |= BLOCK_FAILED_VALID;
+                setOrphans.insert(item.second);
+                setPrevs.insert(item.second->pprev);
+            }
+        }
 
-                if ((blk->nStatus & BLOCK_FAILED_CHILD) == 0)
+        for (std::set<CBlockIndex *>::iterator it = setOrphans.begin(); it != setOrphans.end(); ++it)
+        {
+            if (setPrevs.erase(*it) == 0)
+            {
+                setTips.insert(*it);
+            }
+        }
+
+        // Always report the currently active tip.
+        setTips.insert(chainActive.Tip());
+
+        for (CBlockIndex *tip : setTips)
+        {
+            if (tip->GetAncestor(invalidBlock->height()) == invalidBlock)
+            {
+                for (CBlockIndex *blk = tip; blk != invalidBlock; blk = blk->pprev)
                 {
-                    blk->nStatus |= BLOCK_FAILED_CHILD;
-                    setDirtyBlockIndex.insert(blk);
-                    dirty = true;
+                    blk->nStatus |= BLOCK_FAILED_VALID;
+
+                    if ((blk->nStatus & BLOCK_FAILED_CHILD) == 0)
+                    {
+                        blk->nStatus |= BLOCK_FAILED_CHILD;
+                        setDirtyBlockIndex.insert(blk);
+                        dirty = true;
+                    }
                 }
             }
         }

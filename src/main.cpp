@@ -103,32 +103,18 @@ extern CTweak<uint32_t> limitFreeRelay;
 extern std::map<CNetAddr, ConnectionHistory> mapInboundConnectionTracker;
 extern CCriticalSection cs_mapInboundConnectionTracker;
 
-extern CCriticalSection cs_LastBlockFile;
 
-extern std::map<uint256, NodeId> mapBlockSource;
-extern std::set<int> setDirtyFileInfo;
-extern uint64_t nBlockSequenceId;
-
-
-/** Number of nodes with fSyncStarted. */
-int nSyncStarted = 0;
+/** Number of nodes with fSyncStarted set to true. */
+std::atomic<int> nSyncStarted{0};
 
 /** Number of preferable block download peers. */
 std::atomic<int> nPreferredDownload{0};
-
-/** All pairs A->B, where A (or one of its ancestors) misses transactions, but B has transactions.
- * Pruned nodes may have entries where B is missing data.
- */
-std::multimap<CBlockIndex *, CBlockIndex *> mapBlocksUnlinked;
 
 /** Global flag to indicate we should check to see if there are
  *  block/undo files that should be deleted.  Set on startup
  *  or if we allocate more file space when we're in prune mode
  */
-bool fCheckForPruning = false;
-
-std::vector<CBlockFileInfo> vinfoBlockFile;
-int nLastBlockFile = 0;
+std::atomic<bool> fCheckForPruning = false;
 
 //////////////////////////////////////////////////////////////////////////////
 //

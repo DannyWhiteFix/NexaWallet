@@ -46,6 +46,8 @@ extern CTweak<int> maxReorgDepth;
 extern CTweak<bool> pvtest;
 extern std::atomic<uint64_t> nTotalChainTx;
 
+extern CCriticalSection cs_LastBlockFile;
+
 class Hasher
 {
 private:
@@ -103,7 +105,7 @@ struct CBlockIndexWorkComparator
  * as good as our current tip or better. Entries may be failed, though, and pruning nodes may be
  * missing the data for the block.
  */
-std::set<CBlockIndex *, CBlockIndexWorkComparator> setBlockIndexCandidates GUARDED_BY(cs_main);
+std::set<CBlockIndex *, CBlockIndexWorkComparator> setBlockIndexCandidates GUARDED_BY(cs_mapBlockIndex);
 
 // Last time the block tip was updated
 std::atomic<int64_t> nTimeBestReceived{0};
@@ -124,6 +126,8 @@ extern std::atomic<int> nPreferredDownload;
 extern int nSyncStarted;
 extern bool fLargeWorkForkFound;
 extern bool fLargeWorkInvalidChainFound;
+extern std::vector<CBlockFileInfo> vinfoBlockFile;
+extern int nLastBlockFile;
 
 static int64_t nTimeCheck = 0;
 static int64_t nTimeVerify = 0;
@@ -325,9 +329,10 @@ bool AcceptBlockHeader(const CBlockHeader &block,
 //
 
 /** Delete all entries in setBlockIndexCandidates that are worse than the current tip. */
-void PruneBlockIndexCandidates()
+static void _PruneBlockIndexCandidates()
 {
-    AssertLockHeld(cs_main);
+    AssertWriteLockHeld(cs_mapBlockIndex);
+
     if (setBlockIndexCandidates.empty())
         return; // nothing to prune
 
@@ -339,10 +344,15 @@ void PruneBlockIndexCandidates()
         setBlockIndexCandidates.erase(it++);
     }
 }
+void PruneBlockIndexCandidates()
+{
+    WRITELOCK(cs_mapBlockIndex);
+    _PruneBlockIndexCandidates();
+}
 
 CBlockIndex *AddToBlockIndex(const CChainParams &chainparams, const CBlockHeader &block)
 {
-    AssertLockHeld(cs_main); // For setDirtyBlockIndex
+    AssertLockHeld(cs_main);
     WRITELOCK(cs_mapBlockIndex);
     // Check for duplicate
     uint256 hash = block.GetHash();
@@ -386,9 +396,11 @@ CBlockIndex *AddToBlockIndex(const CChainParams &chainparams, const CBlockHeader
         pindexNew->nStatus = (pindexNew->nStatus & ~BLOCK_VALID_MASK) | BLOCK_VALID_TREE;
 
     assert((pindexNew->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TREE);
+
     // Insert the record in the map
     BlockMap::iterator mi = mapBlockIndex.insert(std::make_pair(hash, pindexNew)).first;
     pindexNew->phashBlock = &((*mi).first);
+    setDirtyBlockIndex.insert(pindexNew);
 
     // If the block belongs to the set of check-pointed blocks but it has a mismatched hash,
     // then we are on the wrong fork so ignore.
@@ -414,8 +426,6 @@ CBlockIndex *AddToBlockIndex(const CChainParams &chainparams, const CBlockHeader
 
     // Update the ui if the best header has changed.
     NotifyHeaderTip();
-
-    setDirtyBlockIndex.insert(pindexNew);
 
     return pindexNew;
 }
@@ -679,7 +689,7 @@ bool LoadBlockIndexDB()
     // set the current maximum sequence id in the block index
     nBlockSequenceId = mapBlockIndex.size() + 1;
 
-    PruneBlockIndexCandidates();
+    _PruneBlockIndexCandidates();
 
     LOGA("%s: hashBestChain=%s height=%d date=%s progress=%f\n", __func__, chainActive.Tip()->GetBlockHash().ToString(),
         chainActive.Height(), FormatISO8601DateTime(chainActive.Tip()->GetBlockTime()),
@@ -712,18 +722,11 @@ void UnloadBlockIndex()
         LOCK(cs_main);
         nBlockSequenceId = 1;
         nSyncStarted = 0;
-        nLastBlockFile = 0;
-        setBlockIndexCandidates.clear();
         chainActive.SetTip(nullptr);
         pindexBestInvalid = nullptr;
         pindexBestHeader = nullptr;
         ResetASERTAnchorBlockCache();
-        mapBlocksUnlinked.clear();
-        vinfoBlockFile.clear();
         mapBlockSource.clear();
-        setDirtyBlockIndex.clear();
-        setDirtyFileInfo.clear();
-        versionbitscache.Clear();
         for (int b = 0; b < Consensus::MAX_VERSION_BITS_DEPLOYMENTS; b++)
         {
             warningcache[b].clear();
@@ -732,12 +735,21 @@ void UnloadBlockIndex()
 
     {
         WRITELOCK(cs_mapBlockIndex);
-
+        setDirtyBlockIndex.clear();
+        versionbitscache.Clear();
         for (BlockMap::value_type &entry : mapBlockIndex)
         {
             delete entry.second;
         }
         mapBlockIndex.clear();
+        mapBlocksUnlinked.clear();
+        setBlockIndexCandidates.clear();
+    }
+    {
+        LOCK(cs_LastBlockFile);
+        setDirtyFileInfo.clear();
+        vinfoBlockFile.clear();
+        nLastBlockFile = 0;
     }
 
     fHavePruned = false;
@@ -1311,11 +1323,11 @@ bool CheckInputs(const CTransactionRef &tx,
 
 bool ReconsiderBlock(CValidationState &state, CBlockIndex *pindex)
 {
-    AssertLockHeld(cs_main); // for setDirtyBlockIndex
+    AssertLockHeld(cs_main);
 
     int nHeight = pindex->height();
 
-    READLOCK(cs_mapBlockIndex);
+    WRITELOCK(cs_mapBlockIndex);
     // Remove the invalidity flag from this block and all its descendants.
     BlockMap::iterator it = mapBlockIndex.begin();
     while (it != mapBlockIndex.end())
@@ -1535,16 +1547,16 @@ CBlockIndex *FindMostWorkChain()
 
 bool InvalidateBlock(CValidationState &state, const Consensus::Params &consensusParams, CBlockIndex *pindex)
 {
-    AssertLockHeld(cs_main); // for setDirtyBlockIndex
+    AssertLockHeld(cs_main);
 
     // Mark the block itself as invalid.
     {
         {
             WRITELOCK(cs_mapBlockIndex);
             pindex->nStatus |= BLOCK_FAILED_VALID;
+            setDirtyBlockIndex.insert(pindex);
+            setBlockIndexCandidates.erase(pindex);
         }
-        setDirtyBlockIndex.insert(pindex);
-        setBlockIndexCandidates.erase(pindex);
 
         // Lock block validation threads to make sure no new inbound block announcements
         // cause any block validation state to change while we're unwinding the chain.
@@ -1556,9 +1568,9 @@ bool InvalidateBlock(CValidationState &state, const Consensus::Params &consensus
             {
                 WRITELOCK(cs_mapBlockIndex);
                 pindexWalk->nStatus |= BLOCK_FAILED_CHILD;
+                setDirtyBlockIndex.insert(pindexWalk);
+                setBlockIndexCandidates.erase(pindexWalk);
             }
-            setDirtyBlockIndex.insert(pindexWalk);
-            setBlockIndexCandidates.erase(pindexWalk);
             // ActivateBestChain considers blocks already in chainActive
             // unconditionally valid already, so force disconnect away from it.
             if (!DisconnectTip(state, consensusParams))
@@ -1820,8 +1832,8 @@ bool ReceivedBlockTransactions(ConstCBlockRef pblock,
     CBlockIndex *pindexNew,
     const CDiskBlockPos &pos)
 {
-    AssertLockHeld(cs_main); // for setBlockIndexCandidates & setDirtyBlockIndex
-    WRITELOCK(cs_mapBlockIndex); // for nStatus and nSequenceId
+    AssertLockHeld(cs_main);
+    WRITELOCK(cs_mapBlockIndex);
 
     pindexNew->nStatus |= BLOCK_PROCESSED;
     pindexNew->nStatus |= BLOCK_HAVE_DATA;
@@ -1899,7 +1911,7 @@ bool AcceptBlock(ConstCBlockRef pblock,
     bool fRequested,
     CDiskBlockPos *dbp)
 {
-    AssertLockHeld(cs_main); // for setDirtyBlockIndex
+    AssertLockHeld(cs_main);
 
     CBlockIndex *&pindex = *ppindex;
 
@@ -2538,7 +2550,8 @@ bool ConnectBlock(ConstCBlockRef pblock,
     /** Start Section to validate inputs - if there are parallel blocks being checked
      *  then the winner of this race will get to update the UTXO.
      */
-    AssertLockHeld(cs_main); // for setDirtyBlockIndex (et al)
+    AssertLockHeld(cs_main);
+
     // Section for boost scoped lock on the scriptcheck_mutex
     boost::thread::id this_id(boost::this_thread::get_id());
 
@@ -2670,7 +2683,7 @@ bool ConnectBlock(ConstCBlockRef pblock,
 
 void InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state)
 {
-    AssertLockHeld(cs_main); // For setDirtyBlockIndex (et al)
+    AssertLockHeld(cs_main);
     int nDoS = 0;
     if (state.IsInvalid(nDoS))
     {
@@ -2696,9 +2709,9 @@ void InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state)
         {
             WRITELOCK(cs_mapBlockIndex);
             pindex->nStatus |= BLOCK_FAILED_VALID;
+            setDirtyBlockIndex.insert(pindex);
+            setBlockIndexCandidates.erase(pindex);
         }
-        setDirtyBlockIndex.insert(pindex);
-        setBlockIndexCandidates.erase(pindex);
         InvalidChainFound(pindex);
 
         // Now mark every block index on every chain that contains pindex as child of invalid

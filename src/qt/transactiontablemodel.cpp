@@ -68,7 +68,7 @@ public:
         qDebug() << "TransactionTablePriv::refreshWallet";
         cachedWallet.clear();
         {
-            LOCK2(cs_main, wallet->cs_wallet);
+            LOCK(wallet->cs_wallet);
             for (MapWallet::iterator it = wallet->mapWallet.begin(); it != wallet->mapWallet.end(); ++it)
             {
                 CWalletTxRef wtx = it->second.tx;
@@ -123,7 +123,7 @@ public:
             }
             if (showTransaction)
             {
-                LOCK2(cs_main, wallet->cs_wallet);
+                LOCK(wallet->cs_wallet);
                 // Find transaction in wallet
                 CWalletTxRef wtx = wallet->GetWalletTx(hash);
                 if (!wtx)
@@ -209,7 +209,7 @@ public:
     QString describe(TransactionRecord *rec, int unit, QString labelFreeze)
     {
         {
-            LOCK2(cs_main, wallet->cs_wallet);
+            LOCK(wallet->cs_wallet);
             CWalletTxRef wtx = wallet->GetWalletTx(rec->hash);
             if (wtx)
             {
@@ -221,7 +221,7 @@ public:
 
     QString getTxHex(TransactionRecord *rec)
     {
-        LOCK2(cs_main, wallet->cs_wallet);
+        LOCK(wallet->cs_wallet);
         CWalletTxRef wtx = wallet->GetWalletTx(rec->hash);
         if (wtx)
         {
