@@ -278,10 +278,6 @@ extern CTokenDescriptionDB *ptokenDesc;
 /** Global variable that points to the token mintage database (protected by tokenmint.cs_tokenmint) */
 extern CTokenMintageDB *ptokenMint;
 
-extern std::vector<CBlockFileInfo> vinfoBlockFile;
-extern int nLastBlockFile;
-
-
 extern VersionBitsCache versionbitscache;
 
 /** Reject codes greater or equal to this can be returned by AcceptToMemPool

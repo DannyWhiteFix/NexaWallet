@@ -13,6 +13,8 @@ extern bool AbortNode(CValidationState &state, const std::string &strMessage, co
 extern bool fCheckForPruning;
 extern CCriticalSection cs_LastBlockFile;
 extern std::set<int> setDirtyFileInfo;
+extern std::vector<CBlockFileInfo> vinfoBlockFile;
+extern int nLastBlockFile;
 extern std::multimap<CBlockIndex *, CBlockIndex *> mapBlocksUnlinked;
 
 fs::path GetBlockPosFilename(const CDiskBlockPos &pos, const char *prefix)
@@ -161,38 +163,41 @@ uint64_t CalculateCurrentUsage()
 /* Prune a block file (modify associated database entries)*/
 void PruneOneBlockFile(const int fileNumber)
 {
-    AssertLockHeld(cs_main); // For setDirtyBlockIndex
-    READLOCK(cs_mapBlockIndex);
-    for (BlockMap::iterator it = mapBlockIndex.begin(); it != mapBlockIndex.end(); ++it)
+    AssertLockHeld(cs_LastBlockFile);
     {
-        CBlockIndex *pindex = it->second;
-        if (pindex->nFile == fileNumber)
+        WRITELOCK(cs_mapBlockIndex);
+        for (BlockMap::iterator it = mapBlockIndex.begin(); it != mapBlockIndex.end(); ++it)
         {
-            pindex->nStatus &= ~BLOCK_HAVE_DATA;
-            pindex->nStatus &= ~BLOCK_HAVE_UNDO;
-            pindex->nFile = 0;
-            pindex->nDataPos = 0;
-            pindex->nUndoPos = 0;
-            setDirtyBlockIndex.insert(pindex);
-
-            // Prune from mapBlocksUnlinked -- any block we prune would have
-            // to be downloaded again in order to consider its chain, at which
-            // point it would be considered as a candidate for
-            // mapBlocksUnlinked or setBlockIndexCandidates.
-            std::pair<std::multimap<CBlockIndex *, CBlockIndex *>::iterator,
-                std::multimap<CBlockIndex *, CBlockIndex *>::iterator>
-                range = mapBlocksUnlinked.equal_range(pindex->pprev);
-            while (range.first != range.second)
+            CBlockIndex *pindex = it->second;
+            if (pindex->nFile == fileNumber)
             {
-                std::multimap<CBlockIndex *, CBlockIndex *>::iterator itr = range.first;
-                range.first++;
-                if (itr->second == pindex)
+                pindex->nStatus &= ~BLOCK_HAVE_DATA;
+                pindex->nStatus &= ~BLOCK_HAVE_UNDO;
+                pindex->nFile = 0;
+                pindex->nDataPos = 0;
+                pindex->nUndoPos = 0;
+                setDirtyBlockIndex.insert(pindex);
+
+                // Prune from mapBlocksUnlinked -- any block we prune would have
+                // to be downloaded again in order to consider its chain, at which
+                // point it would be considered as a candidate for
+                // mapBlocksUnlinked or setBlockIndexCandidates.
+                std::pair<std::multimap<CBlockIndex *, CBlockIndex *>::iterator,
+                    std::multimap<CBlockIndex *, CBlockIndex *>::iterator>
+                    range = mapBlocksUnlinked.equal_range(pindex->pprev);
+                while (range.first != range.second)
                 {
-                    mapBlocksUnlinked.erase(itr);
+                    std::multimap<CBlockIndex *, CBlockIndex *>::iterator itr = range.first;
+                    range.first++;
+                    if (itr->second == pindex)
+                    {
+                        mapBlocksUnlinked.erase(itr);
+                    }
                 }
             }
         }
     }
+
     vinfoBlockFile[fileNumber].SetNull();
     setDirtyFileInfo.insert(fileNumber);
 }
@@ -209,6 +214,7 @@ void FindFilesToPruneSequential(std::set<int> &setFilesToPrune, uint64_t nLastBl
 
     if (nCurrentUsage + nBuffer >= nPruneTarget)
     {
+        LOCK(cs_LastBlockFile);
         for (int fileNumber = 0; fileNumber < nLastBlockFile; fileNumber++)
         {
             nBytesToPrune = vinfoBlockFile[fileNumber].nSize + vinfoBlockFile[fileNumber].nUndoSize;

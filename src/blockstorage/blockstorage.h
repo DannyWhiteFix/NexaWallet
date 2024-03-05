@@ -11,6 +11,7 @@
 #include "main.h"
 #include "undo.h"
 
+extern CCriticalSection cs_flushstate;
 enum FlushStateMode
 {
     FLUSH_STATE_NONE,

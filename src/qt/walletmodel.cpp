@@ -274,7 +274,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     }
 
     {
-        LOCK2(cs_main, wallet->cs_wallet);
+        LOCK(wallet->cs_wallet);
 
         transaction.newPossibleKeyChange(wallet);
 
@@ -315,7 +315,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
     QByteArray transaction_array; /* store serialized transaction */
 
     {
-        LOCK2(cs_main, wallet->cs_wallet);
+        LOCK(wallet->cs_wallet);
         CWalletTx *newTx = transaction.getTransaction();
 
         Q_FOREACH (const SendCoinsRecipient &rcp, transaction.getRecipients())
@@ -567,7 +567,7 @@ bool WalletModel::IsSpendable(const CTxDestination &dest) const { return wallet-
 // returns a list of COutputs from COutPoints
 void WalletModel::getOutputs(const std::vector<COutPoint> &vOutpoints, std::vector<COutput> &vOutputs)
 {
-    LOCK2(cs_main, wallet->cs_wallet);
+    LOCK(wallet->cs_wallet);
     for (const COutPoint &outpoint : vOutpoints)
     {
         if (!wallet->mapWallet.count(outpoint))
@@ -584,7 +584,7 @@ void WalletModel::getOutputs(const std::vector<COutPoint> &vOutpoints, std::vect
 
 bool WalletModel::isSpent(const COutPoint &outpoint) const
 {
-    LOCK2(cs_main, wallet->cs_wallet);
+    LOCK(wallet->cs_wallet);
     return wallet->IsSpent(outpoint);
 }
 
@@ -594,7 +594,7 @@ void WalletModel::listCoins(std::map<QString, std::vector<COutput> > &mapCoins) 
     std::vector<COutput> vCoins;
     wallet->AvailableCoins(vCoins);
 
-    LOCK2(cs_main, wallet->cs_wallet); // ListLockedCoins, mapWallet
+    LOCK(wallet->cs_wallet); // ListLockedCoins, mapWallet
     std::vector<COutPoint> vLockedCoins;
     wallet->ListLockedCoins(vLockedCoins);
 
@@ -635,25 +635,25 @@ void WalletModel::listCoins(std::map<QString, std::vector<COutput> > &mapCoins) 
 
 bool WalletModel::isLockedCoin(const COutPoint &outpt) const
 {
-    LOCK2(cs_main, wallet->cs_wallet);
+    LOCK(wallet->cs_wallet);
     return wallet->IsLockedCoin(outpt);
 }
 
 void WalletModel::lockCoin(const COutPoint &output)
 {
-    LOCK2(cs_main, wallet->cs_wallet);
+    LOCK(wallet->cs_wallet);
     wallet->LockCoin(output);
 }
 
 void WalletModel::unlockCoin(const COutPoint &output)
 {
-    LOCK2(cs_main, wallet->cs_wallet);
+    LOCK(wallet->cs_wallet);
     wallet->UnlockCoin(output);
 }
 
 void WalletModel::listLockedCoins(std::vector<COutPoint> &vOutpts)
 {
-    LOCK2(cs_main, wallet->cs_wallet);
+    LOCK(wallet->cs_wallet);
     wallet->ListLockedCoins(vOutpts);
 }
 

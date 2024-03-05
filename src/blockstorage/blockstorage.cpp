@@ -19,14 +19,16 @@
 #include "validation/validation.h"
 
 extern bool AbortNode(CValidationState &state, const std::string &strMessage, const std::string &userMessage = "");
-extern bool fCheckForPruning;
+extern std::atomic<bool> fCheckForPruning;
 extern CCriticalSection cs_LastBlockFile;
 extern std::set<int> setDirtyFileInfo;
-extern std::multimap<CBlockIndex *, CBlockIndex *> mapBlocksUnlinked;
+extern std::vector<CBlockFileInfo> vinfoBlockFile;
+extern int nLastBlockFile;
 extern CTweak<uint64_t> pruneIntervalTweak;
 extern CTweak<uint64_t> dbcacheTweak;
 extern std::atomic<uint64_t> nTotalChainTx;
 
+CCriticalSection cs_flushstate;
 
 CDatabaseAbstract *pblockdb = nullptr;
 uint64_t blockfile_chunk_size = DEFAULT_BLOCKFILE_CHUNK_SIZE;
@@ -611,7 +613,7 @@ bool ReadUndoFromDisk(CBlockUndo &blockundo, const CDiskBlockPos &pos, const CBl
 /* Calculate the block/rev files that should be deleted to remain under target*/
 void FindFilesToPrune(std::set<int> &setFilesToPrune, uint64_t nPruneAfterHeight)
 {
-    LOCK2(cs_main, cs_LastBlockFile);
+    LOCK(cs_LastBlockFile);
 
     if (chainActive.Tip() == nullptr || nPruneTarget == 0)
     {
@@ -655,10 +657,11 @@ bool FlushStateToDiskInternal(CValidationState &state,
     bool fFlushForPrune,
     std::set<int> setFilesToPrune)
 {
-    AssertLockHeld(cs_main); // For setDirtyBlockIndex
     static int64_t nLastWrite = 0;
     static int64_t nLastFlush = 0;
     static int64_t nLastSetChain = 0;
+
+    LOCK(cs_flushstate);
     int64_t nNow = GetStopwatchMicros();
     // Avoid writing/flushing immediately after startup.
     if (nLastWrite == 0)
@@ -718,18 +721,25 @@ bool FlushStateToDiskInternal(CValidationState &state,
         // Then update all block file information (which may refer to block and undo files).
         {
             std::vector<std::pair<int, const CBlockFileInfo *> > vFiles;
-            vFiles.reserve(setDirtyFileInfo.size());
-            for (std::set<int>::iterator it = setDirtyFileInfo.begin(); it != setDirtyFileInfo.end();)
             {
-                vFiles.push_back(std::make_pair(*it, &vinfoBlockFile[*it]));
-                setDirtyFileInfo.erase(it++);
+                LOCK(cs_LastBlockFile);
+                vFiles.reserve(setDirtyFileInfo.size());
+                for (std::set<int>::iterator it = setDirtyFileInfo.begin(); it != setDirtyFileInfo.end();)
+                {
+                    vFiles.push_back(std::make_pair(*it, &vinfoBlockFile[*it]));
+                    setDirtyFileInfo.erase(it++);
+                }
             }
             std::vector<const CBlockIndex *> vBlocks;
+
             vBlocks.reserve(setDirtyBlockIndex.size());
-            for (std::set<CBlockIndex *>::iterator it = setDirtyBlockIndex.begin(); it != setDirtyBlockIndex.end();)
             {
-                vBlocks.push_back(*it);
-                setDirtyBlockIndex.erase(it++);
+                WRITELOCK(cs_mapBlockIndex);
+                for (std::set<CBlockIndex *>::iterator it = setDirtyBlockIndex.begin(); it != setDirtyBlockIndex.end();)
+                {
+                    vBlocks.push_back(*it);
+                    setDirtyBlockIndex.erase(it++);
+                }
             }
 
 
@@ -835,7 +845,6 @@ bool FlushStateToDiskInternal(CValidationState &state,
 bool FlushStateToDisk(CValidationState &state, FlushStateMode mode)
 {
     const CChainParams &chainparams = Params();
-    LOCK2(cs_main, cs_LastBlockFile);
     std::set<int> setFilesToPrune;
     bool fFlushForPrune = false;
     try

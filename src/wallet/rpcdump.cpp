@@ -761,7 +761,7 @@ UniValue dumpprivkey(const UniValue &params, bool fHelp)
                             HelpExampleCli("importprivkey", "\"mykey\"") +
                             HelpExampleRpc("dumpprivkey", "\"myaddress\""));
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    LOCK(pwalletMain->cs_wallet);
 
     EnsureWalletIsUnlocked();
 
@@ -797,7 +797,7 @@ UniValue dumpwallet(const UniValue &params, bool fHelp)
             "\nExamples:\n" +
             HelpExampleCli("dumpwallet", "\"test\"") + HelpExampleRpc("dumpwallet", "\"test\""));
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    LOCK(pwalletMain->cs_wallet);
 
     EnsureWalletIsUnlocked();
 

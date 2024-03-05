@@ -87,16 +87,23 @@ std::atomic<bool> fRescan{false};
 std::atomic<uint64_t> nLargestNextMaxBlockSize{0};
 
 CStatusString statusStrings;
-// main.cpp CriticalSections:
-CCriticalSection cs_LastBlockFile;
 
 CCriticalSection cs_nTimeOffset;
 int64_t nTimeOffset = 0;
 
 CCriticalSection cs_rpcWarmup;
 
+/** Dirty block index and mapBlockIndex are under the same lock. Once an new entry is made into
+ *  mapBlockIndex then there is also a new entry in setDirtyBlockIndex.  The dirty block index
+ *  is written later to disk when it's convenient.
+ */
 CSharedCriticalSection cs_mapBlockIndex;
 BlockMap mapBlockIndex GUARDED_BY(cs_mapBlockIndex);
+std::set<CBlockIndex *> setDirtyBlockIndex GUARDED_BY(cs_mapBlockIndex);
+/** All pairs A->B, where A (or one of its ancestors) misses transactions, but B has transactions.
+ * Pruned nodes may have entries where B is missing data.
+ */
+std::multimap<CBlockIndex *, CBlockIndex *> mapBlocksUnlinked GUARDED_BY(cs_mapBlockIndex);
 
 std::atomic<CBlockIndex *> pindexBestHeader{nullptr};
 std::atomic<CBlockIndex *> pindexBestInvalid{nullptr};
@@ -137,10 +144,13 @@ uint64_t nBlockSequenceId GUARDED_BY(cs_main) = 1;
  * cs_main.
  */
 std::map<uint256, NodeId> mapBlockSource GUARDED_BY(cs_main);
+
+
 /** Dirty block file entries. */
-std::set<int> setDirtyFileInfo GUARDED_BY(cs_main);
-/** Dirty block index entries. */
-std::set<CBlockIndex *> setDirtyBlockIndex GUARDED_BY(cs_main);
+CCriticalSection cs_LastBlockFile;
+std::set<int> setDirtyFileInfo GUARDED_BY(cs_LastBlockFile);
+std::vector<CBlockFileInfo> vinfoBlockFile GUARDED_BY(cs_LastBlockFile);
+int nLastBlockFile GUARDED_BY(cs_LastBlockFile) = 0;
 
 /** Hold current block templates size and transaction counts */
 CCriticalSection csCurrentCandidate;

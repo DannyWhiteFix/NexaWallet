@@ -761,7 +761,7 @@ CacheConfig CacheSizeCalculations(int64_t _nTotalCache)
 
 void AdjustCoinCacheSize()
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(cs_flushstate);
 
     // If the operator has not set a cache.dbcache and initial sync is complete then revert back to the default
     // value for cache.dbcache. This will cause the current coins cache to be immediately trimmed to size.
