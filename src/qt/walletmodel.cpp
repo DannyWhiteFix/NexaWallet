@@ -106,18 +106,26 @@ void WalletModel::pollBalanceChanged()
         }
     }
 
-    if (fForceCheckBalanceChanged || chainActive.Height() != cachedNumBlocks)
+    // Balance and confirmations might have changed
+    // NOTE: updating confirmation in the UI is a relatively expensive operation and should
+    //       be limited as much as possible. Such as only done here when a new block arrives.
+    if (chainActive.Height() != cachedNumBlocks)
     {
+        cachedNumBlocks = chainActive.Height();
+        checkBalanceChanged();
         fForceCheckBalanceChanged = false;
 
-        // Balance and number of transactions might have changed
-        cachedNumBlocks = chainActive.Height();
-
-        checkBalanceChanged();
         if (transactionTableModel)
             transactionTableModel->updateConfirmations();
         if (tokenTableModel)
             tokenTableModel->updateConfirmations();
+    }
+
+    // Update balance when needed
+    if (fForceCheckBalanceChanged)
+    {
+        checkBalanceChanged();
+        fForceCheckBalanceChanged = false;
     }
 }
 
