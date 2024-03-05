@@ -334,10 +334,7 @@ void AddressTableModel::updateEntry(const QString &address,
     priv->updateEntry(address, label, isMine, purpose, status);
 }
 
-QString AddressTableModel::addRow(const QString &type,
-    const QString &label,
-    const QString &address,
-    const CScriptNum nFreezeLockTime)
+QString AddressTableModel::addRow(const QString &type, const QString &label, const QString &address)
 {
     std::string strLabel = label.toStdString();
     std::string strAddress = address.toStdString();
@@ -380,17 +377,8 @@ QString AddressTableModel::addRow(const QString &type,
                 return QString();
             }
         }
-        // Generate and load freeze script if nFreezeLockTime > 0
-        if (nFreezeLockTime > 0)
-        {
-            if (!wallet->LoadFreezeScript(newKey, nFreezeLockTime, strLabel, strAddress))
-                return QString();
-        }
-        else
-        {
-            ScriptTemplateDestination dest(P2pktOutput(newKey));
-            strAddress = EncodeDestination(dest);
-        }
+        ScriptTemplateDestination dest(P2pktOutput(newKey));
+        strAddress = EncodeDestination(dest);
     }
     else
     {
@@ -437,25 +425,6 @@ QString AddressTableModel::labelForAddress(const QString &address) const
         }
     }
     return returnLabel;
-}
-
-/* Look up label for freeze in wallet, if not found return empty string.
- */
-QString AddressTableModel::labelForFreeze(const QString &address) const
-{
-    {
-        LOCK(wallet->cs_wallet);
-        CTxDestination dest = DecodeDestination(address.toStdString());
-        CScriptNum nFreezeLockTime = CScriptNum::fromIntUnchecked(0);
-        if (isFreezeCLTV(*wallet, GetScriptForDestination(dest), nFreezeLockTime))
-        {
-            if (nFreezeLockTime.getint64() < LOCKTIME_THRESHOLD)
-                return (QString)("Block:") + QString::number(nFreezeLockTime.getint64());
-            else
-                return QDateTime::fromMSecsSinceEpoch(nFreezeLockTime.getint64() * 1000).toString();
-        }
-    }
-    return QString();
 }
 
 int AddressTableModel::lookupAddress(const QString &address) const

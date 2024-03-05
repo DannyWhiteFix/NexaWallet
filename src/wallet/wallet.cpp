@@ -13,7 +13,6 @@
 #include "consensus/consensus.h"
 #include "consensus/grouptokens.h"
 #include "consensus/validation.h"
-#include "core_io.h" // Freeze for debug only
 #include "dstencode.h"
 #include "fs.h"
 #include "grouptokenwallet.h"
@@ -310,25 +309,6 @@ bool CWallet::LoadCScript(const CScript &redeemScript)
     }
 
     return CCryptoKeyStore::AddCScript(redeemScript);
-}
-
-bool CWallet::LoadFreezeScript(CPubKey newKey, CScriptNum nFreezeLockTime, std::string strLabel, std::string &address)
-{
-    // Template rpcdump.cpp::ImportAddress();
-
-    // Get Freeze Script
-    CScript freezeScript = GetScriptForFreeze(nFreezeLockTime, newKey);
-
-    // Test and Add Script to wallet
-    if (!this->HaveCScript(freezeScript) && !this->AddCScript(freezeScript))
-    {
-        LOGA("LoadFreezeScript: Error adding p2sh freeze redeemScript to wallet. \n ");
-        return false;
-    }
-    // If just added then return P2SH for user
-    address = EncodeDestination(CScriptID(freezeScript));
-    LOGA("CLTV Freeze Script Load \n %s => %s \n ", ::ScriptToAsmStr(freezeScript), address.c_str());
-    return true;
 }
 
 bool CWallet::AddWatchOnly(const CScript &dest)
@@ -3607,14 +3587,6 @@ bool CWallet::CreateOneTransaction(const vector<CRecipient> &vecSend,
                     {
                         txNew.vin.push_back(CTxIn(coin.GetOutPoint(), coin.GetValue(), CScript(),
                             std::numeric_limits<unsigned int>::max() - 1));
-
-                        // If the input is a Freeze CLTV lock-by-blocktime then update the txNew.nLockTime
-                        CScriptNum nFreezeLockTime = CScriptNum::fromIntUnchecked(0);
-                        if (isFreezeCLTV(*this, coin.GetScriptPubKey(), nFreezeLockTime))
-                        {
-                            if (nFreezeLockTime.getint64() > LOCKTIME_THRESHOLD)
-                                txNew.nLockTime = chainActive.Tip()->GetMedianTimePast();
-                        }
                     }
 
                     // BIP69

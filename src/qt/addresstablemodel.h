@@ -6,8 +6,6 @@
 #ifndef NEXA_QT_ADDRESSTABLEMODEL_H
 #define NEXA_QT_ADDRESSTABLEMODEL_H
 
-#include "script/script.h" // Freeze CScriptNum
-
 #include <QAbstractTableModel>
 #include <QStringList>
 
@@ -67,12 +65,11 @@ public:
     /* Add an address to the model.
        Returns the added address on success, and an empty string otherwise.
      */
-    QString addRow(const QString &type, const QString &label, const QString &address, const CScriptNum nFreezeLockTime);
+    QString addRow(const QString &type, const QString &label, const QString &address);
 
     /* Look up label for address in address book, if not found return empty string.
      */
     QString labelForAddress(const QString &address) const;
-    QString labelForFreeze(const QString &address) const;
 
     /* Look up row index of an address in the model.
        Return -1 if not found.

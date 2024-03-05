@@ -47,10 +47,9 @@ public:
         const QString &_label,
         const CAmount &_amount,
         const QString &_message,
-        const QString &_freezeLockTime,
         const QString &_labelPublic)
         : address(addr), label(_label), labelPublic(_labelPublic), amount(_amount), message(_message),
-          freezeLockTime(_freezeLockTime), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION)
+          fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION)
     {
     }
 
@@ -65,8 +64,6 @@ public:
     CAmount amount;
     // If from a payment request, this is used for storing the memo
     QString message;
-    // Freeze Lock Time
-    QString freezeLockTime;
 
     // If from a payment request, paymentRequest.IsInitialized() will be true
     PaymentRequestPlus paymentRequest;
@@ -86,7 +83,6 @@ public:
         std::string sAddress = address.toStdString();
         std::string sLabel = label.toStdString();
         std::string sMessage = message.toStdString();
-        std::string sFreezeLockTime = freezeLockTime.toStdString();
         std::string slabelPublic = labelPublic.toStdString();
         std::string sPaymentRequest;
         if (!ser_action.ForRead() && paymentRequest.IsInitialized())
@@ -100,15 +96,12 @@ public:
         READWRITE(sMessage);
         READWRITE(sPaymentRequest);
         READWRITE(sAuthenticatedMerchant);
-        if (nVersion >= 2)
-            READWRITE(sFreezeLockTime);
 
         if (ser_action.ForRead())
         {
             address = QString::fromStdString(sAddress);
             label = QString::fromStdString(sLabel);
             message = QString::fromStdString(sMessage);
-            freezeLockTime = QString::fromStdString(sFreezeLockTime);
             labelPublic = QString::fromStdString(slabelPublic);
             if (!sPaymentRequest.empty())
                 paymentRequest.parse(QByteArray::fromRawData(sPaymentRequest.data(), sPaymentRequest.size()));

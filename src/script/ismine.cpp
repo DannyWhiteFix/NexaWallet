@@ -6,8 +6,6 @@
 
 #include "ismine.h"
 
-#include "core_io.h" // freeze debug only
-
 #include "chain.h"
 #include "key.h"
 #include "keystore.h"
@@ -58,32 +56,6 @@ std::string getLabelPublic(const CScript &scriptPubKey)
 
     return "";
 }
-
-
-bool isFreezeCLTV(const CKeyStore &keystore, const CScript &scriptPubKey, CScriptNum &nFreezeLockTime)
-{
-    vector<valtype> vSolutions;
-    txnouttype whichType;
-    if (Solver(scriptPubKey, whichType, vSolutions))
-    {
-        if (whichType == TX_SCRIPTHASH)
-        {
-            CScriptID scriptID = CScriptID(uint160(vSolutions[0]));
-            CScript subscript;
-            if (keystore.GetCScript(scriptID, subscript))
-                Solver(subscript, whichType, vSolutions);
-        }
-
-        if (whichType == TX_CLTV)
-        {
-            CScriptNum sn(vSolutions[0], true, 5);
-            nFreezeLockTime = sn;
-            return true;
-        }
-    }
-    return false;
-}
-
 
 static isminetype IsMine(const CKeyStore &keystore,
     const CScript &scriptPubKey,
@@ -157,40 +129,6 @@ static isminetype IsMine(const CKeyStore &keystore,
             if (HaveKeys(keys, keystore) == keys.size())
                 return ISMINE_SPENDABLE;
             break;
-        }
-        case TX_CLTV:
-        {
-            keyID = CPubKey(vSolutions[1]).GetID();
-            bool haveKey = alreadyLocked ? keystore._HaveKey(keyID) : keystore.HaveKey(keyID);
-            if (haveKey)
-            {
-                CScriptNum nFreezeLockTime(vSolutions[0], true, 5);
-
-                // FIXME do not always log, use a  specific debug category or create one if no others fit
-                LOGA("Found Freeze Have Key. nFreezeLockTime=%d. BestBlockHeight=%d \n", nFreezeLockTime.getint64(),
-                    bestBlock->height());
-                if (nFreezeLockTime < LOCKTIME_THRESHOLD)
-                {
-                    // locktime is a block
-                    if (nFreezeLockTime > bestBlock->height())
-                        return ISMINE_WATCH_SOLVABLE;
-                    else
-                        return ISMINE_SPENDABLE;
-                }
-                else
-                {
-                    // locktime is a time
-                    if (nFreezeLockTime > bestBlock->GetMedianTimePast())
-                        return ISMINE_WATCH_SOLVABLE;
-                    else
-                        return ISMINE_SPENDABLE;
-                }
-            }
-            else
-            {
-                LOGA("Found Freeze DONT HAVE KEY!! \n");
-                return ISMINE_NO;
-            }
         }
         } // switch
     }

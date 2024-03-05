@@ -35,8 +35,6 @@ enum isminetype
 typedef uint8_t isminefilter;
 
 std::string getLabelPublic(const CScript &scriptPubKey);
-bool isFreezeCLTV(const CKeyStore &keystore, const CScript &scriptPubKey, CScriptNum &nFreezeLockTime); // Freeze
-// bestBlock - Freeze CLTV
 
 /** Determines if an output is spendable by this wallet
  */

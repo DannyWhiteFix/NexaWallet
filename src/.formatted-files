@@ -267,8 +267,6 @@ qt/qvaluecombobox.cpp
 qt/qvaluecombobox.h
 qt/receivecoinsdialog.cpp
 qt/receivecoinsdialog.h
-qt/receivefreezedialog.cpp
-qt/receivefreezedialog.h
 qt/receiverequestdialog.cpp
 qt/receiverequestdialog.h
 qt/recentrequeststablemodel.cpp

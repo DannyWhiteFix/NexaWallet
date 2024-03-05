@@ -30,8 +30,6 @@ const char *GetTxnOutputType(txnouttype t)
         return "scripthash";
     case TX_MULTISIG:
         return "multisig";
-    case TX_CLTV:
-        return "cltv"; // CLTV HODL Freeze
     case TX_LABELPUBLIC:
         return "publiclabel";
     case TX_NULL_DATA:
@@ -143,53 +141,6 @@ static bool MatchLabelPublic(const CScript &script, std::vector<valtype> &dataCa
     }
 
     return false;
-}
-
-static bool MatchFreezeCLTV(const CScript &script, std::vector<valtype> &pubkeys)
-{
-    // Freeze tx using CLTV ; nFreezeLockTime CLTV DROP (0x21 pubkeys) checksig
-    // {TX_CLTV, CScript() << OP_BIGINTEGER << OP_CHECKLOCKTIMEVERIFY << OP_DROP << OP_PUBKEYS << OP_CHECKSIG},
-
-    if ((script.size() < 1) || script.back() != OP_CHECKSIG)
-    {
-        return false;
-    }
-
-    valtype data;
-    opcodetype opcode;
-    CScript::const_iterator s = script.begin();
-    script.GetOp(s, opcode, data);
-
-    try
-    {
-        // extracting the bignum in a try-catch because if the provided number is not
-        // a big int CScriptNum will raise an error.
-        CScriptNum nLockFreezeTime(data, true, 5);
-
-        pubkeys.emplace_back(data);
-        if ((*s != OP_CHECKLOCKTIMEVERIFY) || (*(s + 1) != OP_DROP))
-        {
-            return false;
-        }
-
-        // starting from pubkeys (4/5 byte nlock time + 1 OP_CLTV + 1 OP_DROP)
-        s = s + 2;
-        if (!script.GetOp(s, opcode, data))
-        {
-            return false;
-        }
-        if (!CPubKey::ValidSize(data))
-        {
-            return false;
-        }
-        pubkeys.emplace_back(std::move(data));
-        // after key extraction we should still have one byte which represent OP_CHECKSIG
-        return (s + 1 == script.end());
-    }
-    catch (scriptnum_error &)
-    {
-        return false;
-    }
 }
 
 static bool MatchMultisig(const CScript &script, unsigned int &required, std::vector<valtype> &pubkeys)
@@ -317,13 +268,6 @@ bool ExtendedSolver(const CScript &scriptPubKey,
         return true;
     }
 
-    if (MatchFreezeCLTV(scriptPubKey, vData))
-    {
-        typeRet = TX_CLTV;
-        vSolutionsRet.insert(vSolutionsRet.end(), vData.begin(), vData.end());
-        return true;
-    }
-
     unsigned int required;
     std::vector<std::vector<uint8_t> > keys;
     if (MatchMultisig(scriptPubKey, required, keys))
@@ -373,15 +317,6 @@ bool ExtractDestinationAndType(const CScript &scriptPubKey, CTxDestination &addr
         addressRet = CScriptID(uint160(vSolutions[0]));
         return true;
     }
-    else if (whichType == TX_CLTV)
-    {
-        CPubKey pubKey(vSolutions[1]);
-        if (!pubKey.IsValid())
-            return false;
-
-        addressRet = pubKey.GetID();
-        return true;
-    }
     // Multisig txns have more than one address...
     return false;
 }
@@ -426,7 +361,6 @@ bool ExtractDestinations(const CScript &scriptPubKey,
     }
     else
     {
-        // Freeze TX_CLTV also here
         nRequiredRet = 1;
         CTxDestination address;
         if (!ExtractDestination(scriptPubKey, address))
@@ -495,13 +429,6 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey> &keys)
         script << ToByteVector(key);
     script << CScript::EncodeOP_N(keys.size()) << OP_CHECKMULTISIG;
     return script;
-}
-
-CScript GetScriptForFreeze(CScriptNum nFreezeLockTime, const CPubKey &pubKey)
-{
-    // TODO Perhaps add limit tests for nLockTime eg. 10 year max lock
-    return CScript() << nFreezeLockTime << OP_CHECKLOCKTIMEVERIFY << OP_DROP
-                     << std::vector<unsigned char>(pubKey.begin(), pubKey.end()) << OP_CHECKSIG;
 }
 
 /*

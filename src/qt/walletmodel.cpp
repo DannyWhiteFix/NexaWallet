@@ -351,10 +351,6 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
     // and emit coinsSent signal for each recipient
     Q_FOREACH (const SendCoinsRecipient &rcp, transaction.getRecipients())
     {
-        // Set have watch only flag to true if sending to a coin freeze address
-        if (!rcp.freezeLockTime.isEmpty())
-            this->updateWatchOnlyFlag(true);
-
         // Don't touch the address book when we have a payment request
         if (!rcp.paymentRequest.IsInitialized())
         {
