@@ -396,17 +396,18 @@ void CommitTxToMempool()
 
 void ThreadTxAdmission()
 {
-    // Process at most this many transactions before letting the commit thread take over
-    const int maxTxPerRound = 200;
-
     while (shutdown_threads.load() == false)
     {
+        // Process at most this many transactions before letting the commit thread take over
+        uint32_t nThreadsTweak = numTxAdmissionThreads.Value();
+        const int maxTxPerRound = std::max((uint64_t)1000, mempool.GetInstantaneousTxPerSec() / nThreadsTweak);
+
         // Start or Stop threads as determined by the numTxAdmissionThreads tweak
         {
             static CCriticalSection cs_threads;
-            static uint32_t numThreads GUARDED_BY(cs_threads) = numTxAdmissionThreads.Value();
+            static uint32_t numThreads GUARDED_BY(cs_threads) = nThreadsTweak;
             LOCK(cs_threads);
-            if (numTxAdmissionThreads.Value() >= 1 && numThreads > numTxAdmissionThreads.Value())
+            if (numThreads >= 1 && numThreads > nThreadsTweak)
             {
                 // Kill this thread
                 numThreads--;
@@ -414,7 +415,7 @@ void ThreadTxAdmission()
 
                 return;
             }
-            else if (numThreads < numTxAdmissionThreads.Value())
+            else if (numThreads < nThreadsTweak)
             {
                 // Launch another thread
                 numThreads++;
