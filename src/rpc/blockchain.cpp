@@ -1669,7 +1669,7 @@ UniValue mempoolInfoToJSON()
     mempool.GetTransactionRateStatistics(smoothedTps, instantaneousTps, peakTps);
     try
     {
-        ret.pushKV("tps", std::stod(strprintf("%.2f", smoothedTps)));
+        ret.pushKV("tps", strprintf("%.2f", smoothedTps));
     }
     catch (...)
     {
@@ -1677,7 +1677,7 @@ UniValue mempoolInfoToJSON()
     }
     try
     {
-        ret.pushKV("peak_tps", std::stod(strprintf("%.2f", peakTps)));
+        ret.pushKV("peak_tps", strprintf("%.2f", peakTps));
     }
     catch (...)
     {
