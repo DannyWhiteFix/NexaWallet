@@ -163,7 +163,6 @@ SendCoinsRecipient SendCoinsEntry::getValue()
     recipient.amount = ui->payAmount->value();
     recipient.message = ui->messageTextLabel->text();
     recipient.fSubtractFeeFromAmount = (ui->checkboxSubtractFeeFromAmount->checkState() == Qt::Checked);
-    recipient.freezeLockTime = model->getAddressTableModel()->labelForFreeze(recipient.address);
     recipient.labelPublic = ui->lineEditPublic->text();
 
     return recipient;

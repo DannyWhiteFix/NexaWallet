@@ -51,13 +51,10 @@ public:
 
     void setModel(WalletModel *model);
 
-    CScriptNum nFreezeLockTime = CScriptNum::fromIntUnchecked(0);
-
 public Q_SLOTS:
     void clear();
     void reject();
     void accept();
-    void on_freezeDialog_hide();
 
 protected:
     virtual void keyPressEvent(QKeyEvent *event);
@@ -79,7 +76,6 @@ private Q_SLOTS:
     void on_receiveButton_clicked();
     void on_showRequestButton_clicked();
     void on_removeRequestButton_clicked();
-    void on_freezeCheck_clicked();
     void on_recentRequestsView_doubleClicked(const QModelIndex &index);
     void recentRequestsView_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void updateDisplayUnit();

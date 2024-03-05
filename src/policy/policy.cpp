@@ -56,11 +56,6 @@ bool IsStandard(const CScript &scriptPubKey, txnouttype &whichType)
         if (m < 1 || m > n)
             return false;
     }
-    else if (whichType == TX_CLTV)
-    {
-        // are CLTV Freeze transactions standard (currently disabled)
-        return false;
-    }
     else if (whichType == TX_NULL_DATA || whichType == TX_LABELPUBLIC)
     {
         if (!dataCarrier.Value() || scriptPubKey.size() > dataCarrierSize.Value())

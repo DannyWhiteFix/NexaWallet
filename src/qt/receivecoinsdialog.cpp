@@ -13,12 +13,9 @@
 #include "nexaunits.h"
 #include "optionsmodel.h"
 #include "platformstyle.h"
-#include "receivefreezedialog.h"
 #include "receiverequestdialog.h"
 #include "recentrequeststablemodel.h"
 #include "unlimited.h"
-
-ReceiveFreezeDialog *freezeDialog;
 
 #include <QAction>
 #include <QCheckBox>
@@ -70,13 +67,6 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(const PlatformStyle *_platformStyle, cons
     connect(copyAmountAction, SIGNAL(triggered()), this, SLOT(copyAmount()));
 
     connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
-
-    // initialize freeze
-    nFreezeLockTime = CScriptNum::fromIntUnchecked(0);
-
-    // Temporarily disable the freeze coin check box in the wallet.
-    // TODO: determine whether to competely remove the freeze feature.
-    ui->freezeCheck->setEnabled(false);
 }
 
 void ReceiveCoinsDialog::setModel(WalletModel *_model)
@@ -115,10 +105,6 @@ void ReceiveCoinsDialog::clear()
     ui->reqLabel->setText("");
     ui->reqMessage->setText("");
     ui->reuseAddress->setChecked(false);
-    ui->freezeCheck->setChecked(false);
-    ui->freezeCheck->setText("Coin &Freeze");
-    nFreezeLockTime = CScriptNum::fromIntUnchecked(0);
-    freezeDialog = nullptr;
     updateDisplayUnit();
 }
 
@@ -132,58 +118,6 @@ void ReceiveCoinsDialog::updateDisplayUnit()
     }
 }
 
-void ReceiveCoinsDialog::on_freezeDialog_hide()
-{
-    freezeDialog->getFreezeLockTime(nFreezeLockTime);
-
-    if (nFreezeLockTime == 0)
-    {
-        // user cancelled freeze
-        ui->freezeCheck->setChecked(false);
-        ui->freezeCheck->setText("Coin Freeze");
-    }
-    else
-    {
-        // user selected freeze
-        ui->freezeCheck->setChecked(true);
-
-        QString freezeLabel;
-        if (nFreezeLockTime.getint64() < LOCKTIME_THRESHOLD)
-
-        {
-            uint64_t height = chainActive.Height();
-            uint64_t freezeHeight = nFreezeLockTime.getint64();
-            uint64_t approxTimeMs =
-                ((freezeHeight - height) * 10 * 60 * 1000) + QDateTime::currentDateTime().toMSecsSinceEpoch();
-
-            freezeLabel = (QString)("block: ") + QString::number(freezeHeight) + (QString)(" (approximately: ") +
-                          QDateTime::fromMSecsSinceEpoch(approxTimeMs).date().toString() + ")";
-        }
-        else
-            freezeLabel =
-                QDateTime::fromMSecsSinceEpoch(nFreezeLockTime.getint64() * 1000).toString("yyyy/MM/dd hh:mm");
-        ui->freezeCheck->setText("Coin freeze until " + freezeLabel);
-    }
-}
-
-void ReceiveCoinsDialog::on_freezeCheck_clicked()
-{
-    if (ui->freezeCheck->isChecked()) // If the user clicked on coin freeze, bring up the freeze dialog box
-    {
-        if (!freezeDialog)
-        {
-            freezeDialog = new ReceiveFreezeDialog(this);
-            freezeDialog->setModel(model->getOptionsModel());
-        }
-        freezeDialog->show();
-    }
-    else // if the user unchecked, then hide the freeze dialog if its still showing
-    {
-        if (freezeDialog)
-            freezeDialog->hide();
-    }
-}
-
 void ReceiveCoinsDialog::on_receiveButton_clicked()
 {
     if (!model || !model->getOptionsModel() || !model->getAddressTableModel() || !model->getRecentRequestsTableModel())
@@ -191,7 +125,6 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
 
     QString address;
     QString label = ui->reqLabel->text();
-    QString sFreezeLockTime = "";
 
     if (ui->reuseAddress->isChecked())
     {
@@ -213,22 +146,10 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
     }
     else
     {
-        // only use coin freeze if the freeze value is valid and the check box is still set
-        if ((nFreezeLockTime > 0) && (ui->freezeCheck) && (ui->freezeCheck->isChecked()))
-        {
-            /* Generate the freeze redeemScript and add to the address table.
-             * The address variable needs to show the freeze P2SH public key  */
-            address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "", nFreezeLockTime);
-            sFreezeLockTime = model->getAddressTableModel()->labelForFreeze(address);
-        }
-        else
-        {
-            /* Generate new receiving address and add to the address table */
-            address = model->getAddressTableModel()->addRow(
-                AddressTableModel::Receive, label, "", CScriptNum::fromIntUnchecked(0));
-        }
+        /* Generate new receiving address and add to the address table */
+        address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "");
     }
-    SendCoinsRecipient info(address, label, ui->reqAmount->value(), ui->reqMessage->text(), sFreezeLockTime, "");
+    SendCoinsRecipient info(address, label, ui->reqAmount->value(), ui->reqMessage->text(), "");
     ReceiveRequestDialog *dialog = new ReceiveRequestDialog(cfg, this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->setModel(model->getOptionsModel());

@@ -53,7 +53,7 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx &wtx)
     }
 }
 
-QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionRecord *rec, int unit, QString labelFreeze)
+QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionRecord *rec, int unit)
 {
     QString strHTML;
 
@@ -146,12 +146,6 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
         if (!wallet->mapAddressBook[dest].name.empty())
             strHTML += " (" + tr("label") + ": " + GUIUtil::HtmlEscape(wallet->mapAddressBook[address].name) + ")";
         strHTML += "<br>";
-    }
-
-    if (labelFreeze != "")
-    {
-        strHTML += "<b>" + tr("Freeze until") + ":</b> ";
-        strHTML += GUIUtil::HtmlEscape(labelFreeze) + "<br>";
     }
 
     //
