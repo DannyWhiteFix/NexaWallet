@@ -61,6 +61,7 @@ extern CTweak<bool> feeEstimationTweak;
 extern CTweak<bool> instantTxns;
 extern CTweak<uint32_t> instantTxnsDelay;
 extern CTweak<bool> autoTxns;
+extern bool fRelayPriority;
 
 /** @defgroup mapWallet
  *
@@ -3684,8 +3685,7 @@ bool CWallet::CreateOneTransaction(const vector<CRecipient> &vecSend,
                     dPriority = wtxNew.ComputePriority(dPriority, nBytes);
 
                     // Can we complete this as a free transaction?
-                    if (fSendFreeTransactions && nBytes <= MAX_STANDARD_TX_SIZE &&
-                        GetBoolArg("-relaypriority", DEFAULT_RELAYPRIORITY))
+                    if (fRelayPriority && fSendFreeTransactions && (nBytes <= MAX_STANDARD_TX_SIZE))
                     {
                         // Require at least hard-coded AllowFree.
                         if (AllowFree(dPriority))
@@ -3723,8 +3723,7 @@ bool CWallet::CreateOneTransaction(const vector<CRecipient> &vecSend,
 
 
                     // Can we complete this as a free transaction?
-                    if (fSendFreeTransactions && nBytes <= MAX_STANDARD_TX_SIZE &&
-                        GetBoolArg("-relaypriority", DEFAULT_RELAYPRIORITY))
+                    if (fRelayPriority && fSendFreeTransactions && (nBytes <= MAX_STANDARD_TX_SIZE))
                     {
                         // Require at least hard-coded AllowFree.
                         if (dPriority >= AllowFree(dPriority))

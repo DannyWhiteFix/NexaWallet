@@ -123,6 +123,9 @@ std::atomic<bool> fMempoolTests{false};
 uint64_t nReceiveBufferSize = 0;
 uint64_t nSendBufferSize = 0;
 
+// Are we checking priority when doing tx admission
+bool fRelayPriority = false;
+
 CChain chainActive; // chainActive.Tip() is lock free, other APIs take the internal lock cs_chainLock
 
 CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE); // lock free - has an internal atomic value
