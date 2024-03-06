@@ -46,6 +46,8 @@
 extern CTweak<uint32_t> minRelayFee;
 extern CTweak<uint32_t> limitFreeRelay;
 
+extern bool fRelayPriority;
+
 using namespace std;
 
 static void TestConflictEnqueueTx(CTxInputData &txd);
@@ -991,8 +993,8 @@ bool ParallelAcceptToMemoryPool(Snapshot &ss,
         entry.UpdateRuntimeSigOps(resourceTracker.GetSigOps(), resourceTracker.GetSighashBytes());
 
         nSize = entry.GetTxSize();
-        if (GetBoolArg("-relaypriority", DEFAULT_RELAYPRIORITY) && nModifiedFees < ::minRelayTxFee.GetFee(nSize) &&
-            !AllowFree(entry.GetPriority(chainActive.Height() + 1)))
+        if (fRelayPriority && (nModifiedFees < ::minRelayTxFee.GetFee(nSize)) &&
+            (!AllowFree(entry.GetPriority(chainActive.Height() + 1))))
         {
             if (debugger)
             {

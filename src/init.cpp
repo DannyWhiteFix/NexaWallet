@@ -92,6 +92,7 @@ extern CAmount GROUPED_SATOSHI_AMT;
 
 extern uint64_t nReceiveBufferSize;
 extern uint64_t nSendBufferSize;
+extern bool fRelayPriority;
 
 using namespace std;
 
@@ -1055,6 +1056,9 @@ bool AppInit2(Config &config)
     // message buffer sizes
     nReceiveBufferSize = 1000 * GetArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER);
     nSendBufferSize = 1000 * GetArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER);
+
+    // relay priority
+    fRelayPriority = GetBoolArg("-relaypriority", DEFAULT_RELAYPRIORITY);
 
     // mempool limits
     int64_t nMempoolSizeMax = maxTxPool.Value() * ONE_MEGABYTE;
