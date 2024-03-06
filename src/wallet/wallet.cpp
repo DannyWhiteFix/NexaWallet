@@ -33,6 +33,7 @@
 #include "util.h"
 #include "utilmoneystr.h"
 #include "validation/validation.h"
+#include "wallet/grouptokencache.h"
 
 #include <algorithm>
 #include <assert.h>
@@ -79,6 +80,72 @@ struct CompareValueOnly
 std::string COutput::ToString() const
 {
     return strprintf("COutput(%s, %d) [%s]", tx->GetId().ToString(), i, FormatMoney(tx->vout[i].nValue));
+}
+
+void CWallet::SanitiseTokenTrackers()
+{
+    std::map<CGroupTokenID, std::string>::iterator iter;
+    for (iter = mapTokenTrackers.begin(); iter != mapTokenTrackers.end();)
+    {
+        if (iter->first.isUserGroup() == false)
+        {
+            CWalletDB(strWalletFile).EraseTokenTracker(iter->first);
+            iter = mapTokenTrackers.erase(iter);
+            continue;
+        }
+        else if (iter->second == "???" || iter->second == "")
+        {
+            // if empty or unknown ticker, try to populate the field
+            const CGroupTokenID grpID = iter->first;
+            std::string strTokenTicker;
+            if (GetGroupTicker(grpID, strTokenTicker))
+            {
+                iter->second = strTokenTicker;
+                CWalletDB(strWalletFile).WriteTokenTracker(grpID, strTokenTicker);
+            }
+        }
+        ++iter;
+    }
+}
+
+int CWallet::AddTokenTracker(const CGroupTokenID &id, const std::string &strTokenTicker)
+{
+    if (id.isUserGroup() == false)
+    {
+        return -1;
+    }
+    {
+        LOCK(cs_wallet);
+        // write to disk first
+        if (!CWalletDB(strWalletFile).WriteTokenTracker(id, strTokenTicker))
+        {
+            return -2;
+        }
+        // update memory map
+        // TODO - emplace exception should return -3
+        mapTokenTrackers.emplace(id, strTokenTicker);
+    }
+    // send signal to notify change last
+    NotifyTokenTrackersChanged();
+    return 0;
+}
+
+int CWallet::RemoveTokenTracker(const CGroupTokenID &id)
+{
+    {
+        LOCK(cs_wallet);
+        // write to disk first
+        if (!CWalletDB(strWalletFile).EraseTokenTracker(id))
+        {
+            return -2;
+        }
+        // update memory map
+        // TODO - erase exception should return -3
+        mapTokenTrackers.erase(id);
+    }
+    // send signal to notify change last
+    NotifyTokenTrackersChanged();
+    return 0;
 }
 
 const CWalletTxRef CWallet::GetWalletTx(const uint256 &hash) const
@@ -886,7 +953,7 @@ bool CWallet::AddToWallet(CWalletTxRef wtx, bool fFromLoadWallet, CWalletDB *pwa
         {
             isminetype mine = IsMine(wtx->vout[i]);
             // Add to unspent map
-            const auto &outpoint = wtx->OutpointAt(i);
+            const COutPoint &outpoint = wtx->OutpointAt(i);
             if (!IsSpent(outpoint) && mine != ISMINE_NO)
             {
                 mapWalletUnspent[outpoint] = COutput(wtx, i, mine);
@@ -3915,6 +3982,8 @@ DBErrors CWallet::LoadWallet(bool &fFirstRunRet)
 
     // Make sure to clear all spent items from the unspent map
     ClearAllSpent();
+    // fixes an older issue of non-user groups being added as token trackers
+    SanitiseTokenTrackers();
 
     uiInterface.LoadWallet(this);
 

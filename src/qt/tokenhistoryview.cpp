@@ -218,6 +218,9 @@ void TokenHistoryView::setModel(WalletModel *_model)
 
         if (_model->getOptionsModel())
         {
+            connect(_model->getOptionsModel(), SIGNAL(tokenWhitelistButtonChanged(bool)), _model->getTokenTableModel(),
+                SLOT(updateDisplayedTokens(bool)));
+
             // Add third party transaction URLs to context menu
             QStringList listUrls = _model->getOptionsModel()->getThirdPartyTxUrls().split("|", QString::SkipEmptyParts);
             for (int i = 0; i < listUrls.size(); ++i)

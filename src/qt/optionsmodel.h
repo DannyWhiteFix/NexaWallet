@@ -51,6 +51,7 @@ public:
         InstantTransactions, // bool
         AutoConsolidation, // bool
         RescanOnStartup, // bool
+        TokenWhitelist, // bool
         Listen, // bool
         OptionIDRowCount,
     };
@@ -93,6 +94,7 @@ private:
 Q_SIGNALS:
     void displayUnitChanged(int unit);
     void coinControlFeaturesChanged(bool);
+    void tokenWhitelistButtonChanged(bool);
 };
 
 // Returns nullptr if this URL is valid, otherwise returns an untranslated error message

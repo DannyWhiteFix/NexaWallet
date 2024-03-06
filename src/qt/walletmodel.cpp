@@ -18,6 +18,7 @@
 #include "main.h"
 #include "sync.h"
 #include "ui_interface.h"
+#include "wallet/grouptokenwallet.h"
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h" // for BackupWallet
 
@@ -682,3 +683,53 @@ bool WalletModel::saveReceiveRequest(const std::string &sAddress, const int64_t 
 }
 
 bool WalletModel::hdEnabled() const { return wallet->IsHDEnabled(); }
+
+int WalletModel::AddTokenTracker(const CGroupTokenID &grpID, const std::string &strTokenTicker) const
+{
+    // cs_wallet locked inside method
+    return wallet->AddTokenTracker(grpID, strTokenTicker);
+}
+
+int WalletModel::RemoveTokenTracker(const CGroupTokenID &grpID) const
+{
+    // cs_wallet locked inside method
+    return wallet->RemoveTokenTracker(grpID);
+}
+
+void WalletModel::listTokenTrackers(std::map<CGroupTokenID, std::string> &mapTrackers) const
+{
+    LOCK(wallet->cs_wallet);
+    mapTrackers = wallet->mapTokenTrackers;
+}
+
+void WalletModel::listTokens(std::map<CGroupTokenID, std::string> &mapTokens) const
+{
+    // Find all the coins that have a groupID
+    // add the ID and the ticker to mapTokens
+    {
+        LOCK(wallet->cs_wallet);
+        for (auto &iter : wallet->mapWallet)
+        {
+            const COutput &coin = iter.second;
+            if (coin.isNull() || coin.txOnly())
+            {
+                continue;
+            }
+            CGroupTokenInfo tg(coin.GetScriptPubKey());
+            if (tg.associatedGroup != NoGroup && mapTokens.count(tg.associatedGroup) == 0)
+            {
+                CGroupTokenID grpID = tg.associatedGroup;
+                if (grpID.isSubgroup())
+                {
+                    grpID = grpID.parentGroup();
+                }
+                std::string strTokenTicker;
+                if (GetGroupTicker(grpID, strTokenTicker) == false)
+                {
+                    strTokenTicker = "???";
+                }
+                mapTokens.emplace(tg.associatedGroup, strTokenTicker);
+            }
+        }
+    }
+}

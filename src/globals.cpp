@@ -533,6 +533,12 @@ CTweak<bool> feeEstimationTweak("wallet.feeEstimation",
     strprintf("Is fee estimation turned on (default: %s)", false),
     false);
 
+// Should we get an estimate for how much fee we need to get into the next block */
+CTweak<bool> tokenWhitelist("wallet.tokenWhitelist",
+    "Is token whitelisting enabled (default in nexad: false, default in QT: true)",
+    false,
+    &TokenWalletUpdater);
+
 #endif // ENABLE_WALLET
 
 /** Number of blocks that can be requested at any given time from a single peer. */

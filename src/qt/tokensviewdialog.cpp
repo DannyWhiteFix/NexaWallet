@@ -9,10 +9,13 @@
 #include "addresstablemodel.h"
 #include "consensus/grouptokens.h"
 #include "dstencode.h"
+#include "optionsmodel.h"
 #include "platformstyle.h"
 #include "qt/guiconstants.h"
 #include "qt/guiutil.h"
+#include "qt/tokendisplaydialog.h"
 #include "qt/transactionrecord.h"
+#include "tweak.h"
 #include "wallet/grouptokencache.h"
 #include "wallet/grouptokenwallet.h"
 #include "wallet/wallet.h"
@@ -25,6 +28,8 @@
 #include <QMessageBox>
 #include <QPalette>
 
+extern CTweak<bool> tokenWhitelist;
+
 extern std::atomic<bool> fImporting;
 extern std::atomic<bool> fReindex;
 extern bool IsChainNearlySyncd();
@@ -33,9 +38,14 @@ extern CTweak<uint32_t> instantTxnsDelay;
 
 static void RefreshTokenWallet(TokensViewDialog *tokenwallet, CWallet *wallet, const uint256 &hash, ChangeType status)
 {
-    Q_UNUSED(tokenwallet);
+    Q_UNUSED(wallet);
     Q_UNUSED(hash);
     Q_UNUSED(status);
+    QMetaObject::invokeMethod(tokenwallet, "refresh", Qt::QueuedConnection);
+}
+
+static void RefreshTokenWallet2(TokensViewDialog *tokenwallet)
+{
     QMetaObject::invokeMethod(tokenwallet, "refresh", Qt::QueuedConnection);
 }
 
@@ -84,9 +94,12 @@ TokensViewDialog::TokensViewDialog(const PlatformStyle *_platformStyle, const Co
     connect(pollTimer, SIGNAL(timeout()), this, SLOT(checkBalanceChanged()));
     pollTimer->start(MODEL_UPDATE_DELAY1);
 
+    setManageDisplayedTokensButton(tokenWhitelist.Value());
+
     // subscribe to core signals
     pwalletMain->NotifyTransactionChanged.connect(
         boost::bind(RefreshTokenWallet, this, boost::arg<1>(), boost::arg<2>(), boost::arg<3>()));
+    pwalletMain->NotifyTokenTrackersChanged.connect(boost::bind(RefreshTokenWallet2, this));
 }
 
 TokensViewDialog::~TokensViewDialog()
@@ -150,15 +163,28 @@ void TokensViewDialog::refresh()
     std::unordered_map<CGroupTokenID, CAmount> balances;
     std::unordered_map<CGroupTokenID, CAmount> pending;
 
+    std::set<CGroupTokenID> all_tokens;
+
     // Get Balances - this is quite performant since it only parses the much smaller unspent wallet map.
     if (pwalletMain)
     {
+        bool fWhitelist = tokenWhitelist.Value();
         LOCK(pwalletMain->cs_wallet);
         for (MapWallet::const_iterator it = pwalletMain->mapWalletUnspent.begin();
              it != pwalletMain->mapWalletUnspent.end(); ++it)
         {
-            const CWalletTxRef ptx = it->second.tx;
             CGroupTokenInfo tg(it->second.GetScriptPubKey());
+
+            if (!pwalletMain->IsSpent(it->first) && tg.associatedGroup != NoGroup && !tg.isAuthority())
+            {
+                all_tokens.emplace(tg.associatedGroup);
+            }
+
+            if (fWhitelist && !pwalletMain->mapTokenTrackers.count(tg.associatedGroup))
+            {
+                continue;
+            }
+            const CWalletTxRef ptx = it->second.tx;
             if (ptx->IsTrusted())
             {
                 if (!pwalletMain->IsSpent(it->first) && tg.associatedGroup != NoGroup && !tg.isAuthority())
@@ -176,6 +202,11 @@ void TokensViewDialog::refresh()
         }
     }
 
+    const size_t nTokensDisplayed = pending.size() + balances.size();
+
+    ui->tokensInWalletLabel->setText(QString::fromStdString("Tokens in Wallet: " + std::to_string(all_tokens.size())));
+    ui->tokensDisplayedLabel->setText(QString::fromStdString("Tokens Displayed: " + std::to_string(nTokensDisplayed)));
+
 
     // Get the current item if it is selected
     QList selectedItems = ui->tokenTable->selectedItems();
@@ -185,13 +216,6 @@ void TokensViewDialog::refresh()
         // get the grpID
         strGrpIDSelected = selectedItems[0]->text();
     }
-
-    // Resize table in the event that one item was removed as when
-    // the full balance of a token would have been sent and we now
-    // should show one less.  We could just resize to zero but doing
-    // it this way prevents the scroll bar from moving to a different
-    // position.
-    ui->tokenTable->setRowCount(nCurrentRowCount);
 
     // Add items to the table
     ui->tokenTable->setSortingEnabled(false);
@@ -276,7 +300,13 @@ void TokensViewDialog::refresh()
 
         row++;
     }
+    // Resize table in the event that one item was removed as when
+    // the full balance of a token would have been sent and we now
+    // should show one less.  We could just resize to zero but doing
+    // it this way prevents the scroll bar from moving to a different
+    // position.
     nCurrentRowCount = row;
+    ui->tokenTable->setRowCount(nCurrentRowCount);
 
     // After sorting is re-enabled make sure the any previously selected row remains selected.
     ui->tokenTable->setSortingEnabled(true);
@@ -679,6 +709,22 @@ void TokensViewDialog::on_sendButton_clicked()
     return;
 }
 
+// Coin Control: settings menu - coin control enabled/disabled by user
+void TokensViewDialog::setManageDisplayedTokensButton(bool checked)
+{
+    ui->manageDisplayedTokensButton->setVisible(checked);
+    ui->manageDisplayedTokensButton->setEnabled(checked);
+    ui->tokensInWalletLabel->setVisible(checked);
+    ui->tokensDisplayedLabel->setVisible(checked);
+}
+
+void TokensViewDialog::on_manageDisplayedTokensButton_clicked()
+{
+    TokenDisplayDialog dlg(platformStyle);
+    dlg.setModel(model);
+    dlg.exec();
+}
+
 void TokensViewDialog::keyPressEvent(QKeyEvent *event)
 {
     // prevent the escape key from closing the tokens tab.
@@ -691,4 +737,6 @@ void TokensViewDialog::keyPressEvent(QKeyEvent *event)
 void TokensViewDialog::setModel(WalletModel *_model)
 {
     this->model = _model; // need this for the send address selection dialog
+    connect(_model->getOptionsModel(), SIGNAL(tokenWhitelistButtonChanged(bool)), this,
+        SLOT(setManageDisplayedTokensButton(bool)));
 }

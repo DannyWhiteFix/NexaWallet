@@ -764,6 +764,8 @@ public:
     std::set<int64_t> setKeyPool;
     std::map<CKeyID, CKeyMetadata> mapKeyMetadata;
 
+    std::map<CGroupTokenID, std::string> mapTokenTrackers;
+
     typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
     MasterKeyMap mapMasterKeys;
     unsigned int nMasterKeyMaxID;
@@ -822,6 +824,10 @@ public:
     std::set<COutPoint> setLockedCoins;
 
     int64_t nTimeFirstKey;
+
+    void SanitiseTokenTrackers();
+    int AddTokenTracker(const CGroupTokenID &id, const std::string &strTokenTicker);
+    int RemoveTokenTracker(const CGroupTokenID &id);
 
     const CWalletTxRef GetWalletTx(const uint256 &hash) const;
 
@@ -1131,6 +1137,9 @@ public:
      * @note called with lock cs_wallet held.
      */
     boost::signals2::signal<void(CWallet *wallet, const uint256 &hashTx, ChangeType status)> NotifyTransactionChanged;
+
+    /** Token Trackers changed */
+    boost::signals2::signal<void()> NotifyTokenTrackersChanged;
 
     /** Show progress e.g. for rescan */
     boost::signals2::signal<void(const std::string &title, int nProgress)> ShowProgress;

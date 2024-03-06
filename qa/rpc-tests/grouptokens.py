@@ -118,6 +118,13 @@ class GroupTokensTest (BitcoinTestFramework):
         waitFor(30, lambda: self.nodes[0].token("mintage", sg1a), 0);
         tx = self.nodes[0].token("mint",sg1a, addr2, 100)
         waitFor(30, lambda: tx in self.nodes[2].getrawtxpool())  # If this fails, remember that there's a very rare chance that a tx won't propagate due to an inv bloom filter collision.
+        self.nodes[2].token("tracker", "add", sg1a, "1")
+        assert_equal(self.nodes[2].token("balance", sg1a)['balance_satoshis'], 100)
+        # remove the tracker, balance should go back to 0
+        self.nodes[2].token("tracker", "remove", sg1a)
+        assert_equal(self.nodes[2].token("balance", sg1a)['balance_satoshis'], 0)
+        # add tracker back to continue test
+        self.nodes[2].token("tracker", "add", sg1a, "1")
         assert_equal(self.nodes[2].token("balance", sg1a)['balance_satoshis'], 100)
         assert_equal(self.nodes[2].token("balance", grp1)['balance_satoshis'], 0)
 
@@ -232,6 +239,11 @@ class GroupTokensTest (BitcoinTestFramework):
         self.nodes[2].set("wallet.instant=true");
         self.nodes[2].set("wallet.instantDelay=0");
 
+        # use the whitelist for the tests
+        self.nodes[0].set("wallet.tokenWhitelist=1");
+        self.nodes[1].set("wallet.tokenWhitelist=1");
+        self.nodes[2].set("wallet.tokenWhitelist=1");
+
         # generate enough blocks so that nodes[0] has a balance
         self.nodes[2].generate(2)
         self.sync_blocks()
@@ -329,24 +341,33 @@ class GroupTokensTest (BitcoinTestFramework):
         grp1Id = t["groupIdentifier"]
         self.nodes[0].generate(1)
         self.sync_blocks()
-        self.checkTokenInfo(self.nodes[1], grp1Id)
         try:
+            # neither node will see it until it is added to the whitelist
+            # this prevents someone from remote bombing someone elses wallet UI with spam
+            # tokens if you happen to find an address they control
+            self.checkTokenInfo(self.nodes[1], grp1Id)
             self.checkTokenInfo(self.nodes[0], grp1Id)
             assert False
         except:
             pass
+        # adding the token to the node1 whitelist will let them see it though
+        self.nodes[1].token("tracker", "add", grp1Id)
+        self.checkTokenInfo(self.nodes[1], grp1Id)
 
         t = self.nodes[0].token("new", auth2Addr)
         self.checkGroupNew(self.nodes[0].decoderawtransaction(self.nodes[0].gettransaction(t["transaction"])["hex"]))
         grp2Id = t["groupIdentifier"]
         self.nodes[0].generate(1)
         self.sync_blocks()
-        self.checkTokenInfo(self.nodes[2], grp2Id)
         try:
+            # same situation as above
+            self.checkTokenInfo(self.nodes[2], grp2Id)
             self.checkTokenInfo(self.nodes[0], grp2Id)
             assert False
         except:
             pass
+        self.nodes[2].token("tracker", "add", grp2Id)
+        self.checkTokenInfo(self.nodes[2], grp2Id)
 
         mint0_0 = self.nodes[0].getnewaddress()
         mint0_1 = self.nodes[0].getnewaddress()
@@ -365,7 +386,7 @@ class GroupTokensTest (BitcoinTestFramework):
         assert(self.nodes[0].token("balance", grpId)['balance_satoshis'] == 2000)
         self.checkTokenInfo(self.nodes[0], grpId,"","","","", 2000)
 
-        # TODO: what happens here to foreign address minting? 
+        # TODO: what happens here to foreign address minting?
         # print("node 1 balance " + str( self.nodes[1].token("balance", grpId)))
           # add more tests for foreign address?
 
@@ -499,6 +520,17 @@ class GroupTokensTest (BitcoinTestFramework):
         assert(self.nodes[0].token("balance", grp2Id, mint0_0)['balance_satoshis'] == 300)
         assert(self.nodes[2].token("balance", grp2Id)['balance_satoshis'] == 800)
         assert(self.nodes[0].token("balance", grpId)['balance_satoshis'] == 3000)
+        # node 1 does not have an authority baton and was not the token creator, it should see no balance
+        assert(self.nodes[1].token("balance", grpId)['balance_satoshis'] == 0)
+        # if we add a tracker then check again it should be able to get the balance
+        self.nodes[1].token("tracker", "add", grpId)
+        # balance should be 1000 as expected now
+        assert(self.nodes[1].token("balance", grpId)['balance_satoshis'] == 1000)
+        # remove tracker, balance should be 0 again
+        self.nodes[1].token("tracker", "remove", grpId)
+        assert(self.nodes[1].token("balance", grpId)['balance_satoshis'] == 0)
+        # add tracker back and continue test
+        self.nodes[1].token("tracker", "add", grpId)
         assert(self.nodes[1].token("balance", grpId)['balance_satoshis'] == 1000)
         # This should fail because the grp2Id was created for an address on node[2]
         try:
@@ -526,7 +558,12 @@ class GroupTokensTest (BitcoinTestFramework):
         self.nodes[0].token("send", grp0Id, mint1_0, 100, mint2_0, 200)
         self.sync_all()
         assert(self.nodes[0].token("balance", grp0Id)['balance_satoshis'] == 10)
+        # node 1 does not have an authority baton and was not the token creator, it should see no balance
+        assert(self.nodes[1].token("balance", grp0Id)['balance_satoshis'] == 0)
+        # if we add a tracker then check again it should be able to get the balance
+        self.nodes[1].token("tracker", "add", grp0Id)
         assert(self.nodes[1].token("balance", grp0Id)['balance_satoshis'] == 120)
+        self.nodes[2].token("tracker", "add", grp0Id)
         assert(self.nodes[2].token("balance", grp0Id)['balance_satoshis'] == 230)
         self.checkTokenInfo(self.nodes[0], grp0Id, "","","","", 10)
         # This should fail because the grp2Id was created for an address on node[0]
@@ -647,7 +684,7 @@ class GroupTokensTest (BitcoinTestFramework):
         grp_node0 = t["groupIdentifier"]
         t = self.nodes[2].token("new")
         grp_node2 = t["groupIdentifier"]
- 
+
 
         # check mintages are correct for single mint
         mintage0 = self.nodes[0].token("mintage", grp_node0)['mintage_satoshis']
@@ -832,7 +869,7 @@ class GroupTokensTest (BitcoinTestFramework):
         self.sync_blocks()
 
         # Create basic token and check that the authority is tracked
-        authGrpId1 = self.nodes[2].token("new", "NEXA", "NEXA.org" "" "" "2")["groupIdentifier"]  
+        authGrpId1 = self.nodes[2].token("new", "NEXA", "NEXA.org" "" "" "2")["groupIdentifier"]
         waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 1)
         try:
             self.nodes[2].token("authority", "count", authGrpId1)["mint"]
@@ -863,8 +900,8 @@ class GroupTokensTest (BitcoinTestFramework):
         assert_equal(self.nodes[2].token("authority", "count", authGrpId1)["subgroup"], "1")
 
         # The new token creation transaction is in the same block as the first mint
-        authGrpId2 = self.nodes[2].token("new")["groupIdentifier"]  
-        authGrpId3 = self.nodes[2].token("new")["groupIdentifier"]  
+        authGrpId2 = self.nodes[2].token("new")["groupIdentifier"]
+        authGrpId3 = self.nodes[2].token("new")["groupIdentifier"]
         waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 2)
 
         addr2 = self.nodes[2].getnewaddress()
@@ -989,7 +1026,7 @@ class GroupTokensTest (BitcoinTestFramework):
         logging.info("testing authority tracking after destroying an authority")
         self.nodes[2].generate(80) # must mine a block for tracking to update and also need coins for fees
 
-        authGrpId4 = self.nodes[2].token("new", "NEXA", "NEXA.org" "" "" "2")["groupIdentifier"]  
+        authGrpId4 = self.nodes[2].token("new", "NEXA", "NEXA.org" "" "" "2")["groupIdentifier"]
         waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 1)
         try:
             self.nodes[2].token("authority", "count", authGrpId4)["mint"]

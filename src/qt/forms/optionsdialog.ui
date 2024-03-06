@@ -275,6 +275,22 @@
               <string>&amp;Rescan wallet on startup</string>
              </property>
             </widget>
+            <widget class="QCheckBox" name="tokenWhitelist">
+             <property name="geometry">
+              <rect>
+               <x>12</x>
+               <y>144</y>
+               <width>201</width>
+               <height>21</height>
+              </rect>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When Token Whitelist is enabled you can control what tokens appear in your wallet.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>&amp;Token Whitelist</string>
+             </property>
+            </widget>
            </widget>
           </item>
          </layout>
