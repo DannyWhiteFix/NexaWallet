@@ -83,7 +83,9 @@ const char *ScriptErrorString(const ScriptError serror)
     case SCRIPT_ERR_SIG_HIGH_S:
         return "Non-canonical signature: S value is unnecessarily high";
     case SCRIPT_ERR_SIG_NULLFAIL:
-        return "Signature must be zero for failed CHECK(MULTI)SIG operation";
+        return "Signature must be zero for failed CHECKSIG operation";
+    case SCRIPT_ERR_MULTISIG_NULLFAIL:
+        return "Signature must be zero for failed CHECKMULTISIG operation";
     case SCRIPT_ERR_SIG_BADLENGTH:
         return "Signature cannot be 65 bytes in CHECKMULTISIG";
     case SCRIPT_ERR_SIG_NONSCHNORR:

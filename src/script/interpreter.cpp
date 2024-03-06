@@ -1616,7 +1616,7 @@ bool ScriptMachine::Step()
                         // If the operation failed, we require that all signatures must be empty vector
                         if (!fSuccess && (flags & SCRIPT_VERIFY_NULLFAIL))
                         {
-                            return set_error(serror, SCRIPT_ERR_SIG_NULLFAIL);
+                            return set_error(serror, SCRIPT_ERR_MULTISIG_NULLFAIL);
                         }
                     }
 
