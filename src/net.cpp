@@ -1450,32 +1450,30 @@ void ThreadSocketHandler()
                 setSocket.insert(hSocket);
 
                 // Implement the following logic:
-                // * If there is data to send, select() for sending data. As this only
-                //   happens when optimistic write failed, we choose to first drain the
-                //   write buffer in this case before receiving more. This avoids
-                //   needlessly queueing received data, if the remote peer is not themselves
-                //   receiving data. This means properly utilizing TCP flow control signalling.
-                // * Otherwise, if there is no (complete) message in the receive buffer,
+                // * If there is no (complete) message in the receive buffer,
                 //   or there is space left in the buffer, select() for receiving data.
-                // * (if neither of the above applies, there is certainly one message
-                //   in the receiver buffer ready to be processed).
-                // Together, that means that at least one of the following is always possible,
-                // so we don't deadlock:
-                // * We send some data.
-                // * We wait for data to be received (and disconnect after timeout).
-                // * We process a message in the buffer (message handler thread).
-                {
-                    TRY_LOCK(pnode->cs_vSend, lockSend);
-                    if (lockSend && (!pnode->vSendMsg.empty() || !pnode->vLowPrioritySendMsg.empty()))
-                    {
-                        FD_SET(hSocket, &fdsetSend);
-                    }
-                }
+                // * If the receive buffer is full then only select for receiving and skip
+                //   sending for the time being.
+                // * If there is data to send, select() for sending data.
+                // By always reading in data we will be sure to never deadlock even though
+                // we may occassionaly skip sending under high load.
                 {
                     TRY_LOCK(pnode->cs_vRecvMsg, lockRecv);
                     if (lockRecv && (pnode->vRecvMsg.empty() || pnode->GetTotalRecvSize() <= ReceiveFloodSize()))
                     {
                         FD_SET(hSocket, &fdsetRecv);
+                    }
+                    else
+                    {
+                        FD_SET(hSocket, &fdsetRecv);
+                        continue;
+                    }
+                }
+                {
+                    TRY_LOCK(pnode->cs_vSend, lockSend);
+                    if (lockSend && (!pnode->vSendMsg.empty() || !pnode->vLowPrioritySendMsg.empty()))
+                    {
+                        FD_SET(hSocket, &fdsetSend);
                     }
                 }
             }
