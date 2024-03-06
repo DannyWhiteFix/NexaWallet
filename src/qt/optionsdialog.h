@@ -59,6 +59,7 @@ private Q_SLOTS:
     void setZeroConf(bool fPersisten = false);
     void setInstant(bool fPersistent = false);
     void setAuto(bool fPersistent = false);
+    void setTokenWhitelist();
     void thirdPartyTxWarning(bool fPersistent = false);
     void clearStatusLabel();
     void updateProxyValidationState();

@@ -124,6 +124,12 @@ public:
     {
     }
 
+    // the wallet will not display tokens that are not explicitly tracked in the UI or in rpcs
+    // if this wallet created the token or holds an authority for the token it is automatically added
+    // to tracking, the goal of this list is to try to prevent some scams
+    bool WriteTokenTracker(const CGroupTokenID &id, const std::string &strTokenTicker);
+    bool EraseTokenTracker(const CGroupTokenID &id);
+
     bool WriteName(const CTxDestination &address, const std::string &strName);
     bool EraseName(const CTxDestination &address);
 

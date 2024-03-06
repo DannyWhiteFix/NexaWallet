@@ -97,6 +97,7 @@ QT_FORMS_UI = \
   qt/forms/askpassphrasedialog.ui \
   qt/forms/coincontroldialog.ui \
   qt/forms/editaddressdialog.ui \
+  qt/forms/edittokendialog.ui \
   qt/forms/helpmessagedialog.ui \
   qt/forms/intro.ui \
   qt/forms/modaloverlay.ui \
@@ -110,6 +111,7 @@ QT_FORMS_UI = \
   qt/forms/sendcoinsentry.ui \
   qt/forms/signverifymessagedialog.ui \
   qt/forms/tokendescdialog.ui \
+  qt/forms/tokendisplaydialog.ui \
   qt/forms/tokensviewdialog.ui \
   qt/forms/transactiondescdialog.ui
 
@@ -123,6 +125,7 @@ QT_MOC_CPP = \
   qt/moc_coincontroltreewidget.cpp \
   qt/moc_csvmodelwriter.cpp \
   qt/moc_editaddressdialog.cpp \
+  qt/moc_edittokendialog.cpp \
   qt/moc_guiutil.cpp \
   qt/moc_intro.cpp \
   qt/moc_macdockiconhandler.cpp \
@@ -152,6 +155,8 @@ QT_MOC_CPP = \
   qt/moc_signverifymessagedialog.cpp \
   qt/moc_splashscreen.cpp \
   qt/moc_tokendescdialog.cpp \
+  qt/moc_tokendisplaydialog.cpp \
+  qt/moc_tokendisplaytreewidget.cpp \
   qt/moc_tokenhistoryview.cpp \
   qt/moc_tokensviewdialog.cpp \
   qt/moc_tokentablemodel.cpp \
@@ -197,6 +202,7 @@ NEXA_QT_H = \
   qt/coincontroltreewidget.h \
   qt/csvmodelwriter.h \
   qt/editaddressdialog.h \
+  qt/edittokendialog.h \
   qt/guiconstants.h \
   qt/guiutil.h \
   qt/intro.h \
@@ -230,6 +236,8 @@ NEXA_QT_H = \
   qt/signverifymessagedialog.h \
   qt/splashscreen.h \
   qt/tokendescdialog.h \
+  qt/tokendisplaydialog.h \
+  qt/tokendisplaytreewidget.h \
   qt/tokenhistoryview.h \
   qt/tokensviewdialog.h \
   qt/tokentablemodel.h \
@@ -341,6 +349,7 @@ NEXA_QT_CPP += \
   qt/coincontroldialog.cpp \
   qt/coincontroltreewidget.cpp \
   qt/editaddressdialog.cpp \
+  qt/edittokendialog.cpp \
   qt/openuridialog.cpp \
   qt/overviewpage.cpp \
   qt/paymentrequestplus.cpp \
@@ -352,6 +361,8 @@ NEXA_QT_CPP += \
   qt/sendcoinsentry.cpp \
   qt/signverifymessagedialog.cpp \
   qt/tokendescdialog.cpp \
+  qt/tokendisplaydialog.cpp \
+  qt/tokendisplaytreewidget.cpp \
   qt/tokenhistoryview.cpp \
   qt/tokensviewdialog.cpp \
   qt/tokentablemodel.cpp \

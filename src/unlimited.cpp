@@ -130,6 +130,17 @@ std::string SubverValidator(const std::string &value, std::string *item, bool va
     return std::string();
 }
 
+std::string TokenWalletUpdater(const bool &value, CTweak<bool> *item, bool validate)
+{
+    // We don't actually validate anything here we just want to force an update of the UI
+    // when the tweak is modified.
+    if (pwalletMain)
+    {
+        pwalletMain->NotifyTokenTrackersChanged();
+    }
+    return std::string();
+}
+
 std::string Bip135VoteValidator(const std::string &value, std::string *item, bool validate)
 {
     if (validate)

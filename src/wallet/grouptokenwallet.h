@@ -11,9 +11,12 @@
 #include "consensus/validation.h"
 #include "pubkey.h"
 #include "script/standard.h"
+#include "tweak.h"
 #include "wallet/wallet.h"
 
 #include <unordered_map>
+
+extern CTweak<bool> tokenWhitelist;
 
 /** Pass a group and a destination address (or CNoDestination) to get the balance of all outputs in the group
  *  or all outputs in that group and on that destination address.
@@ -60,6 +63,8 @@ CGroupTokenID findGroupId(const COutPoint &input,
     GroupTokenIdFlags flags,
     GroupAuthorityFlags authorityFlags,
     uint64_t &nonce);
+
+bool GetGroupTicker(const CGroupTokenID &grpID, std::string &ticker);
 
 //* Group script helper function
 CScript GetScriptForDestination(const CTxDestination &dest, const CGroupTokenID &group, const CAmount &amount);

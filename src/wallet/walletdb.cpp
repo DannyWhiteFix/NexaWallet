@@ -34,6 +34,18 @@ static uint64_t nAccountingEntryNumber = 0;
 // CWalletDB
 //
 
+bool CWalletDB::WriteTokenTracker(const CGroupTokenID &id, const std::string &strTokenTicker)
+{
+    nWalletDBUpdated++;
+    return Write(std::make_pair(std::string("tokentracker"), id), strTokenTicker);
+}
+
+bool CWalletDB::EraseTokenTracker(const CGroupTokenID &id)
+{
+    nWalletDBUpdated++;
+    return Erase(std::make_pair(std::string("tokentracker"), id));
+}
+
 bool CWalletDB::WriteName(const CTxDestination &address, const std::string &strName)
 {
     if (!IsValidDestination(address))
@@ -534,6 +546,14 @@ bool ReadKeyValue(CWallet *pwallet,
                 strErr = "Error reading wallet database: SetHDChain failed";
                 return false;
             }
+        }
+        else if (strType == "tokentracker")
+        {
+            CGroupTokenID tokenId;
+            std::string strTokenTicker;
+            ssKey >> tokenId;
+            ssValue >> strTokenTicker;
+            pwallet->mapTokenTrackers.emplace(tokenId, strTokenTicker);
         }
     }
     catch (...)

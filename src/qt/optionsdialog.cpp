@@ -36,6 +36,7 @@
 
 extern CTweak<bool> instantTxns;
 extern CTweak<bool> autoTxns;
+extern CTweak<bool> tokenWhitelist;
 
 // Contains native language names that are missing from the QT database.  The key is the language code
 // whereas the value is the language name as written in the native tounge.
@@ -89,6 +90,16 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet)
     else
     {
         ui->autoConsolidation->setChecked(false);
+    }
+
+    ui->tokenWhitelist->setEnabled(true);
+    if (tokenWhitelist.Value())
+    {
+        ui->tokenWhitelist->setChecked(true);
+    }
+    else
+    {
+        ui->tokenWhitelist->setChecked(false);
     }
 
 #endif
@@ -200,6 +211,7 @@ void OptionsDialog::setModel(OptionsModel *_model)
     connect(ui->instantTransactions, SIGNAL(clicked(bool)), this, SLOT(setInstant()));
     connect(ui->autoConsolidation, SIGNAL(clicked(bool)), this, SLOT(setAuto()));
     connect(ui->rescanOnStartup, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
+    connect(ui->tokenWhitelist, SIGNAL(clicked(bool)), this, SLOT(setTokenWhitelist()));
     /* Network */
     connect(ui->allowIncoming, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     connect(ui->connectSocks, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
@@ -223,6 +235,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->instantTransactions, OptionsModel::InstantTransactions);
     mapper->addMapping(ui->autoConsolidation, OptionsModel::AutoConsolidation);
     mapper->addMapping(ui->rescanOnStartup, OptionsModel::RescanOnStartup);
+    mapper->addMapping(ui->tokenWhitelist, OptionsModel::TokenWhitelist);
 
     /* Network */
     mapper->addMapping(ui->mapPortUpnp, OptionsModel::MapPortUPnP);
@@ -333,6 +346,21 @@ void OptionsDialog::setAuto(bool fPersistent)
     {
         ui->autoConsolidation->setEnabled(false);
         autoTxns.Set(false);
+    }
+#endif
+}
+
+void OptionsDialog::setTokenWhitelist()
+{
+#ifdef ENABLE_WALLET
+    // should always be enabled but santiy check it
+    if (ui->tokenWhitelist->isEnabled() && ui->tokenWhitelist->isChecked())
+    {
+        tokenWhitelist.Set(true);
+    }
+    else
+    {
+        tokenWhitelist.Set(false);
     }
 #endif
 }

@@ -169,6 +169,7 @@ void GetAllGroupDescriptions(const CWallet *wallet,
     // Find all the coins that have a groupID
     std::vector<COutput> vCoins;
     {
+        bool fWhitelist = tokenWhitelist.Value();
         LOCK(wallet->cs_wallet);
         for (auto &iter : wallet->mapWallet)
         {
@@ -179,7 +180,14 @@ void GetAllGroupDescriptions(const CWallet *wallet,
             if ((tg.associatedGroup != NoGroup) && tg.isAuthority())
             {
                 if (grpID != NoGroup && tg.associatedGroup != grpID)
+                {
                     continue;
+                }
+                // do not get descriptions for tokens not being tracked
+                if (fWhitelist && !wallet->mapTokenTrackers.count(tg.associatedGroup))
+                {
+                    continue;
+                }
                 vCoins.push_back(coin);
             }
         }
@@ -219,16 +227,27 @@ void GetAllGroupDescriptions(const CWallet *wallet,
 void GetAllGroupBalances(const CWallet *wallet, std::unordered_map<CGroupTokenID, CAmount> &balances)
 {
     std::vector<COutput> coins;
+    bool fWhitelist = tokenWhitelist.Value();
     wallet->FilterCoins(coins,
-        [&balances](const COutput &coin)
+        [wallet, &balances, fWhitelist](const COutput &coin)
         {
             CGroupTokenInfo tg(coin.GetScriptPubKey());
             if ((tg.associatedGroup != NoGroup) && !tg.isAuthority()) // must be sitting in any group address
             {
+                // do not get balances for tokens not being tracked
+                if (fWhitelist && !wallet->mapTokenTrackers.count(tg.associatedGroup))
+                {
+                    return false;
+                }
+
                 if (tg.quantity > std::numeric_limits<CAmount>::max() - balances[tg.associatedGroup])
+                {
                     balances[tg.associatedGroup] = std::numeric_limits<CAmount>::max();
+                }
                 else
+                {
                     balances[tg.associatedGroup] += tg.quantity;
+                }
             }
             return false; // I don't want to actually filter anything
         });
@@ -238,9 +257,24 @@ CAmount GetGroupBalance(const CGroupTokenID &grpID, const CTxDestination &dest, 
 {
     std::vector<COutput> coins;
     CAmount balance = 0;
-    wallet->FilterCoins(coins,
-        [grpID, dest, &balance](const COutput &coin)
+    const bool fWhitelist = tokenWhitelist.Value();
+
+    if (fWhitelist)
+    {
+        LOCK(wallet->cs_wallet);
+        if (wallet->mapTokenTrackers.count(grpID) == 0)
         {
+            return balance;
+        }
+    }
+
+    wallet->FilterCoins(coins,
+        [wallet, grpID, dest, &balance, fWhitelist](const COutput &coin)
+        {
+            if (fWhitelist && !wallet->mapTokenTrackers.count(grpID))
+            {
+                return false;
+            }
             CGroupTokenInfo tg(coin.GetScriptPubKey());
             if ((grpID == tg.associatedGroup) && !tg.isAuthority()) // must be sitting in group address
             {
@@ -252,20 +286,37 @@ CAmount GetGroupBalance(const CGroupTokenID &grpID, const CTxDestination &dest, 
                     if (ExtractDestinationAndType(coin.GetScriptPubKey(), address, whichType))
                     {
                         if (address == dest)
+                        {
                             useit = true;
+                        }
                     }
                 }
                 if (useit)
                 {
                     if (tg.quantity > std::numeric_limits<CAmount>::max() - balance)
+                    {
                         balance = std::numeric_limits<CAmount>::max();
+                    }
                     else
+                    {
                         balance += tg.quantity;
+                    }
                 }
             }
             return false;
         });
     return balance;
+}
+
+bool GetGroupTicker(const CGroupTokenID &grpID, std::string &ticker)
+{
+    std::vector<std::string> res = tokencache.GetTokenDesc(grpID);
+    if (res.empty())
+    {
+        return false;
+    }
+    ticker = res[0];
+    return true;
 }
 
 CScript GetScriptForDestination(const CTxDestination &dest, const CGroupTokenID &group, const CAmount &amount)
@@ -909,7 +960,7 @@ extern UniValue token(const UniValue &params, bool fHelp)
 {
     if (fHelp || params.size() < 1)
         throw std::runtime_error(
-            "token [info, new, mint, melt, balance, send, authority, subgroup, mintage] \n"
+            "token [info, new, mint, melt, balance, send, authority, tracker, subgroup, mintage] \n"
             "\nToken functions.\n"
             "'info' returns a list of all tokens with their groupId and associated token-name, token-ticker "
             "descUrl, descHash, the number of mint/melt/renew/rescript/subgroup authorities, and also "
@@ -927,6 +978,10 @@ extern UniValue token(const UniValue &params, bool fHelp)
             "'authority destroy'  Destroys all authorties associated with this outpoint. args: outpoint\n"
             "'subgroup' translates a group and additional data into a subgroup identifier. args: groupId data\n"
             "'mintage' returns the current mintage of a token. args: groupId\n"
+            "'tracker add' adds a token to the tracking whitelist which allows for that token to be shown in the "
+            "QT gui and returned by rpc commands. args: groupId, token-ticker(optional)\n"
+            "'tracker remove' removes a token from the tracking whitelist, args: groupId\n"
+            "'tracker list' lists all token trackers, args: none\n"
 
             "Note: As this interface is often used for scripting, all balances are accepted and reported as integers\n"
             "      specified in the token's finest unit (the 'decimals' field in the token information is ignored).\n"
@@ -978,7 +1033,12 @@ extern UniValue token(const UniValue &params, bool fHelp)
                 "token", "authority count nexa:tpyte9hwr6ew0agt67a0y2fnnccc0d8r62lwryq44rfhzmv7ngqqqza82qdu0") +
             "\nMake subgroups\n " +
             HelpExampleCli("token", "subgroup nexa:tpyte9hwr6ew0agt67a0y2fnnccc0d8r62lwryq44rfhzmv7ngqqqza82qdum 1") +
-            "\nGet token mintage\n " +
+            "\nAdd token tracker\n " +
+            HelpExampleCli("token", "tracker add nexa:tpyte9hwr6ew0agt67a0y2fnnccc0d8r62lwryq44rfhzmv7ngqqqza82qdum") +
+            "\nRemove token tracker\n " +
+            HelpExampleCli(
+                "token", "tracker remove nexa:tpyte9hwr6ew0agt67a0y2fnnccc0d8r62lwryq44rfhzmv7ngqqqza82qdum") +
+            "\nlist all token trackers\n " + HelpExampleCli("token", "tracker list") + "\nGet token mintage\n " +
             HelpExampleCli("token", "mintage nexa:tpyte9hwr6ew0agt67a0y2fnnccc0d8r62lwryq44rfhzmv7ngqqqza82qdum"));
 
     CWallet *wallet = pwalletMain;
@@ -1338,54 +1398,49 @@ extern UniValue token(const UniValue &params, bool fHelp)
     }
     else if (operation == "new")
     {
-        LOCK(wallet->cs_wallet);
-        unsigned int curparam = 1;
-
-        COutput coin;
+        CGroupTokenID grpID;
+        CWalletTx wtx;
+        std::string strTokenTicker = "";
         {
-            std::vector<COutput> coins;
-            CAmount lowest = MAX_MONEY;
-            wallet->FilterCoins(coins,
-                [&lowest](const COutput &tcoin)
-                {
-                    CGroupTokenInfo tg(tcoin.GetScriptPubKey());
-                    // although its possible to spend a grouped input to produce
-                    // a single mint group, I won't allow it to make the tx construction easier.
-                    if ((tg.associatedGroup == NoGroup) && (tcoin.GetValue() < lowest))
-                    {
-                        lowest = tcoin.GetValue();
-                        return true;
-                    }
-                    return false;
-                });
+            LOCK(wallet->cs_wallet);
+            unsigned int curparam = 1;
 
-            if (0 == coins.size())
+            COutput coin;
             {
-                throw JSONRPCError(RPC_INVALID_PARAMS, "No coins available in the wallet");
+                std::vector<COutput> coins;
+                CAmount lowest = MAX_MONEY;
+                wallet->FilterCoins(coins,
+                    [&lowest](const COutput &tcoin)
+                    {
+                        CGroupTokenInfo tg(tcoin.GetScriptPubKey());
+                        // although its possible to spend a grouped input to produce
+                        // a single mint group, I won't allow it to make the tx construction easier.
+                        if ((tg.associatedGroup == NoGroup) && (tcoin.GetValue() < lowest))
+                        {
+                            lowest = tcoin.GetValue();
+                            return true;
+                        }
+                        return false;
+                    });
+
+                if (0 == coins.size())
+                {
+                    throw JSONRPCError(RPC_INVALID_PARAMS, "No coins available in the wallet");
+                }
+                coin = coins[coins.size() - 1];
             }
-            coin = coins[coins.size() - 1];
-        }
 
-        uint64_t grpNonce = 0;
+            uint64_t grpNonce = 0;
 
-        std::vector<COutput> chosenCoins;
-        chosenCoins.push_back(coin);
+            std::vector<COutput> chosenCoins;
+            chosenCoins.push_back(coin);
 
-        std::vector<CRecipient> outputs;
+            std::vector<CRecipient> outputs;
 
-        CReserveKey authKeyReservation(wallet);
-        CTxDestination authDest;
-        CScript opretScript;
-        if (curparam >= params.size())
-        {
-            CPubKey authKey;
-            authKeyReservation.GetReservedKey(authKey);
-            authDest = ScriptTemplateDestination(P2pktOutput(authKey));
-        }
-        else
-        {
-            authDest = DecodeDestination(params[curparam].get_str(), Params());
-            if (authDest == CTxDestination(CNoDestination()))
+            CReserveKey authKeyReservation(wallet);
+            CTxDestination authDest;
+            CScript opretScript;
+            if (curparam >= params.size())
             {
                 CPubKey authKey;
                 authKeyReservation.GetReservedKey(authKey);
@@ -1393,43 +1448,130 @@ extern UniValue token(const UniValue &params, bool fHelp)
             }
             else
             {
-                curparam++;
-            }
-
-            // If token description info is supplied then parse it and create an OP_RETURN output.  Otherwise
-            // do not create an OP_RETURN output
-            if (curparam < params.size())
-            {
-                auto desc = ParseGroupDescParams(params, curparam);
-                if (desc.size()) // Add an op_return if there's a token desc doc
+                authDest = DecodeDestination(params[curparam].get_str(), Params());
+                if (authDest == CTxDestination(CNoDestination()))
                 {
-                    opretScript = BuildTokenDescScript(desc);
-                    outputs.push_back(CRecipient{opretScript, 0, false});
+                    CPubKey authKey;
+                    authKeyReservation.GetReservedKey(authKey);
+                    authDest = ScriptTemplateDestination(P2pktOutput(authKey));
+                }
+                else
+                {
+                    curparam++;
+                }
+
+                // If token description info is supplied then parse it and create an OP_RETURN output.  Otherwise
+                // do not create an OP_RETURN output
+                if (curparam < params.size())
+                {
+                    std::string tickerStr = params[curparam].get_str();
+                    auto desc = ParseGroupDescParams(params, curparam);
+                    if (desc.size()) // Add an op_return if there's a token desc doc
+                    {
+                        opretScript = BuildTokenDescScript(desc);
+                        outputs.push_back(CRecipient{opretScript, 0, false});
+                        strTokenTicker = tickerStr;
+                    }
                 }
             }
+
+            CAmount totalNeeded = 0;
+            grpID = findGroupId(coin.GetOutPoint(), opretScript, GroupTokenIdFlags::NONE,
+                GroupAuthorityFlags::ACTIVE_FLAG_BITS, grpNonce);
+
+            CScript script =
+                GetScriptForDestination(authDest, grpID, (CAmount)GroupAuthorityFlags::ACTIVE_FLAG_BITS | grpNonce);
+            if (script.size() == 0)
+            {
+                throw JSONRPCError(RPC_INVALID_PARAMS, "Invalid destination address (not a script template)");
+            }
+            CRecipient recipient = {script, GROUPED_SATOSHI_AMT, false};
+            outputs.push_back(recipient);
+            totalNeeded += recipient.nAmount;
+
+            ConstructTx(wtx, chosenCoins, outputs, coin.GetValue(), totalNeeded, 0, 0, grpID, wallet);
+            authKeyReservation.KeepKey();
         }
-
-        CAmount totalNeeded = 0;
-        CGroupTokenID grpID = findGroupId(
-            coin.GetOutPoint(), opretScript, GroupTokenIdFlags::NONE, GroupAuthorityFlags::ACTIVE_FLAG_BITS, grpNonce);
-
-        CScript script =
-            GetScriptForDestination(authDest, grpID, (CAmount)GroupAuthorityFlags::ACTIVE_FLAG_BITS | grpNonce);
-        if (script.size() == 0)
-            throw JSONRPCError(RPC_INVALID_PARAMS, "Invalid destination address (not a script template)");
-        CRecipient recipient = {script, GROUPED_SATOSHI_AMT, false};
-        outputs.push_back(recipient);
-        totalNeeded += recipient.nAmount;
-
-        CWalletTx wtx;
-        ConstructTx(wtx, chosenCoins, outputs, coin.GetValue(), totalNeeded, 0, 0, grpID, wallet);
-        authKeyReservation.KeepKey();
+        // add tokens created by this wallet to tracked tokens
+        // do this outside of the wallet lock scope because it grabs it internally
+        if (wallet->AddTokenTracker(grpID, strTokenTicker) != 0)
+        {
+            return "failed to add token tracker to wallet";
+        }
         UniValue ret(UniValue::VOBJ);
         ret.pushKV("groupIdentifier", EncodeGroupToken(grpID));
         ret.pushKV("transaction", wtx.GetIdem().GetHex());
         return ret;
     }
 
+    else if (operation == "tracker")
+    {
+        LOCK(wallet->cs_wallet);
+        std::string suboperation;
+        std::string p1 = params[1].get_str();
+        std::transform(p1.begin(), p1.end(), std::back_inserter(suboperation), ::tolower);
+
+        if (suboperation == "list")
+        {
+            if (params.size() > 2)
+            {
+                throw JSONRPCError(RPC_INVALID_PARAMS, "Improper number of parameters, too many params");
+            }
+            UniValue ret(UniValue::VOBJ);
+            for (const auto &entry : wallet->mapTokenTrackers)
+            {
+                ret.pushKV(EncodeGroupToken(entry.first), entry.second);
+            }
+            return ret;
+        }
+        else if (suboperation == "add")
+        {
+            const CGroupTokenID grpID = DecodeGroupToken(params[2].get_str());
+            std::string strTokenTicker = "";
+            // ticker was not supplied
+            if (params.size() < 4)
+            {
+                CGroupTokenID _grpID = grpID;
+                if (_grpID.isSubgroup())
+                {
+                    _grpID = _grpID.parentGroup();
+                }
+                if (!GetGroupTicker(_grpID, strTokenTicker))
+                {
+                    return "failed to add token tracker to wallet, could not find all token info";
+                }
+                if (wallet->AddTokenTracker(grpID, strTokenTicker) == 0)
+                {
+                    return "added token tracker to wallet";
+                }
+                return "failed to add token tracker to wallet";
+            }
+            strTokenTicker = params[3].get_str();
+            if (strTokenTicker.size() > 8)
+            {
+                std::string strError = strprintf("Ticker %s has too many characters (8 max)", strTokenTicker);
+                throw JSONRPCError(RPC_INVALID_PARAMS, strError);
+            }
+            if (wallet->AddTokenTracker(grpID, strTokenTicker) == 0)
+            {
+                return "added token tracker to wallet";
+            }
+            return "failed to add token tracker to wallet";
+        }
+        else if (suboperation == "remove")
+        {
+            const CGroupTokenID grpID = DecodeGroupToken(params[2].get_str());
+            if (wallet->RemoveTokenTracker(grpID) == 0)
+            {
+                return "removed token tracker from wallet";
+            }
+            return "failed to remove token tracker from wallet";
+        }
+        else
+        {
+            throw JSONRPCError(RPC_INVALID_PARAMS, "Missing or incorrect tracker parameters.");
+        }
+    }
 
     else if (operation == "mint")
     {

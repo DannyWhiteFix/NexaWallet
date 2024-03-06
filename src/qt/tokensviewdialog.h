@@ -59,6 +59,8 @@ private Q_SLOTS:
     void on_tokenTable_itemClicked();
     void on_tokenTable_itemDoubleClicked();
     void on_sendButton_clicked();
+    void setManageDisplayedTokensButton(bool);
+    void on_manageDisplayedTokensButton_clicked();
     void keyPressEvent(QKeyEvent *event);
 };
 

@@ -85,6 +85,8 @@ public:
     QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
     bool processingQueuedTransactions() { return fProcessingQueuedTransactions; }
 
+    void updateWallet();
+
 private:
     CWallet *wallet;
     WalletModel *walletModel;
@@ -118,7 +120,8 @@ public Q_SLOTS:
     /* New transaction, or transaction changed status */
     void updateTransaction(const QString &hash, int status, bool showTransaction);
     void updateConfirmations();
-
+    /* called when toggling or using the whitelist feature */
+    void updateDisplayedTokens(bool fWhitelist);
     /* Needed to update fProcessingQueuedTransactions through a QueuedConnection */
     void setProcessingQueuedTransactions(bool value) { fProcessingQueuedTransactions = value; }
     friend class TokenTablePriv;

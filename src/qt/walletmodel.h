@@ -227,6 +227,11 @@ public:
 
     bool hdEnabled() const;
 
+    int AddTokenTracker(const CGroupTokenID &grpID, const std::string &strTokenTicker) const;
+    int RemoveTokenTracker(const CGroupTokenID &grpID) const;
+    void listTokenTrackers(std::map<CGroupTokenID, std::string> &mapTrackers) const;
+    void listTokens(std::map<CGroupTokenID, std::string> &mapTokens) const;
+
 private:
     CWallet *wallet;
     bool fHaveWatchOnly;

@@ -32,6 +32,7 @@
 
 extern CTweak<bool> instantTxns;
 extern CTweak<bool> autoTxns;
+extern CTweak<bool> tokenWhitelist;
 
 OptionsModel::OptionsModel(QObject *parent, bool resetSettings) : QAbstractListModel(parent) { Init(resetSettings); }
 void OptionsModel::addOverriddenOption(const std::string &option)
@@ -152,6 +153,14 @@ void OptionsModel::Init(bool resetSettings)
     {
         autoTxns.Set(false);
     }
+
+    // Turn on token whitelist for QT users only on first launch
+    if (!settings.contains("QT_tokenWhitelist"))
+    {
+        settings.setValue("QT_tokenWhitelist", true);
+    }
+    // after first launch set tokenWhitelist to whatever QT setting was saved on shutdown
+    tokenWhitelist.Set(settings.value("QT_tokenWhitelist").toBool());
 #endif
 
     // Network
@@ -283,6 +292,8 @@ QVariant OptionsModel::data(const QModelIndex &index, int role) const
             return settings.value("fAutoConsolidation");
         case RescanOnStartup:
             return settings.value("fRescanOnStartup");
+        case TokenWhitelist:
+            return settings.value("QT_tokenWhitelist");
 #endif
         case DisplayUnit:
             return nDisplayUnit;
@@ -468,6 +479,11 @@ bool OptionsModel::setData(const QModelIndex &index, const QVariant &value, int 
         case RescanOnStartup:
             settings.setValue("fRescanOnStartup", value);
             setRestartRequired(true);
+            break;
+        case TokenWhitelist:
+            settings.setValue("QT_tokenWhitelist", value.toBool());
+            tokenWhitelist.Set(value.toBool());
+            Q_EMIT tokenWhitelistButtonChanged(value.toBool());
             break;
 #endif
         case DisplayUnit:

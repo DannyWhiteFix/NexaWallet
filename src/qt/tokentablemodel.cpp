@@ -16,6 +16,7 @@
 #include "core_io.h"
 #include "main.h"
 #include "sync.h"
+#include "tweak.h"
 #include "uint256.h"
 #include "util.h"
 #include "wallet/wallet.h"
@@ -29,6 +30,9 @@
 #include <QList>
 
 #include <algorithm>
+
+extern CTweak<bool> tokenWhitelist;
+
 // Amount column is right-aligned it contains numbers
 static int column_alignments[] = {
     Qt::AlignLeft | Qt::AlignVCenter, /* status */
@@ -68,6 +72,37 @@ public:
         qDebug() << "TokenTablePriv::refreshWallet";
         cachedWallet.clear();
         {
+            bool fWhitelist = tokenWhitelist.Value();
+            LOCK(wallet->cs_wallet);
+
+            for (MapWallet::iterator it = wallet->mapWallet.begin(); it != wallet->mapWallet.end(); ++it)
+            {
+                CWalletTxRef wtx = it->second.tx;
+                if (it->first.hash == wtx->GetId())
+                {
+                    if (TransactionRecord::showTransaction(*wtx))
+                    {
+                        QList<TransactionRecord> txnRecord = TransactionRecord::decomposeTransaction(wallet, *wtx);
+                        for (auto &iter : txnRecord.last().mapTokens)
+                        {
+                            if (!fWhitelist || wallet->mapTokenTrackers.count(iter.first))
+                            {
+                                cachedWallet.append(txnRecord);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    void updateWallet()
+    {
+        qDebug() << "TokenTablePriv::updateWallet";
+        {
+            bool fWhitelist = tokenWhitelist.Value();
+
             LOCK(wallet->cs_wallet);
             for (MapWallet::iterator it = wallet->mapWallet.begin(); it != wallet->mapWallet.end(); ++it)
             {
@@ -77,9 +112,16 @@ public:
                     if (TransactionRecord::showTransaction(*wtx))
                     {
                         QList<TransactionRecord> txnRecord = TransactionRecord::decomposeTransaction(wallet, *wtx);
-                        if (!(txnRecord.last().mapTokens.empty()))
+                        for (auto &iter : txnRecord.last().mapTokens)
                         {
-                            cachedWallet.append(txnRecord);
+                            if (!fWhitelist || wallet->mapTokenTrackers.count(iter.first))
+                            {
+                                updateWallet(wtx->GetIdem(), CT_UPDATED, true);
+                            }
+                            else
+                            {
+                                updateWallet(wtx->GetIdem(), CT_UPDATED, false);
+                            }
                         }
                     }
                 }
@@ -97,6 +139,9 @@ public:
         qDebug() << "TokenTablePriv::updateWallet: " + QString::fromStdString(hash.ToString()) + " " +
                         QString::number(status);
 
+        // std::lower_bound and std::upper_bound require a sorted container which cachedWallet (QList) is not.
+        // QList is probably the wrong container to use for cachedWallet. hackfix this with std::sort for now
+        std::sort(cachedWallet.begin(), cachedWallet.end(), TxLessThan());
         // Find bounds of this transaction in model
         QList<TransactionRecord>::iterator lower =
             std::lower_bound(cachedWallet.begin(), cachedWallet.end(), hash, TxLessThan());
@@ -109,9 +154,13 @@ public:
         if (status == CT_UPDATED)
         {
             if (showTransaction && !inModel)
+            {
                 status = CT_NEW; /* Not in model, but want to show, treat as new */
+            }
             if (!showTransaction && inModel)
+            {
                 status = CT_DELETED; /* In model, but want to hide, treat as deleted */
+            }
         }
 
         qDebug() << "    inModel=" + QString::number(inModel) + " Index=" + QString::number(lowerIndex) + "-" +
@@ -129,6 +178,7 @@ public:
             }
             if (showTransaction)
             {
+                const bool fWhitelist = tokenWhitelist.Value();
                 LOCK(wallet->cs_wallet);
                 // Find transaction in wallet
                 CWalletTxRef wtx = wallet->GetWalletTx(hash);
@@ -144,10 +194,21 @@ public:
                 int idx = 0;
                 Q_FOREACH (const TransactionRecord &rec, listRecords)
                 {
+
                     if (rec.mapTokens.empty() || cachedWallet.contains(rec) || toInsert.contains(rec))
+                    {
                         continue;
-                    toInsert.insert(idx, rec);
-                    idx++;
+                    }
+                    for (auto &iter : rec.mapTokens)
+                    {
+                        if (fWhitelist && wallet->mapTokenTrackers.count(iter.first) == 0)
+                        {
+                            continue;
+                        }
+                        toInsert.insert(idx, rec);
+                        idx++;
+                        break;
+                    }
                 }
 
                 if (!toInsert.isEmpty()) /* only if something to insert */
@@ -318,6 +379,17 @@ void TokenTableModel::updateConfirmations()
     //  visible rows.
     Q_EMIT dataChanged(index(0, Status), index(priv->size() - 1, Status));
     Q_EMIT dataChanged(index(0, ToTokenID), index(priv->size() - 1, ToTokenID));
+}
+
+void TokenTableModel::updateDisplayedTokens(bool fWhitelist)
+{
+    Q_UNUSED(fWhitelist);
+    updateWallet();
+}
+
+void TokenTableModel::updateWallet()
+{
+    priv->updateWallet();
 }
 
 int TokenTableModel::rowCount(const QModelIndex &parent) const
@@ -863,12 +935,18 @@ static void ShowProgress(TokenTableModel *ttm, const std::string &title, int nPr
     }
 }
 
+static void NotifyTokenTrackersChanged(TokenTableModel *ttm)
+{
+    ttm->updateWallet();
+}
+
 void TokenTableModel::subscribeToCoreSignals()
 {
     // Connect signals to wallet
     wallet->NotifyTransactionChanged.connect(
         boost::bind(NotifyTransactionChanged, this, boost::arg<1>(), boost::arg<2>(), boost::arg<3>()));
     wallet->ShowProgress.connect(boost::bind(ShowProgress, this, boost::arg<1>(), boost::arg<2>()));
+    wallet->NotifyTokenTrackersChanged.connect(boost::bind(NotifyTokenTrackersChanged, this));
 }
 
 void TokenTableModel::unsubscribeFromCoreSignals()
@@ -877,4 +955,5 @@ void TokenTableModel::unsubscribeFromCoreSignals()
     wallet->NotifyTransactionChanged.disconnect(
         boost::bind(NotifyTransactionChanged, this, boost::arg<1>(), boost::arg<2>(), boost::arg<3>()));
     wallet->ShowProgress.disconnect(boost::bind(ShowProgress, this, boost::arg<1>(), boost::arg<2>()));
+    wallet->NotifyTokenTrackersChanged.disconnect(boost::bind(NotifyTokenTrackersChanged, this));
 }

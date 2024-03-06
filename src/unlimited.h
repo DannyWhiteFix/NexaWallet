@@ -233,6 +233,7 @@ std::string SubverValidator(const std::string &value, std::string *item, bool va
 std::string Bip135VoteValidator(const std::string &value, std::string *item, bool validate);
 // ensure that only 1 fork is active
 std::string ForkTimeValidator(const uint64_t &value, uint64_t *item, bool validate);
+std::string TokenWalletUpdater(const bool &value, CTweak<bool> *item, bool validate);
 
 extern CTweak<uint64_t> coinbaseReserve;
 extern CTweak<uint64_t> miningBlockSize;
