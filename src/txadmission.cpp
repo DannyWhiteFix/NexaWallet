@@ -261,17 +261,6 @@ void ThreadCommitToMempool()
                 LOG(MEMPOOL, "MemoryPool sz %u txn, %u kB\n", mempool.size(), mempool.DynamicMemoryUsage() / 1000);
                 LimitMempoolSize(mempool, maxTxPool.Value() * ONE_MEGABYTE, txPoolExpiry.Value() * 60 * 60);
 
-                // This is only a periodic flush and probably isn't even needed here so there is no danger if we
-                // skip a flush from time to time for lack of getting the lock.
-                // And because we are within a CORRAL we don't want to take the cs_main lock if some other higher level
-                // CORRAL has taken it, since this would cause a deadlock.
-                TRY_LOCK(cs_main, lock);
-                if (lock)
-                {
-                    CValidationState state;
-                    FlushStateToDisk(state, FLUSH_STATE_PERIODIC);
-                }
-
                 // The flush to disk above is only periodic therefore we need to check if we need to trim
                 // any excess from the cache.
                 if (pcoinsTip->DynamicMemoryUsage() > (size_t)nCoinCacheMaxSize)

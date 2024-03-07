@@ -660,6 +660,7 @@ bool FlushStateToDiskInternal(CValidationState &state,
     static int64_t nLastWrite = 0;
     static int64_t nLastFlush = 0;
     static int64_t nLastSetChain = 0;
+    static int64_t nLastCoinsCacheReset = 0;
 
     LOCK(cs_flushstate);
     int64_t nNow = GetStopwatchMicros();
@@ -676,6 +677,11 @@ bool FlushStateToDiskInternal(CValidationState &state,
     {
         nLastSetChain = nNow;
     }
+    if (nLastCoinsCacheReset == 0)
+    {
+        nLastCoinsCacheReset = nNow;
+    }
+
 
     // If possible adjust the max size of the coin cache (nCoinCacheMaxSize) based on current available memory. Do
     // this before determinining whether to flush the cache or not in the steps that follow.
@@ -697,7 +703,9 @@ bool FlushStateToDiskInternal(CValidationState &state,
     bool fPeriodicFlush =
         mode == FLUSH_STATE_PERIODIC && nNow > nLastFlush + (int64_t)DATABASE_FLUSH_INTERVAL * 1000000;
     // Combine all conditions that result in a full cache flush.
-    bool fDoFullFlush = (mode == FLUSH_STATE_ALWAYS) || fCacheCritical || fAutoCache || fPeriodicFlush;
+    bool fCoinCacheReset = nNow > nLastCoinsCacheReset + (int64_t)DATABASE_FLUSH_INTERVAL * 1000000;
+    bool fDoFullFlush =
+        (mode == FLUSH_STATE_ALWAYS) || fCacheCritical || fAutoCache || fPeriodicFlush || fCoinCacheReset;
     // Write blocks and block index to disk.
     if (fDoFullFlush || fPeriodicWrite || fFlushForPrune)
     {
@@ -829,9 +837,10 @@ bool FlushStateToDiskInternal(CValidationState &state,
     // As a safeguard, periodically check and correct any drift in the value of cachedCoinsUsage.  While a
     // correction should never be needed, resetting the value allows the node to continue operating, and only
     // an error is reported if the new and old values do not match.
-    if (fPeriodicFlush)
+    if (fCoinCacheReset)
     {
         pcoinsTip->ResetCachedCoinUsage();
+        nLastCoinsCacheReset = nNow;
     }
     return true;
 }
