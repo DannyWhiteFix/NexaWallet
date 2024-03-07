@@ -415,6 +415,8 @@ wallet/rpcwallet.cpp
 wallet/rpcwallet.h
 wallet/grouptokencache.cpp
 wallet/grouptokencache.h
+utilgrouptoken.cpp
+utilgrouptoken.h
 wallet/grouptokenwallet.cpp
 wallet/grouptokenwallet.h
 wallet/wallet.cpp
