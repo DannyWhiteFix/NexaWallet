@@ -727,7 +727,7 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes)
                     {
                         // Move the this message to the priority queue.
                         vPriorityRecvQ.push_back(std::make_pair<CNodeRef, CNetMessage>(CNodeRef(this), std::move(msg)));
-                        msg = CNetMessage(GetMagic(Params()), SER_NETWORK, nRecvVersion);
+                        msg = CNetMessage(GetMagic(Params()), 0, SER_NETWORK, nRecvVersion);
 
                         LOG(PRIORITYQ, "Receive Queue: pushed %s to the priority queue, %d bytes, peer(%d)\n",
                             strCommand, vPriorityRecvQ.back().second.hdr.nMessageSize, this->GetId());
@@ -748,7 +748,7 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes)
                 {
                     vRecvMsg.push_back(std::move(msg));
                 }
-                msg = CNetMessage(GetMagic(Params()), SER_NETWORK, nRecvVersion);
+                msg = CNetMessage(GetMagic(Params()), 0, SER_NETWORK, nRecvVersion);
             }
             messageHandlerCondition.notify_one();
             fDownloading.store(false);
@@ -3327,7 +3327,7 @@ CNode::CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNa
     fPingQueued = false;
     nMinPingUsecTime = std::numeric_limits<int64_t>::max();
 
-    msg = CNetMessage(GetMagic(Params()), SER_NETWORK, nRecvVersion);
+    msg = CNetMessage(GetMagic(Params()), 0, SER_NETWORK, nRecvVersion);
 
     // xthinblocks
     nXthinBloomfilterSize = 0;
@@ -3425,12 +3425,12 @@ CNode::~CNode()
     GetNodeSignals().FinalizeNode(GetId());
 }
 
-void CNode::BeginMessage(const char *pszCommand) EXCLUSIVE_LOCK_FUNCTION(cs_vSend)
+void CNode::BeginMessage(const char *pszCommand, uint32_t msgCookie) EXCLUSIVE_LOCK_FUNCTION(cs_vSend)
 {
+    LOG(NET, "sending msg: %s with cookie %x to %s \n", SanitizeString(pszCommand), msgCookie, GetLogName());
     ENTER_CRITICAL_SECTION(cs_vSend);
     assert(ssSend.size() == 0);
-    ssSend << CMessageHeader(GetMagic(Params()), pszCommand, 0);
-    LOG(NET, "sending msg: %s to %s\n", SanitizeString(pszCommand), GetLogName());
+    ssSend << CMessageHeader(GetMagic(Params()), pszCommand, msgCookie, 0);
     currentCommand = pszCommand;
 }
 
@@ -3466,15 +3466,15 @@ void CNode::EndMessage() UNLOCK_FUNCTION(cs_vSend)
 
     UpdateSendStats(this, currentCommand, nSize + CMessageHeader::HEADER_SIZE, GetTimeMicros());
 
-    // Set the checksum
-    uint32_t nChecksum = 0; // If we can skip the checksum, we send 0 instead
+    // Set the checksum (if needed) -- in this case, the message cookie will be overwritten
     if (!skipChecksum)
     {
+        uint32_t nChecksum = 0; // If we can skip the checksum, we send 0 instead
         uint256 hash = Hash(ssSend.begin() + CMessageHeader::HEADER_SIZE, ssSend.end());
         memcpy(&nChecksum, &hash, sizeof(nChecksum));
+        assert(ssSend.size() >= CMessageHeader::CHECKSUM_OFFSET + sizeof(nChecksum));
+        memcpy((char *)&ssSend[CMessageHeader::CHECKSUM_OFFSET], &nChecksum, sizeof(nChecksum));
     }
-    assert(ssSend.size() >= CMessageHeader::CHECKSUM_OFFSET + sizeof(nChecksum));
-    memcpy((char *)&ssSend[CMessageHeader::CHECKSUM_OFFSET], &nChecksum, sizeof(nChecksum));
 
     LOG(NET, "(%d bytes) peer=%d\n", nSize, id);
 
@@ -3560,6 +3560,8 @@ void CNode::ReadConfigFromExtversion()
     extversionEnabled = true;
     LOCK(cs_extversion);
     skipChecksum = (extversion.as_u64c(XVer::BU_MSG_IGNORE_CHECKSUM) == 1);
+    if (skipChecksum)
+        LOG(NET, "skipping checksum (enabling message cookies) for node %s (%s)\n", GetLogName(), cleanSubVer);
     if (addrFromPort == 0)
     {
         addrFromPort = extversion.as_u64c(XVer::BU_LISTEN_PORT) & 0xffff;

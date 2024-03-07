@@ -16,10 +16,15 @@ bool ProcessMessages(CNode *pfrom);
 /** Process a single protocol messages received from a given node
     @param pfrom The node this message originated from
     @param strCommand The message type
+    @param msgCookie A number passed by the requester that should be returned in the response
     @param vRecv The message contents
     @param nStopwatchTimeReceived Stopwatch time in microseconds indicating when this message was received
 */
-bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, int64_t nStopwatchTimeReceived);
+bool ProcessMessage(CNode *pfrom,
+    std::string strCommand,
+    uint32_t msgCookie,
+    CDataStream &vRecv,
+    int64_t nStopwatchTimeReceived);
 
 /**
  * Send queued protocol messages to be sent to a give node.

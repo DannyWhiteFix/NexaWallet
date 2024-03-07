@@ -131,7 +131,6 @@ class MyTest (BitcoinTestFramework):
         connect_nodes_full(self.nodes)
         self.is_network_split=False
         self.sync_blocks()
-
         self.pynode = pynode = BasicBUCashNode()
         self.conn = pynode.connect(0, '127.0.0.1', p2p_port(0), self.nodes[0], protohandler = CapdProtoHandler(), send_initial_version = True, extversion_service = True)
         self.nt = NetworkThread()
@@ -184,9 +183,10 @@ class MyTest (BitcoinTestFramework):
         result = self.nodes[0].getpeerinfo()
         for n in result:
             # Note that this tests both the C code exchanging CAPD xversion and this python node
-            # All BU nodes and this node should show up as supporting CAPD
-            capdVer = int(n["extversion_map"][CAPD_XVERSION_STR])
-            assert_equal(capdVer, 1)
+            # All BU nodes and this node should show up as supporting CAPD (but not rostrum)
+            if "Nexa" in n["subver"]:
+                capdVer = int(n["extversion_map"][CAPD_XVERSION_STR])
+                assert_equal(capdVer, 1)
 
         if True:
             capdStats = self.nodes[0].capd()

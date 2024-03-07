@@ -337,7 +337,7 @@ void CommitTxToMempool()
         LOCK(csTxInQ);
         // Clear the filter of incoming conflicts, and put all queued tx on the deferred queue since they've been
         // deferred
-        LOG(MEMPOOL, "txadmission incoming filter reset.  Current txInQ size: %d\n", txInQ.size());
+        // LOG(MEMPOOL, "txadmission incoming filter reset.  Current txInQ size: %d\n", txInQ.size());
         incomingConflicts.reset();
         while (!txInQ.empty())
         {
@@ -368,7 +368,7 @@ void CommitTxToMempool()
 
         // Use a map to store the txns so that we end up removing duplicates which could have arrived
         // from re-requests.
-        LOG(MEMPOOL, "popping txdeferQ, size %d\n", txDeferQ.size());
+        // LOG(MEMPOOL, "popping txdeferQ, size %d\n", txDeferQ.size());
         // this could be a lot more efficient
         uint64_t count = 0;
         uint64_t maxmove = max(avgCommitBatchSize * 2, minCommitBatchSize);
@@ -435,7 +435,6 @@ void ThreadTxAdmission()
 
         bool fMissingInputs = false;
         CValidationState state;
-        // Snapshot ss;
         CTxInputData txd;
 
         {
@@ -576,7 +575,8 @@ void ThreadTxAdmission()
                             if (from)
                             {
                                 std::string strCommand = NetMsgType::TX;
-                                from->PushMessage(NetMsgType::REJECT, strCommand, (unsigned char)state.GetRejectCode(),
+                                from->PushMessageWithCookie(NetMsgType::REJECT, txd.msgCookie | 0xFFFF, strCommand,
+                                    (unsigned char)state.GetRejectCode(),
                                     state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), inv.hash);
                                 if (nDoS > 0)
                                 {
@@ -1004,7 +1004,9 @@ bool ParallelAcceptToMemoryPool(Snapshot &ss,
                 }
             }
             // Place sigchecks into the mempool sigops field, since these are not cotemporaneous
-            LOG(MEMPOOL, "Mempool is tracking sigchecks.  Tx %s has %d\n", id.ToString(), nSigOps);
+            // only show this log for a strange # of sigchecks (typically 1 per input)
+            if (nSigOps != tx->vin.size())
+                LOG(MEMPOOL, "Tx %s has %d sigchecks\n", id.ToString(), nSigOps);
         }
 
         // Create a commit data entry

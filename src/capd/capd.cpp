@@ -641,6 +641,7 @@ void CapdMsgPool::_DbgDump()
 
 bool CapdProtocol::HandleCapdMessage(CNode *pfrom,
     std::string &command,
+    uint32_t msgCookie,
     CDataStream &vRecv,
     int64_t stopwatchTimeReceived)
 {
@@ -668,8 +669,8 @@ bool CapdProtocol::HandleCapdMessage(CNode *pfrom,
     }
     else if (command == NetMsgType::CAPDGETINFO)
     {
-        pfrom->PushMessage(
-            NetMsgType::CAPDINFO, msgpool.GetLocalPriority(), msgpool.GetRelayPriority(), msgpool.GetHighestPriority());
+        pfrom->PushMessageWithCookie(NetMsgType::CAPDINFO, msgCookie | 0xFFFF, msgpool.GetLocalPriority(),
+            msgpool.GetRelayPriority(), msgpool.GetHighestPriority());
     }
     else if (command == NetMsgType::CAPDQUERY)
     {
@@ -697,10 +698,10 @@ bool CapdProtocol::HandleCapdMessage(CNode *pfrom,
             if (type == CAPD_QUERY_TYPE_MSG)
             {
                 quantity = std::min((int)CAPD_QUERY_MAX_MSGS, (int)quantity);
-                pfrom->PushMessage(NetMsgType::CAPDQUERYREPLY, cookie, type, (uint32_t)msgs.size(),
-                    PtrVectorSpan<CapdMsgRef>(msgs, start, quantity));
+                pfrom->PushMessageWithCookie(NetMsgType::CAPDQUERYREPLY, msgCookie | 0xFFFF, cookie, type,
+                    (uint32_t)msgs.size(), PtrVectorSpan<CapdMsgRef>(msgs, start, quantity));
             }
-            if (type == CAPD_QUERY_TYPE_MSG_HASH)
+            else if (type == CAPD_QUERY_TYPE_MSG_HASH)
             {
                 int qty = std::min(
                     std::min((int)CAPD_QUERY_MAX_INVS + start, (int)start + quantity), (int)msgs.size() - start);
@@ -709,13 +710,15 @@ bool CapdProtocol::HandleCapdMessage(CNode *pfrom,
                 {
                     hashes.push_back(msgs[i]->GetHash());
                 }
-                pfrom->PushMessage(NetMsgType::CAPDQUERYREPLY, cookie, type, (uint32_t)msgs.size(), hashes);
+                pfrom->PushMessageWithCookie(
+                    NetMsgType::CAPDQUERYREPLY, msgCookie | 0xFFFF, cookie, type, (uint32_t)msgs.size(), hashes);
             }
         }
         else
         {
             uint8_t error = sz;
-            pfrom->PushMessage(NetMsgType::CAPDQUERYREPLY, cookie, (uint8_t)CAPD_QUERY_TYPE_ERROR, error);
+            pfrom->PushMessageWithCookie(
+                NetMsgType::CAPDQUERYREPLY, msgCookie | 0xFFFF, cookie, (uint8_t)CAPD_QUERY_TYPE_ERROR, error);
         }
     }
     else if (command == NetMsgType::CAPDREMOVENOTIFY)
@@ -784,7 +787,7 @@ bool CapdProtocol::HandleCapdMessage(CNode *pfrom,
                 continue;
             }
 
-            cn->sendMsg(msg);
+            cn->sendMsg(msg, msgCookie | 0xFFFF);
         }
     }
     else if (command == NetMsgType::CAPDMSG)
@@ -964,14 +967,29 @@ bool CapdNode::FlushMessages()
     if (!sendMsgs.empty())
     {
         unsigned int offset = 0;
-        std::vector<CapdMsg> sm; // TODO figure out shared_ptr serialization
+        // Send all messages that didn't provide a reply cookie in a few large chunks
+        std::vector<CapdMsg> unreplyMessages;
         for (auto m : sendMsgs)
-            sm.push_back(*m);
+        {
+            if ((m.second & 0xFFFF0000) == 0)
+                unreplyMessages.push_back(*(m.first));
+        }
         do
         {
-            node->PushMessage(NetMsgType::CAPDMSG, VectorSpan<CapdMsg>(sm, offset, CAPD_MAX_MSG_TO_SEND));
+            node->PushMessage(NetMsgType::CAPDMSG, VectorSpan<CapdMsg>(unreplyMessages, offset, CAPD_MAX_MSG_TO_SEND));
             offset += CAPD_MAX_MSG_TO_SEND;
-        } while (offset < sm.size());
+        } while (offset < unreplyMessages.size());
+
+        // Now send the messages that need a reply cookie
+        for (auto it : sendMsgs)
+        {
+            if ((it.second & 0xFFFF0000) != 0)
+            {
+                std::vector<CapdMsg> oneMsg(1);
+                oneMsg[0] = *it.first;
+                node->PushMessageWithCookie(NetMsgType::CAPDMSG, it.second, oneMsg);
+            }
+        }
 
         sendMsgs.clear();
     }

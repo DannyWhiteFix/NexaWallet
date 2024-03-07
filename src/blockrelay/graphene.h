@@ -139,7 +139,11 @@ public:
      * @param[in]  nHops        On the wire, nHops is zero for an incoming Graphene block
      * @return True if handling succeeded
      */
-    static bool HandleMessage(CDataStream &vRecv, CNode *pfrom, std::string strCommand, unsigned nHops);
+    static bool HandleMessage(CDataStream &vRecv,
+        CNode *pfrom,
+        uint32_t msgCookie,
+        std::string strCommand,
+        unsigned nHops);
 
     static inline uint64_t GetGrapheneSetVersion(uint64_t grapheneBlockVersion)
     {
@@ -496,9 +500,12 @@ public:
 bool IsGrapheneBlockEnabled();
 void SendGrapheneBlock(ConstCBlockRef pblock, CNode *pfrom, const CInv &inv, const CMemPoolInfo &mempoolinfo);
 bool IsGrapheneBlockValid(CNode *pfrom, const CBlockHeader &header);
-bool HandleGrapheneBlockRequest(CDataStream &vRecv, CNode *pfrom, const CChainParams &chainparams);
+bool HandleGrapheneBlockRequest(CDataStream &vRecv, CNode *pfrom, uint32_t msgCookie, const CChainParams &chainparams);
 bool HandleGrapheneBlockRecoveryResponse(CDataStream &vRecv, CNode *pfrom, const CChainParams &chainparams);
-bool HandleGrapheneBlockRecoveryRequest(CDataStream &vRecv, CNode *pfrom, const CChainParams &chainparams);
+bool HandleGrapheneBlockRecoveryRequest(CDataStream &vRecv,
+    CNode *pfrom,
+    uint32_t msgCookie,
+    const CChainParams &chainparams);
 CMemPoolInfo GetGrapheneMempoolInfo();
 void RequestFailureRecovery(CNode *pfrom,
     std::shared_ptr<CGrapheneBlock> pblock,

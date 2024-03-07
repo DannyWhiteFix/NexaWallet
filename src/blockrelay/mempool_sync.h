@@ -147,10 +147,11 @@ public:
     /**
      * Handle an incoming request for missing graphene block transactions
      * @param[in] vRecv        The raw binary message
+     * @param[in] msgCookie    The cookie nonce provided to us by the requesting node
      * @param[in] pFrom        The node the message was from
      * @return True if handling succeeded
      */
-    static bool HandleMessage(CDataStream &vRecv, CNode *pfrom);
+    static bool HandleMessage(CDataStream &vRecv,  uint32_t msgCookie, CNode *pfrom);
 
     ADD_SERIALIZE_METHODS;
 
@@ -178,7 +179,7 @@ public:
      * @param[in] pFrom        The node the message was from
      * @return True if handling succeeded
      */
-    static bool HandleMessage(CDataStream &vRecv, CNode *pfrom);
+    static bool HandleMessage(CDataStream &vRecv, uint32_t msgCookie, CNode *pfrom);
 
     ADD_SERIALIZE_METHODS;
 
@@ -189,7 +190,7 @@ public:
     }
 };
 
-bool HandleMempoolSyncRequest(CDataStream &vRecv, CNode *pfrom);
+bool HandleMempoolSyncRequest(CDataStream &vRecv, CNode *pfrom, uint32_t msgCookie);
 void GetMempoolTxHashes(std::vector<uint256> &mempoolTxHashes);
 CMempoolSyncInfo GetMempoolSyncInfo();
 uint64_t NegotiateMempoolSyncVersion(CNode *pfrom);

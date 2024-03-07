@@ -93,14 +93,30 @@ bool PeerHasHeader(const CNodeState *state, CBlockIndex *pindex)
     return false;
 }
 
-void static ProcessGetData(CNode *pfrom, const Consensus::Params &consensusParams, std::deque<CInv> &vInv)
+void static ProcessGetData(CNode *pfrom,
+    const Consensus::Params &consensusParams,
+    std::deque<std::pair<CInv, uint32_t> > &vInv)
 {
     std::vector<CInv> vNotFound;
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
 
-    std::deque<CInv>::iterator it = vInv.begin();
+    auto it = vInv.begin();
+    uint32_t replyCookieCount = 0;
+    int cur = 0;
+    int sz = vInv.size();
+    uint32_t msgCookie = 0;
+    LOG(NET, "Processing %d INVs\n", sz);
     while (it != vInv.end())
     {
+        // If the cookie has changed, restart the reply count.  This might happen in weird cases where the invs
+        // were deferred.
+        uint32_t nextMsgCookie = it->second;
+        if (nextMsgCookie != msgCookie)
+            replyCookieCount = 0;
+        msgCookie = nextMsgCookie;
+        cur++;
+        bool lastInv = (sz == cur);
+        uint32_t oneReplyPerInvCookie = (lastInv ? (msgCookie | 0xFFFF) : (msgCookie + replyCookieCount));
         // Don't bother if send buffer is too full to respond anyway
         if (pfrom->nSendSize >= SendBufferSize() + ss.size())
         {
@@ -113,7 +129,7 @@ void static ProcessGetData(CNode *pfrom, const Consensus::Params &consensusParam
         }
 
         // start processing inventory here
-        const CInv &inv = *it;
+        const CInv &inv = it->first;
         it++;
 
         if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK)
@@ -197,22 +213,29 @@ void static ProcessGetData(CNode *pfrom, const Consensus::Params &consensusParam
                     {
                         if (inv.type == MSG_BLOCK)
                         {
+                            LOG(NET, "Sending block via getdata message to %s\n", pfrom->GetLogName());
                             pfrom->blocksSent += 1;
-                            pfrom->PushMessage(NetMsgType::BLOCK, *pblock);
+                            pfrom->PushMessageWithCookie(NetMsgType::BLOCK, oneReplyPerInvCookie, *pblock);
+                            replyCookieCount++;
                         }
                         else if (inv.type == MSG_CMPCT_BLOCK)
                         {
-                            LOG(CMPCT, "Sending compactblock via getdata message\n");
-                            SendCompactBlock(pblock, pfrom, inv);
+                            LOG(CMPCT, "Sending compactblock via getdata message to %s\n", pfrom->GetLogName());
+                            SendCompactBlock(pblock, pfrom, msgCookie, inv);
+                            replyCookieCount++;
                         }
                         else // MSG_FILTERED_BLOCK)
                         {
+                            LOG(CMPCT, "Sending filtered block via getdata message to %s\n", pfrom->GetLogName());
                             LOCK(pfrom->cs_filter);
                             if (pfrom->pfilter)
                             {
                                 CMerkleBlock merkleBlock(*pblock, *pfrom->pfilter);
-                                pfrom->PushMessage(NetMsgType::MERKLEBLOCK, merkleBlock);
+                                pfrom->PushMessageWithCookie(
+                                    NetMsgType::MERKLEBLOCK, msgCookie + replyCookieCount, merkleBlock);
+                                replyCookieCount++;
                                 pfrom->blocksSent += 1;
+                                LOG(NET, "Bloom filtered block matched: %d tx\n", merkleBlock.vMatchedTxn.size());
                                 // CMerkleBlock just contains hashes, so also push any transactions in the block the
                                 // client did not see. This avoids hurting performance by pointlessly requiring a
                                 // round-trip.
@@ -222,28 +245,43 @@ void static ProcessGetData(CNode *pfrom, const Consensus::Params &consensusParam
                                 // block. Thus, the protocol spec specified allows for us to provide duplicate txn
                                 // here, however we MUST always provide at least what the remote peer needs
                                 typedef std::pair<unsigned int, uint256> PairType;
+                                int txSz = merkleBlock.vMatchedTxn.size();
+                                int txCount = 0;
                                 for (PairType &pair : merkleBlock.vMatchedTxn)
                                 {
+                                    txCount++;
+                                    bool lastTx = (txCount == txSz);
                                     pfrom->txsSent += 1;
-                                    pfrom->PushMessage(NetMsgType::TX, pblock->vtx[pair.first]);
+                                    uint32_t replyCookie = msgCookie + replyCookieCount;
+                                    if (lastInv && lastTx)
+                                        replyCookie = msgCookie | 0xFFFF;
+                                    pfrom->PushMessageWithCookie(NetMsgType::TX, replyCookie, pblock->vtx[pair.first]);
+                                    replyCookieCount++;
                                 }
                             }
                             // else
                             // no response
                         }
-
-                        // Trigger the peer node to send a getblocks request for the next batch of inventory
-                        if (inv.hash == pfrom->hashContinue)
-                        {
-                            // Bypass PushInventory, this must send even if redundant,
-                            // and we want it right after the last block so they don't
-                            // wait for other stuff first.
-                            std::vector<CInv> oneInv;
-                            oneInv.push_back(CInv(MSG_BLOCK, chainActive.Tip()->GetBlockHash()));
-                            pfrom->PushMessage(NetMsgType::INV, oneInv);
-                            pfrom->hashContinue.SetNull();
-                        }
                     }
+                }
+            }
+            else
+            {
+                // Trigger the peer node to send a getblocks request for the next batch of inventory
+                if (inv.hash == pfrom->hashContinue)
+                {
+                    // Bypass PushInventory, this must send even if redundant,
+                    // and we want it right after the last block so they don't
+                    // wait for other stuff first.
+                    std::vector<CInv> oneInv;
+                    oneInv.push_back(CInv(MSG_BLOCK, chainActive.Tip()->GetBlockHash()));
+                    pfrom->PushMessageWithCookie(NetMsgType::INV, oneReplyPerInvCookie + replyCookieCount, oneInv);
+                    replyCookieCount++;
+                    pfrom->hashContinue.SetNull();
+                }
+                else
+                {
+                    vNotFound.push_back(inv);
                 }
             }
         }
@@ -255,13 +293,14 @@ void static ProcessGetData(CNode *pfrom, const Consensus::Params &consensusParam
                 CDataStream ssDSP(SER_NETWORK, PROTOCOL_VERSION);
                 ssDSP.reserve(600);
                 ssDSP << dsp;
-                pfrom->PushMessage(NetMsgType::DSPROOF, ssDSP);
+                pfrom->PushMessageWithCookie(NetMsgType::DSPROOF, oneReplyPerInvCookie, ssDSP);
             }
             else
             {
-                pfrom->PushMessage(NetMsgType::REJECT, std::string(NetMsgType::DSPROOF), REJECT_INVALID,
-                    std::string("dsproof requested was not found"));
+                pfrom->PushMessageWithCookie(NetMsgType::REJECT, oneReplyPerInvCookie, std::string(NetMsgType::DSPROOF),
+                    REJECT_INVALID, std::string("dsproof requested was not found"));
             }
+            replyCookieCount++;
         }
         else if (inv.IsKnownType())
         {
@@ -294,7 +333,9 @@ void static ProcessGetData(CNode *pfrom, const Consensus::Params &consensusParam
                     // too many and end up delaying the send.
                     if (ss.size() > MAX_TXN_BATCH_SIZE)
                     {
-                        pfrom->PushMessage(NetMsgType::TX, ss);
+                        // TODO, what if this is the last one
+                        pfrom->PushMessageWithCookie(NetMsgType::TX, msgCookie + replyCookieCount, ss);
+                        replyCookieCount++;
                         ss.clear();
                     }
                 }
@@ -303,9 +344,10 @@ void static ProcessGetData(CNode *pfrom, const Consensus::Params &consensusParam
                     // Or if this is not a peer that supports
                     // concatenation then send the transaction right away.
                     if (pStream)
-                        pfrom->PushMessage(NetMsgType::TX, *pStream);
+                        pfrom->PushMessageWithCookie(NetMsgType::TX, msgCookie + replyCookieCount, *pStream);
                     else
-                        pfrom->PushMessage(NetMsgType::TX, ptx);
+                        pfrom->PushMessageWithCookie(NetMsgType::TX, msgCookie + replyCookieCount, ptx);
+                    replyCookieCount++;
                 }
                 pfrom->txsSent += 1;
             }
@@ -321,13 +363,15 @@ void static ProcessGetData(CNode *pfrom, const Consensus::Params &consensusParam
         // Send only one of these message type before breaking. These type of requests use more
         // resources to process and send, therefore we don't want some a peer to, intentionlally or
         // unintentionally, dominate our network layer.
-        if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK)
+        if (inv.type == MSG_BLOCK || inv.type == MSG_CMPCT_BLOCK)
             break;
     }
     // Send the batched transactions if any to send.
     if (!ss.empty())
     {
-        pfrom->PushMessage(NetMsgType::TX, ss);
+        uint32_t lastMsgCookie = msgCookie | 0xFFFF;
+        pfrom->PushMessageWithCookie(NetMsgType::TX, lastMsgCookie, ss);
+        replyCookieCount++;
     }
 
     // Erase all messages inv's we processed
@@ -342,7 +386,7 @@ void static ProcessGetData(CNode *pfrom, const Consensus::Params &consensusParam
         // do that because they want to know about (and store and rebroadcast and
         // risk analyze) the dependencies of transactions relevant to them, without
         // having to download the entire memory pool.
-        pfrom->PushMessage(NetMsgType::NOTFOUND, vNotFound);
+        pfrom->PushMessageWithCookie(NetMsgType::NOTFOUND, msgCookie | 0xFFFF, vNotFound);
     }
 }
 
@@ -402,7 +446,11 @@ static void enableCompactBlocks(CNode *pfrom)
     }
 }
 
-bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, int64_t nStopwatchTimeReceived)
+bool ProcessMessage(CNode *pfrom,
+    std::string strCommand,
+    uint32_t msgCookie,
+    CDataStream &vRecv,
+    int64_t nStopwatchTimeReceived)
 {
     int64_t receiptTime = GetTime();
     const CChainParams &chainparams = Params();
@@ -450,7 +498,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
         if (pfrom->nVersion < MIN_PEER_PROTO_VERSION)
         {
             // ban peers older than this proto version
-            pfrom->PushMessage(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE,
+            pfrom->PushMessageWithCookie(NetMsgType::REJECT, msgCookie | 0xFFFF, strCommand, REJECT_OBSOLETE,
                 strprintf("Protocol Version must be %d or greater", MIN_PEER_PROTO_VERSION));
             dosMan.Misbehaving(pfrom, 100);
             return error("Using obsolete protocol version %i - banning peer=%s version=%s", pfrom->nVersion,
@@ -478,13 +526,6 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
 
                 // Add the subver string.
                 mapInboundConnectionTracker[(CNetAddr)pfrom->addr].userAgent = pfrom->cleanSubVer;
-            }
-
-            // ban SV peers
-            if (pfrom->strSubVer.find("Bitcoin SV") != std::string::npos ||
-                pfrom->strSubVer.find("(SV;") != std::string::npos)
-            {
-                dosMan.Misbehaving(pfrom, 100, BanReasonInvalidPeer);
             }
         }
         if (!vRecv.empty())
@@ -549,12 +590,12 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
             electrum::set_extversion_flags(xver, chainparams.NetworkIDString());
 
             pfrom->extversionExpected = true;
-            pfrom->PushMessage(NetMsgType::EXTVERSION, xver);
+            pfrom->PushMessageWithCookie(NetMsgType::EXTVERSION, msgCookie | 0xFFFF, xver);
         }
         else
         {
             // Send VERACK handshake message
-            pfrom->PushMessage(NetMsgType::VERACK);
+            pfrom->PushMessageWithCookie(NetMsgType::VERACK, msgCookie | 0xFFFF);
         }
 
         // Change version
@@ -617,7 +658,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
         pfrom->ReadConfigFromExtversion();
 
         // Send VERACK handshake message
-        pfrom->PushMessage(NetMsgType::VERACK);
+        pfrom->PushMessageWithCookie(NetMsgType::VERACK, msgCookie | 0xFFFF);
     }
 
     else if (!pfrom->fSuccessfullyConnected && GetTime() - pfrom->tVersionSent > VERACK_TIMEOUT &&
@@ -658,7 +699,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
             // support extversion
 
             // Send VERACK handshake message
-            pfrom->PushMessage(NetMsgType::VERACK);
+            pfrom->PushMessageWithCookie(NetMsgType::VERACK, msgCookie | 0xFFFF);
         }
 
         handleAddressAfterInit(pfrom);
@@ -709,8 +750,8 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
             // As a safeguard don't allow a smaller max bloom filter size than the default max size.
             if (!pfrom->nXthinBloomfilterSize || (pfrom->nXthinBloomfilterSize < SMALLEST_MAX_BLOOM_FILTER_SIZE))
             {
-                pfrom->PushMessage(
-                    NetMsgType::REJECT, strCommand, REJECT_INVALID, std::string("filter size was too small"));
+                pfrom->PushMessageWithCookie(NetMsgType::REJECT, msgCookie | 0xFFFF, strCommand, REJECT_INVALID,
+                    std::string("filter size was too small"));
                 LOG(NET, "Disconnecting %s: bloom filter size too small\n", pfrom->GetLogName());
                 pfrom->fDisconnect = true;
                 return false;
@@ -743,7 +784,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
         // it, if the remote node sends a ping once per second and this node takes 5
         // seconds to respond to each, the 5th ping the remote sends would appear to
         // return very quickly.
-        pfrom->PushMessage(NetMsgType::PONG, nonce);
+        pfrom->PushMessageWithCookie(NetMsgType::PONG, msgCookie | 0xFFFF, nonce);
         LeaveCritical(&pfrom->csMsgSerializer);
         EnterCritical("pfrom.csMsgSerializer", __FILE__, __LINE__, (void *)(&pfrom->csMsgSerializer),
             LockType::SHARED_MUTEX, OwnershipType::SHARED);
@@ -881,27 +922,31 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
 
     else if (strCommand == NetMsgType::INV)
     {
+        // This message is not part of a request/response so even if processing this results in a request,
+        // we will not "reply" with the passed cookie.
+
         if (fImporting || fReindex)
             return true;
 
         std::vector<CInv> vInv;
         vRecv >> vInv;
-        LOG(NET, "Received INV list of size %d\n", vInv.size());
+        size_t vInvSize = vInv.size();
+        LOG(NET, "Received INV list of size %d\n", vInvSize);
 
         // Message Consistency Checking
         //   Check size == 0 to be intolerant of an empty and useless request.
         //   Validate that INVs are a valid type and not null.
-        if (vInv.size() > MAX_INV_SZ || vInv.empty())
+        if (vInvSize > MAX_INV_SZ || vInv.empty())
         {
             dosMan.Misbehaving(pfrom, 20);
-            return error("message inv size() = %u", vInv.size());
+            return error("message inv size() = %u", vInvSize);
         }
 
         // Allow whitelisted peers to send data other than blocks in blocks only mode if whitelistrelay is true
         if (pfrom->fWhitelisted && GetBoolArg("-whitelistrelay", DEFAULT_WHITELISTRELAY))
             fBlocksOnly = false;
 
-        for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
+        for (unsigned int nInv = 0; nInv < vInvSize; nInv++)
         {
             if (shutdown_threads.load() == true)
                 return false;
@@ -1002,7 +1047,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
         }
 
         // Validate that INVs are a valid type
-        std::deque<CInv> invDeque;
+        std::deque<std::pair<CInv, uint32_t> > invDeque;
         for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
         {
             const CInv &inv = vInv[nInv];
@@ -1020,14 +1065,17 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
                     return false;
             }
 
-            invDeque.push_back(inv);
+            invDeque.push_back(std::pair<CInv, uint32_t>(inv, msgCookie));
+            // These will be deferred, so we need to provide a different cookie for each one.
+            if ((inv.type == MSG_BLOCK) || (inv.type == MSG_CMPCT_BLOCK))
+                msgCookie++;
         }
 
         if (fDebug || (invDeque.size() != 1))
             LOG(NET, "received getdata (%u invsz) peer=%s\n", invDeque.size(), pfrom->GetLogName());
 
         if ((fDebug && invDeque.size() > 0) || (invDeque.size() == 1))
-            LOG(NET, "received getdata for: %s peer=%s\n", invDeque[0].ToString(), pfrom->GetLogName());
+            LOG(NET, "received getdata for: %s peer=%s\n", invDeque[0].first.ToString(), pfrom->GetLogName());
 
         // Run process getdata and process as much of the getdata's as we can before taking the lock
         // and appending the remainder to the vRecvGetData queue.
@@ -1135,7 +1183,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
             CNodeStateAccessor state(nodestate, pfrom->GetId());
             state->pindexBestHeaderSent = pindex ? pindex : chainActive.Tip();
         }
-        pfrom->PushMessage(NetMsgType::HEADERS, vHeaders);
+        pfrom->PushMessageWithCookie(NetMsgType::HEADERS, msgCookie | 0xFFFF, vHeaders);
     }
 
 
@@ -1165,6 +1213,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
             txd.nodeId = pfrom->id;
             txd.nodeName = pfrom->GetLogName();
             txd.whitelisted = pfrom->fWhitelisted;
+            txd.msgCookie = msgCookie;
             EnqueueTxForAdmission(txd);
 
             CInv inv(MSG_TX, txd.tx->GetId());
@@ -1543,7 +1592,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
             }
             else
             {
-                SendXThinBlock(pblock, pfrom, inv);
+                SendXThinBlock(pblock, msgCookie, pfrom, inv);
             }
         }
     }
@@ -1578,7 +1627,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
         }
         else
         {
-            SendXThinBlock(pblock, pfrom, inv);
+            SendXThinBlock(pblock, msgCookie, pfrom, inv);
         }
     }
     else if (strCommand == NetMsgType::XPEDITEDREQUEST)
@@ -1638,14 +1687,14 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
             return false;
 
         LOCK(pfrom->cs_thintype);
-        return HandleGrapheneBlockRequest(vRecv, pfrom, chainparams);
+        return HandleGrapheneBlockRequest(vRecv, pfrom, msgCookie, chainparams);
     }
 
     else if (strCommand == NetMsgType::GRAPHENEBLOCK && !fImporting && !fReindex && !IsInitialBlockDownload() &&
              IsGrapheneBlockEnabled() && grapheneVersionCompatible)
     {
         LOCK(pfrom->cs_thintype);
-        return CGrapheneBlock::HandleMessage(vRecv, pfrom, strCommand, 0);
+        return CGrapheneBlock::HandleMessage(vRecv, pfrom, msgCookie, strCommand, 0);
     }
 
 
@@ -1673,7 +1722,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
             return false;
 
         LOCK(pfrom->cs_thintype);
-        return HandleGrapheneBlockRecoveryRequest(vRecv, pfrom, chainparams);
+        return HandleGrapheneBlockRecoveryRequest(vRecv, pfrom, msgCookie, chainparams);
     }
 
     else if (strCommand == NetMsgType::GRAPHENE_RECOVERY && IsGrapheneBlockEnabled() && grapheneVersionCompatible)
@@ -1690,7 +1739,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
              IsCompactBlocksEnabled())
     {
         LOCK(pfrom->cs_thintype);
-        return CompactBlock::HandleMessage(vRecv, pfrom);
+        return CompactBlock::HandleMessage(vRecv, msgCookie, pfrom);
     }
     else if (strCommand == NetMsgType::GETBLOCKTXN && !fImporting && !fReindex && !IsInitialBlockDownload() &&
              IsCompactBlocksEnabled())
@@ -1699,19 +1748,19 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
             return false;
 
         LOCK(pfrom->cs_thintype);
-        return CompactReRequest::HandleMessage(vRecv, pfrom);
+        return CompactReRequest::HandleMessage(vRecv, msgCookie, pfrom);
     }
     else if (strCommand == NetMsgType::BLOCKTXN && !fImporting && !fReindex && !IsInitialBlockDownload() &&
              IsCompactBlocksEnabled())
     {
         LOCK(pfrom->cs_thintype);
-        return CompactReReqResponse::HandleMessage(vRecv, pfrom);
+        return CompactReReqResponse::HandleMessage(vRecv, msgCookie, pfrom);
     }
 
     // Mempool synchronization request
     else if (strCommand == NetMsgType::GET_MEMPOOLSYNC)
     {
-        return HandleMempoolSyncRequest(vRecv, pfrom);
+        return HandleMempoolSyncRequest(vRecv, pfrom, msgCookie);
     }
 
     else if (strCommand == NetMsgType::MEMPOOLSYNC)
@@ -1722,12 +1771,12 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
     // Mempool synchronization transaction request
     else if (strCommand == NetMsgType::GET_MEMPOOLSYNCTX)
     {
-        return CRequestMempoolSyncTx::HandleMessage(vRecv, pfrom);
+        return CRequestMempoolSyncTx::HandleMessage(vRecv, msgCookie, pfrom);
     }
 
     else if (strCommand == NetMsgType::MEMPOOLSYNCTX)
     {
-        return CMempoolSyncTx::HandleMessage(vRecv, pfrom);
+        return CMempoolSyncTx::HandleMessage(vRecv, msgCookie, pfrom);
     }
 
 
@@ -1823,6 +1872,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
             fHaveFilter = pfrom->pfilter ? true : false;
         }
 
+        uint32_t replyCount = 0;
         for (uint256 &hash : vtxid)
         {
             CInv inv(MSG_TX, hash);
@@ -1837,15 +1887,19 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
                 if (!pfrom->pfilter->IsRelevantAndUpdate(ptx))
                     continue;
             }
-            vInv.push_back(inv);
+            // By sending before we push the next one on the list, we guarantee that the pushmessage outside of this
+            // loop will be called rather than this one at the end of the array.
+            // That must happen so that the end-of-message-group cookie can be sent.
             if (vInv.size() == MAX_INV_SZ)
             {
-                pfrom->PushMessage(NetMsgType::INV, vInv);
+                pfrom->PushMessageWithCookie(NetMsgType::INV, msgCookie + replyCount, vInv);
+                replyCount++;
                 vInv.clear();
             }
+            vInv.push_back(inv);
         }
         if (vInv.size() > 0)
-            pfrom->PushMessage(NetMsgType::INV, vInv);
+            pfrom->PushMessageWithCookie(NetMsgType::INV, msgCookie | 0xFFFF, vInv);
     }
 
     else if (strCommand == NetMsgType::PONG)
@@ -1920,6 +1974,7 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
     {
         CBloomFilter filter;
         vRecv >> filter;
+        LOG(NET, "Bloom Filter Installed: %d bytes\n", filter.vDataSize());
 
         if (!filter.IsWithinSizeConstraints())
         {
@@ -2068,13 +2123,13 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
         if (fHaveMempool)
         {
             std::string err = "transaction already in mempool";
-            pfrom->PushMessage(NetMsgType::RESTXVAL, nonce, err);
+            pfrom->PushMessageWithCookie(NetMsgType::RESTXVAL, msgCookie | 0xFFFF, nonce, err);
             return true;
         }
         else if (fHaveChain)
         {
             std::string err = "transaction already in block chain";
-            pfrom->PushMessage(NetMsgType::RESTXVAL, nonce, err);
+            pfrom->PushMessageWithCookie(NetMsgType::RESTXVAL, msgCookie | 0xFFFF, nonce, err);
             return true;
         }
         CValidationState state;
@@ -2085,12 +2140,12 @@ bool ProcessMessage(CNode *pfrom, std::string strCommand, CDataStream &vRecv, in
             fOverrideFees, txClass, vCoinsToUncache, &isRespend, &debugger);
 
         std::string result = DebuggerToString(debugger);
-        pfrom->PushMessage(NetMsgType::RESTXVAL, nonce, result);
+        pfrom->PushMessageWithCookie(NetMsgType::RESTXVAL, msgCookie | 0xFFFF, nonce, result);
     }
     else if ((capdPoolSize.Value() > 0) && pfrom->IsCapdEnabled() &&
              (strCommand.substr(0, 4) == NetMsgType::CAPDPREFIX))
     {
-        capdProtocol.HandleCapdMessage(pfrom, strCommand, vRecv, nStopwatchTimeReceived);
+        capdProtocol.HandleCapdMessage(pfrom, strCommand, msgCookie, vRecv, nStopwatchTimeReceived);
     }
 
     else if (strCommand == NetMsgType::REJECT)
@@ -2359,7 +2414,7 @@ bool ProcessMessages(CNode *pfrom)
         bool fRet = false;
         try
         {
-            fRet = ProcessMessage(pfrom, strCommand, vRecv, msg.nStopwatch);
+            fRet = ProcessMessage(pfrom, strCommand, hdr.msgCookie, vRecv, msg.nStopwatch);
             if (shutdown_threads.load() == true)
             {
                 return false;
@@ -2367,7 +2422,8 @@ bool ProcessMessages(CNode *pfrom)
         }
         catch (const std::ios_base::failure &e)
         {
-            pfrom->PushMessage(NetMsgType::REJECT, strCommand, REJECT_MALFORMED, std::string("error parsing message"));
+            pfrom->PushMessageWithCookie(NetMsgType::REJECT, hdr.msgCookie | 0xffff, strCommand, REJECT_MALFORMED,
+                std::string("error parsing message"));
             if (strstr(e.what(), "end of data"))
             {
                 // Allow exceptions from under-length message on vRecv

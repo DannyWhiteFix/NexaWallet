@@ -210,6 +210,7 @@ bool CTxOrphanPool::LoadOrphanPool()
             {
                 CTxInputData txd;
                 txd.tx = MakeTransactionRef(tx);
+                txd.msgCookie = 0;
                 EnqueueTxForAdmission(txd);
                 ++count;
             }

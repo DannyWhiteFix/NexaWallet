@@ -480,7 +480,7 @@ public:
 
     CMsgMaker(CDataStream &serializedMsg, CNode &node, const char *msgtype) : pkt(serializedMsg)
     {
-        pkt << CMessageHeader(node.GetMagic(Params()), msgtype, 0);
+        pkt << CMessageHeader(node.GetMagic(Params()), msgtype, 0, 0);
     }
 
 
@@ -495,7 +495,7 @@ template <typename Fn>
 CDataStream MsgMaker(CNode &node, const char *msgtype, Fn f)
 {
     CDataStream pkt(SER_NETWORK, CLIENT_VERSION);
-    pkt << CMessageHeader(node.GetMagic(Params()), msgtype, 0);
+    pkt << CMessageHeader(node.GetMagic(Params()), msgtype, 0, 0);
     f(pkt);
     unsigned int nSize = pkt.size() - CMessageHeader::HEADER_SIZE;
     WriteLE32((uint8_t *)&pkt[CMessageHeader::MESSAGE_SIZE_OFFSET], nSize);
@@ -505,10 +505,10 @@ CDataStream MsgMaker(CNode &node, const char *msgtype, Fn f)
 
 bool HandleCapdMessage(CNode &node, CDataStream &pkt)
 {
-    CMessageHeader hdr(node.GetMagic(Params()));
+    CMessageHeader hdr(node.GetMagic(Params()), 0);
     pkt >> hdr;
     auto s = hdr.GetCommand();
-    bool result = capdProtocol.HandleCapdMessage(&node, s, pkt, 0);
+    bool result = capdProtocol.HandleCapdMessage(&node, s, 0, pkt, 0);
     return result;
 }
 
@@ -534,7 +534,7 @@ BOOST_AUTO_TEST_CASE(capd_p2p)
         CDataStream pkt(SER_NETWORK, CLIENT_VERSION);
         std::vector<uint256> invs;
         invs.push_back(msg1.GetHash());
-        pkt << CMessageHeader(node1.GetMagic(Params()), NetMsgType::CAPDINV, 0);
+        pkt << CMessageHeader(node1.GetMagic(Params()), NetMsgType::CAPDINV, 0, 0);
         WriteCompactSize(pkt, CapdProtocol::CAPD_MSG_TYPE);
         pkt << invs;
         unsigned int nSize = pkt.size() - CMessageHeader::HEADER_SIZE;
@@ -542,10 +542,10 @@ BOOST_AUTO_TEST_CASE(capd_p2p)
 
         // Check cases were capd is not enabled
 
-        CMessageHeader hdr(node1.GetMagic(Params()));
+        CMessageHeader hdr(node1.GetMagic(Params()), 0);
         pkt >> hdr;
         auto s = hdr.GetCommand();
-        bool result = capdProtocol.HandleCapdMessage(&node1, s, pkt, 0);
+        bool result = capdProtocol.HandleCapdMessage(&node1, s, 0, pkt, 0);
         BOOST_CHECK(result == false);
 
         node1.isCapdEnabled = true;
@@ -553,7 +553,7 @@ BOOST_AUTO_TEST_CASE(capd_p2p)
         pkt.Rewind(pkt.ReadPos());
         pkt >> hdr;
         s = hdr.GetCommand();
-        result = capdProtocol.HandleCapdMessage(&node1, s, pkt, 0);
+        result = capdProtocol.HandleCapdMessage(&node1, s, 0, pkt, 0);
         BOOST_CHECK(result == false);
 
         node1.capd = &capdNode1;
@@ -562,21 +562,21 @@ BOOST_AUTO_TEST_CASE(capd_p2p)
         pkt.Rewind(pkt.ReadPos());
         pkt >> hdr;
         s = hdr.GetCommand();
-        result = capdProtocol.HandleCapdMessage(&node1, s, pkt, 0);
+        result = capdProtocol.HandleCapdMessage(&node1, s, 0, pkt, 0);
         BOOST_CHECK(result == true);
 
         // Check bad object type
         pkt.clear();
         WriteCompactSize(pkt, CapdProtocol::CAPD_MSG_TYPE + 1);
         pkt << invs;
-        result = capdProtocol.HandleCapdMessage(&node1, s, pkt, 0);
+        result = capdProtocol.HandleCapdMessage(&node1, s, 0, pkt, 0);
         BOOST_CHECK(result == false);
     }
 
     // too many INV objects
     {
         CDataStream pkt(SER_NETWORK, CLIENT_VERSION);
-        pkt << CMessageHeader(node1.GetMagic(Params()), NetMsgType::CAPDINV, 0);
+        pkt << CMessageHeader(node1.GetMagic(Params()), NetMsgType::CAPDINV, 0, 0);
         pkt = MsgMaker(node1, NetMsgType::CAPDINV,
             [](auto &p)
             {

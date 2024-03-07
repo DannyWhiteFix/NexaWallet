@@ -269,7 +269,7 @@ public:
     int64_t nStopwatch; // stopwatch time in microseconds of message receipt.  Used to calculate round trip latency.
 
     // default constructor builds an empty message object to accept assignment of real messages
-    CNetMessage() : hdrbuf(0, 0), hdr({0, 0, 0, 0}), vRecv(0, 0)
+    CNetMessage() : hdrbuf(0, 0), hdr(), vRecv(0, 0)
     {
         in_data = false;
         nHdrPos = 0;
@@ -278,8 +278,11 @@ public:
         nStopwatch = 0;
     }
 
-    CNetMessage(const CMessageHeader::MessageStartChars &pchMessageStartIn, int nTypeIn, int nVersionIn)
-        : hdrbuf(nTypeIn, nVersionIn), hdr(pchMessageStartIn), vRecv(nTypeIn, nVersionIn)
+    CNetMessage(const CMessageHeader::MessageStartChars &pchMessageStartIn,
+        uint32_t msgCookie,
+        int nTypeIn,
+        int nVersionIn)
+        : hdrbuf(nTypeIn, nVersionIn), hdr(pchMessageStartIn, msgCookie), vRecv(nTypeIn, nVersionIn)
     {
         hdrbuf.resize(24);
         in_data = false;
@@ -378,7 +381,7 @@ public:
     std::atomic<uint64_t> nSendBytes;
 
     CCriticalSection csRecvGetData;
-    std::deque<CInv> vRecvGetData GUARDED_BY(csRecvGetData);
+    std::deque<std::pair<CInv, uint32_t> > vRecvGetData GUARDED_BY(csRecvGetData);
 
     CCriticalSection cs_vRecvMsg;
     std::atomic<uint64_t> nRecvBytes;
@@ -743,7 +746,7 @@ public:
     }
 
     // TODO: Document the postcondition of this function.  Is cs_vSend locked?
-    void BeginMessage(const char *pszCommand) EXCLUSIVE_LOCK_FUNCTION(cs_vSend);
+    void BeginMessage(const char *pszCommand, uint32_t msgCookie) EXCLUSIVE_LOCK_FUNCTION(cs_vSend);
 
     // TODO: Document the precondition of this function.  Is cs_vSend locked?
     void AbortMessage() UNLOCK_FUNCTION(cs_vSend);
@@ -758,7 +761,7 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand);
+            BeginMessage(pszCommand, 0);
             EndMessage();
         }
         catch (...)
@@ -773,7 +776,7 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand);
+            BeginMessage(pszCommand, 0);
             ssSend << a1;
             EndMessage();
         }
@@ -789,7 +792,7 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand);
+            BeginMessage(pszCommand, 0);
             ssSend << a1 << a2;
             EndMessage();
         }
@@ -805,7 +808,7 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand);
+            BeginMessage(pszCommand, 0);
             ssSend << a1 << a2 << a3;
             EndMessage();
         }
@@ -821,7 +824,7 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand);
+            BeginMessage(pszCommand, 0);
             ssSend << a1 << a2 << a3 << a4;
             EndMessage();
         }
@@ -837,7 +840,7 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand);
+            BeginMessage(pszCommand, 0);
             ssSend << a1 << a2 << a3 << a4 << a5;
             EndMessage();
         }
@@ -859,7 +862,7 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand);
+            BeginMessage(pszCommand, 0);
             ssSend << a1 << a2 << a3 << a4 << a5 << a6;
             EndMessage();
         }
@@ -882,7 +885,7 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand);
+            BeginMessage(pszCommand, 0);
             ssSend << a1 << a2 << a3 << a4 << a5 << a6 << a7;
             EndMessage();
         }
@@ -906,7 +909,7 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand);
+            BeginMessage(pszCommand, 0);
             ssSend << a1 << a2 << a3 << a4 << a5 << a6 << a7 << a8;
             EndMessage();
         }
@@ -939,7 +942,7 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand);
+            BeginMessage(pszCommand, 0);
             ssSend << a1 << a2 << a3 << a4 << a5 << a6 << a7 << a8 << a9;
             EndMessage();
         }
@@ -949,6 +952,218 @@ public:
             throw;
         }
     }
+
+    void PushMessageWithCookie(const char *pszCommand, uint32_t msgCookie)
+    {
+        try
+        {
+            BeginMessage(pszCommand, msgCookie);
+            EndMessage();
+        }
+        catch (...)
+        {
+            AbortMessage();
+            throw;
+        }
+    }
+
+    template <typename T1>
+    void PushMessageWithCookie(const char *pszCommand, uint32_t msgCookie, const T1 &a1)
+    {
+        try
+        {
+            BeginMessage(pszCommand, msgCookie);
+            ssSend << a1;
+            EndMessage();
+        }
+        catch (...)
+        {
+            AbortMessage();
+            throw;
+        }
+    }
+
+    template <typename T1, typename T2>
+    void PushMessageWithCookie(const char *pszCommand, uint32_t msgCookie, const T1 &a1, const T2 &a2)
+    {
+        try
+        {
+            BeginMessage(pszCommand, msgCookie);
+            ssSend << a1 << a2;
+            EndMessage();
+        }
+        catch (...)
+        {
+            AbortMessage();
+            throw;
+        }
+    }
+
+    template <typename T1, typename T2, typename T3>
+    void PushMessageWithCookie(const char *pszCommand, uint32_t msgCookie, const T1 &a1, const T2 &a2, const T3 &a3)
+    {
+        try
+        {
+            BeginMessage(pszCommand, msgCookie);
+            ssSend << a1 << a2 << a3;
+            EndMessage();
+        }
+        catch (...)
+        {
+            AbortMessage();
+            throw;
+        }
+    }
+
+    template <typename T1, typename T2, typename T3, typename T4>
+    void PushMessageWithCookie(const char *pszCommand,
+        uint32_t msgCookie,
+        const T1 &a1,
+        const T2 &a2,
+        const T3 &a3,
+        const T4 &a4)
+    {
+        try
+        {
+            BeginMessage(pszCommand, msgCookie);
+            ssSend << a1 << a2 << a3 << a4;
+            EndMessage();
+        }
+        catch (...)
+        {
+            AbortMessage();
+            throw;
+        }
+    }
+
+    template <typename T1, typename T2, typename T3, typename T4, typename T5>
+    void PushMessageWithCookie(const char *pszCommand,
+        uint32_t msgCookie,
+        const T1 &a1,
+        const T2 &a2,
+        const T3 &a3,
+        const T4 &a4,
+        const T5 &a5)
+    {
+        try
+        {
+            BeginMessage(pszCommand, msgCookie);
+            ssSend << a1 << a2 << a3 << a4 << a5;
+            EndMessage();
+        }
+        catch (...)
+        {
+            AbortMessage();
+            throw;
+        }
+    }
+
+    template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
+    void PushMessageWithCookie(const char *pszCommand,
+        uint32_t msgCookie,
+        const T1 &a1,
+        const T2 &a2,
+        const T3 &a3,
+        const T4 &a4,
+        const T5 &a5,
+        const T6 &a6)
+    {
+        try
+        {
+            BeginMessage(pszCommand, msgCookie);
+            ssSend << a1 << a2 << a3 << a4 << a5 << a6;
+            EndMessage();
+        }
+        catch (...)
+        {
+            AbortMessage();
+            throw;
+        }
+    }
+
+    template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
+    void PushMessageWithCookie(const char *pszCommand,
+        uint32_t msgCookie,
+        const T1 &a1,
+        const T2 &a2,
+        const T3 &a3,
+        const T4 &a4,
+        const T5 &a5,
+        const T6 &a6,
+        const T7 &a7)
+    {
+        try
+        {
+            BeginMessage(pszCommand, msgCookie);
+            ssSend << a1 << a2 << a3 << a4 << a5 << a6 << a7;
+            EndMessage();
+        }
+        catch (...)
+        {
+            AbortMessage();
+            throw;
+        }
+    }
+
+    template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
+    void PushMessageWithCookie(const char *pszCommand,
+        uint32_t msgCookie,
+        const T1 &a1,
+        const T2 &a2,
+        const T3 &a3,
+        const T4 &a4,
+        const T5 &a5,
+        const T6 &a6,
+        const T7 &a7,
+        const T8 &a8)
+    {
+        try
+        {
+            BeginMessage(pszCommand, msgCookie);
+            ssSend << a1 << a2 << a3 << a4 << a5 << a6 << a7 << a8;
+            EndMessage();
+        }
+        catch (...)
+        {
+            AbortMessage();
+            throw;
+        }
+    }
+
+    template <typename T1,
+        typename T2,
+        typename T3,
+        typename T4,
+        typename T5,
+        typename T6,
+        typename T7,
+        typename T8,
+        typename T9>
+    void PushMessageWithCookie(const char *pszCommand,
+        uint32_t msgCookie,
+        const T1 &a1,
+        const T2 &a2,
+        const T3 &a3,
+        const T4 &a4,
+        const T5 &a5,
+        const T6 &a6,
+        const T7 &a7,
+        const T8 &a8,
+        const T9 &a9)
+    {
+        try
+        {
+            BeginMessage(pszCommand, msgCookie);
+            ssSend << a1 << a2 << a3 << a4 << a5 << a6 << a7 << a8 << a9;
+            EndMessage();
+        }
+        catch (...)
+        {
+            AbortMessage();
+            throw;
+        }
+    }
+
 
     /**
      * Check if it is flagged for banning, and if so ban it and disconnect.

@@ -176,8 +176,38 @@ def deser_string(f):
         nit = struct.unpack("<Q", f.read(8))[0]
     return f.read(nit)
 
+def deser_bytes(f):
+    """Convert an array of bytes in the bitcoin P2P protocol format into a string
+
+    >>> import io
+    >>> deser_string(io.BytesIO(ser_string("The grid bug bites!  You get zapped!".encode()))).decode()
+    'The grid bug bites!  You get zapped!'
+    """
+    nit = struct.unpack("<B", f.read(1))[0]
+    if nit == 253:
+        nit = struct.unpack("<H", f.read(2))[0]
+    elif nit == 254:
+        nit = struct.unpack("<I", f.read(4))[0]
+    elif nit == 255:
+        nit = struct.unpack("<Q", f.read(8))[0]
+    return f.read(nit)
+
 
 def ser_string(s):
+    """convert a string into an array of bytes (in the bitcoin network format)
+
+       >>> ser_string("The grid bug bites!  You get zapped!".encode())
+       b'$The grid bug bites!  You get zapped!'
+    """
+    if len(s) < 253:
+        return struct.pack("B", len(s)) + s
+    elif len(s) < 0x10000:
+        return struct.pack("<BH", 253, len(s)) + s
+    elif len(s) < 0x100000000:
+        return struct.pack("<BI", 254, len(s)) + s
+    return struct.pack("<BQ", 255, len(s)) + s
+
+def ser_bytes(s):
     """convert a string into an array of bytes (in the bitcoin network format)
 
        >>> ser_string("The grid bug bites!  You get zapped!".encode())
@@ -1592,6 +1622,36 @@ class CBlock(CBlockHeader):
             % (self.hashPrevBlock, self.hashMerkleRoot,
                time.ctime(self.nTime), self.nBits, self.nonce.hex(), repr(self.vtx))
 
+class CMerkleBlock(CBlockHeader):
+    def __init__(self):
+        super(CMerkleBlock, self).__init__()
+        self.nTransactions = 0
+        self.vHash = []
+        self.vBytes = b""
+
+    def deserialize(self, f):
+        super(CMerkleBlock, self).deserialize(f)
+        self.nTransactions = struct.unpack("<I", f.read(4))[0]
+        self.vHash = deser_uint256_vector(f)
+        self.vBytes = deser_bytes(f)
+
+    def serialize(self, stype=SER_DEFAULT):
+        r = b""
+        r += super(CMerkleBlock, self).serialize(stype)
+        r += struct.pack("<I", self.nTransactions)
+        r += ser_uint256_vector(self.vHash)
+        r += ser_bytes(self.vBytes)
+        return r
+
+    def __str__(self):
+        return "CMerkleBlock(hashPrevBlock=%064x hashMerkleRoot=%064x nTime=%s nBits=%08x nonce=%s vhash_len=%d)" \
+            % (self.hashPrevBlock, self.hashMerkleRoot,
+               time.ctime(self.nTime), self.nBits, self.nonce.hex(), len(self.vHash))
+
+    def __repr__(self):
+        return "CMerkleBlock(hashPrevBlock=%064x hashMerkleRoot=%064x nTime=%s nBits=%08x nonce=%s vhash_len=%s)" \
+            % (self.hashPrevBlock, self.hashMerkleRoot,
+               time.ctime(self.nTime), self.nBits, self.nonce.hex(), repr(self.vHash))
 
 class CUnsignedAlert(object):
     def __init__(self):
@@ -2026,7 +2086,6 @@ class msg_inv(object):
     def __repr__(self):
         return "msg_inv(inv=%s)" % (repr(self.inv))
 
-
 class msg_getdata(object):
     command = b"getdata"
 
@@ -2046,6 +2105,26 @@ class msg_getdata(object):
 
     def __repr__(self):
         return "msg_getdata(inv=%s)" % (repr(self.inv))
+
+class msg_notfound(object):
+    command = b"notfound"
+
+    def __init__(self, inv=None):
+        if inv is None:
+            self.inv = []
+        elif type(inv) == list:
+            self.inv = inv
+        else:
+            self.inv = [inv]
+
+    def deserialize(self, f):
+        self.inv = deser_vector(f, CInv)
+
+    def serialize(self, stype=SER_DEFAULT):
+        return ser_vector(self.inv)
+
+    def __repr__(self):
+        return "msg_notfound(inv=%s)" % (repr(self.inv))
 
 
 class msg_getblocks(object):
@@ -2107,6 +2186,27 @@ class msg_block(object):
 
     def __repr__(self):
         return "msg_block(block=%s)" % (repr(self.block))
+
+class msg_merkleblock(object):
+    command = b"merkleblock"
+
+    def __init__(self, block=None):
+        if block is None:
+            self.block = CMerkleBlock()
+        else:
+            self.block = block
+
+    def deserialize(self, f):
+        self.block.deserialize(f)
+
+    def serialize(self, stype=SER_DEFAULT):
+        return self.block.serialize()
+
+    def __str__(self):
+        return "msg_filteredblock(block=%s)" % (str(self.block))
+
+    def __repr__(self):
+        return "msg_filteredblock(block=%s)" % (repr(self.block))
 
 
 class msg_getaddr(object):

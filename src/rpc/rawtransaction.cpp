@@ -1704,6 +1704,7 @@ UniValue enqueuerawtransaction(const UniValue &params, bool fHelp)
     CTxInputData txd;
     txd.tx = MakeTransactionRef(std::move(tx));
     txd.nodeName = "rpc";
+    txd.msgCookie = 0; // no message reply cookie from RPC
     EnqueueTxForAdmission(txd);
 
     if (params.size() > 1)

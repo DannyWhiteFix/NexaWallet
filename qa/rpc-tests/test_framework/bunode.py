@@ -74,12 +74,45 @@ class BUProtocolHandler(NodeConnCB):
     def add_parent(self, p):
         self.parent = p
 
+    def install_bloom_filter(self, filter, cookie=0):
+        msg = msg_filterload(filter)
+        self.connection.send_message_with_cookie(msg, cookie)
+
     # Request data for a list of block hashes
     def get_data(self, block_hashes):
         msg = msg_getdata()
         for x in block_hashes:
-            msg.inv.append(CInv(2, x))
+            if isinstance(x, str): x = int(x, 16)
+            if isinstance(x, bytes): x = deser_uint256(x)
+            msg.inv.append(CInv(CInv.MSG_BLOCK, x))
         self.connection.send_message(msg)
+
+    # Request data for a list of block hashes
+    def get_data_blocks_with_cookie(self, block_hashes, cookie):
+        msg = msg_getdata()
+        for x in block_hashes:
+            if isinstance(x, str): x = int(x, 16)
+            if isinstance(x, bytes): x = deser_uint256(x)
+            msg.inv.append(CInv(CInv.MSG_BLOCK, x))
+        self.connection.send_message_with_cookie(msg, cookie)
+
+    # Request data for a list of block hashes
+    def get_data_filtered_blocks_with_cookie(self, block_hashes, cookie):
+        msg = msg_getdata()
+        for x in block_hashes:
+            if isinstance(x, str): x = int(x, 16)
+            if isinstance(x, bytes): x = deser_uint256(x)
+            msg.inv.append(CInv(CInv.MSG_FILTERED_BLOCK, x))
+        self.connection.send_message_with_cookie(msg, cookie)
+
+    # Request data for a list of tx hashes
+    def get_data_txes_with_cookie(self, tx_hashes, cookie):
+        msg = msg_getdata()
+        for x in tx_hashes:
+            if isinstance(x, str): x = int(x, 16)
+            if isinstance(x, bytes): x = deser_uint256(x)
+            msg.inv.append(CInv(CInv.MSG_TX, x))
+        self.connection.send_message_with_cookie(msg, cookie)
 
     def get_headers(self, locator, hashstop):
         msg = msg_getheaders()
@@ -100,6 +133,10 @@ class BUProtocolHandler(NodeConnCB):
     # Wrapper for the NodeConn's send_message function
     def send_message(self, message, pushbuf = False):
         self.connection.send_message(message, pushbuf)
+
+    # Wrapper for the NodeConn's send_message_with_cookie function
+    def send_message_with_cookie(self, message, cookie, pushbuf = False):
+        self.connection.send_message_with_cookie(message, cookie, pushbuf)
 
     def on_inv(self, conn, message):
         self.last_inv.append(message)
@@ -125,19 +162,19 @@ class BUProtocolHandler(NodeConnCB):
 
     def on_block(self, conn, message):
         self.last_block = message.block
-        self.last_block.calc_sha256()
+        self.last_block.calc_hash()
         if self.parent and hasattr(self.parent, "on_block"):
             self.parent.on_block(self, message)
 
     def on_thinblock(self, conn, message):
         self.last_block = message.block
-        self.last_block.calc_sha256()
+        self.last_block.calc_hash()
         if self.parent and hasattr(self.parent, "on_thinblock"):
             self.parent.on_thinblock(self, message)
 
     def on_xthinblock(self, conn, message):
         self.last_block = message.block
-        self.last_block.calc_sha256()
+        self.last_block.calc_hash()
         if self.parent and hasattr(self.parent, "on_xthinblock"):
             self.parent.on_xthinblock(self, message)
 

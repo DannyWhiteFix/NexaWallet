@@ -286,7 +286,7 @@ class msg_capdqreply(object):
         elif self.typ == CAPD_QUERY_TYPE_MSG_HASH:
             self.msgs = deser_hash32_vector(f)
         else:
-            assert False, "message content type is invalid"
+            assert False, "message content type is invalid, its %d" % self.typ
         return self
 
     def serialize(self):
@@ -673,7 +673,7 @@ class msg_get_thin(object):
 class msg_filterload(object):
     command = b"filterload"
 
-    def __init__(self, inv=None, filter=None):
+    def __init__(self, filter=None):
         self.filter = filter
 
     def deserialize(self, f):
@@ -693,7 +693,7 @@ class msg_filterload(object):
 class msg_filteradd(object):
     command = b"filteradd"
 
-    def __init__(self, inv=None, filter=None):
+    def __init__(self, filter=None):
         self.filter = filter
 
     def deserialize(self, f):

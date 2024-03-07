@@ -158,6 +158,7 @@ protected:
     OdMap::iterator sendBlkIter;
     int64_t nBlocksAskedFor = 0;
     CCriticalSection cs_objDownloader;
+    int32_t requestCookie = 0;
 
     int inFlight;
     CStatHistory<int> inFlightTxns;

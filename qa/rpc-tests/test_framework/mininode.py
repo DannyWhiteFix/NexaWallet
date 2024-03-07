@@ -74,6 +74,7 @@ class NodeConnCB(object):
         self.deliver_sleep_time = None
         self.disconnected = False
         self.extversion = extversion
+        self.cookie = 0
 
     def set_deliver_sleep_time(self, value):
         with mininode_lock:
@@ -100,13 +101,14 @@ class NodeConnCB(object):
     def wait_for_verack(self):
         self.wait_for(lambda : self.verack_received)
 
-    def deliver(self, conn, message):
+    def deliver(self, conn, message, cookie):
         deliver_sleep = self.get_deliver_sleep_time()
         if deliver_sleep is not None:
             time.sleep(deliver_sleep)
         with mininode_lock:
             fn = 'on_' + message.command.decode('ascii')
             try:
+                self.cookie = cookie
                 getattr(self, fn)(conn, message)
             except:
                 print("ERROR delivering %s (%s) to %s" % (repr(message), sys.exc_info()[0], fn))
@@ -115,14 +117,11 @@ class NodeConnCB(object):
     def on_version(self, conn, message):
         # Note, send a verack IF extversion is not being used.  Otherwise send extversion
         if self.extversion == None:
-            if message.nVersion >= 209:
-                conn.send_message(msg_verack())
+            conn.send_message(msg_verack())
         else:
             if type(self.extversion) == msg_extversion:
                 conn.send_message(self.extversion)
         conn.ver_send = min(MY_VERSION, message.nVersion)
-        if message.nVersion < 209:
-            conn.ver_recv = conn.ver_send
 
     def on_verack(self, conn, message):
         conn.ver_recv = conn.ver_send
@@ -251,6 +250,7 @@ class NodeConn(asyncore.dispatcher):
         b"getblocks": msg_getblocks,
         b"tx": msg_tx,
         b"block": msg_block,
+        b"merkleblock": msg_merkleblock,
         b"getaddr": msg_getaddr,
         b"ping": msg_ping,
         b"pong": msg_pong,
@@ -270,7 +270,8 @@ class NodeConn(asyncore.dispatcher):
         b"capdmsg": msg_capdmsg,
         b"capdq": msg_capdquery,
         b"capdqreply": msg_capdqreply,
-        b"capdinfo": msg_capdinfo
+        b"capdinfo": msg_capdinfo,
+        b"notfound": msg_notfound,
     }, bumessagemap)
 
     MAGIC_BYTES = {
@@ -287,16 +288,16 @@ class NodeConn(asyncore.dispatcher):
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sendbuf = b""
         self.recvbuf = b""
-        self.ver_send = 209
-        self.ver_recv = 209
+        self.ver_send = 80003  # Min Nexa protocol version
+        self.ver_recv = 80003
         self.last_sent = 0
         self.state = "connecting"
         self.network = net
         self.cb = callback
         self.disconnect = False
         self.curIndex = 0
-        self.allow0Checksum = False
-        self.produce0Checksum = False
+        self.allow0Checksum = True
+        # self.produce0Checksum = True
         self.num0Checksums = 0
         if send_initial_version:
             # stuff version msg into sendbuf
@@ -390,46 +391,25 @@ class NodeConn(asyncore.dispatcher):
                     return
                 if (self.recvbuf[:4] != self.MAGIC_BYTES[self.network]):
                     raise ValueError("got garbage %s" % repr(self.recvbuf))
-                if self.ver_recv < 209:
-                    if len(self.recvbuf) < 4 + 12 + 4:
-                        return
-                    command = self.recvbuf[4:4 + 12].split(b"\x00", 1)[0]
-                    msglen = struct.unpack("<i", self.recvbuf[4 + 12:4 + 12 + 4])[0]
-                    checksum = None
-                    if len(self.recvbuf) < 4 + 12 + 4 + msglen:
-                        return
-                    msg = self.recvbuf[4 + 12 + 4:4 + 12 + 4 + msglen]
-                    self.recvbuf = self.recvbuf[4 + 12 + 4 + msglen:]
-                else:
+                if True:
                     if len(self.recvbuf) < 4 + 12 + 4 + 4:
                         return
                     command = self.recvbuf[4:4 + 12].split(b"\x00", 1)[0]
                     msglen = struct.unpack("<i", self.recvbuf[4 + 12:4 + 12 + 4])[0]
-                    checksum = self.recvbuf[4 + 12 + 4:4 + 12 + 4 + 4]
+                    cookieBytes = self.recvbuf[4 + 12 + 4:4 + 12 + 4 + 4]
+                    cookie = struct.unpack("<I", cookieBytes)[0]
                     if len(self.recvbuf) < 4 + 12 + 4 + 4 + msglen:
                         return
                     msg = self.recvbuf[4 + 12 + 4 + 4:4 + 12 + 4 + 4 + msglen]
-                    th = sha256(msg)
-                    h = sha256(th)
-                    if checksum != h[:4]:
-                        if checksum == b'\x00\x00\x00\x00':
-                            if self.allow0Checksum:
-                                self.num0Checksums += 1
-                            else:
-                                raise ValueError("got zero checksum")
-                        else:
-                            raise ValueError("got bad checksum " + repr(self.recvbuf))
                     self.recvbuf = self.recvbuf[4 + 12 + 4 + 4 + msglen:]
                 if command in self.messagemap:
                     f = BytesIO(msg)
                     t = self.messagemap[command]()
                     t.deserialize(f)
-                    self.got_message(t)
+                    self.got_message(t, cookie)
                 else:
                     print("Unknown command: '" + command.decode() + "' ")
-                    self.show_debug_msg("Unknown command: '" + command.decode() + "' " +
-                                        repr(msg))
-                    # pdb.set_trace()
+                    self.show_debug_msg("Unknown command: '" + command.decode() + "' " + repr(msg))
         except Exception as e:
             print('got_data:', repr(e))
             self.exceptions.append(e)
@@ -447,23 +427,33 @@ class NodeConn(asyncore.dispatcher):
         tmsg += command
         tmsg += b"\x00" * (12 - len(command))
         tmsg += struct.pack("<I", len(data))
-        if self.ver_send >= 209:
-            if self.produce0Checksum:
-                tmsg += b"\x00" * 4
-            else:
-                th = sha256(data)
-                h = sha256(th)
-                tmsg += h[:4]
+        tmsg += b"\x00" * 4
         tmsg += data
         with mininode_lock:
             self.sendbuf += tmsg
             self.last_sent = time.time()
 
-    def got_message(self, message):
+    def send_message_with_cookie(self, message, cookie, pushbuf=False):
+        if self.state != "connected" and not pushbuf:
+            raise IOError('Not connected, no pushbuf')
+        self.show_debug_msg("Enqueue for send %s" % repr(message))
+        command = message.command
+        data = message.serialize()
+        tmsg = self.MAGIC_BYTES[self.network]
+        tmsg += command
+        tmsg += b"\x00" * (12 - len(command))
+        tmsg += struct.pack("<I", len(data))
+        tmsg += struct.pack("<I", cookie)
+        tmsg += data
+        with mininode_lock:
+            self.sendbuf += tmsg
+            self.last_sent = time.time()
+
+    def got_message(self, message, cookie):
         if self.last_sent + 30 * 60 < time.time():
             self.send_message(self.messagemap[b'ping']())
         self.show_debug_msg("Recv %s" % repr(message))
-        self.cb.deliver(self, message)
+        self.cb.deliver(self, message, cookie)
 
     def disconnect_node(self):
         self.disconnect = True

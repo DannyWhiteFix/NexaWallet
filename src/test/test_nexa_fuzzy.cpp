@@ -176,7 +176,7 @@ protected:
     void run(const bool produce_output)
     {
         CMessageHeader::MessageStartChars pchMessageStart = {0x00, 0x00, 0x00, 0x00};
-        CMessageHeader mh(pchMessageStart);
+        CMessageHeader mh(pchMessageStart, 0);
         *ds >> mh;
         mh.IsValid(pchMessageStart);
 

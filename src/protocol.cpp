@@ -168,16 +168,17 @@ const static std::string allNetMessageTypes[] = {
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes,
     allNetMessageTypes + ARRAYLEN(allNetMessageTypes));
 
-CMessageHeader::CMessageHeader(const MessageStartChars &pchMessageStartIn)
+CMessageHeader::CMessageHeader(const MessageStartChars &pchMessageStartIn, uint32_t _msgCookie)
 {
     memcpy(pchMessageStart, pchMessageStartIn, MESSAGE_START_SIZE);
     memset(pchCommand, 0, sizeof(pchCommand));
     nMessageSize = -1;
-    nChecksum = 0;
+    msgCookie = _msgCookie;
 }
 
 CMessageHeader::CMessageHeader(const MessageStartChars &pchMessageStartIn,
     const char *pszCommand,
+    uint32_t _msgCookie,
     unsigned int nMessageSizeIn)
 {
     memcpy(pchMessageStart, pchMessageStartIn, MESSAGE_START_SIZE);
@@ -188,7 +189,7 @@ CMessageHeader::CMessageHeader(const MessageStartChars &pchMessageStartIn,
     }
     memcpy(pchCommand, pszCommand, size);
     nMessageSize = nMessageSizeIn;
-    nChecksum = 0;
+    msgCookie = _msgCookie;
 }
 
 std::string CMessageHeader::GetCommand() const

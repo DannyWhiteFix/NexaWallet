@@ -164,7 +164,7 @@ class NoConfigValue:
         pass
 
 def waitFor(timeout, fn, onError="timeout in waitFor", sleepAmt=1.0):
-    """  Repeatedly calls fn while it returns None or False, raising an assert after timeout.  If fn returns non None/False, return that result
+    """  Repeatedly calls fn while it returns None or False, raising an assert after timeout in seconds.  If fn returns non None/False, return that result
     """
     timeout = float(timeout)
     while 1:
@@ -815,8 +815,13 @@ def connect_nodes(from_connection, node_num_or_str):
     from_connection.addnode(ip_port, "onetry")
     # poll until version handshake complete to avoid race conditions
     # with transaction relaying
-    while any(peer['version'] == 0 for peer in from_connection.getpeerinfo()):
+    count = 0
+    while count < 10 and any(peer['version'] == 0 for peer in from_connection.getpeerinfo()):
         time.sleep(0.1)
+        count += 0.1
+    if count >= 10:
+        print(from_connection.getpeerinfo())
+        raise RuntimeError("Cannot connect nodes")
 
 def disconnect_nodes(from_connection, node_num_or_str):
     """Disconnect a particular node from this one.  Provide the node index or its ip address:port as a string

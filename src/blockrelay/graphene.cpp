@@ -344,7 +344,11 @@ bool CRequestGrapheneBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
  * Handle an incoming graphene block
  * Once the block is validated apart from the Merkle root, forward the Xpedited block with a hop count of nHops.
  */
-bool CGrapheneBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, std::string strCommand, unsigned nHops)
+bool CGrapheneBlock::HandleMessage(CDataStream &vRecv,
+    CNode *pfrom,
+    uint32_t msgCookie,
+    std::string strCommand,
+    unsigned nHops)
 {
     // Deserialize grapheneblock and store a block to reconstruct
     CGrapheneBlock tmp(NegotiateGrapheneVersion(pfrom), NegotiateFastFilterSupport(pfrom));
@@ -1272,7 +1276,11 @@ void CGrapheneBlockData::FillGrapheneQuickStats(GrapheneQuickStats &stats)
 }
 
 bool IsGrapheneBlockEnabled() { return GetBoolArg("-use-grapheneblocks", DEFAULT_USE_GRAPHENE_BLOCKS); }
-void SendGrapheneBlock(ConstCBlockRef pblock, CNode *pfrom, const CInv &inv, const CMemPoolInfo &mempoolinfo)
+void SendGrapheneBlock(ConstCBlockRef pblock,
+    CNode *pfrom,
+    uint32_t msgCookie,
+    const CInv &inv,
+    const CMemPoolInfo &mempoolinfo)
 {
     if (inv.type == MSG_GRAPHENEBLOCK)
     {
@@ -1295,14 +1303,14 @@ void SendGrapheneBlock(ConstCBlockRef pblock, CNode *pfrom, const CInv &inv, con
             // If graphene block is larger than a regular block then send a regular block instead
             if (nSizeGrapheneBlock > nSizeBlock)
             {
-                pfrom->PushMessage(NetMsgType::BLOCK, *pblock);
+                pfrom->PushMessageWithCookie(NetMsgType::BLOCK, msgCookie | 0xFFFF, *pblock);
                 LOG(GRAPHENE, "Sent regular block instead - graphene block size: %d vs block size: %d => peer: %s\n",
                     nSizeGrapheneBlock, nSizeBlock, pfrom->GetLogName());
             }
             else
             {
                 graphenedata.UpdateOutBound(nSizeGrapheneBlock, nSizeBlock);
-                pfrom->PushMessage(NetMsgType::GRAPHENEBLOCK, grapheneBlock);
+                pfrom->PushMessageWithCookie(NetMsgType::GRAPHENEBLOCK, msgCookie | 0xFFFF, grapheneBlock);
 
                 // First add transaction hashes to local graphene block
                 for (auto &tx : pblock->vtx)
@@ -1323,7 +1331,7 @@ void SendGrapheneBlock(ConstCBlockRef pblock, CNode *pfrom, const CInv &inv, con
         }
         catch (const std::runtime_error &e)
         {
-            pfrom->PushMessage(NetMsgType::BLOCK, *pblock);
+            pfrom->PushMessageWithCookie(NetMsgType::BLOCK, msgCookie | 0xFFFF, *pblock);
             LOG(GRAPHENE,
                 "Sent regular block instead - encountered error when creating graphene block for peer %s: %s\n",
                 pfrom->GetLogName(), e.what());
@@ -1357,7 +1365,7 @@ bool IsGrapheneBlockValid(CNode *pfrom, const CBlockHeader &header)
     return true;
 }
 
-bool HandleGrapheneBlockRequest(CDataStream &vRecv, CNode *pfrom, const CChainParams &chainparams)
+bool HandleGrapheneBlockRequest(CDataStream &vRecv, CNode *pfrom, uint32_t msgCookie, const CChainParams &chainparams)
 {
     CMemPoolInfo mempoolinfo;
     CInv inv;
@@ -1384,13 +1392,16 @@ bool HandleGrapheneBlockRequest(CDataStream &vRecv, CNode *pfrom, const CChainPa
             return error("Peer %s requested block %s that cannot be read", pfrom->GetLogName(), inv.hash.ToString());
         }
         else
-            SendGrapheneBlock(pblock, pfrom, inv, mempoolinfo);
+            SendGrapheneBlock(pblock, pfrom, msgCookie, inv, mempoolinfo);
     }
 
     return true;
 }
 
-bool HandleGrapheneBlockRecoveryRequest(CDataStream &vRecv, CNode *pfrom, const CChainParams &chainparams)
+bool HandleGrapheneBlockRecoveryRequest(CDataStream &vRecv,
+    CNode *pfrom,
+    uint32_t msgCookie,
+    const CChainParams &chainparams)
 {
     CRequestGrapheneReceiverRecover recoveryRequest;
     vRecv >> recoveryRequest;
@@ -1405,7 +1416,7 @@ bool HandleGrapheneBlockRecoveryRequest(CDataStream &vRecv, CNode *pfrom, const 
 
     CGrapheneReceiverRecover recoveryResponse = CGrapheneReceiverRecover(
         *recoveryRequest.pReceiverFilter, *grapheneBlock, recoveryRequest.nSenderFilterPositives, pfrom);
-    pfrom->PushMessage(NetMsgType::GRAPHENE_RECOVERY, recoveryResponse);
+    pfrom->PushMessageWithCookie(NetMsgType::GRAPHENE_RECOVERY, msgCookie | 0xFFFF, recoveryResponse);
 
     return true;
 }
