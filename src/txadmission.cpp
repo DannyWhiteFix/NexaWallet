@@ -47,8 +47,7 @@ extern CTweak<uint32_t> minRelayFee;
 extern CTweak<uint32_t> limitFreeRelay;
 
 extern bool fRelayPriority;
-extern CCriticalSection cs_txKnown;
-extern CRollingBloomFilter filterTransactionKnown GUARDED_BY(cs_txKnown);
+extern CRollingFastFilter<32 * 1024 * 1024> filterTransactionKnown; // guarded by cs_txKnown
 
 using namespace std;
 
@@ -245,7 +244,6 @@ unsigned int TxMayAlreadyHave(const int type, const uint256 &hash)
     // only rarely have to take any locks on the commit queue, mempool and or the orphanpool.
     bool fMaybeHaveTx = false;
     {
-        LOCK(cs_txKnown);
         if (filterTransactionKnown.contains(hash))
             fMaybeHaveTx = true;
     }
@@ -603,7 +601,7 @@ void ThreadTxAdmission()
                         }
                     }
 
-                    LOCK(cs_txKnown);
+                    // Mark this transaction as known. We've seen it and processed it in some way.
                     filterTransactionKnown.insert(inv.hash);
                 }
                 if (fOrphansEmpty)

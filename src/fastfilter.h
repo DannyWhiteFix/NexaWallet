@@ -200,7 +200,6 @@ public:
     {
         static_assert((NUM_HASH_FNS > 1) && (NUM_HASH_FNS <= 16), "NUM_HASH_FNS must be between 2 and 16 inclusive");
         static_assert(isPow2(FILTER_SIZE) && (FILTER_SIZE > 1), "FILTER_SIZE must be a power of 2 greater than 1");
-        FastRandomContext insecure_rand;
         vData.resize(FILTER_BYTES);
     }
 
@@ -259,22 +258,154 @@ public:
 
             unset |= (0 == (vData[idx >> 3] & (1 << (idx & 7))));
             unset |= (0 == (vData[idx2 >> 3] & (1 << (idx2 & 7))));
+            if (unset)
+            {
+                return false;
+            }
         }
-        return !unset;
+        return true;
     }
 
     void reset() { memset(&vData[0], 0, FILTER_BYTES); }
 };
 
 
+// Unlike the FastFilter this class equires a lock to protect the syncronization of all internal data structures
 template <unsigned int FILTER_SIZE, unsigned int NUM_HASH_FNS = 16>
-class CRollingFastFilter : public CFastFilter<FILTER_SIZE, NUM_HASH_FNS>
+class CRollingFastFilter
+{
+protected:
+    // A bit vector containing the bloom filter data
+    mutable std::mutex cs_rollingfilter;
+
+    // Data structures
+    uint64_t vData_elements_set = 0;
+    std::vector<unsigned char> vData;
+    uint64_t vData2_elements_set = 0;
+    std::vector<unsigned char> vData2;
+    uint64_t vData3_elements_set = 0;
+    std::vector<unsigned char> vData3;
+
+    // Which of the two structures (vData2 or vData3) is the currently swappable one.
+    // If true then vData2 is the current one if false then it's vData3.
+    bool fCurrentSwapIsData2 = true;
+
+public:
+    enum
+    {
+        FILTER_BYTES = FILTER_SIZE / 8
+    };
+
+    CRollingFastFilter()
+    {
+        vData.resize(FILTER_BYTES);
+        vData2.resize(FILTER_BYTES);
+        vData3.resize(FILTER_BYTES);
+    }
+
+    void insert(const uint256 &hash)
+    {
+        std::lock_guard<std::mutex> lock(cs_rollingfilter);
+
+        // Swap the containers if it's time.
+        if (vData_elements_set >= FILTER_SIZE / 2)
+        {
+            if (fCurrentSwapIsData2)
+            {
+                if (vData2_elements_set >= FILTER_SIZE / 2)
+                {
+                    vData2.clear();
+                    vData2_elements_set = 0;
+                }
+                std::swap(vData_elements_set, vData2_elements_set);
+                std::swap(vData, vData2);
+                fCurrentSwapIsData2 = false;
+            }
+            else
+            {
+                if (vData3_elements_set >= FILTER_SIZE / 2)
+                {
+                    vData3.clear();
+                    vData3_elements_set = 0;
+                }
+
+                std::swap(vData_elements_set, vData3_elements_set);
+                std::swap(vData, vData3);
+                fCurrentSwapIsData2 = true;
+            }
+        }
+
+        // Do the insert
+        const uint32_t *pos = (const uint32_t *)hash.begin();
+        for (unsigned int i = 0; i < NUM_HASH_FNS / 2; i++, pos++)
+        {
+            uint32_t val = *pos;
+            uint32_t idx = val & (FILTER_SIZE - 1);
+            val = __builtin_bswap32(val);
+            uint32_t idx2 = val & (FILTER_SIZE - 1);
+
+            vData[idx >> 3] |= (1 << (idx & 7));
+            vData[idx2 >> 3] |= (1 << (idx2 & 7));
+        }
+
+        // Increment the counter
+        vData_elements_set += NUM_HASH_FNS;
+    }
+
+    bool contains(const uint256 &hash) const
+    {
+        std::lock_guard<std::mutex> lock(cs_rollingfilter);
+
+        const uint32_t *pos = (const uint32_t *)hash.begin();
+        bool unset = 0; // If any position is not set, then this will be true
+        bool unset2 = 0; // If any position is not set, then this will be true
+        bool unset3 = 0; // If any position is not set, then this will be true
+        for (unsigned int i = 0; i < NUM_HASH_FNS / 2; i++, pos++)
+        {
+            uint32_t val = *pos;
+            uint32_t idx = val & (FILTER_SIZE - 1);
+            val = __builtin_bswap32(val);
+            uint32_t idx2 = val & (FILTER_SIZE - 1);
+
+            unset |= (0 == (vData[idx >> 3] & (1 << (idx & 7))));
+            unset |= (0 == (vData[idx2 >> 3] & (1 << (idx2 & 7))));
+
+            unset2 |= (0 == (vData2[idx >> 3] & (1 << (idx & 7))));
+            unset2 |= (0 == (vData2[idx2 >> 3] & (1 << (idx2 & 7))));
+
+            unset3 |= (0 == (vData3[idx >> 3] & (1 << (idx & 7))));
+            unset3 |= (0 == (vData3[idx2 >> 3] & (1 << (idx2 & 7))));
+
+            if (unset && unset2 && unset3)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    void reset()
+    {
+        std::lock_guard<std::mutex> lock(cs_rollingfilter);
+
+        fCurrentSwapIsData2 = true;
+        vData_elements_set = 0;
+        vData2_elements_set = 0;
+        vData3_elements_set = 0;
+        memset(&vData[0], 0, FILTER_BYTES);
+        memset(&vData2[0], 0, FILTER_BYTES);
+        memset(&vData3[0], 0, FILTER_BYTES);
+    }
+};
+
+template <unsigned int FILTER_SIZE, unsigned int NUM_HASH_FNS = 16>
+class CLegacyRollingFastFilter : public CFastFilter<FILTER_SIZE, NUM_HASH_FNS>
 {
     unsigned int erase;
     unsigned int eraseAmt;
 
 public:
-    CRollingFastFilter(unsigned int _eraseAmt = 16)
+    CLegacyRollingFastFilter(unsigned int _eraseAmt = 16)
     {
         FastRandomContext insecure_rand;
         erase = insecure_rand.rand32() % CFastFilter<FILTER_SIZE>::FILTER_BYTES;

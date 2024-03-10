@@ -719,9 +719,10 @@ public:
     {
         LOCK(csCapdNode);
         // Add to this send list if we haven't recently sent the same INV
-        if (filterInventoryKnown.checkAndSet(hash))
+        if (!filterInventoryKnown.contains(hash))
         {
             LOG(CAPD, "inv %s\n", hash.GetHex()); // , node->GetLogName());
+            filterInventoryKnown.insert(hash);
             invMsgs.push_back(hash);
             return true;
         }
