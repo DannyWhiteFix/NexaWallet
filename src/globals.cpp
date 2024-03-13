@@ -203,6 +203,10 @@ CRollingFastFilter<4 * 1024 * 1024> recentRejects;
  */
 CRollingFastFilter<4 * 1024 * 1024> txRecentlyInBlock;
 
+// Track which transactions we've seen before and attemped to process
+CCriticalSection cs_txKnown;
+CRollingBloomFilter filterTransactionKnown(8000000, 0.0001); // guarded by cs_txKnown
+
 CWaitableCriticalSection csBestBlock;
 CConditionVariable cvBlockChange;
 
