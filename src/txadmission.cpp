@@ -47,6 +47,8 @@ extern CTweak<uint32_t> minRelayFee;
 extern CTweak<uint32_t> limitFreeRelay;
 
 extern bool fRelayPriority;
+extern CCriticalSection cs_txKnown;
+extern CRollingBloomFilter filterTransactionKnown GUARDED_BY(cs_txKnown);
 
 using namespace std;
 
@@ -201,36 +203,58 @@ static void TestConflictEnqueueTx(CTxInputData &txd, bool fOrphan)
     }
 }
 
-
-unsigned int TxAlreadyHave(const CInv &inv)
+unsigned int TxAlreadyHave(const CInv &inv) { return TxAlreadyHave(inv.type, inv.hash); }
+unsigned int TxAlreadyHave(const int type, const uint256 &hash)
 {
-    switch (inv.type)
+    switch (type)
     {
     case MSG_TX:
     {
-        if (txRecentlyInBlock.contains(inv.hash))
+        if (txRecentlyInBlock.contains(hash))
             return 1;
-        if (recentRejects.contains(inv.hash))
+        if (recentRejects.contains(hash))
             return 2;
+
         {
             std::unique_lock<std::mutex> lock(csCommitQ);
-            const auto &elem = txCommitQ->find(inv.hash);
+            const auto &elem = txCommitQ->find(hash);
             if (elem != txCommitQ->end())
             {
-                return 5;
+                return 3;
             }
         }
-        if (mempool.exists(inv.hash))
-            return 3;
-        if (orphanpool.AlreadyHaveOrphan(inv.hash))
+        if (mempool.exists(hash))
             return 4;
+        if (orphanpool.AlreadyHaveOrphan(hash))
+            return 5;
+
         return 0;
     }
     case MSG_DOUBLESPENDPROOF:
-        return mempool.doubleSpendProofStorage()->exists(inv.hash) ||
-               mempool.doubleSpendProofStorage()->isRecentlyRejectedProof(inv.hash);
+        return mempool.doubleSpendProofStorage()->exists(hash) ||
+               mempool.doubleSpendProofStorage()->isRecentlyRejectedProof(hash);
     }
     DbgAssert(0, return false); // this fn should only be called if CInv is a tx
+}
+static unsigned int TxMayAlreadyHave(const int type, const uint256 &hash)
+{
+    // AlreadyHaveTx() is a large source of lock contention when the system is under load.  This lock contention
+    // is coming from the several different locks that may need to be aquired to confim that we have the tx already.
+    // To get around this lock contention we can track transactions already seen in a filter which can be queried
+    // and since in "almost all" cases we would not have seen this transaction yet, we can return right away and
+    // only rarely have to take any locks on the commit queue, mempool and or the orphanpool.
+    bool fMaybeHaveTx = false;
+    {
+        LOCK(cs_txKnown);
+        if (filterTransactionKnown.contains(hash))
+            fMaybeHaveTx = true;
+    }
+    if (fMaybeHaveTx)
+    {
+        return TxAlreadyHave(type, hash);
+    }
+
+    return 0;
 }
 
 void ThreadCommitToMempool()
@@ -494,7 +518,7 @@ void ThreadTxAdmission()
                 CTransactionRef tx = txd.tx;
                 CInv inv(MSG_TX, tx->GetId());
 
-                if (fIsOrphan || !TxAlreadyHave(inv))
+                if (fIsOrphan || !TxMayAlreadyHave(MSG_TX, tx->GetId()))
                 {
                     std::vector<COutPoint> vCoinsToUncache;
                     bool isRespend = false;
@@ -585,6 +609,9 @@ void ThreadTxAdmission()
                             }
                         }
                     }
+
+                    LOCK(cs_txKnown);
+                    filterTransactionKnown.insert(inv.hash);
                 }
                 if (fOrphansEmpty)
                     break;
@@ -781,7 +808,7 @@ bool ParallelAcceptToMemoryPool(Snapshot &ss,
         }
     }
 
-    // is it already in the memory pool?
+    // Is it already in the memory pool?
     uint256 id = tx->GetId();
     uint256 idem = tx->GetIdem();
     if (pool.idemExists(idem))
