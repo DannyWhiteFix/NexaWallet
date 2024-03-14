@@ -3560,8 +3560,6 @@ void CNode::ReadConfigFromExtversion()
     extversionEnabled = true;
     LOCK(cs_extversion);
     skipChecksum = (extversion.as_u64c(XVer::BU_MSG_IGNORE_CHECKSUM) == 1);
-    if (skipChecksum)
-        LOG(NET, "skipping checksum (enabling message cookies) for node %s (%s)\n", GetLogName(), cleanSubVer);
     if (addrFromPort == 0)
     {
         addrFromPort = extversion.as_u64c(XVer::BU_LISTEN_PORT) & 0xffff;
