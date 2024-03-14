@@ -62,7 +62,7 @@ public:
      * @param[in] pFrom        The node the message was from
      * @return True if handling succeeded
      */
-    static bool HandleMessage(CDataStream &vRecv, CNode *pfrom);
+    static bool HandleMessage(CDataStream &vRecv, uint32_t msgCookie, CNode *pfrom);
 
     ADD_SERIALIZE_METHODS;
 
@@ -136,7 +136,7 @@ public:
      * @param[in] pFrom        The node the message was from
      * @return True if handling succeeded
      */
-    static bool HandleMessage(CDataStream &vRecv, CNode *pfrom);
+    static bool HandleMessage(CDataStream &vRecv, uint32_t msgCookie, CNode *pfrom);
 
     ADD_SERIALIZE_METHODS;
 
@@ -226,7 +226,7 @@ public:
      * @param[in] pFrom        The node the message was from
      * @return True if handling succeeded
      */
-    static bool HandleMessage(CDataStream &vRecv, CNode *pfrom);
+    static bool HandleMessage(CDataStream &vRecv, uint32_t msgCookie, CNode *pfrom);
     bool process(CNode *pfrom, std::shared_ptr<CBlockThinRelay> pblock);
     CInv GetInv() { return CInv(MSG_BLOCK, header.GetHash()); }
     uint64_t GetShortID(const uint256 &txhash) const;
@@ -410,7 +410,7 @@ extern CCompactBlockData compactdata; // Singleton class
 
 
 bool IsCompactBlocksEnabled();
-void SendCompactBlock(ConstCBlockRef pblock, CNode *pfrom, const CInv &inv);
+void SendCompactBlock(ConstCBlockRef pblock, CNode *pfrom, uint32_t msgCookie, const CInv &inv);
 bool IsCompactBlockValid(CNode *pfrom, std::shared_ptr<CompactBlock> compactBlock);
 
 // Xpress Validation: begin

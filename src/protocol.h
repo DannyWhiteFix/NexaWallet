@@ -32,9 +32,18 @@ class CMessageHeader
 {
 public:
     typedef unsigned char MessageStartChars[MESSAGE_START_SIZE];
-
-    CMessageHeader(const MessageStartChars &pchMessageStartIn);
-    CMessageHeader(const MessageStartChars &pchMessageStartIn, const char *pszCommand, unsigned int nMessageSizeIn);
+    CMessageHeader()
+    {
+        nMessageSize = 0;
+        msgCookie = 0;
+        memset(pchMessageStart, 0, sizeof(pchMessageStart));
+        memset(pchCommand, 0, sizeof(pchCommand));
+    }
+    CMessageHeader(const MessageStartChars &pchMessageStartIn, uint32_t msgCookie);
+    CMessageHeader(const MessageStartChars &pchMessageStartIn,
+        const char *pszCommand,
+        uint32_t msgCookie,
+        unsigned int nMessageSizeIn);
 
     std::string GetCommand() const;
     bool IsValid(const MessageStartChars &messageStart) const;
@@ -47,7 +56,7 @@ public:
         READWRITE(FLATDATA(pchMessageStart));
         READWRITE(FLATDATA(pchCommand));
         READWRITE(nMessageSize);
-        READWRITE(nChecksum);
+        READWRITE(msgCookie);
     }
 
     // TODO: make private (improves encapsulation)
@@ -65,7 +74,7 @@ public:
     char pchMessageStart[MESSAGE_START_SIZE];
     char pchCommand[COMMAND_SIZE];
     unsigned int nMessageSize;
-    unsigned int nChecksum;
+    unsigned int msgCookie;
 };
 
 /**

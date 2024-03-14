@@ -58,7 +58,7 @@ CMempoolSync::CMempoolSync(std::vector<uint256> mempoolTxHashes,
 }
 
 CMempoolSync::~CMempoolSync() { pGrapheneSet = nullptr; }
-bool HandleMempoolSyncRequest(CDataStream &vRecv, CNode *pfrom)
+bool HandleMempoolSyncRequest(CDataStream &vRecv, CNode *pfrom, uint32_t msgCookie)
 {
     LOG(MPOOLSYNC, "Handling mempool sync request from peer %s\n", pfrom->GetLogName());
     CMempoolSyncInfo mempoolinfo;
@@ -126,7 +126,7 @@ bool HandleMempoolSyncRequest(CDataStream &vRecv, CNode *pfrom)
     CMempoolSync mempoolSync(mempoolTxHashes, mempoolinfo.nTxInMempool, mempoolTxHashes.size(), mempoolinfo.shorttxidk0,
         mempoolinfo.shorttxidk1, NegotiateMempoolSyncVersion(pfrom));
 
-    pfrom->PushMessage(NetMsgType::MEMPOOLSYNC, mempoolSync);
+    pfrom->PushMessageWithCookie(NetMsgType::MEMPOOLSYNC, msgCookie | 0xFFFF, mempoolSync);
     LOG(MPOOLSYNC, "Sent mempool sync to peer %s using version %d\n", pfrom->GetLogName(), mempoolSync.version);
 
     return true;
@@ -231,7 +231,7 @@ bool CMempoolSync::process(CNode *pfrom)
     return true;
 }
 
-bool CRequestMempoolSyncTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
+bool CRequestMempoolSyncTx::HandleMessage(CDataStream &vRecv, uint32_t msgCookie, CNode *pfrom)
 {
     CRequestMempoolSyncTx reqMempoolSyncTx;
     vRecv >> reqMempoolSyncTx;
@@ -307,7 +307,7 @@ bool CRequestMempoolSyncTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
 
     // Assemble missing transaction object
     CMempoolSyncTx mempoolSyncTx(vTx);
-    pfrom->PushMessage(NetMsgType::MEMPOOLSYNCTX, mempoolSyncTx);
+    pfrom->PushMessageWithCookie(NetMsgType::MEMPOOLSYNCTX, msgCookie | 0xFFFF, mempoolSyncTx);
 
     // We should not receive any future messages related to this synchronization round
     {
@@ -318,7 +318,7 @@ bool CRequestMempoolSyncTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
     return true;
 }
 
-bool CMempoolSyncTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
+bool CMempoolSyncTx::HandleMessage(CDataStream &vRecv, uint32_t msgCookie, CNode *pfrom)
 {
     std::string strCommand = NetMsgType::MEMPOOLSYNCTX;
     CMempoolSyncTx mempoolSyncTx;
@@ -352,6 +352,7 @@ bool CMempoolSyncTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
     {
         CTxInputData inputData;
         inputData.tx = tx;
+        inputData.msgCookie = msgCookie;
         inputData.nodeId = pfrom->id;
         EnqueueTxForAdmission(inputData);
     }

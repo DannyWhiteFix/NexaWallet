@@ -669,7 +669,11 @@ public:
     };
 
     CapdProtocol(CapdMsgPool &msgpool) : pool(&msgpool) { pool->setP2PprotocolHandler(this); }
-    bool HandleCapdMessage(CNode *pfrom, std::string &command, CDataStream &vRecv, int64_t stopwatchTimeReceived);
+    bool HandleCapdMessage(CNode *pfrom,
+        std::string &command,
+        uint32_t msgCookie,
+        CDataStream &vRecv,
+        int64_t stopwatchTimeReceived);
 
     /** Periodically distribute all the INVs that have accrued into per-node send queues, checking whether each node
         will accept that INV (based on priority) */
@@ -698,7 +702,7 @@ public:
     CRollingFastFilter<4 * 1024 * 1024> filterInventoryKnown;
     std::vector<uint256> invMsgs;
     std::vector<uint256> requestMsgs;
-    std::vector<CapdMsgRef> sendMsgs;
+    std::vector<std::pair<CapdMsgRef, uint32_t> > sendMsgs;
     CNode *node = nullptr; // The associated node.
 
     // Track all notifications
@@ -731,10 +735,10 @@ public:
             requestMsgs.push_back(inv.hash);
     }
 
-    void sendMsg(const CapdMsgRef m)
+    void sendMsg(const CapdMsgRef m, uint32_t msgCookie)
     {
         LOCK(csCapdNode);
-        sendMsgs.push_back(m);
+        sendMsgs.push_back(std::pair<CapdMsgRef, uint32_t>(m, msgCookie));
     }
 
     void clear(void);

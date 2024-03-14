@@ -3855,6 +3855,7 @@ bool CWallet::CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey, std:
             d.tx = MakeTransactionRef(wtxNew);
             d.whitelisted = true;
             d.nodeName = "wallet";
+            d.msgCookie = 0;
             EnqueueTxForAdmission(d);
         }
         else

@@ -271,7 +271,7 @@ unsigned int TxConfirmStats::NewTx(unsigned int nBlockHeight, double val)
     unsigned int bucketindex = bucketMap.lower_bound(val)->second;
     unsigned int blockIndex = nBlockHeight % unconfTxs.size();
     unconfTxs[blockIndex][bucketindex]++;
-    LOG(ESTIMATEFEE, "adding to %s", dataTypeString);
+    // LOG(ESTIMATEFEE, "adding to %s", dataTypeString);
     return bucketindex;
 }
 

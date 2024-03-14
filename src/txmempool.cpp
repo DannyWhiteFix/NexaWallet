@@ -786,6 +786,7 @@ void CTxMemPool::ResubmitCommitQ()
             CTxInputData txd;
             txd.tx = kv.second.entry.GetSharedTx();
             txd.nodeName = "rollback";
+            txd.msgCookie = 0;
             EnqueueTxForAdmission(txd);
         }
         txCommitQ->clear();
@@ -1958,6 +1959,7 @@ bool LoadTxPool(void)
             {
                 CTxInputData txd;
                 txd.tx = MakeTransactionRef(tx);
+                txd.msgCookie = 0;
                 EnqueueTxForAdmission(txd);
                 ++count;
             }

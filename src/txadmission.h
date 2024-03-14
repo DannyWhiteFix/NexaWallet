@@ -76,6 +76,7 @@ class CTxInputData
 public:
     CTransactionRef tx;
     NodeId nodeId; // hold the id so I don't keep a ref to the node
+    uint32_t msgCookie;
     bool whitelisted;
     std::string nodeName;
 

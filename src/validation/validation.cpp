@@ -2696,6 +2696,7 @@ void InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state)
 
             if (node)
             {
+                // TODO get the block request's msgCookie
                 node->PushMessage(NetMsgType::REJECT, (std::string)NetMsgType::BLOCK,
                     (unsigned char)state.GetRejectCode(), state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH),
                     pindex->GetBlockHash());
@@ -2931,6 +2932,7 @@ static void ResubmitTransactions(const ConstCBlockRef pblock = nullptr)
                     CTxInputData txd;
                     txd.tx = ptx;
                     txd.nodeName = "rollback";
+                    txd.msgCookie = 0;
                     EnqueueTxForAdmission(txd);
                 }
             }
@@ -2943,6 +2945,7 @@ static void ResubmitTransactions(const ConstCBlockRef pblock = nullptr)
                 CTxInputData txd;
                 txd.tx = entry.GetSharedTx();
                 txd.nodeName = "rollback";
+                txd.msgCookie = 0;
                 EnqueueTxForAdmission(txd);
             });
 

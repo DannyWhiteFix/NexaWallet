@@ -1269,7 +1269,7 @@ void CThinBlockData::FillThinBlockQuickStats(ThinBlockQuickStats &stats)
 }
 
 bool IsThinBlocksEnabled() { return GetBoolArg("-use-thinblocks", true); }
-void SendXThinBlock(const ConstCBlockRef pblock, CNode *pfrom, const CInv &inv)
+void SendXThinBlock(const ConstCBlockRef pblock, uint32_t msgCookie, CNode *pfrom, const CInv &inv)
 {
     if (inv.type == MSG_XTHINBLOCK)
     {
@@ -1290,7 +1290,7 @@ void SendXThinBlock(const ConstCBlockRef pblock, CNode *pfrom, const CInv &inv)
             }
             if (thinBlock.GetSize() < nSizeBlock)
             {
-                pfrom->PushMessage(NetMsgType::THINBLOCK, thinBlock);
+                pfrom->PushMessageWithCookie(NetMsgType::THINBLOCK, msgCookie | 0xFFFF, thinBlock);
                 thindata.UpdateOutBound(thinBlock.GetSize(), nSizeBlock);
                 LOG(THIN,
                     "TX HASH COLLISION: Sent thinblock - size: %d vs block size: %d => tx hashes: %d "
@@ -1300,7 +1300,7 @@ void SendXThinBlock(const ConstCBlockRef pblock, CNode *pfrom, const CInv &inv)
             }
             else
             {
-                pfrom->PushMessage(NetMsgType::BLOCK, *pblock);
+                pfrom->PushMessageWithCookie(NetMsgType::BLOCK, msgCookie | 0xFFFF, *pblock);
                 LOG(THIN,
                     "Sent regular block instead - thinblock size: %d vs block size: %d => tx hashes: %d "
                     "transactions: %d  peer: %s\n",
@@ -1314,7 +1314,7 @@ void SendXThinBlock(const ConstCBlockRef pblock, CNode *pfrom, const CInv &inv)
             if (xThinBlock.GetSize() < nSizeBlock)
             {
                 thindata.UpdateOutBound(xThinBlock.GetSize(), nSizeBlock);
-                pfrom->PushMessage(NetMsgType::XTHINBLOCK, xThinBlock);
+                pfrom->PushMessageWithCookie(NetMsgType::XTHINBLOCK, msgCookie | 0xFFFF, xThinBlock);
                 LOG(THIN, "Sent xthinblock - size: %d vs block size: %d => tx hashes: %d transactions: %d peer: %s\n",
                     xThinBlock.GetSize(), nSizeBlock, xThinBlock.vTxHashes.size(), xThinBlock.vMissingTx.size(),
                     pfrom->GetLogName());
@@ -1323,7 +1323,7 @@ void SendXThinBlock(const ConstCBlockRef pblock, CNode *pfrom, const CInv &inv)
             }
             else
             {
-                pfrom->PushMessage(NetMsgType::BLOCK, *pblock);
+                pfrom->PushMessageWithCookie(NetMsgType::BLOCK, msgCookie | 0xFFFF, *pblock);
                 LOG(THIN,
                     "Sent regular block instead - xthinblock size: %d vs block size: %d => tx hashes: %d "
                     "transactions: %d  peer: %s\n",
@@ -1344,14 +1344,14 @@ void SendXThinBlock(const ConstCBlockRef pblock, CNode *pfrom, const CInv &inv)
         {
             // Only send a thinblock if smaller than a regular block
             thindata.UpdateOutBound(thinBlock.GetSize(), nSizeBlock);
-            pfrom->PushMessage(NetMsgType::THINBLOCK, thinBlock);
+            pfrom->PushMessageWithCookie(NetMsgType::THINBLOCK, msgCookie | 0xFFFF, thinBlock);
             LOG(THIN, "Sent thinblock - size: %d vs block size: %d => tx hashes: %d transactions: %d  peer: %s\n",
                 thinBlock.GetSize(), nSizeBlock, thinBlock.vTxHashes.size(), thinBlock.vMissingTx.size(),
                 pfrom->GetLogName());
         }
         else
         {
-            pfrom->PushMessage(NetMsgType::BLOCK, *pblock);
+            pfrom->PushMessageWithCookie(NetMsgType::BLOCK, msgCookie | 0xFFFF, *pblock);
             LOG(THIN,
                 "Sent regular block instead - thinblock size: %d vs block size: %d => tx hashes: %d "
                 "transactions: %d  peer: %s\n",

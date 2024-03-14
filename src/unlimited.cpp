@@ -352,12 +352,12 @@ void UnlimitedPushTxns(CNode *dest)
 
         if (vInv.size() == MAX_INV_SZ)
         {
-            dest->PushMessage("inv", vInv);
+            dest->PushMessage(NetMsgType::INV, vInv);
             vInv.clear();
         }
     }
     if (vInv.size() > 0)
-        dest->PushMessage("inv", vInv);
+        dest->PushMessage(NetMsgType::INV, vInv);
 }
 
 std::thread periodicStuff;

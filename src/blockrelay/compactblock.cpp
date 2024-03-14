@@ -122,7 +122,7 @@ void validateCompactBlock(std::shared_ptr<CompactBlock> cmpctblock)
  * Handle an incoming compactblock.  The block is fully validated, and if any
  * transactions are missing we re-request them.
  */
-bool CompactBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom)
+bool CompactBlock::HandleMessage(CDataStream &vRecv, uint32_t msgCookie, CNode *pfrom)
 {
     // Deserialize compactblock and store a block to reconstruct
     CompactBlock tmp;
@@ -386,7 +386,7 @@ bool CompactBlock::process(CNode *pfrom, std::shared_ptr<CBlockThinRelay> pblock
     return true;
 }
 
-bool CompactReRequest::HandleMessage(CDataStream &vRecv, CNode *pfrom)
+bool CompactReRequest::HandleMessage(CDataStream &vRecv, uint32_t msgCookie, CNode *pfrom)
 {
     CompactReRequest compactReRequest;
     vRecv >> compactReRequest;
@@ -425,14 +425,14 @@ bool CompactReRequest::HandleMessage(CDataStream &vRecv, CNode *pfrom)
         }
 
         CompactReReqResponse compactReqResponse(*pblock, compactReRequest.indexes);
-        pfrom->PushMessage(NetMsgType::BLOCKTXN, compactReqResponse);
+        pfrom->PushMessageWithCookie(NetMsgType::BLOCKTXN, msgCookie | 0xFFFF, compactReqResponse);
         pfrom->txsSent += compactReRequest.indexes.size();
     }
 
     return true;
 }
 
-bool CompactReReqResponse::HandleMessage(CDataStream &vRecv, CNode *pfrom)
+bool CompactReReqResponse::HandleMessage(CDataStream &vRecv, uint32_t msgCookie, CNode *pfrom)
 {
     std::string strCommand = NetMsgType::BLOCKTXN;
     size_t msgSize = vRecv.size();
@@ -1048,7 +1048,7 @@ void CCompactBlockData::FillCompactBlockQuickStats(CompactBlockQuickStats &stats
 }
 
 bool IsCompactBlocksEnabled() { return GetBoolArg("-use-compactblocks", true); }
-void SendCompactBlock(ConstCBlockRef pblock, CNode *pfrom, const CInv &inv)
+void SendCompactBlock(ConstCBlockRef pblock, CNode *pfrom, uint32_t msgCookie, const CInv &inv)
 {
     if (inv.type == MSG_CMPCT_BLOCK)
     {
@@ -1063,7 +1063,7 @@ void SendCompactBlock(ConstCBlockRef pblock, CNode *pfrom, const CInv &inv)
         if (compactBlock.GetSize() < nSizeBlock)
         {
             compactdata.UpdateOutBound(compactBlock.GetSize(), nSizeBlock);
-            pfrom->PushMessage(NetMsgType::CMPCTBLOCK, compactBlock);
+            pfrom->PushMessageWithCookie(NetMsgType::CMPCTBLOCK, msgCookie | 0xFFFF, compactBlock);
             LOG(CMPCT, "Sent compact block - compactblock size: %d vs block size: %d peer: %s\n",
                 compactBlock.GetSize(), nSizeBlock, pfrom->GetLogName());
 
@@ -1073,7 +1073,7 @@ void SendCompactBlock(ConstCBlockRef pblock, CNode *pfrom, const CInv &inv)
         }
         else // send full block
         {
-            pfrom->PushMessage(NetMsgType::BLOCK, *pblock);
+            pfrom->PushMessageWithCookie(NetMsgType::BLOCK, msgCookie | 0xFFFF, *pblock);
             LOG(CMPCT, "Sent regular block instead - compactblock size: %d vs block size: %d , peer: %s\n",
                 compactBlock.GetSize(), nSizeBlock, pfrom->GetLogName());
         }
