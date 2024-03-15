@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 import test_framework.loginit
 
-from itertools import cycle
+from itertools import cycle, tee
 import io
 import time
 import sys
@@ -24,8 +24,14 @@ test_framework.nodemessages.MY_SUBVERSION = b"/python-headerpath-tester:0.0.1/"
 IGNORE_CHECKSUM_STR = '0000000200000002'
 TIMEOUT = 30
 
-def hashToHex(x):
-    return x[::-1].hex()
+LARGE_TEST = False # Test many long paths -- takes too much time for CI
+
+# https://docs.python.org/3.8/library/itertools.html#itertools-recipes
+def pairwise(iterable):
+    "s -> (s0, s1), (s1, s2), (s2, s3), ..."
+    a, b = tee(iterable)
+    next(b, None)
+    return zip(a, b)
 
 class TestNode():
     def __init__(self):
@@ -46,23 +52,14 @@ class TestNode():
 class MsgCookieProtoHandler(BUProtocolHandler):
     def __init__(self):
         BUProtocolHandler.__init__(self, extversion=True)
-        self.lastCapdGetMsg = None
-        self.numCapdGetMsg = 0
-        self.lastCapdInvHashes = None
-        self.numInvMsgs = 0
-        self.callbacks = {}
-        self.msgs = {}  # messages to auto-reply with based on a request message
-        self.capdinfo = None
         self.expectedCookie = 0
-        self.todo = []
         self.numHeaderPaths = 0
         self.headerPath = None
         self.numNotFound = 0
         self.numRejects = 0
-        self.expectedBlockInv = None
 
     def setAsyncMsgProcessing(self):
-        self.todo = None
+        pass
 
     def on_version(self, conn, message):
         BUProtocolHandler.on_version(self,conn, message)
@@ -83,8 +80,6 @@ class MsgCookieProtoHandler(BUProtocolHandler):
         assert (self.cookie == self.expectedCookie | 0xFFFF), "Incorrect message cookie on block receipt expected %x got %x" % (self.expectedCookie, self.cookie)
         self.numRejects += 1
 
-def hex2Num(x):
-    return int(x, 16)
 
 class HeaderPathTest (BitcoinTestFramework):
 
@@ -93,11 +88,8 @@ class HeaderPathTest (BitcoinTestFramework):
         initialize_chain(self.options.tmpdir, bitcoinConfDict, wallets)
 
     def setup_network(self, split=False):
-        self.nodes = start_nodes(2, self.options.tmpdir)
-        # Now interconnect the nodes
-        connect_nodes_full(self.nodes)
+        self.nodes = start_nodes(1, self.options.tmpdir)
         self.is_network_split=False
-        self.sync_blocks()
         self.pynode = pynode = TestNode()
         self.conn = pynode.connect(0, '127.0.0.1', p2p_port(0), self.nodes[0], protohandler = MsgCookieProtoHandler(), send_initial_version = True, extversion_service = True)
         self.nt = NetworkThread()
@@ -117,21 +109,14 @@ class HeaderPathTest (BitcoinTestFramework):
             assert nexthash == hdr.hashAncestor or nexthash == hdr.hashPrevBlock, "header chain broken at height %d" % nexthdr.height
 
     def run_test (self):
-        TIMEOUT = 30
         logging.info("Message Header Path Test")
         logging.info(" mining blocks")
         self.nodes[0].generate(100)
-        # hand run larger span test
-        #self.sync_blocks()
-        #self.nodes[0].generate(1500)
-        #self.sync_blocks()
-        #self.nodes[0].generate(1500)
-        #self.sync_blocks()
-        #self.nodes[0].generate(1500)
-        #self.sync_blocks()
-        #self.nodes[0].generate(1500)
+        if LARGE_TEST:
+            for i in range(0,20):
+                self.nodes[0].generate(1000)
         logging.info(" mining blocks complete")
-        self.sync_blocks()
+        # This test only uses node 0 so no need to sync blocks
 
         hdlr = self.pynode.cnxns[0]
         self.conn.handle_write() # start a thread up handling received messages
@@ -145,6 +130,7 @@ class HeaderPathTest (BitcoinTestFramework):
         hdlr.get_header_path(0xFFFFFFFF, 0, hdlr.expectedCookie)
         waitFor(TIMEOUT, lambda: hdlr.numHeaderPaths == tmp)
         headerPath = hdlr.headerPath.headers
+        gaps = [ x.height - y.height for (x,y) in pairwise(headerPath)]
         self.checkHeaderPath(headerPath, headerPath[0].height, 0)
         logging.info("complete headers %d -> %d in %d steps" % (headerPath[0].height, headerPath[-1].height, len(hdlr.headerPath.headers)))
         hdlr.headerPath.headers = []
@@ -180,7 +166,11 @@ class HeaderPathTest (BitcoinTestFramework):
         logging.info(" random test")
         tipHeight = self.nodes[0].getblockcount()
 
-        for i in range(0,10):
+        for i in range(0, 1000 if LARGE_TEST else 10):
+            if LARGE_TEST and (i%10 == 0):
+                self.nodes[0].generate(500)
+                tipHeight = self.nodes[0].getblockcount()
+                logging.info("blockchain length %d" % tipHeight)
             a = random.randrange(tipHeight+1)
             b = random.randrange(tipHeight+1)
             if b > a:
@@ -192,7 +182,8 @@ class HeaderPathTest (BitcoinTestFramework):
             hdlr.get_header_path(a, b, hdlr.expectedCookie)
             # print("headers path %d -> %d" % (a,b))
             waitFor(TIMEOUT, lambda: hdlr.numHeaderPaths == tmp)
-            logging.info("headers path %d -> %d in %d steps" % (a,b,len(hdlr.headerPath.headers)))
+            gaps = [ x.height - y.height for (x,y) in pairwise(hdlr.headerPath.headers)]
+            logging.info("headers path %d -> %d in %d steps.  Gaps: %s" % (a,b,len(hdlr.headerPath.headers), gaps))
             self.checkHeaderPath(hdlr.headerPath.headers, a, b)
 
 
