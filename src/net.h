@@ -12,12 +12,14 @@
 #include "bloom.h"
 #include "chainparams.h"
 #include "compat.h"
+#include "datastream.h"
 #include "extversionmessage.h"
 #include "fastfilter.h"
 #include "fs.h"
 #include "hashwrapper.h"
 #include "iblt.h"
 #include "limitedmap.h"
+#include "lockswap.h"
 #include "netbase.h"
 #include "policy/mempool.h"
 #include "primitives/block.h"
@@ -33,6 +35,7 @@
 
 #include <atomic>
 #include <deque>
+#include <queue>
 #include <stdint.h>
 
 #ifndef WIN32
@@ -284,7 +287,7 @@ public:
         int nVersionIn)
         : hdrbuf(nTypeIn, nVersionIn), hdr(pchMessageStartIn, msgCookie), vRecv(nTypeIn, nVersionIn)
     {
-        hdrbuf.resize(24);
+        hdrbuf.resize(CMessageHeader::HEADER_SIZE);
         in_data = false;
         nHdrPos = 0;
         nDataPos = 0;
@@ -325,6 +328,7 @@ public:
   ~CNetCleanup();
 };
 #endif
+
 
 /** Information about a peer */
 class CNode
@@ -373,10 +377,11 @@ public:
     CapdNode *capd = nullptr;
 
     CCriticalSection cs_vSend;
-    CDataStream ssSend GUARDED_BY(cs_vSend);
+    CSerializeData msgBeingSent GUARDED_BY(cs_vSend);
     size_t nSendOffset GUARDED_BY(cs_vSend); // offset inside the first vSendMsg already sent
-    std::deque<CSerializeData> vSendMsg GUARDED_BY(cs_vSend);
-    std::deque<CSerializeData> vLowPrioritySendMsg GUARDED_BY(cs_vSend);
+
+    CLockSwapQ<CSerializeData> vSendMsg;
+    CLockSwapQ<CSerializeData> vLowPrioritySendMsg;
     std::atomic<uint64_t> nSendSize; // total size in bytes of all vSendMsg entries
     std::atomic<uint64_t> nSendBytes;
 
@@ -384,12 +389,14 @@ public:
     std::deque<std::pair<CInv, uint32_t> > vRecvGetData GUARDED_BY(csRecvGetData);
 
     CCriticalSection cs_vRecvMsg;
-    std::atomic<uint64_t> nRecvBytes;
-    std::deque<CNetMessage> vRecvMsg GUARDED_BY(cs_vRecvMsg);
     std::deque<CNetMessage> vRecvMsg_handshake GUARDED_BY(cs_vRecvMsg);
     // the next message we receive from the socket
     CNetMessage msg GUARDED_BY(cs_vRecvMsg);
     CStatHistory<uint64_t> currentRecvMsgSize;
+
+    std::atomic<uint64_t> nRecvBytes;
+    CLockSwapQ<CNetMessage> vRecvMsg;
+
 
     uint64_t nServices;
     int nRecvVersion;
@@ -520,7 +527,7 @@ public:
 
 protected:
     // Basic fuzz-testing
-    void Fuzz(int nChance); // modifies ssSend
+    void Fuzz(int nChance, CDataStream &ssSend); // modifies ssSend
 
 public:
 #ifdef DEBUG
@@ -608,15 +615,8 @@ public:
     /** Updates node configuration variables based on extversion data in the extversion member variable */
     void ReadConfigFromExtversion();
 
-    // requires LOCK(cs_vRecvMsg)
-    unsigned int GetTotalRecvSize() EXCLUSIVE_LOCKS_REQUIRED(cs_vRecvMsg)
-    {
-        AssertLockHeld(cs_vRecvMsg);
-        unsigned int total = 0;
-        for (const CNetMessage &message : vRecvMsg)
-            total += message.vRecv.size() + 24;
-        return total;
-    }
+    /** Get the byte size of all messages in the receive queue */
+    unsigned int GetTotalRecvSize() { return vRecvMsg.totalbytes(); }
 
     unsigned int GetSendMsgSize()
     {
@@ -745,14 +745,11 @@ public:
         vBlockHashesToAnnounce.push_back(hash);
     }
 
-    // TODO: Document the postcondition of this function.  Is cs_vSend locked?
-    void BeginMessage(const char *pszCommand, uint32_t msgCookie) EXCLUSIVE_LOCK_FUNCTION(cs_vSend);
+    void BeginMessage(const char *pszCommand, uint32_t, CDataStream &ssSend);
 
-    // TODO: Document the precondition of this function.  Is cs_vSend locked?
-    void AbortMessage() UNLOCK_FUNCTION(cs_vSend);
+    void AbortMessage();
 
-    // TODO: Document the precondition of this function.  Is cs_vSend locked?
-    void EndMessage() UNLOCK_FUNCTION(cs_vSend);
+    void EndMessage(CDataStream &ssSend);
 
     void PushVersion();
 
@@ -761,8 +758,9 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand, 0);
-            EndMessage();
+            CDataStream ssSend(SER_NETWORK, PROTOCOL_VERSION);
+            BeginMessage(pszCommand, 0, ssSend);
+            EndMessage(ssSend);
         }
         catch (...)
         {
@@ -776,9 +774,10 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand, 0);
+            CDataStream ssSend(SER_NETWORK, PROTOCOL_VERSION);
+            BeginMessage(pszCommand, 0, ssSend);
             ssSend << a1;
-            EndMessage();
+            EndMessage(ssSend);
         }
         catch (...)
         {
@@ -792,9 +791,10 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand, 0);
+            CDataStream ssSend(SER_NETWORK, PROTOCOL_VERSION);
+            BeginMessage(pszCommand, 0, ssSend);
             ssSend << a1 << a2;
-            EndMessage();
+            EndMessage(ssSend);
         }
         catch (...)
         {
@@ -808,9 +808,10 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand, 0);
+            CDataStream ssSend(SER_NETWORK, PROTOCOL_VERSION);
+            BeginMessage(pszCommand, 0, ssSend);
             ssSend << a1 << a2 << a3;
-            EndMessage();
+            EndMessage(ssSend);
         }
         catch (...)
         {
@@ -824,9 +825,10 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand, 0);
+            CDataStream ssSend(SER_NETWORK, PROTOCOL_VERSION);
+            BeginMessage(pszCommand, 0, ssSend);
             ssSend << a1 << a2 << a3 << a4;
-            EndMessage();
+            EndMessage(ssSend);
         }
         catch (...)
         {
@@ -840,9 +842,10 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand, 0);
+            CDataStream ssSend(SER_NETWORK, PROTOCOL_VERSION);
+            BeginMessage(pszCommand, 0, ssSend);
             ssSend << a1 << a2 << a3 << a4 << a5;
-            EndMessage();
+            EndMessage(ssSend);
         }
         catch (...)
         {
@@ -862,9 +865,10 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand, 0);
+            CDataStream ssSend(SER_NETWORK, PROTOCOL_VERSION);
+            BeginMessage(pszCommand, 0, ssSend);
             ssSend << a1 << a2 << a3 << a4 << a5 << a6;
-            EndMessage();
+            EndMessage(ssSend);
         }
         catch (...)
         {
@@ -885,9 +889,10 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand, 0);
+            CDataStream ssSend(SER_NETWORK, PROTOCOL_VERSION);
+            BeginMessage(pszCommand, 0, ssSend);
             ssSend << a1 << a2 << a3 << a4 << a5 << a6 << a7;
-            EndMessage();
+            EndMessage(ssSend);
         }
         catch (...)
         {
@@ -909,9 +914,10 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand, 0);
+            CDataStream ssSend(SER_NETWORK, PROTOCOL_VERSION);
+            BeginMessage(pszCommand, 0, ssSend);
             ssSend << a1 << a2 << a3 << a4 << a5 << a6 << a7 << a8;
-            EndMessage();
+            EndMessage(ssSend);
         }
         catch (...)
         {
@@ -942,9 +948,10 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand, 0);
+            CDataStream ssSend(SER_NETWORK, PROTOCOL_VERSION);
+            BeginMessage(pszCommand, 0, ssSend);
             ssSend << a1 << a2 << a3 << a4 << a5 << a6 << a7 << a8 << a9;
-            EndMessage();
+            EndMessage(ssSend);
         }
         catch (...)
         {
@@ -957,8 +964,9 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand, msgCookie);
-            EndMessage();
+            CDataStream ssSend(SER_NETWORK, PROTOCOL_VERSION);
+            BeginMessage(pszCommand, msgCookie, ssSend);
+            EndMessage(ssSend);
         }
         catch (...)
         {
@@ -972,9 +980,10 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand, msgCookie);
+            CDataStream ssSend(SER_NETWORK, PROTOCOL_VERSION);
+            BeginMessage(pszCommand, msgCookie, ssSend);
             ssSend << a1;
-            EndMessage();
+            EndMessage(ssSend);
         }
         catch (...)
         {
@@ -988,9 +997,10 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand, msgCookie);
+            CDataStream ssSend(SER_NETWORK, PROTOCOL_VERSION);
+            BeginMessage(pszCommand, msgCookie, ssSend);
             ssSend << a1 << a2;
-            EndMessage();
+            EndMessage(ssSend);
         }
         catch (...)
         {
@@ -1004,9 +1014,10 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand, msgCookie);
+            CDataStream ssSend(SER_NETWORK, PROTOCOL_VERSION);
+            BeginMessage(pszCommand, msgCookie, ssSend);
             ssSend << a1 << a2 << a3;
-            EndMessage();
+            EndMessage(ssSend);
         }
         catch (...)
         {
@@ -1025,9 +1036,10 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand, msgCookie);
+            CDataStream ssSend(SER_NETWORK, PROTOCOL_VERSION);
+            BeginMessage(pszCommand, msgCookie, ssSend);
             ssSend << a1 << a2 << a3 << a4;
-            EndMessage();
+            EndMessage(ssSend);
         }
         catch (...)
         {
@@ -1047,9 +1059,10 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand, msgCookie);
+            CDataStream ssSend(SER_NETWORK, PROTOCOL_VERSION);
+            BeginMessage(pszCommand, msgCookie, ssSend);
             ssSend << a1 << a2 << a3 << a4 << a5;
-            EndMessage();
+            EndMessage(ssSend);
         }
         catch (...)
         {
@@ -1070,9 +1083,10 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand, msgCookie);
+            CDataStream ssSend(SER_NETWORK, PROTOCOL_VERSION);
+            BeginMessage(pszCommand, msgCookie, ssSend);
             ssSend << a1 << a2 << a3 << a4 << a5 << a6;
-            EndMessage();
+            EndMessage(ssSend);
         }
         catch (...)
         {
@@ -1094,9 +1108,10 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand, msgCookie);
+            CDataStream ssSend(SER_NETWORK, PROTOCOL_VERSION);
+            BeginMessage(pszCommand, msgCookie, ssSend);
             ssSend << a1 << a2 << a3 << a4 << a5 << a6 << a7;
-            EndMessage();
+            EndMessage(ssSend);
         }
         catch (...)
         {
@@ -1119,9 +1134,10 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand, msgCookie);
+            CDataStream ssSend(SER_NETWORK, PROTOCOL_VERSION);
+            BeginMessage(pszCommand, msgCookie, ssSend);
             ssSend << a1 << a2 << a3 << a4 << a5 << a6 << a7 << a8;
-            EndMessage();
+            EndMessage(ssSend);
         }
         catch (...)
         {
@@ -1153,9 +1169,10 @@ public:
     {
         try
         {
-            BeginMessage(pszCommand, msgCookie);
+            CDataStream ssSend(SER_NETWORK, PROTOCOL_VERSION);
+            BeginMessage(pszCommand, msgCookie, ssSend);
             ssSend << a1 << a2 << a3 << a4 << a5 << a6 << a7 << a8 << a9;
-            EndMessage();
+            EndMessage(ssSend);
         }
         catch (...)
         {

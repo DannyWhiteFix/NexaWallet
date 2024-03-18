@@ -92,6 +92,8 @@ extern CAmount GROUPED_SATOSHI_AMT;
 
 extern uint64_t nReceiveBufferSize;
 extern uint64_t nSendBufferSize;
+extern uint32_t nFuzzMessages;
+extern uint32_t nDropMessages;
 extern bool fRelayPriority;
 
 using namespace std;
@@ -1056,6 +1058,10 @@ bool AppInit2(Config &config)
     // message buffer sizes
     nReceiveBufferSize = 1000 * GetArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER);
     nSendBufferSize = 1000 * GetArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER);
+
+    // set flags for net message testing
+    nFuzzMessages = GetArg("-fuzzmessagestest", 0);
+    nDropMessages = GetArg("-dropmessagestest", 0);
 
     // relay priority
     fRelayPriority = GetBoolArg("-relaypriority", DEFAULT_RELAYPRIORITY);

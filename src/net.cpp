@@ -38,6 +38,8 @@
 extern CTweak<bool> ignoreNetTimeouts;
 extern uint64_t nReceiveBufferSize;
 extern uint64_t nSendBufferSize;
+extern bool nFuzzMessages;
+extern bool nDropMessages;
 
 #ifdef WIN32
 #include <string.h>
@@ -823,30 +825,35 @@ int SocketSendData(CNode *pnode, bool fSendTwo = false) EXCLUSIVE_LOCKS_REQUIRED
     if (pnode->fDisconnect)
         return progress;
 
-    std::deque<CSerializeData>::iterator it;
-    while (!pnode->vSendMsg.empty() || !pnode->vLowPrioritySendMsg.empty())
+    int nFailedToPop = 0;
+    while (pnode->msgBeingSent.size() > 0 || !pnode->vSendMsg.empty() || !pnode->vLowPrioritySendMsg.empty())
     {
-        if (!pnode->vSendMsg.empty())
+        if (pnode->msgBeingSent.size() == 0)
         {
-            it = pnode->vSendMsg.begin();
-        }
-        else
-        {
-            // Move a message from the lower priority queue to the higher priority queue
-            // and then continue. This keeps all active message sending from the priority queue
-            // only and prevents us from putting the next priority message in front of any that
-            // has already been partially sent.
-            pnode->vSendMsg.push_back(std::move(*pnode->vLowPrioritySendMsg.begin()));
-            pnode->vLowPrioritySendMsg.pop_front();
-            continue;
+            if (!pnode->vSendMsg.empty() && nFailedToPop < 5)
+            {
+                if (!pnode->vSendMsg.pop_front(pnode->msgBeingSent))
+                {
+                    // Failing to pop is tracked as a defensive measure in the unlikely event
+                    // that the priority send queue is having trouble draining. In this way we can
+                    // be prevented from a "theoretically" infinite looping situation.
+                    nFailedToPop++;
+                    continue;
+                }
+            }
+            else
+            {
+                if (!pnode->vLowPrioritySendMsg.pop_front(pnode->msgBeingSent))
+                    break;
+            }
         }
 
-        const CSerializeData &data = *it;
+        const CSerializeData &data = pnode->msgBeingSent;
         if (data.size() <= 0)
         {
-            pnode->vSendMsg.pop_front();
             LOGA("ERROR:  Trying to send message but data size was %d nSendOffset was %d nSendSize was %d\n",
                 data.size(), pnode->nSendOffset, pnode->nSendSize);
+            pnode->msgBeingSent.clear();
             continue;
         }
         DbgAssert(data.size() > pnode->nSendOffset, );
@@ -872,7 +879,7 @@ int SocketSendData(CNode *pnode, bool fSendTwo = false) EXCLUSIVE_LOCKS_REQUIRED
             {
                 pnode->nSendOffset = 0;
                 pnode->nSendSize.fetch_sub(data.size());
-                pnode->vSendMsg.pop_front();
+                pnode->msgBeingSent.clear();
 
                 // If this is a priority send then just send two messages, then stop sending more.
                 nMsgSent++;
@@ -904,14 +911,14 @@ int SocketSendData(CNode *pnode, bool fSendTwo = false) EXCLUSIVE_LOCKS_REQUIRED
         }
     }
 
-    if (pnode->vSendMsg.empty() && pnode->vLowPrioritySendMsg.empty())
+
+    if (pnode->msgBeingSent.size() == 0 && pnode->vSendMsg.empty() && pnode->vLowPrioritySendMsg.empty())
     {
-        if (pnode->nSendOffset != 0 || pnode->nSendSize != 0)
-            LOGA("ERROR: One or more values were not Zero - nSendOffset was %d nSendSize was %d\n", pnode->nSendOffset,
-                pnode->nSendSize);
+        if (pnode->nSendOffset != 0)
+            LOGA("ERROR: One or more values were not Zero - nSendOffset was %d\n", pnode->nSendOffset);
         DbgAssert(pnode->nSendOffset == 0, );
-        DbgAssert(pnode->nSendSize == 0, );
     }
+
 
     return progress;
 }
@@ -1390,11 +1397,9 @@ void ThreadSocketHandler()
     // solves spin loop issues where the select does not block but no bytes can be transferred (traffic shaping limited,
     // for example).
     int progress;
-    bool fAquiredAllRecvLocks;
     while (true)
     {
         progress = 0;
-        fAquiredAllRecvLocks = true;
         stat_io_service.poll(); // BU instrumentation
         CleanupDisconnectedNodes();
         if (vNodes.size() != nPrevNodeCount)
@@ -1458,8 +1463,7 @@ void ThreadSocketHandler()
                 // By always reading in data we will be sure to never deadlock even though
                 // we may occassionaly skip sending under high load.
                 {
-                    TRY_LOCK(pnode->cs_vRecvMsg, lockRecv);
-                    if (lockRecv && (pnode->vRecvMsg.empty() || pnode->GetTotalRecvSize() <= ReceiveFloodSize()))
+                    if (pnode->vRecvMsg.empty() || pnode->GetTotalRecvSize() <= ReceiveFloodSize())
                     {
                         FD_SET(hSocket, &fdsetRecv);
                     }
@@ -1468,12 +1472,18 @@ void ThreadSocketHandler()
                         FD_SET(hSocket, &fdsetRecv);
                         continue;
                     }
-                }
-                {
-                    TRY_LOCK(pnode->cs_vSend, lockSend);
-                    if (lockSend && (!pnode->vSendMsg.empty() || !pnode->vLowPrioritySendMsg.empty()))
+
+                    if (!pnode->vSendMsg.empty() || !pnode->vLowPrioritySendMsg.empty())
                     {
                         FD_SET(hSocket, &fdsetSend);
+                    }
+                    else
+                    {
+                        TRY_LOCK(pnode->cs_vSend, lockSend);
+                        if (lockSend && (pnode->msgBeingSent.size() > 0))
+                        {
+                            FD_SET(hSocket, &fdsetSend);
+                        }
                     }
                 }
             }
@@ -1545,11 +1555,7 @@ void ThreadSocketHandler()
             {
                 TRY_LOCK(pnode->cs_vRecvMsg, lockRecv);
                 int64_t amt2Recv = receiveShaper.available(RECV_SHAPER_MIN_FRAG);
-                if (!lockRecv)
-                {
-                    fAquiredAllRecvLocks = false;
-                }
-                else if (amt2Recv > 0)
+                if (lockRecv && amt2Recv > 0)
                 {
                     {
                         progress++;
@@ -1734,7 +1740,7 @@ void ThreadSocketHandler()
         }
 
         // Nothing happened even though select did not block.  So slow us down.
-        if (progress == 0 && fAquiredAllRecvLocks)
+        if (progress == 0)
             MilliSleep(5);
     }
 }
@@ -2567,9 +2573,7 @@ static bool threadProcessMessages(CNode *pnode)
         }
         if (fSleep)
         {
-            // If already locked some other thread is working on it, so no work for this thread
-            TRY_LOCK(pnode->cs_vRecvMsg, lockRecv);
-            if (lockRecv && (!pnode->vRecvMsg.empty() || fPriorityRecvMsg.load()))
+            if (!pnode->vRecvMsg.empty() || fPriorityRecvMsg.load())
                 fSleep = false;
         }
     }
@@ -2983,7 +2987,7 @@ void NetCleanup()
             }
             {
                 LOCK(pnode->cs_vSend);
-                pnode->ssSend.clear();
+                pnode->msgBeingSent.clear();
             }
             pnode->nSendSize.store(0);
             // Now close communications with the other node
@@ -3126,9 +3130,8 @@ uint64_t CNode::GetOutboundTargetBytesLeft()
 
 uint64_t CNode::GetTotalBytesRecv() { return nTotalBytesRecv; }
 uint64_t CNode::GetTotalBytesSent() { return nTotalBytesSent; }
-void CNode::Fuzz(int nChance)
+void CNode::Fuzz(int nChance, CDataStream &ssSend)
 {
-    AssertLockHeld(cs_vSend);
     if (!fSuccessfullyConnected)
         return; // Don't fuzz initial handshake
     if (GetRand(nChance) != 0)
@@ -3163,7 +3166,7 @@ void CNode::Fuzz(int nChance)
     }
     // Chance of more than one change half the time:
     // (more changes exponentially less likely):
-    Fuzz(2);
+    Fuzz(2, ssSend);
 }
 
 //
@@ -3280,8 +3283,7 @@ unsigned int ReceiveFloodSize() { return nReceiveBufferSize; }
 unsigned int SendBufferSize() { return nSendBufferSize; }
 
 CNode::CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNameIn, bool fInboundIn)
-    : extversionEnabled(false), skipChecksum(false), ssSend(SER_NETWORK, INIT_PROTO_VERSION), id(connmgr->NextNodeId()),
-      addrKnown(5000, 0.001)
+    : extversionEnabled(false), skipChecksum(false), id(connmgr->NextNodeId()), addrKnown(5000, 0.001)
 {
     nServices = 0;
     hSocket = hSocketIn;
@@ -3425,41 +3427,38 @@ CNode::~CNode()
     GetNodeSignals().FinalizeNode(GetId());
 }
 
-void CNode::BeginMessage(const char *pszCommand, uint32_t msgCookie) EXCLUSIVE_LOCK_FUNCTION(cs_vSend)
+void CNode::BeginMessage(const char *pszCommand, uint32_t msgCookie, CDataStream &ssSend)
 {
     LOG(NET, "sending msg: %s with cookie %x to %s \n", SanitizeString(pszCommand), msgCookie, GetLogName());
-    ENTER_CRITICAL_SECTION(cs_vSend);
     assert(ssSend.size() == 0);
     ssSend << CMessageHeader(GetMagic(Params()), pszCommand, msgCookie, 0);
     currentCommand = pszCommand;
 }
 
-void CNode::AbortMessage() UNLOCK_FUNCTION(cs_vSend)
-{
-    ssSend.clear();
-    LEAVE_CRITICAL_SECTION(cs_vSend);
-    LOG(NET, "(aborted)\n");
-}
+void CNode::AbortMessage() { LOG(NET, "(aborted)\n"); }
 
-void CNode::EndMessage() UNLOCK_FUNCTION(cs_vSend)
+void CNode::EndMessage(CDataStream &ssSend)
 {
     // The -*messagestest options are intentionally not documented in the help message,
     // since they are only used during development to debug the networking code and are
     // not intended for end-users.
-    if (mapArgs.count("-dropmessagestest") && GetRand(GetArg("-dropmessagestest", 2)) == 0)
+    if (nDropMessages && GetRand(nDropMessages) == 0)
     {
         LOG(NET, "dropmessages DROPPING SEND MESSAGE\n");
         AbortMessage();
         return;
     }
-    if (mapArgs.count("-fuzzmessagestest"))
-        Fuzz(GetArg("-fuzzmessagestest", 10));
+    if (nFuzzMessages)
+    {
+        Fuzz(nFuzzMessages, ssSend);
+    }
 
     if (ssSend.size() == 0)
     {
-        LEAVE_CRITICAL_SECTION(cs_vSend);
+        LOG(NET, "ssSend size was zero - not sending message\n");
         return;
     }
+
     // Set the size
     unsigned int nSize = ssSend.size() - CMessageHeader::HEADER_SIZE;
     WriteLE32((uint8_t *)&ssSend[CMessageHeader::MESSAGE_SIZE_OFFSET], nSize);
@@ -3495,9 +3494,9 @@ void CNode::EndMessage() UNLOCK_FUNCTION(cs_vSend)
     // If the message is a priority message then move it to priority queue.
     if (IsPriorityMsg(strCommand))
     {
-        it = vSendMsg.insert(vSendMsg.end(), CSerializeData());
-        ssSend.GetAndClear(*it);
-        nSendSize.fetch_add((*it).size());
+        nSendSize.fetch_add(ssSend.size());
+        vSendMsg.push_back(std::move(CSerializeData(ssSend.begin(), ssSend.end())));
+
         LOG(PRIORITYQ, "Send Queue: pushed %s to the priority queue, peer(%d)\n", strCommand, this->GetId());
 
         LOCK(cs_prioritySendQ);
@@ -3506,22 +3505,9 @@ void CNode::EndMessage() UNLOCK_FUNCTION(cs_vSend)
     }
     else
     {
-        it = vLowPrioritySendMsg.insert(vLowPrioritySendMsg.end(), CSerializeData());
-        ssSend.GetAndClear(*it);
-        nSendSize.fetch_add((*it).size());
+        nSendSize.fetch_add(ssSend.size());
+        vLowPrioritySendMsg.push_back(std::move(CSerializeData(ssSend.begin(), ssSend.end())));
     }
-
-    // if only 1 message is in queue then attempt and "optimistic" send
-    if (vSendMsg.size() == 1)
-    {
-        SocketSendData(this);
-    }
-    else if (vSendMsg.empty() && (vLowPrioritySendMsg.size() == 1))
-    {
-        SocketSendData(this);
-    }
-
-    LEAVE_CRITICAL_SECTION(cs_vSend);
 }
 
 /**

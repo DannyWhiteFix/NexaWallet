@@ -64,16 +64,19 @@ static void CleanupAll(std::vector<CNode *> &vPeers)
 }
 
 // Return the netmessage string for a block/xthin/graphene request
-static std::string NetMessage(std::deque<CSerializeData> &_vSendMsg)
+static std::string NetMessage(CLockSwapQ<CSerializeData> &_vSendMsg)
 {
     if (_vSendMsg.size() == 0)
         return "none";
 
     CInv inv_result;
-    CSerializeData data = _vSendMsg.front();
+    CSerializeData data;
+    if (!_vSendMsg.pop_front(data))
+    {
+        return "none";
+    }
     std::string ssData(data.begin(), data.end());
     std::string ss(ssData.begin() + 4, ssData.begin() + 16);
-    _vSendMsg.pop_front();
 
     // Remove whitespace
     ss.erase(std::remove(ss.begin(), ss.end(), '\000'), ss.end());
@@ -89,6 +92,7 @@ static std::string NetMessage(std::deque<CSerializeData> &_vSendMsg)
 
         if (inv.type == MSG_BLOCK)
             return "getdata";
+
         else if (inv.type == MSG_CMPCT_BLOCK)
             return "cmpctblock";
         else
@@ -211,12 +215,14 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     CleanupAll(vNodes);
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeCmpct, inv_cmpct) == true);
-    BOOST_CHECK(NetMessage(dummyNodeCmpct.vSendMsg) == "cmpctblock");
+    // TODO: compact block requests are done through getdata and so can not be requested with priority.
+    BOOST_CHECK(NetMessage(dummyNodeCmpct.vLowPrioritySendMsg) == "cmpctblock");
     thinrelay.ClearBlockRelayTimer(inv_cmpct.hash);
     CleanupAll(vNodes);
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeNone, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeNone.vSendMsg) == "getdata");
+    // TODO: full block requests are done through getdata and so can not be requested with priority.
+    BOOST_CHECK(NetMessage(dummyNodeNone.vLowPrioritySendMsg) == "getdata");
     thinrelay.ClearBlockRelayTimer(inv.hash);
     CleanupAll(vNodes);
 
@@ -242,12 +248,12 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     CleanupAll(vNodes);
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeCmpct, inv_cmpct) == true);
-    BOOST_CHECK(NetMessage(dummyNodeCmpct.vSendMsg) == "cmpctblock");
+    BOOST_CHECK(NetMessage(dummyNodeCmpct.vLowPrioritySendMsg) == "cmpctblock");
     thinrelay.ClearBlockRelayTimer(inv_cmpct.hash);
     CleanupAll(vNodes);
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeNone, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeNone.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeNone.vLowPrioritySendMsg) == "getdata");
     thinrelay.ClearBlockRelayTimer(inv.hash);
     CleanupAll(vNodes);
 
@@ -267,7 +273,7 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     // This test would generally cause a request for a "get_xthin", however xthins is not on and
     // the timer is off which results in a full block request.
     BOOST_CHECK(requester.RequestBlock(&dummyNodeXthin, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeXthin.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeXthin.vLowPrioritySendMsg) == "getdata");
     thinrelay.ClearBlockRelayTimer(inv.hash);
     CleanupAll(vNodes);
 
@@ -277,13 +283,13 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     CleanupAll(vNodes);
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeCmpct, inv_cmpct) == true);
-    BOOST_CHECK(NetMessage(dummyNodeCmpct.vSendMsg) == "cmpctblock");
+    BOOST_CHECK(NetMessage(dummyNodeCmpct.vLowPrioritySendMsg) == "cmpctblock");
     thinrelay.ClearBlockRelayTimer(inv_cmpct.hash);
     CleanupAll(vNodes);
 
     inv.type = MSG_BLOCK;
     BOOST_CHECK(requester.RequestBlock(&dummyNodeNone, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeNone.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeNone.vLowPrioritySendMsg) == "getdata");
     thinrelay.ClearBlockRelayTimer(inv.hash);
     CleanupAll(vNodes);
     SetArg("-preferential-timer", "10000"); // reset from 0
@@ -299,13 +305,13 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     thinrelay.AddPeers(&dummyNodeNone);
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeXthin, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeXthin.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeXthin.vLowPrioritySendMsg) == "getdata");
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeGraphene, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeGraphene.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeGraphene.vLowPrioritySendMsg) == "getdata");
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeNone, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeNone.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeNone.vLowPrioritySendMsg) == "getdata");
 
     thinrelay.ClearBlockRelayTimer(inv.hash);
     CleanupAll(vNodes);
@@ -318,7 +324,7 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     thinrelay.AddPeers(&dummyNodeNone);
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeNone, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeNone.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeNone.vLowPrioritySendMsg) == "getdata");
 
     thinrelay.ClearBlockRelayTimer(inv.hash);
     ClearThinBlocksInFlight(dummyNodeNone, inv);
@@ -336,7 +342,7 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     thinrelay.AddPeers(&dummyNodeNone);
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeNone, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeNone.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeNone.vLowPrioritySendMsg) == "getdata");
 
     thinrelay.ClearBlockRelayTimer(inv.hash);
     CleanupAll(vNodes);
@@ -350,7 +356,7 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     thinrelay.AddPeers(&dummyNodeNone);
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeNone, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeNone.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeNone.vLowPrioritySendMsg) == "getdata");
 
     thinrelay.ClearBlockRelayTimer(inv.hash);
     CleanupAll(vNodes);
@@ -364,7 +370,7 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     thinrelay.AddPeers(&dummyNodeNone);
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeNone, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeNone.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeNone.vLowPrioritySendMsg) == "getdata");
 
     thinrelay.ClearBlockRelayTimer(inv.hash);
     CleanupAll(vNodes);
@@ -379,7 +385,7 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     thinrelay.AddPeers(&dummyNodeNone);
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeNone, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeNone.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeNone.vLowPrioritySendMsg) == "getdata");
 
     thinrelay.ClearBlockRelayTimer(inv.hash);
     CleanupAll(vNodes);
@@ -394,7 +400,7 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     thinrelay.AddPeers(&dummyNodeNone);
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeNone, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeNone.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeNone.vLowPrioritySendMsg) == "getdata");
 
     thinrelay.ClearBlockRelayTimer(inv.hash);
     CleanupAll(vNodes);
@@ -409,7 +415,7 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     thinrelay.AddPeers(&dummyNodeNone);
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeNone, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeNone.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeNone.vLowPrioritySendMsg) == "getdata");
 
     thinrelay.ClearBlockRelayTimer(inv.hash);
     CleanupAll(vNodes);
@@ -424,7 +430,7 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     thinrelay.AddPeers(&dummyNodeNone);
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeNone, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeNone.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeNone.vLowPrioritySendMsg) == "getdata");
 
     thinrelay.ClearBlockRelayTimer(inv.hash);
     CleanupAll(vNodes);
@@ -439,7 +445,7 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     thinrelay.AddPeers(&dummyNodeNone);
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeNone, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeNone.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeNone.vLowPrioritySendMsg) == "getdata");
 
     thinrelay.ClearBlockRelayTimer(inv.hash);
     CleanupAll(vNodes);
@@ -454,7 +460,7 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     thinrelay.AddPeers(&dummyNodeNone);
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeNone, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeNone.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeNone.vLowPrioritySendMsg) == "getdata");
 
     thinrelay.ClearBlockRelayTimer(inv.hash);
     CleanupAll(vNodes);
@@ -469,7 +475,7 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     thinrelay.AddPeers(&dummyNodeNone);
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeNone, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeNone.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeNone.vLowPrioritySendMsg) == "getdata");
 
     thinrelay.ClearBlockRelayTimer(inv.hash);
     CleanupAll(vNodes);
@@ -484,7 +490,7 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     thinrelay.AddPeers(&dummyNodeNone);
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeNone, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeNone.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeNone.vLowPrioritySendMsg) == "getdata");
 
     thinrelay.ClearBlockRelayTimer(inv.hash);
     CleanupAll(vNodes);
@@ -498,7 +504,7 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     thinrelay.AddPeers(&dummyNodeNone);
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeNone, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeNone.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeNone.vLowPrioritySendMsg) == "getdata");
 
     thinrelay.ClearBlockRelayTimer(inv.hash);
     CleanupAll(vNodes);
@@ -512,7 +518,7 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     thinrelay.AddPeers(&dummyNodeNone);
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeNone, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeNone.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeNone.vLowPrioritySendMsg) == "getdata");
 
     thinrelay.ClearBlockRelayTimer(inv.hash);
     CleanupAll(vNodes);
@@ -526,7 +532,7 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     thinrelay.AddPeers(&dummyNodeNone);
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeNone, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeNone.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeNone.vLowPrioritySendMsg) == "getdata");
 
     thinrelay.ClearBlockRelayTimer(inv.hash);
     CleanupAll(vNodes);
@@ -628,7 +634,7 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     thinrelay.AddPeers(&dummyNodeNone);
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeCmpct, inv_cmpct) == true);
-    BOOST_CHECK(NetMessage(dummyNodeCmpct.vSendMsg) == "cmpctblock");
+    BOOST_CHECK(NetMessage(dummyNodeCmpct.vLowPrioritySendMsg) == "cmpctblock");
 
     thinrelay.ClearBlockRelayTimer(inv.hash);
     CleanupAll(vNodes);
@@ -642,7 +648,7 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     thinrelay.AddPeers(&dummyNodeNone);
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeCmpct, inv_cmpct) == true);
-    BOOST_CHECK(NetMessage(dummyNodeCmpct.vSendMsg) == "cmpctblock");
+    BOOST_CHECK(NetMessage(dummyNodeCmpct.vLowPrioritySendMsg) == "cmpctblock");
 
     thinrelay.ClearBlockRelayTimer(inv.hash);
     CleanupAll(vNodes);
@@ -665,7 +671,7 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     thinrelay.AddPeers(&dummyNodeNone);
 
     BOOST_CHECK(requester.RequestBlock(&dummyNodeNone, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeNone.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeNone.vLowPrioritySendMsg) == "getdata");
 
     thinrelay.ClearBlockRelayTimer(inv.hash);
     CleanupAll(vNodes);
@@ -697,7 +703,7 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     // download a full block
     SetMockTime(nTime + 20);
     BOOST_CHECK(requester.RequestBlock(&dummyNodeNone, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeNone.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeNone.vLowPrioritySendMsg) == "getdata");
 
     thinrelay.ClearBlockRelayTimer(inv.hash);
     CleanupAll(vNodes);
@@ -730,7 +736,7 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     randhash = InsecureRand256();
     thinrelay.AddBlockInFlight(&dummyNodeGraphene, randhash, NetMsgType::GRAPHENEBLOCK);
     BOOST_CHECK(requester.RequestBlock(&dummyNodeGraphene, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeGraphene.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeGraphene.vLowPrioritySendMsg) == "getdata");
 
     CleanupAll(vNodes);
 
@@ -820,7 +826,7 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     // download a full block
     SetMockTime(nTime + 20);
     BOOST_CHECK(requester.RequestBlock(&dummyNodeXthin, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeXthin.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeXthin.vLowPrioritySendMsg) == "getdata");
 
     thinrelay.ClearBlockRelayTimer(inv.hash);
     CleanupAll(vNodes);
@@ -852,7 +858,7 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     randhash = InsecureRand256();
     thinrelay.AddBlockInFlight(&dummyNodeXthin, randhash, NetMsgType::XTHINBLOCK);
     BOOST_CHECK(requester.RequestBlock(&dummyNodeXthin, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeXthin.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeXthin.vLowPrioritySendMsg) == "getdata");
 
 
     thinrelay.ClearBlockRelayTimer(inv.hash);
@@ -888,7 +894,7 @@ BOOST_AUTO_TEST_CASE(blockrequest_tests)
     randhash = InsecureRand256();
     thinrelay.AddBlockInFlight(&dummyNodeCmpct, randhash, NetMsgType::CMPCTBLOCK);
     BOOST_CHECK(requester.RequestBlock(&dummyNodeCmpct, inv) == true);
-    BOOST_CHECK(NetMessage(dummyNodeCmpct.vSendMsg) == "getdata");
+    BOOST_CHECK(NetMessage(dummyNodeCmpct.vLowPrioritySendMsg) == "getdata");
 
 
     thinrelay.ClearBlockRelayTimer(inv.hash);
