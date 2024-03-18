@@ -357,6 +357,20 @@ extern const char *GETBLOCKTXN;
 extern const char *BLOCKTXN;
 
 /**
+ * Requests a headers path
+ *
+ * @since protocol version 80004
+ */
+extern const char *GETHEADERPATH;
+
+/**
+ * Contains a headers path between two blocks.
+ * Sent in response to a "getblockpath" message.
+ * @since protocol version 80004
+ */
+extern const char *HEADERPATH;
+
+/**
  * Double spend proof
  */
 extern const char *DSPROOF;

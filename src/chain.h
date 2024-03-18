@@ -530,6 +530,22 @@ public:
         return _Next(pindex);
     }
 
+    /** Find the header corresponding to this hash (linear by number of headers). */
+    CBlockIndex *_lookup(uint256 hash) const
+    {
+        for (auto &i : vChain)
+        {
+            if (i->phashBlock)
+            {
+                if (*i->phashBlock == hash)
+                    return i;
+            }
+            else if (i->header.GetHash() == hash)
+                return i;
+        }
+        return nullptr;
+    }
+
     /** Lock Free - Find the successor of a block in this chain, or nullptr if the given index is not found or is the
      * tip.
      */

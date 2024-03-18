@@ -48,6 +48,8 @@ extern CTweak<uint32_t> doubleSpendProofs;
 extern CTweak<bool> extVersionEnabled;
 extern CTweak<bool> allowp2pTxVal;
 
+bool HandleHeaderPathMessage(CDataStream &vRecv, CNode *pfrom, uint32_t msgCookie);
+
 /** How many inbound connections will we track before pruning entries */
 const uint32_t MAX_INBOUND_CONNECTIONS_TRACKED = 10000;
 /** maximum size (in bytes) of a batched set of transactions */
@@ -1756,6 +1758,10 @@ bool ProcessMessage(CNode *pfrom,
         LOCK(pfrom->cs_thintype);
         return CompactReReqResponse::HandleMessage(vRecv, msgCookie, pfrom);
     }
+    else if (strCommand == NetMsgType::GETHEADERPATH)
+    {
+        return HandleHeaderPathMessage(vRecv, pfrom, msgCookie);
+    }
 
     // Mempool synchronization request
     else if (strCommand == NetMsgType::GET_MEMPOOLSYNC)
@@ -2922,5 +2928,111 @@ bool SendMessages(CNode *pto)
             }
         }
     }
+    return true;
+}
+
+
+bool HandleHeaderPathMessage(CDataStream &vRecv, CNode *pfrom, uint32_t msgCookie)
+{
+    LOG(NET, "Handling block path request from peer %s\n", pfrom->GetLogName());
+    uint32_t fromHeight;
+    uint256 fromHash;
+    uint32_t toHeight;
+    uint256 toHash;
+
+    vRecv >> fromHeight >> fromHash >> toHeight >> toHash;
+
+    CBlockIndex *from = nullptr;
+    CBlockIndex *to = nullptr;
+
+    std::vector<CBlockHeader> headers;
+
+    {
+        READLOCK(chainActive.cs_chainLock);
+
+        // Find where we are going from and to
+        if (fromHeight == std::numeric_limits<uint32_t>::max())
+            from = chainActive.Tip();
+        // returns nullptr if too big
+        else if (fromHeight != 0 || fromHash == uint256())
+            from = chainActive._idx(fromHeight);
+        else
+            from = chainActive._lookup(fromHash);
+
+        if (toHeight == std::numeric_limits<uint32_t>::max())
+            to = chainActive.Tip();
+        else if (toHeight != 0 || fromHash == uint256())
+            to = chainActive._idx(toHeight); // returns nullptr if too big
+        else
+            to = chainActive._lookup(toHash);
+
+        // If we do not find these blocks, then give up
+        if (from == nullptr || to == nullptr)
+        {
+            pfrom->PushMessageWithCookie(NetMsgType::REJECT, msgCookie | 0xFFFF, std::string(NetMsgType::GETHEADERPATH),
+                REJECT_FORK, std::string("start or end header not on main chain"));
+            return false;
+        }
+        // We only accept paths backwards.  Caller can just swap their from and to fields
+        if (from->height() < to->height())
+        {
+            pfrom->PushMessageWithCookie(NetMsgType::REJECT, msgCookie | 0xFFFF, std::string(NetMsgType::GETHEADERPATH),
+                REJECT_MALFORMED,
+                std::string("start precedes end, but header paths must move from backwards through the chain"));
+            return false;
+        }
+
+        // Just in case we were given a hash, get the height
+        toHeight = to->height();
+        fromHeight = from->height();
+
+        uint32_t curHeight = fromHeight;
+
+        std::vector<uint32_t> path;
+        path.push_back(curHeight);
+        while (curHeight != toHeight)
+        {
+            uint32_t nextHeight = GetConsensusAncestorHeight(curHeight);
+            if (nextHeight < toHeight) // Ancestor jumps back too far, have to use previous
+            { // Note this will switch the log vs linear path.
+                curHeight = curHeight - 1;
+                path.push_back(curHeight);
+            }
+            else if (nextHeight > toHeight)
+            {
+                curHeight = nextHeight;
+                path.push_back(curHeight);
+                // Heuristic, if we are in the linear path, and have a long way to go we need to switch back to the log
+                // path even if not much progress is made for a few blocks. There's a better algorithm to generate the
+                // optimal path but this will do. Investigate changing the ANCESTOR_HASH_IF_ODD to (height - 5040 &
+                // ~0xff)+1 or similar to jump back a linear amount that also puts us 1 away from a log path with larger
+                // jumps
+
+                // 16 log hops is 65536, 16 linear hops is 80640 so 16 linear hops is where moving to the log path
+                // starts to make sense
+                if ((nextHeight & 1) && (nextHeight > toHeight + ANCESTOR_HASH_IF_ODD * 16))
+                {
+                    curHeight = curHeight - 1;
+                    path.push_back(curHeight);
+                }
+            }
+            else // We hit it!
+            {
+                curHeight = nextHeight;
+                path.push_back(curHeight);
+            }
+        }
+
+        // Ok we have a path, now produce the headers list to get there
+        auto sz = path.size();
+        headers.resize(path.size());
+
+        for (size_t i = 0; i < sz; i++)
+        {
+            headers[i] = chainActive._idx(path[i])->header;
+        }
+    }
+
+    pfrom->PushMessageWithCookie(NetMsgType::HEADERPATH, msgCookie | 0xFFFF, headers);
     return true;
 }

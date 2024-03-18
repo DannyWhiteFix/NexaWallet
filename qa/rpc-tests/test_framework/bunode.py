@@ -120,6 +120,21 @@ class BUProtocolHandler(NodeConnCB):
         msg.hashstop = hashstop
         self.connection.send_message(msg)
 
+    def get_header_path(self, frm, to, cookie):
+        fromHash = 0
+        toHash = 0
+        if frm < 0x100000000: fromHeight = frm
+        else:
+            fromHeight = 0
+            fromHash = frm
+        if to < 0x100000000: toHeight = to
+        else:
+            toHeight = 0
+            toHash = to
+
+        msg = msg_getheaderpath(fromHeight, fromHash, toHeight, toHash)
+        self.connection.send_message_with_cookie(msg, cookie)
+
     def send_block_inv(self, blockhash):
         msg = msg_inv()
         msg.inv = [CInv(2, blockhash)]

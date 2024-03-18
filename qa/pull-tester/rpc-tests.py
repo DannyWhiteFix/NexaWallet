@@ -194,6 +194,7 @@ if ENABLE_ZMQ:
 #Tests
 testScripts = [ RpcTest(t) for t in [
     'hardfork1_activation_blocksizelimit',
+    'headerPath',
     'msgCookie',
     'capd',
     'testpynode',

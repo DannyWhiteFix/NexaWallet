@@ -72,6 +72,9 @@ const char *CMPCTBLOCK = "cmpctblock";
 const char *GETBLOCKTXN = "getblocktxn";
 const char *BLOCKTXN = "blocktxn";
 
+const char *GETHEADERPATH = "gethdrpath";
+const char *HEADERPATH = "hdrpath";
+
 const char *DSPROOF = "dsproof";
 
 const char *REQTXVAL = "req-txval";
@@ -152,6 +155,8 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::CMPCTBLOCK,
     NetMsgType::GETBLOCKTXN,
     NetMsgType::BLOCKTXN,
+    NetMsgType::GETHEADERPATH,
+    NetMsgType::HEADERPATH,
     NetMsgType::DSPROOF,
     NetMsgType::REQTXVAL,
     NetMsgType::RESTXVAL,

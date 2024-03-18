@@ -272,6 +272,7 @@ class NodeConn(asyncore.dispatcher):
         b"capdqreply": msg_capdqreply,
         b"capdinfo": msg_capdinfo,
         b"notfound": msg_notfound,
+        b"hdrpath": msg_headerpath,
     }, bumessagemap)
 
     MAGIC_BYTES = {

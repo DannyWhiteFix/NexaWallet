@@ -1503,13 +1503,12 @@ class CBlockHeader(object):
         return "".join(s)
 
     def __str__(self):
-        return "CBlockHeader(hash=%064x nVersion=%i hashPrevBlock=%064x hashMerkleRoot=%064x nTime=%s nBits=%08x nonce=%s)" \
-            % (self.gethash(), self.nVersion, self.hashPrevBlock, self.hashMerkleRoot, time.ctime(self.nTime), self.nBits, self.nonce.hex())
+        return "CBlockHeader(hash=%064x height=%d hashPrevBlock=%064x hashAncestor=%064x hashMerkleRoot=%064x nTime=%s nBits=%08x nonce=%s)" \
+            % (self.gethash(), self.height, self.hashPrevBlock, self.hashAncestor, self.hashMerkleRoot, time.ctime(self.nTime), self.nBits, self.nonce.hex())
 
     def __repr__(self):
-        return "CBlockHeader(hashPrevBlock=%064x hashMerkleRoot=%064x nTime=%s nBits=%08x nonce=%s)" \
-            % (self.hashPrevBlock, self.hashMerkleRoot,
-               time.ctime(self.nTime), self.nBits, self.nonce.hex())
+        return "CBlockHeader(hash=%064x height=%d hashPrevBlock=%064x hashAncestor=%064x hashMerkleRoot=%064x nTime=%s nBits=%08x nonce=%s)" \
+            % (self.gethash(), self.height, self.hashPrevBlock, self.hashAncestor, self.hashMerkleRoot, time.ctime(self.nTime), self.nBits, self.nonce.hex())
 
 
 class CBlock(CBlockHeader):
@@ -2223,6 +2222,56 @@ class msg_getaddr(object):
 
     def __repr__(self):
         return "msg_getaddr()"
+
+class msg_getheaderpath(object):
+    command = b"gethdrpath"
+
+    def __init__(self, fromHeight, fromHash, toHeight, toHash):
+        self.fromHeight = fromHeight
+        #if type(fromHash) is int:
+        #    fromHash = ser_uint256(fromHash)
+        #if type(toHash) is int:
+        #    toHash = ser_uint256(toHash)
+        #assert len(fromHash) == 32
+        #assert len(toHash) == 32
+
+        self.fromHash = fromHash
+        self.toHeight = toHeight
+        self.toHash = toHash
+
+    def deserialize(self, f):
+        self.fromHeight = struct.unpack("<I", f.read(4))[0]
+        self.fromHash = deser_uint256(f)
+        self.toHeight = struct.unpack("<I", f.read(4))[0]
+        self.toHash = deser_uint256(f)
+
+    def serialize(self, stype=SER_DEFAULT):
+        r = b""
+        r += struct.pack("<I", self.fromHeight)
+        r += ser_uint256(self.fromHash)
+        r += struct.pack("<I", self.toHeight)
+        r += ser_uint256(self.toHash)
+        return r
+
+    def __repr__(self):
+        return "msg_getheaderpath(fromHeight=%d, fromHash=%064x, toHeight=%d, toHash=%064x)" % (self.fromHeight, self.fromHash, self.toHeight, self.toHash)
+
+class msg_headerpath(object):
+    command = b"hdrpath"
+
+    def __init__(self, headers = None):
+        self.headers = [] if headers is None else headers
+
+    def deserialize(self, f):
+        self.headers = deser_vector(f, CBlockHeader)
+
+    def serialize(self, stype=SER_DEFAULT):
+        for x in self.headers:
+            assert type(x) is CBlockHeader
+        return ser_vector(self.headers, stype)
+
+    def __repr__(self):
+        return "msg_headerpath(headers=%s)" % repr(self.headers)
 
 
 class msg_ping(object):
