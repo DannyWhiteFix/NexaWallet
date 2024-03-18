@@ -154,7 +154,9 @@ class GroupTokensTest (BitcoinTestFramework):
         anyhash = "9241565005f6647e8a521801e72c6d66b6cf01ff85df89e238f24b02878d3b40"
         n = self.nodes[0]
         addr = n.getnewaddress()
+        blockcount = n.getblockcount();
         n.generate(5) # clear out anything and get coins
+        waitFor(60, lambda: n.getblockcount() == blockcount + 5)
 
         g0 = n.token("new", "tkr", "name","http://nothing.com/", anyhash, 4)
         tx0 = waitFor(60, lambda: n.getrawtransaction(g0["transaction"], True))

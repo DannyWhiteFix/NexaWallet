@@ -119,6 +119,7 @@ keystore.cpp
 keystore.h
 leakybucket.h
 limitedmap.h
+lockswap.h
 logging.cpp
 logging.h
 main.cpp

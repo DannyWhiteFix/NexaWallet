@@ -126,6 +126,10 @@ uint64_t nSendBufferSize = 0;
 // Are we checking priority when doing tx admission
 bool fRelayPriority = false;
 
+// Are we doing network message testing
+uint32_t nFuzzMessages = 0;
+uint32_t nDropMessages = 0;
+
 CChain chainActive; // chainActive.Tip() is lock free, other APIs take the internal lock cs_chainLock
 
 CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE); // lock free - has an internal atomic value

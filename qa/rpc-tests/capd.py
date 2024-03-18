@@ -440,11 +440,11 @@ class MyTest (BitcoinTestFramework):
         assert st0["size"] < 10000
         logging.info(st0)
 
-        logging.info("Create 3000 messages, overflow pool")
+        logging.info("Create 3500 messages, overflow pool")
         # Generate acceptable messages, given a full msg pool
         hdlr.msgs={}
         msgs = []
-        while i < 3000:
+        while i < 3500:
             i+=1
             st0 = self.nodes[0].capd()
             pri0 = st0["maxPriority"]

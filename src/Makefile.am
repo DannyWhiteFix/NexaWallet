@@ -180,6 +180,7 @@ BITCOIN_CORE_H = \
   keystore.h \
   dbwrapper.h \
   limitedmap.h \
+  lockswap.h \
   logging.h \
   main.h \
   memusage.h \

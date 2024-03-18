@@ -600,12 +600,6 @@ bool ProcessMessage(CNode *pfrom,
             pfrom->PushMessageWithCookie(NetMsgType::VERACK, msgCookie | 0xFFFF);
         }
 
-        // Change version
-        {
-            LOCK(pfrom->cs_vSend);
-            pfrom->ssSend.SetVersion(std::min(pfrom->nVersion, PROTOCOL_VERSION));
-        }
-
         LOG(NET, "receive version message: %s: version %d, blocks=%d, us=%s, peer=%s\n", pfrom->cleanSubVer,
             pfrom->nVersion, pfrom->nStartingHeight, addrMe.ToString(), pfrom->GetLogName());
 
@@ -2255,7 +2249,7 @@ bool ProcessMessages(CNode *pfrom)
         bool fUseLowPriorityMsg = true;
         bool fUsePriorityMsg = true;
         // try to complete the handshake before handling messages that require us to be fSuccessfullyConnected
-        if (pfrom->fSuccessfullyConnected == false)
+        if (!pfrom->fSuccessfullyConnected)
         {
             TRY_LOCK(pfrom->cs_vRecvMsg, lockRecv);
             if (!lockRecv)
@@ -2274,21 +2268,22 @@ bool ProcessMessages(CNode *pfrom)
         else
         {
             {
-                TRY_LOCK(pfrom->cs_vRecvMsg, lockRecv);
-                if (!lockRecv)
-                    break;
-                if (pfrom->vRecvMsg_handshake.empty() == false)
+                if (!pfrom->vRecvMsg_handshake.empty())
                 {
-                    std::string frontCommand = pfrom->vRecvMsg_handshake.front().hdr.GetCommand();
-                    if (frontCommand == NetMsgType::VERSION || frontCommand == NetMsgType::VERACK ||
-                        frontCommand == NetMsgType::EXTVERSION)
+                    LOCK(pfrom->cs_vRecvMsg);
+                    if (!pfrom->vRecvMsg_handshake.empty()) // check again after locking
                     {
-                        pfrom->vRecvMsg_handshake.clear();
-                        pfrom->fDisconnect = true;
-                        dosMan.Misbehaving(pfrom, 1);
-                        return error(
-                            "received handshake message '%s' after successful initialization, disconnecting peer=%s",
-                            frontCommand, pfrom->GetLogName());
+                        std::string frontCommand = pfrom->vRecvMsg_handshake.front().hdr.GetCommand();
+                        if (frontCommand == NetMsgType::VERSION || frontCommand == NetMsgType::VERACK ||
+                            frontCommand == NetMsgType::EXTVERSION)
+                        {
+                            pfrom->vRecvMsg_handshake.clear();
+                            pfrom->fDisconnect = true;
+                            dosMan.Misbehaving(pfrom, 1);
+                            return error("received handshake message '%s' after successful initialization,"
+                                         "disconnecting peer=%s",
+                                frontCommand, pfrom->GetLogName());
+                        }
                     }
                 }
             }
@@ -2337,15 +2332,12 @@ bool ProcessMessages(CNode *pfrom)
 
             if (fUseLowPriorityMsg)
             {
-                TRY_LOCK(pfrom->cs_vRecvMsg, lockRecv);
-                if (!lockRecv)
-                    break;
                 if (pfrom->vRecvMsg.empty())
                     break;
 
                 // get the message from the queue
-                std::swap(msg, pfrom->vRecvMsg.front());
-                pfrom->vRecvMsg.pop_front();
+                if (!pfrom->vRecvMsg.pop_front(msg))
+                    break;
             }
 
             // Check if this is a priority message and if so then modify pfrom to be the peer which
@@ -2813,10 +2805,7 @@ bool SendMessages(CNode *pto)
                     LOG(NET, "%s: sending header %s to peer=%d\n", __func__, vHeaders.front().GetHash().ToString(),
                         pto->id);
                 }
-                {
-                    LOCK(pto->cs_vSend);
-                    pto->PushMessage(NetMsgType::HEADERS, vHeaders);
-                }
+                pto->PushMessage(NetMsgType::HEADERS, vHeaders);
                 CNodeStateAccessor(nodestate, pto->GetId())->pindexBestHeaderSent = pBestIndex;
             }
         }
@@ -2890,7 +2879,6 @@ bool SendMessages(CNode *pto)
                 // was held in the section above.
                 if (nToErase > 0)
                 {
-                    LOCK(pto->cs_vSend);
                     if (!vInvSend.empty())
                     {
                         pto->PushMessage(NetMsgType::INV, vInvSend);
