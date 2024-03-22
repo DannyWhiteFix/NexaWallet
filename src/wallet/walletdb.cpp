@@ -1084,7 +1084,25 @@ bool CWalletDB::Recover(CDBEnv &dbenv, const std::string &filename, bool fOnlyKe
         LOGA("Renamed %s to %s\n", filename, newFilename);
     else
     {
-        LOGA("Failed to rename %s to %s\n", filename, newFilename);
+        // If error code value is greater than 0, it means a system error occured (even thou this would also be
+        // triggered by an incompatible version of bdb (eg trying to open with bdb 5.3 a db created by an higher
+        // version, eg 18 (on macos)). error code lower tha zero should specific berkeley db error. Have a look at this
+        // page from oracle documentation web site for more details:
+        //
+        // https://docs.oracle.com/cd/E17076_02/html/programmer_reference/program_errorret.html
+        //
+        // Quoting the relevant part from the above docuemntation page:
+        //
+        // All values returned by Berkeley DB functions are less than 0 in order to avoid conflict with possible values
+        // of errno. Specifically, Berkeley DB reserves all values from -30,800 to -30,999 to itself as possible error
+        // values. There are a few Berkeley DB interfaces where it is possible for an application function to be called
+        // by a Berkeley DB function and subsequently fail with an application-specific return. Such failure returns
+        // will be passed back to the function that originally called a Berkeley DB interface. To avoid ambiguity about
+        // the cause of the error, error values separate from the Berkeley DB error name space should be used.
+        //
+        LOGA("dbrename failed. Trying to rename %s into  %s, error code: %d, error string: %s\n Look in %s/db.log for "
+             "more detailed error report.",
+            filename, newFilename, result, dbenv.dbenv->strerror(result), GetDataDir().string());
         return false;
     }
 
