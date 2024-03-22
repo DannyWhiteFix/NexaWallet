@@ -103,6 +103,7 @@ class GroupTokensTest (BitcoinTestFramework):
 
     def subgroupTest(self):
         logging.info("subgroup test")
+        self.sync_blocks()
         self.nodes[0].generate(1)
         grp1 = self.nodes[0].token("new")["groupIdentifier"]
 
@@ -151,12 +152,10 @@ class GroupTokensTest (BitcoinTestFramework):
         return True
 
     def decimalDescTest(self):
+        self.sync_blocks()
         anyhash = "9241565005f6647e8a521801e72c6d66b6cf01ff85df89e238f24b02878d3b40"
         n = self.nodes[0]
         addr = n.getnewaddress()
-        blockcount = n.getblockcount();
-        n.generate(5) # clear out anything and get coins
-        waitFor(60, lambda: n.getblockcount() == blockcount + 5)
 
         g0 = n.token("new", "tkr", "name","http://nothing.com/", anyhash, 4)
         tx0 = waitFor(60, lambda: n.getrawtransaction(g0["transaction"], True))
@@ -197,6 +196,7 @@ class GroupTokensTest (BitcoinTestFramework):
 
     def descDocTest(self):
         logging.info("description doc test")
+        self.sync_blocks()
         self.nodes[2].generate(10)
 
         # These restrictions are implemented in this wallet and follow the spec, but are NOT consensus.
