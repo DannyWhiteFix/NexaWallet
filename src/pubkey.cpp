@@ -264,14 +264,38 @@ bool CPubKey::VerifySchnorr(const uint256 &hash, const std::vector<uint8_t> &vch
     return secp256k1_schnorr_verify(secp256k1_context_verify, &vchSig[0], hash.begin(), &pubkey);
 }
 
-bool CPubKey::RecoverCompact(const uint256 &hash, const std::vector<uint8_t> &vchSig)
+bool CPubKey::RecoverCompact(const uint256 &hash, const std::vector<uint8_t> &_vchSig)
 {
+    std::vector<uint8_t> vchSig;
+    if (_vchSig.size() != COMPACT_SIGNATURE_SIZE)
+    {
+        secp256k1_ecdsa_signature der_sig;
+        if (!ecdsa_signature_parse_der_lax(secp256k1_context_verify, &der_sig, &_vchSig[0], _vchSig.size()))
+        {
+            return false;
+        }
+        unsigned char output65[65];
+        if (!secp256k1_ecdsa_signature_serialize_compact(secp256k1_context_verify, &output65[1], &der_sig))
+        {
+            return false;
+        }
+        vchSig = std::vector(output65, output65 + 65);
+        // only support DER sigs from compressed pubkeys
+        vchSig[0] = 27 + vchSig[64] + 4;
+    }
+    else
+    {
+        vchSig = _vchSig;
+    }
     if (vchSig.size() != COMPACT_SIGNATURE_SIZE)
+    {
+        // it needs to be compressed at this stage for recovery
         return false;
-    int recid = (vchSig[0] - 27) & 3;
-    bool fComp = ((vchSig[0] - 27) & 4) != 0;
+    }
     secp256k1_pubkey pubkey;
     secp256k1_ecdsa_recoverable_signature sig;
+    int recid = (vchSig[0] - 27) & 3;
+    bool fComp = ((_vchSig[0] - 27) & 4) != 0;
     if (!secp256k1_ecdsa_recoverable_signature_parse_compact(secp256k1_context_verify, &sig, &vchSig[1], recid))
     {
         return false;
