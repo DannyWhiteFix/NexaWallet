@@ -267,6 +267,34 @@ BOOST_AUTO_TEST_CASE(key_test1)
         BOOST_CHECK(rE2 != rS2);
     }
 
+    // test ECDSA DER signature verification
+    std::string strAddr = "nqtsq5g5507g8lmp3dl458hzwzty6sq6zsttqq2n36eel304";
+    CTxDestination destination = DecodeDestination(strAddr, Params(CBaseChainParams::NEXA));
+    BOOST_CHECK(IsValidDestination(destination) == true);
+
+    std::string strDERsig =
+        "MEUCIQCv0+pkaVamk2Y4iQbHT77oxrovU44UgXWdlbDFpEyiZgIgDVgJk09ATrRfFU0UbPIrO0ETk3iJiaS7VLwXLoL871w=";
+    bool fInvalid = false;
+    std::vector<unsigned char> vDERsig = DecodeBase64(strDERsig.c_str(), &fInvalid);
+    BOOST_CHECK(fInvalid == false);
+
+    std::string strMessage = "Hello";
+    CHashWriter ss(SER_GETHASH, 0);
+    ss << strMessageMagic;
+    ss << strMessage;
+
+    CPubKey pubkey;
+    BOOST_CHECK(pubkey.RecoverCompact(ss.GetHash(), vDERsig));
+    ScriptTemplateDestination *st = nullptr;
+    BOOST_CHECK((st = std::get_if<ScriptTemplateDestination>(&destination)) != nullptr);
+    CGroupTokenInfo groupInfo;
+    std::vector<unsigned char> templateHash;
+    BOOST_CHECK(GetScriptTemplate(st->toScript(), &groupInfo, &templateHash) == ScriptTemplateError::OK);
+    BOOST_CHECK(templateHash == P2PKT_ID);
+    ScriptTemplateDestination signedBy(P2pktOutput(pubkey));
+    BOOST_CHECK(*st == signedBy);
+
+
     // test deterministic signing expected values
 
     std::vector<unsigned char> detsig, detsigc;
