@@ -49,6 +49,9 @@ static const unsigned int DEFAULT_MIN_TX_REQUEST_RETRY_INTERVAL = 5 * 1000 * 100
 // When should I request a block from someone else (in microseconds).
 static const unsigned int DEFAULT_MIN_BLK_REQUEST_RETRY_INTERVAL = 5 * 1000 * 1000;
 
+// Max requests in a singe getdata message
+static const unsigned int MAX_GETDATA_REQUESTS = 1000;
+
 // Which peers have mempool synchronization in-flight?
 extern std::map<NodeId, CMempoolSyncState> mempoolSyncRequested;
 extern uint64_t lastMempoolSync;
@@ -95,6 +98,7 @@ public:
     ObjectSourceList availableFrom;
     unsigned int priority;
     int64_t nEntryTime;
+    bool fGarbageCollect;
 
     CUnknownObj()
     {
@@ -148,26 +152,43 @@ protected:
 
     friend class CRequestManagerTest;
 
-    // The following are GUARDED_BY cs_objDownloader
-    typedef std::map<uint256, CUnknownObj> OdMap;
-    OdMap mapTxnInfo;
-    OdMap mapBlkInfo;
-    std::map<uint256, std::map<NodeId, std::list<QueuedBlock>::iterator> > mapBlocksInFlight;
-    std::map<NodeId, CRequestManagerNodeState> mapRequestManagerNodeState;
-    OdMap::iterator sendIter;
-    OdMap::iterator sendBlkIter;
-    int64_t nBlocksAskedFor = 0;
+    // Data structures for making and tracking requests
     CCriticalSection cs_objDownloader;
+
     int32_t requestCookie = 0;
 
-    int inFlight;
-    CStatHistory<int> inFlightTxns;
-    CStatHistory<int> receivedTxns;
+    typedef std::map<uint256, CUnknownObj> OdMap;
+    OdMap mapTxnInfo GUARDED_BY(cs_objDownloader);
+    OdMap mapBlkInfo GUARDED_BY(cs_objDownloader);
+    std::map<uint256, std::map<NodeId, std::list<QueuedBlock>::iterator> > mapBlocksInFlight GUARDED_BY(
+        cs_objDownloader);
+    std::map<NodeId, CRequestManagerNodeState> mapRequestManagerNodeState GUARDED_BY(cs_objDownloader);
+
+    // The map of transaction requests to add.
+    CCriticalSection cs_addBlock;
+    OdMap mapBlkToAdd GUARDED_BY(cs_addBlock);
+    int64_t nBlocksAskedFor GUARDED_BY(cs_addBlock) = 0;
+
+    // The set of transaction requests to delete
+    CCriticalSection cs_deleteBlock;
+    std::set<uint256> setBlockDeleter GUARDED_BY(cs_deleteBlock);
+
+    // The map of transaction requests to add.
+    CCriticalSection cs_adder;
+    OdMap mapTxnToAdd GUARDED_BY(cs_adder);
+
+    // The set of transaction requests to delete
+    CCriticalSection cs_deleter;
+    std::set<uint256> setDeleter GUARDED_BY(cs_deleter);
+
+    CStatHistory<int> inFlightTxns; // unused
+    CStatHistory<int> receivedTxns; // unused
     CStatHistory<int> rejectedTxns;
-    CStatHistory<int> droppedTxns;
+    CStatHistory<int> droppedTxns; // unused
     CStatHistory<int> pendingTxns;
 
     void cleanup(OdMap::iterator &item);
+    void cleanup(const CInv &item);
     CLeakyBucket requestPacer;
 
 public:
@@ -211,9 +232,6 @@ public:
     // Indicate that we got this object
     void Downloading(const uint256 &hash, CNode *pfrom, unsigned int nSize);
 
-    // Indicate that we are processing this transaction
-    void ProcessingTxn(const uint256 &hash, CNode *pfrom);
-
     // Indicate that we are processing this block
     void ProcessingBlock(const uint256 &hash, CNode *pfrom);
 
@@ -235,6 +253,22 @@ public:
     // Resets the last request time to zero when a node disconnects and has blocks in flight.
     void ResetLastBlockRequestTime(const uint256 &hash);
 
+    // Clear out any objects from the block request map that were slated for deletion.
+    void RunBlockDeleter();
+
+    // Add new block requests to the transaction request map.
+    void AddNewBlockRequests();
+
+    // Clear out any objects from the transaction request maps that are slated for deletion.
+    void RunTxnDeleter(OdMap &maybeToSend);
+
+    // Add new transaction requests to the transaction request map.
+    void AddNewTxnRequests(OdMap &mapTemp);
+
+    // Send transaction requests for a particular request map
+    void SendTxnRequests(OdMap &mapTxns);
+
+    // Send all block and transaction requests
     void SendRequests();
 
     // Check whether the limit for thintype object requests has been exceeded
