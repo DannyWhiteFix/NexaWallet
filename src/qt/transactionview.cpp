@@ -153,7 +153,8 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     QAction *copyAddressAction = new QAction(tr("Copy address"), this);
     QAction *copyLabelAction = new QAction(tr("Copy label"), this);
     QAction *copyAmountAction = new QAction(tr("Copy amount"), this);
-    QAction *copyTxIDAction = new QAction(tr("Copy transaction idem"), this);
+    QAction *copyTxIDAction = new QAction(tr("Copy transaction id"), this);
+    QAction *copyTxIdemAction = new QAction(tr("Copy transaction idem"), this);
     QAction *copyTxHexAction = new QAction(tr("Copy raw transaction"), this);
     QAction *editLabelAction = new QAction(tr("Edit label"), this);
     QAction *showDetailsAction = new QAction(tr("Show transaction details"), this);
@@ -163,6 +164,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     contextMenu->addAction(copyLabelAction);
     contextMenu->addAction(copyAmountAction);
     contextMenu->addAction(copyTxIDAction);
+    contextMenu->addAction(copyTxIdemAction);
     contextMenu->addAction(copyTxHexAction);
     contextMenu->addAction(editLabelAction);
     contextMenu->addAction(showDetailsAction);
@@ -185,6 +187,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     connect(copyLabelAction, SIGNAL(triggered()), this, SLOT(copyLabel()));
     connect(copyAmountAction, SIGNAL(triggered()), this, SLOT(copyAmount()));
     connect(copyTxIDAction, SIGNAL(triggered()), this, SLOT(copyTxID()));
+    connect(copyTxIdemAction, SIGNAL(triggered()), this, SLOT(copyTxIdem()));
     connect(copyTxHexAction, SIGNAL(triggered()), this, SLOT(copyTxHex()));
     connect(editLabelAction, SIGNAL(triggered()), this, SLOT(editLabel()));
     connect(showDetailsAction, SIGNAL(triggered()), this, SLOT(showDetails()));
@@ -347,6 +350,7 @@ void TransactionView::exportClicked()
     writer.addColumn(BitcoinUnits::getAmountColumnTitle(model->getOptionsModel()->getDisplayUnit()), 0,
         TransactionTableModel::FormattedAmountRole);
     writer.addColumn(tr("ID"), 0, TransactionTableModel::TxIDRole);
+    writer.addColumn(tr("Idem"), 0, TransactionTableModel::TxIdemRole);
 
     if (!writer.write())
     {
@@ -379,6 +383,7 @@ void TransactionView::copyAmount()
 }
 
 void TransactionView::copyTxID() { GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::TxIDRole); }
+void TransactionView::copyTxIdem() { GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::TxIdemRole); }
 void TransactionView::copyTxHex() { GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::TxHexRole); }
 void TransactionView::editLabel()
 {

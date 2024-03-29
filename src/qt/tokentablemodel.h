@@ -64,6 +64,8 @@ public:
         LabelRole,
         /** Unique identifier */
         TxIDRole,
+        /** other identifier */
+        TxIdemRole,
         /** Transaction hash */
         TxHashRole,
         /** Transaction data, hex-encoded */

@@ -147,19 +147,21 @@ public:
     /** Number of confirmation recommended for accepting a transaction */
     static const int RecommendedNumConfirmations = 6;
 
-    TransactionRecord() : hash(), time(0), type(Other), addresses(), debit(0), credit(0), idx(0) {}
-    TransactionRecord(uint256 _hash, qint64 _time)
-        : hash(_hash), time(_time), type(Other), addresses(), debit(0), credit(0), idx(0)
+    TransactionRecord() : hash(), idem(), time(0), type(Other), addresses(), debit(0), credit(0), idx(0) {}
+    TransactionRecord(uint256 _hash, uint256 _idem, qint64 _time)
+        : hash(_hash), idem(_idem), time(_time), type(Other), addresses(), debit(0), credit(0), idx(0)
     {
     }
 
     TransactionRecord(uint256 _hash,
+        uint256 _idem,
         qint64 _time,
         Type _type,
         const AddressList &_addresses,
         const CAmount &_debit,
         const CAmount &_credit)
-        : hash(_hash), time(_time), type(_type), addresses(_addresses), debit(_debit), credit(_credit), idx(0)
+        : hash(_hash), idem(_idem), time(_time), type(_type), addresses(_addresses), debit(_debit), credit(_credit),
+          idx(0)
     {
     }
 
@@ -174,6 +176,7 @@ public:
     /** @name Immutable transaction attributes
       @{*/
     uint256 hash;
+    uint256 idem;
     qint64 time;
     Type type;
     AddressList addresses;
@@ -195,6 +198,9 @@ public:
 
     /** Return the unique identifier for this transaction (part) */
     QString getTxID() const;
+
+    /** Return the other identifier for this transaction (part) */
+    QString getTxIdem() const;
 
     /** Return the output index of the subtransaction  */
     int getOutputIndex() const;

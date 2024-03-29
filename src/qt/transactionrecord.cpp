@@ -66,7 +66,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     CAmount nCredit = wtx.GetCredit(ISMINE_ALL);
     CAmount nDebit = wtx.GetDebit(ISMINE_ALL);
     CAmount nNet = nCredit - nDebit;
-    uint256 hash = wtx.GetIdem();
+    uint256 hash = wtx.GetId();
+    uint256 idem = wtx.GetIdem();
     std::map<std::string, std::string> mapValue = wtx.mapValue;
     std::list<TokenRecord> tokens;
 
@@ -81,7 +82,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             isminetype mine = wallet->IsMine(txout);
             if (mine)
             {
-                TransactionRecord sub(hash, nTime);
+                TransactionRecord sub(hash, idem, nTime);
                 CTxDestination address;
                 sub.idx = parts.size(); // sequence number
                 sub.credit = txout.nValue;
@@ -169,8 +170,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         {
             // Payment to self
             CAmount nChange = wtx.GetChange();
-            parts.append(TransactionRecord(
-                hash, nTime, TransactionRecord::SendToSelf, listAllAddresses, -(nDebit - nChange), nCredit - nChange));
+            parts.append(TransactionRecord(hash, idem, nTime, TransactionRecord::SendToSelf, listAllAddresses,
+                -(nDebit - nChange), nCredit - nChange));
 
             // maybe pass to TransactionRecord as constructor argument
             parts.last().involvesWatchAddress = involvesWatchAddress;
@@ -193,7 +194,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     continue;
                 }
 
-                TransactionRecord sub(hash, nTime);
+                TransactionRecord sub(hash, idem, nTime);
                 sub.idx = parts.size();
                 sub.involvesWatchAddress = involvesWatchAddress;
 
@@ -231,7 +232,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             //
             // Mixed debit transaction, can't break down payees
             //
-            parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, listAllAddresses, nNet, 0));
+            parts.append(TransactionRecord(hash, idem, nTime, TransactionRecord::Other, listAllAddresses, nNet, 0));
             parts.last().involvesWatchAddress = involvesWatchAddress;
         }
     }
@@ -411,4 +412,5 @@ void TransactionRecord::updateStatus(const CWalletTxRef &wtx)
 
 bool TransactionRecord::statusUpdateNeeded() { return status.cur_num_blocks != chainActive.Height(); }
 QString TransactionRecord::getTxID() const { return QString::fromStdString(hash.ToString()); }
+QString TransactionRecord::getTxIdem() const { return QString::fromStdString(idem.ToString()); }
 int TransactionRecord::getOutputIndex() const { return idx; }
