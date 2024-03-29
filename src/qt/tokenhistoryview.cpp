@@ -153,7 +153,8 @@ TokenHistoryView::TokenHistoryView(const PlatformStyle *platformStyle, QWidget *
     // Actions
     QAction *copyGrpIDAction = new QAction(tr("Copy token id"), this);
     QAction *copyAmountAction = new QAction(tr("Copy amount"), this);
-    QAction *copyTxIDAction = new QAction(tr("Copy transaction idem"), this);
+    QAction *copyTxIDAction = new QAction(tr("Copy transaction id"), this);
+    QAction *copyTxIdemAction = new QAction(tr("Copy transaction idem"), this);
     QAction *copyTxHexAction = new QAction(tr("Copy raw transaction"), this);
     QAction *showDetailsAction = new QAction(tr("Show transaction details"), this);
 
@@ -161,6 +162,7 @@ TokenHistoryView::TokenHistoryView(const PlatformStyle *platformStyle, QWidget *
     contextMenu->addAction(copyGrpIDAction);
     contextMenu->addAction(copyAmountAction);
     contextMenu->addAction(copyTxIDAction);
+    contextMenu->addAction(copyTxIdemAction);
     contextMenu->addAction(copyTxHexAction);
     contextMenu->addAction(showDetailsAction);
 
@@ -181,6 +183,7 @@ TokenHistoryView::TokenHistoryView(const PlatformStyle *platformStyle, QWidget *
     connect(copyGrpIDAction, SIGNAL(triggered()), this, SLOT(copyGrpID()));
     connect(copyAmountAction, SIGNAL(triggered()), this, SLOT(copyAmount()));
     connect(copyTxIDAction, SIGNAL(triggered()), this, SLOT(copyTxID()));
+    connect(copyTxIdemAction, SIGNAL(triggered()), this, SLOT(copyTxIdem()));
     connect(copyTxHexAction, SIGNAL(triggered()), this, SLOT(copyTxHex()));
     connect(showDetailsAction, SIGNAL(triggered()), this, SLOT(showDetails()));
 }
@@ -337,6 +340,7 @@ void TokenHistoryView::exportClicked()
     writer.addColumn(tr("Label"), 0, TokenTableModel::LabelRole);
     writer.addColumn(tr("Address"), 0, TokenTableModel::AddressRole);
     writer.addColumn(tr("Transaction ID"), 0, TokenTableModel::TxIDRole);
+    writer.addColumn(tr("Transaction Idem"), 0, TokenTableModel::TxIdemRole);
     writer.addColumn(tr("Token ID"), 0, TokenTableModel::TokenIDRole);
     writer.addColumn(tr("Token Amount"), 0, TokenTableModel::FormattedAmountRole);
 
@@ -370,6 +374,7 @@ void TokenHistoryView::copyAmount()
 }
 
 void TokenHistoryView::copyTxID() { GUIUtil::copyEntryData(tokenHistoryView, 0, TokenTableModel::TxIDRole); }
+void TokenHistoryView::copyTxIdem() { GUIUtil::copyEntryData(tokenHistoryView, 0, TokenTableModel::TxIdemRole); }
 void TokenHistoryView::copyTxHex() { GUIUtil::copyEntryData(tokenHistoryView, 0, TokenTableModel::TxHexRole); }
 
 void TokenHistoryView::showDetails()

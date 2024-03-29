@@ -805,6 +805,8 @@ QVariant TokenTableModel::data(const QModelIndex &index, int role) const
         return label;
     case TxIDRole:
         return rec->getTxID();
+    case TxIdemRole:
+        return rec->getTxIdem();
     case TxHashRole:
         return QString::fromStdString(rec->hash.ToString());
     case TxHexRole:
