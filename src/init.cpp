@@ -90,8 +90,8 @@ extern CTweak<bool> dataCarrier;
 extern CTweak<int> maxConnections;
 extern CAmount GROUPED_SATOSHI_AMT;
 
-extern uint64_t nReceiveBufferSize;
-extern uint64_t nSendBufferSize;
+extern uint64_t nMaxReceiveBufferSize;
+extern uint64_t nMaxSendBufferSize;
 extern uint32_t nFuzzMessages;
 extern uint32_t nDropMessages;
 extern bool fRelayPriority;
@@ -1056,8 +1056,8 @@ bool AppInit2(Config &config)
     dosMan.HandleCommandLine();
 
     // message buffer sizes
-    nReceiveBufferSize = 1000 * GetArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER);
-    nSendBufferSize = 1000 * GetArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER);
+    nMaxReceiveBufferSize = 1000 * GetArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER);
+    nMaxSendBufferSize = 1000 * GetArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER);
 
     // set flags for net message testing
     nFuzzMessages = GetArg("-fuzzmessagestest", 0);

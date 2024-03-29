@@ -120,8 +120,8 @@ std::atomic<int64_t> nCoinCacheMaxSize{0};
 std::atomic<bool> fMempoolTests{false};
 
 // The maximum buffer sizes allowed when sending and receving net messages
-uint64_t nReceiveBufferSize = 0;
-uint64_t nSendBufferSize = 0;
+uint64_t nMaxReceiveBufferSize = 0;
+uint64_t nMaxSendBufferSize = 0;
 
 // Are we checking priority when doing tx admission
 bool fRelayPriority = false;

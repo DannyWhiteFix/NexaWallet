@@ -36,6 +36,8 @@
 extern std::atomic<int64_t> nTimeBestReceived;
 extern std::atomic<int> nPreferredDownload;
 extern std::atomic<int> nSyncStarted;
+extern uint64_t nMaxReceiveBufferSize;
+extern uint64_t nMaxSendBufferSize;
 extern CTweak<unsigned int> maxBlocksInTransitPerPeer;
 extern CTweak<uint64_t> grapheneMinVersionSupported;
 extern CTweak<uint64_t> grapheneMaxVersionSupported;
@@ -120,7 +122,7 @@ void static ProcessGetData(CNode *pfrom,
         bool lastInv = (sz == cur);
         uint32_t oneReplyPerInvCookie = (lastInv ? (msgCookie | 0xFFFF) : (msgCookie + replyCookieCount));
         // Don't bother if send buffer is too full to respond anyway
-        if (pfrom->nSendSize >= SendBufferSize() + ss.size())
+        if (pfrom->nSendSize >= nMaxSendBufferSize + ss.size())
         {
             LOG(REQ, "Postponing %d getdata requests.  Send buffer is too large: %d\n", vInv.size(), pfrom->nSendSize);
             break;
@@ -2240,7 +2242,7 @@ bool ProcessMessages(CNode *pfrom)
     // Don't bother if send buffer is too full to respond anyway
     CNode *pfrom_original = pfrom;
     std::deque<std::pair<CNodeRef, CNetMessage> > vPriorityRecvQ_delay;
-    while ((!pfrom->fDisconnect) && (pfrom->nSendSize < SendBufferSize()) && (shutdown_threads.load() == false))
+    while ((!pfrom->fDisconnect) && (pfrom->nSendSize < nMaxSendBufferSize) && (shutdown_threads.load() == false))
     {
         CNodeRef noderef;
         bool fIsPriority = false;
@@ -2312,7 +2314,7 @@ bool ProcessMessages(CNode *pfrom)
                         // if the node is to be disconnected dont bother responding
                         continue;
                     }
-                    if (pnode->nSendSize > SendBufferSize())
+                    if (pnode->nSendSize > nMaxSendBufferSize)
                     {
                         // if the nodes send is full, delay the processing of this message until a time when
                         // send is not full

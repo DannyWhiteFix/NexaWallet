@@ -114,9 +114,6 @@ static const bool DEFAULT_FORCEDNSSEED = false;
 static const size_t DEFAULT_MAXRECEIVEBUFFER = 10 * 1000;
 static const size_t DEFAULT_MAXSENDBUFFER = 10 * 1000;
 
-unsigned int ReceiveFloodSize();
-unsigned int SendBufferSize();
-
 // Node IDs are currently signed but only values greater than zero are returned.  Zero or negative can be used as a
 // sentinel value.
 typedef int NodeId;

@@ -36,8 +36,8 @@
 #include "utilstrencodings.h"
 
 extern CTweak<bool> ignoreNetTimeouts;
-extern uint64_t nReceiveBufferSize;
-extern uint64_t nSendBufferSize;
+extern uint64_t nMaxReceiveBufferSize;
+extern uint64_t nMaxSendBufferSize;
 extern bool nFuzzMessages;
 extern bool nDropMessages;
 
@@ -1397,11 +1397,29 @@ void ThreadSocketHandler()
     // solves spin loop issues where the select does not block but no bytes can be transferred (traffic shaping limited,
     // for example).
     int progress;
+
+    // Track when we last processed diconnections
+    int64_t nLastCleanup = GetTimeMillis();
+
     while (true)
     {
+        if (shutdown_threads.load() == true)
+        {
+            return;
+        }
+
         progress = 0;
         stat_io_service.poll(); // BU instrumentation
-        CleanupDisconnectedNodes();
+
+        // Only process disconnect node requests occasionally but not
+        // too infrequently either. This helps alleviate contention on cs_vNodes.
+        if (GetTimeMillis() - nLastCleanup > 500)
+        {
+            CleanupDisconnectedNodes();
+            nLastCleanup = GetTimeMillis();
+        }
+
+        // Notify if number of connections has changed.
         if (vNodes.size() != nPrevNodeCount)
         {
             nPrevNodeCount = vNodes.size();
@@ -1433,13 +1451,36 @@ void ThreadSocketHandler()
             setSocket.insert(hListenSocket.socket);
         }
 
+        //
+        // Accept new connections
+        //
+        for (const ListenSocket &hListenSocket : vhListenSocket)
+        {
+            if (shutdown_threads.load() == true)
+            {
+                return;
+            }
+
+            if (hListenSocket.socket != INVALID_SOCKET && FD_ISSET(hListenSocket.socket, &fdsetRecv))
+            {
+                AcceptConnection(hListenSocket);
+            }
+        }
+
+        vector<CNode *> vNodesCopy;
         {
             LOCK(cs_vNodes);
-            for (CNode *pnode : vNodes)
+            vNodesCopy = vNodes;
+            for (CNode *pnode : vNodesCopy)
+                pnode->AddRef();
+        }
+
+        {
+            for (CNode *pnode : vNodesCopy)
             {
                 if (shutdown_threads.load() == true)
                 {
-                    return;
+                    break;
                 }
 
                 // It is necessary to use a temporary variable to ensure that pnode->hSocket is not changed by another
@@ -1463,7 +1504,7 @@ void ThreadSocketHandler()
                 // By always reading in data we will be sure to never deadlock even though
                 // we may occassionaly skip sending under high load.
                 {
-                    if (pnode->vRecvMsg.empty() || pnode->GetTotalRecvSize() <= ReceiveFloodSize())
+                    if (pnode->vRecvMsg.empty() || pnode->GetTotalRecvSize() <= nMaxReceiveBufferSize)
                     {
                         FD_SET(hSocket, &fdsetRecv);
                     }
@@ -1490,11 +1531,6 @@ void ThreadSocketHandler()
         }
 
         int nSelect = select(have_fds ? hSocketMax + 1 : 0, &fdsetRecv, &fdsetSend, &fdsetError, &timeout);
-        if (shutdown_threads.load() == true)
-        {
-            return;
-        }
-
         if (nSelect == SOCKET_ERROR)
         {
             if (have_fds)
@@ -1511,32 +1547,8 @@ void ThreadSocketHandler()
         }
 
         //
-        // Accept new connections
-        //
-        for (const ListenSocket &hListenSocket : vhListenSocket)
-        {
-            if (shutdown_threads.load() == true)
-            {
-                return;
-            }
-
-            if (hListenSocket.socket != INVALID_SOCKET && FD_ISSET(hListenSocket.socket, &fdsetRecv))
-            {
-                AcceptConnection(hListenSocket);
-            }
-        }
-
-        //
         // Service each socket
         //
-        vector<CNode *> vNodesCopy;
-        {
-            LOCK(cs_vNodes);
-            vNodesCopy = vNodes;
-            for (CNode *pnode : vNodesCopy)
-                pnode->AddRef();
-        }
-
         for (CNode *pnode : vNodesCopy)
         {
             if (shutdown_threads.load() == true)
@@ -2563,7 +2575,7 @@ static bool threadProcessMessages(CNode *pnode)
         pnode->fDisconnect = true;
 
     // Discover if there's more work to be done
-    if (pnode->nSendSize < SendBufferSize())
+    if (pnode->nSendSize < nMaxSendBufferSize)
     {
         {
             // If already locked some other thread is working on it, so no work for this thread
@@ -3278,9 +3290,6 @@ bool CAddrDB::Read(CAddrMan &addr, CDataStream &ssPeers)
 
     return true;
 }
-
-unsigned int ReceiveFloodSize() { return nReceiveBufferSize; }
-unsigned int SendBufferSize() { return nSendBufferSize; }
 
 CNode::CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNameIn, bool fInboundIn)
     : extversionEnabled(false), skipChecksum(false), id(connmgr->NextNodeId()), addrKnown(5000, 0.001)
