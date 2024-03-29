@@ -79,18 +79,12 @@ CRequestManager::CRequestManager()
       droppedTxns("reqMgr/dropped", STAT_KEEP), pendingTxns("reqMgr/pending", STAT_KEEP),
       requestPacer(15000, 10000) // Max and average # of requests that can be made per second
 {
-    inFlight = 0;
     nOutbound = 0;
-
-    sendIter = mapTxnInfo.end();
-    sendBlkIter = mapBlkInfo.end();
 }
 
 void CRequestManager::Cleanup()
 {
     LOCK(cs_objDownloader);
-    sendIter = mapTxnInfo.end();
-    sendBlkIter = mapBlkInfo.end();
     MapBlocksInFlightClear();
     OdMap::iterator i = mapTxnInfo.begin();
     while (i != mapTxnInfo.end())
@@ -111,39 +105,48 @@ void CRequestManager::Cleanup()
 
 void CRequestManager::cleanup(OdMap::iterator &itemIt)
 {
-    LOCK(cs_objDownloader);
     CUnknownObj &item = itemIt->second;
     // Because we'll ignore anything deleted from the map, reduce the # of requests in flight by every request we made
     // for this object
-    inFlight -= item.outstandingReqs;
-    droppedTxns -= (item.outstandingReqs - 1);
     pendingTxns -= 1;
-
-    // remove all the source nodes
-    item.availableFrom.clear();
 
     if (item.obj.type == MSG_TX)
     {
-        if (sendIter == itemIt)
-            ++sendIter;
-        mapTxnInfo.erase(itemIt);
+        LOCK(cs_deleter);
+        setDeleter.insert(itemIt->first);
     }
     else
     {
-        if (sendBlkIter == itemIt)
-            ++sendBlkIter;
-        mapBlkInfo.erase(itemIt);
+        LOCK(cs_deleteBlock);
+        setBlockDeleter.insert(itemIt->first);
     }
 }
+
+void CRequestManager::cleanup(const CInv &inv)
+{
+    pendingTxns -= 1;
+
+    if (inv.type == MSG_TX)
+    {
+        LOCK(cs_deleter);
+        setDeleter.insert(inv.hash);
+    }
+    else
+    {
+        LOCK(cs_deleteBlock);
+        setBlockDeleter.insert(inv.hash);
+    }
+}
+
 
 // Get this object from somewhere, asynchronously.
 void CRequestManager::AskFor(const CInv &obj, CNode *from, unsigned int priority)
 {
     // LOG(REQ, "ReqMgr: Ask for %s.\n", obj.ToString().c_str());
 
-    LOCK(cs_objDownloader);
     if (obj.type == MSG_TX)
     {
+        LOCK(cs_adder);
         // Don't allow the in flight requests to grow unbounded.
         if (mapTxnInfo.size() >= (size_t)(MAX_INV_SZ * 2 * chainActive.Tip()->GetNextMaxBlockSize()))
         {
@@ -151,16 +154,14 @@ void CRequestManager::AskFor(const CInv &obj, CNode *from, unsigned int priority
             return;
         }
 
-        std::pair<OdMap::iterator, bool> result = mapTxnInfo.emplace(obj.hash, CUnknownObj());
+        std::pair<OdMap::iterator, bool> result = mapTxnToAdd.emplace(obj.hash, CUnknownObj());
         OdMap::iterator &item = result.first;
         CUnknownObj &data = item->second;
         data.obj = obj;
         if (result.second) // inserted
         {
             pendingTxns += 1;
-            // all other fields are zeroed on creation
         }
-        // else the txn already existed so nothing to do
 
         data.priority = max(priority, data.priority);
 
@@ -176,7 +177,9 @@ void CRequestManager::AskFor(const CInv &obj, CNode *from, unsigned int priority
     }
     else if (IsBlockType(obj))
     {
-        std::pair<OdMap::iterator, bool> result = mapBlkInfo.emplace(obj.hash, CUnknownObj());
+        LOCK(cs_addBlock);
+
+        std::pair<OdMap::iterator, bool> result = mapBlkToAdd.emplace(obj.hash, CUnknownObj());
         OdMap::iterator &item = result.first;
         CUnknownObj &data = item->second;
         data.obj = obj;
@@ -287,29 +290,6 @@ void CRequestManager::UpdateTxnResponseTime(const CInv &obj, CNode *pfrom)
     }
 }
 
-void CRequestManager::ProcessingTxn(const uint256 &hash, CNode *pfrom)
-{
-    LOCK(cs_objDownloader);
-    OdMap::iterator item = mapTxnInfo.find(hash);
-    if (item == mapTxnInfo.end())
-        return;
-
-    item->second.fProcessing = true;
-    LOG(REQ, "ReqMgr: Processing %s (received from %s).\n", item->second.obj.ToString(),
-        pfrom ? pfrom->GetLogName() : "unknown");
-
-    // As a last step we must clear all sources to release the noderef's. If we don't do this
-    // then if the transaction ends up being a double spend, an orphan that is never reclaimed, or
-    // perhaps some other validation failure, it would result in having dangling noderef's which then
-    // prevent a node from fully disconnecting and thus preventing the CNode from calling it's destructor.
-    //
-    // However in the case of blocks we don't do this because if a block fails to validate we
-    // reset the fProcessing flag to false so that we can get another block and check its validity.
-    // This is so that we can prevent a DOS attack where a corrupted block is fed to us in order
-    // to prevent us from downloading the good block.
-    item->second.availableFrom.clear();
-}
-
 void CRequestManager::ProcessingBlock(const uint256 &hash, CNode *pfrom)
 {
     LOCK(cs_objDownloader);
@@ -351,25 +331,15 @@ void CRequestManager::Downloading(const uint256 &hash, CNode *pfrom, unsigned in
 // Indicate that we got this object.
 void CRequestManager::Received(const CInv &obj, CNode *pfrom)
 {
-    LOCK(cs_objDownloader);
     if (obj.type == MSG_TX)
     {
-        OdMap::iterator item = mapTxnInfo.find(obj.hash);
-        if (item == mapTxnInfo.end())
-            return;
-
-        LOG(REQ, "ReqMgr: TX received for %s.\n", item->second.obj.ToString().c_str());
-        cleanup(item);
+        LOG(REQ, "ReqMgr: TX received: %s.\n", obj.hash.ToString().c_str());
+        cleanup(obj);
     }
     else if (IsBlockType(obj))
     {
-        OdMap::iterator item = mapBlkInfo.find(obj.hash);
-        if (item == mapBlkInfo.end())
-            return;
-
-        LOG(BLK, "%s removed from request queue (received from %s).\n", item->second.obj.ToString().c_str(),
-            pfrom ? pfrom->GetLogName() : "unknown");
-        cleanup(item);
+        LOG(REQ, "ReqMgr: Block received: %s.\n", obj.hash.ToString().c_str());
+        cleanup(obj);
     }
 }
 
@@ -390,7 +360,6 @@ void CRequestManager::AlreadyReceived(CNode *pnode, const CInv &obj)
     // peer later when we think this block download attempt has timed out.
     MarkBlockAsReceived(obj.hash, pnode);
 
-    // will be decremented in the item cleanup: if (inFlight) inFlight--;
     cleanup(item); // remove the item
 }
 
@@ -407,8 +376,6 @@ void CRequestManager::Rejected(const CInv &obj, CNode *from, unsigned char reaso
             LOG(REQ, "ReqMgr: Item already removed. Unknown txn rejected %s\n", obj.ToString().c_str());
             return;
         }
-        if (inFlight)
-            inFlight--;
         if (item->second.outstandingReqs)
             item->second.outstandingReqs--;
 
@@ -422,6 +389,8 @@ void CRequestManager::Rejected(const CInv &obj, CNode *from, unsigned char reaso
             LOG(REQ, "ReqMgr: Item already removed. Unknown block rejected %s\n", obj.ToString().c_str());
             return;
         }
+        if (item->second.outstandingReqs)
+            item->second.outstandingReqs--;
     }
 
     if (reason == REJECT_MALFORMED)
@@ -630,8 +599,7 @@ bool CRequestManager::RequestBlock(CNode *pfrom, CInv obj)
 void CRequestManager::ResetLastBlockRequestTime(const uint256 &hash)
 {
     LOCK(cs_objDownloader);
-    OdMap::iterator itemIter = sendBlkIter;
-    itemIter = mapBlkInfo.find(hash);
+    OdMap::iterator itemIter = mapBlkInfo.find(hash);
     if (itemIter != mapBlkInfo.end())
     {
         CUnknownObj &item = itemIter->second;
@@ -646,14 +614,52 @@ struct CompareIteratorByNodeRef
     bool operator()(const CNodeRef &a, const CNodeRef &b) const { return a.get() < b.get(); }
 };
 
+// requires cs_objDownloader
+void CRequestManager::RunBlockDeleter()
+{
+    std::set<uint256> setTemp;
+    {
+        LOCK(cs_deleteBlock);
+        std::swap(setTemp, setBlockDeleter);
+    }
+    for (const uint256 &hash : setTemp)
+        mapBlkInfo.erase(hash);
+}
+
+// requires cs_objDownloader
+void CRequestManager::AddNewBlockRequests()
+{
+    OdMap mapTemp;
+    {
+        LOCK(cs_addBlock);
+        std::swap(mapTemp, mapBlkToAdd);
+    }
+    mapBlkInfo.merge(mapTemp);
+}
+
+// requires cs_objDownloader
+void CRequestManager::RunTxnDeleter(OdMap &maybeToSend)
+{
+    std::set<uint256> setTemp;
+    {
+        LOCK(cs_deleter);
+        std::swap(setTemp, setDeleter);
+    }
+    for (const uint256 &hash : setTemp)
+    {
+        maybeToSend.erase(hash);
+        mapTxnInfo.erase(hash);
+    }
+}
+
+// requires cs_objDownloader
+void CRequestManager::AddNewTxnRequests(OdMap &mapTemp) { mapTxnInfo.merge(mapTemp); }
 void CRequestManager::SendRequests()
 {
     int64_t now = 0;
 
     // TODO: if a node goes offline, rerequest txns from someone else and cleanup references right away
     LOCK(cs_objDownloader);
-    if (sendBlkIter == mapBlkInfo.end())
-        sendBlkIter = mapBlkInfo.begin();
 
     // Modify retry interval. If we're doing IBD or if Traffic Shaping is ON we want to have a longer interval because
     // those blocks and txns can take much longer to download.
@@ -681,7 +687,14 @@ void CRequestManager::SendRequests()
     // of syncing the chain, as we do with block requests.
     std::map<CNodeRef, std::vector<CInv>, CompareIteratorByNodeRef> mapBatchTxnRequests;
 
+    // Add new block requests to be processed
+    AddNewBlockRequests();
+
+    // Remove blocks slated for deletion
+    RunBlockDeleter();
+
     // Get Blocks
+    OdMap::iterator sendBlkIter = mapBlkInfo.begin();
     while (sendBlkIter != mapBlkInfo.end())
     {
         if (shutdown_threads.load() == true)
@@ -766,9 +779,7 @@ void CRequestManager::SendRequests()
                     }
                     else
                     {
-                        LEAVE_CRITICAL_SECTION(cs_objDownloader); // item and itemIter are now invalid
                         fReqBlkResult = RequestBlock(next.noderef.get(), obj);
-                        ENTER_CRITICAL_SECTION(cs_objDownloader);
 
                         if (!fReqBlkResult)
                         {
@@ -812,7 +823,6 @@ void CRequestManager::SendRequests()
     // send batched requests if any.
     if (fBatchBlockRequests && !mapBatchBlockRequests.empty())
     {
-        LEAVE_CRITICAL_SECTION(cs_objDownloader);
         {
             for (auto iter : mapBatchBlockRequests)
             {
@@ -834,14 +844,64 @@ void CRequestManager::SendRequests()
                     iter.first.get()->GetLogName());
             }
         }
-        ENTER_CRITICAL_SECTION(cs_objDownloader);
 
         mapBatchBlockRequests.clear();
     }
 
-    // Get Transactions
-    if (sendIter == mapTxnInfo.end())
-        sendIter = mapTxnInfo.begin();
+
+    // Make new Transaction requests
+    OdMap mapTemp;
+    {
+        LOCK(cs_adder);
+        std::swap(mapTemp, mapTxnToAdd);
+    }
+    // Remove Transactions slated for deletion including
+    // any we are going attempting to request. These txns
+    // that we would be attmeping to request again would really
+    // have been new txn sources but because of our multithreading
+    // they would end up becoming new and unwanted requests so we
+    // run the deleter first on both the new request map as well
+    // as the mapTxnInfo.
+    RunTxnDeleter(mapTemp);
+
+    // Now send the new requests.
+    SendTxnRequests(mapTemp);
+
+    // Add the new requests to the re-request map
+    AddNewTxnRequests(mapTemp);
+
+    // Make Transaction re-requests if necessary.
+    // Check only every second to avoid parsing through this large map too many times.
+    static std::atomic<int64_t> nLastSend{GetTimeMillis()};
+    if (GetTimeMillis() - nLastSend > 1000)
+    {
+        nLastSend.store(GetTimeMillis());
+        SendTxnRequests(mapTxnInfo);
+    }
+}
+
+void CRequestManager::SendTxnRequests(OdMap &mapTxns)
+{
+    int64_t now = 0;
+
+    // Batch any transaction requests when possible. The process of batching and requesting batched transactions
+    // is simlilar to batched block requests, however, we don't make the distinction of whether we're in the process
+    // of syncing the chain, as we do with block requests.
+    std::map<CNodeRef, std::vector<CInv>, CompareIteratorByNodeRef> mapBatchTxnRequests;
+
+    // Modify retry interval. If we're doing IBD or if Traffic Shaping is ON we want to have a longer interval because
+    // those blocks and txns can take much longer to download.
+    unsigned int _txReqRetryInterval = txRetryInterval.Value();
+    if (IsTrafficShapingEnabled())
+    {
+        _txReqRetryInterval *= (12 * 2);
+    }
+    else if ((!IsChainNearlySyncd() && Params().NetworkIDString() != "regtest"))
+    {
+        _txReqRetryInterval *= 8;
+    }
+
+    OdMap::iterator sendIter = mapTxns.begin();
     while ((sendIter != mapTxnInfo.end()) && requestPacer.try_leak(1))
     {
         if (shutdown_threads.load() == true)
@@ -851,7 +911,7 @@ void CRequestManager::SendRequests()
 
         now = GetStopwatchMicros();
         OdMap::iterator itemIter = sendIter;
-        if (itemIter == mapTxnInfo.end())
+        if (itemIter == mapTxns.end())
             break;
 
         ++sendIter; // move it forward up here in case we need to erase the item we are working with.
@@ -872,11 +932,6 @@ void CRequestManager::SendRequests()
                 if (item.lastRequestTime)
                 {
                     LOG(REQ, "Request timeout for %s.  Retrying\n", item.obj.ToString().c_str());
-                    // Not reducing inFlight; it's still outstanding and will be cleaned up when
-                    // item is removed from map.
-                    // Note we can never be sure its really dropped verses just delayed for a long
-                    // time so this is not authoritative.
-                    droppedTxns += 1;
                 }
 
                 if (item.availableFrom.empty())
@@ -916,23 +971,19 @@ void CRequestManager::SendRequests()
                             mapBatchTxnRequests[next.noderef].emplace_back(item.obj);
 
                             // If we have 1000 requests for this peer then send them right away.
-                            if (mapBatchTxnRequests[next.noderef].size() >= 1000)
+                            if (mapBatchTxnRequests[next.noderef].size() >= MAX_GETDATA_REQUESTS)
                             {
-                                LEAVE_CRITICAL_SECTION(cs_objDownloader);
                                 {
                                     next.noderef.get()->PushMessageWithCookie(NetMsgType::GETDATA,
                                         (++requestCookie << 16), mapBatchTxnRequests[next.noderef]);
                                     LOG(REQ, "Sent batched request with %d transactions to node %s\n",
                                         mapBatchTxnRequests[next.noderef].size(), next.noderef.get()->GetLogName());
+                                    LOG(REQ, "txninfo size %d\n", mapTxns.size());
                                 }
-                                ENTER_CRITICAL_SECTION(cs_objDownloader);
 
                                 mapBatchTxnRequests.erase(next.noderef);
                             }
                         }
-
-                        inFlight++;
-                        inFlightTxns << inFlight;
                     }
                     else
                     {
@@ -948,7 +999,6 @@ void CRequestManager::SendRequests()
     // send batched requests if any.
     if (!mapBatchTxnRequests.empty())
     {
-        LEAVE_CRITICAL_SECTION(cs_objDownloader);
         {
             for (auto iter : mapBatchTxnRequests)
             {
@@ -962,7 +1012,6 @@ void CRequestManager::SendRequests()
                     iter.first.get()->GetLogName());
             }
         }
-        ENTER_CRITICAL_SECTION(cs_objDownloader);
 
         mapBatchTxnRequests.clear();
     }

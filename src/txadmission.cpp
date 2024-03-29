@@ -341,9 +341,6 @@ void CommitTxToMempool()
             const CTxCommitData &data = it.second;
             mempool._addUnchecked(data.entry, !IsInitialBlockDownload());
             vWhatChanged.push_back(data.entry.GetSharedTx());
-
-            // Indicate that this tx was fully processed/accepted and can now be removed from the req mgr.
-            requester.Received(CInv(MSG_TX, data.hash), nullptr);
         }
     }
 #ifdef ENABLE_WALLET
@@ -426,7 +423,7 @@ void ThreadTxAdmission()
     {
         // Process at most this many transactions before letting the commit thread take over
         uint32_t nThreadsTweak = numTxAdmissionThreads.Value();
-        const int maxTxPerRound = std::max((uint64_t)1000, mempool.GetInstantaneousTxPerSec() / nThreadsTweak);
+        uint64_t maxTxPerRound = std::max((uint64_t)1000, mempool.GetInstantaneousTxPerSec() / nThreadsTweak);
 
         // Start or Stop threads as determined by the numTxAdmissionThreads tweak
         {
@@ -481,7 +478,7 @@ void ThreadTxAdmission()
             CORRAL(txProcessingCorral, CORRAL_TX_PROCESSING);
 
             bool fOrphansEmpty = false;
-            for (unsigned int txPerRoundCount = 0; txPerRoundCount < maxTxPerRound; txPerRoundCount++)
+            for (uint64_t txPerRoundCount = 0; txPerRoundCount < maxTxPerRound; txPerRoundCount++)
             {
                 // tx must be popped within the TX_PROCESSING corral or the state break between processing
                 // and commitment will not be clean
@@ -581,10 +578,6 @@ void ThreadTxAdmission()
                             for (const COutPoint &remove : vCoinsToUncache)
                                 pcoinsTip->Uncache(remove);
                         }
-
-                        // Mark tx as received if invalid or an orphan. If it's a valid Tx we mark it received
-                        // only when it's finally accepted into the mempool.
-                        requester.Received(inv, nullptr);
                     }
 
                     int nDoS = 0;

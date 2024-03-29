@@ -1203,7 +1203,8 @@ bool ProcessMessage(CNode *pfrom,
 
             // Indicate that the tx was received and is about to be processed. Setting the processing flag
             // prevents us from re-requesting the txn during the time of processing and before mempool acceptance.
-            requester.ProcessingTxn(txd.tx->GetId(), pfrom);
+            CInv inv(MSG_TX, txd.tx->GetId());
+            requester.Received(inv, pfrom);
 
             // Processing begins here where we enqueue the transaction.
             txd.nodeId = pfrom->id;
@@ -1212,7 +1213,6 @@ bool ProcessMessage(CNode *pfrom,
             txd.msgCookie = msgCookie;
             EnqueueTxForAdmission(txd);
 
-            CInv inv(MSG_TX, txd.tx->GetId());
             pfrom->AddInventoryKnown(inv);
             requester.UpdateTxnResponseTime(inv, pfrom);
         }
@@ -2236,7 +2236,7 @@ bool ProcessMessages(CNode *pfrom)
         }
     }
 
-    int msgsProcessed = 0;
+    unsigned int msgsProcessed = 0;
     // Don't bother if send buffer is too full to respond anyway
     CNode *pfrom_original = pfrom;
     std::deque<std::pair<CNodeRef, CNetMessage> > vPriorityRecvQ_delay;
@@ -2458,12 +2458,12 @@ bool ProcessMessages(CNode *pfrom)
             LOG(NET, "%s(%s, %u bytes) FAILED peer %s\n", __func__, SanitizeString(strCommand), nMessageSize,
                 pfrom->GetLogName());
 
-        if (msgsProcessed > 2000)
-            break; // let someone else do something periodically
-
         // Swap back to the original peer if we just processed a priority message
         if (fIsPriority)
             pfrom = pfrom_original;
+
+        if (msgsProcessed > MAX_GETDATA_REQUESTS)
+            break; // let someone else do something periodically
     }
 
     {
