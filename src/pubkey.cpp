@@ -279,7 +279,9 @@ bool CPubKey::RecoverCompact(const uint256 &hash, const std::vector<uint8_t> &_v
         {
             return false;
         }
-        vchSig = std::vector(output65, output65 + 65);
+        vchSig.resize(65);
+        memcpy(vchSig.data(), &output65[0], 65);
+
         // only support DER sigs from compressed pubkeys
         vchSig[0] = 27 + vchSig[64] + 4;
     }
