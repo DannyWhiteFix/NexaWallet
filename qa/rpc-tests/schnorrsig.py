@@ -11,7 +11,7 @@ from test_framework.util import *
 from test_framework.nodemessages import *
 from test_framework.blocktools import *
 from test_framework.test_framework import BitcoinTestFramework
-import test_framework.cashlib as cashlib
+import test_framework.libnexa as libnexa
 import test_framework.schnorr as schnorr
 import logging
 import test_framework.loginit
@@ -53,13 +53,13 @@ class SchnorrSigTest (BitcoinTestFramework):
 
     def pubkeySearch(self):
         print("pid: ", os.getpid())
-        privkey = cashlib.randombytes(32)
+        privkey = libnexa.randombytes(32)
         pubkey = schnorr.getpubkey(privkey, compressed=True)
         lens = array.array("Q",[0 for i in range (0,101)])
         data = 1
         while 1:
             databytes = struct.pack(">Q", data)
-            sig = cashlib.signData(databytes, privkey)
+            sig = libnexa.signData(databytes, privkey)
             l = len(sig)
             if l == 64:
                 print("data: ", data, " ", hexlify(databytes))
@@ -84,23 +84,23 @@ class SchnorrSigTest (BitcoinTestFramework):
 
         sig = schnorr.sign(privkey, msghash)
         assert sig == bytes.fromhex("2c56731ac2f7a7e7f11518fc7722a166b02438924ca9d8b4d111347b81d0717571846de67ad3d913a8fdf9d8f3f73161a4c48ae81cb183b214765feb86e255ce")
-        sig2 = cashlib.signHashSchnorr(privkey, msghash)
+        sig2 = libnexa.signHashSchnorr(privkey, msghash)
         assert sig2 == sig
 
         logging.info("random Schnorr signature comparison")
         # Next try random signatures
         for i in range(1, 1000):
-            privkey = cashlib.randombytes(32)
+            privkey = libnexa.randombytes(32)
             pubkey = schnorr.getpubkey(privkey, compressed=True)
-            pubkey2 = cashlib.pubkey(privkey)
+            pubkey2 = libnexa.pubkey(privkey)
             assert pubkey == pubkey2
 
-            msg = cashlib.randombytes(random.randint(0, 10000))
-            hsh = cashlib.hash256(msg)
+            msg = libnexa.randombytes(random.randint(0, 10000))
+            hsh = libnexa.hash256(msg)
 
             sigpy = schnorr.sign(privkey, hsh)
-            sigcashlib = cashlib.signHashSchnorr(privkey, hsh)
-            assert sigpy == sigcashlib
+            siglibnexa = libnexa.signHashSchnorr(privkey, hsh)
+            assert sigpy == siglibnexa
 
     def negativeTests(self):
         n = self.nodes[0]
@@ -108,11 +108,11 @@ class SchnorrSigTest (BitcoinTestFramework):
         inp = wallet[0]
         privb58 = n.dumpprivkey(inp["address"])
         privkey = decodeBase58(privb58)[1:-5]
-        pubkey = cashlib.pubkey(privkey)
+        pubkey = libnexa.pubkey(privkey)
 
-        destPrivKey = cashlib.randombytes(32)
-        destPubKey = cashlib.pubkey(destPrivKey)
-        destHash = cashlib.addrbin(destPubKey)
+        destPrivKey = libnexa.randombytes(32)
+        destPubKey = libnexa.pubkey(destPrivKey)
+        destHash = libnexa.addrbin(destPubKey)
         constraint = CScript([OP_DUP, OP_HASH160, destHash, OP_EQUALVERIFY, OP_CHECKSIG])
 
         for amt in [inp['amount']-decimal.Decimal(0.00001), inp['amount']+decimal.Decimal(0.0000001)]:
@@ -124,8 +124,8 @@ class SchnorrSigTest (BitcoinTestFramework):
             sighashtype = SIGHASH_ALL
             idx = 0
             for i, priv in zip([inp], [privkey]):
-                sig = cashlib.signTxInputSchnorr(tx, idx, i["amount"], i["scriptPubKey"], priv, sighashtype)
-                tx.vin[idx].scriptSig = cashlib.spendscript(sig)  # P2PK
+                sig = libnexa.signTxInputSchnorr(tx, idx, i["amount"], i["scriptPubKey"], priv, sighashtype)
+                tx.vin[idx].scriptSig = libnexa.spendscript(sig)  # P2PK
                 idx += 1
             result = n.validaterawtransaction(tx.toHex())
             assert result['inputs_flags']['isValid'] == False, "amount is incorrect"
@@ -161,11 +161,11 @@ class SchnorrSigTest (BitcoinTestFramework):
         inp = list(wallet)[0]
         privb58 = n.dumpprivkey(inp["address"])
         privkey = decodeBase58(privb58)[1:-5]
-        pubkey = cashlib.pubkey(privkey)
+        pubkey = libnexa.pubkey(privkey)
 
-        destPrivKey = cashlib.randombytes(32)
-        destPubKey = cashlib.pubkey(destPrivKey)
-        destHash = cashlib.addrbin(destPubKey)
+        destPrivKey = libnexa.randombytes(32)
+        destPubKey = libnexa.pubkey(destPrivKey)
+        destHash = libnexa.addrbin(destPubKey)
         constraint = CScript([OP_DUP, OP_HASH160, destHash, OP_EQUALVERIFY, OP_CHECKSIG])
 
         fee = decimal.Decimal("2")
@@ -182,7 +182,7 @@ class SchnorrSigTest (BitcoinTestFramework):
 
         # sign child tx
         sighashtype = SIGHASH_ALL
-        sig = cashlib.signTxInputSchnorr(txc, 0, txc.vin[0].amount, constraint, destPrivKey, sighashtype)
+        sig = libnexa.signTxInputSchnorr(txc, 0, txc.vin[0].amount, constraint, destPrivKey, sighashtype)
         txc.vin[0].scriptSig = CScript([sig, destPubKey])  # P2PKH
         result = n.validaterawtransaction(txc.toHex())
         assert("inputs-are-missing" in result["errors"])
@@ -190,7 +190,7 @@ class SchnorrSigTest (BitcoinTestFramework):
         waitFor(10,lambda: n.getorphanpoolinfo()['size'] == 1)
 
         # sign and post parent tx
-        sig = cashlib.signTxInputSchnorr(txp, 0, txp.vin[0].amount, inp["scriptPubKey"], privkey, sighashtype)
+        sig = libnexa.signTxInputSchnorr(txp, 0, txp.vin[0].amount, inp["scriptPubKey"], privkey, sighashtype)
         txp.vin[0].scriptSig = CScript([sig, pubkey])  # P2PKH
         # txp.vin[0].scriptSig = CScript([sig])  # P2PK
         n.sendrawtransaction(txp.toHex())
@@ -243,27 +243,27 @@ class SchnorrSigTest (BitcoinTestFramework):
             privb58 = [self.nodes[0].dumpprivkey(inputs[0]["address"]), self.nodes[1].dumpprivkey(inputs[1]["address"])]
 
             privkeys = [decodeBase58(x)[1:-5] for x in privb58]
-            pubkeys = [cashlib.pubkey(x) for x in privkeys]
+            pubkeys = [libnexa.pubkey(x) for x in privkeys]
 
             for doubleSpend in range(0, 2):  # Double spend this many times
                 tx = CTransaction()
                 for i in inputs:
                     tx.vin.append(CTxIn(COutPoint(i["outpoint"]), i['amount'], b"", 0xffffffff-doubleSpend))  # subtracting doubleSpend changes the tx slightly
 
-                destPrivKey = cashlib.randombytes(32)
-                destPubKey = cashlib.pubkey(destPrivKey)
-                destHash = cashlib.addrbin(destPubKey)
+                destPrivKey = libnexa.randombytes(32)
+                destPubKey = libnexa.pubkey(destPrivKey)
+                destHash = libnexa.addrbin(destPubKey)
 
                 output = CScript([OP_DUP, OP_HASH160, destHash, OP_EQUALVERIFY, OP_CHECKSIG])
 
-                amt = int(sum([x["amount"] for x in inputs]) * cashlib.NEX)
+                amt = int(sum([x["amount"] for x in inputs]) * libnexa.NEX)
                 tx.vout.append(CTxOut(amt, output))
 
                 sighashtype = SIGHASH_ALL
                 n = 0
                 for i, priv, pub in zip(inputs, privkeys, pubkeys):
-                    sig = cashlib.signTxInputSchnorr(tx, n, i["amount"], i["scriptPubKey"], priv, sighashtype)
-                    tx.vin[n].scriptSig = cashlib.spendscript(sig, pub)  # P2PKH
+                    sig = libnexa.signTxInputSchnorr(tx, n, i["amount"], i["scriptPubKey"], priv, sighashtype)
+                    tx.vin[n].scriptSig = libnexa.spendscript(sig, pub)  # P2PKH
                     n += 1
 
                 txhex = hexlify(tx.serialize()).decode("utf-8")
@@ -287,7 +287,7 @@ class SchnorrSigTest (BitcoinTestFramework):
         for i in wallets:
             privb58 = self.nodes[0].dumpprivkey(i["address"])
             privKey = decodeBase58(privb58)[1:-5]
-            pubKey = cashlib.pubkey(privKey)
+            pubKey = libnexa.pubkey(privKey)
             resultWallet.append([privKey, pubKey, i["satoshi"], PlaceHolder(i['txidem']), i["vout"], i['amount'], CScript(i["scriptPubKey"])])
 
         FEEINSAT = 5000
@@ -307,20 +307,20 @@ class SchnorrSigTest (BitcoinTestFramework):
                     NOUTS = 1
                 amtPerOut = int((w[2]-FEEINSAT)/NOUTS)
                 for outIdx in range(0, NOUTS):
-                    destPrivKey = cashlib.randombytes(32)
-                    destPubKey = cashlib.pubkey(destPrivKey)
-                    destHash = cashlib.addrbin(destPubKey)
+                    destPrivKey = libnexa.randombytes(32)
+                    destPubKey = libnexa.pubkey(destPrivKey)
+                    destHash = libnexa.addrbin(destPubKey)
                     output = CScript([OP_DUP, OP_HASH160, destHash, OP_EQUALVERIFY, OP_CHECKSIG])
                     tx.vout.append(CTxOut(amtPerOut, output))
                     resultWallet.append([destPrivKey, destPubKey, amtPerOut, txidHolder, outIdx, amtPerOut, output])
 
                 n = 0
-                sig = cashlib.signTxInputSchnorr(tx, n, w[2], w[6], w[0])
+                sig = libnexa.signTxInputSchnorr(tx, n, w[2], w[6], w[0])
                 # In this test we only have P2PK or P2PKH type constraint scripts so the length can be used to distinguish them
                 if len(w[6]) == 35:
-                    tx.vin[n].scriptSig = cashlib.spendscript(sig)  # P2PK
+                    tx.vin[n].scriptSig = libnexa.spendscript(sig)  # P2PK
                 else:
-                    tx.vin[n].scriptSig = cashlib.spendscript(sig, w[1])  # P2PKH
+                    tx.vin[n].scriptSig = libnexa.spendscript(sig, w[1])  # P2PKH
 
                 txhex = hexlify(tx.serialize()).decode("utf-8")
                 txid = self.nodes[1].enqueuerawtransaction(txhex)
@@ -336,12 +336,12 @@ class SchnorrSigTest (BitcoinTestFramework):
 if __name__ == '__main__':
     binpath = findBitcoind()
     try:
-        cashlib.init(binpath + os.sep + ".libs" + os.sep + "libbitcoincash.so")
+        libnexa.init(binpath + os.sep + ".libs" + os.sep + "libbitcoincash.so")
         SchnorrSigTest().main()
     except OSError as e:
         p = platform.platform()
-        if "Linux" in p and "x86-64" in p: raise  # cashlib should be properly created on this platform
-        print("Issue loading cashlib shared library.  This is expected during cross compilation since the native python will not load the .so so no error will be reported: %s" % str(e))
+        if "Linux" in p and "x86-64" in p: raise  # libnexa should be properly created on this platform
+        print("Issue loading libnexa shared library.  This is expected during cross compilation since the native python will not load the .so so no error will be reported: %s" % str(e))
 
 
 # Create a convenient function for an interactive python debugging session
@@ -357,6 +357,6 @@ def Test():
         flags.append("--tmpdir=/ramdisk/test/t")
     binpath = findBitcoind()
     flags.append("--srcdir=%s" % binpath)
-    cashlib.init(binpath + os.sep + ".libs" + os.sep + "libnexa.so")
+    libnexa.init(binpath + os.sep + ".libs" + os.sep + "libnexa.so")
 
     t.main(flags, bitcoinConf, None)

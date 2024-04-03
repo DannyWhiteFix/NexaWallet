@@ -539,7 +539,7 @@ static void MutateTxSign(CMutableTransaction &tx, const string &flagStr)
         MutableTransactionSignatureChecker tsc(&mergedTx, i, amount, flags);
         // Since we are not capable of signing complex introspection scripts, we just pass empty validation state into
         // the script machine.  But actually since we've already constructed the coin cache view, it would be
-        // relatively easy to gather this data (see cashlib)
+        // relatively easy to gather this data (see libnexa)
         ScriptImportedState sis(&tsc, MakeTransactionRef(mergedTx), CValidationState(), spendingCoins, i);
 
         // Nothing we are capable of signing can be more than the original 201 ops so using it is fine.

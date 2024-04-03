@@ -5,7 +5,7 @@
 
 cmake_minimum_required(VERSION 3.14.4)
 
-message(STATUS "Nexa fullnode cashlib cmake is running")
+message(STATUS "Nexa fullnode libnexa cmake is running")
 
 set(CMAKE_C_FLAGS "")
 set(CMAKE_C_FLAGS_DEBUG "")
@@ -37,7 +37,7 @@ add_definitions(-DLIGHT -DANDROID -Wno-tautological-constant-compare -DBOOST_SYS
 
 set(libsrc
              # Provides a relative path to your source file(s).
-             cashlib.cpp
+             libnexa.cpp
              ../config.cpp
              ../config.h
              ../base58.cpp
@@ -131,7 +131,7 @@ SET_SOURCE_FILES_PROPERTIES(../secp256k1/src/secp256k1.c PROPERTIES COMPILE_FLAG
 # HINTS /fast/bitcoin/boostAndroid/boost_1_67_0/boost
 #)
 
-# We expect that you have built boost in the cashlib subdirectory.  Run the ./buildBoostAndroid.sh script in the cashlib directory to do this.
+# We expect that you have built boost in the libnexa subdirectory.  Run the ./buildBoostAndroid.sh script in the libnexa directory to do this.
 set( Boost_LIB_DIR ${CMAKE_CURRENT_LIST_DIR}/boost/stage/lib)
 set( Boost_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/boost)
 

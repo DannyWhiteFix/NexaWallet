@@ -531,4 +531,4 @@ consensus/grouptokens.h
 consensus/grouptokens.cpp
 consensus/adaptive_blocksize.h
 consensus/adaptive_blocksize.cpp
-cashlib/cashlib.cpp
+libnexa/libnexa.cpp

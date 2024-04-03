@@ -15,7 +15,7 @@ import logging
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
-import test_framework.cashlib as cashlib
+import test_framework.libnexa as libnexa
 from test_framework.nodemessages import *
 from test_framework.script import *
 
@@ -27,13 +27,13 @@ class PayDest:
     def __init__(self, node=None):
         """Pass a node to use an address from that node's wallet.  Pass None to generate a local address"""
         if node is None:
-            self.privkey = cashlib.randombytes(32)
+            self.privkey = libnexa.randombytes(32)
         else:
             addr = node.getnewaddress()
             privb58 = node.dumpprivkey(addr)
             self.privkey = decodeBase58(privb58)[1:-5]
-        self.pubkey = cashlib.pubkey(self.privkey)
-        self.hash = cashlib.addrbin(self.pubkey)
+        self.pubkey = libnexa.pubkey(self.privkey)
+        self.hash = libnexa.addrbin(self.pubkey)
 
     def __str__(self):
         return "priv:%s pub:%s hash:%s" % (hexlify(self.privkey), hexlify(self.pubkey), hexlify(self.hash))
@@ -67,12 +67,12 @@ def createConflictingTx(dests, source, count, fee=1):
                 i += 1
 
             sighashtype = 0x41
-            sig = cashlib.signTxInput(tx, 0, w["satoshi"], w["scriptPubKey"], w["privkey"], sighashtype)
+            sig = libnexa.signTxInput(tx, 0, w["satoshi"], w["scriptPubKey"], w["privkey"], sighashtype)
             # construct the signature script -- it may be one of 2 types
             if w["scriptPubKey"][0:2] == hexOP_DUP or w["scriptPubKey"][0] == binOP_DUP:  # P2PKH starts with OP_DUP
-                tx.vin[0].scriptSig = cashlib.spendscript(sig, w["pubkey"])  # P2PKH
+                tx.vin[0].scriptSig = libnexa.spendscript(sig, w["pubkey"])  # P2PKH
             else:
-                tx.vin[0].scriptSig = cashlib.spendscript(sig)  # P2PK
+                tx.vin[0].scriptSig = libnexa.spendscript(sig)  # P2PK
 
             generatedTx.append(tx)
 
@@ -109,7 +109,7 @@ def createTx(dests, sources, node, maxx=None, fee=1, nextWallet=None, generatedT
         if not "privkey" in w:
             privb58 = node.dumpprivkey(w["address"])
             privkey = decodeBase58(privb58)[1:-5]
-            pubkey = cashlib.pubkey(privkey)
+            pubkey = libnexa.pubkey(privkey)
             w["privkey"] = privkey
             w["pubkey"] = pubkey
 
@@ -133,16 +133,16 @@ def createTx(dests, sources, node, maxx=None, fee=1, nextWallet=None, generatedT
         code = p2pkt if w.get("scriptType", None) == 'template' else w['scriptPubKey']
         n = 0
         # print("amountin: %d amountout: %d outscript: %s" % (w["satoshi"], amt, w["scriptPubKey"]))
-        sig = cashlib.signTxInput(tx, n, w["satoshi"], code, w["privkey"], sighashtype)
+        sig = libnexa.signTxInput(tx, n, w["satoshi"], code, w["privkey"], sighashtype)
 
         if w.get("scriptType", None) == 'template':
-            pubkey = cashlib.pubkey(w["privkey"])
+            pubkey = libnexa.pubkey(w["privkey"])
             args = bytes(CScript([pubkey]))
             tx.vin[n].scriptSig = CScript([ args, sig])
         elif w["scriptPubKey"][0:2] == hexOP_DUP or w["scriptPubKey"][0] == binOP_DUP:  # P2PKH starts with OP_DUP
-            tx.vin[n].scriptSig = cashlib.spendscript(sig, w["pubkey"])  # P2PKH
+            tx.vin[n].scriptSig = libnexa.spendscript(sig, w["pubkey"])  # P2PKH
         else:
-            tx.vin[n].scriptSig = cashlib.spendscript(sig)  # P2PK
+            tx.vin[n].scriptSig = libnexa.spendscript(sig)  # P2PK
 
         if not type(generatedTx) is list:  # submit these tx to the node
             txhex = hexlify(tx.serialize()).decode("utf-8")
@@ -177,7 +177,7 @@ class MyTest (BitcoinTestFramework):
         BitcoinTestFramework.__init__(self)
 
     def setup_chain(self, bitcoinConfDict=None, wallets=None):
-        cashlib.loadCashLibOrExit(self.options.srcdir)
+        libnexa.loadLibNexaOrExit(self.options.srcdir)
         logging.info("Initializing test directory " + self.options.tmpdir)
         initialize_chain(self.options.tmpdir, bitcoinConfDict, wallets)
 
@@ -321,7 +321,7 @@ def Test():
     binpath = findBitcoind()
     flags.append("--srcdir=%s" % binpath)
 
-    # load the cashlib.so from our build directory
-    cashlib.init(binpath + os.sep + ".libs" + os.sep + "libnexa.so")
+    # load the libnexa.so from our build directory
+    libnexa.init(binpath + os.sep + ".libs" + os.sep + "libnexa.so")
     # start the test
     t.main(flags, bitcoinConf, None)

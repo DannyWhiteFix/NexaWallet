@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef CASHLIB_H
-#define CASHLIB_H
+#ifndef LIBNEXA_H
+#define LIBNEXA_H
 
 // This removes an unneeded define that confuses the Kotlin/Native binding program
 #ifdef CINTEROP
@@ -13,8 +13,8 @@
 #include "stdint.h"
 #include <stdbool.h>
 
-// cashlib version
-SLAPI int cashlibVersion();
+// libnexa version
+SLAPI int libnexaVersion();
 
 /** Sign data (compatible with BCH OP_CHECKDATASIG) */
 SLAPI int SignHashEDCSA(const unsigned char *data,
@@ -195,4 +195,4 @@ SLAPI int extractFromMerkleBlock(int numTxes, const unsigned char *merkleProofPa
                                  unsigned char *result, int resultLen);
 
 
-#endif /* CASHLIB_H */
+#endif /* LIBNEXA_H */

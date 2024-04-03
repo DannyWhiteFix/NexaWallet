@@ -138,7 +138,7 @@ cache/
 share/BitcoindComparisonTool.jar
 
 !src/leveldb*/Makefile
-!src/cashlib/Makefile
+!src/libnexa/Makefile
 
 /doc/doxygen/
 /doc/Doxyfile
