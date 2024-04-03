@@ -529,7 +529,7 @@ bool CRequestManager::RequestBlock(CNode *pfrom, CInv obj)
                 graphenedata.UpdateOutBoundMemPoolInfo(
                     ::GetSerializeSize(receiverMemPoolInfo, SER_NETWORK, PROTOCOL_VERSION));
 
-                pfrom->PushMessageWithCookie(NetMsgType::GET_GRAPHENE, (++requestCookie << 16), ss);
+                pfrom->PushMessageWithCookie(NetMsgType::GET_GRAPHENE, getCookie(), ss);
                 LOG(GRAPHENE, "Requesting graphene block %s from peer %s\n", inv2.hash.ToString(), pfrom->GetLogName());
                 return true;
             }
@@ -556,7 +556,7 @@ bool CRequestManager::RequestBlock(CNode *pfrom, CInv obj)
                 ss << inv2;
                 ss << filterMemPool;
 
-                pfrom->PushMessageWithCookie(NetMsgType::GET_XTHIN, (++requestCookie << 16), ss);
+                pfrom->PushMessageWithCookie(NetMsgType::GET_XTHIN, getCookie(), ss);
                 LOG(THIN, "Requesting xthinblock %s from peer %s\n", inv2.hash.ToString(), pfrom->GetLogName());
                 return true;
             }
@@ -573,7 +573,7 @@ bool CRequestManager::RequestBlock(CNode *pfrom, CInv obj)
                 std::vector<CInv> vGetData;
                 inv2.type = MSG_CMPCT_BLOCK;
                 vGetData.push_back(inv2);
-                pfrom->PushMessageWithCookie(NetMsgType::GETDATA, (++requestCookie << 16), vGetData);
+                pfrom->PushMessageWithCookie(NetMsgType::GETDATA, getCookie(), vGetData);
                 LOG(CMPCT, "Requesting compact block %s from peer %s\n", inv2.hash.ToString(), pfrom->GetLogName());
                 return true;
             }
@@ -588,7 +588,7 @@ bool CRequestManager::RequestBlock(CNode *pfrom, CInv obj)
         vToFetch.push_back(inv2);
 
         MarkBlockAsInFlight(pfrom->GetId(), obj.hash);
-        pfrom->PushMessageWithCookie(NetMsgType::GETDATA, (++requestCookie << 16), vToFetch);
+        pfrom->PushMessageWithCookie(NetMsgType::GETDATA, getCookie(), vToFetch);
         LOG(THIN | GRAPHENE | CMPCT, "Requesting Regular Block %s from peer %s\n", inv2.hash.ToString(),
             pfrom->GetLogName());
         return true;
@@ -839,7 +839,7 @@ void CRequestManager::SendRequests()
                     MarkBlockAsInFlight(iter.first.get()->GetId(), hash);
                     vInv.push_back(mi.second);
                 }
-                iter.first.get()->PushMessageWithCookie(NetMsgType::GETDATA, (++requestCookie << 16), vInv);
+                iter.first.get()->PushMessageWithCookie(NetMsgType::GETDATA, getCookie(), vInv);
                 LOG(REQ, "Sent batched request with %d blocks to node %s\n", vInv.size(),
                     iter.first.get()->GetLogName());
             }
@@ -974,8 +974,8 @@ void CRequestManager::SendTxnRequests(OdMap &mapTxns)
                             if (mapBatchTxnRequests[next.noderef].size() >= MAX_GETDATA_REQUESTS)
                             {
                                 {
-                                    next.noderef.get()->PushMessageWithCookie(NetMsgType::GETDATA,
-                                        (++requestCookie << 16), mapBatchTxnRequests[next.noderef]);
+                                    next.noderef.get()->PushMessageWithCookie(
+                                        NetMsgType::GETDATA, getCookie(), mapBatchTxnRequests[next.noderef]);
                                     LOG(REQ, "Sent batched request with %d transactions to node %s\n",
                                         mapBatchTxnRequests[next.noderef].size(), next.noderef.get()->GetLogName());
                                     LOG(REQ, "txninfo size %d\n", mapTxns.size());
@@ -1006,8 +1006,7 @@ void CRequestManager::SendTxnRequests(OdMap &mapTxns)
                 {
                     return;
                 }
-
-                iter.first.get()->PushMessageWithCookie(NetMsgType::GETDATA, (++requestCookie << 16), iter.second);
+                iter.first.get()->PushMessageWithCookie(NetMsgType::GETDATA, getCookie(), iter.second);
                 LOG(REQ, "Sent batched request with %d transactions to node %s\n", iter.second.size(),
                     iter.first.get()->GetLogName());
             }
@@ -1292,18 +1291,18 @@ void CRequestManager::RequestMempoolSync(CNode *pto)
         mempoolSyncRequested[nodeId] = CMempoolSyncState(
             GetStopwatchMicros(), receiverMemPoolInfo.shorttxidk0, receiverMemPoolInfo.shorttxidk1, false);
         if (NegotiateMempoolSyncVersion(pto) > 0)
-            pto->PushMessageWithCookie(NetMsgType::GET_MEMPOOLSYNC, (++requestCookie << 16), receiverMemPoolInfo);
+            pto->PushMessageWithCookie(NetMsgType::GET_MEMPOOLSYNC, getCookie(), receiverMemPoolInfo);
         else
         {
             CInv inv;
             CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
             ss << inv;
             ss << receiverMemPoolInfo;
-            pto->PushMessageWithCookie(NetMsgType::GET_MEMPOOLSYNC, (++requestCookie << 16), ss);
+            pto->PushMessageWithCookie(NetMsgType::GET_MEMPOOLSYNC, getCookie(), ss);
         }
         LOG(MPOOLSYNC, "Requesting mempool synchronization from peer %s\n", pto->GetLogName());
 
-        lastMempoolSync = GetStopwatchMicros();
+        lastMempoolSync.store(GetStopwatchMicros());
     }
 }
 

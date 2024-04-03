@@ -22,7 +22,6 @@ extern CTweak<bool> syncMempoolWithPeers;
 extern CTweak<uint64_t> mempoolSyncMinVersionSupported;
 extern CTweak<uint64_t> mempoolSyncMaxVersionSupported;
 extern CCriticalSection cs_mempoolsync;
-extern uint64_t lastMempoolSyncClear;
 
 CMempoolSyncInfo::CMempoolSyncInfo(uint64_t _nTxInMempool,
     uint64_t _nRemainingMempoolBytes,

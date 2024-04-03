@@ -38,6 +38,7 @@
 extern CTweak<bool> ignoreNetTimeouts;
 extern uint64_t nMaxReceiveBufferSize;
 extern uint64_t nMaxSendBufferSize;
+extern CTweak<bool> syncMempoolWithPeers;
 extern bool nFuzzMessages;
 extern bool nDropMessages;
 
@@ -153,8 +154,7 @@ extern std::map<CNetAddr, ConnectionHistory> mapInboundConnectionTracker;
 extern CCriticalSection cs_mapInboundConnectionTracker;
 
 // Mempool synchronization
-extern uint64_t lastMempoolSync;
-extern uint64_t lastMempoolSyncClear;
+extern std::atomic<uint64_t> lastMempoolSync;
 
 // Signals for message handling
 extern CNodeSignals g_signals;
@@ -2646,12 +2646,16 @@ void ThreadMessageHandler()
 
         bool fSleep = true;
 
-        if (((GetStopwatchMicros() - lastMempoolSync) > MEMPOOLSYNC_FREQ_US) && vNodesCopy.size() > 0)
+        // if memepool sync is turned on then try to sync the pools if there are any peers to sync with
+        if (syncMempoolWithPeers.Value())
         {
-            // select node from whom to request mempool sync
-            CNode *syncPeer = SelectMempoolSyncPeer(vNodesCopy);
-            if (syncPeer && IsChainNearlySyncd())
-                requester.RequestMempoolSync(syncPeer);
+            if (((GetStopwatchMicros() - lastMempoolSync.load()) > MEMPOOLSYNC_FREQ_US) && vNodesCopy.size() > 0)
+            {
+                // select node from whom to request mempool sync
+                CNode *syncPeer = SelectMempoolSyncPeer(vNodesCopy);
+                if (syncPeer && IsChainNearlySyncd())
+                    requester.RequestMempoolSync(syncPeer);
+            }
         }
 
         for (CNode *pnode : vNodesCopy)
