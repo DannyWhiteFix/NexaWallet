@@ -995,10 +995,8 @@ bool ProcessMessage(CNode *pfrom,
             }
             else if (inv.type == MSG_TX)
             {
-                bool fAlreadyHaveTx = TxAlreadyHave(inv);
-                // LOG(NET, "got inv: %s  %d peer=%s\n", inv.ToString(), fAlreadyHaveTx ? "have" : "new",
-                // pfrom->GetLogName());
-                LOG(NET, "got inv: %s  have: %d peer=%s\n", inv.ToString(), fAlreadyHaveTx, pfrom->GetLogName());
+                bool fMayAlreadyHaveTx = TxMayAlreadyHave(inv.type, inv.hash);
+                LOG(NET, "got inv: %s  have: %d peer=%s\n", inv.ToString(), fMayAlreadyHaveTx, pfrom->GetLogName());
 
                 pfrom->AddInventoryKnown(inv);
                 if (fBlocksOnly)
@@ -1009,7 +1007,7 @@ bool ProcessMessage(CNode *pfrom,
                 // RE !IsInitialBlockDownload(): during IBD, its a waste of bandwidth to grab transactions, they will
                 // likely be included in blocks that we IBD download anyway.  This is especially important as
                 // transaction volumes increase.
-                else if (!fAlreadyHaveTx && !IsInitialBlockDownload())
+                else if (!fMayAlreadyHaveTx && !IsInitialBlockDownload())
                 {
                     requester.AskFor(inv, pfrom);
                 }
