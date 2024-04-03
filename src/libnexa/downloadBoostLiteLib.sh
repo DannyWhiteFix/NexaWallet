@@ -1,15 +1,16 @@
 #!/bin/bash
 # script modified from: https://gist.github.com/enh/b2dc8e2cbbce7fffffde2135271b10fd
 
-version=1.83.0
-echo "Retreiving boost $version..."
+version=1.84.0
+echo "Retrieving boost $version..."
 
 set -eu
 
 dir_name=boost_$(sed 's#\.#_#g' <<< $version)
 archive=${dir_name}.tar.bz2
 if [ ! -f "$archive" ]; then
-    wget -O $archive "https://boostorg.jfrog.io/artifactory/main/release/$version/source/$archive"
+    curl -L "https://boostorg.jfrog.io/artifactory/main/release/$version/source/$archive" -o $archive
+    # wget -O $archive "https://boostorg.jfrog.io/artifactory/main/release/$version/source/$archive" 
 else
   echo "Archive $archive already downloaded"
 fi
