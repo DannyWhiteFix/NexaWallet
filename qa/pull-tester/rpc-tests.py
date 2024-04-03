@@ -211,7 +211,7 @@ testScripts = [ RpcTest(t) for t in [
     Disabled('nov152018_forkactivation','Nov 2018 already activated'),
     'blockstorage',
     'miningtest',
-    'cashlibtest',
+    'libnexatest',
     'tweak',
     'notify',
     'validateblocktemplate',

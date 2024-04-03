@@ -19,16 +19,16 @@ MAX_STACK_ITEM_LENGTH = 520
 # How many sats make a nex
 NEX = 100
 
-cashlib = None
+libnexa = None
 
-def loadCashLibOrExit(srcdir=None):
+def loadLibNexaOrExit(srcdir=None):
     try:
         path = findBitcoind(srcdir)
         init(path + os.sep + ".libs" + os.sep + "libnexa.so")
     except OSError as e:
         p = platform.platform()
         print("Platform  : " + p)
-        if "Linux" in p and "x86_64" in p: raise  # cashlib should be created on this platform
+        if "Linux" in p and "x86_64" in p: raise  # libnexa should be created on this platform
         print("Issue loading shared library.  This is expected during cross compilation since the native python will not load the .so: %s" % str(e))
         exit(0)
 
@@ -43,34 +43,34 @@ class Error(BaseException):
 
 
 def init(libbitcoincashfile=None):
-    global cashlib
+    global libnexa
     if libbitcoincashfile is None:
         libbitcoincashfile = "libnexa.so"
         try:
-            cashlib = CDLL(libbitcoincashfile)
+            libnexa = CDLL(libbitcoincashfile)
         except OSError:
             import os
             dir_path = os.path.dirname(os.path.realpath(__file__))
-            cashlib = CDLL(dir_path + os.sep + libbitcoincashfile)
+            libnexa = CDLL(dir_path + os.sep + libbitcoincashfile)
     else:
-        cashlib = CDLL(libbitcoincashfile)
-    if cashlib is None:
+        libnexa = CDLL(libbitcoincashfile)
+    if libnexa is None:
         raise Error("Cannot find %s shared library", libbitcoincashfile)
-    cashlib.CreateNoContextScriptMachine.restype = c_void_p
-    cashlib.CreateScriptMachine.restype = c_void_p
-    cashlib.CreateScriptMachine.argtypes = [ c_int, c_int, c_char_p, c_int, c_char_p, c_int ]
-    cashlib.SmEval.argtypes = [ c_void_p, c_char_p, c_int]
-    cashlib.SmBeginStep.argtypes = [ c_void_p, c_char_p, c_int]
-    cashlib.SmClone.argtypes = [ c_void_p ]
-    cashlib.SmClone.restype = c_void_p
-    cashlib.SmRelease.argtypes = [ c_void_p ]
-    cashlib.SmReset.argtypes = [ c_void_p ]
-    cashlib.SmStep.argtypes = [ c_void_p ]
-    cashlib.SmPos.argtypes = [ c_void_p ]
-    cashlib.SmGetError.argtypes = [ c_void_p ]
-    cashlib.SmEndStep.argtypes = [ c_void_p ]
-    cashlib.SmGetStackItem.argtypes = [ c_void_p, c_int, c_int, c_char_p, c_char_p ]
-    cashlib.SmSetStackItem.argtypes = [ c_void_p, c_int, c_int, c_int, c_char_p, c_int ]
+    libnexa.CreateNoContextScriptMachine.restype = c_void_p
+    libnexa.CreateScriptMachine.restype = c_void_p
+    libnexa.CreateScriptMachine.argtypes = [ c_int, c_int, c_char_p, c_int, c_char_p, c_int ]
+    libnexa.SmEval.argtypes = [ c_void_p, c_char_p, c_int]
+    libnexa.SmBeginStep.argtypes = [ c_void_p, c_char_p, c_int]
+    libnexa.SmClone.argtypes = [ c_void_p ]
+    libnexa.SmClone.restype = c_void_p
+    libnexa.SmRelease.argtypes = [ c_void_p ]
+    libnexa.SmReset.argtypes = [ c_void_p ]
+    libnexa.SmStep.argtypes = [ c_void_p ]
+    libnexa.SmPos.argtypes = [ c_void_p ]
+    libnexa.SmGetError.argtypes = [ c_void_p ]
+    libnexa.SmEndStep.argtypes = [ c_void_p ]
+    libnexa.SmGetStackItem.argtypes = [ c_void_p, c_int, c_int, c_char_p, c_char_p ]
+    libnexa.SmSetStackItem.argtypes = [ c_void_p, c_int, c_int, c_int, c_char_p, c_int ]
 
 # Serialization/deserialization tools
 def sha256(s):
@@ -98,12 +98,12 @@ def hash160(msg):
 
 def bin2hex(data):
     """convert the passed binary data to hex"""
-    assert type(data) is bytes, "cashlib.bintohex requires parameter of type bytes"
+    assert type(data) is bytes, "libnexa.bintohex requires parameter of type bytes"
     l = len(data)
     result = create_string_buffer(2 * l + 1)
-    if cashlib.Bin2Hex(data, l, result, 2 * l + 1):
+    if libnexa.Bin2Hex(data, l, result, 2 * l + 1):
         return result.value.decode("utf-8")
-    raise Error("cashlib bin2hex error")
+    raise Error("libnexa bin2hex error")
 
 def signData(data, key):
     if type(data) == str:
@@ -111,7 +111,7 @@ def signData(data, key):
     elif type(data) != bytes:
         data = data.serialize()
     result = create_string_buffer(100)
-    siglen = cashlib.SignData(data,len(data),key, result, 100)
+    siglen = libnexa.SignData(data,len(data),key, result, 100)
     return result.raw[0:siglen]
 
 def signTxInputECDSA(tx, inputIdx, inputAmount, prevoutScript, key, sigHashType=BTCBCH_SIGHASH_FORKID | BTCBCH_SIGHASH_ALL):
@@ -135,10 +135,10 @@ def signTxInputECDSA(tx, inputIdx, inputAmount, prevoutScript, key, sigHashType=
         inputAmount = int(inputAmount * NEX)
 
     result = create_string_buffer(100)
-    siglen = cashlib.SignTxECDSA(tx, len(tx), inputIdx, c_longlong(inputAmount), prevoutScript,
+    siglen = libnexa.SignTxECDSA(tx, len(tx), inputIdx, c_longlong(inputAmount), prevoutScript,
                             len(prevoutScript), sigHashType, key, result, 100)
     if siglen == 0:
-        raise Error("cashlib signtx error")
+        raise Error("libnexa signtx error")
     return result.raw[0:siglen]
 
 def signTxInput(tx, inputIdx, inputAmount, prevoutScript, key, sigHashType=SIGHASH_ALL):
@@ -167,10 +167,10 @@ def signTxInputSchnorr(tx, inputIdx, inputAmount, prevoutScript, key, sigHashTyp
         inputAmount = int(inputAmount * NEX)
 
     result = create_string_buffer(100)
-    siglen = cashlib.SignTxSchnorr(tx, len(tx), inputIdx, c_longlong(inputAmount), prevoutScript,
+    siglen = libnexa.SignTxSchnorr(tx, len(tx), inputIdx, c_longlong(inputAmount), prevoutScript,
         len(prevoutScript), sigHashType, len(sigHashType), key, result, 100)
     if siglen == 0:
-        raise Error("cashlib signtx error")
+        raise Error("libnexa signtx error")
     return result.raw[0:siglen]
 
 def signHashSchnorr(key, hsh):
@@ -187,37 +187,37 @@ def signHashSchnorr(key, hsh):
 
     result = create_string_buffer(100)
     assert len(hsh) == 32
-    siglen = cashlib.SignHashSchnorr(hsh, key, result, 100)
+    siglen = libnexa.SignHashSchnorr(hsh, key, result, 100)
     if siglen == 0:
-        raise Error("cashlib signtx error")
+        raise Error("libnexa signtx error")
     return result.raw[0:siglen]
 
 
 def randombytes(length):
     """Get cryptographically acceptable pseudorandom bytes from the OS"""
     result = create_string_buffer(length)
-    worked = cashlib.RandomBytes(result, length)
+    worked = libnexa.RandomBytes(result, length)
     if worked != length:
-        raise Error("cashlib randombytes error")
+        raise Error("libnexa randombytes error")
     return result.raw
 
 
 def pubkey(key):
     """Given a private key, return its public key"""
     result = create_string_buffer(65)
-    l = cashlib.GetPubKey(key, result, 65)
+    l = libnexa.GetPubKey(key, result, 65)
     return result.raw[0:l]
 
 
 def addrbin(pubkey):
     """Given a public key, in binary format, return its binary form address (just the bytes, no type or checksum)"""
     result = create_string_buffer(20)
-    cashlib.hash160(pubkey, len(pubkey), result)
+    libnexa.hash160(pubkey, len(pubkey), result)
     return bytes(result)
 
 def txid(txbin):
     """Return a transaction id, given a transaction in hex, object or binary form.
-       The returned binary txid is not reversed.  Do: hexlify(cashlib.txid(txhex)[::-1]).decode("utf-8") to convert to
+       The returned binary txid is not reversed.  Do: hexlify(libnexa.txid(txhex)[::-1]).decode("utf-8") to convert to
        bitcoind's hex format.
     """
     if type(txbin) == str:
@@ -225,7 +225,7 @@ def txid(txbin):
     elif type(txbin) != bytes:
         txbin = txbin.serialize()
     result = create_string_buffer(32)
-    ret = cashlib.txid(txbin, len(txbin), result)
+    ret = libnexa.txid(txbin, len(txbin), result)
     if ret:
         return bytes(result)
     assert ret, "transaction decode error"
@@ -235,7 +235,7 @@ def txid(txbin):
 
 def txidem(txbin):
     """Return a transaction id, given a transaction in hex, object or binary form.
-       The returned binary txid is not reversed.  Do: hexlify(cashlib.txid(txhex)[::-1]).decode("utf-8") to convert to
+       The returned binary txid is not reversed.  Do: hexlify(libnexa.txid(txhex)[::-1]).decode("utf-8") to convert to
        bitcoind's hex format.
     """
     if type(txbin) == str:
@@ -243,7 +243,7 @@ def txidem(txbin):
     elif type(txbin) != bytes:
         txbin = txbin.serialize()
     result = create_string_buffer(32)
-    ret = cashlib.txidem(txbin, len(txbin), result)
+    ret = libnexa.txidem(txbin, len(txbin), result)
     if ret:
         return bytes(result)
     assert ret, "transaction decode error"
@@ -394,7 +394,7 @@ class ScriptMachine:
             self.smId = None
         else:
             if tx is None:
-                self.smId = cashlib.CreateNoContextScriptMachine(self.flags)
+                self.smId = libnexa.CreateNoContextScriptMachine(self.flags)
             else:
                 # If string (assumes hex) or object convert to binary serialization
                 if type(tx) == str:
@@ -410,7 +410,7 @@ class ScriptMachine:
                 else:
                     prevoutsbin = prevouts
 
-                self.smId = cashlib.CreateScriptMachine(self.flags, inputIdx, txbin, len(txbin), prevoutsBin, len(prevoutsBin))
+                self.smId = libnexa.CreateScriptMachine(self.flags, inputIdx, txbin, len(txbin), prevoutsBin, len(prevoutsBin))
         self.curPos = 0
         self.script = None
 
@@ -420,7 +420,7 @@ class ScriptMachine:
 
     def clone(self):
         sm = ScriptMachine(self.flags, nocreate=True)
-        sm.smId = cashlib.SmClone(self.smId)
+        sm.smId = libnexa.SmClone(self.smId)
         sm.curPos = self.curPos
         sm.script = self.script
         return sm
@@ -428,21 +428,21 @@ class ScriptMachine:
     def cleanup(self):
         """Call to explicitly free the resources used by this script machine"""
         if self.smId:
-            cashlib.SmRelease(self.smId)
+            libnexa.SmRelease(self.smId)
             self.smId = 0
         else:
             raise Error("accessed inactive script machine")
 
     def reset(self):
         if self.smId==0: raise Error("accessed inactive script machine")
-        cashlib.SmReset(self.smId)
+        libnexa.SmReset(self.smId)
         self.curPos = 0
 
     def eval(self, script):
         if self.smId==0: raise Error("accessed inactive script machine")
         if type(script) == str:
             script = unhexlify(script)
-        ret = cashlib.SmEval(self.smId, script, len(script))
+        ret = libnexa.SmEval(self.smId, script, len(script))
         return ret
 
     def begin(self, script):
@@ -450,7 +450,7 @@ class ScriptMachine:
         if self.smId==0: raise Error("accessed inactive script machine")
         if type(script) == str:
             script = unhexlify(script)
-        ret = cashlib.SmBeginStep(self.smId, script, len(script))
+        ret = libnexa.SmBeginStep(self.smId, script, len(script))
         self.curPos = 0
         self.script = script
         return ret
@@ -460,15 +460,15 @@ class ScriptMachine:
         if self.smId==0: raise Error("accessed inactive script machine")
         if self.curPos >= len(self.script):
             raise Error("stepped beyond end of script")
-        ret = cashlib.SmStep(self.smId)
+        ret = libnexa.SmStep(self.smId)
         if ret == 0:
             raise Error("execution error")
-        self.curPos = cashlib.SmPos(self.smId)
+        self.curPos = libnexa.SmPos(self.smId)
         return self.curPos
 
     def error(self):
         if self.smId==0: raise Error("accessed inactive script machine")
-        return (ScriptError(cashlib.SmGetError(self.smId)), cashlib.SmPos(self.smId))
+        return (ScriptError(libnexa.SmGetError(self.smId)), libnexa.SmPos(self.smId))
 
     def pos(self):
         return self.curPos
@@ -476,7 +476,7 @@ class ScriptMachine:
     def end(self):
         """Call when script is complete to do final script checks"""
         if self.smId==0: raise Error("accessed inactive script machine")
-        ret = cashlib.SmEndStep(self.smId)
+        ret = libnexa.SmEndStep(self.smId)
         return ret
 
     def altstack(self):
@@ -491,7 +491,7 @@ class ScriptMachine:
         item = create_string_buffer(MAX_STACK_ITEM_LENGTH)
         itemType = create_string_buffer(1)
         while 1:
-            result = cashlib.SmGetStackItem(self.smId, which, idx, itemType, item)
+            result = libnexa.SmGetStackItem(self.smId, which, idx, itemType, item)
             if result == -1: break
             if itemType[0] == b'\x00':
                 itemTyp = StackItemType.BYTES
@@ -511,7 +511,7 @@ class ScriptMachine:
         """Set an item on the stack to a value, index 0 is the top.  index -1 means push"""
         if self.smId==0: raise Error("accessed inactive script machine")
         if which is None: which = self.STACK
-        cashlib.SmSetStackItem(self.smId, which, idx, int(itemType), value, len(value))
+        libnexa.SmSetStackItem(self.smId, which, idx, int(itemType), value, len(value))
 
 
 def Test():

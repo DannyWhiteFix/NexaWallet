@@ -29,7 +29,7 @@ AM_CXXFLAGS += -O0 -g -rdynamic
 AM_CPPFLAGS += -O0 -g -rdynamic
 AM_LDFLAGS  += -O0 -g -rdynamic
 endif
-if ENABLE_JAVACASHLIB
+if ENABLE_JAVALIBNEXA
 JNI_CXXFLAGS = -I$(JAVA_HOME)/include/linux -I$(JAVA_HOME)/include -DJAVA
 endif
 
@@ -400,7 +400,7 @@ libnexa_a_CPPFLAGS = $(AM_CPPFLAGS) $(NEXA_INCLUDES)
 libnexa_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 libnexa_a_SOURCES = \
-  cashlib/cashlib.cpp \
+  libnexa/libnexa.cpp \
   base58.cpp \
   base58.h \
   merkleblock.cpp \

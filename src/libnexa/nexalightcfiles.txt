@@ -1,4 +1,4 @@
-cashlib/cashlib.cpp
+libnexa/libnexa.cpp
 base58.cpp
 script/interpreter.cpp
 script/script.cpp
@@ -40,5 +40,4 @@ dstencode.cpp
 random.cpp
 randomenv.cpp
 utiltime.cpp
-cashlib/sqlite/sqlite3.c
-
+libnexa/sqlite/sqlite3.c

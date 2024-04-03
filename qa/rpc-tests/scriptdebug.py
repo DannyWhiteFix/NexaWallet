@@ -13,7 +13,7 @@ import logging
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-import test_framework.cashlib as cashlib
+import test_framework.libnexa as libnexa
 from test_framework.nodemessages import *
 from test_framework.script import *
 
@@ -24,9 +24,9 @@ class ScriptDebugError(Exception):
 
 def prettyStk(t):
     ret = ""
-    if t[0] == cashlib.StackItemType.BYTES:
+    if t[0] == libnexa.StackItemType.BYTES:
         return "d_"+hexlify(t[1]).decode()
-    if t[0] == cashlib.StackItemType.BIGNUM:
+    if t[0] == libnexa.StackItemType.BIGNUM:
         return "n_"+hexlify(t[1]).decode()
     else:
         return "u_"+hexlify(t[1]).decode()
@@ -54,14 +54,14 @@ def stepEval(sm, script):
                 count += 1
                 pos = sm.step()
 
-        except cashlib.Error as e:
+        except libnexa.Error as e:
             if str(e) == 'stepped beyond end of script':
-                return (cashlib.ScriptError.SCRIPT_ERR_OK, pos)
+                return (libnexa.ScriptError.SCRIPT_ERR_OK, pos)
             else:
                 (err, pos) = sm.error()
                 print("Error: %d (%s): %s" % (err, err.name, str(e)))
                 return (err, pos)
-        return (cashlib.ScriptError.SCRIPT_ERR_OK, pos)
+        return (libnexa.ScriptError.SCRIPT_ERR_OK, pos)
 
 
 def MakeCTransaction(data):
@@ -105,12 +105,12 @@ class DebugSession:
         self.constraintScript = self.prevTx.vout[self.prevoutIdx].scriptPubKey
         self.inputAmount = self.prevTx.vout[self.prevoutIdx].nValue
         self.flags = flags
-        if self.flags is None: self.flags = cashlib.ScriptFlags.STANDARD_SCRIPT_VERIFY_FLAGS
+        if self.flags is None: self.flags = libnexa.ScriptFlags.STANDARD_SCRIPT_VERIFY_FLAGS
 
         self.spendScript = self.spendTx.vin[self.inputIdx].scriptSig
         self.redeemScript = None
 
-        self.sm = cashlib.ScriptMachine(flags=self.flags, tx=self.spendTx, inputIdx=self.inputIdx, inputAmount=self.inputAmount)
+        self.sm = libnexa.ScriptMachine(flags=self.flags, tx=self.spendTx, inputIdx=self.inputIdx, inputAmount=self.inputAmount)
 
 
     def evalSpendScript(self):
@@ -126,7 +126,7 @@ class DebugSession:
 
     def evalWithReturn(self, script):
         result = self.evals(script)
-        if result[0] != cashlib.ScriptError.SCRIPT_ERR_OK:
+        if result[0] != libnexa.ScriptError.SCRIPT_ERR_OK:
             return result # script failed to execute fully
 
         # if script fully executed, evaluate the "return code"
@@ -134,14 +134,14 @@ class DebugSession:
         if len(stk): # outside of your script, the VM pops 1 thing off the stack and uses that to decide whether the script is successful
             stkTop = stk[0]
             self.sm.eval(CScript([OP_DROP]))
-            if self.flags & cashlib.ScriptFlags.SCRIPT_VERIFY_CLEANSTACK:
+            if self.flags & libnexa.ScriptFlags.SCRIPT_VERIFY_CLEANSTACK:
                 if len(stk) > 1:
                     print("Script finished with result %s but unclean stack: %s" % (prettyStk(stkTop), [ prettyStk(x) for x in stk]))
-                    return (cashlib.ScriptError.SCRIPT_ERR_CLEANSTACK, result[1])
-            if stkTop[0] == cashlib.StackItemType.BYTES and ord(stkTop[1]) == 1:
-                return (cashlib.ScriptError.SCRIPT_ERR_OK, result[1])
+                    return (libnexa.ScriptError.SCRIPT_ERR_CLEANSTACK, result[1])
+            if stkTop[0] == libnexa.StackItemType.BYTES and ord(stkTop[1]) == 1:
+                return (libnexa.ScriptError.SCRIPT_ERR_OK, result[1])
             else:
-                return (cashlib.ScriptError.SCRIPT_EVAL_FALSE, result[1])
+                return (libnexa.ScriptError.SCRIPT_EVAL_FALSE, result[1])
         return None
 
     def evalRedeemScript(self):
@@ -170,14 +170,14 @@ class DebugSession:
                 count += 1
                 pos = self.sm.step()
 
-        except cashlib.Error as e:
+        except libnexa.Error as e:
             if str(e) == 'stepped beyond end of script':
-                return (cashlib.ScriptError.SCRIPT_ERR_OK, pos)
+                return (libnexa.ScriptError.SCRIPT_ERR_OK, pos)
             else:
                 (err, pos) = self.sm.error()
                 print("Error: %d (%s): %s" % (err, err.name, str(e)))
                 return (err, pos)
-        return (cashlib.ScriptError.SCRIPT_ERR_OK, pos)
+        return (libnexa.ScriptError.SCRIPT_ERR_OK, pos)
 
 class ScriptDebugTest (BitcoinTestFramework):
 
@@ -194,10 +194,10 @@ class ScriptDebugTest (BitcoinTestFramework):
         tx = CTransaction()
         tx.deserialize(txStream)
 
-        flags = cashlib.ScriptFlags.STANDARD_SCRIPT_VERIFY_FLAGS
+        flags = libnexa.ScriptFlags.STANDARD_SCRIPT_VERIFY_FLAGS
 
         print("eval scriptSig")
-        sm = cashlib.ScriptMachine(flags=flags, tx=tx, inputIdx=0)
+        sm = libnexa.ScriptMachine(flags=flags, tx=tx, inputIdx=0)
         worked = evals(sm,CScript(unhexlify("00473044022001a983ec77ff66bcf2d4ad6d4d96a1f6431ee1102c884dc3d01f564092fad92102204d3af3b419ffb2e27249bdfb2290f77bb40b66afc874c2b561f10d5674f61f4201004752210371f9bb1024de3b2da052ec3c238b1917d3f3eca7c7f75798d096b7ed05dc371221028d7ef7f437223338528f7f0c042c95e1d717c0613b97078601ed3019865288eb52ae")))
         if not worked:
             print(sm.error())
@@ -218,8 +218,8 @@ class ScriptDebugTest (BitcoinTestFramework):
 
     def runAscript(self):
         pdb.set_trace()
-        flags=cashlib.ScriptFlags.STANDARD_SCRIPT_VERIFY_FLAGS | cashlib.ScriptFlags.SCRIPT_ENABLE_CHECKDATASIG
-        sm = cashlib.ScriptMachine(flags=flags, tx=None, inputIdx=0)
+        flags=libnexa.ScriptFlags.STANDARD_SCRIPT_VERIFY_FLAGS | libnexa.ScriptFlags.SCRIPT_ENABLE_CHECKDATASIG
+        sm = libnexa.ScriptMachine(flags=flags, tx=None, inputIdx=0)
         # s = CScript([ unhexlify("000000000000000000000000000000000000000000000000000001"), OP_SETBMD, unhexlify("f334a8c048898e4de6b8ca6359533d7fb7c12df3619e22238400"), OP_BIN2BIGNUM, OP_DUP, OP_ADD])
         s = CScript([ unhexlify("000000000000000000000000000000000000000000000000000001"), OP_SETBMD, unhexlify("f334a8c048898e4de6b8ca6359533d7fb7c12df3619e22238400"), OP_DUP, OP_BIN2BIGNUM, OP_SWAP, OP_BIN2BIGNUM, OP_ADD])
         # s = CScript([ unhexlify("000000000000000000000000000000000000000000000000000001"), OP_SETBMD, unhexlify("f334a8c048898e4de6b8ca6359533d7fb7c12df3619e22238400"), OP_BIN2BIGNUM, unhexlify("f334a8c048898e4de6b8ca6359533d7fb7c12df3619e22238400"), OP_BIN2BIGNUM, OP_ADD, 26, OP_NUM2BIN])
@@ -231,26 +231,26 @@ class ScriptDebugTest (BitcoinTestFramework):
         prevTx = ""
         spendTx = unhexlify("")
 
-        dbg = DebugSession(prevTx, spendTx, flags=cashlib.ScriptFlags.STANDARD_SCRIPT_VERIFY_FLAGS | cashlib.ScriptFlags.SCRIPT_ENABLE_CHECKDATASIG )
+        dbg = DebugSession(prevTx, spendTx, flags=libnexa.ScriptFlags.STANDARD_SCRIPT_VERIFY_FLAGS | libnexa.ScriptFlags.SCRIPT_ENABLE_CHECKDATASIG )
         print("Evaluating spend script")
         dbg.evalSpendScript()
         print("Evaluating constraint script")
         result = dbg.evalConstraintScript()
-        assert(result[0] == cashlib.ScriptError.SCRIPT_ERR_NUMBER_BAD_ENCODING)
+        assert(result[0] == libnexa.ScriptError.SCRIPT_ERR_NUMBER_BAD_ENCODING)
 
-        dbg = DebugSession(prevTx, spendTx, flags= (cashlib.ScriptFlags.STANDARD_SCRIPT_VERIFY_FLAGS | cashlib.ScriptFlags.SCRIPT_ENABLE_CHECKDATASIG) & ~cashlib.ScriptFlags.SCRIPT_VERIFY_MINIMALDATA)
+        dbg = DebugSession(prevTx, spendTx, flags= (libnexa.ScriptFlags.STANDARD_SCRIPT_VERIFY_FLAGS | libnexa.ScriptFlags.SCRIPT_ENABLE_CHECKDATASIG) & ~libnexa.ScriptFlags.SCRIPT_VERIFY_MINIMALDATA)
         print("Evaluating spend script")
         dbg.evalSpendScript()
         print("Evaluating constraint script")
         result = dbg.evalConstraintScript()
-        assert(result[0] == cashlib.ScriptError.SCRIPT_ERR_OK)
+        assert(result[0] == libnexa.ScriptError.SCRIPT_ERR_OK)
 
     def multisigTest(self):
         
         prevTx = ""
         spendTx =""
 
-        dbg = DebugSession(prevTx, spendTx, flags=cashlib.ScriptFlags.STANDARD_SCRIPT_VERIFY_FLAGS | cashlib.ScriptFlags.SCRIPT_ENABLE_CHECKDATASIG )
+        dbg = DebugSession(prevTx, spendTx, flags=libnexa.ScriptFlags.STANDARD_SCRIPT_VERIFY_FLAGS | libnexa.ScriptFlags.SCRIPT_ENABLE_CHECKDATASIG )
         print("Evaluating spend script")
         dbg.evalSpendScript()
         print("Evaluating constraint script")
@@ -281,7 +281,7 @@ if __name__ == '__main__':
         env = os.path.abspath(env)
     path = os.path.dirname(env)
     try:
-        cashlib.init(path + os.sep + ".libs" + os.sep + "libnexa.so")
+        libnexa.init(path + os.sep + ".libs" + os.sep + "libnexa.so")
         MyTest().main()
     except OSError as e:
         print("Issue loading shared library.  This is expected during cross compilation since the native python will not load the .so: %s" % str(e))
@@ -301,5 +301,5 @@ def Test():
         flags.append("--tmppfx=/ramdisk/test")
     binpath = findBitcoind()
     flags.append("--srcdir=%s" % binpath)
-    cashlib.init(binpath + os.sep + ".libs" + os.sep + "libnexa.so")
+    libnexa.init(binpath + os.sep + ".libs" + os.sep + "libnexa.so")
     t.main(flags, bitcoinConf, None)

@@ -80,11 +80,11 @@
 // Revision version MUST be incremented if only backward compatible bug fixes are
 // introduced. A bug fix is defined as an internal change that fixes incorrect behavior.
 #define REVISION(revision) 1 * revision
-static const int CASHLIB_VERSION = MAJOR(1) + MINOR(1) + REVISION(0);
+static const int LIBNEXA_VERSION = MAJOR(1) + MINOR(1) + REVISION(0);
 
 // clang-format on
 
-SLAPI int cashlibVersion() { return CASHLIB_VERSION; }
+SLAPI int libnexaVersion() { return LIBNEXA_VERSION; }
 
 // in headervalidation.cpp
 bool CheckBlockHeader(const Consensus::Params &consensusParams,
@@ -99,7 +99,7 @@ bool CheckBlockHeader(const Consensus::Params &consensusParams,
 
 static bool sigInited = false;
 ECCVerifyHandle *verifyContext = nullptr;
-CChainParams *cashlibParams = nullptr;
+CChainParams *libnexaParams = nullptr;
 
 const int CLIENT_VERSION = 0; // 0 because app should report its version, not this lib
 
@@ -116,7 +116,7 @@ int64_t GetAdjustedTime()
     return now;
 }
 
-#ifdef DEBUG_LOCKORDER // Not debugging the lockorder in cashlib even if its defined
+#ifdef DEBUG_LOCKORDER // Not debugging the lockorder in libnexa even if its defined
 void AssertLockHeldInternal(const char *pszName, const char *pszFile, unsigned int nLine, void *cs) {}
 void AssertLockNotHeldInternal(const char *pszName, const char *pszFile, unsigned int nLine, void *cs) {}
 void EnterCritical(const char *pszName,
@@ -180,7 +180,7 @@ std::atomic<uint64_t> categoriesEnabled = 0; // 64 bit log id mask.
 
 // I don't want to pull in the args stuff so always pick the defaults
 bool GetBoolArg(const std::string &strArg, bool fDefault) { return fDefault; }
-// cashlib does not support versionbits right now so just supply this which is used in chainparams
+// libnexa does not support versionbits right now so just supply this which is used in chainparams
 struct ForkDeploymentInfo
 {
     /** Deployment name */
@@ -1590,7 +1590,7 @@ SLAPI int extractFromMerkleBlock(int numTxes,
 
 #ifdef JAVA
 
-#define APPNAME "BU.wallet.cashlib"
+#define APPNAME "BU.wallet.libnexa"
 
 jclass secRandomClass = nullptr;
 jmethodID secRandom = nullptr;
@@ -1698,9 +1698,9 @@ jbyteArray makeJByteArray(JNIEnv *env, std::vector<unsigned char> &buf)
     return bArray;
 }
 
-extern "C" JNIEXPORT jint JNICALL Java_org_nexa_libnexakotlin_cashlibVersion(JNIEnv *env, jobject ths)
+extern "C" JNIEXPORT jint JNICALL Java_org_nexa_libnexakotlin_libnexaVersion(JNIEnv *env, jobject ths)
 {
-    return CASHLIB_VERSION;
+    return LIBNEXA_VERSION;
 }
 
 #ifndef LIGHT
@@ -2831,7 +2831,7 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_nexa_libnexakotlin_Native_initial
 {
     javaEnv = env;
 
-    // A chain selection parameter should be part of every cashlib API, but the underlying code still
+    // A chain selection parameter should be part of every libnexa API, but the underlying code still
     // requires a default to be set so pick Nexa as the default.
     SelectParams("nexa");
 

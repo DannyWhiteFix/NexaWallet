@@ -191,11 +191,11 @@ AC_ARG_ENABLE([gprof],
   [use_gprof=yes],
   [use_gprof=no])
 
-AC_ARG_ENABLE([javacashlib],
-  [AS_HELP_STRING([--enable-javacashlib],
+AC_ARG_ENABLE([javalibnexa],
+  [AS_HELP_STRING([--enable-javalibnexa],
   [enable java bindings for libnexa (default is no)])],
-  [use_javacashlib=yes],
-  [use_javacashlib=no])
+  [use_javalibnexa=yes],
+  [use_javalibnexa=no])
 
 AC_ARG_ENABLE([mutrace],
   [AS_HELP_STRING([--enable-mutrace],
@@ -570,8 +570,8 @@ case $host in
      if test "x$use_mutrace" = "xyes"; then
        AC_DEFINE([ENABLE_MUTRACE],[1],[Define to 1 to enable mutex tracing])
      fi
-     if test "x$use_javacashlib" = "xyes"; then
-       AC_DEFINE([ENABLE_JAVACASHLIB],[1],[Define to 1 to enable java binding in cashlib])
+     if test "x$use_javalibnexa" = "xyes"; then
+       AC_DEFINE([ENABLE_JAVALIBNEXA],[1],[Define to 1 to enable java binding in libnexa])
      fi
 
      ;;
@@ -1222,7 +1222,7 @@ AM_CONDITIONAL([USE_LCOV],[test x$use_lcov = xyes])
 AM_CONDITIONAL([ENABLE_GPERF],[test x$use_gperf = xyes])
 AM_CONDITIONAL([ENABLE_GPROF],[test x$use_gprof = xyes])
 AM_CONDITIONAL([ENABLE_MUTRACE],[test x$use_mutrace = xyes])
-AM_CONDITIONAL([ENABLE_JAVACASHLIB],[test x$use_javacashlib = xyes])
+AM_CONDITIONAL([ENABLE_JAVALIBNEXA],[test x$use_javalibnexa = xyes])
 AM_CONDITIONAL([GLIBC_BACK_COMPAT],[test x$use_glibc_compat = xyes])
 AM_CONDITIONAL([HARDEN],[test x$use_hardening = xyes])
 AM_CONDITIONAL([ENABLE_HWCRC32],[test x$enable_hwcrc32 = xyes])
