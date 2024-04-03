@@ -236,7 +236,7 @@ unsigned int TxAlreadyHave(const int type, const uint256 &hash)
     }
     DbgAssert(0, return false); // this fn should only be called if CInv is a tx
 }
-static unsigned int TxMayAlreadyHave(const int type, const uint256 &hash)
+unsigned int TxMayAlreadyHave(const int type, const uint256 &hash)
 {
     // AlreadyHaveTx() is a large source of lock contention when the system is under load.  This lock contention
     // is coming from the several different locks that may need to be aquired to confim that we have the tx already.
