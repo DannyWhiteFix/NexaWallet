@@ -780,11 +780,13 @@ CThinBlockData thindata;
 CGrapheneBlockData graphenedata;
 CCompactBlockData compactdata;
 ThinTypeRelay thinrelay;
+
+// Data for doing mempool sync
 CCriticalSection cs_mempoolsync;
 std::map<NodeId, CMempoolSyncState> mempoolSyncRequested GUARDED_BY(cs_mempoolsync);
 std::map<NodeId, CMempoolSyncState> mempoolSyncResponded GUARDED_BY(cs_mempoolsync);
-uint64_t lastMempoolSync = GetStopwatchMicros();
-uint64_t lastMempoolSyncClear = GetStopwatchMicros();
+
+std::atomic<uint64_t> lastMempoolSync{GetStopwatchMicros()};
 
 // Are we shutting down. Replaces boost interrupts.
 std::atomic<bool> shutdown_threads{false};

@@ -121,6 +121,7 @@ void static ProcessGetData(CNode *pfrom,
         cur++;
         bool lastInv = (sz == cur);
         uint32_t oneReplyPerInvCookie = (lastInv ? (msgCookie | 0xFFFF) : (msgCookie + replyCookieCount));
+
         // Don't bother if send buffer is too full to respond anyway
         if (pfrom->nSendSize >= nMaxSendBufferSize + ss.size())
         {

@@ -53,9 +53,10 @@ static const unsigned int DEFAULT_MIN_BLK_REQUEST_RETRY_INTERVAL = 5 * 1000 * 10
 static const unsigned int MAX_GETDATA_REQUESTS = 1000;
 
 // Which peers have mempool synchronization in-flight?
-extern std::map<NodeId, CMempoolSyncState> mempoolSyncRequested;
-extern uint64_t lastMempoolSync;
 extern CCriticalSection cs_mempoolsync;
+extern std::map<NodeId, CMempoolSyncState> mempoolSyncRequested;
+
+extern std::atomic<uint64_t> lastMempoolSync;
 
 class CNode;
 
@@ -155,7 +156,12 @@ protected:
     // Data structures for making and tracking requests
     CCriticalSection cs_objDownloader;
 
-    int32_t requestCookie = 0;
+    // A cookie can be added to a message which is sent in the message header and which can be used
+    // to determine the correct sequence of separate messages that have been received by a node or light client.
+    std::atomic<int32_t> requestCookie{0};
+
+    // Increment the cookie value and then return the new value.
+    uint32_t getCookie() { return (++requestCookie << 16); }
 
     typedef std::map<uint256, CUnknownObj> OdMap;
     OdMap mapTxnInfo GUARDED_BY(cs_objDownloader);
