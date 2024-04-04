@@ -1212,7 +1212,7 @@ UnitDisplayStatusBarControl::UnitDisplayStatusBarControl(const PlatformStyle *pl
     const QFontMetrics fm(font());
     Q_FOREACH (const BitcoinUnits::Unit unit, units)
     {
-        max_width = qMax(max_width, fm.horizontalAdvance(BitcoinUnits::name(unit)));
+        max_width = qMax(max_width, fm.width(BitcoinUnits::name(unit)));
     }
     setMinimumSize(max_width, 0);
     setAlignment(Qt::AlignRight | Qt::AlignVCenter);

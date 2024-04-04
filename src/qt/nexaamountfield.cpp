@@ -90,7 +90,7 @@ public:
 
             const QFontMetrics fm(fontMetrics());
             int h = lineEdit()->minimumSizeHint().height();
-            int w = fm.horizontalAdvance(BitcoinUnits::format(
+            int w = fm.width(BitcoinUnits::format(
                 BitcoinUnits::NEX, BitcoinUnits::maxMoney(), false, BitcoinUnits::separatorAlways));
             w += 2; // cursor blinking space
 
