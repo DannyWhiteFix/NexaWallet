@@ -263,25 +263,27 @@ void TransactionView::chooseDate(int idx)
         transactionProxyModel->setDateRange(TransactionFilterProxy::MIN_DATE, TransactionFilterProxy::MAX_DATE);
         break;
     case Today:
-        transactionProxyModel->setDateRange(QDateTime(current), TransactionFilterProxy::MAX_DATE);
+        transactionProxyModel->setDateRange(QDateTime(current.currentDate()), TransactionFilterProxy::MAX_DATE);
         break;
     case ThisWeek:
     {
         // Find last Monday
         QDate startOfWeek = current.addDays(-(current.dayOfWeek() - 1));
-        transactionProxyModel->setDateRange(QDateTime(startOfWeek), TransactionFilterProxy::MAX_DATE);
+        transactionProxyModel->setDateRange(QDateTime(startOfWeek.currentDate()), TransactionFilterProxy::MAX_DATE);
     }
     break;
     case ThisMonth:
         transactionProxyModel->setDateRange(
-            QDateTime(QDate(current.year(), current.month(), 1)), TransactionFilterProxy::MAX_DATE);
+            QDateTime(QDate(current.year(), current.month(), 1).currentDate()), TransactionFilterProxy::MAX_DATE);
         break;
     case LastMonth:
-        transactionProxyModel->setDateRange(QDateTime(QDate(current.year(), current.month(), 1).addMonths(-1)),
-            QDateTime(QDate(current.year(), current.month(), 1)));
+        transactionProxyModel->setDateRange(
+            QDateTime(QDate(current.year(), current.month(), 1).addMonths(-1).currentDate()),
+            QDateTime(QDate(current.year(), current.month(), 1).currentDate()));
         break;
     case ThisYear:
-        transactionProxyModel->setDateRange(QDateTime(QDate(current.year(), 1, 1)), TransactionFilterProxy::MAX_DATE);
+        transactionProxyModel->setDateRange(
+            QDateTime(QDate(current.year(), 1, 1).currentDate()), TransactionFilterProxy::MAX_DATE);
         break;
     case Range:
         dateRangeWidget->setVisible(true);
@@ -491,7 +493,8 @@ void TransactionView::dateRangeChanged()
 {
     if (!transactionProxyModel)
         return;
-    transactionProxyModel->setDateRange(QDateTime(dateFrom->date()), QDateTime(dateTo->date()).addDays(1));
+    transactionProxyModel->setDateRange(
+        QDateTime(dateFrom->date().currentDate()), QDateTime(dateTo->date().addDays(1).currentDate()));
 }
 
 void TransactionView::focusTransaction(const QModelIndex &idx)

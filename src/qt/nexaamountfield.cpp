@@ -90,7 +90,7 @@ public:
 
             const QFontMetrics fm(fontMetrics());
             int h = lineEdit()->minimumSizeHint().height();
-            int w = fm.width(BitcoinUnits::format(
+            int w = fm.horizontalAdvance(BitcoinUnits::format(
                 BitcoinUnits::NEX, BitcoinUnits::maxMoney(), false, BitcoinUnits::separatorAlways));
             w += 2; // cursor blinking space
 
@@ -162,7 +162,7 @@ protected:
         if (text().isEmpty()) // Allow step-up with empty field
             return StepUpEnabled;
 
-        StepEnabled rv = 0;
+        StepEnabled rv;
         bool valid = false;
         CAmount val = value(&valid);
         if (valid)

@@ -261,25 +261,25 @@ void TokenHistoryView::chooseDate(int idx)
         tokenProxyModel->setDateRange(TokenFilterProxy::MIN_DATE, TokenFilterProxy::MAX_DATE);
         break;
     case Today:
-        tokenProxyModel->setDateRange(QDateTime(current), TokenFilterProxy::MAX_DATE);
+        tokenProxyModel->setDateRange(QDateTime(current.currentDate()), TokenFilterProxy::MAX_DATE);
         break;
     case ThisWeek:
     {
         // Find last Monday
         QDate startOfWeek = current.addDays(-(current.dayOfWeek() - 1));
-        tokenProxyModel->setDateRange(QDateTime(startOfWeek), TokenFilterProxy::MAX_DATE);
+        tokenProxyModel->setDateRange(QDateTime(startOfWeek.currentDate()), TokenFilterProxy::MAX_DATE);
     }
     break;
     case ThisMonth:
         tokenProxyModel->setDateRange(
-            QDateTime(QDate(current.year(), current.month(), 1)), TokenFilterProxy::MAX_DATE);
+            QDateTime(QDate(current.year(), current.month(), 1).currentDate()), TokenFilterProxy::MAX_DATE);
         break;
     case LastMonth:
-        tokenProxyModel->setDateRange(QDateTime(QDate(current.year(), current.month(), 1).addMonths(-1)),
-            QDateTime(QDate(current.year(), current.month(), 1)));
+        tokenProxyModel->setDateRange(QDateTime(QDate(current.year(), current.month(), 1).addMonths(-1).currentDate()),
+            QDateTime(QDate(current.year(), current.month(), 1).currentDate()));
         break;
     case ThisYear:
-        tokenProxyModel->setDateRange(QDateTime(QDate(current.year(), 1, 1)), TokenFilterProxy::MAX_DATE);
+        tokenProxyModel->setDateRange(QDateTime(QDate(current.year(), 1, 1).currentDate()), TokenFilterProxy::MAX_DATE);
         break;
     case Range:
         dateRangeWidget->setVisible(true);
@@ -439,7 +439,7 @@ void TokenHistoryView::dateRangeChanged()
 {
     if (!tokenProxyModel)
         return;
-    tokenProxyModel->setDateRange(QDateTime(dateFrom->date()), QDateTime(dateTo->date()).addDays(1));
+    tokenProxyModel->setDateRange(QDateTime(dateFrom->date().currentDate()), QDateTime(dateTo->date().addDays(1).currentDate()));
 }
 
 void TokenHistoryView::focusTransaction(const QModelIndex &idx)
