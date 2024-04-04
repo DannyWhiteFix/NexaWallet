@@ -758,7 +758,6 @@ void CRequestManager::SendRequests()
                     int64_t then = item.lastRequestTime;
                     int64_t nDownloadingSincePrev = item.nDownloadingSince;
                     {
-                        LOCK(next.noderef.get()->cs_nAvgBlkResponseTime);
                         std::map<NodeId, CRequestManagerNodeState>::iterator it =
                             mapRequestManagerNodeState.find(next.noderef.get()->GetId());
                         if (it == mapRequestManagerNodeState.end())
@@ -767,6 +766,8 @@ void CRequestManager::SendRequests()
                             continue;
                         }
                         CRequestManagerNodeState *state = &it->second;
+
+                        LOCK(next.noderef.get()->cs_nAvgBlkResponseTime);
                         item.lastRequestTime =
                             now + (next.noderef.get()->nAvgBlkResponseTime * 1000000 * 5 * state->nBlocksInFlight);
                     }
@@ -1370,13 +1371,18 @@ bool CRequestManager::MarkBlockAsReceived(const uint256 &hash, CNode *pnode)
         // calculate avg block response time over a range of blocks to be used for IBD tuning.
         uint8_t blockRange = 50;
         {
-            LOCK(pnode->cs_nAvgBlkResponseTime);
-            if (pnode->nAvgBlkResponseTime > 0)
-                pnode->nAvgBlkResponseTime -= (pnode->nAvgBlkResponseTime / blockRange);
-            pnode->nAvgBlkResponseTime += nResponseTime / blockRange;
-            if (pnode->nAvgBlkResponseTime < 0)
+            double nAvgBlkResponseTime = 0.0;
             {
-                pnode->nAvgBlkResponseTime = nResponseTime / blockRange;
+                LOCK(pnode->cs_nAvgBlkResponseTime);
+                if (pnode->nAvgBlkResponseTime > 0)
+                    pnode->nAvgBlkResponseTime -= (pnode->nAvgBlkResponseTime / blockRange);
+
+                pnode->nAvgBlkResponseTime += nResponseTime / blockRange;
+                if (pnode->nAvgBlkResponseTime < 0)
+                {
+                    pnode->nAvgBlkResponseTime = nResponseTime / blockRange;
+                }
+                nAvgBlkResponseTime = pnode->nAvgBlkResponseTime;
             }
 
             // Protect nOverallAverageResponseTime and nIterations with cs_overallaverage.
@@ -1427,7 +1433,7 @@ bool CRequestManager::MarkBlockAsReceived(const uint256 &hash, CNode *pnode)
                     pnode->nAvgBlkResponseTime > nOverallAverageResponseTime * 5)
                 {
                     LOG(IBD, "disconnecting %s because too slow , overall avg %d peer avg %d\n", pnode->GetLogName(),
-                        nOverallAverageResponseTime, pnode->nAvgBlkResponseTime);
+                        nOverallAverageResponseTime, nAvgBlkResponseTime);
                     pnode->InitiateGracefulDisconnect();
                     // We must not return here but continue in order
                     // to update the vBlocksInFlight stats.
@@ -1442,39 +1448,39 @@ bool CRequestManager::MarkBlockAsReceived(const uint256 &hash, CNode *pnode)
                 }
             }
 
-            if (pnode->nAvgBlkResponseTime < 0.2)
+            if (nAvgBlkResponseTime < 0.2)
             {
                 pnode->nMaxBlocksInTransit.store(64);
             }
-            else if (pnode->nAvgBlkResponseTime < 0.5)
+            else if (nAvgBlkResponseTime < 0.5)
             {
                 pnode->nMaxBlocksInTransit.store(56);
             }
-            else if (pnode->nAvgBlkResponseTime < 0.9)
+            else if (nAvgBlkResponseTime < 0.9)
             {
                 pnode->nMaxBlocksInTransit.store(48);
             }
-            else if (pnode->nAvgBlkResponseTime < 1.4)
+            else if (nAvgBlkResponseTime < 1.4)
             {
                 pnode->nMaxBlocksInTransit.store(32);
             }
-            else if (pnode->nAvgBlkResponseTime < 2.0)
+            else if (nAvgBlkResponseTime < 2.0)
             {
                 pnode->nMaxBlocksInTransit.store(24);
             }
-            else if (pnode->nAvgBlkResponseTime < 2.7)
+            else if (nAvgBlkResponseTime < 2.7)
             {
                 pnode->nMaxBlocksInTransit.store(16);
             }
-            else if (pnode->nAvgBlkResponseTime < 3.5)
+            else if (nAvgBlkResponseTime < 3.5)
             {
                 pnode->nMaxBlocksInTransit.store(8);
             }
-            else if (pnode->nAvgBlkResponseTime < 4.3)
+            else if (nAvgBlkResponseTime < 4.3)
             {
                 pnode->nMaxBlocksInTransit.store(4);
             }
-            else if (pnode->nAvgBlkResponseTime < 5.3)
+            else if (nAvgBlkResponseTime < 5.3)
             {
                 pnode->nMaxBlocksInTransit.store(2);
             }
@@ -1482,7 +1488,7 @@ bool CRequestManager::MarkBlockAsReceived(const uint256 &hash, CNode *pnode)
                 pnode->nMaxBlocksInTransit.store(1);
 
 
-            LOG(THIN | BLK, "Average block response time is %.2f seconds for %s\n", pnode->nAvgBlkResponseTime,
+            LOG(THIN | BLK, "Average block response time is %.2f seconds for %s\n", nAvgBlkResponseTime,
                 pnode->GetLogName());
         }
 
