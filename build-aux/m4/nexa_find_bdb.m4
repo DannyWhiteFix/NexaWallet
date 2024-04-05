@@ -11,10 +11,9 @@ AC_DEFUN([BITCOIN_FIND_BDB],[
     AC_MSG_CHECKING([for Berkeley DB C++ headers])
     BDB_CPPFLAGS=
     bdbpath=X
-    bdb4path=X
-    bdb5path=X
+    bdbpathnot53=X
     bdbdirlist=
-    for _vn in 4.8 48 4 5 5.3 ''; do
+    for _vn in 5 5.3 ''; do
       for _pfx in b lib ''; do
         bdbdirlist="$bdbdirlist ${_pfx}db${_vn}"
       done
@@ -24,41 +23,56 @@ AC_DEFUN([BITCOIN_FIND_BDB],[
       AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
         #include <${searchpath}db_cxx.h>
       ]],[[
-        #if !(DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 8)
-          #error "failed to find bdb major version 4 minor version 8+"
+        #if !(DB_VERSION_MAJOR == 5 && DB_VERSION_MINOR == 3)
+          #error "failed to find bdb 5.3"
         #endif
       ]])],[
-        if test "x$bdb4path" = "xX"; then
-          bdb4path="${searchpath}"
-        fi
+          bdbpath="${searchpath}"
       ],[])
       AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
         #include <${searchpath}db_cxx.h>
       ]],[[
-        #if !(DB_VERSION_MAJOR == 5 && DB_VERSION_MINOR >= 3)
-          #error "failed to find bdb major version 5 minor version 3+"
+        #if !( (DB_VERSION_MAJOR >= 4) || (DB_VERSION_MAJOR == 4 && DB_VERSION_MAJOR == 8) )
+          #error "failed to find bdb 4.8+ other than 5.3"
         #endif
       ]])],[
-        bdb5path="${searchpath}"
-        break
+        if test "x$bdbpathnot53" = "xX"; then
+          bdbpathnot53="${searchpath}"
+        fi
+        continue
       ],[])
     done
 
-    # use 4 path if set and incompatible flag set, otherwise check and use 5 path if set. if neither set then error.
-    if test "x$bdb4path" != "xX"; then
-      BITCOIN_SUBDIR_TO_INCLUDE(BDB_CPPFLAGS,[${bdb4path}],db_cxx)
-      AC_ARG_WITH([incompatible-bdb],[AS_HELP_STRING([--with-incompatible-bdb], [allow using a bdb version other than 5.3])],[
-        AC_MSG_WARN([Found Berkeley DB other than 5.3+; wallets opened by this build will not be portable!])
-        bdbpath="${bdb4path}"
-      ],[
-        AC_MSG_ERROR([Found Berkeley DB other than 5.3+, required for portable wallets (--with-incompatible-bdb to ignore or --disable-wallet to disable wallet functionality)])
-      ])
-    elif test "x$bdb5path" = "xX"; then
-      AC_MSG_RESULT([no])
-      AC_MSG_ERROR([libdb_cxx headers missing, ]AC_PACKAGE_NAME[ requires this library version 5.3 or higher for wallet functionality (--disable-wallet to disable wallet functionality)])
+    has_incompat_flag=no
+
+    AC_ARG_WITH([incompatible-bdb],[AS_HELP_STRING([--with-incompatible-bdb], [allow using a bdb version other than 5.3])],[
+      has_incompat_flag=yes
+    ],[
+      has_incompat_flag=no
+    ])
+
+    if test "x$has_incompat_flag" = xyes; then
+        if test "x$bdbpathnot53" != "xX"; then
+            AC_MSG_WARN([Found Berkeley DB other than 5.3; wallets opened by this build will not be portable!])
+            bdbpath="${bdbpathnot53}"
+            BITCOIN_SUBDIR_TO_INCLUDE(BDB_CPPFLAGS,[${bdbpath}],db_cxx)
+        elif test "x$bdbpath" != "xX"; then
+            AC_MSG_RESULT([no])
+            AC_MSG_ERROR([Found Berkeley DB 5.3 but --with-incompatible-bdb flag was used; please remove the --with-incompatible dbd configure flag!])
+        else
+            AC_MSG_RESULT([no])
+            AC_MSG_ERROR([libdb_cxx headers missing, ]AC_PACKAGE_NAME[ requires this library version 5.3 for wallet functionality (--disable-wallet to disable wallet functionality)])
+        fi
     else
-      BITCOIN_SUBDIR_TO_INCLUDE(BDB_CPPFLAGS,[${bdb5path}],db_cxx)
-      bdbpath="${bdb5path}"
+        if test "x$bdbpath" != "xX"; then
+            BITCOIN_SUBDIR_TO_INCLUDE(BDB_CPPFLAGS,[${bdbpath}],db_cxx)
+        elif test "x$bdbpathnot53" != "xX"; then
+            AC_MSG_RESULT([no])
+            AC_MSG_ERROR([Found Berkeley DB other than 5.3, required for portable wallets (--with-incompatible-bdb to ignore or --disable-wallet to disable wallet functionality)])
+        else
+            AC_MSG_RESULT([no])
+            AC_MSG_ERROR([libdb_cxx headers missing, ]AC_PACKAGE_NAME[ requires this library version 5.3 for wallet functionality (--disable-wallet to disable wallet functionality)])
+        fi
     fi
   else
     BDB_CPPFLAGS=${BDB_CFLAGS}
@@ -74,7 +88,7 @@ AC_DEFUN([BITCOIN_FIND_BDB],[
       ])
     done
     if test "x$BDB_LIBS" = "x"; then
-        AC_MSG_ERROR([libdb_cxx missing, ]AC_PACKAGE_NAME[ requires this library iversion 5.3 or higher for wallet functionality (--disable-wallet to disable wallet functionality)])
+        AC_MSG_ERROR([libdb_cxx missing, ]AC_PACKAGE_NAME[ requires this library version 5.3 or higher for wallet functionality (--disable-wallet to disable wallet functionality)])
     fi
   fi
   AC_SUBST(BDB_LIBS)
