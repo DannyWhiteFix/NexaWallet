@@ -2073,8 +2073,12 @@ class msg_inv(object):
     def __init__(self, inv=None):
         if inv is None:
             self.inv = []
-        else:
+        elif type(inv) is list:
             self.inv = inv
+        elif type(inv) is CInv:
+            self.inv = [inv]
+        else:
+            raise Exception("bad object passed to msg inv; it needs to be a CInv or list of CInv")
 
     def deserialize(self, f):
         self.inv = deser_vector(f, CInv)
@@ -2093,8 +2097,10 @@ class msg_getdata(object):
             self.inv = []
         elif type(inv) == list:
             self.inv = inv
-        else:
+        elif type(inv) is CInv:
             self.inv = [inv]
+        else:
+            raise Exception("bad object passed to msg inv; it needs to be a CInv or list of CInv")
 
     def deserialize(self, f):
         self.inv = deser_vector(f, CInv)
@@ -2397,7 +2403,22 @@ class msg_headers(object):
 
 class msg_reject(object):
     command = b"reject"
+    # Must match src/consensus/validation.h
     REJECT_MALFORMED = 1
+    REJECT_INVALID = 0x10
+    REJECT_OBSOLETE = 0x11
+    REJECT_DUPLICATE = 0x12
+    REJECT_NONSTANDARD = 0x40
+    REJECT_DUST = 0x41
+    REJECT_INSUFFICIENTFEE = 0x42
+    REJECT_FORK = 0x43
+    REJECT_WAITING = 0x44
+    REJECT_MULTIPLE_INPUTS = 0x45 # Used if we restrict transaction inputs in txadmission
+    REJECT_CHECKPOINT = 0x46
+    # Used when static node policy prevents the reply.  REJECT_RETRY will be returned if this is a transient issue
+    REJECT_LIMITED = 0x47
+    # used when a temporary condition (such as a buffer overflow) prevents the processing of a response
+    REJECT_RETRY = 0x48
 
     def __init__(self):
         self.message = b""

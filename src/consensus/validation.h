@@ -26,6 +26,14 @@ static const unsigned char REJECT_FORK = 0x43;
 static const unsigned char REJECT_WAITING = 0x44;
 static const unsigned char REJECT_MULTIPLE_INPUTS = 0x45; /* Used if we restrict transaction inputs in txadmission */
 static const unsigned char REJECT_CHECKPOINT = 0x46;
+/** Used when node policy will always prevent a reply from being issued.
+ Currently used when the node is pruned so it does not have a block.
+*/
+static const unsigned char REJECT_LIMITED = 0x47;
+/** Used when a temporary condition (such as rate limiting) prevents the processing of a response.
+ Currently used when too many historical blocks have been requested.
+*/
+static const unsigned char REJECT_RETRY = 0x48;
 
 /** Capture information about block/transaction validation */
 class CValidationState
