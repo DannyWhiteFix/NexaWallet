@@ -2,6 +2,8 @@
 
 [![Build Status](https://gitlab.com/nexa/nexa/badges/dev/pipeline.svg?key_text=Build%20Status%20%28dev%29&key_width=110)](https://gitlab.com/nexa/nexa/-/pipelines)
 
+<a href="https://www.producthunt.com/posts/nexa-full-node-coins-tokens-and-nfts?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-nexa&#0045;full&#0045;node&#0045;coins&#0045;tokens&#0045;and&#0045;nfts" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=452361&theme=light" alt="Nexa&#0032;Full&#0032;Node&#0044;&#0032;coins&#0044;&#0032;tokens&#0032;and&#0032;NFTs - A&#0032;digital&#0032;economy&#0032;with&#0032;capacity&#0032;for&#0032;all&#0046;&#0032;Smart&#0032;contracts | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
+
 # What is Nexa?
 
 Nexa is an experimental financial blockchain and digital currency.  It updates the Bitcoin codebase to enable more transactions per block, advanced scripting, and miner validated (native) fungible and non-fungible tokens.
