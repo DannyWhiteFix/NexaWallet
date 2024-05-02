@@ -322,10 +322,11 @@ bool CompactBlock::process(CNode *pfrom, std::shared_ptr<CBlockThinRelay> pblock
     // A merkle root mismatch here does not cause a ban because and expedited node will forward an xthin
     // without checking the merkle root, therefore we don't want to ban our expedited nodes. Just re-request
     // a full block if a mismatch occurs.
+    uint256 hash = header.GetHash();
     if (!fMerkleRootCorrect)
     {
-        thinrelay.ClearAllBlockData(pfrom, header.GetHash());
-        thinrelay.RequestBlock(pfrom, header.GetHash());
+        thinrelay.ClearAllBlockData(pfrom, hash);
+        thinrelay.RequestBlock(pfrom, hash);
 
         return error("mismatched merkle root on compactblock: rerequesting a full block, peer=%s", pfrom->GetLogName());
     }
@@ -350,7 +351,7 @@ bool CompactBlock::process(CNode *pfrom, std::shared_ptr<CBlockThinRelay> pblock
             nIndex++;
         }
         CompactReRequest compactReRequest;
-        compactReRequest.blockhash = header.GetHash();
+        compactReRequest.blockhash = hash;
         compactReRequest.indexes = vIndexesToRequest;
         pfrom->PushMessage(NetMsgType::GETBLOCKTXN, compactReRequest);
 
@@ -364,24 +365,24 @@ bool CompactBlock::process(CNode *pfrom, std::shared_ptr<CBlockThinRelay> pblock
     if (missingCount > 0)
     {
         // Since we can't process this compactblock then clear out the data from memory
-        thinrelay.ClearAllBlockData(pfrom, header.GetHash());
+        thinrelay.ClearAllBlockData(pfrom, hash);
 
-        thinrelay.RequestBlock(pfrom, header.GetHash());
+        thinrelay.RequestBlock(pfrom, hash);
         return error("Still missing transactions for compactblock: re-requesting a full block");
     }
 
     // We now have all the transactions now that are in this block
     int blockSize = pblock->GetBlockSize();
     LOG(CMPCT, "Reassembled compactblock for %s (%d bytes). Message was %d bytes, compression ratio %3.2f, peer=%s\n",
-        pblock->GetHash().ToString(), blockSize, cmpctBlock->GetSize(),
-        ((float)blockSize) / ((float)cmpctBlock->GetSize()), pfrom->GetLogName());
+        hash.ToString(), blockSize, cmpctBlock->GetSize(), ((float)blockSize) / ((float)cmpctBlock->GetSize()),
+        pfrom->GetLogName());
 
     // Update run-time statistics of compact block bandwidth savings
     compactdata.UpdateInBound(cmpctBlock->GetSize(), blockSize);
     LOG(CMPCT, "compact block stats: %s\n", compactdata.ToString());
 
     // Process the full block
-    PV->HandleBlockMessage(pfrom, NetMsgType::CMPCTBLOCK, pblock, GetInv());
+    PV->HandleBlockMessage(pfrom, NetMsgType::CMPCTBLOCK, pblock, hash);
 
     return true;
 }
@@ -538,7 +539,7 @@ bool CompactReReqResponse::HandleMessage(CDataStream &vRecv, uint32_t msgCookie,
     else
     {
         // We have all the transactions now that are in this block: try to reassemble and process.
-        CInv inv2(CInv(MSG_BLOCK, compactReReqResponse.blockhash));
+        const uint256 &hash = compactReReqResponse.blockhash;
 
         // for compression statistics, we have to add up the size of compactblock and the re-requested Txns.
         uint64_t nSizeCompactBlockTx = msgSize;
@@ -547,7 +548,7 @@ bool CompactReReqResponse::HandleMessage(CDataStream &vRecv, uint32_t msgCookie,
         LOG(CMPCT,
             "Reassembled compactReReqResponse for %s (%d bytes). Message was %d bytes (compactblock) and %d bytes "
             "(re-requested tx), compression ratio %3.2f, peer=%s\n",
-            pblock->GetHash().ToString(), nBlockSize, nCmpctBlkSize, nSizeCompactBlockTx,
+            hash.ToString(), nBlockSize, nCmpctBlkSize, nSizeCompactBlockTx,
             ((float)nBlockSize) / ((float)nCmpctBlkSize + (float)nSizeCompactBlockTx), pfrom->GetLogName());
 
         // Update run-time statistics of compactblock bandwidth savings.
@@ -556,7 +557,7 @@ bool CompactReReqResponse::HandleMessage(CDataStream &vRecv, uint32_t msgCookie,
         compactdata.UpdateInBound(nSizeCompactBlockTx + nCmpctBlkSize, nBlockSize);
         LOG(CMPCT, "compactblock stats: %s\n", compactdata.ToString());
 
-        PV->HandleBlockMessage(pfrom, strCommand, pblock, inv2);
+        PV->HandleBlockMessage(pfrom, strCommand, pblock, hash);
     }
 
     return true;
@@ -1048,9 +1049,9 @@ void CCompactBlockData::FillCompactBlockQuickStats(CompactBlockQuickStats &stats
 }
 
 bool IsCompactBlocksEnabled() { return GetBoolArg("-use-compactblocks", true); }
-void SendCompactBlock(ConstCBlockRef pblock, CNode *pfrom, uint32_t msgCookie, const CInv &inv)
+void SendCompactBlock(ConstCBlockRef pblock, CNode *pfrom, uint32_t msgCookie, const int invType)
 {
-    if (inv.type == MSG_CMPCT_BLOCK)
+    if (invType == MSG_CMPCT_BLOCK)
     {
         CompactBlock compactBlock;
         {
@@ -1077,6 +1078,10 @@ void SendCompactBlock(ConstCBlockRef pblock, CNode *pfrom, uint32_t msgCookie, c
             LOG(CMPCT, "Sent regular block instead - compactblock size: %d vs block size: %d , peer: %s\n",
                 compactBlock.GetSize(), nSizeBlock, pfrom->GetLogName());
         }
+    }
+    else
+    {
+        LOG(CMPCT, "Compact Block not sent.  Incorrect inventory type %d\n", invType);
     }
 }
 

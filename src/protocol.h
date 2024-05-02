@@ -578,6 +578,35 @@ public:
     uint256 hash;
 };
 
+class CInv2
+{
+public:
+    CInv2();
+    CInv2(uint8_t typeIn, const uint256 &hashIn);
+    CInv2(const std::string &strType, const uint256 &hashIn);
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream &s, Operation ser_action)
+    {
+        READWRITE(type);
+        READWRITE(hash);
+    }
+
+    friend bool operator<(const CInv2 &a, const CInv2 &b);
+
+    /// returns true if this inv is one of any of the inv types ever used.
+    bool IsKnownType() const;
+    const char *GetCommand() const;
+    std::string ToString() const;
+
+    // TODO: make private (improves encapsulation)
+public:
+    uint8_t type;
+    uint256 hash;
+};
+
 enum
 {
     MSG_TX = 1,

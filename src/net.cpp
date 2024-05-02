@@ -3571,6 +3571,7 @@ void CNode::ReadConfigFromExtversion()
     minGrapheneVersion = extversion.as_u64c(XVer::BU_GRAPHENE_MIN_VERSION_SUPPORTED);
     maxGrapheneVersion = extversion.as_u64c(XVer::BU_GRAPHENE_MAX_VERSION_SUPPORTED);
     m_wants_addrv2 = (extversion.as_u64c(XVer::BU_ADDRV2_SUPPORT) == 1);
+    fPeerWantsINV2 = (extversion.as_u64c(XVer::BU_INV2_SUPPORT) == 1);
 
     {
         uint64_t selfMax = grapheneMaxVersionSupported.Value();
@@ -3617,6 +3618,8 @@ void RelayTransaction(const CTransactionRef ptx)
     *pStream << *ptx;
 
     CInv inv(MSG_TX, ptx->GetId());
+    CInv2 inv2(MSG_TX, ptx->GetId());
+
     maprelay.Add(inv.hash, pStream);
 
     // Take refs
@@ -3644,12 +3647,26 @@ void RelayTransaction(const CTransactionRef ptx)
         {
             if (pnode->pfilter->IsRelevantAndUpdate(ptx))
             {
-                pnode->PushInventory(inv);
+                if (pnode->fPeerWantsINV2)
+                {
+                    pnode->PushInventory(inv2);
+                }
+                else
+                {
+                    pnode->PushInventory(inv);
+                }
             }
         }
         else
         {
-            pnode->PushInventory(inv);
+            if (pnode->fPeerWantsINV2)
+            {
+                pnode->PushInventory(inv2);
+            }
+            else
+            {
+                pnode->PushInventory(inv);
+            }
         }
     }
 

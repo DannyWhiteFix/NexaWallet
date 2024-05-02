@@ -36,7 +36,10 @@ static const unsigned int nScriptCheckQueues = 4;
 std::unique_ptr<CParallelValidation> PV;
 
 bool ShutdownRequested();
-static void HandleBlockMessageThread(CNodeRef noderef, const string strCommand, ConstCBlockRef pblock, const CInv inv);
+static void HandleBlockMessageThread(CNodeRef noderef,
+    const string strCommand,
+    ConstCBlockRef pblock,
+    const uint256 hash);
 
 static void AddScriptCheckThreads(int i, CCheckQueue<CScriptCheck> *pqueue)
 {
@@ -333,13 +336,13 @@ bool CParallelValidation::Enabled() { return parallelTweak.Value(); }
 void CParallelValidation::InitThread(const boost::thread::id this_id,
     const CNode *pfrom,
     ConstCBlockRef pblock,
-    const CInv &inv,
+    const uint256 &hash,
     uint64_t blockSize)
 {
     LOCK(cs_blockvalidationthread);
     assert(mapBlockValidationThreads.count(this_id) == 0); // this id should not already be in use
     mapBlockValidationThreads.emplace(
-        this_id, CHandleBlockMsgThreads{nullptr, inv.hash, pblock->hashPrevBlock, pblock->nBits, pblock->nBits, INT_MAX,
+        this_id, CHandleBlockMsgThreads{nullptr, hash, pblock->hashPrevBlock, pblock->nBits, pblock->nBits, INT_MAX,
                      GetTimeMillis(), blockSize, false, pfrom->id, false, false});
 
     numBlocksValidating.store(mapBlockValidationThreads.size());
@@ -469,7 +472,7 @@ uint32_t CParallelValidation::MaxWorkChainBeingProcessed()
 void CParallelValidation::HandleBlockMessage(CNode *pfrom,
     const string &strCommand,
     ConstCBlockRef pblock,
-    const CInv &inv)
+    const uint256 &hash)
 {
     // Indicate that the block was received and is about to be processed. Setting the processing flag
     // prevents us from re-requesting the block during the time it is being processed.
@@ -560,16 +563,16 @@ void CParallelValidation::HandleBlockMessage(CNode *pfrom,
     // only launch block validation in a separate thread if PV is enabled.
     if (PV->Enabled() && !ShutdownRequested())
     {
-        boost::thread thread(boost::bind(&HandleBlockMessageThread, noderef, strCommand, pblock, inv));
+        boost::thread thread(boost::bind(&HandleBlockMessageThread, noderef, strCommand, pblock, hash));
         thread.detach();
     }
     else
     {
-        HandleBlockMessageThread(noderef, strCommand, pblock, inv);
+        HandleBlockMessageThread(noderef, strCommand, pblock, hash);
     }
 }
 
-void HandleBlockMessageThread(CNodeRef noderef, const string strCommand, ConstCBlockRef pblock, const CInv inv)
+void HandleBlockMessageThread(CNodeRef noderef, const string strCommand, ConstCBlockRef pblock, const uint256 hash)
 {
     boost::thread::id this_id(boost::this_thread::get_id());
     CNode *pfrom = noderef.get();
@@ -583,9 +586,9 @@ void HandleBlockMessageThread(CNodeRef noderef, const string strCommand, ConstCB
         // Indicate that the block was fully received. At this point we have either a block or a fully reconstructed
         // thin type block but we still need to maintain a map*BlocksInFlight entry so that we don't re-request a
         // full block from the same node while the block is processing.
-        thinrelay.BlockWasReceived(pfrom, inv.hash);
+        thinrelay.BlockWasReceived(pfrom, hash);
 
-        PV->InitThread(this_id, pfrom, pblock, inv, nSizeBlock); // initialize the mapBlockValidationThread entries
+        PV->InitThread(this_id, pfrom, pblock, hash, nSizeBlock); // initialize the mapBlockValidationThread entries
 
         // Process all blocks from whitelisted peers, even if not requested,
         // unless we're still syncing with the network.
@@ -615,7 +618,7 @@ void HandleBlockMessageThread(CNodeRef noderef, const string strCommand, ConstCB
                 (IsThinBlocksEnabled() || IsGrapheneBlockEnabled() || IsCompactBlocksEnabled()))
             {
                 LOG(THIN | GRAPHENE | CMPCT, "Processed Block %s reconstructed from (%s) in %.2f seconds, peer=%s\n",
-                    inv.hash.ToString(), strCommand, (double)(GetStopwatchMicros() - startTime) / 1000000.0,
+                    hash.ToString(), strCommand, (double)(GetStopwatchMicros() - startTime) / 1000000.0,
                     pfrom->GetLogName());
 
                 if (strCommand == NetMsgType::GRAPHENEBLOCK || strCommand == NetMsgType::GRAPHENETX)
@@ -627,15 +630,15 @@ void HandleBlockMessageThread(CNodeRef noderef, const string strCommand, ConstCB
             }
             else
             {
-                LOG(THIN | GRAPHENE | CMPCT, "Processed Regular Block %s in %.2f seconds, peer=%s\n",
-                    inv.hash.ToString(), (double)(GetStopwatchMicros() - startTime) / 1000000.0, pfrom->GetLogName());
+                LOG(THIN | GRAPHENE | CMPCT, "Processed Regular Block %s in %.2f seconds, peer=%s\n", hash.ToString(),
+                    (double)(GetStopwatchMicros() - startTime) / 1000000.0, pfrom->GetLogName());
             }
         }
 
         // When we request a thin type block we may get back a regular block if it is smaller than
         // either of the former.  Therefore we have to remove the thintype block in flight and any
         // associated data.
-        thinrelay.ClearAllBlockData(pfrom, inv.hash);
+        thinrelay.ClearAllBlockData(pfrom, hash);
 
         // Increment block counter
         pfrom->firstBlock += 1;

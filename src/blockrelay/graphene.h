@@ -123,7 +123,7 @@ public:
 
     // Validates header and, if possible, determines if there are any missing or unnecessary transactions
     // in the block
-    bool ValidateAndRecontructBlock(uint256 blockhash,
+    bool ValidateAndRecontructBlock(const uint256 &blockhash,
         std::shared_ptr<CBlockThinRelay> pblock,
         const std::map<uint64_t, CTransactionRef> &mapMissingTx,
         std::string command,
@@ -498,7 +498,7 @@ public:
 };
 
 bool IsGrapheneBlockEnabled();
-void SendGrapheneBlock(ConstCBlockRef pblock, CNode *pfrom, const CInv &inv, const CMemPoolInfo &mempoolinfo);
+void SendGrapheneBlock(ConstCBlockRef pblock, CNode *pfrom, const int invType, const CMemPoolInfo &mempoolinfo);
 bool IsGrapheneBlockValid(CNode *pfrom, const CBlockHeader &header);
 bool HandleGrapheneBlockRequest(CDataStream &vRecv, CNode *pfrom, uint32_t msgCookie, const CChainParams &chainparams);
 bool HandleGrapheneBlockRecoveryResponse(CDataStream &vRecv, CNode *pfrom, const CChainParams &chainparams);

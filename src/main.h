@@ -199,6 +199,7 @@ bool CheckDiskSpace(uint64_t nAdditionalBytes = 0);
 bool LoadExternalBlockFile(const CChainParams &chainparams, FILE *fileIn, CDiskBlockPos *dbp = nullptr);
 /** Do we already have this block on disk */
 bool AlreadyHaveBlock(const CInv &inv);
+bool AlreadyHaveBlock(const CInv2 &inv);
 
 /** Try to detect Partition (network isolation) attacks against us */
 void PartitionCheck(bool (*initialDownloadCheck)(),

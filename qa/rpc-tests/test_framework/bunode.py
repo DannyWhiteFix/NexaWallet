@@ -197,7 +197,6 @@ class BUProtocolHandler(NodeConnCB):
         self.last_getdata.append(message)
 
     def on_reject(self, conn, message):
-        print("on_reject")
         self.last_reject.append(message)
 
     def on_pong(self, conn, message):

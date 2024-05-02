@@ -683,8 +683,20 @@ std::string GetWarnings(const std::string &strFor)
 //
 // Messages
 //
-
 bool AlreadyHaveBlock(const CInv &inv)
+{
+    READLOCK(cs_mapBlockIndex);
+    // The Request Manager functionality requires that we return true only when we actually have received
+    // the block and not when we have received the header only.  Otherwise the request manager may not
+    // be able to update its block source in order to make re-requests.
+    BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
+    if (mi == mapBlockIndex.end())
+        return false;
+    if (!(mi->second->nStatus & BLOCK_HAVE_DATA))
+        return false;
+    return true;
+}
+bool AlreadyHaveBlock(const CInv2 &inv)
 {
     READLOCK(cs_mapBlockIndex);
     // The Request Manager functionality requires that we return true only when we actually have received

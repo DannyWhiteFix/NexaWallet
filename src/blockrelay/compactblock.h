@@ -410,7 +410,7 @@ extern CCompactBlockData compactdata; // Singleton class
 
 
 bool IsCompactBlocksEnabled();
-void SendCompactBlock(ConstCBlockRef pblock, CNode *pfrom, uint32_t msgCookie, const CInv &inv);
+void SendCompactBlock(ConstCBlockRef pblock, CNode *pfrom, uint32_t msgCookie, const int invType);
 bool IsCompactBlockValid(CNode *pfrom, std::shared_ptr<CompactBlock> compactBlock);
 
 // Xpress Validation: begin
