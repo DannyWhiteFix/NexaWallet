@@ -290,4 +290,44 @@ const char *CInv::GetCommand() const
 }
 
 std::string CInv::ToString() const { return strprintf("%s %s", GetCommand(), hash.ToString()); }
+
+CInv2::CInv2()
+{
+    type = 0;
+    hash.SetNull();
+}
+
+CInv2::CInv2(uint8_t typeIn, const uint256 &hashIn)
+{
+    type = typeIn;
+    hash = hashIn;
+}
+
+CInv2::CInv2(const std::string &strType, const uint256 &hashIn)
+{
+    unsigned int i;
+    for (i = 1; i < ARRAYLEN(ppszTypeName); i++)
+    {
+        if (strType == ppszTypeName[i])
+        {
+            type = i;
+            break;
+        }
+    }
+    if (i == ARRAYLEN(ppszTypeName))
+        throw std::out_of_range(strprintf("CInv::CInv(string, uint256): unknown type '%s'", strType));
+    hash = hashIn;
+}
+
+bool operator<(const CInv2 &a, const CInv2 &b) { return (a.type < b.type || (a.type == b.type && a.hash < b.hash)); }
+bool CInv2::IsKnownType() const { return (type >= 1 && type <= 7); }
+const char *CInv2::GetCommand() const
+{
+    if (!IsKnownType())
+        throw std::out_of_range(strprintf("CInv::GetCommand(): type=%d unknown type", type));
+    return ppszTypeName[type];
+}
+
+std::string CInv2::ToString() const { return strprintf("%s %s", GetCommand(), hash.ToString()); }
+
 const std::vector<std::string> &getAllNetMessageTypes() { return allNetMessageTypesVec; }

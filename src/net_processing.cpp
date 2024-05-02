@@ -97,11 +97,12 @@ bool PeerHasHeader(const CNodeState *state, CBlockIndex *pindex)
     return false;
 }
 
+template <class T>
 void static ProcessGetData(CNode *pfrom,
     const Consensus::Params &consensusParams,
-    std::deque<std::pair<CInv, uint32_t> > &vInv)
+    std::deque<std::pair<T, uint32_t> > &vInv)
 {
-    std::vector<CInv> vNotFound;
+    std::vector<T> vNotFound;
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
 
     auto it = vInv.begin();
@@ -134,7 +135,7 @@ void static ProcessGetData(CNode *pfrom,
         }
 
         // start processing inventory here
-        const CInv &inv = it->first;
+        const T &inv = it->first;
         it++;
 
         if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK)
@@ -226,7 +227,7 @@ void static ProcessGetData(CNode *pfrom,
                         else if (inv.type == MSG_CMPCT_BLOCK)
                         {
                             LOG(CMPCT, "Sending compactblock via getdata message to %s\n", pfrom->GetLogName());
-                            SendCompactBlock(pblock, pfrom, msgCookie, inv);
+                            SendCompactBlock(pblock, pfrom, msgCookie, inv.type);
                             replyCookieCount++;
                         }
                         else // MSG_FILTERED_BLOCK)
@@ -278,8 +279,8 @@ void static ProcessGetData(CNode *pfrom,
                     // Bypass PushInventory, this must send even if redundant,
                     // and we want it right after the last block so they don't
                     // wait for other stuff first.
-                    std::vector<CInv> oneInv;
-                    oneInv.push_back(CInv(MSG_BLOCK, chainActive.Tip()->GetBlockHash()));
+                    std::vector<T> oneInv;
+                    oneInv.push_back(T(MSG_BLOCK, chainActive.Tip()->GetBlockHash()));
                     pfrom->PushMessageWithCookie(NetMsgType::INV, oneReplyPerInvCookie + replyCookieCount, oneInv);
                     replyCookieCount++;
                     pfrom->hashContinue.SetNull();
@@ -393,6 +394,109 @@ void static ProcessGetData(CNode *pfrom,
         // having to download the entire memory pool.
         pfrom->PushMessageWithCookie(NetMsgType::NOTFOUND, msgCookie | 0xFFFF, vNotFound);
     }
+}
+
+template <class T>
+static bool processInvMsgs(CNode *pfrom, CDataStream &vRecv, std::vector<T> &vInv)
+{
+    vRecv >> vInv;
+    size_t vInvSize = vInv.size();
+    LOG(NET, "Received INV list of size %d\n", vInvSize);
+
+    // Message Consistency Checking
+    //   Check size == 0 to be intolerant of an empty and useless request.
+    //   Validate that INVs are a valid type and not null.
+    if (vInvSize > MAX_INV_SZ || vInv.empty())
+    {
+        dosMan.Misbehaving(pfrom, 20);
+        return error("message inv size() = %u", vInvSize);
+    }
+
+    // Allow whitelisted peers to send data other than blocks in blocks only mode if whitelistrelay is true
+    if (pfrom->fWhitelisted && GetBoolArg("-whitelistrelay", DEFAULT_WHITELISTRELAY))
+        fBlocksOnly = false;
+
+    for (unsigned int nInv = 0; nInv < vInvSize; nInv++)
+    {
+        if (shutdown_threads.load() == true)
+            return false;
+
+        const T &inv = vInv[nInv];
+        if (!((inv.type == MSG_TX) || (inv.type == MSG_BLOCK) || inv.type == MSG_DOUBLESPENDPROOF))
+        {
+            LOG(NET, "message inv invalid type = %u hash %s", inv.type, inv.hash.ToString());
+            return false;
+        }
+        else if (inv.hash.IsNull())
+        {
+            LOG(NET, "message inv has null hash %s", inv.type, inv.hash.ToString());
+            return false;
+        }
+
+        if (inv.type == MSG_BLOCK)
+        {
+            bool fAlreadyHaveBlock = AlreadyHaveBlock(inv);
+            LOG(NET, "got BLOCK inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHaveBlock ? "have" : "new", pfrom->id);
+
+            requester.UpdateBlockAvailability(pfrom->GetId(), inv.hash);
+            // RE !IsInitialBlockDownload(): We do not want to get the block if the system is executing the initial
+            // block download because
+            // blocks are stored in block files in the order of arrival.  So grabbing blocks "early" will cause new
+            // blocks to be sprinkled
+            // throughout older block files.  This will stop those files from being pruned.
+            // !IsInitialBlockDownload() can be removed if
+            // a better block storage system is devised.
+            if ((!fAlreadyHaveBlock && !IsInitialBlockDownload()) ||
+                (!fAlreadyHaveBlock && Params().NetworkIDString() == "regtest"))
+            {
+                // Since we now only rely on headers for block requests, if we get an INV from an older node or
+                // if there was a very large re-org which resulted in a revert to block announcements via INV,
+                // we will instead request the header rather than the block.  This is safer and prevents an
+                // attacker from sending us fake INV's for blocks that do not exist or try to get us to request
+                // and download fake blocks.
+                pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), inv.hash);
+            }
+            else
+            {
+                LOG(NET,
+                    "skipping request of block %s.  already have: %d  importing: %d  reindex: %d  "
+                    "isChainNearlySyncd: %d\n",
+                    inv.hash.ToString(), fAlreadyHaveBlock, fImporting, fReindex, IsChainNearlySyncd());
+            }
+        }
+        else if (inv.type == MSG_TX)
+        {
+            bool fMayAlreadyHaveTx = TxMayAlreadyHave(inv.type, inv.hash);
+            // LOG(NET, "got inv: %s  %d peer=%s\n", inv.ToString(), fMayAlreadyHaveTx ? "have" : "new",
+            // pfrom->GetLogName());
+            LOG(NET, "got inv: %s  have: %d peer=%s\n", inv.ToString(), fMayAlreadyHaveTx, pfrom->GetLogName());
+
+            pfrom->AddInventoryKnown(inv);
+            if (fBlocksOnly)
+            {
+                LOG(NET, "transaction (%s) inv sent in violation of protocol peer=%d\n", inv.hash.ToString(),
+                    pfrom->id);
+            }
+            // RE !IsInitialBlockDownload(): during IBD, its a waste of bandwidth to grab transactions, they will
+            // likely be included in blocks that we IBD download anyway.  This is especially important as
+            // transaction volumes increase.
+            else if (!fMayAlreadyHaveTx && !IsInitialBlockDownload())
+            {
+                requester.AskFor(CInv(inv.type, inv.hash), pfrom);
+            }
+        }
+        else if (inv.type == MSG_DOUBLESPENDPROOF && doubleSpendProofs.Value() == true)
+        {
+            std::vector<T> vGetData;
+            vGetData.push_back(inv);
+            pfrom->PushMessage(NetMsgType::GETDATA, vGetData);
+        }
+
+        // Track requests for our stuff.
+        GetMainSignals().Inventory(inv.hash);
+    }
+
+    return true;
 }
 
 static void handleAddressAfterInit(CNode *pfrom)
@@ -591,6 +695,7 @@ bool ProcessMessage(CNode *pfrom,
             if (capdPoolSize.Value() != 0)
                 xver.set_u64c(XVer::BU_CAPD_VERSION, 1); // capd version
             xver.set_u64c(XVer::BU_ADDRV2_SUPPORT, 1); // signal support for ADDRV2 messages
+            xver.set_u64c(XVer::BU_INV2_SUPPORT, 1); // signal support for INV2 messages
 
             electrum::set_extversion_flags(xver, chainparams.NetworkIDString());
 
@@ -927,106 +1032,20 @@ bool ProcessMessage(CNode *pfrom,
         if (fImporting || fReindex)
             return true;
 
-        std::vector<CInv> vInv;
-        vRecv >> vInv;
-        size_t vInvSize = vInv.size();
-        LOG(NET, "Received INV list of size %d\n", vInvSize);
-
-        // Message Consistency Checking
-        //   Check size == 0 to be intolerant of an empty and useless request.
-        //   Validate that INVs are a valid type and not null.
-        if (vInvSize > MAX_INV_SZ || vInv.empty())
+        if (pfrom->fPeerWantsINV2)
         {
-            dosMan.Misbehaving(pfrom, 20);
-            return error("message inv size() = %u", vInvSize);
+            std::vector<CInv2> vInv;
+            return processInvMsgs(pfrom, vRecv, vInv);
         }
-
-        // Allow whitelisted peers to send data other than blocks in blocks only mode if whitelistrelay is true
-        if (pfrom->fWhitelisted && GetBoolArg("-whitelistrelay", DEFAULT_WHITELISTRELAY))
-            fBlocksOnly = false;
-
-        for (unsigned int nInv = 0; nInv < vInvSize; nInv++)
+        else
         {
-            if (shutdown_threads.load() == true)
-                return false;
-
-            const CInv &inv = vInv[nInv];
-            if (!((inv.type == MSG_TX) || (inv.type == MSG_BLOCK) || inv.type == MSG_DOUBLESPENDPROOF))
-            {
-                LOG(NET, "message inv invalid type = %u hash %s", inv.type, inv.hash.ToString());
-                return false;
-            }
-            else if (inv.hash.IsNull())
-            {
-                LOG(NET, "message inv has null hash %s", inv.type, inv.hash.ToString());
-                return false;
-            }
-
-            if (inv.type == MSG_BLOCK)
-            {
-                bool fAlreadyHaveBlock = AlreadyHaveBlock(inv);
-                LOG(NET, "got BLOCK inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHaveBlock ? "have" : "new",
-                    pfrom->id);
-
-                requester.UpdateBlockAvailability(pfrom->GetId(), inv.hash);
-                // RE !IsInitialBlockDownload(): We do not want to get the block if the system is executing the initial
-                // block download because
-                // blocks are stored in block files in the order of arrival.  So grabbing blocks "early" will cause new
-                // blocks to be sprinkled
-                // throughout older block files.  This will stop those files from being pruned.
-                // !IsInitialBlockDownload() can be removed if
-                // a better block storage system is devised.
-                if ((!fAlreadyHaveBlock && !IsInitialBlockDownload()) ||
-                    (!fAlreadyHaveBlock && Params().NetworkIDString() == "regtest"))
-                {
-                    // Since we now only rely on headers for block requests, if we get an INV from an older node or
-                    // if there was a very large re-org which resulted in a revert to block announcements via INV,
-                    // we will instead request the header rather than the block.  This is safer and prevents an
-                    // attacker from sending us fake INV's for blocks that do not exist or try to get us to request
-                    // and download fake blocks.
-                    pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), inv.hash);
-                }
-                else
-                {
-                    LOG(NET,
-                        "skipping request of block %s.  already have: %d  importing: %d  reindex: %d  "
-                        "isChainNearlySyncd: %d\n",
-                        inv.hash.ToString(), fAlreadyHaveBlock, fImporting, fReindex, IsChainNearlySyncd());
-                }
-            }
-            else if (inv.type == MSG_TX)
-            {
-                bool fMayAlreadyHaveTx = TxMayAlreadyHave(inv.type, inv.hash);
-                LOG(NET, "got inv: %s  have: %d peer=%s\n", inv.ToString(), fMayAlreadyHaveTx, pfrom->GetLogName());
-
-                pfrom->AddInventoryKnown(inv);
-                if (fBlocksOnly)
-                {
-                    LOG(NET, "transaction (%s) inv sent in violation of protocol peer=%d\n", inv.hash.ToString(),
-                        pfrom->id);
-                }
-                // RE !IsInitialBlockDownload(): during IBD, its a waste of bandwidth to grab transactions, they will
-                // likely be included in blocks that we IBD download anyway.  This is especially important as
-                // transaction volumes increase.
-                else if (!fMayAlreadyHaveTx && !IsInitialBlockDownload())
-                {
-                    requester.AskFor(inv, pfrom);
-                }
-            }
-            else if (inv.type == MSG_DOUBLESPENDPROOF && doubleSpendProofs.Value() == true)
-            {
-                std::vector<CInv> vGetData;
-                vGetData.push_back(inv);
-                pfrom->PushMessage(NetMsgType::GETDATA, vGetData);
-            }
-
-            // Track requests for our stuff.
-            GetMainSignals().Inventory(inv.hash);
+            std::vector<CInv> vInv;
+            return processInvMsgs(pfrom, vRecv, vInv);
         }
     }
 
-
-    else if (strCommand == NetMsgType::GETDATA)
+    // Peer wants old style inventory (CInv) messages
+    else if (strCommand == NetMsgType::GETDATA && !pfrom->fPeerWantsINV2)
     {
         if (fImporting || fReindex)
         {
@@ -1084,6 +1103,64 @@ bool ProcessMessage(CNode *pfrom,
         }
     }
 
+    // Peer wants new style inventory (CInv2) messages
+    else if (strCommand == NetMsgType::GETDATA && pfrom->fPeerWantsINV2)
+    {
+        if (fImporting || fReindex)
+        {
+            LOG(NET, "received getdata from %s but importing\n", pfrom->GetLogName());
+            return true;
+        }
+
+        std::vector<CInv2> vInv;
+        vRecv >> vInv;
+        // BU check size == 0 to be intolerant of an empty and useless request
+        if ((vInv.size() > MAX_INV_SZ) || (vInv.size() == 0))
+        {
+            dosMan.Misbehaving(pfrom, 20);
+            return error("message getdata size() = %u", vInv.size());
+        }
+
+        // Validate that INVs are a valid type
+        std::deque<std::pair<CInv2, uint32_t> > invDeque;
+        for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
+        {
+            const CInv2 &inv = vInv[nInv];
+            if (!((inv.type == MSG_TX) || (inv.type == MSG_BLOCK) || (inv.type == MSG_FILTERED_BLOCK) ||
+                    (inv.type == MSG_CMPCT_BLOCK) || inv.type == MSG_DOUBLESPENDPROOF))
+            {
+                dosMan.Misbehaving(pfrom, 20, BanReasonInvalidInventory);
+                return error("message inv invalid type = %u", inv.type);
+            }
+
+            // Make basic checks
+            if (inv.type == MSG_CMPCT_BLOCK)
+            {
+                if (!requester.CheckForRequestDOS(pfrom, chainparams))
+                    return false;
+            }
+
+            invDeque.push_back(std::pair<CInv2, uint32_t>(inv, msgCookie));
+            // These will be deferred, so we need to provide a different cookie for each one.
+            if ((inv.type == MSG_BLOCK) || (inv.type == MSG_CMPCT_BLOCK))
+                msgCookie++;
+        }
+
+        if (fDebug || (invDeque.size() != 1))
+            LOG(NET, "received getdata (%u invsz) peer=%s\n", invDeque.size(), pfrom->GetLogName());
+
+        if ((fDebug && invDeque.size() > 0) || (invDeque.size() == 1))
+            LOG(NET, "received getdata for: %s peer=%s\n", invDeque[0].first.ToString(), pfrom->GetLogName());
+
+        // Run process getdata and process as much of the getdata's as we can before taking the lock
+        // and appending the remainder to the vRecvGetData queue.
+        ProcessGetData(pfrom, chainparams.GetConsensus(), invDeque);
+        if (!invDeque.empty())
+        {
+            LOCK(pfrom->csRecvGetData);
+            pfrom->vRecvGetData2.insert(pfrom->vRecvGetData2.end(), invDeque.begin(), invDeque.end());
+        }
+    }
 
     else if (strCommand == NetMsgType::GETBLOCKS)
     {
@@ -1124,7 +1201,11 @@ bool ProcessMessage(CNode *pfrom,
                     break;
                 }
             }
-            pfrom->PushInventory(CInv(MSG_BLOCK, pindex->GetBlockHash()));
+            if (pfrom->fPeerWantsINV2)
+                pfrom->PushInventory(CInv2(MSG_BLOCK, pindex->GetBlockHash()));
+            else
+                pfrom->PushInventory(CInv(MSG_BLOCK, pindex->GetBlockHash()));
+
             if (--nLimit <= 0)
             {
                 // When this block is requested, we'll send an inv that'll
@@ -1558,25 +1639,40 @@ bool ProcessMessage(CNode *pfrom,
             return false;
 
         CBloomFilter filterMemPool;
-        CInv inv;
-        vRecv >> inv >> filterMemPool;
+        uint256 hash;
+        int invType = 0;
+
+        if (pfrom->fPeerWantsINV2)
+        {
+            CInv2 inv2;
+            vRecv >> inv2 >> filterMemPool;
+            invType = inv2.type;
+            hash = inv2.hash;
+        }
+        else
+        {
+            CInv inv;
+            vRecv >> inv >> filterMemPool;
+            invType = inv.type;
+            hash = inv.hash;
+        }
 
         // Message consistency checking
-        if (inv.hash.IsNull())
+        if (hash.IsNull())
         {
             dosMan.Misbehaving(pfrom, 100);
-            return error("invalid get_xthin type=%u hash=%s", inv.type, inv.hash.ToString());
+            return error("invalid get_xthin type=%u hash=%s", invType, hash.ToString());
         }
 
 
         // Validates that the filter is reasonably sized.
         LoadFilter(pfrom, &filterMemPool);
         {
-            auto *invIndex = LookupBlockIndex(inv.hash);
+            auto *invIndex = LookupBlockIndex(hash);
             if (!invIndex)
             {
                 dosMan.Misbehaving(pfrom, 100);
-                return error("Peer %srequested nonexistent block %s", pfrom->GetLogName(), inv.hash.ToString());
+                return error("Peer %srequested nonexistent block %s", pfrom->GetLogName(), hash.ToString());
             }
 
             const Consensus::Params &consensusParams = Params().GetConsensus();
@@ -1584,12 +1680,11 @@ bool ProcessMessage(CNode *pfrom,
             if (!pblock)
             {
                 // We don't have the block yet, although we know about it.
-                return error(
-                    "Peer %s requested block %s that cannot be read", pfrom->GetLogName(), inv.hash.ToString());
+                return error("Peer %s requested block %s that cannot be read", pfrom->GetLogName(), hash.ToString());
             }
             else
             {
-                SendXThinBlock(pblock, msgCookie, pfrom, inv);
+                SendXThinBlock(pblock, msgCookie, pfrom, invType);
             }
         }
     }
@@ -1598,21 +1693,37 @@ bool ProcessMessage(CNode *pfrom,
         if (!requester.CheckForRequestDOS(pfrom, chainparams))
             return false;
 
-        CInv inv;
-        vRecv >> inv;
+        uint256 hash;
+        int invType = 0;
 
-        // Message consistency checking
-        if (inv.hash.IsNull())
+        if (pfrom->fPeerWantsINV2)
         {
-            dosMan.Misbehaving(pfrom, 100);
-            return error("invalid get_thin type=%u hash=%s", inv.type, inv.hash.ToString());
+            CInv2 inv2;
+            vRecv >> inv2;
+            invType = inv2.type;
+            hash = inv2.hash;
+        }
+        else
+        {
+            CInv inv;
+            vRecv >> inv;
+            invType = inv.type;
+            hash = inv.hash;
         }
 
-        auto *invIndex = LookupBlockIndex(inv.hash);
+
+        // Message consistency checking
+        if (hash.IsNull())
+        {
+            dosMan.Misbehaving(pfrom, 100);
+            return error("invalid get_thin type=%u hash=%s", invType, hash.ToString());
+        }
+
+        auto *invIndex = LookupBlockIndex(hash);
         if (!invIndex)
         {
             dosMan.Misbehaving(pfrom, 100);
-            return error("Peer %srequested nonexistent block %s", pfrom->GetLogName(), inv.hash.ToString());
+            return error("Peer %srequested nonexistent block %s", pfrom->GetLogName(), hash.ToString());
         }
 
         const Consensus::Params &consensusParams = Params().GetConsensus();
@@ -1620,11 +1731,11 @@ bool ProcessMessage(CNode *pfrom,
         if (!pblock)
         {
             // We don't have the block yet, although we know about it.
-            return error("Peer %s requested block %s that cannot be read", pfrom->GetLogName(), inv.hash.ToString());
+            return error("Peer %s requested block %s that cannot be read", pfrom->GetLogName(), hash.ToString());
         }
         else
         {
-            SendXThinBlock(pblock, msgCookie, pfrom, inv);
+            SendXThinBlock(pblock, msgCookie, pfrom, invType);
         }
     }
     else if (strCommand == NetMsgType::XPEDITEDREQUEST)
@@ -1796,9 +1907,9 @@ bool ProcessMessage(CNode *pfrom,
                 return true);
         }
 
-        CInv inv(MSG_BLOCK, pblock->GetHash());
-        LOG(BLK, "received block %s peer=%d\n", inv.hash.ToString(), pfrom->id);
-        UnlimitedLogBlock(*pblock, inv.hash.ToString(), receiptTime);
+        const uint256 hash = pblock->GetHash();
+        LOG(BLK, "received block %s peer=%d\n", hash.ToString(), pfrom->id);
+        UnlimitedLogBlock(*pblock, hash.ToString(), receiptTime);
 
         if (IsChainNearlySyncd()) // BU send the received block out expedited channels quickly
         {
@@ -1819,7 +1930,7 @@ bool ProcessMessage(CNode *pfrom,
         // Message consistency checking
         // NOTE: consistency checking is handled by checkblock() which is called during
         //       ProcessNewBlock() during HandleBlockMessage.
-        PV->HandleBlockMessage(pfrom, strCommand, pblock, inv);
+        PV->HandleBlockMessage(pfrom, strCommand, pblock, hash);
     }
 
 
@@ -1853,7 +1964,7 @@ bool ProcessMessage(CNode *pfrom,
     }
 
 
-    else if (strCommand == NetMsgType::MEMPOOL)
+    else if (strCommand == NetMsgType::MEMPOOL && !pfrom->fPeerWantsINV2)
     {
         if (CNode::OutboundTargetReached(false) && !pfrom->fWhitelisted)
         {
@@ -1877,6 +1988,55 @@ bool ProcessMessage(CNode *pfrom,
         for (uint256 &hash : vtxid)
         {
             CInv inv(MSG_TX, hash);
+            if (fHaveFilter)
+            {
+                CTransactionRef ptx = nullptr;
+                ptx = mempool.get(inv.hash);
+                if (ptx == nullptr)
+                    continue; // another thread removed since queryHashes, maybe...
+
+                LOCK(pfrom->cs_filter);
+                if (!pfrom->pfilter->IsRelevantAndUpdate(ptx))
+                    continue;
+            }
+            // By sending before we push the next one on the list, we guarantee that the pushmessage outside of this
+            // loop will be called rather than this one at the end of the array.
+            // That must happen so that the end-of-message-group cookie can be sent.
+            if (vInv.size() == MAX_INV_SZ)
+            {
+                pfrom->PushMessageWithCookie(NetMsgType::INV, msgCookie + replyCount, vInv);
+                replyCount++;
+                vInv.clear();
+            }
+            vInv.push_back(inv);
+        }
+        if (vInv.size() > 0)
+            pfrom->PushMessageWithCookie(NetMsgType::INV, msgCookie | 0xFFFF, vInv);
+    }
+    else if (strCommand == NetMsgType::MEMPOOL && pfrom->fPeerWantsINV2)
+    {
+        if (CNode::OutboundTargetReached(false) && pfrom->fWhitelisted)
+        {
+            LOG(NET, "mempool request with bandwidth limit reached, disconnect peer %s\n", pfrom->GetLogName());
+            pfrom->fDisconnect = true;
+            return true;
+        }
+        std::vector<uint256> vtxid;
+        mempool.queryIds(vtxid);
+        std::vector<CInv2> vInv;
+
+        // Because we have to take cs_filter after mempool.cs, in order to maintain locking order, we
+        // need find out if a filter is present first before later doing the mempool.get().
+        bool fHaveFilter = false;
+        {
+            LOCK(pfrom->cs_filter);
+            fHaveFilter = pfrom->pfilter ? true : false;
+        }
+
+        uint32_t replyCount = 0;
+        for (uint256 &hash : vtxid)
+        {
+            CInv2 inv(MSG_TX, hash);
             if (fHaveFilter)
             {
                 CTransactionRef ptx = nullptr;
@@ -2234,6 +2394,10 @@ bool ProcessMessages(CNode *pfrom)
         if (locked && !pfrom->vRecvGetData.empty())
         {
             ProcessGetData(pfrom, chainparams.GetConsensus(), pfrom->vRecvGetData);
+        }
+        if (locked && !pfrom->vRecvGetData2.empty())
+        {
+            ProcessGetData(pfrom, chainparams.GetConsensus(), pfrom->vRecvGetData2);
         }
     }
 
@@ -2788,7 +2952,10 @@ bool SendMessages(CNode *pto)
                         // setInventoryKnown to track this.)
                         if (!PeerHasHeader(state, pindex))
                         {
-                            pto->PushInventory(CInv(MSG_BLOCK, hashToAnnounce));
+                            if (pto->fPeerWantsINV2)
+                                pto->PushInventory(CInv2(MSG_BLOCK, hashToAnnounce));
+                            else
+                                pto->PushInventory(CInv(MSG_BLOCK, hashToAnnounce));
                             LOG(NET, "%s: sending inv peer=%d hash=%s\n", __func__, pto->id, hashToAnnounce.ToString());
                         }
                     }
@@ -2819,9 +2986,9 @@ bool SendMessages(CNode *pto)
         bool haveInv2Send = false;
         {
             LOCK(pto->cs_inventory);
-            haveInv2Send = !pto->vInventoryToSend.empty();
+            haveInv2Send = !pto->vInventoryToSend.empty() || !pto->vInventoryToSend2.empty();
         }
-        if (haveInv2Send)
+        if (haveInv2Send && !pto->fPeerWantsINV2)
         {
             std::vector<CInv> vInvSend;
             FastRandomContext rnd;
@@ -2869,6 +3036,73 @@ bool SendMessages(CNode *pto)
                     {
                         pto->vInventoryToSend.erase(
                             pto->vInventoryToSend.begin(), pto->vInventoryToSend.begin() + nToErase);
+                    }
+                    else // exit out of the while loop if nothing was done
+                    {
+                        break;
+                    }
+                }
+
+                // To maintain proper locking order we have to push the message when we do not hold cs_inventory which
+                // was held in the section above.
+                if (nToErase > 0)
+                {
+                    if (!vInvSend.empty())
+                    {
+                        pto->PushMessage(NetMsgType::INV, vInvSend);
+                        vInvSend.clear();
+                    }
+                }
+            }
+        }
+        if (haveInv2Send && pto->fPeerWantsINV2)
+        {
+            std::vector<CInv2> vInvSend;
+            FastRandomContext rnd;
+            while (1)
+            {
+                // Send message INV up to the MAX_INV_TO_SEND. Once we reach the max then send the INV message
+                // and if there is any remaining it will be sent on the next iteration until vInventoryToSend is empty.
+                int nToErase = 0;
+                {
+                    // BU - here we only want to forward message inventory if our peer has actually been requesting
+                    // useful data or giving us useful data.  We give them 2 minutes to be useful but then choke off
+                    // their inventory.  This prevents fake peers from connecting and listening to our inventory
+                    // while providing no value to the network.
+                    // However we will still send them block inventory in the case they are a pruned node or wallet
+                    // waiting for block announcements, therefore we have to check each inv in pto->vInventoryToSend.
+                    bool fChokeTxInv =
+                        (pto->nActivityBytes == 0 && (GetStopwatchMicros() - pto->nStopwatchConnected) > 120 * 1000000);
+
+                    // Find INV's which should be sent, save them to vInvSend, and then erase from vInventoryToSend.
+                    LOCK(pto->cs_inventory);
+                    int invsz = std::min((int)pto->vInventoryToSend2.size(), MAX_INV_TO_SEND);
+                    vInvSend.reserve(invsz);
+                    for (const CInv2 &inv : pto->vInventoryToSend2)
+                    {
+                        nToErase++;
+                        if (inv.type == MSG_TX)
+                        {
+                            if (fChokeTxInv)
+                                continue;
+                            // randomly don't inv but always send inventory to spv clients
+                            if (((rnd.rand32() % 100) < randomlyDontInv.Value()) && !pto->fClient)
+                                continue;
+                            // skip if we already know about this one
+                            if (pto->filterInventoryKnown.contains(inv.hash))
+                                continue;
+                        }
+                        vInvSend.push_back(inv);
+                        pto->filterInventoryKnown.insert(inv.hash);
+
+                        if (vInvSend.size() >= MAX_INV_TO_SEND)
+                            break;
+                    }
+
+                    if (nToErase > 0)
+                    {
+                        pto->vInventoryToSend2.erase(
+                            pto->vInventoryToSend2.begin(), pto->vInventoryToSend2.begin() + nToErase);
                     }
                     else // exit out of the while loop if nothing was done
                     {

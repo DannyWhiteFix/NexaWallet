@@ -122,7 +122,7 @@ void CGrapheneBlock::OrderTxHashes(CNode *pfrom)
     LOG(GRAPHENE, "Using canonical order for block from peer=%s\n", pfrom->GetLogName());
 }
 
-bool CGrapheneBlock::ValidateAndRecontructBlock(uint256 blockhash,
+bool CGrapheneBlock::ValidateAndRecontructBlock(const uint256 &blockhash,
     std::shared_ptr<CBlockThinRelay> pblock,
     const std::map<uint64_t, CTransactionRef> &mapCheapHashTx,
     std::string command,
@@ -152,9 +152,7 @@ bool CGrapheneBlock::ValidateAndRecontructBlock(uint256 blockhash,
     }
 
     // We have all the transactions now that are in this block: try to reassemble and process.
-    CInv inv2(MSG_BLOCK, blockhash);
-
-    // for compression statistics, we have to add up the size of grapheneblock and the re-requested grapheneBlockTx.
+    // For compression statistics, we have to add up the size of grapheneblock and the re-requested grapheneBlockTx.
     uint64_t nSizeGrapheneBlockTx = msgSize;
     uint64_t blockSize = pblock->GetBlockSize();
     float nCompressionRatio = 0.0;
@@ -163,8 +161,7 @@ bool CGrapheneBlock::ValidateAndRecontructBlock(uint256 blockhash,
     LOG(GRAPHENE,
         "Reassembled grblktx for %s (%d bytes). Message was %d bytes (graphene block) and %d bytes "
         "(re-requested tx), compression ratio %3.2f, peer=%s\n",
-        pblock->GetHash().ToString(), blockSize, GetSize(), nSizeGrapheneBlockTx, nCompressionRatio,
-        pfrom->GetLogName());
+        blockhash.ToString(), blockSize, GetSize(), nSizeGrapheneBlockTx, nCompressionRatio, pfrom->GetLogName());
 
     // Update run-time statistics of graphene block bandwidth savings.
     // We add the original graphene block size with the size of transactions that were re-requested.
@@ -172,7 +169,7 @@ bool CGrapheneBlock::ValidateAndRecontructBlock(uint256 blockhash,
     graphenedata.UpdateInBound(nSizeGrapheneBlockTx + GetSize(), blockSize);
     LOG(GRAPHENE, "Graphene block stats: %s\n", graphenedata.ToString());
 
-    PV->HandleBlockMessage(pfrom, command, pblock, inv2);
+    PV->HandleBlockMessage(pfrom, command, pblock, blockhash);
 
     return true;
 }
@@ -715,7 +712,7 @@ bool CGrapheneBlock::process(CNode *pfrom, std::string strCommand, std::shared_p
     LOG(GRAPHENE, "Graphene block stats: %s\n", graphenedata.ToString().c_str());
 
     // Process the full block
-    PV->HandleBlockMessage(pfrom, strCommand, pblock, GetInv());
+    PV->HandleBlockMessage(pfrom, strCommand, pblock, pblock->GetHash());
 
     return true;
 }
@@ -1279,10 +1276,10 @@ bool IsGrapheneBlockEnabled() { return GetBoolArg("-use-grapheneblocks", DEFAULT
 void SendGrapheneBlock(ConstCBlockRef pblock,
     CNode *pfrom,
     uint32_t msgCookie,
-    const CInv &inv,
+    const int invType,
     const CMemPoolInfo &mempoolinfo)
 {
-    if (inv.type == MSG_GRAPHENEBLOCK)
+    if (invType == MSG_GRAPHENEBLOCK)
     {
         try
         {
@@ -1369,30 +1366,46 @@ bool HandleGrapheneBlockRequest(CDataStream &vRecv, CNode *pfrom, uint32_t msgCo
 {
     CMemPoolInfo mempoolinfo;
     CInv inv;
-    vRecv >> inv >> mempoolinfo;
+    CInv2 inv2;
+    uint256 hash;
+    int invType = 0;
+
+    if (pfrom->fPeerWantsINV2)
+    {
+        vRecv >> inv2 >> mempoolinfo;
+        invType = inv2.type;
+        hash = inv2.hash;
+    }
+    else
+    {
+        vRecv >> inv >> mempoolinfo;
+        invType = inv.type;
+        hash = inv.hash;
+    }
+
     graphenedata.UpdateInBoundMemPoolInfo(::GetSerializeSize(mempoolinfo, SER_NETWORK, PROTOCOL_VERSION));
 
     // Message consistency checking
-    if (inv.hash.IsNull())
+    if (hash.IsNull())
     {
         dosMan.Misbehaving(pfrom, 100);
-        return error("invalid GET_GRAPHENE message type=%u hash=%s", inv.type, inv.hash.ToString());
+        return error("invalid GET_GRAPHENE message type=%u hash=%s", invType, hash.ToString());
     }
 
     {
-        auto *hdr = LookupBlockIndex(inv.hash);
+        auto *hdr = LookupBlockIndex(hash);
         if (!hdr)
-            return error("Peer %s requested nonexistent block %s", pfrom->GetLogName(), inv.hash.ToString());
+            return error("Peer %s requested nonexistent block %s", pfrom->GetLogName(), hash.ToString());
 
         const Consensus::Params &consensusParams = Params().GetConsensus();
         ConstCBlockRef pblock = ReadBlockFromDisk(hdr, consensusParams);
         if (!pblock)
         {
             // We don't have the block yet, although we know about it.
-            return error("Peer %s requested block %s that cannot be read", pfrom->GetLogName(), inv.hash.ToString());
+            return error("Peer %s requested block %s that cannot be read", pfrom->GetLogName(), hash.ToString());
         }
         else
-            SendGrapheneBlock(pblock, pfrom, msgCookie, inv, mempoolinfo);
+            SendGrapheneBlock(pblock, pfrom, msgCookie, invType, mempoolinfo);
     }
 
     return true;
@@ -1623,6 +1636,7 @@ void RequestFailoverBlock(CNode *pfrom, std::shared_ptr<CBlockThinRelay> pblock)
         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
         CBloomFilter filterMemPool;
         CInv inv(MSG_XTHINBLOCK, blockhash);
+        CInv2 inv2(MSG_XTHINBLOCK, blockhash);
 
         std::vector<uint256> vOrphanHashes;
         {
@@ -1631,7 +1645,11 @@ void RequestFailoverBlock(CNode *pfrom, std::shared_ptr<CBlockThinRelay> pblock)
                 vOrphanHashes.emplace_back(mi.first);
         }
         BuildSeededBloomFilter(filterMemPool, vOrphanHashes, inv.hash, pfrom);
-        ss << inv;
+        if (pfrom->fPeerWantsINV2)
+            ss << inv2;
+        else
+            ss << inv;
+
         ss << filterMemPool;
         pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
     }
@@ -1643,9 +1661,20 @@ void RequestFailoverBlock(CNode *pfrom, std::shared_ptr<CBlockThinRelay> pblock)
         LOG(GRAPHENE | CMPCT, "Requesting a compactblock %s as failover from peer %s\n", blockhash.ToString(),
             pfrom->GetLogName());
         CInv inv(MSG_CMPCT_BLOCK, blockhash);
-        std::vector<CInv> vGetData;
-        vGetData.push_back(inv);
-        pfrom->PushMessage(NetMsgType::GETDATA, vGetData);
+        CInv2 inv2(MSG_CMPCT_BLOCK, blockhash);
+
+        if (pfrom->fPeerWantsINV2)
+        {
+            std::vector<CInv2> vGetData;
+            vGetData.push_back(inv2);
+            pfrom->PushMessage(NetMsgType::GETDATA, vGetData);
+        }
+        else
+        {
+            std::vector<CInv> vGetData;
+            vGetData.push_back(inv);
+            pfrom->PushMessage(NetMsgType::GETDATA, vGetData);
+        }
     }
     else
     {

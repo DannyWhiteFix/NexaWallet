@@ -201,7 +201,7 @@ public:
     void InitThread(const boost::thread::id this_id,
         const CNode *pfrom,
         ConstCBlockRef pblock,
-        const CInv &inv,
+        const uint256 &hash,
         uint64_t blockSize);
 
     /** Number of block validation threads currently validating a block */
@@ -257,7 +257,7 @@ public:
     uint32_t MaxWorkChainBeingProcessed();
 
     /** Process a block message */
-    void HandleBlockMessage(CNode *pfrom, const std::string &strCommand, ConstCBlockRef pblock, const CInv &inv);
+    void HandleBlockMessage(CNode *pfrom, const std::string &strCommand, ConstCBlockRef pblock, const uint256 &hash);
 
     /** The number of script validation threads */
     unsigned int ThreadCount() { return nThreads; }

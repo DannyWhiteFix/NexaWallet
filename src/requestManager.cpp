@@ -504,33 +504,41 @@ static bool IsGrapheneVersionSupported(CNode *pfrom)
     }
 }
 
-bool CRequestManager::RequestBlock(CNode *pfrom, CInv obj)
+bool CRequestManager::RequestBlock(CNode *pfrom, CInv &obj)
 {
-    CInv inv2(obj);
+    const uint256 &hash = obj.hash;
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
 
-    if (IsChainNearlySyncd() &&
-        (!thinrelay.HasBlockRelayTimerExpired(obj.hash) || !thinrelay.IsBlockRelayTimerEnabled()))
+    if (IsChainNearlySyncd() && (!thinrelay.HasBlockRelayTimerExpired(hash) || !thinrelay.IsBlockRelayTimerEnabled()))
     {
         // Ask for Graphene blocks
         // Must download a graphene block from a graphene enabled peer.
         if (IsGrapheneBlockEnabled() && pfrom->GrapheneCapable() && IsGrapheneVersionSupported(pfrom))
         {
-            if (thinrelay.AddBlockInFlight(pfrom, inv2.hash, NetMsgType::GRAPHENEBLOCK))
+            if (thinrelay.AddBlockInFlight(pfrom, hash, NetMsgType::GRAPHENEBLOCK))
             {
-                MarkBlockAsInFlight(pfrom->GetId(), obj.hash);
+                MarkBlockAsInFlight(pfrom->GetId(), hash);
 
                 // Instead of building a bloom filter here as we would for an xthin, we actually
                 // just need to fill in CMempoolInfo
-                inv2.type = MSG_GRAPHENEBLOCK;
                 CMemPoolInfo receiverMemPoolInfo = GetGrapheneMempoolInfo();
-                ss << inv2;
+
+                if (pfrom->fPeerWantsINV2)
+                {
+                    CInv2 invType2(MSG_GRAPHENEBLOCK, hash);
+                    ss << invType2;
+                }
+                else
+                {
+                    CInv inv(MSG_GRAPHENEBLOCK, hash);
+                    ss << inv;
+                }
                 ss << receiverMemPoolInfo;
                 graphenedata.UpdateOutBoundMemPoolInfo(
                     ::GetSerializeSize(receiverMemPoolInfo, SER_NETWORK, PROTOCOL_VERSION));
 
                 pfrom->PushMessageWithCookie(NetMsgType::GET_GRAPHENE, getCookie(), ss);
-                LOG(GRAPHENE, "Requesting graphene block %s from peer %s\n", inv2.hash.ToString(), pfrom->GetLogName());
+                LOG(GRAPHENE, "Requesting graphene block %s from peer %s\n", hash.ToString(), pfrom->GetLogName());
                 return true;
             }
         }
@@ -540,24 +548,32 @@ bool CRequestManager::RequestBlock(CNode *pfrom, CInv obj)
         // Must download an xthinblock from a xthin peer.
         if (IsThinBlocksEnabled() && pfrom->ThinBlockCapable())
         {
-            if (thinrelay.AddBlockInFlight(pfrom, inv2.hash, NetMsgType::XTHINBLOCK))
+            if (thinrelay.AddBlockInFlight(pfrom, hash, NetMsgType::XTHINBLOCK))
             {
-                MarkBlockAsInFlight(pfrom->GetId(), obj.hash);
+                MarkBlockAsInFlight(pfrom->GetId(), hash);
 
                 CBloomFilter filterMemPool;
-                inv2.type = MSG_XTHINBLOCK;
                 std::vector<uint256> vOrphanHashes;
                 {
                     READLOCK(orphanpool.cs_orphanpool);
                     for (auto &mi : orphanpool.mapOrphanTransactions)
                         vOrphanHashes.emplace_back(mi.first);
                 }
-                BuildSeededBloomFilter(filterMemPool, vOrphanHashes, inv2.hash, pfrom);
-                ss << inv2;
+                BuildSeededBloomFilter(filterMemPool, vOrphanHashes, hash, pfrom);
+                if (pfrom->fPeerWantsINV2)
+                {
+                    CInv2 invType2(MSG_XTHINBLOCK, hash);
+                    ss << invType2;
+                }
+                else
+                {
+                    CInv inv(MSG_XTHINBLOCK, hash);
+                    ss << inv;
+                }
                 ss << filterMemPool;
 
                 pfrom->PushMessageWithCookie(NetMsgType::GET_XTHIN, getCookie(), ss);
-                LOG(THIN, "Requesting xthinblock %s from peer %s\n", inv2.hash.ToString(), pfrom->GetLogName());
+                LOG(THIN, "Requesting xthinblock %s from peer %s\n", hash.ToString(), pfrom->GetLogName());
                 return true;
             }
         }
@@ -566,31 +582,56 @@ bool CRequestManager::RequestBlock(CNode *pfrom, CInv obj)
         // Must download an xthinblock from a xthin peer.
         if (IsCompactBlocksEnabled() && pfrom->CompactBlockCapable())
         {
-            if (thinrelay.AddBlockInFlight(pfrom, inv2.hash, NetMsgType::CMPCTBLOCK))
+            if (thinrelay.AddBlockInFlight(pfrom, hash, NetMsgType::CMPCTBLOCK))
             {
-                MarkBlockAsInFlight(pfrom->GetId(), obj.hash);
+                MarkBlockAsInFlight(pfrom->GetId(), hash);
 
-                std::vector<CInv> vGetData;
-                inv2.type = MSG_CMPCT_BLOCK;
-                vGetData.push_back(inv2);
-                pfrom->PushMessageWithCookie(NetMsgType::GETDATA, getCookie(), vGetData);
-                LOG(CMPCT, "Requesting compact block %s from peer %s\n", inv2.hash.ToString(), pfrom->GetLogName());
+                if (pfrom->fPeerWantsINV2)
+                {
+                    std::vector<CInv2> vGetData;
+                    CInv2 invType2(MSG_CMPCT_BLOCK, hash);
+                    vGetData.push_back(invType2);
+                    pfrom->PushMessageWithCookie(NetMsgType::GETDATA, getCookie(), vGetData);
+                    LOG(CMPCT, "Requesting compact block %s from peer %s\n", hash.ToString(), pfrom->GetLogName());
+                }
+                else
+                {
+                    std::vector<CInv> vGetData;
+                    CInv inv(MSG_CMPCT_BLOCK, hash);
+                    vGetData.push_back(inv);
+                    pfrom->PushMessageWithCookie(NetMsgType::GETDATA, getCookie(), vGetData);
+                    LOG(CMPCT, "Requesting compact block %s from peer %s\n", hash.ToString(), pfrom->GetLogName());
+                }
                 return true;
             }
         }
     }
 
     // Request a full block if the BlockRelayTimer has expired.
-    if (!IsChainNearlySyncd() || thinrelay.HasBlockRelayTimerExpired(obj.hash) || !thinrelay.IsBlockRelayTimerEnabled())
+    if (!IsChainNearlySyncd() || thinrelay.HasBlockRelayTimerExpired(hash) || !thinrelay.IsBlockRelayTimerEnabled())
     {
-        std::vector<CInv> vToFetch;
-        inv2.type = MSG_BLOCK;
-        vToFetch.push_back(inv2);
+        if (pfrom->fPeerWantsINV2)
+        {
+            std::vector<CInv2> vToFetch;
+            CInv2 invType2(MSG_BLOCK, hash);
+            vToFetch.push_back(invType2);
 
-        MarkBlockAsInFlight(pfrom->GetId(), obj.hash);
-        pfrom->PushMessageWithCookie(NetMsgType::GETDATA, getCookie(), vToFetch);
-        LOG(THIN | GRAPHENE | CMPCT, "Requesting Regular Block %s from peer %s\n", inv2.hash.ToString(),
-            pfrom->GetLogName());
+            MarkBlockAsInFlight(pfrom->GetId(), hash);
+            pfrom->PushMessageWithCookie(NetMsgType::GETDATA, getCookie(), vToFetch);
+            LOG(THIN | GRAPHENE | CMPCT, "Requesting Regular Block %s from peer %s\n", hash.ToString(),
+                pfrom->GetLogName());
+        }
+        else
+        {
+            std::vector<CInv> vToFetch;
+            CInv inv(MSG_BLOCK, hash);
+            vToFetch.push_back(inv);
+
+            MarkBlockAsInFlight(pfrom->GetId(), hash);
+            pfrom->PushMessageWithCookie(NetMsgType::GETDATA, getCookie(), vToFetch);
+            LOG(THIN | GRAPHENE | CMPCT, "Requesting Regular Block %s from peer %s\n", hash.ToString(),
+                pfrom->GetLogName());
+        }
         return true;
     }
     return false; // no block was requested
@@ -681,11 +722,8 @@ void CRequestManager::SendRequests()
     // this time.
     bool fBatchBlockRequests = IsInitialBlockDownload();
     std::map<CNodeRef, std::map<int64_t, CInv, std::less<int64_t> >, CompareIteratorByNodeRef> mapBatchBlockRequests;
-
-    // Batch any transaction requests when possible. The process of batching and requesting batched transactions
-    // is simlilar to batched block requests, however, we don't make the distinction of whether we're in the process
-    // of syncing the chain, as we do with block requests.
-    std::map<CNodeRef, std::vector<CInv>, CompareIteratorByNodeRef> mapBatchTxnRequests;
+    std::map<CNodeRef, std::map<int64_t, CInv2, std::less<int64_t> >, CompareIteratorByNodeRef>
+        mapBatchBlockRequestsInv2;
 
     // Add new block requests to be processed
     AddNewBlockRequests();
@@ -762,7 +800,10 @@ void CRequestManager::SendRequests()
                             mapRequestManagerNodeState.find(next.noderef.get()->GetId());
                         if (it == mapRequestManagerNodeState.end())
                         {
-                            mapBatchBlockRequests.erase(next.noderef);
+                            if (next.noderef.get()->fPeerWantsINV2)
+                                mapBatchBlockRequestsInv2.erase(next.noderef);
+                            else
+                                mapBatchBlockRequests.erase(next.noderef);
                             continue;
                         }
                         CRequestManagerNodeState *state = &it->second;
@@ -776,7 +817,10 @@ void CRequestManager::SendRequests()
 
                     if (fBatchBlockRequests)
                     {
-                        mapBatchBlockRequests[next.noderef].emplace(item.nEntryTime, obj);
+                        if (next.noderef.get()->fPeerWantsINV2)
+                            mapBatchBlockRequestsInv2[next.noderef].emplace(item.nEntryTime, CInv2(obj.type, obj.hash));
+                        else
+                            mapBatchBlockRequests[next.noderef].emplace(item.nEntryTime, obj);
                     }
                     else
                     {
@@ -822,7 +866,7 @@ void CRequestManager::SendRequests()
         }
     }
     // send batched requests if any.
-    if (fBatchBlockRequests && !mapBatchBlockRequests.empty())
+    if (fBatchBlockRequests && (!mapBatchBlockRequests.empty() || !mapBatchBlockRequestsInv2.empty()))
     {
         {
             for (auto iter : mapBatchBlockRequests)
@@ -844,9 +888,29 @@ void CRequestManager::SendRequests()
                 LOG(REQ, "Sent batched request with %d blocks to node %s\n", vInv.size(),
                     iter.first.get()->GetLogName());
             }
+            for (auto iter : mapBatchBlockRequestsInv2)
+            {
+                if (shutdown_threads.load() == true)
+                {
+                    return;
+                }
+
+                // iterate through the second map and create the inv message
+                std::vector<CInv2> vInv;
+                for (auto mi : iter.second)
+                {
+                    const uint256 &hash = mi.second.hash;
+                    MarkBlockAsInFlight(iter.first.get()->GetId(), hash);
+                    vInv.push_back(mi.second);
+                }
+                iter.first.get()->PushMessage(NetMsgType::GETDATA, vInv);
+                LOG(REQ, "Sent batched request with %d blocks to node %s\n", vInv.size(),
+                    iter.first.get()->GetLogName());
+            }
         }
 
         mapBatchBlockRequests.clear();
+        mapBatchBlockRequestsInv2.clear();
     }
 
 
@@ -889,6 +953,7 @@ void CRequestManager::SendTxnRequests(OdMap &mapTxns)
     // is simlilar to batched block requests, however, we don't make the distinction of whether we're in the process
     // of syncing the chain, as we do with block requests.
     std::map<CNodeRef, std::vector<CInv>, CompareIteratorByNodeRef> mapBatchTxnRequests;
+    std::map<CNodeRef, std::vector<CInv2>, CompareIteratorByNodeRef> mapBatchTxnRequestsInv2;
 
     // Modify retry interval. If we're doing IBD or if Traffic Shaping is ON we want to have a longer interval because
     // those blocks and txns can take much longer to download.
@@ -969,20 +1034,35 @@ void CRequestManager::SendTxnRequests(OdMap &mapTxns)
                             item.outstandingReqs++;
                             item.lastRequestTime = now;
 
-                            mapBatchTxnRequests[next.noderef].emplace_back(item.obj);
-
-                            // If we have 1000 requests for this peer then send them right away.
-                            if (mapBatchTxnRequests[next.noderef].size() >= MAX_GETDATA_REQUESTS)
+                            if (next.noderef.get()->fPeerWantsINV2)
                             {
+                                mapBatchTxnRequestsInv2[next.noderef].emplace_back(CInv2(item.obj.type, item.obj.hash));
+
+                                // If we have 1000 requests for this peer then send them right away.
+                                if (mapBatchTxnRequestsInv2[next.noderef].size() >= 1000)
+                                {
+                                    next.noderef.get()->PushMessageWithCookie(NetMsgType::GETDATA,
+                                        (++requestCookie << 16), mapBatchTxnRequestsInv2[next.noderef]);
+                                    LOG(REQ, "Sent batched request with %d transactions to node %s\n",
+                                        mapBatchTxnRequestsInv2[next.noderef].size(), next.noderef.get()->GetLogName());
+
+                                    mapBatchTxnRequestsInv2.erase(next.noderef);
+                                }
+                            }
+                            else
+                            {
+                                mapBatchTxnRequests[next.noderef].emplace_back(item.obj);
+
+                                // If we have 1000 requests for this peer then send them right away.
+                                if (mapBatchTxnRequests[next.noderef].size() >= 1000)
                                 {
                                     next.noderef.get()->PushMessageWithCookie(
                                         NetMsgType::GETDATA, getCookie(), mapBatchTxnRequests[next.noderef]);
                                     LOG(REQ, "Sent batched request with %d transactions to node %s\n",
                                         mapBatchTxnRequests[next.noderef].size(), next.noderef.get()->GetLogName());
-                                    LOG(REQ, "txninfo size %d\n", mapTxns.size());
-                                }
 
-                                mapBatchTxnRequests.erase(next.noderef);
+                                    mapBatchTxnRequests.erase(next.noderef);
+                                }
                             }
                         }
                     }
@@ -1000,20 +1080,35 @@ void CRequestManager::SendTxnRequests(OdMap &mapTxns)
     // send batched requests if any.
     if (!mapBatchTxnRequests.empty())
     {
+        for (auto iter : mapBatchTxnRequests)
         {
-            for (auto iter : mapBatchTxnRequests)
+            if (shutdown_threads.load() == true)
             {
-                if (shutdown_threads.load() == true)
-                {
-                    return;
-                }
-                iter.first.get()->PushMessageWithCookie(NetMsgType::GETDATA, getCookie(), iter.second);
-                LOG(REQ, "Sent batched request with %d transactions to node %s\n", iter.second.size(),
-                    iter.first.get()->GetLogName());
+                return;
             }
+
+            iter.first.get()->PushMessageWithCookie(NetMsgType::GETDATA, getCookie(), iter.second);
+            LOG(REQ, "Sent batched request with %d transactions to node %s\n", iter.second.size(),
+                iter.first.get()->GetLogName());
         }
 
         mapBatchTxnRequests.clear();
+    }
+    if (!mapBatchTxnRequestsInv2.empty())
+    {
+        for (auto iter : mapBatchTxnRequestsInv2)
+        {
+            if (shutdown_threads.load() == true)
+            {
+                return;
+            }
+
+            iter.first.get()->PushMessageWithCookie(NetMsgType::GETDATA, (++requestCookie << 16), iter.second);
+            LOG(REQ, "Sent batched request with %d transactions to node %s\n", iter.second.size(),
+                iter.first.get()->GetLogName());
+        }
+
+        mapBatchTxnRequestsInv2.clear();
     }
 }
 
@@ -1102,6 +1197,7 @@ void CRequestManager::RequestNextBlocksToDownload(CNode *pto)
         LOCK(cs_objDownloader);
         nBlocksInFlight = mapRequestManagerNodeState[pto->GetId()].nBlocksInFlight;
     }
+
     if (!pto->fDisconnectRequest && !pto->fDisconnect && !pto->fClient && nBlocksInFlight < pto->nMaxBlocksInTransit)
     {
         std::vector<CBlockIndex *> vToDownload;
@@ -1295,9 +1391,7 @@ void CRequestManager::RequestMempoolSync(CNode *pto)
             pto->PushMessageWithCookie(NetMsgType::GET_MEMPOOLSYNC, getCookie(), receiverMemPoolInfo);
         else
         {
-            CInv inv;
             CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-            ss << inv;
             ss << receiverMemPoolInfo;
             pto->PushMessageWithCookie(NetMsgType::GET_MEMPOOLSYNC, getCookie(), ss);
         }

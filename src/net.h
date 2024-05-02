@@ -384,6 +384,7 @@ public:
 
     CCriticalSection csRecvGetData;
     std::deque<std::pair<CInv, uint32_t> > vRecvGetData GUARDED_BY(csRecvGetData);
+    std::deque<std::pair<CInv2, uint32_t> > vRecvGetData2 GUARDED_BY(csRecvGetData);
 
     CCriticalSection cs_vRecvMsg;
     std::deque<CNetMessage> vRecvMsg_handshake GUARDED_BY(cs_vRecvMsg);
@@ -453,6 +454,11 @@ public:
     */
     std::atomic_bool m_wants_addrv2{false};
 
+    /**
+        Whether the peer has signaled support for receiving INV2
+        messages, implying a preference to receive INV2 instead of INV ones.
+    */
+    std::atomic_bool fPeerWantsINV2{false};
 
     /** If true a remote node initiated the connection.  If false, we initiated.
         The protocol is slightly asymmetric:
@@ -544,6 +550,7 @@ public:
     CRollingFastFilter<4 * 1024 * 1024> filterInventoryKnown;
     CCriticalSection cs_inventory;
     std::vector<CInv> vInventoryToSend GUARDED_BY(cs_inventory);
+    std::vector<CInv2> vInventoryToSend2 GUARDED_BY(cs_inventory);
     int64_t nNextInvSend;
     // Used for headers announcements - unfiltered blocks to relay
     // Also protected by cs_inventory
@@ -704,6 +711,11 @@ public:
     }
 
 
+    void AddInventoryKnown(const CInv2 &inv)
+    {
+        LOCK(cs_inventory);
+        filterInventoryKnown.insert(inv.hash);
+    }
     void AddInventoryKnown(const CInv &inv)
     {
         LOCK(cs_inventory);
@@ -723,12 +735,19 @@ public:
             return;
         vInventoryToSend.push_back(inv);
     }
+    void PushInventory(const CInv2 &inv, bool force = false)
+    {
+        LOCK(cs_inventory);
+        if (!force && inv.type == MSG_TX && filterInventoryKnown.contains(inv.hash))
+            return;
+        vInventoryToSend2.push_back(inv);
+    }
 
     /** Get size of INVs to be sent in a thread safe way*/
     unsigned int GetInventoryToSendSize()
     {
         LOCK(cs_inventory);
-        return vInventoryToSend.size();
+        return vInventoryToSend.size() + vInventoryToSend2.size();
     }
 
     /**

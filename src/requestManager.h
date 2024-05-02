@@ -214,7 +214,7 @@ public:
     std::atomic<unsigned int> BLOCK_DOWNLOAD_WINDOW{DEFAULT_BLOCK_DOWNLOAD_WINDOW};
 
     // Request a single block.
-    bool RequestBlock(CNode *pfrom, CInv obj);
+    bool RequestBlock(CNode *pfrom, CInv &obj);
 
     // Get this object from somewhere, asynchronously.
     void AskFor(const CInv &obj, CNode *from, unsigned int priority = 0);
