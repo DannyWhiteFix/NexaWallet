@@ -43,6 +43,17 @@ static const uint32_t BEGIN_PRUNING_PEERS = 4;
 // How many blocks forward to download during IBD
 static const uint32_t DEFAULT_BLOCK_DOWNLOAD_WINDOW = 1024;
 
+// How many requests can be active in the request manager at any one time
+static const uint64_t MAX_IN_FLIGHT_REQS = 100000;
+
+// How many object sources can we add to the new request.  This will prevent
+// too many re-requests from happening and also prevent the unnecessary adding
+// of sources when there are many peers connected.  In other words, if we
+// can't get a re-request withing a few attempts then it's unlikely we will ever
+// get that object and it may just be a DOS attempt at filling up the request manager
+// with fake object requests.
+static const uint32_t MAX_SOURCES_TO_ADD = 3;
+
 // When should I request a tx from someone else (in microseconds).
 static const unsigned int DEFAULT_MIN_TX_REQUEST_RETRY_INTERVAL = 5 * 1000 * 1000;
 
@@ -81,9 +92,9 @@ public:
 // Compare a CNodeRequestData object to a node
 struct MatchCNodeRequestData
 {
-    CNode *pnode;
-    MatchCNodeRequestData(CNode *n) : pnode(n){};
-    inline bool operator()(const CNodeRequestData &nd) const { return nd.noderef.get() == pnode; }
+    CNodeRef pnode;
+    MatchCNodeRequestData(CNodeRef n) : pnode(n){};
+    inline bool operator()(const CNodeRequestData &nd) const { return nd.noderef.get() == pnode.get(); }
 };
 
 class CUnknownObj
@@ -99,7 +110,7 @@ public:
     ObjectSourceList availableFrom;
     unsigned int priority;
     int64_t nEntryTime;
-    bool fGarbageCollect;
+    CNodeRef prevRequestNode; // The last node we made a request from
 
     CUnknownObj()
     {
@@ -112,7 +123,7 @@ public:
         nEntryTime = 0;
     }
 
-    bool AddSource(CNode *from); // returns true if the source did not already exist
+    bool AddSource(CNodeRef &noderef, const CInv &_obj); // returns true if the source did not already exist
 };
 
 // The following structs are used for tracking the internal requestmanager nodestate.
@@ -153,9 +164,6 @@ protected:
 
     friend class CRequestManagerTest;
 
-    // Data structures for making and tracking requests
-    CCriticalSection cs_objDownloader;
-
     // A cookie can be added to a message which is sent in the message header and which can be used
     // to determine the correct sequence of separate messages that have been received by a node or light client.
     std::atomic<int32_t> requestCookie{0};
@@ -163,6 +171,13 @@ protected:
     // Increment the cookie value and then return the new value.
     uint32_t getCookie() { return (++requestCookie << 16); }
 
+    // Loosely track transations per second. This is done so we don't have to repeatedly
+    // take the lock in the mempool.
+    std::atomic<uint64_t> nApproximateTxnPerSec{0};
+    std::atomic<int64_t> nLastCheckForTPS{0};
+
+    // Data structures for making and tracking requests
+    CCriticalSection cs_objDownloader;
     typedef std::map<uint256, CUnknownObj> OdMap;
     OdMap mapTxnInfo GUARDED_BY(cs_objDownloader);
     OdMap mapBlkInfo GUARDED_BY(cs_objDownloader);
@@ -170,22 +185,22 @@ protected:
         cs_objDownloader);
     std::map<NodeId, CRequestManagerNodeState> mapRequestManagerNodeState GUARDED_BY(cs_objDownloader);
 
-    // The map of transaction requests to add.
+    // The map of block requests to add.
     CCriticalSection cs_addBlock;
     OdMap mapBlkToAdd GUARDED_BY(cs_addBlock);
     int64_t nBlocksAskedFor GUARDED_BY(cs_addBlock) = 0;
 
-    // The set of transaction requests to delete
+    // The set of block requests to delete
     CCriticalSection cs_deleteBlock;
     std::set<uint256> setBlockDeleter GUARDED_BY(cs_deleteBlock);
 
     // The map of transaction requests to add.
-    CCriticalSection cs_adder;
-    OdMap mapTxnToAdd GUARDED_BY(cs_adder);
+    CCriticalSection cs_addTxn;
+    OdMap mapTxnToAdd GUARDED_BY(cs_addTxn);
 
     // The set of transaction requests to delete
-    CCriticalSection cs_deleter;
-    std::set<uint256> setDeleter GUARDED_BY(cs_deleter);
+    CCriticalSection cs_deleteTxn;
+    std::set<uint256> setDeleter GUARDED_BY(cs_deleteTxn);
 
     CStatHistory<int> inFlightTxns; // unused
     CStatHistory<int> receivedTxns; // unused
@@ -195,7 +210,6 @@ protected:
 
     void cleanup(OdMap::iterator &item);
     void cleanup(const CInv &item);
-    CLeakyBucket requestPacer;
 
 public:
     CRequestManager();
@@ -259,11 +273,22 @@ public:
     // Resets the last request time to zero when a node disconnects and has blocks in flight.
     void ResetLastBlockRequestTime(const uint256 &hash);
 
+    // Check if this is a new source or a new request. If a new source
+    // then have to add this source to the appropriate source list and then
+    // remove it from the new request map so we don't end up requesting it twice.
+    void CheckIfNewSource(OdMap &mapNewRequests, OdMap &mapOldRequests);
+
     // Clear out any objects from the block request map that were slated for deletion.
-    void RunBlockDeleter();
+    void RunBlockDeleter(OdMap &mapTemp);
+
+    // Get the map of current requests
+    void GetBlockRequests(OdMap &mapTemp);
 
     // Add new block requests to the transaction request map.
-    void AddNewBlockRequests();
+    void AddNewBlockRequests(OdMap &mapTemp);
+
+    // Get the map of current requests
+    void GetTxnRequests(OdMap &mapTemp);
 
     // Clear out any objects from the transaction request maps that are slated for deletion.
     void RunTxnDeleter(OdMap &maybeToSend);

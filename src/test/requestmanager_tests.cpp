@@ -920,17 +920,30 @@ BOOST_AUTO_TEST_CASE(askfor_tests)
 {
     CAddress addr1(ipaddress(0xa0b0c001, 10000));
     CAddress addr2(ipaddress(0xa0b0c002, 10001));
+    CAddress addr3(ipaddress(0xa0b0c003, 10002));
+    CAddress addr4(ipaddress(0xa0b0c004, 10003));
+    CAddress addr5(ipaddress(0xa0b0c005, 10004));
+    CAddress addr6(ipaddress(0xa0b0c006, 10005));
+    CAddress addr7(ipaddress(0xa0b0c007, 10006));
+    CAddress addr8(ipaddress(0xa0b0c008, 10007));
 
     // create nodes
-    CNode dummyNode1(INVALID_SOCKET, addr1, "", true);
-    CNode dummyNode2(INVALID_SOCKET, addr2, "", true);
+    CNode *dummyNode1 = new CNode(INVALID_SOCKET, addr1, "", true);
+    CNode *dummyNode2 = new CNode(INVALID_SOCKET, addr2, "", true);
+    CNode *dummyNode3 = new CNode(INVALID_SOCKET, addr3, "", true);
+    CNode *dummyNode4 = new CNode(INVALID_SOCKET, addr4, "", true);
+    CNode *dummyNode5 = new CNode(INVALID_SOCKET, addr5, "", true);
+    CNode *dummyNode6 = new CNode(INVALID_SOCKET, addr6, "", true);
+    CNode *dummyNode7 = new CNode(INVALID_SOCKET, addr7, "", true);
+    CNode *dummyNode8 = new CNode(INVALID_SOCKET, addr8, "", true);
 
     CRequestManager rman;
     CRequestManagerTest rman_access(&rman);
     std::map<uint256, CUnknownObj> mapTxnToAdd;
-    std::map<uint256, CUnknownObj> mapTxn;
-    std::map<uint256, CUnknownObj> mapBlk;
+    std::map<uint256, CUnknownObj> mapTxnInfo;
     std::map<uint256, CUnknownObj> mapBlkToAdd;
+    std::map<uint256, CUnknownObj> mapBlkInfo;
+    std::map<uint256, CUnknownObj> mapTmp;
     std::set<uint256> setDeleter;
     std::set<uint256> setBlockDeleter;
 
@@ -938,48 +951,142 @@ BOOST_AUTO_TEST_CASE(askfor_tests)
     uint256 hash_txn = GetRandHash();
     CInv inv_txn(MSG_TX, hash_txn);
 
-    // make a new transaction request. There should be one item in mapTxnToAdd.
-    rman.AskFor(inv_txn, &dummyNode1);
+    // make a new transaction request2. There should be one item in mapTxnToAdd and 3 sources
+    rman.AskFor(inv_txn, dummyNode1);
     mapTxnToAdd = rman_access.GetMapTxnToAdd();
     setDeleter = rman_access.GetSetDeleter();
+    mapTxnInfo = rman_access.GetMapTxnInfo();
     BOOST_CHECK_EQUAL(mapTxnToAdd[inv_txn.hash].availableFrom.size(), 1);
     BOOST_CHECK_EQUAL(mapTxnToAdd.size(), 1);
     BOOST_CHECK_EQUAL(setDeleter.count(inv_txn.hash), 0);
+    BOOST_CHECK_EQUAL(mapTxnInfo.size(), 0);
 
-    // deleter should have one item added to it
-    rman.Received(inv_txn, &dummyNode1);
+    rman.AskFor(inv_txn, dummyNode2);
+    mapTxnToAdd = rman_access.GetMapTxnToAdd();
+    setDeleter = rman_access.GetSetDeleter();
+    mapTxnInfo = rman_access.GetMapTxnInfo();
+    BOOST_CHECK_EQUAL(mapTxnToAdd[inv_txn.hash].availableFrom.size(), 2);
+    BOOST_CHECK_EQUAL(mapTxnToAdd.size(), 1);
+    BOOST_CHECK_EQUAL(setDeleter.count(inv_txn.hash), 0);
+    BOOST_CHECK_EQUAL(mapTxnInfo.size(), 0);
+
+    rman.AskFor(inv_txn, dummyNode3);
+    mapTxnToAdd = rman_access.GetMapTxnToAdd();
+    setDeleter = rman_access.GetSetDeleter();
+    mapTxnInfo = rman_access.GetMapTxnInfo();
+    BOOST_CHECK_EQUAL(mapTxnToAdd[inv_txn.hash].availableFrom.size(), 3);
+    BOOST_CHECK_EQUAL(mapTxnToAdd.size(), 1);
+    BOOST_CHECK_EQUAL(setDeleter.count(inv_txn.hash), 0);
+    BOOST_CHECK_EQUAL(mapTxnInfo.size(), 0);
+
+    rman.AskFor(inv_txn, dummyNode4);
+    mapTxnToAdd = rman_access.GetMapTxnToAdd();
+    mapTxnInfo = rman_access.GetMapTxnInfo();
+    setDeleter = rman_access.GetSetDeleter();
+    BOOST_CHECK_EQUAL(mapTxnToAdd[inv_txn.hash].availableFrom.size(), 3); // not added because only 3 maximum allowed
+    BOOST_CHECK_EQUAL(mapTxnToAdd.size(), 1);
+    BOOST_CHECK_EQUAL(setDeleter.count(inv_txn.hash), 0);
+    BOOST_CHECK_EQUAL(mapTxnInfo.size(), 0);
+
+    // add the new requests. mapTxnToAdd elements should be moved to mapTxnInfo.
+    mapTmp.clear();
+    rman.GetTxnRequests(mapTmp);
+    rman.AddNewTxnRequests(mapTmp);
+    mapTxnInfo = rman_access.GetMapTxnInfo();
+    mapTxnToAdd = rman_access.GetMapTxnToAdd();
+    BOOST_CHECK_EQUAL(mapTxnToAdd.size(), 0);
+    BOOST_CHECK_EQUAL(mapTxnInfo.size(), 1);
+
+
+    // Mark a txn as received. The deleter should then have one item added to it.
+    rman.Received(inv_txn, dummyNode1);
     setDeleter = rman_access.GetSetDeleter();
     BOOST_CHECK_EQUAL(setDeleter.count(inv_txn.hash), 1);
     BOOST_CHECK_EQUAL(setDeleter.size(), 1);
 
     // map still retains it's entry until the deleter gets called.
-    BOOST_CHECK_EQUAL(mapTxnToAdd[inv_txn.hash].availableFrom.size(), 1);
-    BOOST_CHECK_EQUAL(mapTxnToAdd.size(), 1);
-
-    // add the new requests. mapTxnToAdd elements should be moved to mapTxnInfo.
-    mapTxnToAdd = rman_access.GetMapTxnToAdd();
-    BOOST_CHECK_EQUAL(mapTxnToAdd.size(), 1);
-    rman.AddNewTxnRequests(mapTxnToAdd);
-    mapTxn = rman_access.GetMapTxnInfo();
-    BOOST_CHECK_EQUAL(mapTxn.size(), 1);
+    BOOST_CHECK_EQUAL(mapTxnInfo[inv_txn.hash].availableFrom.size(), 3);
     BOOST_CHECK_EQUAL(mapTxnToAdd.size(), 0);
 
-    // now run the deleter and all maps should be empty except mapTxnToAdd.
-    rman.RunTxnDeleter(mapTxnToAdd);
+    // Add another new request so that both mapTxnInfo and mapTxnToAdd have entries
+    uint256 hash_txn2 = GetRandHash();
+    CInv inv_txn2(MSG_TX, hash_txn2);
+    rman.AskFor(inv_txn2, dummyNode3);
+    mapTxnInfo = rman_access.GetMapTxnInfo();
+    mapTxnToAdd = rman_access.GetMapTxnToAdd();
+    BOOST_CHECK_EQUAL(mapTxnToAdd.size(), 1);
+    BOOST_CHECK_EQUAL(mapTxnInfo.size(), 1);
+
+    // Receive the new txn before it gets added to mapTxnInfo
+    mapTmp.clear();
+    rman.GetTxnRequests(mapTmp);
+    rman.Received(inv_txn2, dummyNode1);
     setDeleter = rman_access.GetSetDeleter();
-    mapTxn = rman_access.GetMapTxnInfo();
+    mapTxnToAdd = rman_access.GetMapTxnToAdd();
+    BOOST_CHECK_EQUAL(setDeleter.count(inv_txn2.hash), 1);
+    BOOST_CHECK_EQUAL(setDeleter.size(), 2);
+
+    // now run the deleter and all maps should be empty
+    rman.RunTxnDeleter(mapTmp);
+    setDeleter = rman_access.GetSetDeleter();
+    mapTxnInfo = rman_access.GetMapTxnInfo();
     mapTxnToAdd = rman_access.GetMapTxnToAdd();
     BOOST_CHECK_EQUAL(setDeleter.size(), 0);
-    BOOST_CHECK_EQUAL(mapTxn.size(), 0);
-    BOOST_CHECK_EQUAL(mapTxnToAdd.size(), 1); // Txn to add should be unaffected
+    BOOST_CHECK_EQUAL(mapTxnInfo.size(), 0);
+    BOOST_CHECK_EQUAL(mapTxnToAdd.size(), 0);
 
+
+    // Make a new request and push it to mapTxnInfo
+    uint256 hash_txn3 = GetRandHash();
+    CInv inv_txn3(MSG_TX, hash_txn3);
+    rman.AskFor(inv_txn3, dummyNode1);
+    mapTmp.clear();
+    rman.GetTxnRequests(mapTmp);
+    rman.CheckIfNewSource(mapTmp, mapTxnInfo);
+    rman.AddNewTxnRequests(mapTmp);
+    mapTxnInfo = rman_access.GetMapTxnInfo();
+    mapTxnToAdd = rman_access.GetMapTxnToAdd();
+    BOOST_CHECK_EQUAL(mapTxnToAdd.size(), 0);
+    BOOST_CHECK_EQUAL(mapTxnInfo.size(), 1);
+    BOOST_CHECK_EQUAL(mapTxnInfo[inv_txn3.hash].availableFrom.size(), 1);
+
+    rman.AskFor(inv_txn3, dummyNode2);
+    mapTmp.clear();
+    rman.GetTxnRequests(mapTmp);
+    mapTxnInfo = rman_access.GetMapTxnInfo();
+    rman.CheckIfNewSource(mapTmp, mapTxnInfo);
+    rman.AddNewTxnRequests(mapTmp);
+    mapTxnToAdd = rman_access.GetMapTxnToAdd();
+    BOOST_CHECK_EQUAL(mapTxnToAdd.size(), 0);
+    BOOST_CHECK_EQUAL(mapTxnInfo.size(), 1);
+    BOOST_CHECK_EQUAL(mapTxnInfo[inv_txn3.hash].availableFrom.size(), 2);
+
+    rman.AskFor(inv_txn3, dummyNode3);
+    mapTmp.clear();
+    rman.GetTxnRequests(mapTmp);
+    rman.CheckIfNewSource(mapTmp, mapTxnInfo);
+    rman.AddNewTxnRequests(mapTmp);
+    mapTxnToAdd = rman_access.GetMapTxnToAdd();
+    BOOST_CHECK_EQUAL(mapTxnToAdd.size(), 0);
+    BOOST_CHECK_EQUAL(mapTxnInfo.size(), 1);
+    BOOST_CHECK_EQUAL(mapTxnInfo[inv_txn3.hash].availableFrom.size(), 3);
+
+    rman.AskFor(inv_txn3, dummyNode4);
+    mapTmp.clear();
+    rman.GetTxnRequests(mapTmp);
+    rman.CheckIfNewSource(mapTmp, mapTxnInfo);
+    rman.AddNewTxnRequests(mapTmp);
+    mapTxnToAdd = rman_access.GetMapTxnToAdd();
+    BOOST_CHECK_EQUAL(mapTxnToAdd.size(), 0);
+    BOOST_CHECK_EQUAL(mapTxnInfo.size(), 1);
+    BOOST_CHECK_EQUAL(mapTxnInfo[inv_txn3.hash].availableFrom.size(), 3); // no source added
 
     /*** tests for blocks ***/
     uint256 hash_block = GetRandHash();
     CInv inv_block(MSG_BLOCK, hash_block);
 
     // make a new transaction request. There should be one item in mapTxnToAdd.
-    rman.AskFor(inv_block, &dummyNode1);
+    rman.AskFor(inv_block, dummyNode1);
     mapBlkToAdd = rman_access.GetMapBlkToAdd();
     setBlockDeleter = rman_access.GetSetBlockDeleter();
     BOOST_CHECK_EQUAL(mapBlkToAdd[inv_block.hash].availableFrom.size(), 1);
@@ -987,7 +1094,7 @@ BOOST_AUTO_TEST_CASE(askfor_tests)
     BOOST_CHECK_EQUAL(setBlockDeleter.count(inv_block.hash), 0);
 
     // deleter should have one item added to it
-    rman.Received(inv_block, &dummyNode1);
+    rman.Received(inv_block, dummyNode1);
     setBlockDeleter = rman_access.GetSetBlockDeleter();
     BOOST_CHECK_EQUAL(setBlockDeleter.count(inv_block.hash), 1);
     BOOST_CHECK_EQUAL(setBlockDeleter.size(), 1);
@@ -995,38 +1102,120 @@ BOOST_AUTO_TEST_CASE(askfor_tests)
     // map still retains it's entry until the deleter gets called.
     BOOST_CHECK_EQUAL(mapBlkToAdd[inv_block.hash].availableFrom.size(), 1);
     BOOST_CHECK_EQUAL(mapBlkToAdd.size(), 1);
+    BOOST_CHECK_EQUAL(mapBlkInfo.size(), 0);
 
-    // add the new requests. mapBlkToAdd elements should be moved to mapTxnInfo.
-    rman.AddNewBlockRequests();
-    mapBlk = rman_access.GetMapBlkInfo();
+    // add the new requests. mapBlkToAdd elements should be moved to mapBlkInfo.
+    mapTmp.clear();
+    rman.GetBlockRequests(mapTmp);
+    rman.AddNewBlockRequests(mapTmp);
+    mapBlkInfo = rman_access.GetMapBlkInfo();
     mapBlkToAdd = rman_access.GetMapBlkToAdd();
-    BOOST_CHECK_EQUAL(mapBlk.size(), 1);
     BOOST_CHECK_EQUAL(mapBlkToAdd.size(), 0);
+    BOOST_CHECK_EQUAL(mapBlkInfo.size(), 1);
 
     // now run the deleter and all maps should be empty
-    rman.RunBlockDeleter();
+    rman.RunBlockDeleter(mapBlkToAdd);
     setBlockDeleter = rman_access.GetSetBlockDeleter();
-    mapBlk = rman_access.GetMapBlkInfo();
+    mapBlkInfo = rman_access.GetMapBlkInfo();
     mapBlkToAdd = rman_access.GetMapBlkToAdd();
     BOOST_CHECK_EQUAL(setBlockDeleter.size(), 0);
-    BOOST_CHECK_EQUAL(mapBlk.size(), 0);
-    BOOST_CHECK_EQUAL(mapBlkToAdd.size(), 0);
+    BOOST_CHECK_EQUAL(mapBlkInfo.size(), 0);
 
     /** Test multiple requests for same block from different peers */
-    rman.AskFor(inv_block, &dummyNode1);
+    rman.AskFor(inv_block, dummyNode1);
     mapBlkToAdd = rman_access.GetMapBlkToAdd();
     setBlockDeleter = rman_access.GetSetBlockDeleter();
     BOOST_CHECK_EQUAL(mapBlkToAdd[inv_block.hash].availableFrom.size(), 1);
     BOOST_CHECK_EQUAL(mapBlkToAdd.size(), 1);
     BOOST_CHECK_EQUAL(setBlockDeleter.count(inv_block.hash), 0);
+    BOOST_CHECK_EQUAL(mapBlkInfo.size(), 0);
 
     // blocks are handled differently than transactions. A new source should have been added.
-    rman.ProcessingBlock(inv_block.hash, &dummyNode1);
-    rman.AskFor(inv_block, &dummyNode2);
+    rman.ProcessingBlock(inv_block.hash, dummyNode1);
+    rman.AskFor(inv_block, dummyNode2);
     mapBlkToAdd = rman_access.GetMapBlkToAdd();
     setBlockDeleter = rman_access.GetSetBlockDeleter();
     BOOST_CHECK_EQUAL(mapBlkToAdd.size(), 1);
     BOOST_CHECK_EQUAL(setBlockDeleter.count(inv_block.hash), 0);
     BOOST_CHECK_EQUAL(mapBlkToAdd[inv_block.hash].availableFrom.size(), 2); // there should be another source
+    BOOST_CHECK_EQUAL(mapBlkInfo.size(), 0);
+
+    // Add multiple new sources.  For blocks it should be possible, for transactions there is a limit of 3
+    rman.AskFor(inv_block, dummyNode3);
+    mapBlkToAdd = rman_access.GetMapBlkToAdd();
+    setBlockDeleter = rman_access.GetSetBlockDeleter();
+    BOOST_CHECK_EQUAL(mapBlkToAdd.size(), 1);
+    BOOST_CHECK_EQUAL(setBlockDeleter.count(inv_block.hash), 0);
+    BOOST_CHECK_EQUAL(mapBlkToAdd[inv_block.hash].availableFrom.size(), 3); // there should be another source
+    BOOST_CHECK_EQUAL(mapBlkInfo.size(), 0);
+
+    rman.AskFor(inv_block, dummyNode4);
+    mapBlkToAdd = rman_access.GetMapBlkToAdd();
+    setBlockDeleter = rman_access.GetSetBlockDeleter();
+    BOOST_CHECK_EQUAL(mapBlkToAdd.size(), 1);
+    BOOST_CHECK_EQUAL(setBlockDeleter.count(inv_block.hash), 0);
+    BOOST_CHECK_EQUAL(mapBlkToAdd[inv_block.hash].availableFrom.size(), 4); // there should be another source
+    BOOST_CHECK_EQUAL(mapBlkInfo.size(), 0);
+
+    rman.AskFor(inv_block, dummyNode5);
+    mapBlkToAdd = rman_access.GetMapBlkToAdd();
+    setBlockDeleter = rman_access.GetSetBlockDeleter();
+    BOOST_CHECK_EQUAL(mapBlkToAdd.size(), 1);
+    BOOST_CHECK_EQUAL(setBlockDeleter.count(inv_block.hash), 0);
+    BOOST_CHECK_EQUAL(mapBlkToAdd[inv_block.hash].availableFrom.size(), 5); // there should be another source
+    BOOST_CHECK_EQUAL(mapBlkInfo.size(), 0);
+
+    // Try to add the same source again.  Nothing should be added.
+    rman.AskFor(inv_block, dummyNode5);
+    mapBlkToAdd = rman_access.GetMapBlkToAdd();
+    setBlockDeleter = rman_access.GetSetBlockDeleter();
+    BOOST_CHECK_EQUAL(mapBlkToAdd.size(), 1);
+    BOOST_CHECK_EQUAL(setBlockDeleter.count(inv_block.hash), 0);
+    BOOST_CHECK_EQUAL(mapBlkToAdd[inv_block.hash].availableFrom.size(), 5); // no new source
+    BOOST_CHECK_EQUAL(mapBlkInfo.size(), 0);
+
+    // Add the new requests to mapBlkInfo, the re-request map, and then try to add more sources. With blocks
+    // it should be possible to continue to add more sources.
+    mapTmp.clear();
+    rman.GetBlockRequests(mapTmp);
+    rman.AddNewBlockRequests(mapTmp);
+    mapBlkInfo = rman_access.GetMapBlkInfo();
+    mapBlkToAdd = rman_access.GetMapBlkToAdd();
+    BOOST_CHECK_EQUAL(mapBlkToAdd.size(), 0);
+    BOOST_CHECK_EQUAL(mapBlkInfo.size(), 1);
+
+    // add more sources. This time however the sources should increase
+    // but there will be no new requests in mapBlkToAdd and mapBlkInfo should remain
+    // unchanged with 1 re-request item still remaining.
+    rman.AskFor(inv_block, dummyNode6);
+    mapBlkToAdd = rman_access.GetMapBlkToAdd();
+    mapBlkInfo = rman_access.GetMapBlkInfo();
+    rman.CheckIfNewSource(mapBlkToAdd, mapBlkInfo);
+    setBlockDeleter = rman_access.GetSetBlockDeleter();
+    BOOST_CHECK_EQUAL(mapBlkToAdd.size(), 0);
+    BOOST_CHECK_EQUAL(mapBlkInfo.size(), 1);
+    BOOST_CHECK_EQUAL(setBlockDeleter.count(inv_block.hash), 0);
+    BOOST_CHECK_EQUAL(mapBlkInfo[inv_block.hash].availableFrom.size(), 6); // there should be another source
+
+    rman.AskFor(inv_block, dummyNode7);
+    mapBlkToAdd = rman_access.GetMapBlkToAdd();
+    mapBlkInfo = rman_access.GetMapBlkInfo();
+    rman.CheckIfNewSource(mapBlkToAdd, mapBlkInfo);
+    setBlockDeleter = rman_access.GetSetBlockDeleter();
+    BOOST_CHECK_EQUAL(mapBlkToAdd.size(), 0);
+    BOOST_CHECK_EQUAL(mapBlkInfo.size(), 1);
+    BOOST_CHECK_EQUAL(setBlockDeleter.count(inv_block.hash), 0);
+    BOOST_CHECK_EQUAL(mapBlkInfo[inv_block.hash].availableFrom.size(), 7); // there should be another source
+
+    rman.AskFor(inv_block, dummyNode8);
+    mapBlkToAdd = rman_access.GetMapBlkToAdd();
+    mapBlkInfo = rman_access.GetMapBlkInfo();
+    rman.CheckIfNewSource(mapBlkToAdd, mapBlkInfo);
+    setBlockDeleter = rman_access.GetSetBlockDeleter();
+    BOOST_CHECK_EQUAL(mapBlkToAdd.size(), 0);
+    BOOST_CHECK_EQUAL(mapBlkInfo.size(), 1);
+    BOOST_CHECK_EQUAL(setBlockDeleter.count(inv_block.hash), 0);
+    BOOST_CHECK_EQUAL(mapBlkInfo[inv_block.hash].availableFrom.size(), 8); // there should be another source
 }
+
 BOOST_AUTO_TEST_SUITE_END()

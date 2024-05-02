@@ -76,8 +76,7 @@ CRequestManagerNodeState::CRequestManagerNodeState()
 
 CRequestManager::CRequestManager()
     : inFlightTxns("reqMgr/inFlight", STAT_OP_MAX), receivedTxns("reqMgr/received"), rejectedTxns("reqMgr/rejected"),
-      droppedTxns("reqMgr/dropped", STAT_KEEP), pendingTxns("reqMgr/pending", STAT_KEEP),
-      requestPacer(15000, 10000) // Max and average # of requests that can be made per second
+      droppedTxns("reqMgr/dropped", STAT_KEEP), pendingTxns("reqMgr/pending", STAT_KEEP)
 {
     nOutbound = 0;
 }
@@ -112,7 +111,7 @@ void CRequestManager::cleanup(OdMap::iterator &itemIt)
 
     if (item.obj.type == MSG_TX)
     {
-        LOCK(cs_deleter);
+        LOCK(cs_deleteTxn);
         setDeleter.insert(itemIt->first);
     }
     else
@@ -128,7 +127,7 @@ void CRequestManager::cleanup(const CInv &inv)
 
     if (inv.type == MSG_TX)
     {
-        LOCK(cs_deleter);
+        LOCK(cs_deleteTxn);
         setDeleter.insert(inv.hash);
     }
     else
@@ -144,52 +143,76 @@ void CRequestManager::AskFor(const CInv &obj, CNode *from, unsigned int priority
 {
     // LOG(REQ, "ReqMgr: Ask for %s.\n", obj.ToString().c_str());
 
+    CNodeRef noderef(from);
     if (obj.type == MSG_TX)
     {
-        LOCK(cs_adder);
+        // Limit the  number of times we update this value so we don't have to take the lock
+        // in the mempool so often. Doing this just a few times a second is ample accuracy.
+        int64_t nNow = GetTimeMillis();
+        int64_t nLastCheck = nLastCheckForTPS.load();
+        if (nNow - nLastCheck > 250)
+        {
+            if (nLastCheckForTPS.compare_exchange_strong(nLastCheck, nNow))
+            {
+                nApproximateTxnPerSec.store(mempool.GetInstantaneousTxPerSec());
+            }
+        }
+
         // Don't allow the in flight requests to grow unbounded.
-        if (mapTxnInfo.size() >= (size_t)(MAX_INV_SZ * 2 * chainActive.Tip()->GetNextMaxBlockSize()))
+        if (mapTxnInfo.size() > std::max(MAX_IN_FLIGHT_REQS, (nApproximateTxnPerSec * 10)))
         {
             LOG(REQ, "Tx request buffer full: Dropping request for %s", obj.hash.ToString());
             return;
         }
 
+        LOCK(cs_addTxn);
         std::pair<OdMap::iterator, bool> result = mapTxnToAdd.emplace(obj.hash, CUnknownObj());
         OdMap::iterator &item = result.first;
         CUnknownObj &data = item->second;
         data.obj = obj;
-        if (result.second) // inserted
+
+        // Adjust the priority
+        data.priority = std::max(priority, data.priority);
+
+        // Then add another source.  A new souce would be added even
+        // if this object already existed in mapTxnToAdd.  This could happen
+        // if multiple invs were received before the transaction
+        // was actually requested.
+        data.AddSource(noderef, obj);
+
+        if (result.second) // inserted new
         {
             pendingTxns += 1;
-        }
-
-        data.priority = max(priority, data.priority);
-
-        // Got the data, now add the node as a source if we're not already processing
-        // this txn. If we add more sources here while processing a txn then we could
-        // end up with dangling noderefs when the peer tries to disconnect.
-        if (!data.fProcessing)
-            data.AddSource(from);
-        else
-        {
-            LOG(REQ, "Not calling AddSource for %s at %s.  Already processing.\n", obj.ToString(), from->GetLogName());
         }
     }
     else if (IsBlockType(obj))
     {
-        LOCK(cs_addBlock);
+        // Don't allow the in flight requests to grow unbounded.
+        if (mapBlkInfo.size() > DEFAULT_BLOCK_DOWNLOAD_WINDOW * 2)
+        {
+            LOG(REQ, "Block request buffer full: Dropping request for %s", obj.hash.ToString());
+            return;
+        }
 
+        LOCK(cs_addBlock);
         std::pair<OdMap::iterator, bool> result = mapBlkToAdd.emplace(obj.hash, CUnknownObj());
         OdMap::iterator &item = result.first;
         CUnknownObj &data = item->second;
         data.obj = obj;
-        data.priority = max(priority, data.priority);
-        if (data.AddSource(from))
+
+        // Adjust the priority
+        data.priority = std::max(priority, data.priority);
+
+        // Then add another source.  A new souce would be added even
+        // if this object already existed in mapBlkToAdd.  This could happen
+        // if multiple invs were received before the transaction
+        // was actually requested.
+        if (data.AddSource(noderef, obj))
         {
             // LOG(BLK, "%s available at %s\n", obj.ToString().c_str(), from->addrName.c_str());
         }
 
-        if (result.second)
+        if (result.second) // inserted new
         {
             nBlocksAskedFor++;
             data.nEntryTime = GetStopwatchMicros() + nBlocksAskedFor;
@@ -204,11 +227,6 @@ void CRequestManager::AskFor(const CInv &obj, CNode *from, unsigned int priority
 // Get these objects from somewhere, asynchronously.
 void CRequestManager::AskFor(const std::vector<CInv> &objArray, CNode *from, unsigned int priority)
 {
-    // In order to maintain locking order, we must lock cs_objDownloader first and before possibly taking cs_vNodes.
-    // Also, locking here prevents anyone from asking again for any of these objects again before we've notified the
-    // request manager of them all. In addition this helps keep blocks batched and requests for batches of blocks
-    // in a better order.
-    LOCK(cs_objDownloader);
     for (auto &inv : objArray)
     {
         AskFor(inv, from, priority);
@@ -442,42 +460,86 @@ CNodeRequestData::CNodeRequestData(CNodeRef n)
     // Prefer thin block nodes over low latency ones when the chain is syncd
     if (noderef.get()->ThinBlockCapable() && IsChainNearlySyncd())
     {
-        desirability += MaxLatency;
+        desirability = MaxLatency;
+    }
+    else
+    {
+        desirability = MaxLatency / 2;
     }
 
-    // The bigger the latency (in microseconds), the less we want to request from this node
+    // The bigger the transaction latency (in microseconds), the less we want to request from this node
     int latency = noderef.get()->txReqLatency.GetTotalTyped();
+
     // data has never been requested from this node.  Should we encourage investigation into whether this node is fast,
     // or stick with nodes that we do have data on?
     if (latency == 0)
     {
         latency = 80 * 1000; // assign it a reasonably average latency (80ms) for sorting purposes
     }
+
+    // if latency is very high then make this peer less desirable
     if (latency > MaxLatency)
         latency = MaxLatency;
+
+    // The longer a request takes then the lower it's desirability
     desirability -= latency;
+
+    // If the node had been the cause of a re-request (didn't return a requested object in time)
+    // then give it a lower priority.
+    uint64_t nReRequests = noderef.get()->nReRequests;
+    if (nReRequests > 0)
+        desirability = desirability / nReRequests;
+
+    // If the peer has misbehaved recently then make it the least desirable
+    if (noderef.get()->nMisbehavior > 0 || desirability < 0)
+        desirability = 0;
 }
 
 // requires cs_objDownloader
-bool CUnknownObj::AddSource(CNode *from)
+bool CUnknownObj::AddSource(CNodeRef &noderef, const CInv &_obj)
 {
     // node is not in the request list
-    if (std::find_if(availableFrom.begin(), availableFrom.end(), MatchCNodeRequestData(from)) == availableFrom.end())
+    if (std::find_if(availableFrom.begin(), availableFrom.end(), MatchCNodeRequestData(noderef)) == availableFrom.end())
     {
-        LOG(REQ, "AddSource %s is available at %s.\n", obj.ToString(), from->GetLogName());
+        LOG(REQ, "AddSource %s is available at %s.\n", _obj.ToString(), noderef.get()->GetLogName());
 
-        CNodeRef noderef(from);
+        bool fAdded = false;
         CNodeRequestData req(noderef);
         for (ObjectSourceList::iterator i = availableFrom.begin(); i != availableFrom.end(); ++i)
         {
+            // Place the source in a position desirability in descending order such that the most
+            // desirable sources will get requested first.
             if (i->desirability < req.desirability)
             {
                 availableFrom.emplace(i, req);
-                return true;
+                fAdded = true;
+                break;
             }
         }
-        availableFrom.push_back(req);
-        return true;
+        if (!fAdded)
+        {
+            availableFrom.push_back(req);
+            if (_obj.type == MSG_TX && availableFrom.size() > MAX_SOURCES_TO_ADD)
+                fAdded = false;
+            else
+                fAdded = true;
+        }
+
+        // It's rare to get a re-request so for transactions we limit the number of sources so we
+        // don't constantly add them when we have many peers connected.  Sine the items in the list
+        // are ordered by most desirable to least desirable then just trim the last item in the list.
+        if (_obj.type == MSG_TX)
+        {
+            if (availableFrom.size() > MAX_SOURCES_TO_ADD)
+            {
+                // Trim the list so that we have just highest priority items remaining
+                availableFrom.pop_back();
+                LOG(REQ, "Trimmed a source for txn request %s\n", _obj.ToString());
+            }
+        }
+
+        if (fAdded)
+            return true;
     }
     return false;
 }
@@ -615,7 +677,7 @@ struct CompareIteratorByNodeRef
 };
 
 // requires cs_objDownloader
-void CRequestManager::RunBlockDeleter()
+void CRequestManager::RunBlockDeleter(OdMap &maybeToSend)
 {
     std::set<uint256> setTemp;
     {
@@ -623,26 +685,29 @@ void CRequestManager::RunBlockDeleter()
         std::swap(setTemp, setBlockDeleter);
     }
     for (const uint256 &hash : setTemp)
+    {
+        maybeToSend.erase(hash);
         mapBlkInfo.erase(hash);
+    }
+}
+
+
+// requires cs_objDownloader
+void CRequestManager::GetBlockRequests(OdMap &mapTemp)
+{
+    LOCK(cs_addBlock);
+    std::swap(mapTemp, mapBlkToAdd);
 }
 
 // requires cs_objDownloader
-void CRequestManager::AddNewBlockRequests()
-{
-    OdMap mapTemp;
-    {
-        LOCK(cs_addBlock);
-        std::swap(mapTemp, mapBlkToAdd);
-    }
-    mapBlkInfo.merge(mapTemp);
-}
+void CRequestManager::AddNewBlockRequests(OdMap &mapTemp) { mapBlkInfo.merge(mapTemp); }
 
 // requires cs_objDownloader
 void CRequestManager::RunTxnDeleter(OdMap &maybeToSend)
 {
     std::set<uint256> setTemp;
     {
-        LOCK(cs_deleter);
+        LOCK(cs_deleteTxn);
         std::swap(setTemp, setDeleter);
     }
     for (const uint256 &hash : setTemp)
@@ -650,6 +715,13 @@ void CRequestManager::RunTxnDeleter(OdMap &maybeToSend)
         maybeToSend.erase(hash);
         mapTxnInfo.erase(hash);
     }
+}
+
+// requires cs_objDownloader
+void CRequestManager::GetTxnRequests(OdMap &mapTemp)
+{
+    LOCK(cs_addTxn);
+    std::swap(mapTemp, mapTxnToAdd);
 }
 
 // requires cs_objDownloader
@@ -687,11 +759,20 @@ void CRequestManager::SendRequests()
     // of syncing the chain, as we do with block requests.
     std::map<CNodeRef, std::vector<CInv>, CompareIteratorByNodeRef> mapBatchTxnRequests;
 
-    // Add new block requests to be processed
-    AddNewBlockRequests();
+    // Get new block requests
+    OdMap mapTempBlk;
+    GetBlockRequests(mapTempBlk);
 
     // Remove blocks slated for deletion
-    RunBlockDeleter();
+    RunBlockDeleter(mapTempBlk);
+
+    // Take any remaining new requests and then check if they have already been
+    // requested or not.  If they have already been requested then just add them as a new
+    // source in mapBlkInfo and remove them from mapTemp;
+    CheckIfNewSource(mapTempBlk, mapBlkInfo);
+
+    // Add new block requests to be processed
+    AddNewBlockRequests(mapTempBlk);
 
     // Get Blocks
     OdMap::iterator sendBlkIter = mapBlkInfo.begin();
@@ -751,11 +832,16 @@ void CRequestManager::SendRequests()
                     {
                         LOG(REQ, "Block took longer than %6.2f secs. Request timeout for %s.  Retrying\n",
                             ((double)(now - item.lastRequestTime) / 1000000), item.obj.ToString());
+
+                        if (item.prevRequestNode.get() != nullptr)
+                            item.prevRequestNode.get()->nReRequests++;
                     }
 
                     CInv obj = item.obj;
                     item.outstandingReqs++;
                     int64_t then = item.lastRequestTime;
+                    item.prevRequestNode = next.noderef;
+
                     int64_t nDownloadingSincePrev = item.nDownloadingSince;
                     {
                         std::map<NodeId, CRequestManagerNodeState>::iterator it =
@@ -850,12 +936,10 @@ void CRequestManager::SendRequests()
     }
 
 
-    // Make new Transaction requests
+    // Get new Transaction requests
     OdMap mapTemp;
-    {
-        LOCK(cs_adder);
-        std::swap(mapTemp, mapTxnToAdd);
-    }
+    GetTxnRequests(mapTemp);
+
     // Remove Transactions slated for deletion including
     // any we are going attempting to request. These txns
     // that we would be attmeping to request again would really
@@ -864,6 +948,11 @@ void CRequestManager::SendRequests()
     // run the deleter first on both the new request map as well
     // as the mapTxnInfo.
     RunTxnDeleter(mapTemp);
+
+    // Take any remaining new requests and then check if they have already been
+    // requested or not.  If they have already been requested then just add them as a new
+    // source in mapTxnInfo and remove them from mapTemp;
+    CheckIfNewSource(mapTemp, mapTxnInfo);
 
     // Now send the new requests.
     SendTxnRequests(mapTemp);
@@ -878,6 +967,33 @@ void CRequestManager::SendRequests()
     {
         nLastSend.store(GetTimeMillis());
         SendTxnRequests(mapTxnInfo);
+    }
+}
+
+// requires cs_objDownloader
+void CRequestManager::CheckIfNewSource(OdMap &mapNewRequests, OdMap &mapOldRequests)
+{
+    OdMap::iterator iterNew = mapNewRequests.begin();
+    while (iterNew != mapNewRequests.end())
+    {
+        // If the request already has been made and exists in the re-request map
+        // then add a source to the re-request map and delete the request from
+        // the map of new requests.
+        auto iterOld = mapOldRequests.find(iterNew->first);
+        if (iterOld != mapOldRequests.end())
+        {
+            // Add a new source to the re-request map
+            for (CNodeRequestData &item : iterNew->second.availableFrom)
+            {
+                iterOld->second.AddSource(item.noderef, iterNew->second.obj);
+            }
+            // Remove the the new request
+            iterNew = mapNewRequests.erase(iterNew);
+        }
+        else
+        {
+            iterNew++;
+        }
     }
 }
 
@@ -903,7 +1019,7 @@ void CRequestManager::SendTxnRequests(OdMap &mapTxns)
     }
 
     OdMap::iterator sendIter = mapTxns.begin();
-    while ((sendIter != mapTxnInfo.end()) && requestPacer.try_leak(1))
+    while (sendIter != mapTxns.end())
     {
         if (shutdown_threads.load() == true)
         {
@@ -966,8 +1082,26 @@ void CRequestManager::SendTxnRequests(OdMap &mapTxns)
                         // manager should not make this decision but rather the caller should not give us the TX.
                         if (1)
                         {
+                            // If item.lastRequestTime is true then we've requested at least once, so this is a
+                            // rerequest -> a txn request was dropped.
+                            if (item.lastRequestTime)
+                            {
+                                LOG(REQ, "Request timeout for %s.  Retrying\n", item.obj.ToString().c_str());
+                                // Not reducing inFlight; it's still outstanding and will be cleaned up when
+                                // item is removed from map.
+                                // Note we can never be sure its really dropped verses just delayed for a long
+                                // time so this is not authoritative.
+                                droppedTxns += 1;
+
+                                // if we've requested before then increment the re-request counter for the
+                                // previous peer we requested from.
+                                if (item.prevRequestNode.get() != nullptr)
+                                    item.prevRequestNode.get()->nReRequests++;
+                            }
+
                             item.outstandingReqs++;
                             item.lastRequestTime = now;
+                            item.prevRequestNode = next.noderef;
 
                             mapBatchTxnRequests[next.noderef].emplace_back(item.obj);
 
