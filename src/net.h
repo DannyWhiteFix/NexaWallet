@@ -410,6 +410,9 @@ public:
     /** Stopwatch time this node was connected */
     std::atomic<uint64_t> nStopwatchConnected;
 
+    /** Request de-prioritization - Used in the request manager. */
+    std::atomic<uint64_t> nReRequests{0};
+
     int64_t nTimeOffset;
 
     /** The address of the remote peer */
