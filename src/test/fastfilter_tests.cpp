@@ -159,9 +159,49 @@ BOOST_AUTO_TEST_CASE(fastfilter_tests)
 
 BOOST_AUTO_TEST_CASE(rollingfastfilter_tests)
 {
-    // Like a bloom filter the fast filter can have false positives but not false negatives
+    // Like a rolling bloom filter the fast filter can have false positives
+    // but also false negatives.
     FastRandomContext insecure_rand;
-    CRollingFastFilter<1024 * 1024> rfilt;
+    CRollingFastFilter<8 * 1024 * 1024> rfilt;
+    CFastFilter<16 * 1024 * 1024> filt;
+
+    //  pick a random start point for a randomized test
+    // arith_uint256 num(insecure_rand.rand32());
+    arith_uint256 num(1);
+    int rcollisions = 0;
+    int collisions = 0;
+    for (int i = 1; i < 2000000; i++)
+    {
+        num += 1;
+        uint256 t1 = ArithToUint256(num);
+        uint256 tmp = Hash(t1.begin(), t1.end());
+        if (filt.contains(tmp))
+        {
+            collisions++;
+        }
+        if (rfilt.contains(tmp))
+        {
+            rcollisions++;
+        }
+        filt.insert(tmp);
+        rfilt.insert(tmp);
+        BOOST_CHECK(filt.contains(tmp));
+        BOOST_CHECK(rfilt.contains(tmp));
+    }
+    BOOST_CHECK(rcollisions < collisions);
+    // This next check is probabilistic, see comment in CRollingFastFilter insert()
+    // printf("collisions : %ld\n", collisions);
+    // printf("rcollisions : %ld\n", rcollisions);
+    // printf("rcollisions : %10.4f\n", (double)rcollisions/2000000);
+    BOOST_CHECK(((double)rcollisions) / 2000000.0 < .0035);
+}
+
+BOOST_AUTO_TEST_CASE(legacyrollingfastfilter_tests)
+{
+    // Like a rolling bloom filter the fast filter can have false positives
+    // but also false negatives.
+    FastRandomContext insecure_rand;
+    CLegacyRollingFastFilter<1024 * 1024> rfilt;
     CFastFilter<1024 * 1024> filt;
 
     //  pick a random start point for a randomized test
@@ -190,7 +230,7 @@ BOOST_AUTO_TEST_CASE(rollingfastfilter_tests)
         BOOST_CHECK(!rfilt.checkAndSet(tmp));
     }
     BOOST_CHECK(rcollisions < collisions);
-    // This next check is probabilistic, see comment in CRollingFastFilter insert()
+    // This next check is probabilistic, see comment in CLegacyRollingFastFilter insert()
     BOOST_CHECK(((double)rcollisions) / 2000000.0 < .02);
 }
 
