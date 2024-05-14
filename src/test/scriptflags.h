@@ -7,6 +7,7 @@
 #define NEXA_TEST_SCRIPTFLAGS_H
 
 #include <string>
+#include <cstdint>
 
 uint32_t ParseScriptFlags(std::string strFlags);
 std::string FormatScriptFlags(uint32_t flags);

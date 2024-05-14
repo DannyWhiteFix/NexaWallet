@@ -6,6 +6,7 @@
 #ifndef NEXA_CHAINPARAMSBASE_H
 #define NEXA_CHAINPARAMSBASE_H
 
+#include <cstdint>
 #include <string>
 #include <vector>
 

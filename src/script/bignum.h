@@ -9,6 +9,7 @@
 #ifndef LIGHT // limit dependencies: BigNum is a NO_OP on android since script machine not needed
 #include <gmp.h>
 #endif
+#include <cstdint>
 #include <stdarg.h>
 #include <string>
 #include <vector>
