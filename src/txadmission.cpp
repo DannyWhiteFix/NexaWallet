@@ -842,6 +842,10 @@ bool ParallelAcceptToMemoryPool(Snapshot &ss,
 
         CAmount nValueIn = 0;
         LockPoints lp;
+
+        CAmount nValueOut = 0;
+        CAmount nFees = 0;
+        CAmount nModifiedFees = 0;
         {
             READLOCK(ss.cs_snapshot);
             READLOCK(pool.cs_txmempool);
@@ -937,6 +941,15 @@ bool ParallelAcceptToMemoryPool(Snapshot &ss,
                     return state.DoS(0, false, REJECT_NONSTANDARD, "non-BIP68-final");
                 }
             }
+
+            nValueOut = tx->GetValueOut();
+            nFees = nValueIn - nValueOut;
+            nModifiedFees = nFees; // nModifiedFees includes any fee deltas from PrioritiseTransaction
+            double nPriorityDummy = 0;
+
+            // Search either id or idem for a user-applied priority modifier
+            pool._ApplyDeltas(id, nPriorityDummy, nModifiedFees);
+            pool._ApplyDeltas(idem, nPriorityDummy, nModifiedFees);
         }
 
         // Check for non-standard pay-to-script-hash in inputs
@@ -956,15 +969,6 @@ bool ParallelAcceptToMemoryPool(Snapshot &ss,
                 return state.Invalid(false, REJECT_NONSTANDARD, "bad-txns-nonstandard-inputs");
             }
         }
-
-        CAmount nValueOut = tx->GetValueOut();
-        CAmount nFees = nValueIn - nValueOut;
-        // nModifiedFees includes any fee deltas from PrioritiseTransaction
-        CAmount nModifiedFees = nFees;
-        double nPriorityDummy = 0;
-        // Search either id or idem for a user-applied priority modifier
-        pool.ApplyDeltas(id, nPriorityDummy, nModifiedFees);
-        pool.ApplyDeltas(idem, nPriorityDummy, nModifiedFees);
 
         CAmount inChainInputValue;
         double dPriority = view.GetPriority(*tx, chainActive.Height(), inChainInputValue);
