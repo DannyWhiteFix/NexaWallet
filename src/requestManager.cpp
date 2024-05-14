@@ -139,7 +139,7 @@ void CRequestManager::cleanup(const CInv &inv)
 
 
 // Get this object from somewhere, asynchronously.
-void CRequestManager::AskFor(const CInv &obj, CNode *from, unsigned int priority)
+void CRequestManager::AskFor(const CInv &obj, CNode *from)
 {
     // LOG(REQ, "ReqMgr: Ask for %s.\n", obj.ToString().c_str());
 
@@ -171,9 +171,6 @@ void CRequestManager::AskFor(const CInv &obj, CNode *from, unsigned int priority
         CUnknownObj &data = item->second;
         data.obj = obj;
 
-        // Adjust the priority
-        data.priority = std::max(priority, data.priority);
-
         // Then add another source.  A new souce would be added even
         // if this object already existed in mapTxnToAdd.  This could happen
         // if multiple invs were received before the transaction
@@ -200,9 +197,6 @@ void CRequestManager::AskFor(const CInv &obj, CNode *from, unsigned int priority
         CUnknownObj &data = item->second;
         data.obj = obj;
 
-        // Adjust the priority
-        data.priority = std::max(priority, data.priority);
-
         // Then add another source.  A new souce would be added even
         // if this object already existed in mapBlkToAdd.  This could happen
         // if multiple invs were received before the transaction
@@ -225,20 +219,20 @@ void CRequestManager::AskFor(const CInv &obj, CNode *from, unsigned int priority
 }
 
 // Get these objects from somewhere, asynchronously.
-void CRequestManager::AskFor(const std::vector<CInv> &objArray, CNode *from, unsigned int priority)
+void CRequestManager::AskFor(const std::vector<CInv> &objArray, CNode *from)
 {
     for (auto &inv : objArray)
     {
-        AskFor(inv, from, priority);
+        AskFor(inv, from);
     }
 }
 
-void CRequestManager::AskForDuringIBD(const std::vector<CInv> &objArray, CNode *from, unsigned int priority)
+void CRequestManager::AskForDuringIBD(const std::vector<CInv> &objArray, CNode *from)
 {
     // This is block and peer that was selected in FindNextBlocksToDownload() so we want to add it as a block
     // source first so that it gets requested first.
     if (from)
-        AskFor(objArray, from, priority);
+        AskFor(objArray, from);
 
     // We can't hold cs_vNodes in the for loop below because it is out of order with cs_objDownloader which is
     // taken in ProcessBlockAvailability.  We can't take cs_objDownloader earlier because it deadlocks with the
@@ -276,7 +270,7 @@ void CRequestManager::AskForDuringIBD(const std::vector<CInv> &objArray, CNode *
             if (state->pindexBestKnownBlock != nullptr &&
                 state->pindexBestKnownBlock->chainWork() > chainActive.Tip()->chainWork())
             {
-                AskFor(objArray, pnode, priority);
+                AskFor(objArray, pnode);
             }
         }
         pnode->Release(); // Release the refs we took

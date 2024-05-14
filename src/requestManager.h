@@ -108,7 +108,6 @@ public:
     int64_t lastRequestTime; // In stopwatch time microseconds, 0 means no request
     unsigned int outstandingReqs;
     ObjectSourceList availableFrom;
-    unsigned int priority;
     int64_t nEntryTime;
     CNodeRef prevRequestNode; // The last node we made a request from
 
@@ -119,7 +118,6 @@ public:
         fProcessing = false;
         outstandingReqs = 0;
         lastRequestTime = 0;
-        priority = 0;
         nEntryTime = 0;
     }
 
@@ -231,16 +229,16 @@ public:
     bool RequestBlock(CNode *pfrom, CInv &obj);
 
     // Get this object from somewhere, asynchronously.
-    void AskFor(const CInv &obj, CNode *from, unsigned int priority = 0);
+    void AskFor(const CInv &obj, CNode *from);
 
     // Get these objects from somewhere, asynchronously.
-    void AskFor(const std::vector<CInv> &objArray, CNode *from, unsigned int priority = 0);
+    void AskFor(const std::vector<CInv> &objArray, CNode *from);
 
     // Get these objects from somewhere, asynchronously during IBD. During IBD we must assume every peer connected
     // can give us the blocks we need and so we tell the request manager about these sources. Otherwise the request
     // manager may not be able to re-request blocks from anyone after a timeout and we also need to be able to not
     // request another group of blocks that are already in flight.
-    void AskForDuringIBD(const std::vector<CInv> &objArray, CNode *from, unsigned int priority = 0);
+    void AskForDuringIBD(const std::vector<CInv> &objArray, CNode *from);
 
     // Did we already ask for this block. We need to do this during IBD to make sure we don't ask for another set
     // of the same blocks.
