@@ -180,8 +180,8 @@ void CWallet::Check()
         const COutPoint &outpoint = mi.first;
         const COutput &coin = mi.second;
         auto tx = coin.tx;
-        uint256 txid = tx->GetId();
-        uint256 txidem = tx->GetIdem();
+        const uint256 &txid = tx->GetId();
+        const uint256 &txidem = tx->GetIdem();
         assert(tx);
 
         if (outpoint.hash == tx->GetId()) // If its the tx record, run cross checks
@@ -724,7 +724,7 @@ void CWallet::RemoveFromSpends(const COutPoint &outpoint, const uint256 &txId)
 
 void CWallet::AddToSpends(const CWalletTxRef wtx)
 {
-    uint256 txid = wtx->GetId();
+    const uint256 &txid = wtx->GetId();
     assert(mapWallet.count(COutPoint(txid))); // tx better be in the wallet
     uint256 txidem = wtx->GetIdem();
     assert(mapWallet.count(COutPoint(txidem))); // tx better be in the wallet
@@ -739,7 +739,7 @@ void CWallet::AddToSpends(const CWalletTxRef wtx)
 
 void CWallet::RemoveFromSpends(const CWalletTxRef wtx)
 {
-    uint256 txid = wtx->GetId();
+    const uint256 &txid = wtx->GetId();
     assert(mapWallet.count(COutPoint(txid))); // tx better be in the wallet
     uint256 txidem = wtx->GetIdem();
     assert(mapWallet.count(COutPoint(txidem))); // tx better be in the wallet
@@ -1138,7 +1138,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef &ptx,
 
     if (pblock)
     {
-        uint256 txId = ptx->GetId();
+        const uint256 &txId = ptx->GetId();
         for (const CTxIn &txin : ptx->vin)
         {
             std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(txin.prevout);
@@ -2044,7 +2044,7 @@ set<uint256> CWalletTx::GetConflicts() const
     set<uint256> result;
     if (pwallet != nullptr)
     {
-        uint256 myId = GetId();
+        const uint256 &myId = GetId();
         result = pwallet->GetConflicts(myId);
         result.erase(myId);
     }
@@ -3835,7 +3835,7 @@ bool CWallet::CreateOneTransaction(const vector<CRecipient> &vecSend,
  */
 bool CWallet::CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey, std::string &errorString)
 {
-    auto txId = wtxNew.GetId();
+    const uint256 &txId = wtxNew.GetId();
     if (fBroadcastTransactions)
     {
         auto txref = MakeTransactionRef(wtxNew);

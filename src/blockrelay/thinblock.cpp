@@ -211,7 +211,7 @@ CXThinBlock::CXThinBlock(const CBlock &block, const CBloomFilter *filter) : nSiz
     std::set<uint64_t> setPartialTxHash;
     for (unsigned int i = 0; i < nTx; i++)
     {
-        const uint256 hash256 = block.vtx[i]->GetId();
+        const uint256 &hash256 = block.vtx[i]->GetId();
         uint64_t cheapHash = hash256.GetCheapHash();
         vTxHashes.push_back(cheapHash);
 
@@ -240,7 +240,7 @@ CXThinBlock::CXThinBlock(const CBlock &block) : nSize(0), collision(false)
     READLOCK(orphanpool.cs_orphanpool);
     for (unsigned int i = 0; i < nTx; i++)
     {
-        const uint256 hash256 = block.vtx[i]->GetId();
+        const uint256 &hash256 = block.vtx[i]->GetId();
         uint64_t cheapHash = hash256.GetCheapHash();
         vTxHashes.push_back(cheapHash);
 

@@ -357,7 +357,7 @@ public:
     // Block compression protocols
     // mempool access
     // walletdb id
-    uint256 GetId() const
+    const uint256 &GetId() const
     {
 #ifdef DEBUG // inefficient to check every time
         //    assert(id == GetTxId(*this));
@@ -381,7 +381,7 @@ public:
     wallet notify calls
     walletdb tx storage
     */
-    uint256 GetIdem() const
+    const uint256 &GetIdem() const
     {
 #ifdef DEBUG // inefficient to check every time
         // assert(idem == GetTxIdem(*this));

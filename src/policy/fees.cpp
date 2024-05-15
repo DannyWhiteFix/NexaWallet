@@ -306,7 +306,7 @@ void TxConfirmStats::removeTx(unsigned int entryHeight, unsigned int nBestSeenHe
     }
 }
 
-void CBlockPolicyEstimator::removeTx(uint256 hash)
+void CBlockPolicyEstimator::removeTx(const uint256 &hash)
 {
     std::map<uint256, TxStatsInfo>::iterator pos = mapMemPoolTxs.find(hash);
     if (pos == mapMemPoolTxs.end())
@@ -320,7 +320,7 @@ void CBlockPolicyEstimator::removeTx(uint256 hash)
 
     if (stats != nullptr)
         stats->removeTx(entryHeight, nBestSeenHeight, bucketIndex);
-    mapMemPoolTxs.erase(hash);
+    mapMemPoolTxs.erase(pos);
 }
 
 CBlockPolicyEstimator::CBlockPolicyEstimator(const CFeeRate &_minRelayFee) : nBestSeenHeight(0)
