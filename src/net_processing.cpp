@@ -123,14 +123,18 @@ void static ProcessGetData(CNode *pfrom,
         bool lastInv = (sz == cur);
         uint32_t oneReplyPerInvCookie = (lastInv ? (msgCookie | 0xFFFF) : (msgCookie + replyCookieCount));
 
-        // Don't bother if send buffer is too full to respond anyway
-        if (pfrom->nSendSize >= nMaxSendBufferSize + ss.size())
+        // Don't bother if send buffer is too full to respond anyway except we always consume at least one inv.
+        // Otherwise we could get into an infinite loop where we never
+        // process a message that's too large for our send buffer size.
+        if (cur != 0 && pfrom->nSendSize >= nMaxSendBufferSize + ss.size())
         {
-            LOG(REQ, "Postponing %d getdata requests.  Send buffer is too large: %d\n", vInv.size(), pfrom->nSendSize);
             break;
         }
         if (shutdown_threads.load() == true)
         {
+            // I am in the middle of communicating with this node, so I want to make sure it gets an explicit close
+            // rather than timing out since I am breaking the request/reply protocol by quitting.
+            pfrom->CloseSocketDisconnect();
             return;
         }
 
@@ -144,48 +148,51 @@ void static ProcessGetData(CNode *pfrom,
             if (mi)
             {
                 bool fSend = false;
-                {
-                    if (chainActive.Contains(mi))
-                    {
-                        fSend = true;
-                    }
-                    else
-                    {
-                        static const int nOneMonth = 30 * 24 * 60 * 60;
-                        // To prevent fingerprinting attacks, only send blocks outside of the active
-                        // chain if they are valid, and no more than a month older (both in time, and in
-                        // best equivalent proof of work) than the best header chain we know about.
-                        {
-                            READLOCK(cs_mapBlockIndex);
-                            fSend = mi->IsValid(BLOCK_VALID_SCRIPTS) && (pindexBestHeader != NULL) &&
-                                    (pindexBestHeader.load()->GetBlockTime() - mi->GetBlockTime() < nOneMonth) &&
-                                    (GetBlockProofEquivalentTime(
-                                         *pindexBestHeader, *mi, *pindexBestHeader, consensusParams) < nOneMonth);
-                        }
-                        if (!fSend)
-                        {
-                            LOG(NET, "%s: ignoring request from peer=%s for old block that isn't in the main chain\n",
-                                __func__, pfrom->GetLogName());
-                        }
+                unsigned char noSendReason = 0;
+                std::string noSendStr = std::string("");
 
-                        // TODO: in the future we can throttle old block requests by setting send=false if we are out
-                        // of bandwidth
+                static const int nOneMonth = 30 * 24 * 60 * 60;
+                if (chainActive.Contains(mi))
+                {
+                    fSend = true;
+                }
+                else
+                {
+                    // To prevent fingerprinting attacks, only send blocks outside of the active
+                    // chain if they are valid, and no more than a month older (both in time, and in
+                    // best equivalent proof of work) than the best header chain we know about.
+                    {
+                        READLOCK(cs_mapBlockIndex);
+                        fSend = mi->IsValid(BLOCK_VALID_SCRIPTS) && (pindexBestHeader != NULL) &&
+                                (pindexBestHeader.load()->GetBlockTime() - mi->GetBlockTime() < nOneMonth) &&
+                                (GetBlockProofEquivalentTime(
+                                     *pindexBestHeader, *mi, *pindexBestHeader, consensusParams) < nOneMonth);
                     }
+                    if (!fSend)
+                    {
+                        LOG(NET, "%s: ignoring request from peer=%s for old block that isn't in the main chain\n",
+                            __func__, pfrom->GetLogName());
+                        noSendStr = "Not on main chain";
+                        noSendReason = REJECT_FORK;
+                    }
+
+                    // TODO: in the future we can throttle old block requests by setting send=false if we are out
+                    // of bandwidth
                 }
                 // disconnect node in case we have reached the outbound limit for serving historical blocks
                 // never disconnect whitelisted nodes
-                static const int nOneWeek = 7 * 24 * 60 * 60; // assume > 1 week = historical
                 if (fSend && CNode::OutboundTargetReached(true) &&
                     (((pindexBestHeader != nullptr) &&
-                         (pindexBestHeader.load()->GetBlockTime() - mi->GetBlockTime() > nOneWeek)) ||
+                         (pindexBestHeader.load()->GetBlockTime() - mi->GetBlockTime() > nOneMonth)) ||
                         inv.type == MSG_FILTERED_BLOCK) &&
                     !pfrom->fWhitelisted)
                 {
                     LOG(NET, "historical block serving limit reached, disconnect peer %s\n", pfrom->GetLogName());
-
-                    // disconnect node
+                    // disconnect node because it wants info that we are not going to give it
                     pfrom->fDisconnect = true;
                     fSend = false;
+                    noSendStr = "Historical block limit reached";
+                    noSendReason = REJECT_RETRY;
                 }
                 // Avoid leaking prune-height by never sending blocks below the
                 // NODE_NETWORK_LIMITED threshold.
@@ -201,10 +208,18 @@ void static ProcessGetData(CNode *pfrom,
                     // otherwise wait for the missing block)
                     pfrom->fDisconnect = true;
                     fSend = false;
+                    noSendStr = "Block too old";
+                    noSendReason = REJECT_LIMITED;
+                }
+                if (!(mi->nStatus & BLOCK_HAVE_DATA))
+                {
+                    fSend = false;
+                    noSendStr = "Block pruned";
+                    noSendReason = REJECT_OBSOLETE;
                 }
                 // Pruned nodes may have deleted the block, so check whether
                 // it's available before trying to send.
-                if (fSend && mi->nStatus & BLOCK_HAVE_DATA)
+                if (fSend)
                 {
                     // Send block from disk
                     const ConstCBlockRef pblock = ReadBlockFromDisk(mi, consensusParams);
@@ -213,7 +228,9 @@ void static ProcessGetData(CNode *pfrom,
                         // its possible that I know about it but haven't stored it yet
                         LOG(THIN, "unable to load block %s from disk\n",
                             mi->phashBlock ? mi->phashBlock->ToString() : "");
-                        // no response
+                        fSend = false;
+                        noSendStr = "Block is processing";
+                        noSendReason = REJECT_WAITING;
                     }
                     else
                     {
@@ -265,10 +282,23 @@ void static ProcessGetData(CNode *pfrom,
                                     replyCookieCount++;
                                 }
                             }
-                            // else
-                            // no response
+                            else
+                            {
+                                fSend = false;
+                                noSendReason = REJECT_MALFORMED;
+                                noSendStr = std::string("Merkle block requested but no filter installed");
+                            }
                         }
                     }
+                }
+                if (!fSend)
+                {
+                    std::string strCommand = NetMsgType::BLOCK;
+                    uint32_t replyCookie = msgCookie + replyCookieCount;
+                    if (lastInv)
+                        replyCookie = msgCookie | 0xFFFF;
+                    pfrom->PushMessageWithCookie(
+                        NetMsgType::REJECT, replyCookie, strCommand, noSendReason, noSendStr, inv.hash);
                 }
             }
             else
