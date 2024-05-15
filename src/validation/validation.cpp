@@ -3083,7 +3083,7 @@ bool ConnectTip(CValidationState &state,
         // Flush coin state
         bool result = view.Flush();
         assert(result);
-        LOG(BENCH, "      - Update Coins %.3fms\n", GetStopwatchMicros() - nStart);
+        LOG(BENCH, "      - Flush Coins %.3fms\n", GetStopwatchMicros() - nStart);
 
         mapBlockSource.erase(pindexNew->GetBlockHash());
         nTime3 = GetStopwatchMicros();
@@ -3100,35 +3100,15 @@ bool ConnectTip(CValidationState &state,
         if (!IsInitialBlockDownload() && !fReindex)
         {
             // remove confirmed transactions are removed from the mempool and orphanpool.
+            nStart = GetStopwatchMicros();
             mempool.removeForBlock(pblock->vtx, pindexNew->height(), txConflicted, !IsInitialBlockDownload());
-            orphanpool.RemoveForBlock(pblock->vtx);
+            LOG(BENCH, "Remove for Block %.3fms\n", (GetStopwatchMicros() - nStart) * .001);
 
-            // Search orphan queue for anything that is no longer an orphan due to tx in this block
-            uint64_t nOrphansRemaining = 0;
-            nOrphansRemaining = ProcessOrphans(pblock->vtx);
-
-            // Continue processing orphans only if there are any orphans remaining.
-            if (nOrphansRemaining > 0)
-            {
-                // If there are still orphans in the orphanpool then process against the previous block as well.
-                //
-                // In this case the previous block will be the current chaintip because we have not yet updated the
-                // tip for the current block being processed.
-                const ConstCBlockRef prevBlock = ReadBlockFromDisk(chainActive.Tip(), Params().GetConsensus());
-                if (prevBlock)
-                {
-                    nOrphansRemaining = ProcessOrphans(prevBlock->vtx);
-                }
-
-                // Lastly, process the entire mempool against the orphanpool if there are still any orphans remaining.
-                // This should be infrequent since the orphanpool is generally empty.
-                if (nOrphansRemaining > 0)
-                {
-                    std::vector<CTransactionRef> vWhatChanged;
-                    mempool.queryTxs(vWhatChanged);
-                    ProcessOrphans(vWhatChanged);
-                }
-            }
+            // Process orphan pool for transactions in block but do deferr it to be done
+            // in another thread.
+            LOCK(orphanpool.cs_blockprocessing);
+            orphanpool.vPostBlockProcessing.push_back(pblock);
+            cvCommitQ.notify_all();
         }
         else
         {
@@ -3162,7 +3142,7 @@ bool ConnectTip(CValidationState &state,
             return false;
         int64_t nTime5 = GetStopwatchMicros();
         nTimeChainState += nTime5 - nTime4;
-        LOG(BENCH, "  - Writing chainstate: %.2fms [%.2fs]\n", (nTime5 - nTime4) * 0.001, nTimeChainState * 0.000001);
+        LOG(BENCH, "  - Flush State to Disk: %.2fms [%.2fs]\n", (nTime5 - nTime4) * 0.001, nTimeChainState * 0.000001);
 
         // Tell wallet about transactions that went from mempool
         // to conflicted:
