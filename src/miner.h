@@ -123,8 +123,10 @@ private:
     /** Add transactions based on tx "priority" */
     void addPriorityTxs(std::vector<const CTxMemPoolEntry *> *vtxe);
 
-    /** Add transactions based on feerate including unconfirmed ancestors */
-    void addPackageTxs(std::vector<const CTxMemPoolEntry *> *vtxe, bool fAllowDirty);
+    /** Add transactions based on feerate including unconfirmed ancestors. Return of "true" means
+     *  the block is not full and there are still dirty transactions which could be added
+     */
+    bool addPackageTxs(std::vector<const CTxMemPoolEntry *> *vtxe, bool fAllowDirty);
 
     // helper function for addPriorityTxs
     bool IsIncrementallyGood(uint64_t nExtraSize, unsigned int nExtraSigOps);
