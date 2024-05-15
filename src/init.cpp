@@ -95,6 +95,7 @@ extern uint64_t nMaxSendBufferSize;
 extern uint32_t nFuzzMessages;
 extern uint32_t nDropMessages;
 extern bool fRelayPriority;
+extern bool fPrintPriority;
 
 using namespace std;
 
@@ -1065,6 +1066,10 @@ bool AppInit2(Config &config)
 
     // relay priority
     fRelayPriority = GetBoolArg("-relaypriority", DEFAULT_RELAYPRIORITY);
+
+    // print priority
+    fPrintPriority = GetBoolArg("-printpriority", DEFAULT_PRINTPRIORITY);
+
 
     // mempool limits
     int64_t nMempoolSizeMax = maxTxPool.Value() * ONE_MEGABYTE;

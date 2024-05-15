@@ -126,6 +126,9 @@ uint64_t nMaxSendBufferSize = 0;
 // Are we checking priority when doing tx admission
 bool fRelayPriority = false;
 
+// Are we printing out priority when mining a block.
+bool fPrintPriority = false;
+
 // Are we doing network message testing
 uint32_t nFuzzMessages = 0;
 uint32_t nDropMessages = 0;

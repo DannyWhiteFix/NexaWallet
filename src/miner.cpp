@@ -53,6 +53,8 @@ extern CCriticalSection csCurrentCandidate;
 extern uint64_t nLastBlockTx;
 extern uint64_t nLastBlockSize;
 
+extern bool fPrintPriority;
+
 using namespace std;
 
 //////////////////////////////////////////////////////////////////////////////
@@ -226,6 +228,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
             (STANDARD_LOCKTIME_VERIFY_FLAGS & LOCKTIME_MEDIAN_TIME_PAST) ? nMedianTimePast : pblock->GetBlockTime();
 
         std::vector<const CTxMemPoolEntry *> vtxe;
+
         addPriorityTxs(&vtxe);
 
         // Mine by package (CPFP)
@@ -234,8 +237,11 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
         // of the block. Then a second quick pass is made to see if any dirty transactions
         // would be able to fill the rest of the block.
         int64_t nStartPackage = GetStopwatchMicros();
-        addPackageTxs(&vtxe, false);
-        addPackageTxs(&vtxe, true);
+        if (!addPackageTxs(&vtxe, false))
+        {
+            // Make another pass to add the dirty chains.
+            addPackageTxs(&vtxe, true);
+        }
         nTotalPackage += GetStopwatchMicros() - nStartPackage;
 
         {
@@ -247,7 +253,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
             mempool._size(), nFees, nBlockSigOps);
 
 
-        // sort tx if there are any and the feature is enabled
+        // sort transactions
         std::sort(vtxe.begin(), vtxe.end(), NumericallyLessTxHashComparator());
 
         for (auto &txe : vtxe)
@@ -277,13 +283,23 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
     // configured.
     pblock->fXVal = xvalTweak.Value();
 
-    pblock->UpdateHeader(); // fill values like num tx, size, and merkle root
-    CValidationState state;
-    if (!TestBlockValidity(state, chainparams, pblock, pindexPrev, false, false))
-    {
-        throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
-    }
+    // Fill values like num tx, size, and merkle root
+    pblock->UpdateHeader();
 
+    // TestBlockValidity is a relatively time consuming process for large blocks so
+    // only check block validity when running in regtest.  Once the block is created
+    // and applied to the block chain the validity is checked again anyway so it's not
+    // really necessary to do it twice, but it can make testing easier and is why it
+    // should be left on in regtest mode.
+    if (chainparams.NetworkIDString() == CBaseChainParams::REGTEST && fCheckBlockIndex)
+    {
+        CValidationState state;
+        if (!TestBlockValidity(state, chainparams, pblock, pindexPrev, false, false))
+        {
+            throw std::runtime_error(
+                strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
+        }
+    }
     return pblocktemplate;
 }
 
@@ -366,15 +382,13 @@ bool BlockAssembler::TestForBlock(CTxMemPool::TxIdIter iter)
 
 void BlockAssembler::AddToBlock(std::vector<const CTxMemPoolEntry *> *vtxe, CTxMemPool::TxIdIter iter)
 {
-    const CTxMemPoolEntry &tmp = *iter;
-    vtxe->push_back(&tmp);
+    vtxe->push_back(&(*iter));
     nBlockSize += iter->GetTxSize();
     ++nBlockTx;
     nBlockSigOps += iter->GetSigOpCount();
     nFees += iter->GetFee();
     inBlock.insert(iter);
 
-    bool fPrintPriority = GetBoolArg("-printpriority", DEFAULT_PRINTPRIORITY);
     if (fPrintPriority)
     {
         double dPriority = iter->GetPriority(nHeight);
@@ -427,18 +441,21 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries &package,
 // the current algo is still much better than the older method which needed to update calculations for the
 // entire descendant tree after each package was added to the block.
 
-void BlockAssembler::addPackageTxs(std::vector<const CTxMemPoolEntry *> *vtxe, bool fAllowDirtyTxns)
+bool BlockAssembler::addPackageTxs(std::vector<const CTxMemPoolEntry *> *vtxe, bool fAllowDirtyTxns)
 {
     AssertLockHeld(mempool.cs_txmempool);
 
     CTxMemPool::TxIdIter iter;
     uint64_t nPackageFailures = 0;
+    bool fHaveDirty = false;
     for (auto mi = mempool.mapTx.get<ancestor_score>().begin(); mi != mempool.mapTx.get<ancestor_score>().end(); mi++)
     {
         iter = mempool.mapTx.project<0>(mi);
+        if (iter->IsDirty())
+            fHaveDirty = true;
 
-        // Skip txns we know are in the block
-        if (inBlock.count(iter) || (fAllowDirtyTxns == false && iter->IsDirty() == true))
+        // Skip txns we know are in the block and also skip if it's dirty but we're not allowing dirty txns.
+        if (inBlock.count(iter) || (!fAllowDirtyTxns && iter->IsDirty()))
         {
             continue;
         }
@@ -471,9 +488,12 @@ void BlockAssembler::addPackageTxs(std::vector<const CTxMemPoolEntry *> *vtxe, b
         }
 
         // Do not add free transactions here. They should only be added in addPriorityTxes()
+        //
+        // Also, if free transactions are being found here then we've exhausted all possible
+        // transactions that could be added so just return.
         if (packageFees < ::minRelayTxFee.GetFee(packageSize))
         {
-            return;
+            return true;
         }
 
         // Test if package fits in the block
@@ -486,9 +506,15 @@ void BlockAssembler::addPackageTxs(std::vector<const CTxMemPoolEntry *> *vtxe, b
 
             // If we keep failing then the block must be almost full so bail out here.
             if ((nPackageFailures >= MAX_PACKAGE_FAILURES) || (nBlockMaxSize - nBlockSize < MIN_TX_SIZE))
-                return;
+            {
+                // Return true because the block is full and we don't need another loop looking
+                // for dirty transactions to add because they can't be added anyway.
+                return true;
+            }
             else
+            {
                 continue;
+            }
         }
 
         // Test that the package does not exceed sigops limits
@@ -509,6 +535,8 @@ void BlockAssembler::addPackageTxs(std::vector<const CTxMemPoolEntry *> *vtxe, b
             AddToBlock(vtxe, it);
         }
     }
+
+    return !fHaveDirty;
 }
 
 void BlockAssembler::addPriorityTxs(std::vector<const CTxMemPoolEntry *> *vtxe)
