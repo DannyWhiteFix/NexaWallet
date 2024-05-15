@@ -1163,10 +1163,11 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef &ptx,
     {
         CWalletTxRef wtx = std::make_shared<CWalletTx>(this, *ptx);
 
-        // Get merkle branch if transaction was found in a block
+        // Set the hash and index if transaction was found in a block
         if (pblock)
-            wtx->SetMerkleBranch(*pblock, txIndex);
-
+        {
+            wtx->SetBlockChainPos(pblock, txIndex);
+        }
         // Do not flush the wallet here for performance reasons
         // this is safe, as in case of a crash, we rescan the necessary blocks on startup through our
         // SetBestChain-mechanism
@@ -4766,23 +4767,15 @@ CWalletKey::CWalletKey(int64_t nExpires)
     nTimeExpires = nExpires;
 }
 
-int CMerkleTx::SetMerkleBranch(const CBlock &block, int txIdx)
+void CMerkleTx::SetBlockChainPos(const ConstCBlockRef pblock, int txIdx)
 {
     // txIdx never == -1 since the caller already know txIdx
     assert(txIdx >= 0);
-    CBlock blockTmp;
 
     // Update the tx's hashBlock
-    hashBlock = block.GetHash();
+    hashBlock = pblock->GetHash();
     // Set the position of the transaction in the block
     nIndex = txIdx;
-
-    // Is the tx in a block that's in the main chain
-    const CBlockIndex *pindex = LookupBlockIndex(hashBlock);
-    if (!pindex || !chainActive.Contains(pindex))
-        return 0;
-
-    return chainActive.Height() - pindex->height() + 1;
 }
 
 int CMerkleTx::GetDepthInMainChain(const CBlockIndex *&pindexRet) const
