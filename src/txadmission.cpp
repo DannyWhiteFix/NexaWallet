@@ -268,6 +268,14 @@ void ThreadCommitToMempool()
                 {
                     return;
                 }
+
+                // If a block was just received then break from this loop and
+                // commit transactions right away so we can process for orphans
+                LOCK(orphanpool.cs_blockprocessing);
+                if (!orphanpool.vPostBlockProcessing.empty())
+                {
+                    break;
+                }
             } while (txCommitQ->empty() && txDeferQ.empty());
         }
 
@@ -412,7 +420,24 @@ void CommitTxToMempool()
         }
     }
 
+    // Process orphanpool for newly arrived transactions
     ProcessOrphans(vWhatChanged);
+
+    // Process orphanpool for any recently connected blocks
+    while (true)
+    {
+        ConstCBlockRef pblock;
+        {
+            LOCK(orphanpool.cs_blockprocessing);
+            if (orphanpool.vPostBlockProcessing.empty())
+                break;
+            pblock = orphanpool.vPostBlockProcessing.front();
+            orphanpool.vPostBlockProcessing.pop_front();
+        }
+        LOGA("Processing one block for orphans: %s\n", pblock->GetHash().ToString());
+        orphanpool.RemoveForBlock(pblock->vtx);
+        ProcessOrphans(pblock->vtx);
+    }
 }
 
 void ThreadTxAdmission()

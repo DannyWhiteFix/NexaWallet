@@ -7,6 +7,7 @@
 #define NEXA_TX_ORPHANPOOL
 
 #include "net.h"
+#include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "sync.h"
 #include "uint256.h"
@@ -21,7 +22,11 @@ extern CTweak<uint32_t> orphanPoolExpiry;
 class CTxOrphanPool
 {
 public:
+    // General orphan pool READ/WRITE lock
     CSharedCriticalSection cs_orphanpool;
+
+    // Used for syncronizing post block processing of the orphan pool
+    CCriticalSection cs_blockprocessing;
 
 private:
     //! Used in EraseOrphansByTime() to track when the last time was we checked the cache for anything to delete
@@ -44,6 +49,8 @@ public:
 
     std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_orphanpool);
     std::map<uint256, std::set<uint256> > mapOrphanTransactionsByPrev GUARDED_BY(cs_orphanpool);
+
+    std::deque<ConstCBlockRef> vPostBlockProcessing GUARDED_BY(cs_blockprocessing);
 
     CTxOrphanPool();
 
