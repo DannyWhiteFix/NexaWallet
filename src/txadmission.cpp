@@ -800,8 +800,8 @@ bool ParallelAcceptToMemoryPool(Snapshot &ss,
     }
 
     // Is it already in the memory pool?
-    uint256 id = tx->GetId();
-    uint256 idem = tx->GetIdem();
+    const uint256 &id = tx->GetId();
+    const uint256 &idem = tx->GetIdem();
     if (pool.idemExists(idem))
     {
         if (debugger)

@@ -2133,7 +2133,7 @@ DisconnectResult DisconnectBlock(const ConstCBlockRef pblock, const CBlockIndex 
     for (unsigned int i = 0; i < pblock->vtx.size(); i++)
     {
         const CTransaction &tx = *(pblock->vtx[i]);
-        uint256 hash = tx.GetIdem();
+        const uint256 &hash = tx.GetIdem();
 
         // Check that all outputs are available and match the outputs in the block itself exactly.
         for (size_t o = 0; o < tx.vout.size(); o++)
@@ -2332,7 +2332,7 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
             }
             else if (i != 0)
             {
-                uint256 curTxHash = tx.GetId();
+                const uint256 &curTxHash = tx.GetId();
                 if (curTxHash < prevTxHash)
                 {
                     return state.DoS(100,
@@ -2420,11 +2420,10 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
                         REJECT_INVALID, "bad-txns-nonfinal");
                 }
 
-                uint256 hash = tx.GetId();
                 {
                     // If XVal is not on then check all inputs, otherwise only check
                     // transactions that were not previously verified in the mempool.
-                    bool fUnVerified = pblock->setUnVerifiedTxns.count(hash);
+                    bool fUnVerified = pblock->setUnVerifiedTxns.count(tx.GetId());
                     if (fUnVerified || !pblock->fXVal)
                     {
                         if (fUnVerified)

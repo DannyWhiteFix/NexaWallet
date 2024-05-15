@@ -29,7 +29,7 @@ bool CTxOrphanPool::AddOrphanTx(const CTransactionRef ptx, NodeId peer)
     if (mapOrphanTransactions.empty())
         DbgAssert(nBytesOrphanPool == 0, nBytesOrphanPool = 0);
 
-    uint256 hash = ptx->GetId();
+    const uint256 &hash = ptx->GetId();
     if (mapOrphanTransactions.count(hash))
         return false;
 

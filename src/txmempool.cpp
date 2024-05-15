@@ -618,8 +618,8 @@ void CTxMemPool::AddTransactionsUpdated(unsigned int n)
 
 bool CTxMemPool::_addUnchecked(const CTxMemPoolEntry &entry, bool fCurrentEstimate)
 {
-    const uint256 txid = entry.GetTx().GetId();
-    const uint256 txidem = entry.GetTx().GetIdem();
+    const uint256 &txid = entry.GetTx().GetId();
+    const uint256 &txidem = entry.GetTx().GetIdem();
     // Add to memory pool without checking anything.
     // Used by main.cpp AcceptToMemoryPool(), which DOES do
     // all the appropriate checks.
@@ -714,7 +714,7 @@ void CTxMemPool::removeUnchecked(TxIdIter it)
         m_dspStorage->remove(it->dsproof);
 
     const CTransaction &tx = it->GetTx();
-    const uint256 hash = tx.GetId();
+    const uint256 &hash = tx.GetId();
     for (const CTxIn &txin : tx.vin)
         mapNextTx.erase(txin.prevout);
     for (size_t i = 0; i < tx.vout.size(); i++)
@@ -934,7 +934,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef> &vtx,
         setEntries setTxnsInBlock;
         for (const auto &tx : vtx)
         {
-            uint256 hash = tx->GetId();
+            const uint256 &hash = tx->GetId();
             TxIdIter it = mapTx.find(hash);
             if (it == mapTx.end())
             {
@@ -964,6 +964,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef> &vtx,
                 _UpdateParent(updateIt, it, false);
             }
         }
+
         // Add any additional dirty chain tips from set of mempool txn chain tips that need to be
         // updated.
         for (uint256 hash : setDirtyTxnChainTips)
@@ -978,7 +979,6 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef> &vtx,
             }
         }
         setDirtyTxnChainTips.clear();
-
         // Before the txs in the new block have been removed from the mempool, update policy estimates
         minerPolicyEstimator->processBlock(nBlockHeight, setTxnsInBlock, fCurrentEstimate);
 
@@ -1212,7 +1212,7 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
     }
     for (std::map<COutPoint, CInPoint>::const_iterator it = mapNextTx.begin(); it != mapNextTx.end(); it++)
     {
-        uint256 hash = it->second.ptx->GetId();
+        const uint256 &hash = it->second.ptx->GetId();
         indexed_transaction_set::const_iterator it2 = mapTx.find(hash);
         const CTransaction &tx = it2->GetTx();
         assert(it2 != mapTx.end()); // Every entry in mapNextTx should point to a mempool entry
