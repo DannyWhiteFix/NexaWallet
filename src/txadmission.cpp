@@ -115,7 +115,7 @@ void FlushTxAdmission()
         {
             {
                 LOCK(csTxInQ);
-                empty = txInQ.empty() & txDeferQ.empty() & txOrphanQ.empty();
+                empty = txInQ.empty() && txDeferQ.empty() && txOrphanQ.empty();
             }
             if (!empty)
                 MilliSleep(100);
@@ -133,7 +133,7 @@ void FlushTxAdmission()
             CORRAL(txProcessingCorral, CORRAL_TX_PAUSE);
             {
                 LOCK(csTxInQ);
-                empty = txInQ.empty() & txDeferQ.empty() & txOrphanQ.empty();
+                empty = txInQ.empty() && txDeferQ.empty() && txOrphanQ.empty();
             }
             {
                 std::unique_lock<std::mutex> lock(csCommitQ);
