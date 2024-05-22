@@ -18,7 +18,7 @@ import pdb
 import tempfile
 
 # A set of versions known to produce the same output
-tested_versions = ['15.0.7','15.0.3']
+tested_versions = ['15.0.7','15.0.3','17.0.6']
 accepted_file_extensions = ('.h', '.cpp') # Files to format
 trailing_comment_exe = "trailing-comment.py"
 max_col_len = 120
