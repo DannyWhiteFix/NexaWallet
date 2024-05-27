@@ -17,6 +17,7 @@ from test_framework.authproxy import JSONRPCException
 from test_framework.util import *
 from test_framework.loginit import logging
 
+waitTime = 60
 
 class BlockchainTest(BitcoinTestFramework):
     """
@@ -75,9 +76,9 @@ class BlockchainTest(BitcoinTestFramework):
             connect_nodes(node3, 2)  # Connect node 3 only to the new node
             connect_nodes(node3, 1)  # Connect node 3 only to the new node
             logging.info("syncing nodes 0, 2 and 3 to node 1")
-            waitFor(30, lambda: node2.getblockcount() == nblocks, 2.0)
-            waitFor(30, lambda: node3.getblockcount() == nblocks, 2.0)
-            waitFor(30, lambda: self.nodes[0].getblockcount() == nblocks, 2.0)
+            waitFor(waitTime, lambda: node2.getblockcount() == nblocks, 2.0)
+            waitFor(waitTime, lambda: node3.getblockcount() == nblocks, 2.0)
+            waitFor(waitTime, lambda: self.nodes[0].getblockcount() == nblocks, 2.0)
 
         # sort of simultaneously create blocks (we'd need to have an async generate to really do so,
         # but this is likely to generate on another node before it has a chance to sync
@@ -88,14 +89,17 @@ class BlockchainTest(BitcoinTestFramework):
         besthashes = [x.getbestblockhash() for x in self.nodes]
         print("Node tips: ", besthashes)
         # now force convergence
-        self.nodes[1].generate(6)
         count = self.nodes[1].getblockcount()
+        self.nodes[1].generate(6)
+        count = count + 6
+        waitFor(waitTime, lambda: self.nodes[0].getblockcount() == count)
+        waitFor(waitTime, lambda: self.nodes[2].getblockcount() == count)
+        waitFor(waitTime, lambda: self.nodes[3].getblockcount() == count)
+
         bestblockhash = self.nodes[1].getbestblockhash()
-        waitFor(30, lambda: self.nodes[0].getblockcount() == count)
-        waitFor(30, lambda: self.nodes[2].getblockcount() == count)
-        waitFor(30, lambda: self.nodes[3].getblockcount() == count)
-        waitFor(30, lambda: self.nodes[0].getbestblockhash() == bestblockhash)
-        waitFor(30, lambda: self.nodes[2].getbestblockhash() == bestblockhash)
+        waitFor(waitTime, lambda: self.nodes[0].getbestblockhash() == bestblockhash)
+        waitFor(waitTime, lambda: self.nodes[2].getbestblockhash() == bestblockhash)
+        waitFor(waitTime, lambda: self.nodes[3].getbestblockhash() == bestblockhash)
 
         logging.info("Forced fork")
         # create a fork by partitioning the network
@@ -113,8 +117,8 @@ class BlockchainTest(BitcoinTestFramework):
         connect_nodes(node2, 0)
 
         # now nodes 2 and 3 should reorganize to the longer (more work) side
-        waitFor(30, lambda: self.nodes[2].getbestblockhash() == winningHashes[-1])
-        waitFor(30, lambda: self.nodes[3].getbestblockhash() == winningHashes[-1])
+        waitFor(waitTime, lambda: self.nodes[2].getbestblockhash() == winningHashes[-1])
+        waitFor(waitTime, lambda: self.nodes[3].getbestblockhash() == winningHashes[-1])
 
     def _test_gettxout(self):
         node = self.nodes[0]
