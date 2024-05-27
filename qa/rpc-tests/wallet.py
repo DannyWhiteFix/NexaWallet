@@ -504,7 +504,7 @@ class WalletTest (BitcoinTestFramework):
 
         # Check wallet unspent counts. The counts may be different from the listunspent count because
         # they include watch-only amounts as well as any immature coinbases, unconfirmed and/or locked coins.
-        assert_equal(self.nodes[0].getwalletinfo()["unspentcount"], 11)
+        waitFor(waitTime, lambda: self.nodes[0].getwalletinfo()["unspentcount"] == 11)
         assert_equal(len(self.nodes[0].listunspent()), 5)
         assert_equal(self.nodes[1].getwalletinfo()["unspentcount"], 229)
         assert_equal(len(self.nodes[1].listunspent()), 139)
