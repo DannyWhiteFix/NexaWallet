@@ -156,13 +156,15 @@ class NodeHandlingTest (BitcoinTestFramework):
             node.clearbanned();
    
         # Before reconnecting the peers, extend the chain on one peer while
-        # at the same time invalidating a few blocks on another
+        # at the same time invalidating a few blocks on another. (The nodes
+        # are not connected at this time).
+        height = self.nodes[0].getblockcount() # this is the last synced height between these two nodes
         self.nodes[0].generate(5);
-        height = self.nodes[1].getblockcount()
+        waitFor(waitTime, lambda: self.nodes[0].getblockcount() == height + 5)
         self.nodes[1].invalidateblock(self.nodes[1].getblockhash(height))
         self.nodes[1].invalidateblock(self.nodes[1].getblockhash(height-1))
         self.nodes[1].invalidateblock(self.nodes[1].getblockhash(height-2))
-
+        waitFor(waitTime, lambda: self.nodes[1].getblockcount() == height - 3)
         stop_nodes(self.nodes)
         wait_bitcoinds()
 
