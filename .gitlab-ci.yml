@@ -75,6 +75,7 @@ gitian-binaries:
             - ./gitian-builder/result/*.yaml
             - ./gitian-builder/var/build.log
             - ./gitian-builder/var/build-script
+            - ./gitian-builder/make-base-vm.log
     tags:
         - scheduled
     rules:
