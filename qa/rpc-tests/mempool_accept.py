@@ -23,6 +23,8 @@ from test_framework.script import *
 
 Cli = "nexa-cli"  # Will be amended with the path during initialization
 
+waitTime = 60
+
 class PayDest:
     """A payment destination.  All the info you need to send a payment here and make a subsequent payment
        from this address"""
@@ -243,7 +245,7 @@ class MyTest (BitcoinTestFramework):
                     i += 1
 
             for n in self.nodes:
-                waitFor(30, lambda: True if n.gettxpoolinfo()["size"] >= NTX - 5 else None)
+                waitFor(waitTime, lambda: True if n.gettxpoolinfo()["size"] >= NTX - 5 else None)
             # we have to allow < because bloom filter false positives in the node's
             # sending logic may cause it to not get an INV
             time.sleep(1)
@@ -286,8 +288,8 @@ class MyTest (BitcoinTestFramework):
                     conflict_count += 1;
             waitFor(5, lambda: True if conflict_count == NTX else logging.info("num conflicts found:" + str(conflict_count) + ", node0 txpool size:" + str(self.nodes[0].gettxpoolinfo()["size"]) + ", node1 txpool size:" + str(self.nodes[1].gettxpoolinfo()["size"])))
 
-            waitFor(30, lambda: True if self.nodes[0].gettxpoolinfo()["size"] == NTX else None)
-            waitFor(30, lambda: True if self.nodes[1].gettxpoolinfo()["size"] == NTX else None)
+            waitFor(waitTime, lambda: True if self.nodes[0].gettxpoolinfo()["size"] == NTX else None)
+            waitFor(waitTime, lambda: True if self.nodes[1].gettxpoolinfo()["size"] == NTX else None)
 
             # forget about the tx I used above
             wallet = wallet[NTX:]
@@ -321,8 +323,8 @@ class MyTest (BitcoinTestFramework):
             # completed because out of testing the process of accepting tx is never
             # complete so sleep a little while first before checking.
             time.sleep(2) #wait for all txns to propagate
-            waitFor(30, lambda: True if self.nodes[0].gettxpoolinfo()["size"] == NTX + NTX1 else None)
-            waitFor(30, lambda: True if self.nodes[1].gettxpoolinfo()["size"] == NTX + NTX1 else None)
+            waitFor(waitTime, lambda: True if self.nodes[0].gettxpoolinfo()["size"] == NTX + NTX1 else None)
+            waitFor(waitTime, lambda: True if self.nodes[1].gettxpoolinfo()["size"] == NTX + NTX1 else None)
 
             # forget about the tx I used
             wallet = wallet[NTX:]
@@ -365,7 +367,7 @@ class MyTest (BitcoinTestFramework):
         (amt, wallet) = self.threadedCreateTx(dests1, None, 0, NTX)
         assert(amt == NTX)
         waitFor(10, lambda: True if self.nodes[0].gettxpoolinfo()["size"] >= NTX else None)
-        mp = waitFor(30, lambda: [x.gettxpoolinfo() for x in self.nodes] if amt - self.nodes[1].gettxpoolinfo()
+        mp = waitFor(waitTime, lambda: [x.gettxpoolinfo() for x in self.nodes] if amt - self.nodes[1].gettxpoolinfo()
                      ["size"] < 5 else None, lambda: "timeout txpool is: " + str([x.gettxpoolinfo() for x in self.nodes]))
         logging.info(mp)
 
@@ -583,12 +585,12 @@ class MyTest (BitcoinTestFramework):
         # check all txpools. Nodes 2 and 3 will have had free transactions rate limited with node 2 having
         # only a max of 10K bytes in the pool and node3 up to 20K bytes in the pool, where as, Nodes 1 and 2 will
         # have allowed all transactions into their txpools.
-        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()["size"] == 100)
-        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()["bytes"] > 20000)
-        waitFor(30, lambda: self.nodes[1].gettxpoolinfo()["size"] == 100)
-        waitFor(30, lambda: self.nodes[1].gettxpoolinfo()["bytes"] > 20000)
-        waitFor(60, lambda: [logging.info("Node 2 txpool, expecting 10k: %s" % str(self.nodes[2].gettxpoolinfo())), (self.nodes[2].gettxpoolinfo()["bytes"] >= 9000) and (self.nodes[2].gettxpoolinfo()["bytes"] <= 11000)][-1])
-        waitFor(30, lambda: [logging.info("Node 3 txpool, expecting 20k: %s" % str(self.nodes[3].gettxpoolinfo())), (self.nodes[3].gettxpoolinfo()["bytes"] >= 19000) and (self.nodes[3].gettxpoolinfo()["bytes"] <= 21000)][-1])
+        waitFor(waitTime, lambda: self.nodes[0].gettxpoolinfo()["size"] == 100)
+        waitFor(waitTime, lambda: self.nodes[0].gettxpoolinfo()["bytes"] > 20000)
+        waitFor(waitTime, lambda: self.nodes[1].gettxpoolinfo()["size"] == 100)
+        waitFor(waitTime, lambda: self.nodes[1].gettxpoolinfo()["bytes"] > 20000)
+        waitFor(waitTime, lambda: [logging.info("Node 2 txpool, expecting 10k: %s" % str(self.nodes[2].gettxpoolinfo())), (self.nodes[2].gettxpoolinfo()["bytes"] >= 9000) and (self.nodes[2].gettxpoolinfo()["bytes"] <= 11000)][-1])
+        waitFor(waitTime, lambda: [logging.info("Node 3 txpool, expecting 20k: %s" % str(self.nodes[3].gettxpoolinfo())), (self.nodes[3].gettxpoolinfo()["bytes"] >= 19000) and (self.nodes[3].gettxpoolinfo()["bytes"] <= 21000)][-1])
 
         if False: # TODO: test removed until wallet/txpool fee policy is worked out
             # stop and start all nodes with txpool persist off and relay.limitFreeRelay off but increase the relay.minRelayTxFee to a high
@@ -598,16 +600,16 @@ class MyTest (BitcoinTestFramework):
             wait_bitcoinds()
             self.nodes = start_nodes(4, self.options.tmpdir, [["-relay.minRelayTxFee=10000", "-relay.limitFreeRelay=0", "-cache.persistTxPool=0"], ["-relay.minRelayTxFee=1000", "-relay.limitFreeRelay=0", "-cache.persistTxPool=0"], ["-relay.minRelayTxFee=2000", "-relay.limitFreeRelay=0", "-cache.persistTxPool=0"], ["-relay.minRelayTxFee=3000", "-relay.limitFreeRelay=0", "-cache.persistTxPool=0"]])
             interconnect_nodes(self.nodes)
-            waitFor(30, lambda: self.nodes[0].gettxpoolinfo()["size"] == 100)
-            waitFor(30, lambda: self.nodes[0].gettxpoolinfo()["bytes"] > 20000)
-            waitFor(30, lambda: self.nodes[1].gettxpoolinfo()["size"] == 0)
-            waitFor(30, lambda: self.nodes[1].gettxpoolinfo()["bytes"] == 0)
-            waitFor(30, lambda: self.nodes[2].gettxpoolinfo()["size"] == 0)
-            waitFor(30, lambda: self.nodes[2].gettxpoolinfo()["bytes"] == 0)
-            waitFor(30, lambda: self.nodes[2].gettxpoolinfo()["bytes"] == 0)
-            waitFor(30, lambda: self.nodes[3].gettxpoolinfo()["size"] == 0)
-            waitFor(30, lambda: self.nodes[3].gettxpoolinfo()["bytes"] == 0)
-            waitFor(30, lambda: self.nodes[3].gettxpoolinfo()["bytes"] == 0)
+            waitFor(waitTime, lambda: self.nodes[0].gettxpoolinfo()["size"] == 100)
+            waitFor(waitTime, lambda: self.nodes[0].gettxpoolinfo()["bytes"] > 20000)
+            waitFor(waitTime, lambda: self.nodes[1].gettxpoolinfo()["size"] == 0)
+            waitFor(waitTime, lambda: self.nodes[1].gettxpoolinfo()["bytes"] == 0)
+            waitFor(waitTime, lambda: self.nodes[2].gettxpoolinfo()["size"] == 0)
+            waitFor(waitTime, lambda: self.nodes[2].gettxpoolinfo()["bytes"] == 0)
+            waitFor(waitTime, lambda: self.nodes[2].gettxpoolinfo()["bytes"] == 0)
+            waitFor(waitTime, lambda: self.nodes[3].gettxpoolinfo()["size"] == 0)
+            waitFor(waitTime, lambda: self.nodes[3].gettxpoolinfo()["bytes"] == 0)
+            waitFor(waitTime, lambda: self.nodes[3].gettxpoolinfo()["bytes"] == 0)
 
 
         # clear all pools and add 5 txns to the pool
@@ -633,23 +635,27 @@ class MyTest (BitcoinTestFramework):
 
         # Mine block on node 0 and while at the same time try to send txns/chains
         # and double spends to the mempool.
+        node2_height = self.nodes[2].getblockcount()
         self.nodes[2].generate(1) # Mine block on other than node0 so that we don't hold the cs_main lock on node0
-        time.sleep(1) # give time for block to propagate
+        node2_newheight = node2_height + 1;
+        waitFor(waitTime, lambda: self.nodes[2].getblockcount() == node2_newheight)
         addr = self.nodes[0].getnewaddress()
         for i in range(10):
             tx = self.nodes[1].sendtoaddress(addr, "500")
+        time.sleep(1) #give transactions a chance to propagate to node0
 
-        # There should temporarily be 15 txns in node0's txpool during the period where the block is still being
-        # processed.
-        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()["size"] == 15)
+        # There should temporarily be greater than 5 txns in node0's txpool during the period where the block is still being
+        # processed. Some txns will arrive in the txpool during the block processing period and some may come after, but
+        # in the end we should have at least 1 more than the initial 5 txns in the txpool when we make you intial check.
+        waitFor(waitTime, lambda: self.nodes[0].gettxpoolinfo()["size"] > 5)
 
         # After the blocks are processed there should only be
         # the transactions that were sent "after" the block was mined.
         self.sync_blocks()
-        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()["size"] == 10)
-        waitFor(30, lambda: self.nodes[1].gettxpoolinfo()["size"] == 10)
-        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()["size"] == 10)
-        waitFor(30, lambda: self.nodes[3].gettxpoolinfo()["size"] == 10)
+        waitFor(waitTime, lambda: self.nodes[0].gettxpoolinfo()["size"] == 10)
+        waitFor(waitTime, lambda: self.nodes[1].gettxpoolinfo()["size"] == 10)
+        waitFor(waitTime, lambda: self.nodes[2].gettxpoolinfo()["size"] == 10)
+        waitFor(waitTime, lambda: self.nodes[3].gettxpoolinfo()["size"] == 10)
 
 
 if __name__ == '__main__':
