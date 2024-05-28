@@ -589,7 +589,7 @@ class MyTest (BitcoinTestFramework):
         waitFor(waitTime, lambda: self.nodes[0].gettxpoolinfo()["bytes"] > 20000)
         waitFor(waitTime, lambda: self.nodes[1].gettxpoolinfo()["size"] == 100)
         waitFor(waitTime, lambda: self.nodes[1].gettxpoolinfo()["bytes"] > 20000)
-        waitFor(60, lambda: [logging.info("Node 2 txpool, expecting 10k: %s" % str(self.nodes[2].gettxpoolinfo())), (self.nodes[2].gettxpoolinfo()["bytes"] >= 9000) and (self.nodes[2].gettxpoolinfo()["bytes"] <= 11000)][-1])
+        waitFor(waitTime, lambda: [logging.info("Node 2 txpool, expecting 10k: %s" % str(self.nodes[2].gettxpoolinfo())), (self.nodes[2].gettxpoolinfo()["bytes"] >= 9000) and (self.nodes[2].gettxpoolinfo()["bytes"] <= 11000)][-1])
         waitFor(waitTime, lambda: [logging.info("Node 3 txpool, expecting 20k: %s" % str(self.nodes[3].gettxpoolinfo())), (self.nodes[3].gettxpoolinfo()["bytes"] >= 19000) and (self.nodes[3].gettxpoolinfo()["bytes"] <= 21000)][-1])
 
         if False: # TODO: test removed until wallet/txpool fee policy is worked out
@@ -639,11 +639,10 @@ class MyTest (BitcoinTestFramework):
         self.nodes[2].generate(1) # Mine block on other than node0 so that we don't hold the cs_main lock on node0
         node2_newheight = node2_height + 1;
         waitFor(waitTime, lambda: self.nodes[2].getblockcount() == node2_newheight)
-        time.sleep(1) # give time for block to propagate and start processing (you have a 5 second window)
         addr = self.nodes[0].getnewaddress()
         for i in range(10):
             tx = self.nodes[1].sendtoaddress(addr, "500")
-        time.sleep(1)
+        time.sleep(1) #give transactions a chance to propagate to node0
 
         # There should temporarily be greater than 5 txns in node0's txpool during the period where the block is still being
         # processed. Some txns will arrive in the txpool during the block processing period and some may come after, but
