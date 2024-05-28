@@ -434,7 +434,7 @@ void CommitTxToMempool()
             pblock = orphanpool.vPostBlockProcessing.front();
             orphanpool.vPostBlockProcessing.pop_front();
         }
-        LOGA("Processing one block for orphans: %s\n", pblock->GetHash().ToString());
+        LOG(BENCH, "Processing one block for orphans: %s\n", pblock->GetHash().ToString());
         orphanpool.RemoveForBlock(pblock->vtx);
         ProcessOrphans(pblock->vtx);
     }
