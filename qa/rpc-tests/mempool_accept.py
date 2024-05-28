@@ -633,15 +633,20 @@ class MyTest (BitcoinTestFramework):
 
         # Mine block on node 0 and while at the same time try to send txns/chains
         # and double spends to the mempool.
+        node2_height = self.nodes[2].getblockcount()
         self.nodes[2].generate(1) # Mine block on other than node0 so that we don't hold the cs_main lock on node0
-        time.sleep(1) # give time for block to propagate
+        node2_newheight = node2_height + 1;
+        waitFor(30, lambda: self.nodes[2].getblockcount() == node2_newheight)
+        time.sleep(1) # give time for block to propagate and start processing (you have a 5 second window)
         addr = self.nodes[0].getnewaddress()
         for i in range(10):
             tx = self.nodes[1].sendtoaddress(addr, "500")
+        time.sleep(1)
 
-        # There should temporarily be 15 txns in node0's txpool during the period where the block is still being
-        # processed.
-        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()["size"] == 15)
+        # There should temporarily be greater than 5 txns in node0's txpool during the period where the block is still being
+        # processed. Some txns will arrive in the txpool during the block processing period and some may come after, but
+        # in the end we should have at least 1 more than the initial 5 txns in the txpool when we make you intial check.
+        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()["size"] > 5)
 
         # After the blocks are processed there should only be
         # the transactions that were sent "after" the block was mined.
