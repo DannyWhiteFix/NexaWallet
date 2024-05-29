@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(covenantedAndSubgroupPushtxstate)
     std::vector<CTxOut> coins;
 
     CGroupTokenID grp1(1, GroupTokenIdFlags::COVENANT);
-    VchType subgrpbytes(grp1.bytes()); // Make this is a subgroup of grp1...
+    VchType subgrpbytes(grp1.bytes().begin(), grp1.bytes().end()); // Make this is a subgroup of grp1...
     subgrpbytes.resize(60);
     subgrpbytes[33] = 1;
     CGroupTokenID subgrp(subgrpbytes);

@@ -254,7 +254,7 @@ const char *uvTypeName(UniValue::VType t)
     return NULL;
 }
 
-const UniValue& find_value(const UniValue& obj, const std::string& name)
+const UniValue find_value(const UniValue& obj, const std::string& name)
 {
     for (auto &key : obj.keys)
     {

@@ -9,7 +9,7 @@
 // we have changed the keys from a vector to a std::map making insertions log(n)
 // instead of N^2. Other methods were adjusted accordingly to the change in keys
 // data structure. This is not the exact fix Calin had remedied for this issue
-// but it is heavily based on and influenced by his solution. 
+// but it is heavily based on and influenced by his solution.
 
 #ifndef __UNIVALUE_H__
 #define __UNIVALUE_H__
@@ -192,7 +192,7 @@ public:
     const UniValue& get_array() const;
 
     enum VType type() const { return getType(); }
-    friend const UniValue& find_value( const UniValue& obj, const std::string& name);
+    friend const UniValue find_value( const UniValue& obj, const std::string& name);
 };
 
 enum jtokentype {
@@ -250,6 +250,6 @@ static inline bool json_isspace(int ch)
 
 extern const UniValue NullUniValue;
 
-const UniValue& find_value( const UniValue& obj, const std::string& name);
+const UniValue find_value( const UniValue& obj, const std::string& name);
 
 #endif // __UNIVALUE_H__

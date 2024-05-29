@@ -3508,7 +3508,7 @@ void CNode::EndMessage(CDataStream &ssSend)
     if (IsPriorityMsg(strCommand))
     {
         nSendSize.fetch_add(ssSend.size());
-        vSendMsg.push_back(std::move(CSerializeData(ssSend.begin(), ssSend.end())));
+        vSendMsg.push_back(CSerializeData(ssSend.begin(), ssSend.end()));
 
         LOG(PRIORITYQ, "Send Queue: pushed %s to the priority queue, peer(%d)\n", strCommand, this->GetId());
 
@@ -3519,7 +3519,7 @@ void CNode::EndMessage(CDataStream &ssSend)
     else
     {
         nSendSize.fetch_add(ssSend.size());
-        vLowPrioritySendMsg.push_back(std::move(CSerializeData(ssSend.begin(), ssSend.end())));
+        vLowPrioritySendMsg.push_back(CSerializeData(ssSend.begin(), ssSend.end()));
     }
 }
 

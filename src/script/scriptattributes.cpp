@@ -173,8 +173,8 @@ bool MatchGroupedPayToPubkey(const CScript &script, valtype &pubkey, CGroupToken
 
 ScriptTemplateError GetScriptTemplate(const CScript &script,
     CGroupTokenInfo *groupInfo,
-    std::vector<unsigned char> *templateHash,
-    std::vector<unsigned char> *argsHash,
+    std::vector<uint8_t> *templateHash,
+    std::vector<uint8_t> *argsHash,
     CScript::const_iterator *pcout)
 {
     if (templateHash)
@@ -221,7 +221,7 @@ ScriptTemplateError GetScriptTemplate(const CScript &script,
     {
         if (templateHashSize > 0 && templateHashSize < 2) // check for valid well known script template
         {
-            VchType tmp = *templateHash;
+            VchType tmp(templateHash->begin(), templateHash->end());
             CScript unused;
             if (ConvertWellKnownTemplateHash(tmp, unused) != SCRIPT_ERR_OK)
             {
