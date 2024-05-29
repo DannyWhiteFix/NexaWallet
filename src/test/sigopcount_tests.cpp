@@ -155,9 +155,6 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
     // Create key
     CKey key;
     key.MakeNewKey(true);
-    CPubKey pubkey = key.GetPubKey();
-    // Default flags
-    const uint32_t flags = SCRIPT_VERIFY_P2SH;
 
     // Any non-0-size sig will be interpreted as a good signature by the sigchecker used in this code.
     // use 65 so this looks like a good schnorr signature.

@@ -793,7 +793,9 @@ std::vector<unsigned char> CService::GetKey() const
     }
     else
     {
-        std::memcpy(&vKey[0], ip.data(), GetNetAddrSize(*((CNetAddr *)this)));
+        const size_t addr_size = GetNetAddrSize(*((CNetAddr *)this));
+        vKey.reserve(addr_size);
+        std::memcpy(&vKey[0], ip.data(), addr_size);
     }
     return vKey;
 }

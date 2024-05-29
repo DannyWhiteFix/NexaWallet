@@ -271,7 +271,7 @@ static const StackItem vchTrue(VchStack, 1, 1);
 // Returns info about the next instruction to be run
 std::tuple<bool, opcodetype, StackItem, ScriptError> ScriptMachine::Peek()
 {
-    ScriptError err;
+    ScriptError err = SCRIPT_ERR_OK;
     opcodetype opcode;
     StackItem vchPushValue;
     auto oldpc = pc;
