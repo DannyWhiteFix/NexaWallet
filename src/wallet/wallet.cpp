@@ -366,13 +366,13 @@ bool CWallet::LoadCScript(const CScript &redeemScript)
      * never can be redeemed. However, old wallets may still contain these. Do
      * not add them to the wallet and warn.
      */
-    if (redeemScript.size() > MAX_SCRIPT_ELEMENT_SIZE)
+    if (!withinStackWidth(redeemScript.size(), GetBlockScriptFlags(chainActive.Tip(), Params().GetConsensus())))
     {
         std::string strAddr = EncodeDestination(CScriptID(redeemScript));
         LOGA("%s: Warning: This wallet contains a redeemScript of size %i "
-             "which exceeds maximum size %i thus can never be redeemed. "
+             "which exceeds maximum size, thus can never be redeemed. "
              "Do not use address %s.\n",
-            __func__, redeemScript.size(), MAX_SCRIPT_ELEMENT_SIZE, strAddr);
+            __func__, redeemScript.size(), strAddr);
         return true;
     }
 

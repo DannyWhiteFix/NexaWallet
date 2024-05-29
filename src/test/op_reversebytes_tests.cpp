@@ -128,6 +128,7 @@ BOOST_AUTO_TEST_CASE(op_reversebytes_random_and_palindrome)
         SCRIPT_VERIFY_NONE,
         STANDARD_SCRIPT_VERIFY_FLAGS,
         MANDATORY_SCRIPT_VERIFY_FLAGS,
+        POST_UPGRADE_MANDATORY_SCRIPT_VERIFY_FLAGS,
     });
     for (uint32_t flagindex = 0; flagindex < 32; ++flagindex)
     {
@@ -136,7 +137,7 @@ BOOST_AUTO_TEST_CASE(op_reversebytes_random_and_palindrome)
     }
 
     // Test every possible stack item size.
-    for (uint32_t datasize = 0; datasize < MAX_SCRIPT_ELEMENT_SIZE; ++datasize)
+    for (uint32_t datasize = 0; datasize < GENESIS_MAX_SCRIPT_ELEMENT_SIZE; ++datasize)
     {
         // Generate random data.
         valtype random_data;

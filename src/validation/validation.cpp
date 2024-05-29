@@ -2012,10 +2012,12 @@ bool AcceptBlock(ConstCBlockRef pblock,
 
 uint32_t GetBlockScriptFlags(const CBlockIndex *pindex, const Consensus::Params &consensusparams)
 {
-    AssertLockHeld(cs_main);
+    uint32_t flags = MANDATORY_SCRIPT_VERIFY_FLAGS;
 
-    uint32_t flags =
-        MANDATORY_SCRIPT_VERIFY_FLAGS | SCRIPT_VERIFY_DERSIG | SCRIPT_VERIFY_SIGPUSHONLY | SCRIPT_VERIFY_CLEANSTACK;
+    if (pindex && pindex->forkActivated(nMiningForkTime))
+    {
+        flags = POST_UPGRADE_MANDATORY_SCRIPT_VERIFY_FLAGS;
+    }
 
     return flags;
 }

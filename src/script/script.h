@@ -52,8 +52,9 @@ So no limits on script template size is really needed, since the transaction siz
 A max size of 100000 bytes and 50000 non-push opcodes was chosen as an initial limit out of an abundance of caution.
 */
 
-// Maximum number of bytes pushable to the stack
-static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520;
+// Maximum number of bytes pushable to the stack at the beginning of the blockchain
+// (restriction relaxed in fork, use [withinStackWidth(unsigned int size)] now)
+static const unsigned int GENESIS_MAX_SCRIPT_ELEMENT_SIZE = 520;
 
 // Maximum number of non-push operations per script
 static const int MAX_OPS_PER_SCRIPT = 201;

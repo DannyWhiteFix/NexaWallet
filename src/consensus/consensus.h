@@ -82,7 +82,12 @@ static const uint32_t MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH |
                                                       SCRIPT_ALLOW_NATIVE_INTROSPECTION |
                                                       SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY |
                                                       SCRIPT_VERIFY_CHECKSEQUENCEVERIFY |
-                                                      SCRIPT_ENABLE_CHECKDATASIG;
+                                                      SCRIPT_ENABLE_CHECKDATASIG |
+                                                      SCRIPT_VERIFY_DERSIG |
+                                                      SCRIPT_VERIFY_SIGPUSHONLY |
+                                                      SCRIPT_VERIFY_CLEANSTACK;
+
+static const uint32_t POST_UPGRADE_MANDATORY_SCRIPT_VERIFY_FLAGS = MANDATORY_SCRIPT_VERIFY_FLAGS | SCRIPT_RELAX_STACK_WIDTH;
 
 /* clang-format on */
 

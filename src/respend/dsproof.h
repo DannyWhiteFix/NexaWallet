@@ -6,6 +6,7 @@
 
 #include <primitives/transaction.h>
 #include <script/script.h>
+#include <script/script_flags.h>
 #include <serialize.h>
 #include <txmempool.h>
 #include <uint256.h>
@@ -14,9 +15,6 @@
 class DoubleSpendProof
 {
 public:
-    //! limit for the size of a `pushData` vector below
-    static constexpr size_t MaxPushDataSize = MAX_SCRIPT_ELEMENT_SIZE;
-
     /** Creates an empty, invalid object */
     DoubleSpendProof();
 
@@ -108,8 +106,13 @@ public:
                     throw std::ios_base::failure("DSProof contained more than 1 pushData");
                 }
             }
-            // Enforce script data must be within size limits
-            if (!pushData->empty() && pushData->front().size() > MaxPushDataSize)
+            // Enforce script data must be within size limits.
+            // Relaxing these limits can be done outside of a consensus change because DS proofs are not
+            // within consensus.
+            // To avoid drawing blockchain state (whether we've forked) into this deserialization code,
+            // we will accept DS proofs that are outside of the original 520 byte limit.  When they are relayed
+            // to old nodes, they will generate a log and be dropped (see net_processing.cpp).
+            if (!pushData->empty() && !withinStackWidth(pushData->front().size(), SCRIPT_RELAX_STACK_WIDTH))
                 throw std::ios_base::failure("DSProof script size limit exceeded");
         }
     }

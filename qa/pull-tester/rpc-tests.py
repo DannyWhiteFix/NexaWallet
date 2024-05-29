@@ -193,6 +193,7 @@ if ENABLE_ZMQ:
 
 #Tests
 testScripts = [ RpcTest(t) for t in [
+    'upgrade_activation',
     'hardfork1_activation_blocksizelimit',
     'headerPath',
     'rejectReply',

@@ -1313,7 +1313,13 @@ UniValue signrawtransaction(const UniValue &params, bool fHelp)
                     txin.scriptSig, txv.vin[i].scriptSig);
         }
         ScriptError serror = SCRIPT_ERR_OK;
-        auto flags = STANDARD_SCRIPT_VERIFY_FLAGS | SCRIPT_ENABLE_SIGHASH_FORKID;
+        auto flags = STANDARD_SCRIPT_VERIFY_FLAGS;
+        CBlockIndex *tip = chainActive.Tip();
+        if (tip && tip->forkActivated(nMiningForkTime))
+        {
+            flags |= POST_UPGRADE_MANDATORY_SCRIPT_VERIFY_FLAGS;
+        }
+
         MutableTransactionSignatureChecker tsc(&mergedTx, i, amount, flags);
         ScriptImportedState sis(&tsc, txref, unnecessaryState, spentCoins, i);
         if (!VerifyScript(txin.scriptSig, prevPubKey, flags, sis, &serror))

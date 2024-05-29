@@ -1220,7 +1220,8 @@ BOOST_AUTO_TEST_CASE(AdaptiveBlockSize)
         if (InsecureRandRange(10) == 0)
         {
             CBlockIndex *pindexFork = new CBlockIndex();
-            uint64_t nBlockSizeFork = (nMultiplyer * 1000000) + (InsecureRandRange(256) * 1000 * 1000);
+            // Block size must be at least 1 or certain debug assertion sanity checks are triggered
+            uint64_t nBlockSizeFork = (nMultiplyer * 1000000) + (InsecureRandRange(256) * 1000 * 1000) + 1;
             pindexFork->header.height = nHeight;
             pindexFork->header.size = nBlockSizeFork;
             pindexFork->pprev = pindex->pprev;

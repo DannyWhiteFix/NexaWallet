@@ -15,6 +15,8 @@
 typedef StackItem valtype;
 typedef Stack stacktype;
 
+const unsigned int largeScriptElementSize = 520;
+
 BOOST_FIXTURE_TEST_SUITE(opcodes_tests, BasicTestingSetup)
 
 std::array<uint32_t, 3> flagset{{0, STANDARD_SCRIPT_VERIFY_FLAGS, MANDATORY_SCRIPT_VERIFY_FLAGS}};
@@ -45,9 +47,29 @@ static void CheckError(uint32_t flags,
     ScriptError err = SCRIPT_ERR_OK;
     stacktype stack{original_stack};
     bool r = EvalScript(stack, script, flags, MAX_OPS_PER_SCRIPT, ScriptImportedState(), &err);
+    if (r)
+    {
+        printf("should have failed\n");
+        ScriptError err2 = SCRIPT_ERR_OK;
+        bool r2 = EvalScript(stack, script, flags, MAX_OPS_PER_SCRIPT, ScriptImportedState(), &err2);
+    }
+    if (err != expected_error)
+    {
+        printf("ERR\n");
+    }
     BOOST_CHECK(!r);
     BOOST_CHECK_EQUAL(err, expected_error);
 }
+
+static void CheckWorks(uint32_t flags, const stacktype &original_stack, const CScript &script)
+{
+    ScriptError err = SCRIPT_ERR_OK;
+    stacktype stack{original_stack};
+    bool r = EvalScript(stack, script, flags, MAX_OPS_PER_SCRIPT, ScriptImportedState(), &err);
+    BOOST_CHECK(r);
+    BOOST_CHECK(err == SCRIPT_ERR_OK);
+}
+
 
 static void CheckErrorForAllFlags(const stacktype &original_stack, const CScript &script, ScriptError expected_error)
 {
@@ -239,11 +261,11 @@ BOOST_AUTO_TEST_CASE(bitwise_opcodes_test)
     RunTestForAllBitwiseOpcodes({}, {}, {}, {}, {});
 
     // Run all variations of zeros and ones.
-    valtype allzeros(VchStack, MAX_SCRIPT_ELEMENT_SIZE, 0);
-    valtype allones(VchStack, MAX_SCRIPT_ELEMENT_SIZE, 0xff);
+    valtype allzeros(VchStack, largeScriptElementSize, 0);
+    valtype allones(VchStack, largeScriptElementSize, 0xff);
 
-    BOOST_CHECK_EQUAL(allzeros.size(), MAX_SCRIPT_ELEMENT_SIZE);
-    BOOST_CHECK_EQUAL(allones.size(), MAX_SCRIPT_ELEMENT_SIZE);
+    BOOST_CHECK_EQUAL(allzeros.size(), largeScriptElementSize);
+    BOOST_CHECK_EQUAL(allones.size(), largeScriptElementSize);
 
     TestBitwiseOpcodes(allzeros, allzeros, allzeros, allzeros);
     TestBitwiseOpcodes(allzeros, allones, allzeros, allones);
@@ -309,8 +331,8 @@ BOOST_AUTO_TEST_CASE(bitwise_opcodes_test)
         0x1b, 0x05, 0x27, 0xf6, 0x59, 0x83, 0xd1, 0xf4, 0xb6, 0x2f, 0xbe, 0x6e, 0x35, 0x7e, 0x97, 0x10, 0xf5, 0x42,
         0x1a, 0xc9, 0x4d, 0xb9, 0x07, 0x71, 0x6d, 0xd1, 0x96, 0xc3, 0x88, 0xb6, 0xe6, 0x0e, 0x8a, 0x8a, 0xd7};
 
-    BOOST_CHECK_EQUAL(a.size(), MAX_SCRIPT_ELEMENT_SIZE);
-    BOOST_CHECK_EQUAL(b.size(), MAX_SCRIPT_ELEMENT_SIZE);
+    BOOST_CHECK_EQUAL(a.size(), largeScriptElementSize);
+    BOOST_CHECK_EQUAL(b.size(), largeScriptElementSize);
 
     valtype aandb{0x10, 0x0e, 0x18, 0x01, 0x83, 0x00, 0x1a, 0x00, 0x41, 0x8c, 0x00, 0x00, 0x90, 0x1c, 0x54, 0xa0, 0x20,
         0x14, 0x2c, 0x44, 0x71, 0x88, 0x0a, 0x48, 0x01, 0x80, 0xc8, 0x03, 0x8e, 0x42, 0x03, 0x06, 0x3e, 0x16, 0x30,
@@ -464,9 +486,9 @@ BOOST_AUTO_TEST_CASE(string_opcodes_test)
         0x59, 0xc1, 0x3a, 0x2a, 0xcc, 0x61, 0xee, 0xe5, 0x2a, 0x88, 0xf8, 0xec, 0xbd, 0x90, 0xc0, 0x96, 0xe0, 0x93,
         0x1f, 0x78, 0xbe, 0x6b, 0xb1, 0x4c, 0x46, 0x2a, 0x86, 0xd9, 0x2d, 0x20, 0x29, 0xb4, 0x44, 0x15, 0xb2, 0x7e};
 
-    BOOST_CHECK_EQUAL(n.size(), MAX_SCRIPT_ELEMENT_SIZE);
+    BOOST_CHECK_EQUAL(n.size(), largeScriptElementSize);
 
-    for (size_t i = 0; i <= MAX_SCRIPT_ELEMENT_SIZE; i++)
+    for (size_t i = 0; i <= largeScriptElementSize; i++)
     {
         valtype a(n.begin(), n.begin() + i);
         valtype b(n.begin() + i, n.end());
@@ -483,6 +505,10 @@ BOOST_AUTO_TEST_CASE(string_opcodes_test)
         CheckOpError({extraA, b}, OP_CAT, SCRIPT_ERR_PUSH_SIZE);
         CheckOpError({a, extraB}, OP_CAT, SCRIPT_ERR_PUSH_SIZE);
         CheckOpError({extraA, extraB}, OP_CAT, SCRIPT_ERR_PUSH_SIZE);
+
+        CheckWorks(POST_UPGRADE_MANDATORY_SCRIPT_VERIFY_FLAGS, {extraA, b}, OP_CAT);
+        CheckWorks(POST_UPGRADE_MANDATORY_SCRIPT_VERIFY_FLAGS, {a, extraB}, OP_CAT);
+        CheckWorks(POST_UPGRADE_MANDATORY_SCRIPT_VERIFY_FLAGS, {extraA, extraB}, OP_CAT);
     }
 
     // Check error conditions.
@@ -518,9 +544,9 @@ static void CheckTypeConversionOp(const valtype &bin, const valtype &num)
 
     // Grow and shrink back down using NUM2BIN.
     CheckTestResultForAllFlags(
-        {bin}, CScript() << MAX_SCRIPT_ELEMENT_SIZE << OP_NUM2BIN << bin.size() << OP_NUM2BIN, {rebuilt_bin});
+        {bin}, CScript() << largeScriptElementSize << OP_NUM2BIN << bin.size() << OP_NUM2BIN, {rebuilt_bin});
     CheckTestResultForAllFlags(
-        {num}, CScript() << MAX_SCRIPT_ELEMENT_SIZE << OP_NUM2BIN << bin.size() << OP_NUM2BIN, {rebuilt_bin});
+        {num}, CScript() << largeScriptElementSize << OP_NUM2BIN << bin.size() << OP_NUM2BIN, {rebuilt_bin});
 
     // BIN2NUM is indempotent.
     CheckTestResultForAllFlags({bin}, CScript() << OP_BIN2NUM << OP_BIN2NUM, {num});
@@ -542,7 +568,7 @@ BOOST_AUTO_TEST_CASE(type_conversion_test)
     CheckTypeConversionOp(empty, empty);
 
     valtype paddedzero, paddednegzero;
-    for (size_t i = 0; i < MAX_SCRIPT_ELEMENT_SIZE; i++)
+    for (size_t i = 0; i < largeScriptElementSize; i++)
     {
         CheckTypeConversionOp(paddedzero, empty);
         paddedzero.push_back(0x00);
@@ -555,7 +581,7 @@ BOOST_AUTO_TEST_CASE(type_conversion_test)
     // Merge leading byte when sign bit isn't used.
     std::vector<uint8_t> k{0x7f}, negk{0xff};
     std::vector<uint8_t> kpadded = k, negkpadded = negk;
-    for (size_t i = 0; i < MAX_SCRIPT_ELEMENT_SIZE; i++)
+    for (size_t i = 0; i < largeScriptElementSize; i++)
     {
         CheckTypeConversionOp(kpadded, k);
         kpadded.push_back(0x00);
@@ -586,13 +612,15 @@ BOOST_AUTO_TEST_CASE(type_conversion_test)
     CheckBin2NumError({{0x00, 0x00, 0x00, 0x80, 0x80, 0x01, 0x02, 0x80, 0x4}}, SCRIPT_ERR_INVALID_NUMBER_RANGE);
 
     // NUM2BIN must not generate oversized push.
-    valtype largezero(VchStack, MAX_SCRIPT_ELEMENT_SIZE, 0);
-    BOOST_CHECK_EQUAL(largezero.size(), MAX_SCRIPT_ELEMENT_SIZE);
+    valtype largezero(VchStack, largeScriptElementSize, 0);
+    BOOST_CHECK_EQUAL(largezero.size(), largeScriptElementSize);
     CheckTypeConversionOp(largezero, {});
 
-    CheckNum2BinError({{}, {0x09, 0x02}}, SCRIPT_ERR_PUSH_SIZE);
+    // convert 0 to a 521 byte binary sign-magnitude representation
+    CheckNum2BinError({{}, {0x09, 0x02}}, SCRIPT_ERR_PUSH_SIZE); // {0x09, 0x02} is a byte vec that decoded to 521
+    CheckWorks(POST_UPGRADE_MANDATORY_SCRIPT_VERIFY_FLAGS, {{}, {0x09, 0x02}}, OP_NUM2BIN);
 
-    // Check that the requested encoding is possible.
+    // Check that the requested encoding is not possible (number is too big for 3 bytes)
     CheckNum2BinError({{0xab, 0xcd, 0xef, 0x80}, {0x03}}, SCRIPT_ERR_IMPOSSIBLE_ENCODING);
 }
 

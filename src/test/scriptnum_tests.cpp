@@ -572,7 +572,7 @@ BOOST_AUTO_TEST_CASE(minimize_encoding_test)
 
     // Check that positive and negative zeros encode to nothing.
     std::vector<uint8_t> zero, negZero;
-    for (size_t i = 0; i < MAX_SCRIPT_ELEMENT_SIZE; i++)
+    for (size_t i = 0; i < GENESIS_MAX_SCRIPT_ELEMENT_SIZE; i++)
     {
         zero.push_back(0x00);
         CheckMinimalyEncode(zero, {});
@@ -587,7 +587,7 @@ BOOST_AUTO_TEST_CASE(minimize_encoding_test)
     // Keep one leading zero when sign bit is used.
     std::vector<uint8_t> n{0x80, 0x00}, negn{0x80, 0x80};
     std::vector<uint8_t> npadded = n, negnpadded = negn;
-    for (size_t i = 0; i < MAX_SCRIPT_ELEMENT_SIZE; i++)
+    for (size_t i = 0; i < GENESIS_MAX_SCRIPT_ELEMENT_SIZE; i++)
     {
         CheckMinimalyEncode(npadded, n);
         npadded.push_back(0x00);
@@ -600,7 +600,7 @@ BOOST_AUTO_TEST_CASE(minimize_encoding_test)
     // Mege leading byte when sign bit isn't used.
     std::vector<uint8_t> k{0x7f}, negk{0xff};
     std::vector<uint8_t> kpadded = k, negkpadded = negk;
-    for (size_t i = 0; i < MAX_SCRIPT_ELEMENT_SIZE; i++)
+    for (size_t i = 0; i < GENESIS_MAX_SCRIPT_ELEMENT_SIZE; i++)
     {
         CheckMinimalyEncode(kpadded, k);
         kpadded.push_back(0x00);

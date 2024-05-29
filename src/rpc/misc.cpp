@@ -16,6 +16,7 @@
 #include "timedata.h"
 #include "util.h"
 #include "utilstrencodings.h"
+#include "validation/validation.h"
 #include "wallet/grouptokencache.h"
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
@@ -341,9 +342,8 @@ CScript _createmultisig_redeemScript(const UniValue &params)
     }
     CScript result = GetScriptForMultisig(nRequired, pubkeys);
 
-    if (result.size() > MAX_SCRIPT_ELEMENT_SIZE)
-        throw runtime_error(
-            strprintf("redeemScript exceeds size limit: %d > %d", result.size(), MAX_SCRIPT_ELEMENT_SIZE));
+    if (!withinStackWidth(result.size(), GetBlockScriptFlags(chainActive.Tip(), Params().GetConsensus())))
+        throw runtime_error(strprintf("redeemScript exceeds size limit: %d", result.size()));
 
     return result;
 }

@@ -785,10 +785,13 @@ bool ParallelAcceptToMemoryPool(Snapshot &ss,
         }
     }
 
-    uint32_t featureFlags = 0;
-    // featureFlags is used in some instances to make a hardfork easier to implement
-    // Example: featureFlags |= SCRIPT_VERIFY_INPUT_SIGCHECKS;
-    uint32_t flags = STANDARD_SCRIPT_VERIFY_FLAGS | featureFlags;
+    uint32_t flags = STANDARD_SCRIPT_VERIFY_FLAGS;
+
+    CBlockIndex *tip = chainActive.Tip();
+    if (tip && tip->forkActivated(nMiningForkTime))
+    {
+        flags = POST_UPGRADE_MANDATORY_SCRIPT_VERIFY_FLAGS;
+    }
 
     // Only accept nLockTime-using transactions that can be mined in the next
     // block; we don't want our mempool filled up with transactions that can't
