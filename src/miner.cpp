@@ -466,10 +466,16 @@ bool BlockAssembler::addPackageTxs(std::vector<const CTxMemPoolEntry *> *vtxe, b
         unsigned int packageSigOps = iter->GetSigOpCountWithAncestors();
 
         // Get any unconfirmed ancestors of this txn
+        //
+        // CalculateMemPoolAncestors is a relatively expensive operation so only perform it when
+        // absolutely necessary.
         CTxMemPool::setEntries ancestors;
-        uint64_t nNoLimit = std::numeric_limits<uint64_t>::max();
-        std::string dummy;
-        mempool._CalculateMemPoolAncestors(*iter, ancestors, nNoLimit, nNoLimit, dummy, &inBlock, false);
+        if (iter->IsDirty() || iter->GetCountWithAncestors() > 1)
+        {
+            uint64_t nNoLimit = std::numeric_limits<uint64_t>::max();
+            std::string dummy;
+            mempool._CalculateMemPoolAncestors(*iter, ancestors, nNoLimit, nNoLimit, dummy, &inBlock, false);
+        }
 
         // Include in the package the current txn we're working with
         ancestors.insert(iter);
