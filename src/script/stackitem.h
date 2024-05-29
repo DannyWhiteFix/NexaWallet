@@ -15,6 +15,10 @@
 
 class CScript;
 
+/** Return true if the passed size in bytes is within the allowed sizes for a single stack item,
+ (and if stack width enforcement is on, based on the [scriptFlags]). */
+bool withinStackWidth(unsigned int size, uint64_t scriptFlags);
+
 enum class StackElementType : uint8_t
 {
     VCH = 0,
@@ -110,6 +114,17 @@ public:
     {
         requireType(StackElementType::VCH);
         return vch;
+    }
+
+
+    /** Return true if the passed size in bytes is within the allowed sizes for a single stack item,
+        (and if stack width enforcement is on, based on the [scriptFlags]). */
+    bool withinStackWidth(uint64_t scriptFlags)
+    {
+        if (type == StackElementType::VCH)
+            return ::withinStackWidth(vch.size(), scriptFlags);
+        else
+            return true;
     }
 
     const BigNum &num() const

@@ -4,11 +4,24 @@
 
 #include "script/stackitem.h"
 #include "script/script.h"
+#include "script/script_flags.h"
 
 #include <limits>
 
 
 VchStackType VchStack;
+
+/** Return true if the passed size in bytes is within the allowed sizes for a single stack item */
+bool withinStackWidth(unsigned int size, uint64_t scriptFlags)
+{
+    // Ignore stack width if we are choosing to not enforce it
+    if (scriptFlags & SCRIPT_RELAX_STACK_WIDTH)
+        return true;
+    // other wise check the size
+    if (size <= GENESIS_MAX_SCRIPT_ELEMENT_SIZE)
+        return true;
+    return false;
+}
 
 uint64_t StackItem::asUint64(bool requireMinimal) const
 {

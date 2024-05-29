@@ -974,3 +974,30 @@ def SignatureHash(script, txTo, inIdx, hashtype, amount):
         in_number = inIdx,
         nValue = amount,
         hashcode = hashtype)
+
+
+def fundSignSend(node, tx):
+    """Fund, sign, then send the passed CTransaction, returning the final CTransaction"""
+    frtReturn = node.fundrawtransaction(tx.toHex())
+    sgnReturn = node.signrawtransaction(frtReturn["hex"])
+    fundedTx = CTransaction().fromHex(sgnReturn["hex"])
+    node.sendrawtransaction(fundedTx.toHex())
+    return fundedTx
+
+def fundSignSendSpend(node, tx, finalOutScript=None, relay=True):
+    """Fund, sign, then send the passed CTransaction.  Then spend all its (non-change) outputs, (with the expectation that a valid sigScript is null)"""
+    fundedTx = fundSignSend(node, tx)
+    txs = CTransaction()
+    amountIn = 0
+    for idx, vout in enumerate(fundedTx.vout):
+        if vout.isIn(tx):  # if the output is in the original tx
+            txs.vin.append(fundedTx.SpendOutput(idx))
+            amountIn += vout.nValue
+    if finalOutScript is None: finalOutScript = CScript([OP_1])
+    if len(txs.serialize()) < 100:
+        txs.vout.append(CTxOut(0, CScript([OP_RETURN, b"                                                                      "])))
+    feeGuess = len(txs.serialize()) + 100
+    txs.vout.append(CTxOut(amountIn-feeGuess, finalOutScript))
+    if relay: node.sendrawtransaction(txs)
+    return txs
+

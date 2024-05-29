@@ -797,7 +797,8 @@ BOOST_AUTO_TEST_CASE(grouptoken_fencefunctions)
 }
 
 #ifdef ENABLE_WALLET
-BOOST_AUTO_TEST_CASE(grouptoken_basicfunctions)
+
+void basicFunctionsTest(uint32_t scriptFlags)
 {
     CKey secret;
     CPubKey pubkey;
@@ -906,10 +907,9 @@ BOOST_AUTO_TEST_CASE(grouptoken_basicfunctions)
         Stack stack;
         ScriptError err = SCRIPT_ERR_OK;
         // bool r =
-        EvalScript(stack, script, STANDARD_SCRIPT_VERIFY_FLAGS | SCRIPT_VERIFY_MINIMALDATA, MAX_OPS_PER_SCRIPT,
-            ScriptImportedState(), &err);
+        EvalScript(stack, script, scriptFlags, MAX_OPS_PER_SCRIPT, ScriptImportedState(), &err);
         // BOOST_CHECK(r);  r will be false because the signature check will fail.  What's important here is that
-        // minimaldata passes
+        // minimaldata passes (which is a mandatory script flag so must be set).
         BOOST_CHECK(err != SCRIPT_ERR_MINIMALDATA);
     }
 
@@ -934,8 +934,8 @@ BOOST_AUTO_TEST_CASE(grouptoken_basicfunctions)
 
         CGroupTokenID subgrp1a = MakeSubgroup(grp1, 1);
         CGroupTokenID subgrp1b = MakeSubgroup(grp1, 2);
-        CGroupTokenID subgrp1c = MakeSubgroup(grp1, 2, MAX_SCRIPT_ELEMENT_SIZE);
-        CGroupTokenID subgrp1cTooBig = MakeSubgroup(grp1, 2, MAX_SCRIPT_ELEMENT_SIZE + 1);
+        CGroupTokenID subgrp1c = MakeSubgroup(grp1, 2, GENESIS_MAX_SCRIPT_ELEMENT_SIZE);
+        CGroupTokenID subgrp1cTooBig = MakeSubgroup(grp1, 2, GENESIS_MAX_SCRIPT_ELEMENT_SIZE + 1);
 
         // Create a utxo set that I can run tests against
         CCoinsView coinsDummy;
@@ -1355,7 +1355,14 @@ BOOST_AUTO_TEST_CASE(grouptoken_basicfunctions)
         BOOST_CHECK(!ok);
     }
 }
+
+BOOST_AUTO_TEST_CASE(grouptoken_basicfunctions)
+{
+    basicFunctionsTest(STANDARD_SCRIPT_VERIFY_FLAGS);
+    basicFunctionsTest(POST_UPGRADE_MANDATORY_SCRIPT_VERIFY_FLAGS);
+}
 #endif
+
 
 static bool tryBlock(const std::vector<CMutableTransaction> &txns,
     const CScript &scriptPubKey,

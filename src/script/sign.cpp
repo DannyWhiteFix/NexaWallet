@@ -35,6 +35,9 @@ TransactionSignatureCreator::TransactionSignatureCreator(const CKeyStore *keysto
     const CTransaction *txToIn,
     unsigned int nInIn,
     SigHashType sigHashTypeIn)
+    // Note the use of STANDARD_SCRIPT_VERIFY_FLAGS here means that the full node wallet won't be able to use
+    // post-upgrade features right away.  But this is ok because none of the scripts it is capable of signing need
+    // them.
     : BaseSignatureCreator(keystoreIn), txTo(txToIn), nIn(nInIn), sigHashType(sigHashTypeIn),
       checker(txTo, nIn, STANDARD_SCRIPT_VERIFY_FLAGS)
 {

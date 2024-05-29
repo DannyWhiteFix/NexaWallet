@@ -280,7 +280,7 @@ std::tuple<bool, opcodetype, StackItem, ScriptError> ScriptMachine::Peek()
         LOG(SCRIPT, "Peek GetOp failed at offset %d", pc - pbegin);
         set_error(&err, SCRIPT_ERR_BAD_OPCODE);
     }
-    else if (vchPushValue.isVch() && vchPushValue.size() > MAX_SCRIPT_ELEMENT_SIZE)
+    else if (!withinStackWidth(vchPushValue.size()))
         set_error(&err, SCRIPT_ERR_PUSH_SIZE);
     pc = oldpc;
     bool fExec = vfExec.all_true();
@@ -405,7 +405,7 @@ bool ScriptMachine::Step()
                 LOG(SCRIPT, "Step GetOp failed at offset %d", pc - pbegin);
                 return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
             }
-            if (vchPushValue.isVch() && (vchPushValue.size() > MAX_SCRIPT_ELEMENT_SIZE))
+            if (!withinStackWidth(vchPushValue.size()))
             {
                 return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
             }
@@ -1708,7 +1708,7 @@ bool ScriptMachine::Step()
                     }
                     valtype &vch1 = stacktop(-2);
                     valtype &vch2 = stacktop(-1);
-                    if (vch1.size() + vch2.size() > MAX_SCRIPT_ELEMENT_SIZE)
+                    if (!withinStackWidth(vch1.size() + vch2.size()))
                     {
                         return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
                     }
@@ -1796,7 +1796,7 @@ bool ScriptMachine::Step()
                         }
                         // Subset of script starting at the most recent codeseparator
                         CScript scriptCode(pbegincodehash, pend);
-                        if (scriptCode.size() > MAX_SCRIPT_ELEMENT_SIZE)
+                        if (!withinStackWidth(scriptCode.size()))
                         {
                             return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
                         }
@@ -1904,7 +1904,7 @@ bool ScriptMachine::Step()
                                 return set_error(serror, SCRIPT_ERR_DATA_REQUIRED);
                             }
                             const auto &utxoScript = sis.spentCoins[idx].scriptPubKey;
-                            if (utxoScript.size() > MAX_SCRIPT_ELEMENT_SIZE)
+                            if (!withinStackWidth(utxoScript.size()))
                             {
                                 return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
                             }
@@ -1919,7 +1919,7 @@ bool ScriptMachine::Step()
                         break;
                         case OP_INPUTBYTECODE:
                         {
-                            if (input.scriptSig.size() > MAX_SCRIPT_ELEMENT_SIZE)
+                            if (!withinStackWidth(input.scriptSig.size()))
                             {
                                 return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
                             }
@@ -1963,7 +1963,7 @@ bool ScriptMachine::Step()
                         break;
                         case OP_OUTPUTBYTECODE:
                         {
-                            if (output.scriptPubKey.size() > MAX_SCRIPT_ELEMENT_SIZE)
+                            if (!withinStackWidth(output.scriptPubKey.size()))
                             {
                                 return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
                             }
@@ -2084,7 +2084,7 @@ bool ScriptMachine::Step()
                         break;
                     }
 
-                    if (size > MAX_SCRIPT_ELEMENT_SIZE)
+                    if (!withinStackWidth(size))
                     {
                         return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
                     }

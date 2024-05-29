@@ -59,6 +59,24 @@ class MyTest (BitcoinTestFramework):
         ret = rnode.validaterawtransaction(tx.toHex())
         assert rpcErr in str(ret)  # We don't know exactly where validaterawtransaction will put the error, but it must be in there
 
+    def trySpendingAtx(self, tx, p2pErr, rpcErr):
+        node = self.node
+        rnode = self.rnode  # node can relay to node 1
+
+        testTx = fundSignSendSpend(node, tx, relay=False)
+
+        self.invGetdata(testTx)
+        txrpcIdem = util.uint256ToRpcHex(testTx.GetIdem())
+        waitFor(10, lambda: len(self.pynodeCnxn.last_reject) > 0)
+        rej = self.pynodeCnxn.last_reject.pop()
+        assert p2pErr in rej.reason
+        assert txrpcIdem not in node.getrawtxpool()
+        assert txrpcIdem not in rnode.getrawtxpool()  # Verify that the bad tx did not relay
+        # Check RPC interface
+        expectException(lambda: rnode.sendrawtransaction(testTx.toHex()), JSONRPCException, rpcErr)
+        ret = rnode.validaterawtransaction(testTx.toHex())
+        assert rpcErr in str(ret)  # We don't know exactly where validaterawtransaction will put the error, but it must be in there
+
     def run_test (self):
         self.nodes[0].generate(1)  # Kick out of IBD so txes relay (since using cached blocks, it looks like no blocks arrived for a long time)
 
@@ -109,9 +127,10 @@ class MyTest (BitcoinTestFramework):
         utxo = utxos.pop()
         tx2 = CTransaction()
         tx2.vin.append(CTxIn(utxo))
-        tx2.vin[0].scriptSig = b'\x61'*48 + b'\x64'
-        tx2.vout.append(TxOut(0,utxo["amount"]-fee, CScript([OP_1])))
-        self.tryAtx(tx2, b'mandatory-script-verify-flag-failed', 'mandatory-script-verify-flag-failed (Invalid OP_IF construction)')
+        #tx2.vin[0].scriptSig = b'\x61'*48 + b'\x64'
+        # tx2.vout.append(TxOut(0,utxo["amount"]-fee, CScript([OP_1])))
+        tx2.vout.append(TxOut(0,utxo["amount"]-fee, CScript([OP_NOP]*48 + [OP_NOTIF])))
+        self.trySpendingAtx(tx2, b'mandatory-script-verify-flag-failed', 'mandatory-script-verify-flag-failed (Invalid OP_IF construction)')
 
         # Try undersize transaction
         tx2.vin[0].scriptSig = b''

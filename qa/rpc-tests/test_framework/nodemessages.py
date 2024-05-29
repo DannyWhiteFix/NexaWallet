@@ -718,6 +718,18 @@ class TxOut(object):
 
         self.scriptPubKey = scriptPubKey
 
+    def findIn(self, tx):
+        """Return the index if this TxOut (compared by value) is in the passed transaction otherwise -1"""
+        for idx, out in enumerate(tx.vout):
+            if out.nValue == self.nValue and out.scriptPubKey == self.scriptPubKey:
+                return idx
+        return -1
+
+    def isIn(self, tx):
+        """Return true if this TxOut (compared by value) is in the passed transaction"""
+        return self.findIn(tx) >= 0
+
+
     def deserialize(self, f):
         self.t   = struct.unpack("<B", f.read(1))[0]
         self.nValue = struct.unpack("<q", f.read(8))[0]
@@ -2551,3 +2563,4 @@ def varint_test():
 def testCTransactionCopyConstruct():
     a = CTransaction()
     b = CTransaction(a)
+

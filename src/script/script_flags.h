@@ -98,6 +98,11 @@ enum
     // Flag which determines if the script interpretor should allow
     // Native Introspection opcodes.
     SCRIPT_ALLOW_NATIVE_INTROSPECTION = (1U << 25),
+
+    // Flag which determines if the script interpretor should relax stack width restrictions
+    SCRIPT_RELAX_STACK_WIDTH = (1U << 26),
+    // Flag which determines if the script interpretor should enforce a maximum # of bytes for the entire stack
+    // TODO SCRIPT_ENFORCE_MAX_STACK_BYTES = (1U << 27),
 };
 
 #endif // NEXA_SCRIPT_SCRIPTFLAGS_H

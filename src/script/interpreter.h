@@ -380,6 +380,8 @@ public:
     // Moves the instruction pointer
     int setPos(size_t offset);
 
+    bool withinStackWidth(unsigned int size) { return ::withinStackWidth(size, flags); }
+
     // Returns info about the next instruction to be run:
     // first bool is true if the instruction will be executed (false if this is passing across a not-taken branch)
     std::tuple<bool, opcodetype, StackItem, ScriptError> Peek();
