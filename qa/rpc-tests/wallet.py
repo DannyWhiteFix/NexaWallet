@@ -126,6 +126,7 @@ class WalletTest (BitcoinTestFramework):
 
         self.nodes[0].generate(1)
 
+        waitFor(waitTime, lambda: self.nodes[0].getwalletinfo()['unspentcount'] == 1)
         walletinfo = self.nodes[0].getwalletinfo()
         assert_equal(walletinfo['immature_balance'], COINBASE_REWARD)
         assert_equal(walletinfo['balance'], 0)
@@ -136,6 +137,8 @@ class WalletTest (BitcoinTestFramework):
         self.nodes[1].generate(101)
         self.sync_blocks()
 
+        waitFor(waitTime, lambda: self.nodes[0].getbalance() == COINBASE_REWARD)
+        waitFor(waitTime, lambda: self.nodes[1].getbalance() == COINBASE_REWARD)
         assert_equal(self.nodes[0].getbalance(), COINBASE_REWARD)
         assert_equal(self.nodes[1].getbalance(), COINBASE_REWARD)
         assert_equal(self.nodes[2].getbalance(), 0)
@@ -147,6 +150,8 @@ class WalletTest (BitcoinTestFramework):
         self.signmessageTest()
 
         # Check that only first and second nodes have UTXOs
+        waitFor(waitTime, lambda: self.nodes[0].getwalletinfo()['unspentcount'] == 1)
+        waitFor(waitTime, lambda: self.nodes[1].getwalletinfo()['unspentcount'] == 101)
         assert_equal(len(self.nodes[0].listunspent()), 1)
         assert_equal(len(self.nodes[1].listunspent()), 1)
         assert_equal(len(self.nodes[2].listunspent()), 0)

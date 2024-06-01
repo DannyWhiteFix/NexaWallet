@@ -46,6 +46,19 @@ static const bool DEFAULT_RELAYPRIORITY = false;
  * Memory used: 1.7MB
  */
 
+#ifdef ENABLE_WALLET
+// Used for storing data about the syncing of the wallet after blocks get connected/disconnected
+struct CSyncWithWallets
+{
+    ConstCBlockRef pblock;
+    std::shared_ptr<std::list<CTransactionRef> > ptxConflicted;
+    bool fSetIndex;
+};
+#endif
+extern CCriticalSection cs_walletprocessing;
+extern std::deque<CSyncWithWallets> vPostBlockProcessing;
+
+
 // A consistent moment in the data state
 class Snapshot
 {

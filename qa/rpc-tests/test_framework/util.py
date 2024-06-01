@@ -1255,6 +1255,7 @@ def create_confirmed_utxos(fee, node, count):
         priorMempoolSize = newSz
 
 
+    waitFor(30, lambda: len(node.listunspent()) >= count)
     utxos = node.listunspent()
     assert(len(utxos) >= count)
     return utxos
