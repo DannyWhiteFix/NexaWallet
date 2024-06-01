@@ -105,9 +105,6 @@ class ZMQTest (BitcoinTestFramework):
         """Note that this function is very picky about the exact order of generated ZMQ announcements.
            However, this order does not actually matter.  So bitcoind code changes my break this test.
         """
-        num_blocks = 5
-        logging.info(
-            "Generate {0} blocks (and {0} coinbase txes)".format(num_blocks))
 
         logging.info("Send basic transactions and mine blocks")
 
@@ -122,6 +119,11 @@ class ZMQTest (BitcoinTestFramework):
 
         self.nodes[0].setminercomment("got one")
         genhashes = self.nodes[0].generate(1)
+
+        # notify the block
+        h = self.hashblock.receive().hex()
+        b = self.rawblock.receive()
+
         # notify coinbase
         zmqNotif2 = self.hashtx.receive().hex()
         zmqNotif2r = self.rawtx.receive()
@@ -131,15 +133,25 @@ class ZMQTest (BitcoinTestFramework):
         assert fundTx == zmqNotif1
         zmqNotif1r = self.rawtx.receive()
 
-        # notify the block
-        h = self.hashblock.receive().hex()
-        b = self.rawblock.receive()
 
+        num_blocks = 5
+        logging.info(
+            "Generate {0} blocks (and {0} coinbase txes)".format(num_blocks))
         genhashes = self.nodes[0].generate(num_blocks)
 
         self.sync_all()
 
         for x in range(num_blocks):
+            # Should receive the generated block hash.
+            hash = self.hashblock.receive().hex()
+            assert_equal(genhashes[x], hash)
+
+            # Should receive the generated raw block.
+            blockBin = self.rawblock.receive()
+            block = CBlock()
+            block.deserialize(BytesIO(blockBin))
+            assert_equal(genhashes[x], block.gethashhex())
+
             # Should receive the coinbase txid.
             txidem = self.hashtx.receive()
             # Should receive the coinbase raw transaction.
@@ -149,18 +161,8 @@ class ZMQTest (BitcoinTestFramework):
             txidem2 = tx.GetIdem()
             assert_equal(txidem.hex(), uint256ToRpcHex(txidem2))
 
-
-            # Should receive the generated block hash.
-            hash = self.hashblock.receive().hex()
-            assert_equal(genhashes[x], hash)
             # The block should only have the coinbase txid.
             assert_equal([uint256ToRpcHex(tx.GetId())], self.nodes[1].getblock(hash)["txid"])
-
-            # Should receive the generated raw block.
-            blockBin = self.rawblock.receive()
-            block = CBlock()
-            block.deserialize(BytesIO(blockBin))
-            assert_equal(genhashes[x], block.gethashhex())
 
         logging.info("Wait for tx from second node")
         payment_txid = self.nodes[1].sendtoaddress(

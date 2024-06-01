@@ -137,7 +137,6 @@ static int64_t nTimeCallbacks = 0;
 static int64_t nTimeTotal = 0;
 static int64_t nTimeReadFromDisk = 0;
 static int64_t nTimeConnectTotal = 0;
-static int64_t nTimeFlush = 0;
 static int64_t nTimeChainState = 0;
 static int64_t nTimePostConnect = 0;
 
@@ -2876,7 +2875,6 @@ void CheckAndAlertUnknownVersionbits(const CChainParams &chainParams, const CBlo
 void UpdateTip(CBlockIndex *pindexNew)
 {
     DbgAssert(txProcessingCorral.region() == CORRAL_TX_PAUSE, LOGA("Updating tip during tx processing"));
-    const CChainParams &chainParams = Params();
     chainActive.SetTip(pindexNew);
 
     // If the chain tip has changed previously rejected transactions
@@ -2897,13 +2895,6 @@ void UpdateTip(CBlockIndex *pindexNew)
         FormatISO8601DateTime(chainActive.Tip()->GetBlockTime()),
         Checkpoints::GuessVerificationProgress(chainActive.Tip(), !fCheckpointsEnabled),
         pcoinsTip->DynamicMemoryUsage() * (1.0 / (1 << 20)), pcoinsTip->GetCacheSize());
-
-    if (!IsInitialBlockDownload())
-    {
-        // Check the version of the last 100 blocks,
-        // alert if significant signaling changes.
-        CheckAndAlertUnknownVersionbits(chainParams, chainActive.Tip());
-    }
 }
 
 static void ResubmitTransactions(const ConstCBlockRef pblock = nullptr)
@@ -2990,12 +2981,21 @@ bool DisconnectTip(CValidationState &state, const Consensus::Params &consensusPa
 
         // Update chainActive and related variables.
         UpdateTip(pindexDelete->pprev);
+
+#ifdef ENABLE_WALLET
         // Let wallets know transactions went from 1-confirmed to
         // 0-confirmed or conflicted:
-        for (const auto &ptx : pblock->vtx)
         {
-            SyncWithWallets(ptx, nullptr, -1);
+            CSyncWithWallets syncwallet;
+            syncwallet.pblock = pblock;
+            syncwallet.ptxConflicted = nullptr;
+            syncwallet.fSetIndex = false;
+
+            LOCK(cs_walletprocessing);
+            vPostBlockProcessing.push_back(std::move(syncwallet));
+            cvCommitQ.notify_all();
         }
+#endif
 
         // Clear mempool if rolling back the chain using the "rollbackchain" rpc command, otherwise clear and
         // place all tx back into the admission queue. "Rollbackchain" is used for significant manually triggered
@@ -3078,6 +3078,7 @@ bool ConnectTip(CValidationState &state,
     }
     int64_t nStart = GetStopwatchMicros();
 
+    std::list<CTransactionRef> txConflicted;
     {
         // Stop txadmission, and flush the commitQ, before we flush coin state and remove txn conflicts
         TxAdmissionPause txlock;
@@ -3087,18 +3088,11 @@ bool ConnectTip(CValidationState &state,
         assert(result);
         LOG(BENCH, "      - Flush Coins %.3fms\n", GetStopwatchMicros() - nStart);
 
-        mapBlockSource.erase(pindexNew->GetBlockHash());
-        nTime3 = GetStopwatchMicros();
-        nTimeConnectTotal += nTime3 - nTime2;
-        LOG(BENCH, "  - Connect total: %.2fms [%.2fs]\n", (nTime3 - nTime2) * 0.001, nTimeConnectTotal * 0.000001);
-
-
         // Remove transactions from the mempool, both those confirmed in the block and conflicting transactions.
         //
         // If we are still in initial block download then skip this step and just clear the mempool. There should
         // be no transactions in the mempool during initial sync, and also there is no need then to parse through each
         // blocks transactions in removeForBlock() looking for transactions to remove.
-        std::list<CTransactionRef> txConflicted;
         if (!IsInitialBlockDownload() && !fReindex)
         {
             // remove confirmed transactions are removed from the mempool and orphanpool.
@@ -3110,7 +3104,11 @@ bool ConnectTip(CValidationState &state,
             // in another thread.
             LOCK(orphanpool.cs_blockprocessing);
             orphanpool.vPostBlockProcessing.push_back(pblock);
+#ifndef ENABLE_WALLET
+            // Only notify the commit Q here if the wallet is turned off so that we don't notify the commit Q
+            // twice, since it gets called again further down if the wallet is on.
             cvCommitQ.notify_all();
+#endif
         }
         else
         {
@@ -3120,52 +3118,71 @@ bool ConnectTip(CValidationState &state,
         // Update chainActive & related variables.
         UpdateTip(pindexNew);
 
-        // Notify txindex thread that a new block has arrived.
-        if (g_txindex)
-        {
-            g_txindex->BlockConnected();
-        }
-
-        if (pindexNew->height() == 1)
-        {
-            // Set the flag so we know we created the token indexes from genesis
-            tokencache.SetSyncFlag(true);
-            tokenmint.SetSyncFlag(true);
-        }
-
-        // Write the chain state to disk, if necessary. This should be done after UpdateTip to make sure the tip
-        // is set correctly when calling FlushStateToDisk(); this is because the automatic -cache.dbcache adjustment
-        // mechanism gets triggered when the chain is synced completely detemined by when the best header matches
-        // the chainActive tip.
-        int64_t nTime4 = GetStopwatchMicros();
-        nTimeFlush += nTime4 - nTime3;
-        LOG(BENCH, "  - Flush: %.2fms [%.2fs]\n", (nTime4 - nTime3) * 0.001, nTimeFlush * 0.000001);
-        if (!FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED))
-            return false;
-        int64_t nTime5 = GetStopwatchMicros();
-        nTimeChainState += nTime5 - nTime4;
-        LOG(BENCH, "  - Flush State to Disk: %.2fms [%.2fs]\n", (nTime5 - nTime4) * 0.001, nTimeChainState * 0.000001);
-
-        // Tell wallet about transactions that went from mempool
-        // to conflicted:
-        for (const auto &ptx : txConflicted)
-        {
-            SyncWithWallets(ptx, nullptr, -1);
-        }
-        // ... and about transactions that got confirmed:
-        int txIdx = 0;
-        for (const auto &ptx : pblock->vtx)
-        {
-            SyncWithWallets(ptx, pblock, txIdx);
-            txIdx++;
-        }
-
-        int64_t nTime6 = GetStopwatchMicros();
-        nTimePostConnect += nTime6 - nTime5;
-        nTimeTotal += nTime6 - nTime1;
-        LOG(BENCH, "  - Connect postprocess: %.2fms [%.2fs]\n", (nTime6 - nTime5) * 0.001, nTimePostConnect * 0.000001);
-        LOG(BENCH, "- Connect block: %.2fms [%.2fs]\n", (nTime6 - nTime1) * 0.001, nTimeTotal * 0.000001);
+        nTime3 = GetStopwatchMicros();
+        nTimeConnectTotal += nTime3 - nTime2;
+        LOG(BENCH, "  - Connect Tip total: %.2fms [%.2fs]\n", (nTime3 - nTime2) * 0.001, nTimeConnectTotal * 0.000001);
     }
+
+    // Update the syncd status after each block is handled
+    int64_t nTime4 = GetStopwatchMicros();
+    IsChainNearlySyncdInit();
+    IsInitialBlockDownloadInit();
+
+    if (!IsInitialBlockDownload())
+    {
+        // Check the version of the last 100 blocks,
+        // alert if significant signaling changes.
+        CheckAndAlertUnknownVersionbits(chainparams, pindexNew);
+
+        // Notify external zmq listeners about the new tip.
+        GetMainSignals().UpdatedBlockTip(pindexNew);
+    }
+
+    if (pindexNew->height() == 1)
+    {
+        // Set the flag so we know we created the token indexes from genesis
+        tokencache.SetSyncFlag(true);
+        tokenmint.SetSyncFlag(true);
+    }
+
+    // Write the blockchain state to disk. This should be done after UpdateTip to make sure the tip
+    // is set correctly when calling FlushStateToDisk(). (This is because the automatic -cache.dbcache adjustment
+    // mechanism gets triggered when the chain is synced completely, determined when the best header matches
+    // the chainActive tip)
+    if (!FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED))
+        return false;
+    int64_t nTime5 = GetStopwatchMicros();
+    nTimeChainState += nTime5 - nTime4;
+    LOG(BENCH, "  - Set and Flush State to Disk: %.2fms [%.2fs]\n", (nTime5 - nTime4) * 0.001,
+        nTimeChainState * 0.000001);
+
+#ifdef ENABLE_WALLET
+    {
+        CSyncWithWallets syncwallet;
+        syncwallet.pblock = pblock;
+        syncwallet.ptxConflicted = std::make_shared<std::list<CTransactionRef> >(txConflicted);
+        syncwallet.fSetIndex = true;
+
+        LOCK(cs_walletprocessing);
+        vPostBlockProcessing.push_back(std::move(syncwallet));
+        cvCommitQ.notify_all();
+    }
+#endif
+
+    int64_t nTime6 = GetStopwatchMicros();
+    nTimePostConnect += nTime6 - nTime5;
+    nTimeTotal += nTime6 - nTime1;
+    LOG(BENCH, "  - Sync with wallets: %.2fms [%.2fs]\n", (nTime6 - nTime5) * 0.001, nTimePostConnect * 0.000001);
+    LOG(BENCH, "- Connect block: %.2fms [%.2fs]\n", (nTime6 - nTime1) * 0.001, nTimeTotal * 0.000001);
+
+    // Notify txindex thread that a new block has arrived.
+    if (g_txindex)
+    {
+        g_txindex->BlockConnected();
+    }
+
+    // Block has been received and processed so no need to keep this entry.
+    mapBlockSource.erase(pindexNew->GetBlockHash());
 
     // When we're in IBD or reindexing then once the block is connected we don't need it in the cache anymore.
     if (IsInitialBlockDownload())
@@ -3332,16 +3349,6 @@ bool ActivateBestChainStep(CValidationState &state,
             {
                 pindexNewTip = pindexConnect;
 
-                // Update the syncd status after each block is handled
-                IsChainNearlySyncdInit();
-                IsInitialBlockDownloadInit();
-
-                if (!IsInitialBlockDownload())
-                {
-                    // Notify external zmq listeners about the new tip.
-                    GetMainSignals().UpdatedBlockTip(pindexConnect);
-                }
-
                 // Update the UI at least every 5 seconds just in case we get in a long loop
                 // as can happen during IBD.  We need an atomic here because there may be other
                 // threads running concurrently.  Start at 0 so it updates right away the first time
@@ -3356,9 +3363,10 @@ bool ActivateBestChainStep(CValidationState &state,
                 PruneBlockIndexCandidates();
                 if (!pindexOldTip || chainActive.Tip()->chainWork() > pindexOldTip->chainWork())
                 {
-                    /* BU: these are commented out for parallel validation:
+                    /*     These lines are commented out for parallel validation:
                            We must always continue so as to find if the pindexMostWork has advanced while we've
                            been trying to connect the last block.
+
                     // We're in a better position than we were. Return temporarily to release the lock.
                     fContinue = false;
                     break;

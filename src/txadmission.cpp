@@ -63,6 +63,12 @@ std::atomic<uint64_t> avgCommitBatchSize(0);
 
 Snapshot txHandlerSnap;
 
+#ifdef ENABLE_WALLET
+// Post block processing for syncing with wallets
+CCriticalSection cs_walletprocessing;
+std::deque<CSyncWithWallets> vPostBlockProcessing GUARDED_BY(cs_walletprocessing);
+#endif
+
 void ThreadCommitToMempool();
 
 CTransactionRef CommitQGet(uint256 hash)
@@ -269,13 +275,27 @@ void ThreadCommitToMempool()
                     return;
                 }
 
+#ifdef ENABLE_WALLET
+                // If a block was just received then break from this loop and
+                // commit transactions right away so we can process for transactions
+                {
+                    LOCK(cs_walletprocessing);
+                    if (!vPostBlockProcessing.empty())
+                    {
+                        break;
+                    }
+                }
+#else
                 // If a block was just received then break from this loop and
                 // commit transactions right away so we can process for orphans
-                LOCK(orphanpool.cs_blockprocessing);
-                if (!orphanpool.vPostBlockProcessing.empty())
                 {
-                    break;
+                    LOCK(orphanpool.cs_blockprocessing);
+                    if (!orphanpool.vPostBlockProcessing.empty())
+                    {
+                        break;
+                    }
                 }
+#endif
             } while (txCommitQ->empty() && txDeferQ.empty());
         }
 
@@ -349,7 +369,58 @@ void CommitTxToMempool()
             vWhatChanged.push_back(data.entry.GetSharedTx());
         }
     }
+
 #ifdef ENABLE_WALLET
+    // Sync transactions with the wallet.  These could be from a newly arrived block
+    // a disconnect/rollback or from transactions arriving in the txpool.
+    while (true)
+    {
+        CSyncWithWallets syncwallet;
+        {
+            LOCK(cs_walletprocessing);
+            if (vPostBlockProcessing.empty())
+                break;
+            syncwallet = vPostBlockProcessing.front();
+            vPostBlockProcessing.pop_front();
+        }
+
+        // Process conflicts first, if any
+        if (syncwallet.ptxConflicted != nullptr && !syncwallet.ptxConflicted->empty())
+        {
+            int64_t nStart = GetStopwatchMicros();
+            for (CTransactionRef &ptx : *syncwallet.ptxConflicted)
+            {
+                SyncWithWallets(ptx, nullptr, -1);
+            }
+            int64_t nEnd = GetStopwatchMicros();
+            LOG(BENCH, "Sync with wallets - processed Conflicted Txns in: %.2fms\n", (nEnd - nStart) * 0.001);
+        }
+
+        // ...then the block
+        if (syncwallet.pblock != nullptr)
+        {
+            int64_t nStart = GetStopwatchMicros();
+            int txIdx = 0;
+            for (const auto &ptx : syncwallet.pblock->vtx)
+            {
+                if (!syncwallet.fSetIndex)
+                {
+                    SyncWithWallets(ptx, nullptr, -1);
+                }
+                else
+                {
+                    SyncWithWallets(ptx, syncwallet.pblock, txIdx);
+                    txIdx++;
+                }
+            }
+            int64_t nEnd = GetStopwatchMicros();
+            LOG(BENCH, "Sync with wallets - processed block: %s in: %.2fms\n", syncwallet.pblock->GetHash().ToString(),
+                (nEnd - nStart) * 0.001);
+        }
+    }
+
+    // ... and finally do the commit Q.  This way new transactions that enter the mempool
+    // and which depend on those in any recent block will be added with a later timestamp.
     for (auto &it : *txCommitQFinal)
     {
         const CTxCommitData &data = it.second;
@@ -434,9 +505,12 @@ void CommitTxToMempool()
             pblock = orphanpool.vPostBlockProcessing.front();
             orphanpool.vPostBlockProcessing.pop_front();
         }
-        LOG(BENCH, "Processing one block for orphans: %s\n", pblock->GetHash().ToString());
+        int64_t nStart = GetStopwatchMicros();
         orphanpool.RemoveForBlock(pblock->vtx);
         ProcessOrphans(pblock->vtx);
+        int64_t nEnd = GetStopwatchMicros();
+        LOG(BENCH, "Processed block %s for orphans in: %.2fms\n", pblock->GetHash().ToString(),
+            (nEnd - nStart) * 0.001);
     }
 }
 
