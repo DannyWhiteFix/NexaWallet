@@ -398,7 +398,7 @@ public:
      * that are already in the chain.  These are the inputs that will age and increase priority as
      * new blocks are added to the chain.
      */
-    double GetPriority(const CTransaction &tx, int nHeight, CAmount &inChainInputValue) const;
+    double GetPriority(const CTransaction &tx, int nHeight, CAmount &inChainInputValue, bool &fSpendsCoinbase) const;
 
 protected:
     // returns an iterator pointing to the coin and lock is taken (caller must unlock when finished with iterator)
