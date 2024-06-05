@@ -780,7 +780,7 @@ void CTxMemPool::ResubmitCommitQ()
 
     // Clear txCommitQ
     {
-        std::unique_lock<std::mutex> lock(csCommitQ);
+        LOCK(cs_commitQ);
         for (auto &kv : *txCommitQ)
         {
             CTxInputData txd;

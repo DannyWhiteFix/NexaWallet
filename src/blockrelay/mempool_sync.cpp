@@ -371,7 +371,7 @@ bool CMempoolSyncTx::HandleMessage(CDataStream &vRecv, uint32_t msgCookie, CNode
 void GetMempoolTxHashes(std::vector<uint256> &mempoolTxHashes)
 {
     {
-        std::unique_lock<std::mutex> lock(csCommitQ);
+        LOCK(cs_commitQ);
         for (auto &kv : *txCommitQ)
         {
             mempoolTxHashes.push_back(kv.first);
@@ -401,7 +401,7 @@ CMempoolSyncInfo GetMempoolSyncInfo()
     // in the txCommitQ that have been processed and valid, and which will be in the mempool shortly.
     uint64_t nCommitQ = 0;
     {
-        std::unique_lock<std::mutex> lock(csCommitQ);
+        LOCK(cs_commitQ);
         nCommitQ = txCommitQ->size();
     }
 

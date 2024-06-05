@@ -308,10 +308,10 @@ std::queue<CTxInputData> txDeferQ GUARDED_BY(csTxInQ);
 
 
 // Transactions that have been validated and are waiting to be committed into the mempool
-CWaitableCriticalSection csCommitQ;
-CConditionVariable cvCommitQ GUARDED_BY(csCommitQ);
-// CConditionVariable cvCommitted GUARDED_BY(csCommitQ);
-std::map<uint256, CTxCommitData> *txCommitQ GUARDED_BY(csCommitQ) = nullptr;
+CWaitableCriticalSection cs_CommitQCondVar;
+CConditionVariable cvCommitQ GUARDED_BY(cs_CommitQCondVar);
+CCriticalSection cs_commitQ;
+std::map<uint256, CTxCommitData> *txCommitQ GUARDED_BY(cs_commitQ) = nullptr;
 
 // Control the execution of the parallel tx validation and serial mempool commit phases
 CThreadCorral txProcessingCorral;
