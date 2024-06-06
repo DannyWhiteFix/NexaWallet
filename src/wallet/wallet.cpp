@@ -3860,8 +3860,8 @@ bool CWallet::CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey, std:
         // Since this is our own wallet, we can use nonstandard
         // TODO: limit nonstandard to a tweak because unless you are a miner it won't be mined
         // setting ignoreFee to false -- it should be a power-user option only to create unrelayable tx
-        ParallelAcceptToMemoryPool(txHandlerSnap, mempool, state, txref, AreFreeTxnsAllowed(), &fMissingInputs,
-            rejectAbsurdFee, TransactionClass::NONSTANDARD, vCoinsToUncache, &isRespend, &debugger);
+        ParallelAcceptToMemoryPool(mempool, state, txref, AreFreeTxnsAllowed(), &fMissingInputs, rejectAbsurdFee,
+            TransactionClass::NONSTANDARD, vCoinsToUncache, &isRespend, &debugger);
         if (debugger.IsValid() || fMissingInputs)
         {
             CTxInputData d;

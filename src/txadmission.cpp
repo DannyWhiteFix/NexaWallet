@@ -62,8 +62,6 @@ const uint64_t minCommitBatchSize = 10000;
 // avgCommitBatchSize is write protected by cs_CommitQ and is wrapped in std::atomic for reads.
 std::atomic<uint64_t> avgCommitBatchSize(0);
 
-Snapshot txHandlerSnap;
-
 #ifdef ENABLE_WALLET
 // Post block processing for syncing with wallets
 CCriticalSection cs_walletprocessing;
@@ -86,7 +84,6 @@ void InitTxAdmission()
 {
     if (txCommitQ == nullptr)
         txCommitQ = new std::map<uint256, CTxCommitData>();
-    txHandlerSnap.Load(); // Get an initial view for the transaction processors
 }
 
 void StartTxAdmissionThreads()
@@ -629,7 +626,7 @@ void ThreadTxAdmission()
                 {
                     std::vector<COutPoint> vCoinsToUncache;
                     bool isRespend = false;
-                    if (ParallelAcceptToMemoryPool(txHandlerSnap, mempool, state, tx, true, &fMissingInputs, false,
+                    if (ParallelAcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs, false,
                             TransactionClass::DEFAULT, vCoinsToUncache, &isRespend, nullptr))
                     {
                         acceptedSomething = true;
@@ -751,12 +748,11 @@ bool AcceptToMemoryPool(CTxMemPool &pool,
         // the normal multi-threaded tx admission.
         static CCriticalSection cs_accept;
         LOCK(cs_accept);
-        txHandlerSnap.Load();
 
         bool isRespend = false;
         bool missingInputs = false;
-        res = ParallelAcceptToMemoryPool(txHandlerSnap, pool, state, tx, fLimitFree, &missingInputs, fRejectAbsurdFee,
-            allowedTx, vCoinsToUncache, &isRespend, nullptr);
+        res = ParallelAcceptToMemoryPool(pool, state, tx, fLimitFree, &missingInputs, fRejectAbsurdFee, allowedTx,
+            vCoinsToUncache, &isRespend, nullptr);
 
         // Uncache any coins for txns that failed to enter the mempool and were NOT orphan txns
         if (isRespend || (!res && !missingInputs))
@@ -781,8 +777,7 @@ bool AcceptToMemoryPool(CTxMemPool &pool,
     return res;
 }
 
-bool ParallelAcceptToMemoryPool(Snapshot &ss,
-    CTxMemPool &pool,
+bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
     CValidationState &state,
     const CTransactionRef &tx,
     bool fLimitFree,
@@ -884,7 +879,7 @@ bool ParallelAcceptToMemoryPool(Snapshot &ss,
     // Only accept nLockTime-using transactions that can be mined in the next
     // block; we don't want our mempool filled up with transactions that can't
     // be mined yet.
-    if (!CheckFinalTx(tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &ss))
+    if (!CheckFinalTx(tx, STANDARD_LOCKTIME_VERIFY_FLAGS))
     {
         if (debugger)
         {
@@ -963,9 +958,9 @@ bool ParallelAcceptToMemoryPool(Snapshot &ss,
         CAmount nFees = 0;
         CAmount nModifiedFees = 0;
         {
-            READLOCK(ss.cs_snapshot);
             READLOCK(pool.cs_txmempool);
-            CCoinsViewMemPool &viewMemPool(*ss.cvMempool);
+
+            CCoinsViewMemPool viewMemPool(pcoinsTip, mempool);
             view.SetBackend(viewMemPool);
             // do all inputs exist?
             if (pfMissingInputs)
@@ -984,7 +979,7 @@ bool ParallelAcceptToMemoryPool(Snapshot &ss,
                     // any coins in vCoinsToUncache will NOT be uncached.
                     bool fSpent = false;
                     bool fMissingOrSpent = false;
-                    if (!ss.coins->HaveCoinInCache(txin.prevout, fSpent))
+                    if (!pcoinsTip->HaveCoinInCache(txin.prevout, fSpent))
                     {
                         vCoinsToUncache.push_back(txin.prevout);
                         if (!view.GetCoinFromDB(txin.prevout))
@@ -1044,7 +1039,7 @@ bool ParallelAcceptToMemoryPool(Snapshot &ss,
             // be mined yet.
             // Must keep pool.cs for this unless we change CheckSequenceLocks to take a
             // CoinsViewCache instead of create its own
-            if (!CheckSequenceLocks(tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &lp, false, &ss))
+            if (!CheckSequenceLocks(tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &lp, false))
             {
                 if (debugger)
                 {
@@ -1396,40 +1391,11 @@ uint64_t ProcessOrphans(const std::vector<CTransactionRef> &vWorkQueue)
 }
 
 
-void Snapshot::Load(void)
+bool CheckSequenceLocks(const CTransactionRef tx, int flags, LockPoints *lp, bool useExistingLockPoints)
 {
-    WRITELOCK(cs_snapshot);
-    tipHeight = chainActive.Height();
-    tip = chainActive.Tip();
-    if (tip)
-    {
-        tipMedianTimePast = tip->GetMedianTimePast();
-    }
-    else
-    {
-        tipMedianTimePast = 0; // MTP does not matter, we are in IBD
-    }
-    adjustedTime = GetAdjustedTime();
-    coins = pcoinsTip; // TODO pcoinsTip can change
-    if (cvMempool)
-        delete cvMempool;
-
-    READLOCK(mempool.cs_txmempool);
-    // ss.coins contains the UTXO set for the tip in ss
-    cvMempool = new CCoinsViewMemPool(coins, mempool);
-}
-
-bool CheckSequenceLocks(const CTransactionRef tx,
-    int flags,
-    LockPoints *lp,
-    bool useExistingLockPoints,
-    const Snapshot *ss)
-{
-    if (ss == nullptr)
-        AssertLockHeld(cs_main);
     AssertLockHeld(mempool.cs_txmempool);
 
-    CBlockIndex *tip = (ss != nullptr) ? ss->tip : chainActive.Tip();
+    CBlockIndex *tip = chainActive.Tip();
     CBlockIndex index;
     index.pprev = tip;
     // CheckSequenceLocks() uses chainActive.Height()+1 to evaluate
@@ -1451,7 +1417,7 @@ bool CheckSequenceLocks(const CTransactionRef tx,
     {
         // pcoinsTip contains the UTXO set for chainActive.Tip()
         CCoinsViewMemPool tmpView(pcoinsTip, mempool);
-        CCoinsViewMemPool &viewMemPool = (ss != nullptr) ? *ss->cvMempool : tmpView;
+        CCoinsViewMemPool &viewMemPool = tmpView;
         std::vector<int> prevheights;
         prevheights.resize(tx->vin.size());
         for (size_t txinIndex = 0; txinIndex < tx->vin.size(); txinIndex++)
@@ -1505,8 +1471,8 @@ bool CheckSequenceLocks(const CTransactionRef tx,
     return EvaluateSequenceLocks(index, lockPair);
 }
 
-bool CheckFinalTx(const CTransactionRef tx, int flags, const Snapshot *ss) { return CheckFinalTx(tx.get(), flags, ss); }
-bool CheckFinalTx(const CTransaction *tx, int flags, const Snapshot *ss)
+bool CheckFinalTx(const CTransactionRef tx, int flags) { return CheckFinalTx(tx.get(), flags); }
+bool CheckFinalTx(const CTransaction *tx, int flags)
 {
     // By convention a negative value for flags indicates that the
     // current network-enforced consensus rules should be used. In
@@ -1533,15 +1499,14 @@ bool CheckFinalTx(const CTransaction *tx, int flags, const Snapshot *ss)
         nBlockHeightDelta = 1;
         // LOG(MEMPOOL, "CheckFinalTx() block height was increased by 1\n");
     }
-    const int64_t nBlockHeight = max((int64_t)((ss != nullptr) ? ss->tipHeight + 1 + nBlockHeightDelta : 0),
-        chainActive.Height() + 1 + nBlockHeightDelta);
+    const int64_t nBlockHeight = chainActive.Height() + 1 + nBlockHeightDelta;
 
     // BIP113 will require that time-locked transactions have nLockTime set to
     // less than the median time of the previous block they're contained in.
     // When the next block is created its previous block will be the current
     // chain tip, so we use that to calculate the median time passed to
     // IsFinalTx() if LOCKTIME_MEDIAN_TIME_PAST is set.
-    const int64_t nMedianTimePast = (ss != nullptr) ? ss->tipMedianTimePast : chainActive.Tip()->GetMedianTimePast();
+    const int64_t nMedianTimePast = chainActive.Tip()->GetMedianTimePast();
     const int64_t nBlockTime = (flags & LOCKTIME_MEDIAN_TIME_PAST) ? nMedianTimePast : GetAdjustedTime();
 
     return IsFinalTx(tx, nBlockHeight, nBlockTime);
