@@ -28,6 +28,7 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "utilstrencodings.h"
+#include "validation/forks.h"
 #include "validationinterface.h"
 
 // The group token cache can and should be compiled even when the wallet is disabled.
@@ -2013,7 +2014,7 @@ uint32_t GetBlockScriptFlags(const CBlockIndex *pindex, const Consensus::Params 
 {
     uint32_t flags = MANDATORY_SCRIPT_VERIFY_FLAGS;
 
-    if (pindex && pindex->forkActivated(nMiningForkTime))
+    if (pindex && IsFork1Enabled(pindex))
     {
         flags = POST_UPGRADE_MANDATORY_SCRIPT_VERIFY_FLAGS;
     }

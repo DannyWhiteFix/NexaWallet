@@ -10,14 +10,5 @@ bool IsFork1Enabled(const CBlockIndex *pindexTip)
     {
         return false;
     }
-    return pindexTip->IsforkActiveOnNextBlock(nMiningForkTime);
-}
-
-bool IsFork1Next(const CBlockIndex *pindexTip)
-{
-    if (pindexTip == nullptr)
-    {
-        return false;
-    }
-    return pindexTip->forkAtNextBlock(nMiningForkTime);
+    return pindexTip->GetMedianTimePast() >= (int64_t)nMiningForkTime;
 }

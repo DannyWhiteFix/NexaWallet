@@ -29,6 +29,7 @@
 #include "txorphanpool.h"
 #include "uint256.h"
 #include "utilstrencodings.h"
+#include "validation/forks.h"
 #include "validation/validation.h"
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
@@ -1315,7 +1316,7 @@ UniValue signrawtransaction(const UniValue &params, bool fHelp)
         ScriptError serror = SCRIPT_ERR_OK;
         auto flags = STANDARD_SCRIPT_VERIFY_FLAGS;
         CBlockIndex *tip = chainActive.Tip();
-        if (tip && tip->forkActivated(nMiningForkTime))
+        if (tip && IsFork1Enabled(tip))
         {
             flags |= POST_UPGRADE_MANDATORY_SCRIPT_VERIFY_FLAGS;
         }
