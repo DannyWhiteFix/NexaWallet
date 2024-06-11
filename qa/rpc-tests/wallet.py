@@ -437,8 +437,10 @@ class WalletTest (BitcoinTestFramework):
         SendQty = Decimal("100000")
         for a in addrs:
             self.nodes[0].sendtoaddress(a, SendQty)
-        self.nodes[0].generate(1)
+        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()["size"] == 21)
+        while self.nodes[0].gettxpoolinfo()["size"] > 0: self.nodes[0].generate(1)
         sync_blocks(self.nodes)
+        sync_wallets(self.nodes)
         self.nodes[2].importprivatekeys(pks[0], pks[1])
         waitForRescan(self.nodes[2])
         assert(bal + 2*SendQty == self.nodes[2].getbalance())
@@ -469,7 +471,8 @@ class WalletTest (BitcoinTestFramework):
         assert(bal + 16*SendQty == self.nodes[2].getbalance("*",1,True)) # show the full balance, will be same because no rescan
         self.nodes[2].importaddresses("rescan") # force a rescan although we imported nothing
         waitForRescan(self.nodes[2])
-        assert(bal + 21*SendQty == self.nodes[2].getbalance("*",1,True)) # show the full balance
+
+        assert bal + 21*SendQty == self.nodes[2].getbalance("*",1,True), "Expected balance %s got %s" % (bal + 21*SendQty, self.nodes[2].getbalance("*",1,True))      # show the full balance
 
         # verify that none of the importaddress calls added the address with a label (bug fix check)
         txns = self.nodes[2].listreceivedbyaddress(0, True, True)
@@ -509,7 +512,7 @@ class WalletTest (BitcoinTestFramework):
 
         # Check wallet unspent counts. The counts may be different from the listunspent count because
         # they include watch-only amounts as well as any immature coinbases, unconfirmed and/or locked coins.
-        waitFor(waitTime, lambda: self.nodes[0].getwalletinfo()["unspentcount"] == 11)
+        waitFor(waitTime, lambda: self.nodes[0].getwalletinfo()["unspentcount"] == 11, lambda: "Expecting unspent count of 11: wallet Info: %s" % self.nodes[0].getwalletinfo())
         assert_equal(len(self.nodes[0].listunspent()), 5)
         assert_equal(self.nodes[1].getwalletinfo()["unspentcount"], 229)
         assert_equal(len(self.nodes[1].listunspent()), 139)

@@ -13,6 +13,9 @@ support/pagelocker.cpp
 support/cleanse.cpp
 script/sigcommon.cpp
 script/bitfield.cpp
+capd/capdmsg.cpp
+crypto/aes.cpp
+crypto/aes.h
 crypto/sha256.cpp
 crypto/hmac_sha512.cpp
 crypto/sha512.cpp
@@ -39,5 +42,4 @@ pow.cpp
 dstencode.cpp
 random.cpp
 randomenv.cpp
-utiltime.cpp
 libnexa/sqlite/sqlite3.c

@@ -29,6 +29,8 @@ from .util import (
     connect_nodes_bi,
     sync_blocks,
     sync_mempools,
+    sync_wallets,
+    sync_wallet,
     stop_nodes,
     wait_bitcoinds,
     wait_bitcoind_exit,
@@ -161,9 +163,12 @@ class BitcoinTestFramework(object):
             sync_blocks(self.nodes[2:])
             sync_mempools(self.nodes[:2])
             sync_mempools(self.nodes[2:])
+            sync_wallets(self.nodes[:2])
+            sync_wallets(self.nodes[2:])
         else:
             sync_blocks(self.nodes)
             sync_mempools(self.nodes)
+            sync_wallets(self.nodes)
 
     def sync_blocks(self):
         """Synchronizes blocks"""

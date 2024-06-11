@@ -104,6 +104,35 @@ UniValue capdrpc(const UniValue &params, bool fHelp)
         msg->SetPowTargetHarderThanPriority(msgpool.GetRelayPriority());
         msg->Solve();
         msgpool.add(msg);
+
+        // Check all query peers to see if they are interested in this new message
+        if (true)
+        {
+            // Grab a copy of capd CNodes and add a ref so they can't be deleted
+            std::vector<CNode *> capdNodes;
+            {
+                LOCK(cs_vNodes);
+                for (CNode *pnode : vNodes)
+                {
+                    if (pnode->isCapdEnabled && pnode->capd)
+                    {
+                        capdNodes.push_back(pnode);
+                        pnode->AddRef();
+                    }
+                }
+            }
+
+            // Now see if we need to relay this message to a query peer
+            for (CNode *pnode : capdNodes)
+            {
+                pnode->capd->checkNotification(msg);
+            }
+
+            // Release our refs to these nodes
+            for (CNode *pnode : capdNodes)
+                pnode->Release();
+        }
+
         return msg->GetHash().GetHex();
     }
     if (cmd == "get")

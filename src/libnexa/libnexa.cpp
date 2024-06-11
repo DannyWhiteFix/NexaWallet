@@ -11,6 +11,7 @@
 #endif
 
 #include <algorithm>
+#include <chrono>
 #include <ctime>
 #include <string>
 #include <vector>
@@ -18,10 +19,12 @@
 #include "arith_uint256.h"
 #include "base58.h"
 #include "bloom.h"
+#include "capd/capd.h"
 #include "cashaddrenc.h"
 #include "chainparams.h"
 #include "coins.h"
 #include "consensus/validation.h"
+#include "crypto/aes.h"
 #include "dstencode.h"
 #include "merkleblock.h"
 #include "policy/policy.h"
@@ -36,14 +39,12 @@
 
 #if defined(ANDROID) // log sighash calculations
 #include <android/log.h>
-#define p(...) __android_log_print(ANDROID_LOG_DEBUG, "BU.sig", __VA_ARGS__)
+#define p(...) __android_log_print(ANDROID_LOG_DEBUG, "libnexa", __VA_ARGS__)
 #elif defined(JAVA)
-#define __android_log_print(x, y, z, ...) \
-    do                                    \
-    {                                     \
-    } while (0)
 #define p(...)
 // tinyformat::format(std::cout, __VA_ARGS__)
+#else
+#define p(...) // tinyformat::format(std::cout, __VA_ARGS__)
 #endif
 
 #if defined(JAVA)
@@ -110,11 +111,26 @@ bool CheckBlockHeader(const Consensus::Params &consensusParams,
 
 
 // This section of this file provides simple or NO-OP implementations of functions used by the larger codebase
+
+// The time stuff is reimplemented here to avoid a dependency on utiltime, which both
+// implements mocktime (using atomics) and has other dependencies for time formatting and logging
 int64_t GetAdjustedTime()
 {
     time_t now = time(nullptr);
     return now;
 }
+int64_t GetTime()
+{
+    time_t now = time(nullptr);
+    return now;
+}
+int64_t GetTimeMicros()
+{
+    std::chrono::time_point<std::chrono::system_clock> clock_now = std::chrono::system_clock::now();
+    int64_t now = std::chrono::duration_cast<std::chrono::microseconds>(clock_now.time_since_epoch()).count();
+    return now;
+}
+
 
 #ifdef DEBUG_LOCKORDER // Not debugging the lockorder in libnexa even if its defined
 void AssertLockHeldInternal(const char *pszName, const char *pszFile, unsigned int nLine, void *cs) {}
@@ -884,6 +900,74 @@ SLAPI int signMessage(const unsigned char *message,
     return sz;
 }
 
+SLAPI int capdSolve(const unsigned char *message, unsigned int msgLen, unsigned char *result, unsigned int resultLen)
+{
+    CDataStream dataStrm((char *)message, (char *)message + msgLen, SER_NETWORK, PROTOCOL_VERSION);
+    CapdMsg msg;
+    try
+    {
+        dataStrm >> msg;
+    }
+    catch (const std::exception &)
+    {
+        p("libnexa capd deserialize error");
+        return -1;
+    }
+    // one year of seconds.  This is not going to work because Solve interprets this as an offset from "now" and changes
+    // the message time field.  But we do not return the changed time.  Callers should manually do this if they
+    // want an offset.  Since such an ancient message is unrelayable this must be an invalid capd message anyway.
+    if (msg.createTime < 31536000)
+        return -2;
+    bool solved = msg.Solve(msg.createTime);
+    if (solved)
+    {
+        unsigned int sz = msg.nonce.size();
+        if (sz > resultLen)
+            return 0;
+        memcpy(result, msg.nonce.data(), sz);
+        return sz;
+    }
+    return 0;
+}
+
+SLAPI int capdCheck(const unsigned char *message, unsigned int msgLen)
+{
+    CDataStream dataStrm((char *)message, (char *)message + msgLen, SER_NETWORK, PROTOCOL_VERSION);
+    CapdMsg msg;
+    try
+    {
+        dataStrm >> msg;
+    }
+    catch (const std::exception &)
+    {
+        p("libnexa capd deserialize error");
+        return -1;
+    }
+    return msg.DoesPowMeetTarget();
+}
+
+SLAPI int capdHash(const unsigned char *message, unsigned int msgLen, unsigned char *result, unsigned int resultLen)
+{
+    CDataStream dataStrm((char *)message, (char *)message + msgLen, SER_NETWORK, PROTOCOL_VERSION);
+    CapdMsg msg;
+    try
+    {
+        dataStrm >> msg;
+    }
+    catch (const std::exception &)
+    {
+        p("libnexa capd deserialize error");
+        return 0;
+    }
+    uint256 hash = msg.CalcHash();
+    unsigned int sz = hash.size();
+    if (sz > resultLen)
+        return 0;
+    memcpy(result, hash.begin(), sz);
+    return sz;
+}
+
+
 SLAPI int verifyMessage(const unsigned char *message,
     unsigned int msgLen,
     const unsigned char *addr,
@@ -1489,6 +1573,33 @@ SLAPI void hash160(const unsigned char *data, unsigned int len, unsigned char *r
     hash.Finalize((unsigned char *)result);
 }
 
+// result buffer length must be len (or more) bytes, secret must be 32 bytes, iv must be 16 or more bytes, len must be a
+// multiple of 16
+SLAPI int cryptAES256CBC(unsigned int encrypt,
+    const unsigned char *data,
+    unsigned int len,
+    const unsigned char *secret,
+    const unsigned char *iv,
+    unsigned char *result)
+{
+    int nBytes = 0;
+    if (encrypt == 1)
+    {
+        AES256CBCEncrypt crypter(secret, iv, false);
+        nBytes = crypter.Encrypt(data, len, result);
+    }
+    else if (encrypt == 0)
+    {
+        AES256CBCDecrypt crypter(secret, iv, false);
+        nBytes = crypter.Decrypt(data, len, result);
+    }
+    else
+        return -1;
+    if (nBytes == 0)
+        return -2;
+    return len;
+}
+
 /** Get work from nbits */
 SLAPI void getWorkFromDifficultyBits(unsigned long int nBits, unsigned char *result)
 {
@@ -1497,6 +1608,18 @@ SLAPI void getWorkFromDifficultyBits(unsigned long int nBits, unsigned char *res
     ui.reverse();
     memcpy(result, ui.begin(), 32);
 }
+
+SLAPI uint32_t getDifficultyBitsFromWork(unsigned char *work256Bits)
+{
+    uint256 ui(work256Bits);
+    arith_uint256 work = UintToArith256(ui);
+    // we need to compute ((2**256)/x) - 1
+    // ~x (bitflip) is mathematically (2**256) - 1 - x
+    // ~x/x is (2**256)/x - 1/x - x/x or (2**256)/x - 1 because 1/x is 0 in integral math
+    work = ~work / work;
+    return work.GetCompact(false);
+}
+
 
 /** Create a bloom filter */
 SLAPI int createBloomFilter(const unsigned char *data,
@@ -1670,6 +1793,15 @@ jbyteArray encodeUint256(JNIEnv *env, arith_uint256 value)
     return result;
 }
 
+jbyteArray makeJByteArray(JNIEnv *env, const uint256 &hash)
+{
+    jbyteArray bArray = env->NewByteArray(256 / 8);
+    jbyte *dest = env->GetByteArrayElements(bArray, 0);
+    const int8_t *buf = (const int8_t *)hash.begin();
+    memcpy(dest, buf, 256 / 8);
+    env->ReleaseByteArrayElements(bArray, dest, 0); // release my changes into the jbyteArray
+    return bArray;
+}
 
 jbyteArray makeJByteArray(JNIEnv *env, const uint8_t *buf, const size_t size)
 {
@@ -2020,6 +2152,76 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_nexa_libnexakotlin_ScriptMachine_
 
 #endif // ifndef ANDROID
 
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_capdSolve(JNIEnv *env,
+    jobject ths,
+    jbyteArray jmessage)
+{
+    ByteArrayAccessor message(env, jmessage);
+    CDataStream dataStrm((char *)message.data, (char *)message.data + message.size, SER_NETWORK, PROTOCOL_VERSION);
+    CapdMsg msg;
+    try
+    {
+        dataStrm >> msg;
+    }
+    catch (const std::exception &)
+    {
+        // p("libnexa capd deserialize error");
+        return jbyteArray();
+    }
+    // one year of seconds.  This is not going to work because Solve interprets this as an offset from "now" and changes
+    // the message time field.  But we do not return the changed time.  Callers should manually do this if they
+    // want an offset.  Since such an ancient message is unrelayable this must be an invalid capd message anyway.
+    if (msg.createTime < 31536000)
+        return jbyteArray();
+    bool solved = msg.Solve(msg.createTime);
+    if (solved)
+    {
+        return makeJByteArray(env, msg.nonce);
+    }
+    return jbyteArray();
+}
+
+extern "C" JNIEXPORT jboolean JNICALL Java_org_nexa_libnexakotlin_Native_capdCheck(JNIEnv *env,
+    jobject ths,
+    jbyteArray jmessage)
+{
+    ByteArrayAccessor message(env, jmessage);
+    CDataStream dataStrm((char *)message.data, (char *)message.data + message.size, SER_NETWORK, PROTOCOL_VERSION);
+    CapdMsg msg;
+    try
+    {
+        dataStrm >> msg;
+    }
+    catch (const std::exception &)
+    {
+        return false;
+    }
+    return msg.DoesPowMeetTarget();
+}
+
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_capdHash(JNIEnv *env,
+    jobject ths,
+    jbyteArray jmessage)
+{
+    ByteArrayAccessor message(env, jmessage);
+    CDataStream dataStrm((char *)message.data, (char *)message.data + message.size, SER_NETWORK, PROTOCOL_VERSION);
+    CapdMsg msg;
+    try
+    {
+        dataStrm >> msg;
+    }
+    catch (const std::exception &)
+    {
+        // p("libnexa capd deserialize error");
+        return jbyteArray();
+    }
+    uint256 hash = msg.CalcHash();
+    // p("C hash: %s\n", HexStr(hash.begin(), hash.end()).c_str());
+    jbyteArray ret = makeJByteArray(env, hash);
+    return ret;
+}
+
+
 extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_signMessage(JNIEnv *env,
     jobject ths,
     jbyteArray jmessage,
@@ -2345,6 +2547,16 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_getWo
     arith_uint256 result = GetWorkForDifficultyBits((uint32_t)nBits);
     return encodeUint256(env, result);
 }
+
+/** Get work from nbits */
+extern "C" JNIEXPORT jint JNICALL Java_org_nexa_libnexakotlin_Native_getDifficultyBitsFromWork(JNIEnv *env,
+    jobject ths,
+    jbyteArray work)
+{
+    ByteArrayAccessor data(env, work);
+    return getDifficultyBitsFromWork(data.data);
+}
+
 
 /** Given a private key, return its corresponding public key */
 extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_getPubKey(JNIEnv *env,
@@ -2758,6 +2970,46 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_txide
     env->ReleaseByteArrayElements(arg, data, 0);
     env->ReleaseByteArrayElements(bArray, dest, 0);
     return bArray;
+}
+
+
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_cryptAES256CBC(JNIEnv *env,
+    jobject ths,
+    jbyteArray message,
+    jbyteArray secret,
+    jbyteArray initial,
+    jboolean encrypt)
+{
+    ByteArrayAccessor data(env, message);
+    ByteArrayAccessor privkey(env, secret);
+    ByteArrayAccessor iv(env, initial);
+
+    if (privkey.size != AES256_KEYSIZE)
+        return jbyteArray();
+    if (iv.size != AES_BLOCKSIZE)
+        return jbyteArray();
+    if ((data.size % AES_BLOCKSIZE) != 0)
+        return jbyteArray();
+
+    jbyteArray ret = env->NewByteArray(data.size);
+    jbyte *dest = env->GetByteArrayElements(ret, 0);
+
+    int nBytes = 0;
+    if (encrypt)
+    {
+        AES256CBCEncrypt crypter(privkey.data, iv.data, false);
+        nBytes = crypter.Encrypt(data.data, data.size, (unsigned char *)dest);
+    }
+    else
+    {
+        AES256CBCDecrypt crypter(privkey.data, iv.data, false);
+        nBytes = crypter.Decrypt(data.data, data.size, (unsigned char *)dest);
+    }
+    if (nBytes == 0)
+        return jbyteArray();
+    // this copies the generated data from the C buffer into the java bytearray
+    env->ReleaseByteArrayElements(ret, dest, 0);
+    return ret;
 }
 
 
