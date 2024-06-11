@@ -81,8 +81,6 @@ CTransactionRef CommitQGet(uint256 hash)
     return it->second.entry.GetSharedTx();
 }
 
-static inline uint256 IncomingConflictHash(const COutPoint &prevout) { return prevout.hash; }
-
 void InitTxAdmission()
 {
     if (txCommitQ == nullptr)
@@ -170,8 +168,7 @@ static void TestConflictEnqueueTx(CTxInputData &txd, bool fOrphan)
     bool conflict = false;
     for (auto &inp : txd.tx->vin)
     {
-        uint256 hash = IncomingConflictHash(inp.prevout);
-        if (!incomingConflicts.checkAndSet(hash))
+        if (!incomingConflicts.checkAndSet(inp.prevout.hash))
         {
             conflict = true;
             break;
@@ -456,8 +453,7 @@ void CommitTxToMempool()
 
             for (const auto &inp : first.tx->vin)
             {
-                uint256 hash = IncomingConflictHash(inp.prevout);
-                incomingConflicts.insert(hash);
+                incomingConflicts.insert(inp.prevout.hash);
             }
             txInQ.push(first);
             cvTxInQ.notify_one();

@@ -51,7 +51,7 @@ bool CTxOrphanPool::AddOrphanTx(const CTransactionRef ptx, NodeId peer)
     return true;
 }
 
-bool CTxOrphanPool::EraseOrphanTx(uint256 hash)
+bool CTxOrphanPool::EraseOrphanTx(const uint256 &hash)
 {
     AssertWriteLockHeld(cs_orphanpool);
 
