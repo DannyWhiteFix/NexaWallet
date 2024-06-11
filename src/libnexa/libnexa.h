@@ -151,7 +151,8 @@ SLAPI int RandomBytes(unsigned char *buf, int num);
 
 /** Get work from nbits */
 SLAPI void getWorkFromDifficultyBits(unsigned long int nBits, unsigned char* result);
-
+/** Get nbits from work */
+SLAPI uint32_t getDifficultyBitsFromWork(unsigned char *work256Bits);
 
 /** Returns 0 if invalid, -sizeNeeded if you did not give a large enough buffer, or the length of the result if it
     worked.
@@ -193,6 +194,16 @@ SLAPI int blockHash(const unsigned char *data, int len, unsigned char *result);
 SLAPI int extractFromMerkleBlock(int numTxes, const unsigned char *merkleProofPath, int mppLen,
                                  const unsigned char *hashIn, int numHashes,
                                  unsigned char *result, int resultLen);
+
+SLAPI int capdSolve(const unsigned char *message, unsigned int msgLen, unsigned char *result, unsigned int resultLen);
+SLAPI int capdCheck(const unsigned char *message, unsigned int msgLen);
+SLAPI int capdHash(const unsigned char *message, unsigned int msgLen, unsigned char *result, unsigned int resultLen);
+
+// encrypt must be 1 (encrypt) or 0 (decrypt).
+// len must be a multiple of 16
+// secret must be 32 bytes, iv must be 16 or more bytes
+// result buffer length must be len (or more) bytes
+SLAPI int cryptAES256CBC(unsigned int encrypt, const unsigned char *data, unsigned int len, const unsigned char *secret, const unsigned char *iv, unsigned char *result);
 
 
 #endif /* LIBNEXA_H */

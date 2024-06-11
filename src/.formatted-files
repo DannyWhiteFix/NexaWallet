@@ -43,6 +43,7 @@ bloom.h
 capd/capd.cpp
 capd/capd.h
 capd/capd_rpc.cpp
+capd/capdmsg.cpp
 cashaddr.cpp
 cashaddr.h
 cashaddrenc.cpp

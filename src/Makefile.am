@@ -297,6 +297,7 @@ libnexa_server_a_SOURCES = \
   blockstorage/blockcache.cpp \
   bloom.cpp \
   capd/capd.cpp \
+  capd/capdmsg.cpp \
   capd/capd_rpc.cpp \
   chain.cpp \
   checkpoints.cpp \
@@ -405,6 +406,8 @@ libnexa_a_SOURCES = \
   base58.h \
   merkleblock.cpp \
   merkleblock.h \
+  capd/capdmsg.cpp \
+  capd/capd.h \
   config.cpp \
   config.h \
   chainparams.cpp \
@@ -474,8 +477,6 @@ libnexa_a_SOURCES = \
   cashaddrenc.h \
   cashaddr.cpp \
   cashaddr.h \
-  utiltime.cpp \
-  utiltime.h \
   consensus/merkle.cpp \
   arith_uint256.cpp \
   arith_uint256.h \

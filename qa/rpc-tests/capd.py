@@ -484,6 +484,12 @@ class MyTest (BitcoinTestFramework):
         epoch_time += 300
         s0 = self.nodes[0].capd()
         m0 = self.nodes[0].capd("get", hashToHex(msgs[-1].getHash()))
+        try:
+            mF0 = self.nodes[0].capd("get", hashToHex(msgs[0].getHash()))
+            assert False, "first message should have aged out"
+        except JSONRPCException as e:
+            assert True
+
         self.nodes[0].setmocktime(epoch_time)
         s1 = self.nodes[0].capd()
         m1 = self.nodes[0].capd("get", hashToHex(msgs[-1].getHash()))
@@ -492,8 +498,10 @@ class MyTest (BitcoinTestFramework):
         s2 = self.nodes[0].capd()
         m2 = self.nodes[0].capd("get", hashToHex(msgs[-1].getHash()))
 
+        # check that the priority continues to fall.
+        assert s0["maxPriority"]/s1["maxPriority"] > 1.25, "time priority reduction issue"
         # after half the time, the priority of every message will have halved
-        assert s0["maxPriority"]/s1["maxPriority"] > 1.99, "time priority reduction issue"
+        # This is the last message created so priority is falling quickly
         assert m0['priority']/m1['priority'] > 1.99, "time priority reduction issue 2"
 
         assert_equal(s2["maxPriority"], CAPD_MIN_RELAY_PRIORITY)

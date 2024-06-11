@@ -57,6 +57,10 @@ set(libsrc
              ../script/sigcommon.cpp
              ../script/bitfield.cpp
              ../script/bitfield.h
+             ../capd/capdmsg.cpp
+             ../capd/capd.h
+             ../crypto/aes.cpp
+             ../crypto/aes.h
              ../crypto/sha256.cpp
              ../crypto/hmac_sha512.cpp
              ../crypto/hmac_sha512.h

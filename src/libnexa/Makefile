@@ -25,14 +25,14 @@ cflags := ${CFLAGS} -c -DHAVE_CONFIG_H -DBOOST_SYSTEM_NO_DEPRECATED -D${PLATFORM
 
 all: ${BUILD_DIR}/libnexalight.a ${BUILD_DIR}/libnexalight.so
 
+# ARE YOU GETTING?: make[1]: *** No rule to make target 'file.o', needed by '/fast/nexa/lnk/libnexa/nexa/build_LINUX_host/lightbuild/libnexalight.so'.  Stop.
+# You need to add the directory of your new file into the build rules below
 
 ${BUILD_DIR}/libnexalight.a: ${srcObjs}
 	${AR} rvs $@ $^
 
 ${BUILD_DIR}/libnexalight.so: ${srcObjs}
 	${CXX} -shared -o $@ $^
-# android?	${CXX} -shared -Wl,-soname,$@ -o $@ $^
-
 
 ${BUILD_DIR}/%.o: %.cpp
 	${CXX} ${cxxflags} -o $@ $<
@@ -47,6 +47,9 @@ ${BUILD_DIR}/%.o: ../primitives/%.cpp
 	${CXX} ${cxxflags} -o $@ $<
 
 ${BUILD_DIR}/%.o: ../crypto/%.cpp
+	${CXX} ${cxxflags} -o $@ $<
+
+${BUILD_DIR}/%.o: ../capd/%.cpp
 	${CXX} ${cxxflags} -o $@ $<
 
 ${BUILD_DIR}/%.o: ../support/%.cpp
