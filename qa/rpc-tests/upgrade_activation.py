@@ -64,7 +64,7 @@ class UpgradeActivationTest(BitcoinTestFramework):
         try:
             spendTxSend = self.nodes[0].sendrawtransaction(txs.toHex())
             print(spendTxSend)
-            assert shouldItWork, "Large stack width worked" 
+            assert shouldItWork, "Large stack width worked"
         except JSONRPCException as e:
             assert not shouldItWork, "Large stack width did not work: %s" % e
 
@@ -82,7 +82,7 @@ class UpgradeActivationTest(BitcoinTestFramework):
         self.testWideStack(True)
         pass
 
-    
+
     def run_test(self):
 
         # Mine some blocks to get utxos etc
@@ -115,7 +115,7 @@ class UpgradeActivationTest(BitcoinTestFramework):
         blockchaininfo = self.nodes[0].getblockchaininfo()
         assert_equal(blockchaininfo['forktime'], activationtime)
         assert_equal(blockchaininfo['forkactive'], False)
-        assert_equal(blockchaininfo['forkactivenextblock'], False)
+        assert_equal(blockchaininfo['forkenforcednextblock'], False)
         assert_greater_than(activationtime, blockchaininfo['mediantime'])
 
         # Mine just up to the hard fork activation (activationtime will still be greater than mediantime).
@@ -125,7 +125,7 @@ class UpgradeActivationTest(BitcoinTestFramework):
             self.nodes[0].generate(1)
             blockchaininfo = self.nodes[0].getblockchaininfo()
             assert_equal(blockchaininfo['forkactive'], False)
-            assert_equal(blockchaininfo['forkactivenextblock'], False)
+            assert_equal(blockchaininfo['forkenforcednextblock'], False)
             assert_greater_than(activationtime, blockchaininfo['mediantime']) # activationtime > mediantime
 
         # Fork should be active after the next block mined (median time will be greater than or equal to blocktime)
@@ -138,7 +138,7 @@ class UpgradeActivationTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
         blockchaininfo = self.nodes[0].getblockchaininfo()
         assert_equal(blockchaininfo['forkactive'], True)
-        assert_equal(blockchaininfo['forkactivenextblock'], True)
+        assert_equal(blockchaininfo['forkenforcednextblock'], True)
         assert_equal(activationtime, blockchaininfo['mediantime']) # when median time is >= activationtime
 
         # First block mined under new rules:  At this point the nextmaxblocksize can be calculated
@@ -148,7 +148,7 @@ class UpgradeActivationTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
         blockchaininfo = self.nodes[0].getblockchaininfo()
         assert_equal(blockchaininfo['forkactive'], True)
-        assert_equal(blockchaininfo['forkactivenextblock'], False)
+        assert_equal(blockchaininfo['forkenforcednextblock'], False)
         assert_greater_than(blockchaininfo['mediantime'], activationtime)
 
         self.postupgradeTests()
@@ -160,7 +160,7 @@ class UpgradeActivationTest(BitcoinTestFramework):
             self.nodes[0].generate(1)
             blockchaininfo = self.nodes[0].getblockchaininfo()
             assert_equal(blockchaininfo['forkactive'], True)
-            assert_equal(blockchaininfo['forkactivenextblock'], False)
+            assert_equal(blockchaininfo['forkenforcednextblock'], False)
             assert_greater_than(blockchaininfo['mediantime'], activationtime)
 
 if __name__ == '__main__':

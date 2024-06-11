@@ -17,8 +17,10 @@
 // Fork configuration
 /** This specifies the MTP time of the next fork */
 extern uint64_t nMiningForkTime;
-/** Next protocol upgrade will be activated once MTP >= (date) */
-const uint64_t NEXT_FORK_ACTIVATION_TIME = 0;
+/** Next protocol upgrade will be activated once MTP >= (date)
+ * FIXME set a mock tentaitve time to Nov 15th 2024
+ */
+const uint64_t NEXT_FORK_ACTIVATION_TIME = 1731672000;
 
 /** Default for -minrelaytxfee, minimum relay fee for transactions */
 static const unsigned int DEFAULT_MIN_RELAY_TX_FEE = 1000;

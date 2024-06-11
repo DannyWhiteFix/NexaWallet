@@ -8,10 +8,13 @@
 #include "chain.h"
 #include "chainparams.h"
 
-/** Check if fork1 is activated at a specific block */
+/** Check if fork1 is Enabled at a specific block
+ *
+ * return true for [x-1, +inf)
+ *
+ * x-1 = first block for which median time past >= activation time
+ * x = first block where the new consensus rules are enforced
+ **/
+
 bool IsFork1Enabled(const CBlockIndex *pindexTip);
-
-/** Check if the next block will be the first block, where the new set of rules for fork1 will be enforced */
-bool IsFork1Next(const CBlockIndex *pindexTip);
-
 #endif

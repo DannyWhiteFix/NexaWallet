@@ -170,7 +170,7 @@ class BlockchainTest(BitcoinTestFramework):
             'mediantime',
             'forktime',
             'forkactive',
-            'forkactivenextblock',
+            'forkenforcednextblock',
             'pruned',
             'softforks',
             'size_on_disk',

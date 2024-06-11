@@ -52,7 +52,7 @@ class HardFork1_Activation_BlockSizeTest(BitcoinTestFramework):
             self.nodes[0].setmocktime(mocktime)
             self.nodes[0].generate(1)
         assert_equal(self.nodes[0].getblockcount(), 111)
-            
+
         # set the harfork activation to just a few blocks ahead
         bestblock = self.nodes[0].getbestblockhash()
         lastblocktime = self.nodes[0].getblockheader(bestblock)['time']
@@ -62,7 +62,7 @@ class HardFork1_Activation_BlockSizeTest(BitcoinTestFramework):
         blockchaininfo = self.nodes[0].getblockchaininfo()
         assert_equal(blockchaininfo['forktime'], activationtime)
         assert_equal(blockchaininfo['forkactive'], False)
-        assert_equal(blockchaininfo['forkactivenextblock'], False)
+        assert_equal(blockchaininfo['forkenforcednextblock'], False)
         assert_greater_than(activationtime, blockchaininfo['mediantime'])
 
         # Mine just up to the hard fork activation (activationtime will still be greater than mediantime).
@@ -72,7 +72,7 @@ class HardFork1_Activation_BlockSizeTest(BitcoinTestFramework):
             self.nodes[0].generate(1)
             blockchaininfo = self.nodes[0].getblockchaininfo()
             assert_equal(blockchaininfo['forkactive'], False)
-            assert_equal(blockchaininfo['forkactivenextblock'], False)
+            assert_equal(blockchaininfo['forkenforcednextblock'], False)
             assert_greater_than(activationtime, blockchaininfo['mediantime']) # activationtime > mediantime
             assert_equal(self.nodes[0].getmininginfo()['currentmaxblocksize'], 100000)
             assert_equal(self.nodes[0].getblockstats(self.nodes[0].getbestblockhash())["nextmaxblocksize"], 100000)
@@ -86,7 +86,7 @@ class HardFork1_Activation_BlockSizeTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
         blockchaininfo = self.nodes[0].getblockchaininfo()
         assert_equal(blockchaininfo['forkactive'], True)
-        assert_equal(blockchaininfo['forkactivenextblock'], True)
+        assert_equal(blockchaininfo['forkenforcednextblock'], True)
         assert_equal(activationtime, blockchaininfo['mediantime']) # when median time is >= activationtime
         assert_equal(self.nodes[0].getmininginfo()['currentmaxblocksize'], 100000)
         assert_equal(self.nodes[0].getblockstats(self.nodes[0].getbestblockhash())["nextmaxblocksize"], 100000)
@@ -98,7 +98,7 @@ class HardFork1_Activation_BlockSizeTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
         blockchaininfo = self.nodes[0].getblockchaininfo()
         assert_equal(blockchaininfo['forkactive'], True)
-        assert_equal(blockchaininfo['forkactivenextblock'], False)
+        assert_equal(blockchaininfo['forkenforcednextblock'], False)
         assert_greater_than(blockchaininfo['mediantime'], activationtime)
         assert_equal(self.nodes[0].getmininginfo()['currentmaxblocksize'], 150000)
         assert_equal(self.nodes[0].getblockstats(self.nodes[0].getbestblockhash())["nextmaxblocksize"], 150000)
@@ -110,7 +110,7 @@ class HardFork1_Activation_BlockSizeTest(BitcoinTestFramework):
             self.nodes[0].generate(1)
             blockchaininfo = self.nodes[0].getblockchaininfo()
             assert_equal(blockchaininfo['forkactive'], True)
-            assert_equal(blockchaininfo['forkactivenextblock'], False)
+            assert_equal(blockchaininfo['forkenforcednextblock'], False)
             assert_greater_than(blockchaininfo['mediantime'], activationtime)
             assert_equal(self.nodes[0].getmininginfo()['currentmaxblocksize'], 150000)
             assert_equal(self.nodes[0].getblockstats(self.nodes[0].getbestblockhash())["nextmaxblocksize"], 150000)

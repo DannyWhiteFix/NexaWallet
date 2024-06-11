@@ -25,6 +25,7 @@
 #include "unlimited.h"
 #include "util.h"
 #include "utiltime.h"
+#include "validation/forks.h"
 #include "validation/validation.h"
 #include "validationinterface.h"
 
@@ -862,7 +863,7 @@ bool ParallelAcceptToMemoryPool(Snapshot &ss,
     uint32_t flags = STANDARD_SCRIPT_VERIFY_FLAGS;
 
     CBlockIndex *tip = chainActive.Tip();
-    if (tip && tip->forkActivated(nMiningForkTime))
+    if (tip && IsFork1Enabled(tip))
     {
         flags = POST_UPGRADE_MANDATORY_SCRIPT_VERIFY_FLAGS;
     }

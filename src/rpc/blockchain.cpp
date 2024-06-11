@@ -1388,10 +1388,12 @@ UniValue getblockchaininfo(const UniValue &params, bool fHelp)
             "  \"difficulty\": xxxxxx,     (numeric) the current difficulty\n"
             "  \"mediantime\": xxxxxx,     (numeric) median time for the current best block\n"
             "  \"forktime\": xxxxxx,       (numeric)  time when the fork becomes active on the next block\n"
-            "  \"forkactive\": xxxxxx,     (bool) is the fork active\n"
-            "  \"forkactivenextblock\": xxxxxx,(bool) will the fork be active on the next block mined\n"
-            "  \"verificationprogress\": xxxx, (numeric) estimate of verification progress [0..1]\n"
-            "  \"initialblockdownload\": xxxx, (bool) (debug information) estimate of whether this node is in Initial "
+            "  \"forkactive\": xxxxxx,     (bool) is the fork active, true for all blocks with a median tiume past >= "
+            "activation time\n"
+            "  \"forkenforcednextblock\": xx,(bool) will the new  fork rules be enforced on the next block mined, true "
+            "only for the first block with MTP >= activation time \n"
+            "  \"verificationprogress\": xx, (numeric) estimate of verification progress [0..1]\n"
+            "  \"initialblockdownload\": xx, (bool) (debug information) estimate of whether this node is in Initial "
             "Block Download mode.\n"
             "  \"chainwork\": \"xxxx\"     (string) total amount of work in active chain, in hexadecimal\n"
             "  \"coinsupply\": xxxxxxx     (numeric) total amount of satoshis minted so far in the active chain\n"
@@ -1462,14 +1464,15 @@ UniValue getblockchaininfo(const UniValue &params, bool fHelp)
     if (forking)
     {
         obj.pushKV("forktime", (int64_t)nMiningForkTime);
-        obj.pushKV("forkactive", IsFork1Enabled(tip));
-        obj.pushKV("forkactivenextblock", IsFork1Next(tip));
+        obj.pushKV("forkactive", IsFork1Enabled(tip)); // true of blocks belong to [x-1,+inf)
+        // true only if block is x-1
+        obj.pushKV("forkenforcednextblock", (IsFork1Enabled(tip) && !IsFork1Enabled(tip->pprev)));
     }
     else
     {
         obj.pushKV("forktime", "N/A");
         obj.pushKV("forkactive", "N/A");
-        obj.pushKV("forkactivenextblock", "N/A");
+        obj.pushKV("forkenforcednextblock", "N/A");
     }
     obj.pushKV("verificationprogress", Checkpoints::GuessVerificationProgress(tip, !fCheckpointsEnabled));
     obj.pushKV("initialblockdownload", IsInitialBlockDownload());
