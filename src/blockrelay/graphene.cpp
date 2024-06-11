@@ -451,7 +451,7 @@ bool CGrapheneBlock::HandleMessage(CDataStream &vRecv,
 void CGrapheneBlock::FillTxMapFromPools(std::map<uint64_t, CTransactionRef> &mapTxFromPools)
 {
     {
-        std::unique_lock<std::mutex> lock(csCommitQ);
+        LOCK(cs_commitQ);
         for (auto &kv : *txCommitQ)
         {
             uint64_t cheapHash = GetShortID(shorttxidk0, shorttxidk1, kv.first, version);
@@ -1599,7 +1599,7 @@ CMemPoolInfo GetGrapheneMempoolInfo()
     // in the txCommitQ that have been processed and valid, and which will be in the mempool shortly.
     uint64_t nCommitQ = 0;
     {
-        std::unique_lock<std::mutex> lock(csCommitQ);
+        LOCK(cs_commitQ);
         nCommitQ = txCommitQ->size();
     }
     return CMemPoolInfo(mempool.size() + orphanpool.GetOrphanPoolSize() + nCommitQ);

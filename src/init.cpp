@@ -644,7 +644,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles, uint64_t nTxIndexCache)
                 nDeferQ = txDeferQ.size();
             }
             {
-                std::unique_lock<std::mutex> lock(csCommitQ);
+                LOCK(cs_commitQ);
                 nCommitQ = txCommitQ->size();
             }
             if (nInQ == 0 && nDeferQ == 0 && nCommitQ == 0)
@@ -664,7 +664,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles, uint64_t nTxIndexCache)
                         txDeferQ.pop();
                 }
                 {
-                    std::unique_lock<std::mutex> lock(csCommitQ);
+                    LOCK(cs_commitQ);
                     txCommitQ->clear();
                 }
             }

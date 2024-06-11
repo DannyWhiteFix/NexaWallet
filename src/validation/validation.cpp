@@ -2908,7 +2908,7 @@ static void ResubmitTransactions(const ConstCBlockRef pblock = nullptr)
     // dependency chain in the mempool performed terribly.
     //
     // We must hold the mempool lock throughout otherwise it would be possible for some txns to slip back into
-    // the mempool from the csCommitQFinal.
+    // the mempool from the CommitQFinal.
     WRITELOCK(mempool.cs_txmempool);
     // If tx admission is not paused, the commitment thread will be modifying what this function is clearing
     DbgAssert(txProcessingCorral.region() != CORRAL_TX_COMMITMENT, LOGA("Resubmit transactions during tx commitment"));
@@ -3005,7 +3005,7 @@ bool DisconnectTip(CValidationState &state, const Consensus::Params &consensusPa
         {
             WRITELOCK(mempool.cs_txmempool);
             mempool._clear();
-            std::unique_lock<std::mutex> lock(csCommitQ);
+            LOCK(cs_commitQ);
             txCommitQ->clear();
         }
         else

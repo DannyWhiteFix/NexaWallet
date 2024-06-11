@@ -1441,7 +1441,7 @@ void BuildSeededBloomFilter(CBloomFilter &filterMemPool,
 
     // Also add all the transaction hashes currently in the txCommitQ
     {
-        std::unique_lock<std::mutex> lock(csCommitQ);
+        LOCK(cs_commitQ);
         for (auto &it : *txCommitQ)
         {
             setHighScoreMemPoolHashes.insert(it.first);

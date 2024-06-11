@@ -58,7 +58,7 @@ static void TestConflictEnqueueTx(CTxInputData &txd, bool fOrphan = false);
 // shuffled between the in queue and the defer queue with little progress being made.
 const uint64_t minCommitBatchSize = 10000;
 
-// avgCommitBatchSize is write protected by csCommitQ and is wrapped in std::atomic for reads.
+// avgCommitBatchSize is write protected by cs_CommitQ and is wrapped in std::atomic for reads.
 std::atomic<uint64_t> avgCommitBatchSize(0);
 
 Snapshot txHandlerSnap;
@@ -74,7 +74,7 @@ void ThreadCommitToMempool();
 CTransactionRef CommitQGet(uint256 hash)
 {
     // search by transaction id
-    std::unique_lock<std::mutex> lock(csCommitQ);
+    LOCK(cs_commitQ);
     std::map<uint256, CTxCommitData>::iterator it = txCommitQ->find(hash);
     if (it == txCommitQ->end())
         return nullptr;
@@ -126,7 +126,7 @@ void FlushTxAdmission()
         } while (!empty);
 
         {
-            std::unique_lock<std::mutex> lock(csCommitQ);
+            std::unique_lock<std::mutex> lock(cs_CommitQCondVar);
             do // wait for the commit thread to commit everything
             {
                 cvCommitQ.wait_for(lock, std::chrono::milliseconds(100));
@@ -140,7 +140,7 @@ void FlushTxAdmission()
                 empty = txInQ.empty() && txDeferQ.empty() && txOrphanQ.empty();
             }
             {
-                std::unique_lock<std::mutex> lock(csCommitQ);
+                LOCK(cs_commitQ);
                 empty &= txCommitQ->empty();
             }
         }
@@ -218,7 +218,7 @@ unsigned int TxAlreadyHave(const int type, const uint256 &hash)
             return 2;
 
         {
-            std::unique_lock<std::mutex> lock(csCommitQ);
+            LOCK(cs_commitQ);
             const auto &elem = txCommitQ->find(hash);
             if (elem != txCommitQ->end())
             {
@@ -263,7 +263,7 @@ void ThreadCommitToMempool()
     while (shutdown_threads.load() == false)
     {
         {
-            std::unique_lock<std::mutex> lock(csCommitQ);
+            std::unique_lock<std::mutex> lock(cs_CommitQCondVar);
             do
             {
                 cvCommitQ.wait_for(lock, std::chrono::milliseconds(2000));
@@ -352,7 +352,7 @@ void CommitTxToMempool()
         WRITELOCK(mempool.cs_txmempool);
 
         {
-            std::unique_lock<std::mutex> lock(csCommitQ);
+            LOCK(cs_commitQ);
             avgCommitBatchSize = (avgCommitBatchSize * 24 + txCommitQ->size()) / 25;
             txCommitQFinal = txCommitQ;
             txCommitQ = new std::map<uint256, CTxCommitData>();
@@ -1269,7 +1269,7 @@ bool ParallelAcceptToMemoryPool(Snapshot &ss,
             eData.entry = std::move(entry);
             eData.hash = id;
 
-            std::unique_lock<std::mutex> lock(csCommitQ);
+            LOCK(cs_commitQ);
             (*txCommitQ).emplace(eData.hash, eData);
         }
     }
