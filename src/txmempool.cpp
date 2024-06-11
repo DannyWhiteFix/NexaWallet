@@ -945,11 +945,13 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef> &vtx,
             // this set of ancestors before; we don't want to be traversing the same part of the ancestor
             // tree more than once.
             setEntries setAncestors;
-            uint64_t nNoLimit = std::numeric_limits<uint64_t>::max();
-            std::string dummy;
-            _CalculateMemPoolAncestors(*it, setAncestors, nNoLimit, nNoLimit, dummy, &setAncestorsFromBlock, false);
-
-            setAncestorsFromBlock.insert(setAncestors.begin(), setAncestors.end());
+            if (it->IsDirty() || it->GetCountWithAncestors() > 1)
+            {
+                uint64_t nNoLimit = std::numeric_limits<uint64_t>::max();
+                std::string dummy;
+                _CalculateMemPoolAncestors(*it, setAncestors, nNoLimit, nNoLimit, dummy, &setAncestorsFromBlock, false);
+                setAncestorsFromBlock.insert(setAncestors.begin(), setAncestors.end());
+            }
             setTxnsInBlock.insert(it);
 
             const setEntries &setMemPoolChildren = GetMemPoolChildren(it);
