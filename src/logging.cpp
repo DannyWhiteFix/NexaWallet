@@ -217,12 +217,16 @@ uint64_t LogFindCategory(const std::string &label)
  * returns all categories and states
  */
 // Return a string rapresentation of all debug categories and their current status,
-// one category per line. If enabled is true it returns only the list of enabled
+// one category per line. If fEnabled is true it returns only the list of enabled
 // debug categories concatenated in a single line.
-std::string LogGetAllString(bool fEnabled)
+std::string LogGetAllString(bool fEnabled /* false */,
+    std::string categorySpacer /* "\n" */,
+    std::string on /* "on " */,
+    std::string off /* "   " */)
 {
     std::string allCategories = "";
     std::string enabledCategories = "";
+    bool first = true;
     for (auto &x : logLabelMap)
     {
         if (x.first == ALL || x.first == NONE)
@@ -231,7 +235,7 @@ std::string LogGetAllString(bool fEnabled)
         }
         if (LogAcceptCategory(x.first))
         {
-            allCategories += "on ";
+            allCategories += on;
             if (fEnabled)
             {
                 enabledCategories += (std::string)x.second + " ";
@@ -239,11 +243,15 @@ std::string LogGetAllString(bool fEnabled)
         }
         else
         {
-            allCategories += "   ";
+            allCategories += off;
         }
-        allCategories += (std::string)x.second + "\n";
+        if (first)
+            first = false;
+        else
+            allCategories += categorySpacer;
+        allCategories += (std::string)x.second;
     }
-    // strip last char from enabledCategories if it is eqaul to a blank space
+    // strip last char from enabledCategories if it is equal to a blank space
     if (enabledCategories.length() > 0)
     {
         enabledCategories.pop_back();

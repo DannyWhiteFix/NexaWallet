@@ -166,9 +166,12 @@ uint64_t LogFindCategory(const std::string &label);
  * returns all categories and states
  */
 // Return a string rapresentation of all debug categories and their current status,
-// one category per line. If enabled is true it returns only the list of enabled
+// one category per line. If fEnabled is true it returns only the list of enabled
 // debug categories concatenated in a single line.
-std::string LogGetAllString(bool fEnabled = false);
+std::string LogGetAllString(bool fEnabled = false,
+    std::string categorySpacer = "\n",
+    std::string on = "on ",
+    std::string off = "   ");
 
 } // namespace Logging
 
