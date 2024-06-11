@@ -1069,21 +1069,13 @@ bool ParallelAcceptToMemoryPool(Snapshot &ss,
             }
         }
 
-        CAmount inChainInputValue;
-        double dPriority = view.GetPriority(*tx, chainActive.Height(), inChainInputValue);
-
-        // Keep track of transactions that spend a coinbase, which we re-scan
+        // Get the priority
+        //
+        // And, keep track of transactions that spend a coinbase, which we re-scan
         // during reorgs to ensure COINBASE_MATURITY is still met.
+        CAmount inChainInputValue;
         bool fSpendsCoinbase = false;
-        for (const CTxIn &txin : tx->vin)
-        {
-            CoinAccessor coin(view, txin.prevout);
-            if (coin->IsCoinBase())
-            {
-                fSpendsCoinbase = true;
-                break;
-            }
-        }
+        double dPriority = view.GetPriority(*tx, chainActive.Height(), inChainInputValue, fSpendsCoinbase);
 
         // Check that input script constraints are satisfied
         unsigned char sighashType = 0;
