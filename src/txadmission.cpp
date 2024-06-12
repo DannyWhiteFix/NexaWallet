@@ -113,38 +113,36 @@ void StopTxAdmission()
 void FlushTxAdmission()
 {
     bool empty = false;
-
+    int64_t nStart = GetTime();
+    uint64_t nLastOrphanQSize = 0;
     while (!empty)
     {
-        do // give the tx processing threads a chance to run
+        CORRAL(txProcessingCorral, CORRAL_TX_PAUSE);
         {
-            {
-                LOCK(csTxInQ);
-                empty = txInQ.empty() && txDeferQ.empty() && txOrphanQ.empty();
-            }
-            if (!empty)
-                MilliSleep(100);
-        } while (!empty);
+            // Block everything and check if queues are empty and if not
+            // then continue processing until they are or we hit the timeout.
+            LOCK(csTxInQ);
+            empty = txInQ.empty() && txDeferQ.empty();
+            if (empty && txOrphanQ.empty())
+                break;
 
-        {
-            std::unique_lock<std::mutex> lock(cs_CommitQCondVar);
-            do // wait for the commit thread to commit everything
-            {
-                cvCommitQ.wait_for(lock, std::chrono::milliseconds(100));
-            } while (!txCommitQ->empty());
+            nLastOrphanQSize = txOrphanQ.size();
         }
 
-        { // block everything and check
-            CORRAL(txProcessingCorral, CORRAL_TX_PAUSE);
-            {
-                LOCK(csTxInQ);
-                empty = txInQ.empty() && txDeferQ.empty() && txOrphanQ.empty();
-            }
-            {
-                LOCK(cs_commitQ);
-                empty &= txCommitQ->empty();
-            }
-        }
+        // Commit to mempool again. There may be orphans that need processing
+        // and the commitQ and txDeferQ may still have entries.
+        CommitTxToMempool(CORRAL_TX_PAUSE);
+
+        // The orphan pool may never clear out if there are true orphans present, so break
+        // from this loop if there is no progress in clearing them out.
+        //
+        // Also break from the loop if the timeout is reached. It could happen under high tps that
+        // the txInQ is never empty or rather keeps getting entries added just as we release the CORRAL
+        // on the next iteration of this loop; and we can't just hold the CORRAL the entire time through
+        // this loop because we need to allow the orphans to get processed to get into the txpool.
+        LOCK(csTxInQ);
+        if ((empty && txOrphanQ.empty()) || (empty && nLastOrphanQSize == txOrphanQ.size()) || GetTime() - nStart > 10)
+            break;
     }
 }
 
@@ -303,22 +301,20 @@ void ThreadCommitToMempool()
                 return;
             }
 
-            CORRAL(txProcessingCorral, CORRAL_TX_COMMITMENT);
+            // Commit the transactions to the txpool and then release the Corral before going through
+            // the final processes of checking txpool size and flushing any coins if needed. We can
+            // also do any other final checks outside of the Corral.
             {
-                CommitTxToMempool();
-                LOG(MEMPOOL, "MemoryPool sz %u txn, %u kB\n", mempool.size(), mempool.DynamicMemoryUsage() / 1000);
-                LimitMempoolSize(mempool, maxTxPool.Value() * ONE_MEGABYTE, txPoolExpiry.Value() * 60 * 60);
-
-                // The flush to disk above is only periodic therefore we need to check if we need to trim
-                // any excess from the cache.
-                if (pcoinsTip->DynamicMemoryUsage() > (size_t)nCoinCacheMaxSize)
-                    pcoinsTip->Trim(nCoinCacheMaxSize * .95);
+                CommitTxToMempool(CORRAL_TX_COMMITMENT);
             }
 
-            // NOTE: In -regtest consistency checking is on by default and this markedly affects performance,
-            //       particuarly when loading a great deal of orphan transactions. If doing any performance testing
-            //       on -regest remember to turn off consistency checking for the mempool and blockindex.
-            mempool.check(pcoinsTip);
+            LOG(MEMPOOL, "MemoryPool sz %u txn, %u kB\n", mempool.size(), mempool.DynamicMemoryUsage() / 1000);
+            LimitMempoolSize(mempool, maxTxPool.Value() * ONE_MEGABYTE, txPoolExpiry.Value() * 60 * 60);
+
+            // The flush to disk above is only periodic therefore we need to check if we need to trim
+            // any excess from the cache.
+            if (pcoinsTip->DynamicMemoryUsage() > (size_t)nCoinCacheMaxSize)
+                pcoinsTip->Trim(nCoinCacheMaxSize * .95);
         }
     }
 }
@@ -338,34 +334,20 @@ void LimitMempoolSize(CTxMemPool &pool, size_t limit, unsigned long age)
         pcoinsTip->Uncache(removed);
 }
 
-void CommitTxToMempool()
+void CommitTxToMempool(int nCorral)
 {
-    // Committing the tx to the mempool takes time.  We can continue to validate non-conflicting tx during this time.
-    // To do so, before the transactions are finally commited to the mempool the txCommitQ pointer is copied
-    // to txCommitQFinal so that the lock on txCommitQ can be released and processing can continue.
-    // However, the incomingConflicts detector is not reset until all the transactions are committed to the mempool.
-    std::map<uint256, CTxCommitData> *txCommitQFinal = nullptr;
-
-    std::vector<CTransactionRef> vWhatChanged;
+    // Now process the transactions that are currently in the commitQ and need to be
+    // synced with the wallet. This is the only time we need to hold the Corral
+    // so that we don't interfere with any blocks that may be processing at the same
+    // time.
     {
-        // We must hold the mempool lock for the duration because we want to be sure that we don't end up
-        // doing this loop in the middle of a reorg where we might be clearing the mempool.
-        WRITELOCK(mempool.cs_txmempool);
+        CORRAL(txProcessingCorral, nCorral);
+        _CommitTxToMempool();
 
-        {
-            LOCK(cs_commitQ);
-            avgCommitBatchSize = (avgCommitBatchSize * 24 + txCommitQ->size()) / 25;
-            txCommitQFinal = txCommitQ;
-            txCommitQ = new std::map<uint256, CTxCommitData>();
-        }
-
-        // These transactions have already been validated so store them directly into the mempool.
-        for (auto &it : *txCommitQFinal)
-        {
-            const CTxCommitData &data = it.second;
-            mempool._addUnchecked(data.entry, !IsInitialBlockDownload());
-            vWhatChanged.push_back(data.entry.GetSharedTx());
-        }
+        // NOTE: In -regtest consistency checking is on by default and this markedly affects performance,
+        //       particuarly when loading a great deal of orphan transactions. If doing any performance testing
+        //       on -regest remember to turn off consistency checking for the mempool and blockindex.
+        mempool.check(pcoinsTip);
     }
 
 #ifdef ENABLE_WALLET
@@ -416,7 +398,58 @@ void CommitTxToMempool()
                 (nEnd - nStart) * 0.001);
         }
     }
+#endif
 
+    // Process orphanpool for any recently connected blocks
+    while (true)
+    {
+        ConstCBlockRef pblock;
+        {
+            LOCK(orphanpool.cs_blockprocessing);
+            if (orphanpool.vPostBlockProcessing.empty())
+                break;
+            pblock = orphanpool.vPostBlockProcessing.front();
+            orphanpool.vPostBlockProcessing.pop_front();
+        }
+        int64_t nStart = GetStopwatchMicros();
+        orphanpool.RemoveForBlock(pblock->vtx);
+        ProcessOrphans(pblock->vtx);
+        int64_t nEnd = GetStopwatchMicros();
+        LOG(BENCH, "Processed block %s for orphans in: %.2fms\n", pblock->GetHash().ToString(),
+            (nEnd - nStart) * 0.001);
+    }
+}
+void _CommitTxToMempool()
+{
+    // Committing the tx to the mempool takes time.  We can continue to validate non-conflicting tx during this time.
+    // To do so, before the transactions are finally commited to the mempool the txCommitQ pointer is copied
+    // to txCommitQFinal so that the lock on txCommitQ can be released and processing can continue.
+    // However, the incomingConflicts detector is not reset until all the transactions are committed to the mempool.
+    std::map<uint256, CTxCommitData> *txCommitQFinal = nullptr;
+
+    std::vector<CTransactionRef> vWhatChanged;
+    {
+        // We must hold the mempool lock for the duration because we want to be sure that we don't end up
+        // doing this loop in the middle of a reorg where we might be clearing the mempool.
+        WRITELOCK(mempool.cs_txmempool);
+
+        {
+            LOCK(cs_commitQ);
+            avgCommitBatchSize = (avgCommitBatchSize * 24 + txCommitQ->size()) / 25;
+            txCommitQFinal = txCommitQ;
+            txCommitQ = new std::map<uint256, CTxCommitData>();
+        }
+
+        // These transactions have already been validated so store them directly into the mempool.
+        for (auto &it : *txCommitQFinal)
+        {
+            const CTxCommitData &data = it.second;
+            mempool._addUnchecked(data.entry, !IsInitialBlockDownload());
+            vWhatChanged.push_back(data.entry.GetSharedTx());
+        }
+    }
+
+#ifdef ENABLE_WALLET
     // ... and finally do the commit Q.  This way new transactions that enter the mempool
     // and which depend on those in any recent block will be added with a later timestamp.
     for (auto &it : *txCommitQFinal)
@@ -428,6 +461,7 @@ void CommitTxToMempool()
     txCommitQFinal->clear();
     delete txCommitQFinal;
 
+    // Process deferred transactions after we commit to the mempool
     std::map<uint256, CTxInputData> mapWasDeferred;
     {
         LOCK(csTxInQ);
@@ -491,24 +525,7 @@ void CommitTxToMempool()
     // Process orphanpool for newly arrived transactions
     ProcessOrphans(vWhatChanged);
 
-    // Process orphanpool for any recently connected blocks
-    while (true)
-    {
-        ConstCBlockRef pblock;
-        {
-            LOCK(orphanpool.cs_blockprocessing);
-            if (orphanpool.vPostBlockProcessing.empty())
-                break;
-            pblock = orphanpool.vPostBlockProcessing.front();
-            orphanpool.vPostBlockProcessing.pop_front();
-        }
-        int64_t nStart = GetStopwatchMicros();
-        orphanpool.RemoveForBlock(pblock->vtx);
-        ProcessOrphans(pblock->vtx);
-        int64_t nEnd = GetStopwatchMicros();
-        LOG(BENCH, "Processed block %s for orphans in: %.2fms\n", pblock->GetHash().ToString(),
-            (nEnd - nStart) * 0.001);
-    }
+    return;
 }
 
 void ThreadTxAdmission()
@@ -723,12 +740,12 @@ bool AcceptToMemoryPool(CTxMemPool &pool,
     std::vector<COutPoint> vCoinsToUncache;
     bool res = false;
 
-    // pause parallel tx entry and commit all txns to the pool so that there are no
-    // other threads running txadmission and to ensure that the mempool state is current.
-    CORRAL(txProcessingCorral, CORRAL_TX_PAUSE);
-    CommitTxToMempool();
-
     {
+        // pause parallel tx entry and commit all txns to the pool so that there are no
+        // other threads running txadmission and to ensure that the mempool state is current.
+        CORRAL(txProcessingCorral, CORRAL_TX_PAUSE);
+        _CommitTxToMempool();
+
         // This lock is here to serialize AcceptToMemoryPool(). This must be done because
         // we do not enqueue the transaction prior to calling this function, as we do with
         // the normal multi-threaded tx admission.
@@ -751,7 +768,7 @@ bool AcceptToMemoryPool(CTxMemPool &pool,
         // Do this commit inside the cs_accept lock to ensure that this function retains its original sequential
         // behavior
         if (res)
-            CommitTxToMempool();
+            _CommitTxToMempool();
 
         if (pfMissingInputs)
             *pfMissingInputs = missingInputs;

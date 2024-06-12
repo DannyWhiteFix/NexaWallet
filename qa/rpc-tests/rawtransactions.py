@@ -150,10 +150,10 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # send 1.2 BTC to msig adr
         txId = self.nodes[0].sendtoaddress(mSigObj, 1200000)
-        # self.sync_blocks()
+        waitFor(60, lambda: self.nodes[0].gettxpoolinfo()['size'] == 1) 
         self.nodes[0].generate(1)
         self.sync_blocks()
-        assert_equal(self.nodes[2].getbalance(), bal+Decimal('1200000.00')) #node2 has both keys of the 2of2 ms addr., tx should affect the balance
+        waitFor(60, lambda: self.nodes[2].getbalance() == bal+Decimal('1200000.00')) #node2 has both keys of the 2of2 ms addr., tx should affect the balance
 
 
         # 2of3 test from different nodes

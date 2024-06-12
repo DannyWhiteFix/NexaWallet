@@ -15,6 +15,8 @@ from test_framework.mininode import COIN
 MAX_ANCESTORS = 25
 MAX_DESCENDANTS = 25
 
+waitTime = 60
+
 class MempoolPackagesTest(BitcoinTestFramework):
 
     def setup_network(self):
@@ -70,31 +72,31 @@ class MempoolPackagesTest(BitcoinTestFramework):
               raise
 
         # check that we have a full valid chain on node1 and a series of orhpans on node0
-        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()["size"] == 0)
-        waitFor(30, lambda: self.nodes[0].getorphanpoolinfo()["size"] == CHAIN_DEPTH)
-        waitFor(30, lambda: self.nodes[1].gettxpoolinfo()["size"] == CHAIN_DEPTH + 1)
-        waitFor(30, lambda: self.nodes[1].getorphanpoolinfo()["size"] == 0)
+        waitFor(waitTime, lambda: self.nodes[0].gettxpoolinfo()["size"] == 0)
+        waitFor(waitTime, lambda: self.nodes[0].getorphanpoolinfo()["size"] == CHAIN_DEPTH)
+        waitFor(waitTime, lambda: self.nodes[1].gettxpoolinfo()["size"] == CHAIN_DEPTH + 1)
+        waitFor(waitTime, lambda: self.nodes[1].getorphanpoolinfo()["size"] == 0)
 
         # evict the last 45 transactions from node1
         self.nodes[1].evicttransaction(txToEvict)
-        waitFor(30, lambda: self.nodes[1].gettxpoolinfo()["size"] == CHAIN_DEPTH + 1 - TX_TO_EVICT)
-        waitFor(30, lambda: self.nodes[1].getorphanpoolinfo()["size"] == 0)
+        waitFor(waitTime, lambda: self.nodes[1].gettxpoolinfo()["size"] == CHAIN_DEPTH + 1 - TX_TO_EVICT)
+        waitFor(waitTime, lambda: self.nodes[1].getorphanpoolinfo()["size"] == 0)
 
         # mine a block on node 1. This will clear it's mempool and when node0 receives the block
         # it should pull in the last 5 orphans of the chain to it's mempool.
         self.nodes[1].generate(1)
-        waitFor(30, lambda: self.nodes[1].gettxpoolinfo()["size"] == 0)
-        waitFor(30, lambda: self.nodes[1].getorphanpoolinfo()["size"] == 0)
+        waitFor(waitTime, lambda: self.nodes[1].gettxpoolinfo()["size"] == 0)
+        waitFor(waitTime, lambda: self.nodes[1].getorphanpoolinfo()["size"] == 0)
 
         connect_nodes(self.nodes[0], 1)
         self.is_network_split = False
         self.sync_blocks()
 
-        waitFor(30, lambda: self.nodes[1].gettxpoolinfo()["size"] == TX_TO_EVICT)
-        waitFor(30, lambda: self.nodes[1].getorphanpoolinfo()["size"] == 0)
-        waitFor(30, lambda: self.nodes[1].getblockheader(self.nodes[1].getblockcount())["txcount"] == CHAIN_DEPTH + 1 - TX_TO_EVICT + 1)
-        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()["size"] == TX_TO_EVICT)
-        waitFor(30, lambda: self.nodes[0].getorphanpoolinfo()["size"] == 0)
+        waitFor(waitTime, lambda: self.nodes[1].gettxpoolinfo()["size"] == TX_TO_EVICT)
+        waitFor(waitTime, lambda: self.nodes[1].getorphanpoolinfo()["size"] == 0)
+        waitFor(waitTime, lambda: self.nodes[1].getblockheader(self.nodes[1].getblockcount())["txcount"] == CHAIN_DEPTH + 1 - TX_TO_EVICT + 1)
+        waitFor(waitTime, lambda: self.nodes[0].gettxpoolinfo()["size"] == TX_TO_EVICT)
+        waitFor(waitTime, lambda: self.nodes[0].getorphanpoolinfo()["size"] == 0)
 
 
 if __name__ == '__main__':

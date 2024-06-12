@@ -42,7 +42,7 @@ class MerkleBlockTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].getbalance(), 0)
         assert_equal(self.nodes[2].getbalance(), 0)
 
-        sync_wallet(30000, self.nodes[0])
+        sync_wallet(30, self.nodes[0])
         node0utxos = self.nodes[0].listunspent(1)
         tx1 = self.nodes[0].createrawtransaction([node0utxos.pop()], {self.nodes[1].getnewaddress(): COINBASE_REWARD})
         tx1 = self.nodes[0].signrawtransaction(tx1)

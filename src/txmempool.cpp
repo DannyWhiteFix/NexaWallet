@@ -1987,6 +1987,10 @@ bool LoadTxPool(void)
         return false;
     }
 
+    // Because we enqueue the txns we may get some ending up in the orphan pool, so
+    // flushing here at the end ensures all orphans will get processed.
+    FlushTxAdmission();
+
     LOGA("Imported txpool transactions from disk: %i successes, %i expired\n", count, skipped);
     return true;
 }

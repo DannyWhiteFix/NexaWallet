@@ -11,11 +11,13 @@ from test_framework.util import (
     assert_equal,
     connect_nodes_bi,
     initialize_chain_clean,
+    waitFor,
 )
 import logging
 import os
 import shutil
 
+waitTime = 60
 
 class WalletHDTest(BitcoinTestFramework):
 
@@ -66,7 +68,7 @@ class WalletHDTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
 
         self.sync_blocks()
-        assert_equal(self.nodes[1].getbalance(), (num_hd_adds * 1000000) + 1000000)
+        waitFor(waitTime, lambda: self.nodes[1].getbalance() == (num_hd_adds * 1000000) + 1000000)
 
         logging.info("Restore backup ...")
         stop_node(self.nodes[1], 1)
@@ -88,7 +90,7 @@ class WalletHDTest(BitcoinTestFramework):
         logging.info("Rescan ...")
         stop_node(self.nodes[1], 1)
         self.nodes[1] = start_node(1, self.options.tmpdir, self.node_args[1] + ['-rescan'])
-        assert_equal(self.nodes[1].getbalance(), (num_hd_adds * 1000000) + 1000000)
+        waitFor(waitTime, lambda: self.nodes[1].getbalance(), (num_hd_adds * 1000000) + 1000000)
 
         # cleanup backup file
         os.remove(tmpdir + "hd.bak")

@@ -695,16 +695,19 @@ class GroupTokensTest (BitcoinTestFramework):
         waitFor(30, lambda: self.nodes[2].token("mintage", grp_node0)['mintage_satoshis'] == mintage0 + 0)
         mintage0 = self.nodes[0].token("mintage", grp_node0)['mintage_satoshis']
         self.nodes[0].generate(1);
+        self.sync_blocks()
         waitFor(30, lambda: self.nodes[0].token("mintage", grp_node0)['mintage_satoshis'] == mintage0 + 100)
         waitFor(30, lambda: self.nodes[2].token("mintage", grp_node0)['mintage_satoshis'] == mintage0 + 100)
 
         # check mintages are correct for single melt
         mintage0 = self.nodes[0].token("mintage", grp_node0)['mintage_satoshis']
+        waitFor(60, lambda: self.nodes[0].getwalletinfo()['balance'] > 100)
         self.nodes[0].token("melt", grp_node0, 10)
         waitFor(30, lambda: self.nodes[0].token("mintage", grp_node0)['mintage_satoshis'] == mintage0 + 0)
         waitFor(30, lambda: self.nodes[2].token("mintage", grp_node0)['mintage_satoshis'] == mintage0 + 0)
         mintage0 = self.nodes[0].token("mintage", grp_node0)['mintage_satoshis']
         self.nodes[0].generate(1);
+        self.sync_blocks()
         waitFor(30, lambda: self.nodes[0].token("mintage", grp_node0)['mintage_satoshis'] == mintage0 - 10)
         waitFor(30, lambda: self.nodes[2].token("mintage", grp_node0)['mintage_satoshis'] == mintage0 - 10)
 
