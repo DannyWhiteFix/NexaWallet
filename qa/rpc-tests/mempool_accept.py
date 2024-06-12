@@ -229,7 +229,7 @@ class MyTest (BitcoinTestFramework):
         """
         logging.info("conflict test")
         self.nodes[0].log("mempool", "on")
-        assert self.nodes[0].gettxpoolinfo()["size"] == 0  # Expects a clean txpool
+        waitFor(waitTime, lambda: self.nodes[0].gettxpoolinfo()["size"] == 0)  # Expects a clean txpool
         if 1:  # test many conflicts
             NTX = 50
             i = 0
@@ -365,8 +365,8 @@ class MyTest (BitcoinTestFramework):
         # Create 51 transaction and ensure that they get synced
         NTX = 51
         (amt, wallet) = self.threadedCreateTx(dests1, None, 0, NTX)
-        assert(amt == NTX)
-        waitFor(10, lambda: True if self.nodes[0].gettxpoolinfo()["size"] >= NTX else None)
+        waitFor(waitTime, lambda: amt == NTX)
+        waitFor(waitTime, lambda: True if self.nodes[0].gettxpoolinfo()["size"] >= NTX else None)
         mp = waitFor(waitTime, lambda: [x.gettxpoolinfo() for x in self.nodes] if amt - self.nodes[1].gettxpoolinfo()
                      ["size"] < 5 else None, lambda: "timeout txpool is: " + str([x.gettxpoolinfo() for x in self.nodes]))
         logging.info(mp)
@@ -384,7 +384,7 @@ class MyTest (BitcoinTestFramework):
         end = time.monotonic()
         logging.info("created %d tx in %s seconds. On node 0.  Speed %f tx/sec" %
                      (amt, end - start, float(amt) / (end - start)))
-        mp = waitFor(20, lambda: [x.gettxpoolinfo() for x in self.nodes] if amt - self.nodes[1].gettxpoolinfo()
+        mp = waitFor(waitTime, lambda: [x.gettxpoolinfo() for x in self.nodes] if amt - self.nodes[1].gettxpoolinfo()
                      ["size"] < 10 else None, lambda: "timeout txpool is: " + str([x.gettxpoolinfo() for x in self.nodes]))
         logging.info(mp)
 

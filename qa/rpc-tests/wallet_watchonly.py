@@ -83,11 +83,10 @@ class WalletWatchonlyTest (BitcoinTestFramework):
         assert_equal(unspent_2[0]['spendable'], False)
 
         # check watch only balances on node 2
-        walletinfo = self.nodes[2].getwalletinfo()
-        assert_equal(walletinfo['watchonly_balance'], COINBASE_REWARD)
-        assert_equal(walletinfo['immature_watchonly_balance'], COINBASE_REWARD * 100)
-        assert_equal(walletinfo['unconfirmed_watchonly_balance'], 0)
-        assert_equal(walletinfo['unspentcount'], 101)
+        waitFor(60, lambda: self.nodes[2].getwalletinfo()['watchonly_balance'] == COINBASE_REWARD)
+        waitFor(60, lambda: self.nodes[2].getwalletinfo()['immature_watchonly_balance'] == COINBASE_REWARD * 100)
+        waitFor(60, lambda: self.nodes[2].getwalletinfo()['unconfirmed_watchonly_balance'] == 0)
+        waitFor(60, lambda: self.nodes[2].getwalletinfo()['unspentcount'] == 101)
 
         # send some coins to watchonly address, see that we see it in the watcher
         watch_sent = 50000

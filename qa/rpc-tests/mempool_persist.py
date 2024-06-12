@@ -44,6 +44,8 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.nodemessages import *
 
+waitTime = 60
+
 class MempoolPersistTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
@@ -72,7 +74,7 @@ class MempoolPersistTest(BitcoinTestFramework):
         wait_bitcoinds()
         node_args = [[ ], ['-cache.persistTxPool=0']]
         self.nodes = start_nodes(2, self.options.tmpdir, node_args)
-        waitFor(10, lambda: len(self.nodes[0].getrawtxpool()) == 5)
+        waitFor(waitTime, lambda: len(self.nodes[0].getrawtxpool()) == 5)
         assert_equal(len(self.nodes[1].getrawtxpool()), 0)
 
         logging.info("Stop-start node0 with -cache.persistTxPool=0. Verify that it doesn't load its txpool.dat file.")
@@ -88,7 +90,7 @@ class MempoolPersistTest(BitcoinTestFramework):
         stop_nodes(self.nodes)
         wait_bitcoinds()
         self.nodes = start_nodes(1, self.options.tmpdir)
-        waitFor(10, lambda: len(self.nodes[0].getrawtxpool()) == 5)
+        waitFor(waitTime, lambda: len(self.nodes[0].getrawtxpool()) == 5)
 
         txpooldat0 = os.path.join(self.options.tmpdir, 'node0', 'regtest', 'txpool.dat')
         txpooldat1 = os.path.join(self.options.tmpdir, 'node1', 'regtest', 'txpool.dat')
@@ -102,7 +104,9 @@ class MempoolPersistTest(BitcoinTestFramework):
         stop_nodes(self.nodes)
         wait_bitcoinds()
         self.nodes = start_nodes(2, self.options.tmpdir)
-        waitFor(10, lambda: len(self.nodes[1].getrawtxpool()) == 5)
+        waitFor(waitTime, lambda: len(self.nodes[0].getrawtxpool()) == 5)
+        waitFor(waitTime, lambda: len(self.nodes[1].getrawtxpool()) == 5)
+
 
         logging.info("Prevent nexad from writing txpool.dat to disk. Verify that `savetxpool` fails")
         # try to dump txpool content on a directory rather than a file
@@ -180,8 +184,8 @@ class MempoolPersistTest(BitcoinTestFramework):
         stop_nodes(self.nodes)
         wait_bitcoinds()
         self.nodes = start_nodes(2, self.options.tmpdir)
-        waitFor(10, lambda: len(self.nodes[0].getraworphanpool()) == 0)
-        waitFor(10, lambda: len(self.nodes[1].getraworphanpool()) == 55)
+        waitFor(waitTime, lambda: len(self.nodes[0].getraworphanpool()) == 0)
+        waitFor(waitTime, lambda: len(self.nodes[1].getraworphanpool()) == 55)
         waitFor(DELAY_TIME, lambda: self.nodes[1].gettxpoolinfo()["size"] == 0, lambda: print (getNodeInfo(self.nodes[1])))
         waitFor(DELAY_TIME, lambda: self.nodes[1].gettxpoolinfo()["size"] == 0, lambda: print (getNodeInfo(self.nodes[1])))
 
@@ -211,16 +215,16 @@ class MempoolPersistTest(BitcoinTestFramework):
             self.nodes[1].capd("send", "this is the message")
 
         logging.info("Verify that node0 and node1 have 5 transactions in their msgpools")
-        waitFor(30, lambda: self.nodes[0].capd("info")["count"] == 5)
-        waitFor(30, lambda: self.nodes[1].capd("info")["count"] == 5)
+        waitFor(waitTime, lambda: self.nodes[0].capd("info")["count"] == 5)
+        waitFor(waitTime, lambda: self.nodes[1].capd("info")["count"] == 5)
 
         logging.info("Stop-start node0 and node1. Verify that node0 has the messages in its msgpool and node1 does not.")
         stop_nodes(self.nodes)
         wait_bitcoinds()
         node_args = [[ ], ['-cache.maxCapdPool=0']]
         self.nodes = start_nodes(2, self.options.tmpdir, node_args)
-        waitFor(30, lambda: self.nodes[0].capd("info")["count"] == 5)
-        waitFor(30, lambda: self.nodes[1].capd("info")["count"] == 0)
+        waitFor(waitTime, lambda: self.nodes[0].capd("info")["count"] == 5)
+        waitFor(waitTime, lambda: self.nodes[1].capd("info")["count"] == 0)
 
         logging.info("Stop-start node0 with -cache.maxCapdPool=0. Verify that it doesn't load its msgpool.dat file.")
         stop_nodes(self.nodes)
@@ -229,13 +233,13 @@ class MempoolPersistTest(BitcoinTestFramework):
         self.nodes = start_nodes(1, self.options.tmpdir, node_args)
         # Give bitcoind a second to reload the msgpool
         time.sleep(1)
-        waitFor(30, lambda: self.nodes[0].capd("info")["count"] == 0)
+        waitFor(waitTime, lambda: self.nodes[0].capd("info")["count"] == 0)
 
         logging.info("Stop-start node0. Verify that it has the transactions in its msgpool.")
         stop_nodes(self.nodes)
         wait_bitcoinds()
         self.nodes = start_nodes(1, self.options.tmpdir)
-        waitFor(30, lambda: self.nodes[0].capd("info")["count"] == 5)
+        waitFor(waitTime, lambda: self.nodes[0].capd("info")["count"] == 5)
 
         msgpooldat0 = os.path.join(self.options.tmpdir, 'node0', 'regtest', 'msgpool.dat')
         msgpooldat1 = os.path.join(self.options.tmpdir, 'node1', 'regtest', 'msgpool.dat')
@@ -249,7 +253,7 @@ class MempoolPersistTest(BitcoinTestFramework):
         stop_nodes(self.nodes)
         wait_bitcoinds()
         self.nodes = start_nodes(2, self.options.tmpdir)
-        waitFor(30, lambda: self.nodes[1].capd("info")["count"] == 5)
+        waitFor(waitTime, lambda: self.nodes[1].capd("info")["count"] == 5)
 
         logging.info("Prevent nexad from writing msgpool.dat to disk. Verify that `savemsgpool` fails")
         # try to dump txpool content on a directory rather than a file

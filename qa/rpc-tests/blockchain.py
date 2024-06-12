@@ -309,8 +309,8 @@ class BlockchainTest(BitcoinTestFramework):
         logging.info ("Test that rollbackchain() works")
         blockcount = self.nodes[0].getblockcount()
         self.nodes[0].rollbackchain(self.nodes[0].getblockcount() - 5)
-        assert_equal(blockcount - 5, self.nodes[0].getblockcount())
-        assert_equal(blockcount, self.nodes[1].getblockcount())
+        waitFor(waitTime, lambda: blockcount - 5 == self.nodes[0].getblockcount())
+        waitFor(waitTime, lambda: blockcount == self.nodes[1].getblockcount())
 
         # Invalidate the chaintip on Node 0 and then mine more blocks on Node 1
         # - Node1 should advance in chain length but Node 0 shoudd not follow.

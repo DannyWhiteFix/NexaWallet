@@ -383,18 +383,26 @@ def hub_is_running(node_num):
     return node_num == NODE_NUM and os.path.isfile(os.path.join(os.getcwd(), CONF_IN_CACHE))
 
 def sync_wallet(timeout, node, onError="timeout in syncWallet", sleepAmt=1.0):
-    blk = node.getbestblockhash()
     timeout = float(timeout)
-    while timeout > 0:
-        walInfo = node.getwalletinfo()
-        if blk == walInfo["syncblock"]:
-            return
+    while 1:
+        try:
+            blk = node.getbestblockhash()
+            walInfo = node.getwalletinfo()
+            if blk == walInfo["syncblock"]:
+                return
+        except JSONRPCException as e:
+          jsonExcept = e.error["message"]
+          pass # ignore as long as timeout is not hit
+
+        if timeout <= 0:
+            if jsonExcept != "":
+                print("JSONRPCException: " + jsonExcept)
+            if callable(onError):
+                onError = onError()
+            raise TimeoutException(onError)
         time.sleep(sleepAmt)
         timeout -= sleepAmt
 
-    if callable(onError):
-        onError = onError()
-    raise TimeoutException(onError)
 
 def sync_wallets(nodes, timeout = 30):
     for n in nodes:

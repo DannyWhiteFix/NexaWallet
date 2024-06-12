@@ -203,7 +203,9 @@ unsigned int TxMayAlreadyHave(const int type, const uint256 &hash);
  * Commit all accepted tx into the mempool.  Corral with CORRAL_TX_PAUSE before calling to stop
  * threads from adding new tx into the q.
  */
-void CommitTxToMempool();
+void CommitTxToMempool(int nCorral);
+void _CommitTxToMempool();
+
 
 /** Run the transaction admission thread */
 void ThreadTxAdmission();
@@ -244,7 +246,7 @@ public:
     TxAdmissionPause()
     {
         txProcessingCorral.Enter(CORRAL_TX_PAUSE);
-        CommitTxToMempool();
+        _CommitTxToMempool();
     }
 
     ~TxAdmissionPause()

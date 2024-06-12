@@ -2019,9 +2019,7 @@ void CWallet::ReacceptWalletTransactions()
     {
         CValidationState state;
         AcceptToMemoryPool(mempool, state, item.second, AreFreeTxnsAllowed(), nullptr, true, TransactionClass::DEFAULT);
-        SyncWithWallets(item.second, nullptr, -1);
     }
-    CommitTxToMempool();
 }
 
 bool CWalletTx::RelayWalletTransaction()
@@ -2993,10 +2991,16 @@ bool CWallet::SelectCoins(const CAmount &nTargetValue,
         // If the user is manually selecting outputs (only way is via the GUI) this is
         // not performance sensitive anyway (and we need to make sure coincontrol coins
         // are not in the list)
+        //
+        // This "if" statement skips case where coincontrol is only used to supply a change address
         if ((coinControl->HasSelected() || coinControl->fAllowWatchOnly || available.size() < 100))
-        { // this "if" statement skips case where coincontrol is only used to supply a change address
+        {
             // flush the txns waiting to enter the txpool so we can respend them
-            CommitTxToMempool();
+            LEAVE_CRITICAL_SECTION(cs_wallet);
+            CORRAL(txProcessingCorral, CORRAL_TX_COMMITMENT);
+            _CommitTxToMempool();
+            ENTER_CRITICAL_SECTION(cs_wallet);
+
             AvailableCoins(customAvailable, coinControl);
             possibleCoins = &customAvailable; // Override what coins we can select from
             filled = true;
@@ -3026,7 +3030,11 @@ bool CWallet::SelectCoins(const CAmount &nTargetValue,
     if (available.size() < MAX_TX_NUM_VIN)
     {
         // flush the txns waiting to enter the txpool so we can respend them
-        CommitTxToMempool();
+        LEAVE_CRITICAL_SECTION(cs_wallet);
+        CORRAL(txProcessingCorral, CORRAL_TX_COMMITMENT);
+        _CommitTxToMempool();
+        ENTER_CRITICAL_SECTION(cs_wallet);
+
         FillAvailableCoins(coinControl);
         filled = true;
     }
@@ -3043,7 +3051,11 @@ bool CWallet::SelectCoins(const CAmount &nTargetValue,
     {
         LOG(SELECTCOINS, "Flush all pending tx and reload available coins\n");
         // flush the txns waiting to enter the txpool so we can respend them
-        CommitTxToMempool();
+        LEAVE_CRITICAL_SECTION(cs_wallet);
+        CORRAL(txProcessingCorral, CORRAL_TX_COMMITMENT);
+        _CommitTxToMempool();
+        ENTER_CRITICAL_SECTION(cs_wallet);
+
         // now get all tx
         FillAvailableCoins(coinControl);
         g = CoinSelection(*possibleCoins, tgtValue, dust, fee, changeLen);
