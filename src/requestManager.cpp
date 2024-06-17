@@ -983,7 +983,7 @@ void CRequestManager::SendRequests()
                     MarkBlockAsInFlight(iter.first.get()->GetId(), hash);
                     vInv.push_back(mi.second);
                 }
-                iter.first.get()->PushMessage(NetMsgType::GETDATA, vInv);
+                iter.first.get()->PushMessageWithCookie(NetMsgType::GETDATA, getCookie(), vInv);
                 LOG(REQ, "Sent batched request with %d blocks to node %s\n", vInv.size(),
                     iter.first.get()->GetLogName());
             }
@@ -1231,7 +1231,7 @@ void CRequestManager::SendTxnRequests(OdMap &mapTxns)
                 return;
             }
 
-            iter.first.get()->PushMessageWithCookie(NetMsgType::GETDATA, (++requestCookie << 16), iter.second);
+            iter.first.get()->PushMessageWithCookie(NetMsgType::GETDATA, getCookie(), iter.second);
             LOG(REQ, "Sent batched request with %d transactions to node %s\n", iter.second.size(),
                 iter.first.get()->GetLogName());
         }
