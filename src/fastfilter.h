@@ -314,7 +314,7 @@ public:
             {
                 if (vData2_elements_set >= FILTER_SIZE / 2)
                 {
-                    vData2.clear();
+                    memset(&vData2[0], 0, FILTER_BYTES);
                     vData2_elements_set = 0;
                 }
                 std::swap(vData_elements_set, vData2_elements_set);
@@ -325,7 +325,7 @@ public:
             {
                 if (vData3_elements_set >= FILTER_SIZE / 2)
                 {
-                    vData3.clear();
+                    memset(&vData3[0], 0, FILTER_BYTES);
                     vData3_elements_set = 0;
                 }
 
