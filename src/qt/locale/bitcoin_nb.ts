@@ -1070,6 +1070,60 @@
     </message>
 </context>
 <context>
+    <name>EditTokenDialog</name>
+    <message>
+        <location filename="../forms/edittokendialog.ui" line="+14"/>
+        <source>Edit Token</source>
+        <translation>Rediger token</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Group ID</source>
+        <translation>Gruppe-ID</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>The group ID of the token to be edited.</source>
+        <translation>Gruppe-ID-en til tokenet som skal redigeres.</translation>
+    </message>
+    <message>
+        <location filename="../edittokendialog.cpp" line="+25"/>
+        <source>Add new token</source>
+        <translation>Legg til nytt token</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Remove existing token</source>
+        <translation>Fjern eksisterende token</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Token Dialog Error! Please notify a developer</source>
+        <translation>Token-dialogfeil! Gi beskjed til en utvikler</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <location line="+20"/>
+        <source>Group ID required.</source>
+        <translation>Gruppe-ID kreves.</translation>
+    </message>
+    <message>
+        <location line="-11"/>
+        <source>Failed to add token: Invalid Group ID.</source>
+        <translation>Kunne ikke legge til token: Ugyldig gruppe-ID.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Failed to add token.</source>
+        <translation>Kunne ikke legge til token.</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Failed to remove token.</source>
+        <translation>Kunne ikke fjerne token.</translation>
+    </message>
+</context>
+<context>
     <name>FreespaceChecker</name>
     <message>
         <location filename="../intro.cpp" line="+75"/>
@@ -1329,7 +1383,7 @@
         <translation>Antall script &amp;verifikasjonstråder</translation>
     </message>
     <message>
-        <location line="+211"/>
+        <location line="+227"/>
         <source>Allow incoming connections</source>
         <translation>Tillatt innkommende tilkoblinger</translation>
     </message>
@@ -1376,7 +1430,7 @@
         <translation>&amp;Nettverk</translation>
     </message>
     <message>
-        <location line="-161"/>
+        <location line="-177"/>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
         <translation>(0 = automatisk, &lt;0 = la så mange kjerner være ledig)</translation>
     </message>
@@ -1429,6 +1483,16 @@
         <location line="+39"/>
         <source>&amp;Rescan wallet on startup</source>
         <translation>&amp;Sann lommebok på nytt ved oppstart</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When Token Whitelist is enabled you can control what tokens appear in your wallet.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Når Token Whitelist er aktivert kan du kontrollere hvilke tokens som vises i lommeboken din.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Token Whitelist</source>
+        <translation>&amp;Tokenhviteliste</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -1549,7 +1613,7 @@
         <translation>Velg standard delt enhet for visning i grensesnittet og for sending av coins.</translation>
     </message>
     <message>
-        <location line="-502"/>
+        <location line="-518"/>
         <source>Whether to show coin control features or not.</source>
         <translation>Skal myntkontroll funksjoner vises eller ikke.</translation>
     </message>
@@ -1584,7 +1648,7 @@
         <translation>Synkroniser blokkdata på nytt ved oppstart</translation>
     </message>
     <message>
-        <location line="+261"/>
+        <location line="+277"/>
         <location line="+23"/>
         <location line="+23"/>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
@@ -1601,7 +1665,7 @@
         <translation>&amp;Avbryt</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+124"/>
+        <location filename="../optionsdialog.cpp" line="+135"/>
         <source>default</source>
         <translation>standardverdi</translation>
     </message>
@@ -1611,7 +1675,7 @@
         <translation>ingen</translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+79"/>
         <source>Confirm options reset</source>
         <translation>Bekreft tilbakestilling av innstillinger</translation>
     </message>
@@ -1632,7 +1696,7 @@
         <translation>Denne endringen krever omstart av klienten.</translation>
     </message>
     <message>
-        <location line="+82"/>
+        <location line="+97"/>
         <source>The supplied proxy address is invalid.</source>
         <translation>Angitt proxyadresse er ugyldig.</translation>
     </message>
@@ -1860,7 +1924,7 @@
 <context>
     <name>PeerTableModel</name>
     <message>
-        <location filename="../peertablemodel.cpp" line="+106"/>
+        <location filename="../peertablemodel.cpp" line="+120"/>
         <source>User Agent</source>
         <translation>Brukeragent</translation>
     </message>
@@ -1888,7 +1952,7 @@
         <translation>Skriv inn en NEXA-adresse (f.eks. %1)</translation>
     </message>
     <message>
-        <location line="+832"/>
+        <location line="+831"/>
         <source>%1 d</source>
         <translation>%1 d</translation>
     </message>
@@ -2530,22 +2594,22 @@
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <location filename="../forms/receivecoinsdialog.ui" line="+110"/>
+        <location filename="../forms/receivecoinsdialog.ui" line="+166"/>
         <source>&amp;Amount:</source>
         <translation>&amp;Beløp:</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="-113"/>
         <source>&amp;Label:</source>
         <translation>&amp;Merkelapp:</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+26"/>
         <source>&amp;Message:</source>
         <translation>&amp;Melding:</translation>
     </message>
     <message>
-        <location line="-27"/>
+        <location line="-13"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
         <translation>Gjenbruk en av de tidligere brukte mottaksadressene. Gjenbruk av adresser har sikkerhets- og personvernsutfordringer. Ikke bruk dette med unntak for å gjennopprette en betalingsetterspørring som ble gjort tidligere.</translation>
     </message>
@@ -2555,30 +2619,30 @@
         <translation>Gj&amp;enbruk en eksisterende mottaksadresse (ikke anbefalt)</translation>
     </message>
     <message>
-        <location line="+21"/>
-        <location line="+23"/>
+        <location line="+7"/>
+        <location line="+110"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Nexa network.</source>
         <translation>En valgfri melding å tilknytte betalingsetterspørringen, som vil bli vist når forespørselen er åpnet. Meldingen vil ikke bli sendt med betalingen over Nexa-nettverket.</translation>
     </message>
     <message>
-        <location line="-63"/>
-        <location line="+56"/>
+        <location line="-136"/>
+        <location line="+106"/>
         <source>An optional label to associate with the new receiving address.</source>
         <translation>En valgfri merkelapp å tilknytte den nye mottakeradressen.</translation>
     </message>
     <message>
-        <location line="-23"/>
+        <location line="+23"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
         <translation>Bruk dette skjemaet til betalingsforespørsler. Alle felt er &lt;b&gt;valgfrie&lt;/b&gt;.</translation>
     </message>
     <message>
-        <location line="-56"/>
-        <location line="+7"/>
+        <location line="-136"/>
+        <location line="+120"/>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation>Et valgfritt beløp å etterspørre. La stå tomt eller null for ikke å etterspørre et spesifikt beløp.</translation>
     </message>
     <message>
-        <location line="-45"/>
+        <location line="-46"/>
         <source>Clear all fields of the form.</source>
         <translation>Fjern alle felter fra skjemaet.</translation>
     </message>
@@ -2588,27 +2652,17 @@
         <translation>Fjern</translation>
     </message>
     <message>
-        <location line="+177"/>
+        <location line="+112"/>
         <source>Requested payments history</source>
         <translation>Etterspurt betalingshistorikk</translation>
     </message>
     <message>
-        <location line="-197"/>
+        <location line="-132"/>
         <source>&amp;Request payment</source>
         <translation>&amp;Etterspør betaling</translation>
     </message>
     <message>
-        <location line="+148"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Coin freezing locks coins to make them temporarily unspendable. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Myntfrysing låser mynter for å gjøre dem midlertidig ubrukelige. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Coin &amp;Freeze</source>
-        <translation>Mynt og frys</translation>
-    </message>
-    <message>
-        <location line="+71"/>
+        <location line="+157"/>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Vis den valgte etterspørringen (gjør det samme som å dobbelklikke på en oppføring)</translation>
     </message>
@@ -2628,7 +2682,7 @@
         <translation>Fjern</translation>
     </message>
     <message>
-        <location filename="../receivecoinsdialog.cpp" line="+53"/>
+        <location filename="../receivecoinsdialog.cpp" line="+50"/>
         <source>Copy URI</source>
         <translation>Kopier URI</translation>
     </message>
@@ -2646,70 +2700,6 @@
         <location line="+1"/>
         <source>Copy amount</source>
         <translation>Kopier beløp</translation>
-    </message>
-</context>
-<context>
-    <name>ReceiveFreezeDialog</name>
-    <message>
-        <location filename="../forms/receivefreezedialog.ui" line="+14"/>
-        <source>Coin Freeze</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+24"/>
-        <source>WARNING! Freezing coins means they will be UNSPENDABLE until the release date or block specified below.</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+45"/>
-        <source>Freeze until block :</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+19"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Specify the block when coins are released from the freeze. Coins are UNSPENDABLE until the freeze block.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <location line="+99"/>
-        <source>-</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="-57"/>
-        <source>OR</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+26"/>
-        <source>Freeze until date and time :</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+22"/>
-        <source>Specify the future date and time when coins are released from the freeze. Coins are UNSPENDABLE until after the freeze date and time.</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+98"/>
-        <source>&amp;Reset</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Alt+R</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+25"/>
-        <source>&amp;OK</source>
-        <translation>&amp;OK</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Alt+O</source>
-        <translation></translation>
     </message>
 </context>
 <context>
@@ -2770,11 +2760,6 @@
         <translation>Melding</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Freeze until</source>
-        <translation>Frys til</translation>
-    </message>
-    <message>
         <location line="+12"/>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
         <translation>Resultat URI for lang, prøv å redusere teksten for merkelapp / melding.</translation>
@@ -2827,7 +2812,7 @@
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+633"/>
+        <location filename="../sendcoinsdialog.cpp" line="+626"/>
         <source>Send Coins</source>
         <translation>Send Coins</translation>
     </message>
@@ -3066,7 +3051,7 @@
         <translation>Bekreft sending av coins</translation>
     </message>
     <message>
-        <location line="-59"/>
+        <location line="-52"/>
         <location line="+5"/>
         <location line="+5"/>
         <location line="+4"/>
@@ -3114,12 +3099,7 @@
         <translation>&lt;b&gt;Offentlig etikett:&lt;/b&gt; %1</translation>
     </message>
     <message>
-        <location line="+33"/>
-        <source>&lt;br&gt;&lt;br&gt;&lt;b&gt;WARNING!!! DESTINATION IS A FREEZE ADDRESS&lt;br&gt;UNSPENDABLE UNTIL&lt;/b&gt; %1 &lt;br&gt;*************************************************&lt;br&gt;</source>
-        <translation>&lt;br&gt;&lt;br&gt;&lt;b&gt;ADVARSEL!!! DESTINASJON ER EN FRYSADRESSE&lt;br&gt;KAN IKKE BRUGE TIL&lt;/b&gt; %1 &lt;br&gt;********************************* ******************&lt;br&gt;</translation>
-    </message>
-    <message>
-        <location line="+36"/>
+        <location line="+62"/>
         <source>Total Amount %1</source>
         <translation>Totalt Beløp %1</translation>
     </message>
@@ -3209,12 +3189,12 @@
         <translation>Advarsel: Ukjent adresse for veksel</translation>
     </message>
     <message>
-        <location line="-784"/>
+        <location line="-777"/>
         <source>Copy dust</source>
         <translation>Kopier støv</translation>
     </message>
     <message>
-        <location line="+298"/>
+        <location line="+291"/>
         <source>Are you sure you want to send?</source>
         <translation>Er du sikker på at du vil sende?</translation>
     </message>
@@ -3515,6 +3495,59 @@
     </message>
 </context>
 <context>
+    <name>TokenDisplayDialog</name>
+    <message>
+        <location filename="../forms/tokendisplaydialog.ui" line="+14"/>
+        <source>Token Display Manager</source>
+        <translation>Token Skjermbehandling</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add a token to the list below&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Legg til et token i listen nedenfor&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Add New Token</source>
+        <translation>Legg til Nytt Token</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Remove a token from the list below&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Fjern et token fra listen nedenfor&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Remove Token</source>
+        <translation>Fjern token</translation>
+    </message>
+    <message>
+        <location line="+40"/>
+        <source>Display</source>
+        <translation>Vise</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Ticker</source>
+        <translation>Ticker</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Group ID</source>
+        <translation>Gruppe-ID</translation>
+    </message>
+    <message>
+        <location filename="../tokendisplaydialog.cpp" line="+43"/>
+        <source>Copy GroupID</source>
+        <translation>Kopier Gruppe-ID</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy Token Ticker</source>
+        <translation>Kopiér Token-Ticker</translation>
+    </message>
+</context>
+<context>
     <name>TokenHistoryView</name>
     <message>
         <location filename="../tokenhistoryview.cpp" line="+78"/>
@@ -3599,6 +3632,11 @@
     </message>
     <message>
         <location line="+1"/>
+        <source>Copy transaction id</source>
+        <translation>Kopier transaksjons-id</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Copy transaction idem</source>
         <translation>Kopier transaksjonsidem</translation>
     </message>
@@ -3613,7 +3651,7 @@
         <translation>Vis transaksjonsdetaljer</translation>
     </message>
     <message>
-        <location line="+162"/>
+        <location line="+167"/>
         <source>Export Token History</source>
         <translation>Eksporter tokenhistorikk</translation>
     </message>
@@ -3659,6 +3697,11 @@
     </message>
     <message>
         <location line="+1"/>
+        <source>Transaction Idem</source>
+        <translation>Transaksjonsidem</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Token ID</source>
         <translation>Token ID</translation>
     </message>
@@ -3688,7 +3731,7 @@
         <translation>Tokenloggen ble lagret til %1.</translation>
     </message>
     <message>
-        <location line="+53"/>
+        <location line="+54"/>
         <source>Range:</source>
         <translation>Intervall:</translation>
     </message>
@@ -3701,7 +3744,7 @@
 <context>
     <name>TokenTableModel</name>
     <message>
-        <location filename="../tokentablemodel.cpp" line="+244"/>
+        <location filename="../tokentablemodel.cpp" line="+354"/>
         <source>Date</source>
         <translation>Dato</translation>
     </message>
@@ -3721,7 +3764,7 @@
         <translation>Nettobeløp</translation>
     </message>
     <message numerus="yes">
-        <location line="+49"/>
+        <location line="+60"/>
         <source>Open for %n more block(s)</source>
         <translation>
             <numerusform>Åpen for %n blokk til</numerusform>
@@ -3824,7 +3867,7 @@
         <translation>Andre</translation>
     </message>
     <message>
-        <location line="+323"/>
+        <location line="+325"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Transaksjonsstatus. Hold muspekeren over dette feltet for å se antall bekreftelser.</translation>
     </message>
@@ -3862,7 +3905,27 @@
         <translation>Tokens</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+11"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable/Disable which tokens in the wallet are to be displayed in QT&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Aktiver/deaktiver hvilke tokens i lommeboken som skal vises i QT&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Manage Displayed Tokens</source>
+        <translation>Administrer viste tokens</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Tokens in Wallet:</source>
+        <translation>Tokens i Wallet:</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Tokens Displayed: </source>
+        <translation>Tokens vist:</translation>
+    </message>
+    <message>
+        <location line="+34"/>
         <source>Amount: </source>
         <translation>Beløp: </translation>
     </message>
@@ -3982,7 +4045,7 @@
         <translation>Hvis det er merket av, er dette elementet en undergruppe.</translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+367"/>
+        <location filename="../tokensviewdialog.cpp" line="+397"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -4133,7 +4196,7 @@
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+36"/>
+        <location filename="../transactiondesc.cpp" line="+35"/>
         <source>Open until %1</source>
         <translation>Åpen til %1</translation>
     </message>
@@ -4188,20 +4251,20 @@
     <message>
         <location line="+8"/>
         <location line="+13"/>
-        <location line="+128"/>
+        <location line="+122"/>
         <source>From</source>
         <translation>Fra</translation>
     </message>
     <message>
-        <location line="-148"/>
+        <location line="-142"/>
         <location line="+21"/>
         <location line="+35"/>
-        <location line="+114"/>
+        <location line="+108"/>
         <source>To</source>
         <translation>Til</translation>
     </message>
     <message>
-        <location line="-215"/>
+        <location line="-209"/>
         <source>double spent</source>
         <translation>dobbelt brukt</translation>
     </message>
@@ -4222,41 +4285,36 @@
     </message>
     <message>
         <location line="+0"/>
-        <location line="+119"/>
+        <location line="+113"/>
         <source>watch-only</source>
         <translation>kun observerbar</translation>
     </message>
     <message>
-        <location line="-116"/>
+        <location line="-110"/>
         <location line="+28"/>
-        <location line="+113"/>
+        <location line="+107"/>
         <source>label</source>
         <translation>merkelapp</translation>
     </message>
     <message>
-        <location line="-122"/>
-        <location line="+63"/>
+        <location line="-116"/>
+        <location line="+57"/>
         <location line="+48"/>
         <location line="+71"/>
         <source>Public label:</source>
         <translation>Offentlig merkelapp:</translation>
     </message>
     <message>
-        <location line="-167"/>
-        <source>Freeze until</source>
-        <translation>Frys til</translation>
-    </message>
-    <message>
-        <location line="+18"/>
+        <location line="-149"/>
         <location line="+41"/>
         <location line="+63"/>
         <location line="+47"/>
-        <location line="+213"/>
+        <location line="+256"/>
         <source>Credit</source>
         <translation>Kredit</translation>
     </message>
     <message numerus="yes">
-        <location line="-361"/>
+        <location line="-404"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>blir moden om %n blokk</numerusform>
@@ -4271,12 +4329,12 @@
     <message>
         <location line="+102"/>
         <location line="+31"/>
-        <location line="+218"/>
+        <location line="+261"/>
         <source>Debit</source>
         <translation>Debet</translation>
     </message>
     <message>
-        <location line="-237"/>
+        <location line="-280"/>
         <source>Total debit</source>
         <translation>Total debet</translation>
     </message>
@@ -4297,17 +4355,22 @@
     </message>
     <message>
         <location line="+7"/>
-        <location line="+12"/>
+        <location line="+13"/>
         <source>Message</source>
         <translation>Melding</translation>
     </message>
     <message>
-        <location line="-9"/>
+        <location line="-10"/>
         <source>Comment</source>
         <translation>Kommentar</translation>
     </message>
     <message>
         <location line="+2"/>
+        <source>Transaction ID</source>
+        <translation>Transaksjons-ID</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Transaction Idem</source>
         <translation>Transaksjonsidem</translation>
     </message>
@@ -4328,55 +4391,60 @@
     </message>
     <message>
         <location line="+66"/>
-        <location line="+24"/>
-        <location line="+31"/>
+        <location line="+33"/>
+        <location line="+48"/>
         <source>Token ID</source>
         <translation>Token ID</translation>
     </message>
     <message>
-        <location line="-50"/>
-        <location line="+24"/>
-        <location line="+31"/>
+        <location line="-76"/>
+        <location line="+33"/>
+        <location line="+48"/>
         <source>Ticker</source>
         <translation>Ticker</translation>
     </message>
     <message>
-        <location line="-54"/>
-        <location line="+24"/>
-        <location line="+31"/>
+        <location line="-80"/>
+        <location line="+33"/>
+        <location line="+48"/>
         <source>Name</source>
         <translation>Navn</translation>
     </message>
     <message>
-        <location line="-51"/>
-        <location line="+24"/>
-        <location line="+31"/>
+        <location line="-77"/>
+        <location line="+32"/>
+        <location line="+48"/>
         <source>Decimals</source>
         <translation>Desimaler</translation>
     </message>
     <message>
-        <location line="-53"/>
+        <location line="-74"/>
+        <location line="+4"/>
         <source>Melt</source>
         <translation>Smelte</translation>
     </message>
     <message>
-        <location line="+28"/>
-        <location line="+34"/>
+        <location line="+30"/>
+        <location line="+4"/>
+        <location line="+56"/>
+        <location line="+4"/>
         <source>Mint</source>
         <translation>Mynte</translation>
     </message>
     <message>
-        <location line="-32"/>
+        <location line="-51"/>
+        <location line="+4"/>
         <source>Amount Sent</source>
         <translation>Sendt beløp</translation>
     </message>
     <message>
-        <location line="+27"/>
+        <location line="+30"/>
+        <location line="+4"/>
         <source>Amount Received</source>
         <translation>Mengde mottatt</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+27"/>
         <source>Debug information</source>
         <translation>Informasjon for feilsøk</translation>
     </message>
@@ -4391,10 +4459,13 @@
         <translation>Inndata</translation>
     </message>
     <message>
-        <location line="-95"/>
-        <location line="+28"/>
-        <location line="+34"/>
-        <location line="+55"/>
+        <location line="-133"/>
+        <location line="+4"/>
+        <location line="+30"/>
+        <location line="+4"/>
+        <location line="+56"/>
+        <location line="+4"/>
+        <location line="+57"/>
         <source>Amount</source>
         <translation>Beløp</translation>
     </message>
@@ -4411,7 +4482,7 @@
         <translation>usann</translation>
     </message>
     <message>
-        <location line="-496"/>
+        <location line="-533"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, har ikke blitt kringkastet med hell enda</translation>
     </message>
@@ -4571,7 +4642,7 @@
         <translation>kun observerbar</translation>
     </message>
     <message>
-        <location line="+276"/>
+        <location line="+277"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Transaksjonsstatus. Hold muspekeren over dette feltet for å se antall bekreftelser.</translation>
     </message>
@@ -4690,6 +4761,11 @@
         <translation>Kopier beløp</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Copy transaction id</source>
+        <translation>Kopier transaksjons-id</translation>
+    </message>
+    <message>
         <location line="+2"/>
         <source>Copy raw transaction</source>
         <translation>Kopier råtransaksjon</translation>
@@ -4705,7 +4781,7 @@
         <translation>Vis transaksjonsdetaljer</translation>
     </message>
     <message>
-        <location line="+172"/>
+        <location line="+176"/>
         <source>Export Transaction History</source>
         <translation>Eksporter Transaksjonshistorikk</translation>
     </message>
@@ -4715,7 +4791,12 @@
         <translation>Kun observer</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+8"/>
+        <source>Idem</source>
+        <translation>Idem</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Exporting Failed</source>
         <translation>Ekport Feilet</translation>
     </message>
@@ -4735,17 +4816,17 @@
         <translation>Transaksjonshistorikken ble lagret til %1.</translation>
     </message>
     <message>
-        <location line="-29"/>
+        <location line="-30"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Kommaseparert fil (*.csv)</translation>
     </message>
     <message>
-        <location line="-175"/>
+        <location line="-179"/>
         <source>Copy transaction idem</source>
         <translation>Kopier transaksjonsidem</translation>
     </message>
     <message>
-        <location line="+184"/>
+        <location line="+188"/>
         <source>Confirmed</source>
         <translation>Bekreftet</translation>
     </message>
@@ -4775,7 +4856,7 @@
         <translation>ID</translation>
     </message>
     <message>
-        <location line="+108"/>
+        <location line="+110"/>
         <source>Range:</source>
         <translation>Intervall:</translation>
     </message>
@@ -4931,7 +5012,7 @@
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+291"/>
+        <location filename="../walletmodel.cpp" line="+300"/>
         <source>Send Coins</source>
         <translation>Send Coins</translation>
     </message>
@@ -5010,12 +5091,7 @@
         <translation>Beskjæring: siste lommeboksynkronisering går utenfor beskjærte data. Du må bruke -reindex (laster ned hele blokkjeden igjen for beskjærte noder)</translation>
     </message>
     <message>
-        <location line="+8"/>
-        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation>Omsøk er ikke mulig i beskjært modus. Du vil måtte bruke -reindex som vil laste nede hele blokkjeden på nytt.</translation>
-    </message>
-    <message>
-        <location line="+96"/>
+        <location line="+104"/>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Feil: En fatal intern feil oppstod, se debug.log for detaljer</translation>
     </message>
@@ -5179,12 +5255,7 @@ Vennligst start Nexa på nytt med &quot;-usehd=0&quot;.</translation>
         <translation>Dette produktet inneholder programvare utviklet av OpenSSL Project for bruk i OpenSSL Toolkit &lt;https://www.openssl.org/&gt; og kryptografisk programvare skrevet av Eric Young og UPnP-programvare skrevet av Thomas Bernard.</translation>
     </message>
     <message>
-        <location line="+50"/>
-        <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
-        <translation>Du må gjenoppbygge databasen ved hjelp av -reindex for å gå tilbake til ubeskåret modus. Dette vil laste ned hele blokkjeden på nytt.</translation>
-    </message>
-    <message>
-        <location line="+13"/>
+        <location line="+63"/>
         <source>Activating best chain...</source>
         <translation>Aktiverer beste kjede...</translation>
     </message>
@@ -5400,7 +5471,12 @@ Vil du indeksere på nytt ved neste omstart?</translation>
         <translation>Reduserer -maxconnections fra %d til %d på grunn av fildeskriptorbegrensninger (unix) eller winsocket fd_set-begrensninger (windows). Hvis du er en Windows-bruker er det en hard øvre grense på 1024 som ikke kan endres ved å justere nodens konfigurasjon.</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+5"/>
+        <source>Rescans are not possible in pruned mode. You will need to use -resync which will download the whole blockchain again.</source>
+        <translation>Reskanninger er ikke mulig i beskjæringsmodus. Du må bruke -resync som vil laste ned hele blokkjeden igjen.</translation>
+    </message>
+    <message>
+        <location line="+17"/>
         <source>Total length of network version string with uacomments added exceeded the maximum length (%i) and have been truncated.  Reduce the number or size of uacomments to avoid truncation.</source>
         <translation>Den totale lengden på nettverksversjonsstrengen med ua-kommentarer lagt til overskred maksimal lengde (%i) og har blitt avkortet. Reduser antallet eller størrelsen på ua-kommentarer for å unngå trunkering.</translation>
     </message>
@@ -5450,7 +5526,12 @@ Vil du indeksere på nytt ved neste omstart?</translation>
         <translation>Du kan ikke sende gratis transaksjoner hvis du har konfigurert et -relay.limitFreeRelay på null</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+3"/>
+        <source>You need to rebuild the database using -resync to go back to unpruned mode.  This will redownload the entire blockchain.</source>
+        <translation>Du må gjenoppbygge databasen med -resync for å gå tilbake til ubeskjært modus. Dette vil laste ned hele blokkjeden på nytt.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>&quot;Restore Wallet&quot; succeeded and a backup of the previous wallet was saved to: %s.
 
 

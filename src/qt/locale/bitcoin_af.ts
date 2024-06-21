@@ -1065,6 +1065,60 @@
     </message>
 </context>
 <context>
+    <name>EditTokenDialog</name>
+    <message>
+        <location filename="../forms/edittokendialog.ui" line="+14"/>
+        <source>Edit Token</source>
+        <translation>Wysig teken</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Group ID</source>
+        <translation>Groep ID</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>The group ID of the token to be edited.</source>
+        <translation>Die groep-ID van die teken wat gewysig moet word.</translation>
+    </message>
+    <message>
+        <location filename="../edittokendialog.cpp" line="+25"/>
+        <source>Add new token</source>
+        <translation>Voeg nuwe teken by</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Remove existing token</source>
+        <translation>Verwyder bestaande teken</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Token Dialog Error! Please notify a developer</source>
+        <translation>Tekendialoogfout! Stel asseblief &apos;n ontwikkelaar in kennis</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <location line="+20"/>
+        <source>Group ID required.</source>
+        <translation>Groep-ID vereis.</translation>
+    </message>
+    <message>
+        <location line="-11"/>
+        <source>Failed to add token: Invalid Group ID.</source>
+        <translation>Kon nie teken byvoeg nie: Ongeldige groep-ID.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Failed to add token.</source>
+        <translation>Kon nie teken byvoeg nie.</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Failed to remove token.</source>
+        <translation>Kon nie teken verwyder nie.</translation>
+    </message>
+</context>
+<context>
     <name>FreespaceChecker</name>
     <message>
         <location filename="../intro.cpp" line="+75"/>
@@ -1414,6 +1468,16 @@
         <translation>&amp;Skandeer beursie weer tydens opstart</translation>
     </message>
     <message>
+        <location line="+13"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When Token Whitelist is enabled you can control what tokens appear in your wallet.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Wanneer Token Witlys geaktiveer is, kan jy beheer watter tokens in jou beursie verskyn.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Token Whitelist</source>
+        <translation>&amp;Tokenwitlys</translation>
+    </message>
+    <message>
         <location line="+9"/>
         <source>&amp;Network</source>
         <translation>&amp;Netwerk</translation>
@@ -1596,7 +1660,7 @@
         <translation>&amp;Kanselleer</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+124"/>
+        <location filename="../optionsdialog.cpp" line="+135"/>
         <source>default</source>
         <translation>verstek</translation>
     </message>
@@ -1606,7 +1670,7 @@
         <translation>geen</translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+79"/>
         <source>Confirm options reset</source>
         <translation>Bevestig opsies-terugstelling</translation>
     </message>
@@ -1627,7 +1691,7 @@
         <translation>Hierdie verandering sal &apos;n kliënt herbegin vereis.</translation>
     </message>
     <message>
-        <location line="+82"/>
+        <location line="+97"/>
         <source>The supplied proxy address is invalid.</source>
         <translation>Die verskafde proxy-adres is ongeldig.</translation>
     </message>
@@ -1855,7 +1919,7 @@
 <context>
     <name>PeerTableModel</name>
     <message>
-        <location filename="../peertablemodel.cpp" line="+106"/>
+        <location filename="../peertablemodel.cpp" line="+120"/>
         <source>Node/Service</source>
         <translation>Nodus/diens</translation>
     </message>
@@ -1878,7 +1942,7 @@
         <translation>Voer &apos;n NEXA-adres in (bv. %1)</translation>
     </message>
     <message>
-        <location line="+832"/>
+        <location line="+831"/>
         <source>%1 d</source>
         <translation>%1 d</translation>
     </message>
@@ -2525,7 +2589,7 @@
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <location filename="../forms/receivecoinsdialog.ui" line="+45"/>
+        <location filename="../forms/receivecoinsdialog.ui" line="+100"/>
         <source>&amp;Request payment</source>
         <translation>&amp;Versoek betaling</translation>
     </message>
@@ -2540,8 +2604,8 @@
         <translation>Duidelik</translation>
     </message>
     <message>
-        <location line="+35"/>
-        <location line="+7"/>
+        <location line="-77"/>
+        <location line="+120"/>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation>&apos;n Opsionele bedrag om aan te vra. Laat dit leeg of nul om nie &apos;n spesifieke bedrag te versoek nie.</translation>
     </message>
@@ -2551,13 +2615,13 @@
         <translation>&amp;Bedrag:</translation>
     </message>
     <message>
-        <location line="+13"/>
-        <location line="+56"/>
+        <location line="-116"/>
+        <location line="+106"/>
         <source>An optional label to associate with the new receiving address.</source>
         <translation>&apos;n Opsionele etiket om met die nuwe ontvangsadres te assosieer.</translation>
     </message>
     <message>
-        <location line="-53"/>
+        <location line="-103"/>
         <source>&amp;Label:</source>
         <translation>&amp;Etiket</translation>
     </message>
@@ -2572,33 +2636,23 @@
         <translation>Hergebruik &apos;n bestaande ontvangsadres (nie aanbeveel nie)</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+110"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
         <translation>Gebruik hierdie vorm om betalings aan te vra. Alle velde is &lt;b&gt;opsioneel&lt;/b&gt;.</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <location line="+23"/>
+        <location line="-103"/>
+        <location line="+110"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Nexa network.</source>
         <translation>&apos;n Opsionele boodskap om aan die betalingsversoek te heg, wat vertoon sal word wanneer die versoek oopgemaak word. Let wel: Die boodskap sal nie saam met die betaling oor die Nexa-netwerk gestuur word nie.</translation>
     </message>
     <message>
-        <location line="-20"/>
+        <location line="-107"/>
         <source>&amp;Message:</source>
         <translation>&amp;Boodskap</translation>
     </message>
     <message>
-        <location line="+27"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Coin freezing locks coins to make them temporarily unspendable. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Muntbevriesing sluit munte om dit tydelik onbesteebaar te maak. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Coin &amp;Freeze</source>
-        <translation>Muntbevriesing</translation>
-    </message>
-    <message>
-        <location line="+46"/>
+        <location line="+153"/>
         <source>Requested payments history</source>
         <translation>Versoek betalingsgeskiedenis</translation>
     </message>
@@ -2623,7 +2677,7 @@
         <translation>Verwyder</translation>
     </message>
     <message>
-        <location filename="../receivecoinsdialog.cpp" line="+53"/>
+        <location filename="../receivecoinsdialog.cpp" line="+50"/>
         <source>Copy URI</source>
         <translation>Kopieer URI</translation>
     </message>
@@ -2641,70 +2695,6 @@
         <location line="+1"/>
         <source>Copy amount</source>
         <translation>Kopieer bedrag</translation>
-    </message>
-</context>
-<context>
-    <name>ReceiveFreezeDialog</name>
-    <message>
-        <location filename="../forms/receivefreezedialog.ui" line="+14"/>
-        <source>Coin Freeze</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+24"/>
-        <source>WARNING! Freezing coins means they will be UNSPENDABLE until the release date or block specified below.</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+45"/>
-        <source>Freeze until block :</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+19"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Specify the block when coins are released from the freeze. Coins are UNSPENDABLE until the freeze block.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <location line="+99"/>
-        <source>-</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="-57"/>
-        <source>OR</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+26"/>
-        <source>Freeze until date and time :</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+22"/>
-        <source>Specify the future date and time when coins are released from the freeze. Coins are UNSPENDABLE until after the freeze date and time.</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+98"/>
-        <source>&amp;Reset</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Alt+R</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+25"/>
-        <source>&amp;OK</source>
-        <translation>&amp;OK</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Alt+O</source>
-        <translation></translation>
     </message>
 </context>
 <context>
@@ -2743,11 +2733,6 @@
         <location line="+2"/>
         <source>Message</source>
         <translation>Boodskap</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Freeze until</source>
-        <translation>Vries tot</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -2874,12 +2859,7 @@
         <translation>%1 tot %2</translation>
     </message>
     <message>
-        <location line="+4"/>
-        <source>&lt;br&gt;&lt;br&gt;&lt;b&gt;WARNING!!! DESTINATION IS A FREEZE ADDRESS&lt;br&gt;UNSPENDABLE UNTIL&lt;/b&gt; %1 &lt;br&gt;*************************************************&lt;br&gt;</source>
-        <translation>&lt;br&gt;&lt;br&gt;&lt;b&gt;WAARSKUWING!!! BESTEMMING IS &apos;N VRIESADRES&lt;br&gt;ONBESTEDEBAAR TOT&lt;/b&gt; %1 &lt;br&gt;********************************* ******************&lt;br&gt;</translation>
-    </message>
-    <message>
-        <location line="+11"/>
+        <location line="+8"/>
         <source>Are you sure you want to send?</source>
         <translation>Is jy seker jy wil stuur?</translation>
     </message>
@@ -3510,6 +3490,59 @@
     </message>
 </context>
 <context>
+    <name>TokenDisplayDialog</name>
+    <message>
+        <location filename="../forms/tokendisplaydialog.ui" line="+14"/>
+        <source>Token Display Manager</source>
+        <translation>Tokenvertoonbestuurder</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add a token to the list below&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Voeg &apos;n teken by die lys hieronder&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Add New Token</source>
+        <translation>Voeg Nuwe Teken by</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Remove a token from the list below&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Verwyder &apos;n teken uit die lys hieronder&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Remove Token</source>
+        <translation>Verwyder Token</translation>
+    </message>
+    <message>
+        <location line="+40"/>
+        <source>Display</source>
+        <translation>Vertoon</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Ticker</source>
+        <translation>Tikker</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Group ID</source>
+        <translation>Groep ID</translation>
+    </message>
+    <message>
+        <location filename="../tokendisplaydialog.cpp" line="+43"/>
+        <source>Copy GroupID</source>
+        <translation>Kopieer Groep ID</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy Token Ticker</source>
+        <translation>Kopieer Token-Tikker</translation>
+    </message>
+</context>
+<context>
     <name>TokenHistoryView</name>
     <message>
         <location filename="../tokenhistoryview.cpp" line="+78"/>
@@ -3594,6 +3627,11 @@
     </message>
     <message>
         <location line="+1"/>
+        <source>Copy transaction id</source>
+        <translation>Kopieer transaksie-id</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Copy transaction idem</source>
         <translation>Kopieer transaksie-idem</translation>
     </message>
@@ -3608,7 +3646,7 @@
         <translation>Wys transaksiebesonderhede</translation>
     </message>
     <message>
-        <location line="+162"/>
+        <location line="+167"/>
         <source>Export Token History</source>
         <translation>Voer Token Geskiedenis uit</translation>
     </message>
@@ -3654,6 +3692,11 @@
     </message>
     <message>
         <location line="+1"/>
+        <source>Transaction Idem</source>
+        <translation>Transaksie Idem</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Token ID</source>
         <translation>Teken ID</translation>
     </message>
@@ -3683,7 +3726,7 @@
         <translation>Die tekengeskiedenis is suksesvol na %1 gestoor.</translation>
     </message>
     <message>
-        <location line="+53"/>
+        <location line="+54"/>
         <source>Range:</source>
         <translation>Reeks:</translation>
     </message>
@@ -3696,7 +3739,7 @@
 <context>
     <name>TokenTableModel</name>
     <message>
-        <location filename="../tokentablemodel.cpp" line="+244"/>
+        <location filename="../tokentablemodel.cpp" line="+354"/>
         <source>Date</source>
         <translation>Datum</translation>
     </message>
@@ -3716,7 +3759,7 @@
         <translation>Netto bedrag</translation>
     </message>
     <message numerus="yes">
-        <location line="+49"/>
+        <location line="+60"/>
         <source>Open for %n more block(s)</source>
         <translation>
             <numerusform>Maak oop vir nog %n blok(e)</numerusform>
@@ -3819,7 +3862,7 @@
         <translation>Ander</translation>
     </message>
     <message>
-        <location line="+323"/>
+        <location line="+325"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Transaksie status. Beweeg oor hierdie veld om die aantal bevestigings te wys.</translation>
     </message>
@@ -3857,7 +3900,27 @@
         <translation>Tekens</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+11"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable/Disable which tokens in the wallet are to be displayed in QT&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Aktiveer/deaktiveer watter tokens in die beursie in QT vertoon moet word&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Manage Displayed Tokens</source>
+        <translation>Bestuur vertoonde tokens</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Tokens in Wallet:</source>
+        <translation>Tokens in Beursie:</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Tokens Displayed: </source>
+        <translation>Tokens Vertoon:</translation>
+    </message>
+    <message>
+        <location line="+34"/>
         <source>Amount: </source>
         <translation>Bedrag: </translation>
     </message>
@@ -3977,7 +4040,7 @@
         <translation>As dit gemerk is, is hierdie item &apos;n subgroep.</translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+367"/>
+        <location filename="../tokensviewdialog.cpp" line="+397"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -4128,7 +4191,7 @@
 <context>
     <name>TransactionDesc</name>
     <message numerus="yes">
-        <location filename="../transactiondesc.cpp" line="+34"/>
+        <location filename="../transactiondesc.cpp" line="+33"/>
         <source>Open for %n more block(s)</source>
         <translation>
             <numerusform>Maak oop vir nog %n blok(e)</numerusform>
@@ -4207,19 +4270,19 @@
         <location line="+1"/>
         <location line="+21"/>
         <location line="+35"/>
-        <location line="+114"/>
+        <location line="+108"/>
         <source>To</source>
         <translation>Aan</translation>
     </message>
     <message>
-        <location line="-163"/>
+        <location line="-157"/>
         <location line="+13"/>
-        <location line="+128"/>
+        <location line="+122"/>
         <source>From</source>
         <translation>Van</translation>
     </message>
     <message>
-        <location line="-128"/>
+        <location line="-122"/>
         <source>unknown</source>
         <translation>onbekend</translation>
     </message>
@@ -4235,41 +4298,36 @@
     </message>
     <message>
         <location line="+0"/>
-        <location line="+119"/>
+        <location line="+113"/>
         <source>watch-only</source>
         <translation>wyk net</translation>
     </message>
     <message>
-        <location line="-116"/>
+        <location line="-110"/>
         <location line="+28"/>
-        <location line="+113"/>
+        <location line="+107"/>
         <source>label</source>
         <translation>etiket</translation>
     </message>
     <message>
-        <location line="-122"/>
-        <location line="+63"/>
+        <location line="-116"/>
+        <location line="+57"/>
         <location line="+48"/>
         <location line="+71"/>
         <source>Public label:</source>
         <translation>Openbare etiket:</translation>
     </message>
     <message>
-        <location line="-167"/>
-        <source>Freeze until</source>
-        <translation>Vries tot</translation>
-    </message>
-    <message>
-        <location line="+18"/>
+        <location line="-149"/>
         <location line="+41"/>
         <location line="+63"/>
         <location line="+47"/>
-        <location line="+213"/>
+        <location line="+256"/>
         <source>Credit</source>
         <translation>Krediet</translation>
     </message>
     <message numerus="yes">
-        <location line="-361"/>
+        <location line="-404"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>verval in nog %n blok(e)</numerusform>
@@ -4284,12 +4342,12 @@
     <message>
         <location line="+102"/>
         <location line="+31"/>
-        <location line="+218"/>
+        <location line="+261"/>
         <source>Debit</source>
         <translation>Debiet</translation>
     </message>
     <message>
-        <location line="-237"/>
+        <location line="-280"/>
         <source>Total debit</source>
         <translation>Totaal debiet</translation>
     </message>
@@ -4310,17 +4368,22 @@
     </message>
     <message>
         <location line="+7"/>
-        <location line="+12"/>
+        <location line="+13"/>
         <source>Message</source>
         <translation>Boodskap</translation>
     </message>
     <message>
-        <location line="-9"/>
+        <location line="-10"/>
         <source>Comment</source>
         <translation>kommentaar lewer</translation>
     </message>
     <message>
         <location line="+2"/>
+        <source>Transaction ID</source>
+        <translation>Transaksie ID</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Transaction Idem</source>
         <translation>Transaksie Idem</translation>
     </message>
@@ -4341,55 +4404,60 @@
     </message>
     <message>
         <location line="+66"/>
-        <location line="+24"/>
-        <location line="+31"/>
+        <location line="+33"/>
+        <location line="+48"/>
         <source>Token ID</source>
         <translation>Teken ID</translation>
     </message>
     <message>
-        <location line="-50"/>
-        <location line="+24"/>
-        <location line="+31"/>
+        <location line="-76"/>
+        <location line="+33"/>
+        <location line="+48"/>
         <source>Ticker</source>
         <translation>Tikker</translation>
     </message>
     <message>
-        <location line="-54"/>
-        <location line="+24"/>
-        <location line="+31"/>
+        <location line="-80"/>
+        <location line="+33"/>
+        <location line="+48"/>
         <source>Name</source>
         <translation>Naam</translation>
     </message>
     <message>
-        <location line="-51"/>
-        <location line="+24"/>
-        <location line="+31"/>
+        <location line="-77"/>
+        <location line="+32"/>
+        <location line="+48"/>
         <source>Decimals</source>
         <translation>Desimale</translation>
     </message>
     <message>
-        <location line="-53"/>
+        <location line="-74"/>
+        <location line="+4"/>
         <source>Melt</source>
         <translation>Smelt</translation>
     </message>
     <message>
-        <location line="+28"/>
-        <location line="+34"/>
+        <location line="+30"/>
+        <location line="+4"/>
+        <location line="+56"/>
+        <location line="+4"/>
         <source>Mint</source>
         <translation>Munt</translation>
     </message>
     <message>
-        <location line="-32"/>
+        <location line="-51"/>
+        <location line="+4"/>
         <source>Amount Sent</source>
         <translation>Bedrag gestuur</translation>
     </message>
     <message>
-        <location line="+27"/>
+        <location line="+30"/>
+        <location line="+4"/>
         <source>Amount Received</source>
         <translation>Bedrag ontvang</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+27"/>
         <source>Debug information</source>
         <translation>Ontfout inligting</translation>
     </message>
@@ -4404,10 +4472,13 @@
         <translation>Insette</translation>
     </message>
     <message>
-        <location line="-95"/>
-        <location line="+28"/>
-        <location line="+34"/>
-        <location line="+55"/>
+        <location line="-133"/>
+        <location line="+4"/>
+        <location line="+30"/>
+        <location line="+4"/>
+        <location line="+56"/>
+        <location line="+4"/>
+        <location line="+57"/>
         <source>Amount</source>
         <translation>Bedrag</translation>
     </message>
@@ -4566,7 +4637,7 @@
         <translation>wyk net:</translation>
     </message>
     <message>
-        <location line="+276"/>
+        <location line="+277"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Transaksie status. Beweeg oor hierdie veld om die aantal bevestigings te wys.</translation>
     </message>
@@ -4599,17 +4670,17 @@
 <context>
     <name>TransactionView</name>
     <message>
-        <location filename="../transactionview.cpp" line="+353"/>
+        <location filename="../transactionview.cpp" line="+359"/>
         <source>Exporting Failed</source>
         <translation>Uitvoer was onsuksesvol</translation>
     </message>
     <message>
-        <location line="-22"/>
+        <location line="-23"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Comma separated file (*.csv)</translation>
     </message>
     <message>
-        <location line="-254"/>
+        <location line="-259"/>
         <location line="+19"/>
         <source>All</source>
         <translation>Almal</translation>
@@ -4696,6 +4767,11 @@
     </message>
     <message>
         <location line="+1"/>
+        <source>Copy transaction id</source>
+        <translation>Kopieer transaksie-id</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Copy transaction idem</source>
         <translation>Kopieer transaksie-idem</translation>
     </message>
@@ -4715,7 +4791,7 @@
         <translation>Wys transaksiebesonderhede</translation>
     </message>
     <message>
-        <location line="+172"/>
+        <location line="+176"/>
         <source>Export Transaction History</source>
         <translation>Voer transaksiegeskiedenis uit</translation>
     </message>
@@ -4755,6 +4831,11 @@
         <translation>ID</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Idem</source>
+        <translation>Idem</translation>
+    </message>
+    <message>
         <location line="+5"/>
         <source>There was an error trying to save the transaction history to %1.</source>
         <translation>Daar was &apos;n fout om die transaksiegeskiedenis na %1 te stoor.</translation>
@@ -4770,7 +4851,7 @@
         <translation>Die transaksiegeskiedenis is suksesvol gestoor na %1.</translation>
     </message>
     <message>
-        <location line="+97"/>
+        <location line="+98"/>
         <source>Range:</source>
         <translation>Reeks:</translation>
     </message>
@@ -4926,7 +5007,7 @@
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+291"/>
+        <location filename="../walletmodel.cpp" line="+300"/>
         <source>Send Coins</source>
         <translation>Stuur munte</translation>
     </message>
@@ -5106,12 +5187,7 @@ Wil jy herindekseer met die volgende herbegin?</translation>
         <translation>Vermindering van -net.maxConnections van %d na %d as gevolg van lêerbeskrywingbeperkings (unix) of winsocket fd_set-beperkings (windows). As jy &apos;n Windows-gebruiker is, is daar &apos;n harde boonste limiet van 1024 wat nie verander kan word deur die nodus se konfigurasie aan te pas nie.</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation>Herskanderings is nie moontlik in snoeimodus nie. Jy sal -reindex moet gebruik wat die hele blokketting weer sal aflaai.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+8"/>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer&apos;s date and time being set incorrectly. Only rebuild the block database if you are sure that your computer&apos;s date and time are correct</source>
         <translation>Die blok databasis bevat &apos;n blok wat blyk te wees uit die toekoms. Dit kan wees as gevolg van jou rekenaar se datum en tyd wat verkeerd gestel is. Herbou slegs die blokdatabasis as jy seker is dat jou rekenaar se datum en tyd korrek is</translation>
     </message>
@@ -5210,9 +5286,14 @@ Herbegin asseblief Nexa met &quot;-usehd=0&quot;.</translation>
         <translation>Jy kan nie gratis transaksies stuur as jy &apos;n -relay.limitFreeRelay van nul opgestel het nie</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
-        <translation>Jy moet die databasis herbou met -reindex om terug te gaan na ongesnoeide modus. Dit sal die hele blokketting weer aflaai</translation>
+        <location line="-60"/>
+        <source>Rescans are not possible in pruned mode. You will need to use -resync which will download the whole blockchain again.</source>
+        <translation>Herskanderings is nie moontlik in snoeimodus nie. Jy sal -resync moet gebruik wat die hele blokketting weer sal aflaai.</translation>
+    </message>
+    <message>
+        <location line="+63"/>
+        <source>You need to rebuild the database using -resync to go back to unpruned mode.  This will redownload the entire blockchain.</source>
+        <translation>Jy moet die databasis herbou met -resync om terug te gaan na ongesnoeide modus. Dit sal die hele blokketting weer aflaai.</translation>
     </message>
     <message>
         <location line="+3"/>

@@ -64,7 +64,7 @@ QT_TRANSLATE_NOOP("nexa", ""
 "windows user there is a hard upper limit of 1024 which cannot be changed by "
 "adjusting the node's configuration."),
 QT_TRANSLATE_NOOP("nexa", ""
-"Rescans are not possible in pruned mode. You will need to use -reindex which "
+"Rescans are not possible in pruned mode. You will need to use -resync which "
 "will download the whole blockchain again."),
 QT_TRANSLATE_NOOP("nexa", ""
 "The block database contains a block which appears to be from the future. "
@@ -127,8 +127,8 @@ QT_TRANSLATE_NOOP("nexa", ""
 "You can not send free transactions if you have configured a -relay."
 "limitFreeRelay of zero"),
 QT_TRANSLATE_NOOP("nexa", ""
-"You need to rebuild the database using -reindex to go back to unpruned "
-"mode.  This will redownload the entire blockchain"),
+"You need to rebuild the database using -resync to go back to unpruned mode.  "
+"This will redownload the entire blockchain."),
 QT_TRANSLATE_NOOP("nexa", ""
 "\"Restore Wallet\" succeeded and a backup of the previous wallet was saved "
 "to: %s.\n"
