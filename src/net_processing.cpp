@@ -1383,6 +1383,10 @@ bool ProcessMessage(CNode *pfrom,
             hashLastBlock.SetNull();
             for (const CBlockHeader &header : headers)
             {
+                const uint256 &hash = header.GetHash();
+                if (mapUnConnectedHeaders.count(hash))
+                    continue;
+
                 // LOG(NET, "Received header %s from %s\n", header.GetId().ToString(), pfrom->GetLogName());
                 // check that the first header has a previous block in the blockindex.
                 if (hashLastBlock.IsNull())
@@ -1410,7 +1414,6 @@ bool ProcessMessage(CNode *pfrom,
                 // if we have an unconnected header then add every following header to the unconnected headers cache.
                 if (fNewUnconnectedHeaders)
                 {
-                    uint256 hash = header.GetHash();
                     // LOG(NET, "Header %s from %s is unconnected\n", hash.ToString(), pfrom->GetLogName());
                     if (mapUnConnectedHeaders.size() < MAX_UNCONNECTED_HEADERS)
                         mapUnConnectedHeaders[hash] = std::make_pair(header, GetTime());
@@ -1422,7 +1425,7 @@ bool ProcessMessage(CNode *pfrom,
                     requester.UpdateBlockAvailability(pfrom->GetId(), hash);
                 }
 
-                hashLastBlock = header.GetHash();
+                hashLastBlock = hash;
             }
             // return without error if we have an unconnected header.  This way we can try to connect it when the next
             // header arrives.
@@ -1452,7 +1455,7 @@ bool ProcessMessage(CNode *pfrom,
                     // Remove any entries that have been in the cache too long.  Unconnected headers should only exist
                     // for a very short while, typically just a second or two.
                     int64_t nTimeHeaderArrived = (*mi).second.second;
-                    uint256 headerHash = (*mi).first;
+                    const uint256 &headerHash = (*mi).first;
                     mi++;
                     if (GetTime() - nTimeHeaderArrived >= UNCONNECTED_HEADERS_TIMEOUT)
                     {
