@@ -25,6 +25,7 @@
 #include "wallet.h"
 #include "walletdb.h"
 
+#include <limits>
 #include <stdint.h>
 #include <univalue.h>
 
@@ -2671,6 +2672,18 @@ UniValue walletpassphrase(const UniValue &params, bool fHelp)
     pwalletMain->TopUpKeyPool();
 
     int64_t nSleepTime = params[1].get_int64();
+    if (nSleepTime <= 0)
+    {
+        throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The timeout period must be a positive number");
+    }
+
+    int64_t nLimit = 24 * 60 * 60; // one day
+    if (nSleepTime > nLimit)
+    {
+        throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT,
+            strprintf("Error: The timeout period can not be greater than %ld seconds", nLimit));
+    }
+
     LOCK(cs_nWalletUnlockTime);
     nWalletUnlockTime = GetTime() + nSleepTime;
     RPCRunLater("lockwallet", boost::bind(LockWallet, pwalletMain), nSleepTime);
