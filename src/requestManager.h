@@ -164,7 +164,7 @@ protected:
 
     // A cookie can be added to a message which is sent in the message header and which can be used
     // to determine the correct sequence of separate messages that have been received by a node or light client.
-    std::atomic<int32_t> requestCookie{0};
+    std::atomic<uint32_t> requestCookie{0};
 
     // Increment the cookie value and then return the new value.
     uint32_t getCookie() { return (++requestCookie << 16); }
