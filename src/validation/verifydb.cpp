@@ -119,7 +119,9 @@ bool CVerifyDB::VerifyDB(const CChainParams &chainparams, CCoinsView *coinsview,
             if (!pblock)
                 return error("VerifyDB(): *** ReadBlockFromDisk failed at %d, hash=%s", pindex->height(),
                     pindex->GetBlockHash().ToString());
-            if (!ConnectBlock(pblock, state, pindex, coins, chainparams))
+            std::map<CGroupTokenID, CAmount> dummyMintages;
+            std::map<CGroupTokenID, CAuth> dummyAuthorities;
+            if (!ConnectBlock(pblock, state, pindex, coins, chainparams, dummyMintages, dummyAuthorities))
                 return error("VerifyDB(): *** found unconnectable block at %d, hash=%s", pindex->height(),
                     pindex->GetBlockHash().ToString());
         }

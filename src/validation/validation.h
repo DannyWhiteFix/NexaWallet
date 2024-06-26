@@ -16,6 +16,9 @@
 #include "txmempool.h"
 #include "versionbits.h"
 
+// The group token cache can and should be compiled even when the wallet is disabled.
+#include "wallet/grouptokencache.h"
+
 /** Default for -blockchain.maxReorgDepth. A value less than zero disables the feature */
 static const int DEFAULT_MAX_REORG_DEPTH = -1; // disabled
 
@@ -148,6 +151,8 @@ bool ConnectBlock(ConstCBlockRef pblock,
     CBlockIndex *pindex,
     CCoinsViewCache &view,
     const CChainParams &chainparams,
+    std::map<CGroupTokenID, CAmount> &accumulatedMintages,
+    std::map<CGroupTokenID, CAuth> &accumulatedAuthorities,
     bool fJustCheck = false,
     bool fParallel = false);
 

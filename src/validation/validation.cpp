@@ -31,9 +31,6 @@
 #include "validation/forks.h"
 #include "validationinterface.h"
 
-// The group token cache can and should be compiled even when the wallet is disabled.
-#include "wallet/grouptokencache.h"
-
 #ifdef ENABLE_WALLET
 #include "wallet/grouptokenwallet.h"
 #endif
@@ -1387,7 +1384,10 @@ bool TestBlockValidity(CValidationState &state,
         return false;
     if (!ContextualCheckBlock(pblock, state, pindexPrev))
         return false;
-    if (!ConnectBlock(pblock, state, &indexDummy, viewNew, chainparams, true))
+
+    std::map<CGroupTokenID, CAmount> dummyMintages;
+    std::map<CGroupTokenID, CAuth> dummyAuthorities;
+    if (!ConnectBlock(pblock, state, &indexDummy, viewNew, chainparams, dummyMintages, dummyAuthorities, true))
         return false;
     assert(state.IsValid());
 
@@ -2530,6 +2530,8 @@ bool ConnectBlock(ConstCBlockRef pblock,
     CBlockIndex *pindex,
     CCoinsViewCache &view,
     const CChainParams &chainparams,
+    std::map<CGroupTokenID, CAmount> &accumulatedMintages,
+    std::map<CGroupTokenID, CAuth> &accumulatedAuthorities,
     bool fJustCheck,
     bool fParallel)
 {
@@ -2582,8 +2584,6 @@ bool ConnectBlock(ConstCBlockRef pblock,
     CBlockUndo blockundo;
     std::vector<std::pair<uint256, CDiskTxPos> > vPos;
     vPos.reserve(pblock->vtx.size());
-    std::map<CGroupTokenID, CAmount> accumulatedMintages;
-    std::map<CGroupTokenID, CAuth> accumulatedAuthorities;
 
     if (!ConnectBlockCanonicalOrdering(pblock, state, pindex, view, chainparams, fJustCheck, fParallel, fScriptChecks,
             nFees, blockundo, vPos, accumulatedMintages, accumulatedAuthorities))
@@ -2673,12 +2673,6 @@ bool ConnectBlock(ConstCBlockRef pblock,
         txRecentlyInBlock.insert(ptx->GetId());
     }
 
-    // Apply token mintages if there are any
-    if (!fVerifyDB.load())
-    {
-        tokenmint.ApplyTokenMintages(accumulatedMintages);
-        tokencache.ApplyTokenAuthorities(accumulatedAuthorities);
-    }
     return true;
 }
 
@@ -3066,7 +3060,10 @@ bool ConnectTip(CValidationState &state,
     LOG(BENCH, "  - Load block from disk: %.2fms [%.2fs]\n", (nTime2 - nTime1) * 0.001, nTimeReadFromDisk * 0.000001);
 
     CCoinsViewCache view(pcoinsTip);
-    bool rv = ConnectBlock(pblock, state, pindexNew, view, chainparams, false, fParallel);
+    std::map<CGroupTokenID, CAmount> accumulatedMintages;
+    std::map<CGroupTokenID, CAuth> accumulatedAuthorities;
+    bool rv = ConnectBlock(
+        pblock, state, pindexNew, view, chainparams, accumulatedMintages, accumulatedAuthorities, false, fParallel);
     GetMainSignals().BlockChecked(*pblock, state);
     if (!rv)
     {
@@ -3139,6 +3136,12 @@ bool ConnectTip(CValidationState &state,
         GetMainSignals().UpdatedBlockTip(pindexNew);
     }
 
+    // Apply token mintages if there are any
+    if (!fVerifyDB.load())
+    {
+        tokenmint.ApplyTokenMintages(accumulatedMintages);
+        tokencache.ApplyTokenAuthorities(accumulatedAuthorities);
+    }
     if (pindexNew->height() == 1)
     {
         // Set the flag so we know we created the token indexes from genesis
