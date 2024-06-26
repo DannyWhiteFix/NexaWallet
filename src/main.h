@@ -132,6 +132,8 @@ extern std::atomic<bool> fReindex;
 extern std::atomic<bool> fVerifyDB;
 extern bool fTxIndex;
 extern bool fBlocksOnly;
+extern bool fWhiteListRelay;
+extern bool fWhiteListForceRelay;
 extern bool fIsBareMultisigStd;
 extern unsigned int nBytesPerSigOp;
 extern bool fCheckBlockIndex;

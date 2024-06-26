@@ -660,7 +660,7 @@ void ThreadTxAdmission()
                         {
                             recentRejects.insert(tx->GetId());
 
-                            if (txd.whitelisted && GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY))
+                            if (txd.whitelisted && fWhiteListForceRelay)
                             {
                                 // Always relay transactions received from whitelisted peers, even
                                 // if they were already in the mempool or rejected from it due

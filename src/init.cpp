@@ -704,7 +704,6 @@ void ThreadImport(std::vector<fs::path> vImportFiles, uint64_t nTxIndexCache)
     // Startup txindex. If we start it earlier and before ActivateBestChain
     // we can end up grinding slowly through ActivateBestChain when txindex still has unfinished
     // compaction to do from a prior run.
-    fTxIndex = GetBoolArg("-txindex", DEFAULT_TXINDEX);
     if (fTxIndex)
     {
         uiInterface.InitMessage(_("Starting txindex"));
@@ -895,6 +894,11 @@ void InitParameterInteraction()
         if (SoftSetBoolArg("-whitelistrelay", true))
             LOGA("%s: parameter interaction: -whitelistforcerelay=1 -> setting -whitelistrelay=1\n", __func__);
     }
+
+    fTxIndex = GetBoolArg("-txindex", DEFAULT_TXINDEX);
+
+    fWhiteListRelay = GetBoolArg("-whitelistrelay", DEFAULT_WHITELISTRELAY);
+    fWhiteListForceRelay = GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY);
 }
 
 void InitLogging()
