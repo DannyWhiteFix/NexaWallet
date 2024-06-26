@@ -1065,6 +1065,60 @@
     </message>
 </context>
 <context>
+    <name>EditTokenDialog</name>
+    <message>
+        <location filename="../forms/edittokendialog.ui" line="+14"/>
+        <source>Edit Token</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Group ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>The group ID of the token to be edited.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../edittokendialog.cpp" line="+25"/>
+        <source>Add new token</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Remove existing token</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Token Dialog Error! Please notify a developer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <location line="+20"/>
+        <source>Group ID required.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-11"/>
+        <source>Failed to add token: Invalid Group ID.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Failed to add token.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Failed to remove token.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>FreespaceChecker</name>
     <message>
         <location filename="../intro.cpp" line="+75"/>
@@ -1324,7 +1378,7 @@
         <translation>სკრიპტის &amp;ვერიფიცირების ნაკადების რაოდენობა</translation>
     </message>
     <message>
-        <location line="+255"/>
+        <location line="+271"/>
         <location line="+187"/>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
         <translation>პროქსის IP-მისამართი (მაგ.: IPv4: 127.0.0.1 / IPv6: ::1)</translation>
@@ -1361,7 +1415,7 @@
         <translation>&amp;ქსელი</translation>
     </message>
     <message>
-        <location line="-236"/>
+        <location line="-252"/>
         <source>Automatically start %1 after logging in to the system.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1433,6 +1487,16 @@
     <message>
         <location line="+39"/>
         <source>&amp;Rescan wallet on startup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When Token Whitelist is enabled you can control what tokens appear in your wallet.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Token Whitelist</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1571,7 +1635,7 @@
         <translation>აირჩიეთ გასაგზავნი თანხის ნაგულისხმევი ერთეული.</translation>
     </message>
     <message>
-        <location line="-502"/>
+        <location line="-518"/>
         <source>Whether to show coin control features or not.</source>
         <translation>ვაჩვენოთ თუ არა მონეტების მართვის პარამეტრები.</translation>
     </message>
@@ -1586,7 +1650,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+694"/>
+        <location line="+710"/>
         <source>&amp;OK</source>
         <translation>&amp;OK</translation>
     </message>
@@ -1596,7 +1660,7 @@
         <translation>&amp;გაუქმება</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+124"/>
+        <location filename="../optionsdialog.cpp" line="+135"/>
         <source>default</source>
         <translation>ნაგულისხმევი</translation>
     </message>
@@ -1606,7 +1670,7 @@
         <translation>ცარიელი</translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+79"/>
         <source>Confirm options reset</source>
         <translation>დაადასტურეთ პარამეტრების დაბრუნება ნაგულისხმევზე</translation>
     </message>
@@ -1627,7 +1691,7 @@
         <translation>ამ ცვლილებების ძალაში შესასვლელად საჭიროა კლიენტის დახურვა და ხელახალი გაშვება.</translation>
     </message>
     <message>
-        <location line="+82"/>
+        <location line="+97"/>
         <source>The supplied proxy address is invalid.</source>
         <translation>პროქსის მისამართი არასწორია.</translation>
     </message>
@@ -1855,7 +1919,7 @@
 <context>
     <name>PeerTableModel</name>
     <message>
-        <location filename="../peertablemodel.cpp" line="+106"/>
+        <location filename="../peertablemodel.cpp" line="+120"/>
         <source>Node/Service</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1883,7 +1947,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+832"/>
+        <location line="+831"/>
         <source>%1 d</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2525,22 +2589,22 @@
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <location filename="../forms/receivecoinsdialog.ui" line="+110"/>
+        <location filename="../forms/receivecoinsdialog.ui" line="+166"/>
         <source>&amp;Amount:</source>
         <translation>თ&amp;ანხა:</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="-113"/>
         <source>&amp;Label:</source>
         <translation>ნიშნუ&amp;ლი:</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+26"/>
         <source>&amp;Message:</source>
         <translation>&amp;მესიჯი:</translation>
     </message>
     <message>
-        <location line="-27"/>
+        <location line="-13"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
         <translation>რომელიმე ადრე გამოყენებული მიღების მისამართის გამოყენება. ეს ამცირებს უსაფრთხოებასა და პრივატულობას. ნუ გამოიყენებთ ამ ოპციას, თუ არ ახდენთ ადრე მოთხოვნილი გადახდის ხელახლა გენერირებას.</translation>
     </message>
@@ -2550,30 +2614,30 @@
         <translation>ად&amp;რე გამოყენებული მიღების მისამართის გამოყენება (არ არის რეკომენდებული)</translation>
     </message>
     <message>
-        <location line="+21"/>
-        <location line="+23"/>
+        <location line="+7"/>
+        <location line="+110"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Nexa network.</source>
         <translation>არააუცილებელი მესიჯი, რომელიც ერთვის გადახდის მოთხოვნას და ნაჩვენები იქნება მოთხოვნის გახსნისას. შენიშვნა: მესიჯი არ გაყვება გადახდას ბითქოინის ქსელში.</translation>
     </message>
     <message>
-        <location line="-63"/>
-        <location line="+56"/>
+        <location line="-136"/>
+        <location line="+106"/>
         <source>An optional label to associate with the new receiving address.</source>
         <translation>არააუცილებელი ნიშნული ახალ მიღების მისამართთან ასოცირებისათვის.</translation>
     </message>
     <message>
-        <location line="-23"/>
+        <location line="+23"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
         <translation>გამოიყენეთ ეს ფორმა გადახდის მოთხოვნისათვის. ყველა ველი &lt;b&gt;არააუცილებელია&lt;/b&gt;.</translation>
     </message>
     <message>
-        <location line="-56"/>
-        <location line="+7"/>
+        <location line="-136"/>
+        <location line="+120"/>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation>მოთხოვნის მოცულობა. არააუცილებელია. ჩაწერეთ 0 ან დატოვეთ ცარიელი, თუ არ მოითხოვება კონკრეტული მოცულობა.</translation>
     </message>
     <message>
-        <location line="-45"/>
+        <location line="-46"/>
         <source>Clear all fields of the form.</source>
         <translation>ფორმის ყველა ველის წაშლა</translation>
     </message>
@@ -2583,27 +2647,17 @@
         <translation>წაშლა</translation>
     </message>
     <message>
-        <location line="+177"/>
+        <location line="+112"/>
         <source>Requested payments history</source>
         <translation>მოთხოვნილი გადახდების ისტორია</translation>
     </message>
     <message>
-        <location line="-197"/>
+        <location line="-132"/>
         <source>&amp;Request payment</source>
         <translation>&amp;გადახდის მოთხოვნა</translation>
     </message>
     <message>
-        <location line="+148"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Coin freezing locks coins to make them temporarily unspendable. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Coin &amp;Freeze</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+71"/>
+        <location line="+157"/>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>არჩეული მოთხოვნის ჩვენება (იგივეა, რაც ჩანაწერზე ორჯერ ჩხვლეტა)</translation>
     </message>
@@ -2623,7 +2677,7 @@
         <translation>წაშლა</translation>
     </message>
     <message>
-        <location filename="../receivecoinsdialog.cpp" line="+53"/>
+        <location filename="../receivecoinsdialog.cpp" line="+50"/>
         <source>Copy URI</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2641,70 +2695,6 @@
         <location line="+1"/>
         <source>Copy amount</source>
         <translation>თანხის კოპირება</translation>
-    </message>
-</context>
-<context>
-    <name>ReceiveFreezeDialog</name>
-    <message>
-        <location filename="../forms/receivefreezedialog.ui" line="+14"/>
-        <source>Coin Freeze</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+24"/>
-        <source>WARNING! Freezing coins means they will be UNSPENDABLE until the release date or block specified below.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+45"/>
-        <source>Freeze until block :</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+19"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Specify the block when coins are released from the freeze. Coins are UNSPENDABLE until the freeze block.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <location line="+99"/>
-        <source>-</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="-57"/>
-        <source>OR</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+26"/>
-        <source>Freeze until date and time :</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+22"/>
-        <source>Specify the future date and time when coins are released from the freeze. Coins are UNSPENDABLE until after the freeze date and time.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+98"/>
-        <source>&amp;Reset</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Alt+R</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+25"/>
-        <source>&amp;OK</source>
-        <translation type="unfinished">&amp;OK</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Alt+O</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2765,11 +2755,6 @@
         <translation>მესიჯი</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Freeze until</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location line="+12"/>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
         <translation>URI ძალიან გრძელი გამოდის, შეამოკლეთ ნიშნულის/მესიჯის ტექსტი.</translation>
@@ -2822,7 +2807,7 @@
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+633"/>
+        <location filename="../sendcoinsdialog.cpp" line="+626"/>
         <source>Send Coins</source>
         <translation>მონეტების გაგზავნა</translation>
     </message>
@@ -3061,7 +3046,7 @@
         <translation>მონეტების გაგზავნის დადასტურება</translation>
     </message>
     <message>
-        <location line="-59"/>
+        <location line="-52"/>
         <location line="+5"/>
         <location line="+5"/>
         <location line="+4"/>
@@ -3114,12 +3099,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+33"/>
-        <source>&lt;br&gt;&lt;br&gt;&lt;b&gt;WARNING!!! DESTINATION IS A FREEZE ADDRESS&lt;br&gt;UNSPENDABLE UNTIL&lt;/b&gt; %1 &lt;br&gt;*************************************************&lt;br&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+36"/>
+        <location line="+62"/>
         <source>Total Amount %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3510,6 +3490,59 @@
     </message>
 </context>
 <context>
+    <name>TokenDisplayDialog</name>
+    <message>
+        <location filename="../forms/tokendisplaydialog.ui" line="+14"/>
+        <source>Token Display Manager</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add a token to the list below&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Add New Token</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Remove a token from the list below&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Remove Token</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+40"/>
+        <source>Display</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Ticker</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Group ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tokendisplaydialog.cpp" line="+43"/>
+        <source>Copy GroupID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy Token Ticker</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>TokenHistoryView</name>
     <message>
         <location filename="../tokenhistoryview.cpp" line="+78"/>
@@ -3594,6 +3627,11 @@
     </message>
     <message>
         <location line="+1"/>
+        <source>Copy transaction id</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Copy transaction idem</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3608,7 +3646,7 @@
         <translation type="unfinished">ტრანსაქციის დეტალების ჩვენება</translation>
     </message>
     <message>
-        <location line="+162"/>
+        <location line="+167"/>
         <source>Export Token History</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3654,6 +3692,11 @@
     </message>
     <message>
         <location line="+1"/>
+        <source>Transaction Idem</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Token ID</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3683,7 +3726,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+53"/>
+        <location line="+54"/>
         <source>Range:</source>
         <translation type="unfinished">შუალედი:</translation>
     </message>
@@ -3696,7 +3739,7 @@
 <context>
     <name>TokenTableModel</name>
     <message>
-        <location filename="../tokentablemodel.cpp" line="+244"/>
+        <location filename="../tokentablemodel.cpp" line="+354"/>
         <source>Date</source>
         <translation type="unfinished">თარიღი</translation>
     </message>
@@ -3716,7 +3759,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location line="+49"/>
+        <location line="+60"/>
         <source>Open for %n more block(s)</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -3819,7 +3862,7 @@
         <translation type="unfinished">სხვა</translation>
     </message>
     <message>
-        <location line="+323"/>
+        <location line="+325"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation type="unfinished">ტრანსაქციის სტატუსი. ველზე კურსორის შეყვანისას გამოჩნდება დასტურების რაოდენობა.</translation>
     </message>
@@ -3857,7 +3900,27 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+11"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable/Disable which tokens in the wallet are to be displayed in QT&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Manage Displayed Tokens</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Tokens in Wallet:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Tokens Displayed: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+34"/>
         <source>Amount: </source>
         <translation type="unfinished"></translation>
     </message>
@@ -3977,7 +4040,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+367"/>
+        <location filename="../tokensviewdialog.cpp" line="+397"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -4128,7 +4191,7 @@
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+36"/>
+        <location filename="../transactiondesc.cpp" line="+35"/>
         <source>Open until %1</source>
         <translation>ღია იქნება სანამ %1</translation>
     </message>
@@ -4175,20 +4238,20 @@
     <message>
         <location line="+8"/>
         <location line="+13"/>
-        <location line="+128"/>
+        <location line="+122"/>
         <source>From</source>
         <translation>გამგზავნი</translation>
     </message>
     <message>
-        <location line="-148"/>
+        <location line="-142"/>
         <location line="+21"/>
         <location line="+35"/>
-        <location line="+114"/>
+        <location line="+108"/>
         <source>To</source>
         <translation>მიმღები</translation>
     </message>
     <message numerus="yes">
-        <location line="-223"/>
+        <location line="-217"/>
         <source>Open for %n more block(s)</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -4225,41 +4288,36 @@
     </message>
     <message>
         <location line="+0"/>
-        <location line="+119"/>
+        <location line="+113"/>
         <source>watch-only</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-116"/>
+        <location line="-110"/>
         <location line="+28"/>
-        <location line="+113"/>
+        <location line="+107"/>
         <source>label</source>
         <translation>ნიშნული</translation>
     </message>
     <message>
-        <location line="-122"/>
-        <location line="+63"/>
+        <location line="-116"/>
+        <location line="+57"/>
         <location line="+48"/>
         <location line="+71"/>
         <source>Public label:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-167"/>
-        <source>Freeze until</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+18"/>
+        <location line="-149"/>
         <location line="+41"/>
         <location line="+63"/>
         <location line="+47"/>
-        <location line="+213"/>
+        <location line="+256"/>
         <source>Credit</source>
         <translation>კრედიტი</translation>
     </message>
     <message numerus="yes">
-        <location line="-361"/>
+        <location line="-404"/>
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -4274,12 +4332,12 @@
     <message>
         <location line="+102"/>
         <location line="+31"/>
-        <location line="+218"/>
+        <location line="+261"/>
         <source>Debit</source>
         <translation>დებიტი</translation>
     </message>
     <message>
-        <location line="-237"/>
+        <location line="-280"/>
         <source>Total debit</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4300,17 +4358,22 @@
     </message>
     <message>
         <location line="+7"/>
-        <location line="+12"/>
+        <location line="+13"/>
         <source>Message</source>
         <translation>მესიჯი</translation>
     </message>
     <message>
-        <location line="-9"/>
+        <location line="-10"/>
         <source>Comment</source>
         <translation>შენიშვნა</translation>
     </message>
     <message>
         <location line="+2"/>
+        <source>Transaction ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Transaction Idem</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4331,55 +4394,60 @@
     </message>
     <message>
         <location line="+66"/>
-        <location line="+24"/>
-        <location line="+31"/>
+        <location line="+33"/>
+        <location line="+48"/>
         <source>Token ID</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-50"/>
-        <location line="+24"/>
-        <location line="+31"/>
+        <location line="-76"/>
+        <location line="+33"/>
+        <location line="+48"/>
         <source>Ticker</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-54"/>
-        <location line="+24"/>
-        <location line="+31"/>
+        <location line="-80"/>
+        <location line="+33"/>
+        <location line="+48"/>
         <source>Name</source>
         <translation type="unfinished">სახელი</translation>
     </message>
     <message>
-        <location line="-51"/>
-        <location line="+24"/>
-        <location line="+31"/>
+        <location line="-77"/>
+        <location line="+32"/>
+        <location line="+48"/>
         <source>Decimals</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-53"/>
+        <location line="-74"/>
+        <location line="+4"/>
         <source>Melt</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+28"/>
-        <location line="+34"/>
+        <location line="+30"/>
+        <location line="+4"/>
+        <location line="+56"/>
+        <location line="+4"/>
         <source>Mint</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-32"/>
+        <location line="-51"/>
+        <location line="+4"/>
         <source>Amount Sent</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+27"/>
+        <location line="+30"/>
+        <location line="+4"/>
         <source>Amount Received</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+27"/>
         <source>Debug information</source>
         <translation>დახვეწის ინფორმაცია</translation>
     </message>
@@ -4394,10 +4462,13 @@
         <translation>ხარჯები</translation>
     </message>
     <message>
-        <location line="-95"/>
-        <location line="+28"/>
-        <location line="+34"/>
-        <location line="+55"/>
+        <location line="-133"/>
+        <location line="+4"/>
+        <location line="+30"/>
+        <location line="+4"/>
+        <location line="+56"/>
+        <location line="+4"/>
+        <location line="+57"/>
         <source>Amount</source>
         <translation>თანხა</translation>
     </message>
@@ -4414,7 +4485,7 @@
         <translation>მცდარი</translation>
     </message>
     <message>
-        <location line="-496"/>
+        <location line="-533"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, დაგზავნა არ არის წარმატებით დასრულებული</translation>
     </message>
@@ -4566,7 +4637,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+276"/>
+        <location line="+277"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>ტრანსაქციის სტატუსი. ველზე კურსორის შეყვანისას გამოჩნდება დასტურების რაოდენობა.</translation>
     </message>
@@ -4685,6 +4756,11 @@
         <translation>თანხის კოპირება</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Copy transaction id</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+3"/>
         <source>Edit label</source>
         <translation>ნიშნულის რედაქტირება</translation>
@@ -4695,12 +4771,17 @@
         <translation>ტრანსაქციის დეტალების ჩვენება</translation>
     </message>
     <message>
-        <location line="+172"/>
+        <location line="+176"/>
         <source>Export Transaction History</source>
         <translation>ტრანსაქციების ისტორიის ექსპორტი</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+19"/>
+        <source>Idem</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Exporting Failed</source>
         <translation>ექსპორტი ვერ განხორციელდა</translation>
     </message>
@@ -4720,12 +4801,12 @@
         <translation>ტრანსაქციების ისტორია შენახულია %1-ში.</translation>
     </message>
     <message>
-        <location line="-29"/>
+        <location line="-30"/>
         <source>Comma separated file (*.csv)</source>
         <translation>CSV-ფაილი (*.csv)</translation>
     </message>
     <message>
-        <location line="-175"/>
+        <location line="-179"/>
         <source>Copy transaction idem</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4735,7 +4816,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+183"/>
+        <location line="+187"/>
         <source>Confirmed</source>
         <translation>დადასტურებულია</translation>
     </message>
@@ -4770,7 +4851,7 @@
         <translation>ID</translation>
     </message>
     <message>
-        <location line="+108"/>
+        <location line="+110"/>
         <source>Range:</source>
         <translation>შუალედი:</translation>
     </message>
@@ -4926,7 +5007,7 @@
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+291"/>
+        <location filename="../walletmodel.cpp" line="+300"/>
         <source>Send Coins</source>
         <translation>მონეტების გაგზავნა</translation>
     </message>
@@ -5017,7 +5098,12 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+7"/>
+        <source>You need to rebuild the database using -resync to go back to unpruned mode.  This will redownload the entire blockchain.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+21"/>
         <source>Corrupted block database detected</source>
         <translation>შენიშნულია ბლოკთა ბაზის დაზიანება</translation>
     </message>
@@ -5142,7 +5228,12 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>მისამართების ჩატვირთვა...</translation>
     </message>
     <message>
-        <location line="-5"/>
+        <location line="-112"/>
+        <source>Rescans are not possible in pruned mode. You will need to use -resync which will download the whole blockchain again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+107"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>არასწორია მისამართი -proxy: &apos;%s&apos;</translation>
     </message>
@@ -5320,12 +5411,7 @@ Do you want to reindex on the next restart?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+5"/>
-        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+8"/>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer&apos;s date and time being set incorrectly. Only rebuild the block database if you are sure that your computer&apos;s date and time are correct</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5400,12 +5486,7 @@ Do you want to reindex on the next restart?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>&quot;Restore Wallet&quot; succeeded and a backup of the previous wallet was saved to: %s.
 
 

@@ -1066,6 +1066,60 @@
     </message>
 </context>
 <context>
+    <name>EditTokenDialog</name>
+    <message>
+        <location filename="../forms/edittokendialog.ui" line="+14"/>
+        <source>Edit Token</source>
+        <translation>Chỉnh sửa mã thông báo</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Group ID</source>
+        <translation>Id nhóm</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>The group ID of the token to be edited.</source>
+        <translation>ID nhóm của mã thông báo sẽ được chỉnh sửa.</translation>
+    </message>
+    <message>
+        <location filename="../edittokendialog.cpp" line="+25"/>
+        <source>Add new token</source>
+        <translation>Thêm mã thông báo mới</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Remove existing token</source>
+        <translation>Xóa mã thông báo hiện có</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Token Dialog Error! Please notify a developer</source>
+        <translation>Lỗi hộp thoại mã thông báo! Vui lòng thông báo cho nhà phát triển</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <location line="+20"/>
+        <source>Group ID required.</source>
+        <translation>Cần có ID nhóm.</translation>
+    </message>
+    <message>
+        <location line="-11"/>
+        <source>Failed to add token: Invalid Group ID.</source>
+        <translation>Không thể thêm mã thông báo: ID nhóm không hợp lệ.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Failed to add token.</source>
+        <translation>Không thêm được mã thông báo.</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Failed to remove token.</source>
+        <translation>Không thể xóa mã thông báo.</translation>
+    </message>
+</context>
+<context>
     <name>FreespaceChecker</name>
     <message>
         <location filename="../intro.cpp" line="+75"/>
@@ -1413,6 +1467,16 @@
         <translation>Quét lại ví khi khởi động</translation>
     </message>
     <message>
+        <location line="+13"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When Token Whitelist is enabled you can control what tokens appear in your wallet.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Khi bật Danh sách cho phép mã thông báo, bạn có thể kiểm soát loại mã thông báo nào xuất hiện trong ví của mình.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Token Whitelist</source>
+        <translation>&amp;Danh sách trắng mã thông báo</translation>
+    </message>
+    <message>
         <location line="+9"/>
         <source>&amp;Network</source>
         <translation>Mạng</translation>
@@ -1595,7 +1659,7 @@
         <translation>Hủy bỏ</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+124"/>
+        <location filename="../optionsdialog.cpp" line="+135"/>
         <source>default</source>
         <translation>mặc định</translation>
     </message>
@@ -1605,7 +1669,7 @@
         <translation>không có</translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+79"/>
         <source>Confirm options reset</source>
         <translation>Xác nhận đặt lại tùy chọn</translation>
     </message>
@@ -1626,7 +1690,7 @@
         <translation>Thay đổi này sẽ yêu cầu khởi động lại máy khách.</translation>
     </message>
     <message>
-        <location line="+82"/>
+        <location line="+97"/>
         <source>The supplied proxy address is invalid.</source>
         <translation>Địa chỉ proxy được cung cấp không hợp lệ.</translation>
     </message>
@@ -1854,7 +1918,7 @@
 <context>
     <name>PeerTableModel</name>
     <message>
-        <location filename="../peertablemodel.cpp" line="+106"/>
+        <location filename="../peertablemodel.cpp" line="+120"/>
         <source>Node/Service</source>
         <translation>Nút/Dịch vụ</translation>
     </message>
@@ -1882,7 +1946,7 @@
         <translation>Nhập địa chỉ NEXA (ví dụ: %1)</translation>
     </message>
     <message>
-        <location line="+832"/>
+        <location line="+831"/>
         <source>%1 d</source>
         <translation>%1 ngày</translation>
     </message>
@@ -2518,7 +2582,7 @@
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <location filename="../forms/receivecoinsdialog.ui" line="+45"/>
+        <location filename="../forms/receivecoinsdialog.ui" line="+100"/>
         <source>&amp;Request payment</source>
         <translation>Yêu cầu thanh toán</translation>
     </message>
@@ -2533,8 +2597,8 @@
         <translation>Xóa</translation>
     </message>
     <message>
-        <location line="+35"/>
-        <location line="+7"/>
+        <location line="-77"/>
+        <location line="+120"/>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation>Một số tiền tùy chọn để yêu cầu. Để trống hoặc bằng 0 để không yêu cầu số tiền cụ thể.</translation>
     </message>
@@ -2544,13 +2608,13 @@
         <translation>Số lượng:</translation>
     </message>
     <message>
-        <location line="+13"/>
-        <location line="+56"/>
+        <location line="-116"/>
+        <location line="+106"/>
         <source>An optional label to associate with the new receiving address.</source>
         <translation>Nhãn tùy chọn để liên kết với địa chỉ nhận mới.</translation>
     </message>
     <message>
-        <location line="-53"/>
+        <location line="-103"/>
         <source>&amp;Label:</source>
         <translation>Nhãn dữ liệu</translation>
     </message>
@@ -2565,33 +2629,23 @@
         <translation>Sử dụng lại địa chỉ nhận hiện có (không khuyến khích)</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+110"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
         <translation>Sử dụng biểu mẫu này để yêu cầu thanh toán. Tất cả các trường đều &lt;b&gt;tùy chọn&lt;/b&gt;.</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <location line="+23"/>
+        <location line="-103"/>
+        <location line="+110"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Nexa network.</source>
         <translation>Một thông báo tùy chọn để đính kèm với yêu cầu thanh toán, thông báo này sẽ được hiển thị khi yêu cầu được mở. Lưu ý: Tin nhắn sẽ không được gửi cùng với khoản thanh toán qua mạng Nexa.</translation>
     </message>
     <message>
-        <location line="-20"/>
+        <location line="-107"/>
         <source>&amp;Message:</source>
         <translation>Tin nhắn</translation>
     </message>
     <message>
-        <location line="+27"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Coin freezing locks coins to make them temporarily unspendable. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Việc đóng băng tiền xu sẽ khóa tiền xu khiến chúng tạm thời không thể chi tiêu được. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Coin &amp;Freeze</source>
-        <translation>Đồng xu và đóng băng</translation>
-    </message>
-    <message>
-        <location line="+46"/>
+        <location line="+153"/>
         <source>Requested payments history</source>
         <translation>Lịch sử thanh toán được yêu cầu</translation>
     </message>
@@ -2616,7 +2670,7 @@
         <translation>Di dời</translation>
     </message>
     <message>
-        <location filename="../receivecoinsdialog.cpp" line="+53"/>
+        <location filename="../receivecoinsdialog.cpp" line="+50"/>
         <source>Copy URI</source>
         <translation>Sao chép URI</translation>
     </message>
@@ -2634,70 +2688,6 @@
         <location line="+1"/>
         <source>Copy amount</source>
         <translation>Sao chép số tiền</translation>
-    </message>
-</context>
-<context>
-    <name>ReceiveFreezeDialog</name>
-    <message>
-        <location filename="../forms/receivefreezedialog.ui" line="+14"/>
-        <source>Coin Freeze</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+24"/>
-        <source>WARNING! Freezing coins means they will be UNSPENDABLE until the release date or block specified below.</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+45"/>
-        <source>Freeze until block :</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+19"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Specify the block when coins are released from the freeze. Coins are UNSPENDABLE until the freeze block.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <location line="+99"/>
-        <source>-</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="-57"/>
-        <source>OR</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+26"/>
-        <source>Freeze until date and time :</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+22"/>
-        <source>Specify the future date and time when coins are released from the freeze. Coins are UNSPENDABLE until after the freeze date and time.</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+98"/>
-        <source>&amp;Reset</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Alt+R</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+25"/>
-        <source>&amp;OK</source>
-        <translation>ĐƯỢC RỒI</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Alt+O</source>
-        <translation></translation>
     </message>
 </context>
 <context>
@@ -2758,11 +2748,6 @@
         <translation>Tin nhắn</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Freeze until</source>
-        <translation>Đóng băng cho đến khi</translation>
-    </message>
-    <message>
         <location line="+12"/>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
         <translation>Kết quả URI quá dài, hãy thử giảm bớt văn bản cho nhãn/tin nhắn.</translation>
@@ -2815,7 +2800,7 @@
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+633"/>
+        <location filename="../sendcoinsdialog.cpp" line="+626"/>
         <source>Send Coins</source>
         <translation></translation>
     </message>
@@ -3049,7 +3034,7 @@
         <translation>Cân bằng:</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-565"/>
+        <location filename="../sendcoinsdialog.cpp" line="-558"/>
         <source>Copy quantity</source>
         <translation>Sao chép số lượng</translation>
     </message>
@@ -3102,12 +3087,7 @@
         <translation>%1 đến 2</translation>
     </message>
     <message>
-        <location line="+4"/>
-        <source>&lt;br&gt;&lt;br&gt;&lt;b&gt;WARNING!!! DESTINATION IS A FREEZE ADDRESS&lt;br&gt;UNSPENDABLE UNTIL&lt;/b&gt; %1 &lt;br&gt;*************************************************&lt;br&gt;</source>
-        <translation>&lt;br&gt;&lt;br&gt;&lt;b&gt;CẢNH BÁO!!! ĐIỂM ĐẾN LÀ ĐỊA CHỈ ĐÓNG BĂNG&lt;br&gt;KHÔNG THỂ CHIA SẺ ĐẾN&lt;/b&gt; %1 &lt;br&gt;********************************* *******************&lt;br&gt;</translation>
-    </message>
-    <message>
-        <location line="+11"/>
+        <location line="+8"/>
         <source>Are you sure you want to send?</source>
         <translation>Bạn có chắc chắn muốn gửi không?</translation>
     </message>
@@ -3503,6 +3483,59 @@
     </message>
 </context>
 <context>
+    <name>TokenDisplayDialog</name>
+    <message>
+        <location filename="../forms/tokendisplaydialog.ui" line="+14"/>
+        <source>Token Display Manager</source>
+        <translation>Trình quản lý hiển thị mã thông báo</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add a token to the list below&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Thêm mã thông báo vào danh sách bên dưới&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Add New Token</source>
+        <translation>Thêm mã thông báo mới</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Remove a token from the list below&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Xóa mã thông báo khỏi danh sách bên dưới&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Remove Token</source>
+        <translation>Xóa mã thông báo</translation>
+    </message>
+    <message>
+        <location line="+40"/>
+        <source>Display</source>
+        <translation>Trưng bày</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Ticker</source>
+        <translation>Biểu tượng</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Group ID</source>
+        <translation>Id nhóm</translation>
+    </message>
+    <message>
+        <location filename="../tokendisplaydialog.cpp" line="+43"/>
+        <source>Copy GroupID</source>
+        <translation>Sao chép ID nhóm</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy Token Ticker</source>
+        <translation>Sao chép mã thông báo</translation>
+    </message>
+</context>
+<context>
     <name>TokenHistoryView</name>
     <message>
         <location filename="../tokenhistoryview.cpp" line="+78"/>
@@ -3587,6 +3620,11 @@
     </message>
     <message>
         <location line="+1"/>
+        <source>Copy transaction id</source>
+        <translation>Sao chép id giao dịch</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Copy transaction idem</source>
         <translation>Sao chép idem giao dịch</translation>
     </message>
@@ -3601,7 +3639,7 @@
         <translation>Hiển thị chi tiết giao dịch</translation>
     </message>
     <message>
-        <location line="+162"/>
+        <location line="+167"/>
         <source>Export Token History</source>
         <translation>Xuất lịch sử mã thông báo</translation>
     </message>
@@ -3647,6 +3685,11 @@
     </message>
     <message>
         <location line="+1"/>
+        <source>Transaction Idem</source>
+        <translation>Idem giao dịch</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Token ID</source>
         <translation>ID mã thông báo</translation>
     </message>
@@ -3676,7 +3719,7 @@
         <translation>Lịch sử mã thông báo đã được lưu thành công vào %1.</translation>
     </message>
     <message>
-        <location line="+53"/>
+        <location line="+54"/>
         <source>Range:</source>
         <translation>Phạm vi:</translation>
     </message>
@@ -3689,7 +3732,7 @@
 <context>
     <name>TokenTableModel</name>
     <message>
-        <location filename="../tokentablemodel.cpp" line="+244"/>
+        <location filename="../tokentablemodel.cpp" line="+354"/>
         <source>Date</source>
         <translation>Ngày</translation>
     </message>
@@ -3709,7 +3752,7 @@
         <translation>Số lượng tịnh</translation>
     </message>
     <message numerus="yes">
-        <location line="+49"/>
+        <location line="+60"/>
         <source>Open for %n more block(s)</source>
         <translation>
             <numerusform>Mở thêm %n khối nữa</numerusform>
@@ -3811,7 +3854,7 @@
         <translation>Khác</translation>
     </message>
     <message>
-        <location line="+323"/>
+        <location line="+325"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Trạng thái giao dịch. Di chuột qua trường này để hiển thị số lượng xác nhận.</translation>
     </message>
@@ -3849,7 +3892,27 @@
         <translation>Mã thông báo</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+11"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable/Disable which tokens in the wallet are to be displayed in QT&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Bật/Tắt loại token nào trong ví sẽ được hiển thị trong QT&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Manage Displayed Tokens</source>
+        <translation>Quản lý mã thông báo được hiển thị</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Tokens in Wallet:</source>
+        <translation>Token trong Ví:</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Tokens Displayed: </source>
+        <translation>Mã thông báo được hiển thị:</translation>
+    </message>
+    <message>
+        <location line="+34"/>
         <source>Amount: </source>
         <translation>Số lượng: </translation>
     </message>
@@ -3969,7 +4032,7 @@
         <translation>Nếu được chọn thì mục này là một nhóm con.</translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+367"/>
+        <location filename="../tokensviewdialog.cpp" line="+397"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -4120,7 +4183,7 @@
 <context>
     <name>TransactionDesc</name>
     <message numerus="yes">
-        <location filename="../transactiondesc.cpp" line="+34"/>
+        <location filename="../transactiondesc.cpp" line="+33"/>
         <source>Open for %n more block(s)</source>
         <translation>
             <numerusform>Mở thêm %n khối nữa</numerusform>
@@ -4197,19 +4260,19 @@
         <location line="+1"/>
         <location line="+21"/>
         <location line="+35"/>
-        <location line="+114"/>
+        <location line="+108"/>
         <source>To</source>
         <translation>Cho</translation>
     </message>
     <message>
-        <location line="-163"/>
+        <location line="-157"/>
         <location line="+13"/>
-        <location line="+128"/>
+        <location line="+122"/>
         <source>From</source>
         <translation>Từ</translation>
     </message>
     <message>
-        <location line="-128"/>
+        <location line="-122"/>
         <source>unknown</source>
         <translation>không xác định</translation>
     </message>
@@ -4225,41 +4288,36 @@
     </message>
     <message>
         <location line="+0"/>
-        <location line="+119"/>
+        <location line="+113"/>
         <source>watch-only</source>
         <translation>chỉ xem</translation>
     </message>
     <message>
-        <location line="-116"/>
+        <location line="-110"/>
         <location line="+28"/>
-        <location line="+113"/>
+        <location line="+107"/>
         <source>label</source>
         <translation>nhãn dữ liệu</translation>
     </message>
     <message>
-        <location line="-122"/>
-        <location line="+63"/>
+        <location line="-116"/>
+        <location line="+57"/>
         <location line="+48"/>
         <location line="+71"/>
         <source>Public label:</source>
         <translation>Nhãn công cộng:</translation>
     </message>
     <message>
-        <location line="-167"/>
-        <source>Freeze until</source>
-        <translation>Đóng băng cho đến khi</translation>
-    </message>
-    <message>
-        <location line="+18"/>
+        <location line="-149"/>
         <location line="+41"/>
         <location line="+63"/>
         <location line="+47"/>
-        <location line="+213"/>
+        <location line="+256"/>
         <source>Credit</source>
         <translation>Tín dụng</translation>
     </message>
     <message numerus="yes">
-        <location line="-361"/>
+        <location line="-404"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>trưởng thành sau %n khối nữa</numerusform>
@@ -4273,12 +4331,12 @@
     <message>
         <location line="+102"/>
         <location line="+31"/>
-        <location line="+218"/>
+        <location line="+261"/>
         <source>Debit</source>
         <translation>Ghi nợ</translation>
     </message>
     <message>
-        <location line="-237"/>
+        <location line="-280"/>
         <source>Total debit</source>
         <translation>Tổng số ghi nợ</translation>
     </message>
@@ -4299,17 +4357,22 @@
     </message>
     <message>
         <location line="+7"/>
-        <location line="+12"/>
+        <location line="+13"/>
         <source>Message</source>
         <translation>Tin nhắn</translation>
     </message>
     <message>
-        <location line="-9"/>
+        <location line="-10"/>
         <source>Comment</source>
         <translation>Bình luận</translation>
     </message>
     <message>
         <location line="+2"/>
+        <source>Transaction ID</source>
+        <translation>ID giao dịch</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Transaction Idem</source>
         <translation>Idem giao dịch</translation>
     </message>
@@ -4330,55 +4393,60 @@
     </message>
     <message>
         <location line="+66"/>
-        <location line="+24"/>
-        <location line="+31"/>
+        <location line="+33"/>
+        <location line="+48"/>
         <source>Token ID</source>
         <translation>ID mã thông báo</translation>
     </message>
     <message>
-        <location line="-50"/>
-        <location line="+24"/>
-        <location line="+31"/>
+        <location line="-76"/>
+        <location line="+33"/>
+        <location line="+48"/>
         <source>Ticker</source>
         <translation>Biểu tượng</translation>
     </message>
     <message>
-        <location line="-54"/>
-        <location line="+24"/>
-        <location line="+31"/>
+        <location line="-80"/>
+        <location line="+33"/>
+        <location line="+48"/>
         <source>Name</source>
         <translation>Tên</translation>
     </message>
     <message>
-        <location line="-51"/>
-        <location line="+24"/>
-        <location line="+31"/>
+        <location line="-77"/>
+        <location line="+32"/>
+        <location line="+48"/>
         <source>Decimals</source>
         <translation>Số thập phân</translation>
     </message>
     <message>
-        <location line="-53"/>
+        <location line="-74"/>
+        <location line="+4"/>
         <source>Melt</source>
         <translation>Tan chảy</translation>
     </message>
     <message>
-        <location line="+28"/>
-        <location line="+34"/>
+        <location line="+30"/>
+        <location line="+4"/>
+        <location line="+56"/>
+        <location line="+4"/>
         <source>Mint</source>
         <translation>Xu bạc hà</translation>
     </message>
     <message>
-        <location line="-32"/>
+        <location line="-51"/>
+        <location line="+4"/>
         <source>Amount Sent</source>
         <translation>Số tiền đã gửi</translation>
     </message>
     <message>
-        <location line="+27"/>
+        <location line="+30"/>
+        <location line="+4"/>
         <source>Amount Received</source>
         <translation>Số tiền nhận được</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+27"/>
         <source>Debug information</source>
         <translation>Thông tin gỡ lỗi</translation>
     </message>
@@ -4393,10 +4461,13 @@
         <translation>Đầu vào</translation>
     </message>
     <message>
-        <location line="-95"/>
-        <location line="+28"/>
-        <location line="+34"/>
-        <location line="+55"/>
+        <location line="-133"/>
+        <location line="+4"/>
+        <location line="+30"/>
+        <location line="+4"/>
+        <location line="+56"/>
+        <location line="+4"/>
+        <location line="+57"/>
         <source>Amount</source>
         <translation>Số lượng</translation>
     </message>
@@ -4554,7 +4625,7 @@
         <translation>chỉ xem</translation>
     </message>
     <message>
-        <location line="+276"/>
+        <location line="+277"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Trạng thái giao dịch. Di chuột qua trường này để hiển thị số lượng xác nhận.</translation>
     </message>
@@ -4674,6 +4745,11 @@
     </message>
     <message>
         <location line="+1"/>
+        <source>Copy transaction id</source>
+        <translation>Sao chép id giao dịch</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Copy transaction idem</source>
         <translation>Sao chép id giao dịch</translation>
     </message>
@@ -4693,7 +4769,7 @@
         <translation>Hiển thị chi tiết giao dịch</translation>
     </message>
     <message>
-        <location line="+172"/>
+        <location line="+176"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Tập tin tách biệt bởi dấu phẩy (*.csv)</translation>
     </message>
@@ -4738,6 +4814,11 @@
         <translation>ID</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Idem</source>
+        <translation>Idem</translation>
+    </message>
+    <message>
         <location line="+4"/>
         <source>Exporting Failed</source>
         <translation>Xuất không thành công</translation>
@@ -4758,7 +4839,7 @@
         <translation>Lịch sử giao dịch đã được lưu thành công vào %1.</translation>
     </message>
     <message>
-        <location line="+97"/>
+        <location line="+98"/>
         <source>Range:</source>
         <translation>Phạm vi:</translation>
     </message>
@@ -4914,7 +4995,7 @@
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+291"/>
+        <location filename="../walletmodel.cpp" line="+300"/>
         <source>Send Coins</source>
         <translation>Gửi xu</translation>
     </message>
@@ -5094,12 +5175,7 @@ Bạn có muốn lập chỉ mục lại vào lần khởi động lại tiếp 
         <translation>Giảm kết nối -maxconnections %d xuống %d do giới hạn bộ mô tả tệp (unix) hoặc giới hạn winsocket fd_set (windows). Nếu bạn là người dùng windows, giới hạn trên cứng là 1024 không thể thay đổi bằng cách điều chỉnh cấu hình của nút.</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation>Không thể quét lại ở chế độ cắt bớt. Bạn sẽ cần sử dụng -reindex để tải lại toàn bộ blockchain.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+8"/>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer&apos;s date and time being set incorrectly. Only rebuild the block database if you are sure that your computer&apos;s date and time are correct</source>
         <translation>Cơ sở dữ liệu khối chứa một khối dường như đến từ tương lai. Điều này có thể do ngày và giờ trên máy tính của bạn được đặt không chính xác. Chỉ xây dựng lại cơ sở dữ liệu khối nếu bạn chắc chắn rằng ngày giờ trên máy tính của mình là chính xác</translation>
     </message>
@@ -5198,9 +5274,14 @@ Vui lòng khởi chạy lại Nexa với &quot;-usehd=0&quot;.</translation>
         <translation>Bạn không thể gửi giao dịch miễn phí nếu bạn đã định cấu hình -relay.limitFreeRelay bằng 0</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
-        <translation>Bạn cần xây dựng lại cơ sở dữ liệu bằng cách sử dụng -reindex để quay lại chế độ không được cắt xén. Điều này sẽ tải xuống lại toàn bộ blockchain</translation>
+        <location line="-60"/>
+        <source>Rescans are not possible in pruned mode. You will need to use -resync which will download the whole blockchain again.</source>
+        <translation>Không thể quét lại ở chế độ cắt bớt. Bạn sẽ cần sử dụng -resync để tải lại toàn bộ blockchain.</translation>
+    </message>
+    <message>
+        <location line="+63"/>
+        <source>You need to rebuild the database using -resync to go back to unpruned mode.  This will redownload the entire blockchain.</source>
+        <translation>Bạn cần xây dựng lại cơ sở dữ liệu bằng cách sử dụng -resync để quay lại chế độ không được cắt xén. Điều này sẽ tải lại toàn bộ blockchain.</translation>
     </message>
     <message>
         <location line="+3"/>

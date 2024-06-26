@@ -1070,6 +1070,60 @@
     </message>
 </context>
 <context>
+    <name>EditTokenDialog</name>
+    <message>
+        <location filename="../forms/edittokendialog.ui" line="+14"/>
+        <source>Edit Token</source>
+        <translation>Editar token</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Group ID</source>
+        <translation>ID do grupo</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>The group ID of the token to be edited.</source>
+        <translation>O ID do grupo do token a ser editado.</translation>
+    </message>
+    <message>
+        <location filename="../edittokendialog.cpp" line="+25"/>
+        <source>Add new token</source>
+        <translation>Adicionar novo token</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Remove existing token</source>
+        <translation>Remover token existente</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Token Dialog Error! Please notify a developer</source>
+        <translation>Erro na caixa de diálogo do token! Notifique um desenvolvedor</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <location line="+20"/>
+        <source>Group ID required.</source>
+        <translation>ID do grupo obrigatório.</translation>
+    </message>
+    <message>
+        <location line="-11"/>
+        <source>Failed to add token: Invalid Group ID.</source>
+        <translation>Falha ao adicionar token: ID de grupo inválido.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Failed to add token.</source>
+        <translation>Falha ao adicionar token.</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Failed to remove token.</source>
+        <translation>Falha ao remover o token.</translation>
+    </message>
+</context>
+<context>
     <name>FreespaceChecker</name>
     <message>
         <location filename="../intro.cpp" line="+75"/>
@@ -1329,7 +1383,7 @@
         <translation>Número de processos de &amp;verificação de scripts</translation>
     </message>
     <message>
-        <location line="+211"/>
+        <location line="+227"/>
         <source>Allow incoming connections</source>
         <translation>Permitir conexão</translation>
     </message>
@@ -1377,7 +1431,7 @@
         <translation>&amp;Rede</translation>
     </message>
     <message>
-        <location line="-161"/>
+        <location line="-177"/>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
         <translation>(0 = auto, &lt;0 = Deixar essa quantidade de núcleos livre)</translation>
     </message>
@@ -1430,6 +1484,16 @@
         <location line="+39"/>
         <source>&amp;Rescan wallet on startup</source>
         <translation>Digitalizar novamente a carteira na inicialização</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When Token Whitelist is enabled you can control what tokens appear in your wallet.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Quando a lista branca de tokens está ativada, você pode controlar quais tokens aparecem em sua carteira.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Token Whitelist</source>
+        <translation>Lista de permissões de &amp;tokens</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -1550,7 +1614,7 @@
         <translation>Escolha a subdivisão unitária a ser mostrada por defeito na aplicação e ao enviar moedas.</translation>
     </message>
     <message>
-        <location line="-502"/>
+        <location line="-518"/>
         <source>Whether to show coin control features or not.</source>
         <translation>Escolha para mostrar funcionalidades de Coin Control ou não.</translation>
     </message>
@@ -1585,7 +1649,7 @@
         <translation>Sincronizar novamente na inicialização</translation>
     </message>
     <message>
-        <location line="+261"/>
+        <location line="+277"/>
         <location line="+23"/>
         <location line="+23"/>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
@@ -1602,7 +1666,7 @@
         <translation>&amp;Cancelar</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+124"/>
+        <location filename="../optionsdialog.cpp" line="+135"/>
         <source>default</source>
         <translation>padrão</translation>
     </message>
@@ -1612,7 +1676,7 @@
         <translation>nenhum</translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+79"/>
         <source>Confirm options reset</source>
         <translation>Confirme a reposição de opções</translation>
     </message>
@@ -1633,7 +1697,7 @@
         <translation>Esta alteração requer um reinício do cliente.</translation>
     </message>
     <message>
-        <location line="+82"/>
+        <location line="+97"/>
         <source>The supplied proxy address is invalid.</source>
         <translation>O endereço de proxy introduzido é inválido. </translation>
     </message>
@@ -1861,7 +1925,7 @@
 <context>
     <name>PeerTableModel</name>
     <message>
-        <location filename="../peertablemodel.cpp" line="+106"/>
+        <location filename="../peertablemodel.cpp" line="+120"/>
         <source>User Agent</source>
         <translation>Agente Usuário</translation>
     </message>
@@ -1889,7 +1953,7 @@
         <translation>Digite um endereço NEXA (por exemplo, %1)</translation>
     </message>
     <message>
-        <location line="+832"/>
+        <location line="+831"/>
         <source>%1 d</source>
         <translation>%1 d</translation>
     </message>
@@ -2531,22 +2595,22 @@
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <location filename="../forms/receivecoinsdialog.ui" line="+110"/>
+        <location filename="../forms/receivecoinsdialog.ui" line="+166"/>
         <source>&amp;Amount:</source>
         <translation>&amp;Quantia:</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="-113"/>
         <source>&amp;Label:</source>
         <translation>&amp;Rótulo:</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+26"/>
         <source>&amp;Message:</source>
         <translation>&amp;Mensagem:</translation>
     </message>
     <message>
-        <location line="-27"/>
+        <location line="-13"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
         <translation>Reutilize um dos endereços de entrada usados anteriormente. Reutilizar endereços pode levar a riscos de segurança e de privacidade. Não use esta função a não ser que esteja a gerar novamente uma requisição de pagamento feita anteriormente.</translation>
     </message>
@@ -2556,30 +2620,30 @@
         <translation>Reutilizar um endereço de receção existente (não recomendado)</translation>
     </message>
     <message>
-        <location line="+21"/>
-        <location line="+23"/>
+        <location line="+7"/>
+        <location line="+110"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Nexa network.</source>
         <translation>Uma mensagem opcional para anexar ao pedido de pagamento, que será exibida quando o pedido for aberto. Nota: A mensagem não será enviada com o pagamento através da rede Nexa.</translation>
     </message>
     <message>
-        <location line="-63"/>
-        <location line="+56"/>
+        <location line="-136"/>
+        <location line="+106"/>
         <source>An optional label to associate with the new receiving address.</source>
         <translation>Um rótulo opcional a associar ao novo endereço de receção.</translation>
     </message>
     <message>
-        <location line="-23"/>
+        <location line="+23"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
         <translation>Utilize este formulário para solicitar pagamentos. Todos os campos são &lt;b&gt;opcionais&lt;/b&gt;.</translation>
     </message>
     <message>
-        <location line="-56"/>
-        <location line="+7"/>
+        <location line="-136"/>
+        <location line="+120"/>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation>Uma quantia opcional a solicitar. Deixe em branco ou zero para não solicitar uma quantidade específica.</translation>
     </message>
     <message>
-        <location line="-45"/>
+        <location line="-46"/>
         <source>Clear all fields of the form.</source>
         <translation>Limpar todos os campos do formulário.</translation>
     </message>
@@ -2589,27 +2653,17 @@
         <translation>Limpar</translation>
     </message>
     <message>
-        <location line="+177"/>
+        <location line="+112"/>
         <source>Requested payments history</source>
         <translation>Histórico de pagamentos solicitados</translation>
     </message>
     <message>
-        <location line="-197"/>
+        <location line="-132"/>
         <source>&amp;Request payment</source>
         <translation>&amp;Requisitar Pagamento</translation>
     </message>
     <message>
-        <location line="+148"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Coin freezing locks coins to make them temporarily unspendable. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;O congelamento de moedas bloqueia moedas para torná-las temporariamente inutilizáveis. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Coin &amp;Freeze</source>
-        <translation>Moeda e Congelar</translation>
-    </message>
-    <message>
-        <location line="+71"/>
+        <location line="+157"/>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Mostrar o pedido seleccionado (faz o mesmo que clicar 2 vezes numa entrada)</translation>
     </message>
@@ -2629,7 +2683,7 @@
         <translation>Remover</translation>
     </message>
     <message>
-        <location filename="../receivecoinsdialog.cpp" line="+53"/>
+        <location filename="../receivecoinsdialog.cpp" line="+50"/>
         <source>Copy URI</source>
         <translation>Copiar URI</translation>
     </message>
@@ -2647,70 +2701,6 @@
         <location line="+1"/>
         <source>Copy amount</source>
         <translation>Copiar quantia</translation>
-    </message>
-</context>
-<context>
-    <name>ReceiveFreezeDialog</name>
-    <message>
-        <location filename="../forms/receivefreezedialog.ui" line="+14"/>
-        <source>Coin Freeze</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+24"/>
-        <source>WARNING! Freezing coins means they will be UNSPENDABLE until the release date or block specified below.</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+45"/>
-        <source>Freeze until block :</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+19"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Specify the block when coins are released from the freeze. Coins are UNSPENDABLE until the freeze block.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <location line="+99"/>
-        <source>-</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="-57"/>
-        <source>OR</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+26"/>
-        <source>Freeze until date and time :</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+22"/>
-        <source>Specify the future date and time when coins are released from the freeze. Coins are UNSPENDABLE until after the freeze date and time.</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+98"/>
-        <source>&amp;Reset</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Alt+R</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location line="+25"/>
-        <source>&amp;OK</source>
-        <translation>&amp;OK</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Alt+O</source>
-        <translation></translation>
     </message>
 </context>
 <context>
@@ -2771,11 +2761,6 @@
         <translation>Mensagem</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Freeze until</source>
-        <translation>Congele até</translation>
-    </message>
-    <message>
         <location line="+12"/>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
         <translation>URI resultante muito longo. Tente reduzir o texto do rótulo / mensagem.</translation>
@@ -2828,7 +2813,7 @@
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+633"/>
+        <location filename="../sendcoinsdialog.cpp" line="+626"/>
         <source>Send Coins</source>
         <translation>Enviar Moedas</translation>
     </message>
@@ -3067,7 +3052,7 @@
         <translation>Confirme envio de moedas</translation>
     </message>
     <message>
-        <location line="-59"/>
+        <location line="-52"/>
         <location line="+5"/>
         <location line="+5"/>
         <location line="+4"/>
@@ -3115,12 +3100,7 @@
         <translation>&lt;b&gt;Rótulo público:&lt;/b&gt;%1</translation>
     </message>
     <message>
-        <location line="+33"/>
-        <source>&lt;br&gt;&lt;br&gt;&lt;b&gt;WARNING!!! DESTINATION IS A FREEZE ADDRESS&lt;br&gt;UNSPENDABLE UNTIL&lt;/b&gt; %1 &lt;br&gt;*************************************************&lt;br&gt;</source>
-        <translation>&lt;br&gt;&lt;br&gt;&lt;b&gt;AVISO!!! O DESTINO É UM ENDEREÇO ​​CONGELADO&lt;br&gt;IMPERDÍVEL ATÉ&lt;/b&gt; %1 &lt;br&gt;****************************** ******************&lt;br&gt;</translation>
-    </message>
-    <message>
-        <location line="+36"/>
+        <location line="+62"/>
         <source>Total Amount %1</source>
         <translation>Quantia Total %1</translation>
     </message>
@@ -3210,12 +3190,12 @@
         <translation>Aviso: Endereço de troco desconhecido</translation>
     </message>
     <message>
-        <location line="-784"/>
+        <location line="-777"/>
         <source>Copy dust</source>
         <translation>Copiar lixo</translation>
     </message>
     <message>
-        <location line="+298"/>
+        <location line="+291"/>
         <source>Are you sure you want to send?</source>
         <translation>Tem a certeza que deseja enviar?</translation>
     </message>
@@ -3516,6 +3496,59 @@
     </message>
 </context>
 <context>
+    <name>TokenDisplayDialog</name>
+    <message>
+        <location filename="../forms/tokendisplaydialog.ui" line="+14"/>
+        <source>Token Display Manager</source>
+        <translation>Gerenciador de exibição de token</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add a token to the list below&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Adicione um token à lista abaixo&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Add New Token</source>
+        <translation>Adicionar novo token</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Remove a token from the list below&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Remova um token da lista abaixo&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Remove Token</source>
+        <translation>Remover token</translation>
+    </message>
+    <message>
+        <location line="+40"/>
+        <source>Display</source>
+        <translation>Visualização</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Ticker</source>
+        <translation>Simbolo</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Group ID</source>
+        <translation>ID do grupo</translation>
+    </message>
+    <message>
+        <location filename="../tokendisplaydialog.cpp" line="+43"/>
+        <source>Copy GroupID</source>
+        <translation>Copiar ID do grupo</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy Token Ticker</source>
+        <translation>Copiar token de token</translation>
+    </message>
+</context>
+<context>
     <name>TokenHistoryView</name>
     <message>
         <location filename="../tokenhistoryview.cpp" line="+78"/>
@@ -3600,6 +3633,11 @@
     </message>
     <message>
         <location line="+1"/>
+        <source>Copy transaction id</source>
+        <translation>Copiar id da transação</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Copy transaction idem</source>
         <translation>Copiar transação idem</translation>
     </message>
@@ -3614,7 +3652,7 @@
         <translation>Mostrar detalhes da transação</translation>
     </message>
     <message>
-        <location line="+162"/>
+        <location line="+167"/>
         <source>Export Token History</source>
         <translation>Exportar histórico de token</translation>
     </message>
@@ -3660,6 +3698,11 @@
     </message>
     <message>
         <location line="+1"/>
+        <source>Transaction Idem</source>
+        <translation>Transação idem</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Token ID</source>
         <translation>ID do token</translation>
     </message>
@@ -3689,7 +3732,7 @@
         <translation>O histórico do token foi salvo com sucesso em %1.</translation>
     </message>
     <message>
-        <location line="+53"/>
+        <location line="+54"/>
         <source>Range:</source>
         <translation>Período:</translation>
     </message>
@@ -3702,7 +3745,7 @@
 <context>
     <name>TokenTableModel</name>
     <message>
-        <location filename="../tokentablemodel.cpp" line="+244"/>
+        <location filename="../tokentablemodel.cpp" line="+354"/>
         <source>Date</source>
         <translation>Data</translation>
     </message>
@@ -3722,7 +3765,7 @@
         <translation>Valor líquido</translation>
     </message>
     <message numerus="yes">
-        <location line="+49"/>
+        <location line="+60"/>
         <source>Open for %n more block(s)</source>
         <translation>
             <numerusform>Aberta por mais %n bloco</numerusform>
@@ -3825,7 +3868,7 @@
         <translation>Outras</translation>
     </message>
     <message>
-        <location line="+323"/>
+        <location line="+325"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Estado da transação. Passar o cursor por cima deste campo para mostrar o número de confirmações.</translation>
     </message>
@@ -3863,7 +3906,27 @@
         <translation>Tokens</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+11"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable/Disable which tokens in the wallet are to be displayed in QT&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ativar/desativar quais tokens na carteira serão exibidos no QT&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Manage Displayed Tokens</source>
+        <translation>Gerenciar tokens exibidos</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Tokens in Wallet:</source>
+        <translation>Tokens na carteira:</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Tokens Displayed: </source>
+        <translation>Tokens exibidos:</translation>
+    </message>
+    <message>
+        <location line="+34"/>
         <source>Amount: </source>
         <translation>Quantia: </translation>
     </message>
@@ -3983,7 +4046,7 @@
         <translation>Se marcado, então este item é um subgrupo.</translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+367"/>
+        <location filename="../tokensviewdialog.cpp" line="+397"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -4134,7 +4197,7 @@
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+36"/>
+        <location filename="../transactiondesc.cpp" line="+35"/>
         <source>Open until %1</source>
         <translation>Aberto até %1</translation>
     </message>
@@ -4189,20 +4252,20 @@
     <message>
         <location line="+8"/>
         <location line="+13"/>
-        <location line="+128"/>
+        <location line="+122"/>
         <source>From</source>
         <translation>De</translation>
     </message>
     <message>
-        <location line="-148"/>
+        <location line="-142"/>
         <location line="+21"/>
         <location line="+35"/>
-        <location line="+114"/>
+        <location line="+108"/>
         <source>To</source>
         <translation>Para</translation>
     </message>
     <message>
-        <location line="-215"/>
+        <location line="-209"/>
         <source>double spent</source>
         <translation>gasto duplo</translation>
     </message>
@@ -4223,41 +4286,36 @@
     </message>
     <message>
         <location line="+0"/>
-        <location line="+119"/>
+        <location line="+113"/>
         <source>watch-only</source>
         <translation>modo-verificação</translation>
     </message>
     <message>
-        <location line="-116"/>
+        <location line="-110"/>
         <location line="+28"/>
-        <location line="+113"/>
+        <location line="+107"/>
         <source>label</source>
         <translation>rótulo</translation>
     </message>
     <message>
-        <location line="-122"/>
-        <location line="+63"/>
+        <location line="-116"/>
+        <location line="+57"/>
         <location line="+48"/>
         <location line="+71"/>
         <source>Public label:</source>
         <translation>Rótulo público:</translation>
     </message>
     <message>
-        <location line="-167"/>
-        <source>Freeze until</source>
-        <translation>Congele até</translation>
-    </message>
-    <message>
-        <location line="+18"/>
+        <location line="-149"/>
         <location line="+41"/>
         <location line="+63"/>
         <location line="+47"/>
-        <location line="+213"/>
+        <location line="+256"/>
         <source>Credit</source>
         <translation>Crédito</translation>
     </message>
     <message numerus="yes">
-        <location line="-361"/>
+        <location line="-404"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>matura em %n bloco</numerusform>
@@ -4272,12 +4330,12 @@
     <message>
         <location line="+102"/>
         <location line="+31"/>
-        <location line="+218"/>
+        <location line="+261"/>
         <source>Debit</source>
         <translation>Débito</translation>
     </message>
     <message>
-        <location line="-237"/>
+        <location line="-280"/>
         <source>Total debit</source>
         <translation>Total a debitar</translation>
     </message>
@@ -4298,17 +4356,22 @@
     </message>
     <message>
         <location line="+7"/>
-        <location line="+12"/>
+        <location line="+13"/>
         <source>Message</source>
         <translation>Mensagem</translation>
     </message>
     <message>
-        <location line="-9"/>
+        <location line="-10"/>
         <source>Comment</source>
         <translation>Comentário</translation>
     </message>
     <message>
         <location line="+2"/>
+        <source>Transaction ID</source>
+        <translation>ID da transação</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Transaction Idem</source>
         <translation>Transação idem</translation>
     </message>
@@ -4329,55 +4392,60 @@
     </message>
     <message>
         <location line="+66"/>
-        <location line="+24"/>
-        <location line="+31"/>
+        <location line="+33"/>
+        <location line="+48"/>
         <source>Token ID</source>
         <translation>ID do token</translation>
     </message>
     <message>
-        <location line="-50"/>
-        <location line="+24"/>
-        <location line="+31"/>
+        <location line="-76"/>
+        <location line="+33"/>
+        <location line="+48"/>
         <source>Ticker</source>
         <translation>Simbolo</translation>
     </message>
     <message>
-        <location line="-54"/>
-        <location line="+24"/>
-        <location line="+31"/>
+        <location line="-80"/>
+        <location line="+33"/>
+        <location line="+48"/>
         <source>Name</source>
         <translation>Nome</translation>
     </message>
     <message>
-        <location line="-51"/>
-        <location line="+24"/>
-        <location line="+31"/>
+        <location line="-77"/>
+        <location line="+32"/>
+        <location line="+48"/>
         <source>Decimals</source>
         <translation>Decimais</translation>
     </message>
     <message>
-        <location line="-53"/>
+        <location line="-74"/>
+        <location line="+4"/>
         <source>Melt</source>
         <translation>Derreter</translation>
     </message>
     <message>
-        <location line="+28"/>
-        <location line="+34"/>
+        <location line="+30"/>
+        <location line="+4"/>
+        <location line="+56"/>
+        <location line="+4"/>
         <source>Mint</source>
         <translation>Cunhar</translation>
     </message>
     <message>
-        <location line="-32"/>
+        <location line="-51"/>
+        <location line="+4"/>
         <source>Amount Sent</source>
         <translation>Quantidade enviada</translation>
     </message>
     <message>
-        <location line="+27"/>
+        <location line="+30"/>
+        <location line="+4"/>
         <source>Amount Received</source>
         <translation>Montante recebido</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+27"/>
         <source>Debug information</source>
         <translation>Informação de depuração</translation>
     </message>
@@ -4392,10 +4460,13 @@
         <translation>Entradas</translation>
     </message>
     <message>
-        <location line="-95"/>
-        <location line="+28"/>
-        <location line="+34"/>
-        <location line="+55"/>
+        <location line="-133"/>
+        <location line="+4"/>
+        <location line="+30"/>
+        <location line="+4"/>
+        <location line="+56"/>
+        <location line="+4"/>
+        <location line="+57"/>
         <source>Amount</source>
         <translation>Quantia</translation>
     </message>
@@ -4412,7 +4483,7 @@
         <translation>falso</translation>
     </message>
     <message>
-        <location line="-496"/>
+        <location line="-533"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, ainda não foi transmitida com sucesso</translation>
     </message>
@@ -4572,7 +4643,7 @@
         <translation>modo-verificação</translation>
     </message>
     <message>
-        <location line="+276"/>
+        <location line="+277"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Estado da transação. Passar o cursor por cima deste campo para mostrar o número de confirmações.</translation>
     </message>
@@ -4691,6 +4762,11 @@
         <translation>Copiar quantia</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Copy transaction id</source>
+        <translation>Copiar id da transação</translation>
+    </message>
+    <message>
         <location line="+2"/>
         <source>Copy raw transaction</source>
         <translation>Copiar dados brutos da transacção</translation>
@@ -4706,7 +4782,7 @@
         <translation>Mostrar detalhes da transação</translation>
     </message>
     <message>
-        <location line="+172"/>
+        <location line="+176"/>
         <source>Export Transaction History</source>
         <translation>Exportar Histórico de Transacções</translation>
     </message>
@@ -4716,7 +4792,12 @@
         <translation>Modo-verificação</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+8"/>
+        <source>Idem</source>
+        <translation>Idem</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Exporting Failed</source>
         <translation>A Exportação Falhou</translation>
     </message>
@@ -4736,17 +4817,17 @@
         <translation>O histórico de transacções foi com guardado com sucesso em %1.</translation>
     </message>
     <message>
-        <location line="-29"/>
+        <location line="-30"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Ficheiro separado por vírgulas (*.csv)</translation>
     </message>
     <message>
-        <location line="-175"/>
+        <location line="-179"/>
         <source>Copy transaction idem</source>
         <translation>Copiar transação idem</translation>
     </message>
     <message>
-        <location line="+184"/>
+        <location line="+188"/>
         <source>Confirmed</source>
         <translation>Confirmada</translation>
     </message>
@@ -4776,7 +4857,7 @@
         <translation>ID</translation>
     </message>
     <message>
-        <location line="+108"/>
+        <location line="+110"/>
         <source>Range:</source>
         <translation>Período:</translation>
     </message>
@@ -4932,7 +5013,7 @@
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+291"/>
+        <location filename="../walletmodel.cpp" line="+300"/>
         <source>Send Coins</source>
         <translation>Enviar Moedas</translation>
     </message>
@@ -5006,12 +5087,7 @@
         <translation>Poda configurada abaixo do mínimo de %d MiB.  Por favor, utilize um valor mais elevado.</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation>Reanálises não são possíveis em modo poda. Para isso terá de usar -reindex, que irá descarregar novamente a cadeia de blocos.</translation>
-    </message>
-    <message>
-        <location line="+96"/>
+        <location line="+106"/>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Erro: Um erro fatal interno ocorreu, verificar debug.log para mais informação</translation>
     </message>
@@ -5175,12 +5251,7 @@ Por favor, reinicie o Nexa com &quot;-usehd=0&quot;.</translation>
         <translation>Este produto inclui software desenvolvido pelo OpenSSL Project para utilização no OpenSSL Toolkit &lt;https://www.openssl.org/&gt;  e software criptográfico escrito por Eric Young e software UPnP escrito por Thomas Bernard.</translation>
     </message>
     <message>
-        <location line="+50"/>
-        <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
-        <translation>É necessário reconstruir a base de dados usando -reindex para sair do modo poda.  Isto irá descarregar novamente a blockchain completa</translation>
-    </message>
-    <message>
-        <location line="+13"/>
+        <location line="+63"/>
         <source>Activating best chain...</source>
         <translation>A activar a melhor cadeia...</translation>
     </message>
@@ -5401,7 +5472,12 @@ Deseja reindexar na próxima reinicialização?</translation>
         <translation>Reduzindo -net.maxConnections de %d para %d devido às limitações do descritor de arquivo (unix) ou limitações do winsocket fd_set (windows). Se você for um usuário do Windows, há um limite superior rígido de 1024 que não pode ser alterado ajustando a configuração do nó.</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+5"/>
+        <source>Rescans are not possible in pruned mode. You will need to use -resync which will download the whole blockchain again.</source>
+        <translation>Novas verificações não são possíveis no modo removido. Você precisará usar -resync que fará o download de todo o blockchain novamente.</translation>
+    </message>
+    <message>
+        <location line="+17"/>
         <source>Total length of network version string with uacomments added exceeded the maximum length (%i) and have been truncated.  Reduce the number or size of uacomments to avoid truncation.</source>
         <translation>O comprimento total da string da versão da rede com uacomments adicionados excedeu o comprimento máximo (%i) e foi truncado. Reduza o número ou o tamanho dos comentários para evitar truncamento.</translation>
     </message>
@@ -5451,7 +5527,12 @@ Deseja reindexar na próxima reinicialização?</translation>
         <translation>Você não pode enviar transações gratuitas se tiver configurado um -relay.limitFreeRelay de zero</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+3"/>
+        <source>You need to rebuild the database using -resync to go back to unpruned mode.  This will redownload the entire blockchain.</source>
+        <translation>Você precisa reconstruir o banco de dados usando -resync para voltar ao modo não removido. Isso irá baixar novamente todo o blockchain.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>&quot;Restore Wallet&quot; succeeded and a backup of the previous wallet was saved to: %s.
 
 
