@@ -82,6 +82,8 @@ std::atomic<bool> fReindex{false};
 std::atomic<bool> fVerifyDB{false};
 
 bool fBlocksOnly = false;
+bool fWhiteListRelay = false;
+bool fWhiteListForceRelay = false;
 bool fTxIndex = false;
 bool fHavePruned = false;
 bool fPruneMode = false;

@@ -15,6 +15,8 @@
 
 #include <stdint.h>
 
+extern bool fTxIndex;
+
 CCoinsViewDB *pcoinsdbview = nullptr;
 
 using namespace std;
@@ -739,7 +741,7 @@ CacheConfig CacheSizeCalculations(int64_t _nTotalCache)
     _nTotalCache -= cache.nBlockDBCache;
     _nTotalCache -= cache.nBlockUndoDBCache;
     cache.nCoinDBCache = std::min(_nTotalCache / 4, (_nTotalCache / 8) + (1 << 23));
-    if (!GetBoolArg("-txindex", DEFAULT_TXINDEX))
+    if (!fTxIndex)
     {
         cache.nTxIndexCache = 0;
     }

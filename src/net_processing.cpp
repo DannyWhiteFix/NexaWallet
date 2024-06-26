@@ -49,6 +49,7 @@ extern CTweak<uint32_t> randomlyDontInv;
 extern CTweak<uint32_t> doubleSpendProofs;
 extern CTweak<bool> extVersionEnabled;
 extern CTweak<bool> allowp2pTxVal;
+extern bool nDropMessages;
 
 bool HandleHeaderPathMessage(CDataStream &vRecv, CNode *pfrom, uint32_t msgCookie);
 
@@ -443,7 +444,7 @@ static bool processInvMsgs(CNode *pfrom, CDataStream &vRecv, std::vector<T> &vIn
     }
 
     // Allow whitelisted peers to send data other than blocks in blocks only mode if whitelistrelay is true
-    if (pfrom->fWhitelisted && GetBoolArg("-whitelistrelay", DEFAULT_WHITELISTRELAY))
+    if (pfrom->fWhitelisted && fWhiteListRelay)
         fBlocksOnly = false;
 
     for (unsigned int nInv = 0; nInv < vInvSize; nInv++)
@@ -596,7 +597,9 @@ bool ProcessMessage(CNode *pfrom,
     unsigned int msgSize = vRecv.size(); // BU for statistics
     UpdateRecvStats(pfrom, strCommand, msgSize, nStopwatchTimeReceived);
     LOG(NET, "received: %s (%u bytes) peer=%s\n", SanitizeString(strCommand), msgSize, pfrom->GetLogName());
-    if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
+
+    // if -dropmessagetest is enabled then randomly drop the processing of a message
+    if (nDropMessages && GetRand(nDropMessages) == 0)
     {
         LOGA("dropmessagestest DROPPING RECV MESSAGE\n");
         return true;
@@ -1299,8 +1302,7 @@ bool ProcessMessage(CNode *pfrom,
     {
         // Stop processing the transaction early if
         // We are in blocks only mode and peer is either not whitelisted or whitelistrelay is off
-        if (GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY) &&
-            (!pfrom->fWhitelisted || !GetBoolArg("-whitelistrelay", DEFAULT_WHITELISTRELAY)))
+        if (fBlocksOnly && (!pfrom->fWhitelisted || !fWhiteListRelay))
         {
             LOG(NET, "transaction sent in violation of protocol peer=%d\n", pfrom->id);
             return true;

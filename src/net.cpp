@@ -41,6 +41,7 @@ extern uint64_t nMaxSendBufferSize;
 extern CTweak<bool> syncMempoolWithPeers;
 extern bool nFuzzMessages;
 extern bool nDropMessages;
+extern bool fBlocksOnly;
 
 #ifdef WIN32
 #include <string.h>
@@ -534,8 +535,7 @@ void CNode::PushVersion()
 
     // BUIP005 add our special subversion string
     PushMessage(NetMsgType::VERSION, PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe, nLocalHostNonce,
-        FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, BUComments), nBestHeight,
-        !GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY));
+        FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, BUComments), nBestHeight, !fBlocksOnly);
     tVersionSent = GetTime();
 }
 

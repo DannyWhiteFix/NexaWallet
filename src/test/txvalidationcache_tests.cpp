@@ -137,8 +137,8 @@ BOOST_FIXTURE_TEST_CASE(cache_configuration, TestChain100Setup)
     BOOST_CHECK(nCoinCacheMaxSize == 393698347);
 
     // check settings when txindex is on
-    bool nTemp = GetBoolArg("-txindex", 0);
-    SetBoolArg("-txindex", true);
+    bool nTemp = fTxIndex;
+    fTxIndex = true;
     cacheConfig1 = DiscoverCacheConfiguration(true);
     BOOST_CHECK(cacheConfig1.nBlockDBCache == 52219084);
     BOOST_CHECK(cacheConfig1.nBlockUndoDBCache == 10443816);
@@ -157,7 +157,7 @@ BOOST_FIXTURE_TEST_CASE(cache_configuration, TestChain100Setup)
     BOOST_CHECK(nCoinCacheMaxSize == 2457600);
 
     // Cleanup
-    SetBoolArg("-txindex", nTemp);
+    fTxIndex = nTemp;
 }
 
 BOOST_FIXTURE_TEST_CASE(uncache_coins, TestChain100Setup)
