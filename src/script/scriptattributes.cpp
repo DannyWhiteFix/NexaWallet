@@ -102,9 +102,9 @@ bool IsScriptGrouped(const CScript &script, CScript::const_iterator *pcin, CGrou
         return false;
     }
 
-    // group must be 32 bytes or more
+    // group must be 32 bytes or more and the opcode must be a push
     // recall that opcodes lower than PUSHDATA1 (0x4c) push that many bytes onto the stack
-    if (opcodeGrp < 0x20)
+    if ((opcodeGrp < 0x20) || (opcodeGrp > OP_PUSHDATA4))
     {
         grp->invalid = true;
         return false;

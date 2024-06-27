@@ -56,6 +56,10 @@ A max size of 100000 bytes and 50000 non-push opcodes was chosen as an initial l
 // (restriction relaxed in fork, use [withinStackWidth(unsigned int size)] now)
 static const unsigned int GENESIS_MAX_SCRIPT_ELEMENT_SIZE = 520;
 
+// Maximum number of total bytes allowed in the script stack
+// (restriction added into fork 1)
+static const unsigned int MAX_SCRIPT_STACK_SIZE = 1024 * 1024;
+
 // Maximum number of non-push operations per script
 static const int MAX_OPS_PER_SCRIPT = 201;
 
@@ -72,7 +76,9 @@ static const int MAX_SCRIPT_SIZE = 10000;
 static const int MAX_SCRIPT_TEMPLATE_SIZE = 100000;
 
 // Maximum number of values on script interpreter stack
-static const int MAX_STACK_SIZE = 1000;
+static const int GENESIS_MAX_STACK_ITEMS = 1000;
+// Maximum number of values on script interpreter stack
+static const int MAX_STACK_ITEMS = 1024 * 8;
 
 // Threshold for nLockTime: below this value it is interpreted as block number,
 // otherwise as UNIX timestamp.
@@ -300,10 +306,10 @@ const char *GetOpName(opcodetype opcode);
  */
 bool CheckMinimalPush(const std::vector<uint8_t> &data, opcodetype opcode);
 
-struct scriptnum_error : std::runtime_error
+struct script_error : std::runtime_error
 {
     ScriptError errNum;
-    explicit scriptnum_error(ScriptError errnum, const std::string &str) : std::runtime_error(str), errNum(errnum) {}
+    explicit script_error(ScriptError errnum, const std::string &str) : std::runtime_error(str), errNum(errnum) {}
 };
 
 class CScriptNum
@@ -369,11 +375,11 @@ public:
     {
         if (vch.size() > nMaxNumSize)
         {
-            throw scriptnum_error(SCRIPT_ERR_NUMBER_OVERFLOW, "script number overflow");
+            throw script_error(SCRIPT_ERR_NUMBER_OVERFLOW, "script number overflow");
         }
         if (fRequireMinimal && !IsMinimallyEncoded(vch, nMaxNumSize))
         {
-            throw scriptnum_error(SCRIPT_ERR_NUMBER_BAD_ENCODING, "non-minimally encoded script number");
+            throw script_error(SCRIPT_ERR_NUMBER_BAD_ENCODING, "non-minimally encoded script number");
         }
         _value = set_vch(vch);
     }

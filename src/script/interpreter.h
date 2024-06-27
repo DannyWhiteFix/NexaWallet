@@ -206,13 +206,23 @@ public:
     /** Number of op_execs executed */
     unsigned int nOpExec = 0;
 
+    /** Maximum number of bytes used in both stacks */
+    unsigned int maxStackBytes = 0;
+
     ScriptMachineResourceTracker() {}
-    /** Combine the results of this tracker and another tracker */
-    void update(const ScriptMachineResourceTracker &stats)
+    /** Combine the results of this tracker and another tracker.
+        @param parentsCurrentStackUse: you may provide a baseline of stack use which gets added to the stats to
+                  determine total use.
+     */
+    void update(const ScriptMachineResourceTracker &stats, unsigned int parentsCurrentStackUse = 0)
     {
         consensusSigCheckCount += stats.consensusSigCheckCount;
         nOpCount += stats.nOpCount;
         nOpExec += stats.nOpExec;
+        // Update the max used stack bytes if it exceeds ours (plus a baseline use)
+        unsigned int totalUse = parentsCurrentStackUse + stats.maxStackBytes;
+        if (maxStackBytes < totalUse)
+            maxStackBytes = totalUse;
     }
 
     /** Set all tracked values to zero */
@@ -230,6 +240,8 @@ protected:
     unsigned int flags;
     Stack stack;
     Stack altstack;
+    unsigned int stackSize = 0;
+    unsigned int altStackSize = 0;
     const CScript *script;
     ScriptError error = SCRIPT_ERR_INITIAL_STATE;
 
@@ -242,6 +254,12 @@ protected:
     unsigned int maxOps;
     /** Maximum number of 2020-05-15 sigchecks allowed -- script will abort with error if this number is exceeded */
     unsigned int maxConsensusSigOps;
+
+    /** Maximum combined size of both stacks allowed -- script will abort with error if this number is exceeded */
+    unsigned int maxStackUse = 0;
+
+    /** Maximum combined number of elements in both stacks -- script will abort with error if this number is exceeded */
+    unsigned int maxStackItems = 0;
 
     /** Tracks current values of script execution metrics */
     ScriptMachineResourceTracker stats;
@@ -340,12 +358,18 @@ public:
     {
         flags = from.flags;
         stack = from.stack;
+        stackSize = from.stackSize;
         altstack = from.altstack;
+        altStackSize = from.altStackSize;
         script = from.script;
         error = from.error;
         vfExec = from.vfExec;
         maxOps = from.maxOps;
         maxConsensusSigOps = from.maxConsensusSigOps;
+        maxStackUse = from.maxStackUse;
+        maxStackItems = from.maxStackItems;
+        bigNumModulo = from.bigNumModulo;
+        maxScriptSize = from.maxScriptSize;
         stats = from.stats;
     }
 
@@ -353,7 +377,52 @@ public:
         : flags(_flags), script(nullptr), pc(CScript().end()), pbegin(CScript().end()), pend(CScript().end()),
           pbegincodehash(CScript().end()), maxOps(_maxOps), maxConsensusSigOps(_maxSigOps), sis(_sis)
     {
+        if (flags & SCRIPT_ENFORCE_STACK_TOTAL)
+        {
+            maxStackUse = MAX_SCRIPT_STACK_SIZE;
+            maxStackItems = MAX_STACK_ITEMS;
+        }
+        else
+        {
+            maxStackUse = std::numeric_limits<unsigned int>::max();
+            maxStackItems = GENESIS_MAX_STACK_ITEMS;
+        }
     }
+
+    const VchType &stacktop(int i);
+
+    // Modifiable stack element: when using this API, you MUST NOT change the size of the item!
+    // i must be a negative offset from the stack top, where -1 references the top element.
+    // The caller must verify that i is within the stack bounds.
+    VchType &mstacktop(int i);
+
+    /** get altstack element (if it is a VchType).  This API is deprecated and should be replaced with
+     altstackItemAt.
+     i must be a negative offset from the stack top, where -1 references the top element.
+     The caller must verify that i is within the stack bounds.
+    */
+    const VchType &altstacktop(int i);
+
+    /** Get the item from a position indexed in negative numbers from the top of the stack
+        @param i Should be a negative number where -1 is the top of the stack
+        @returns StackItem object
+    */
+    const StackItem &stackItemAt(int i);
+
+    /** Get a mutable reference to the item from a position indexed in negative numbers from the top of the stack.
+        **DO NOT CHANGE the total size of the stack when using this API.**
+        This API is dangerous, and only exposed to optimize specific opcodes (like stack position swaps).
+        @param i Should be a negative number where -1 is the top of the stack
+        @returns StackItem object
+    */
+    StackItem &mstackItemAt(int i);
+
+
+    /** Get the item from a position indexed in negative numbers from the top of the altstack
+        @param i Should be a negative number where -1 is the top of the stack
+        @returns StackItem object
+    */
+    const StackItem &altstackItemAt(int i);
 
     // How many OP_EXECs have been called recursively
     unsigned int execDepth = 0;
@@ -387,18 +456,91 @@ public:
     std::tuple<bool, opcodetype, StackItem, ScriptError> Peek();
 
     // Remove all items from the altstack
-    void ClearAltStack() { altstack.clear(); }
+    void ClearAltStack()
+    {
+        altstack.clear();
+        altStackSize = 0;
+    }
     // Remove all items from the stack
-    void ClearStack() { stack.clear(); }
+    void ClearStack()
+    {
+        stack.clear();
+        stackSize = 0;
+    }
     /** remove a single item from the top of the stack.  If the stack is empty, std::runtime_error is thrown. */
-    void PopStack()
+    void PopStack();
+    /** remove a single item negative 1-indexed from the stack top (stack.end() + idx). */
+    void EraseStackItemAt(int idx);
+
+    /* Throw an error if the passed item size causes the stack to exceed limits,
+       otherwise, update the current values (under the assumption that the caller will place an item
+       of the passed size onto the stack when this function is complete).
+       Its possible for itemSize to be negative if the caller intends to replace a stack item with a shorter one
+     */
+    void CheckAndUpdateStackSize(int itemSize);
+
+    /* Push an item to the main stack */
+    void PushStack(const StackItem &item);
+    /* Push a byte vector to the main stack, given its beginning and end
+       (optimization to prevent byte array copies, that replaces emplace_back) */
+    void PushStack(const unsigned char *begin, const unsigned char *end);
+    /* Push a byte vector to the main stack, given its beginning and end
+       (optimization to prevent byte array copies, that replaces emplace_back) */
+    void PushStack(const CScript::const_iterator &begin, const CScript::const_iterator &end);
+    /** remove a single item from the top of the stack.  If the stack is empty, std::runtime_error is thrown. */
+    void PopAltStack();
+    /** Push an item to the altstack */
+    void PushAltStack(const StackItem &item);
+
+    /** just like std::vector reserve, this function helps efficiency by suggesting how big
+      the stack may become, so the underlying data structure can pre-reserve that memory.  */
+    void StackReserve(int numItems) { stack.reserve(numItems); }
+
+    /** just like std::vector reserve, this function helps efficiency by suggesting how big
+      the stack may become, so the underlying data structure can pre-reserve that memory.  */
+    void AltStackReserve(int numItems) { altstack.reserve(numItems); }
+
+    // From a consensus perspective, moving data from one stack to the other takes no temporary space.
+    // In practice an embedded, memory sensitive implementation should move just a buffer pointer so it actually
+    // will not take extra space.
+    void MoveAltToStack()
+    {
+        if (altstack.empty())
+        {
+            throw std::runtime_error("ScriptMachine.PopAltStack: stack empty");
+        }
+        // This is done without calling the Push and Pop member functions so that the
+        // stack bytes checks are not done
+        auto &elem = altstack.at(altstack.size() - 1);
+        int elemSize = elem.size();
+        stackSize += elemSize;
+        altStackSize -= elemSize;
+        stack.push_back(elem);
+        altstack.pop_back();
+    }
+
+    // From a consensus perspective, moving data from one stack to the other takes no temporary space
+    // In practice an embedded, memory sensitive implementation should move just a buffer pointer so it actually
+    // will not take extra space.
+    void MoveStackToAlt()
     {
         if (stack.empty())
         {
             throw std::runtime_error("ScriptMachine.PopStack: stack empty");
         }
+        auto &elem = stack.at(stack.size() - 1);
+        int elemSize = elem.size();
+        altStackSize += elemSize;
+        stackSize -= elemSize;
+        altstack.push_back(elem);
         stack.pop_back();
     }
+
+    /** A No-op in release mode, this function executes various internal checks on the script machine and asserts
+        if there is a problem.
+        It incurs a significant performance penalty.
+     */
+    void DbgConsistencyCheck();
 
     /** Reserve capacity in the passed stack, if needed.  Iterators and references MAY be invalidated.  Use this
         function to control when these are invalidated (for example, to avoid invalidation during subsequent
@@ -420,48 +562,116 @@ public:
     // clear all state except for configuration like maximums
     void Reset()
     {
-        altstack.clear();
-        stack.clear();
+        ClearAltStack();
+        ClearStack();
         vfExec.clear();
         stats.clear();
+        bigNumModulo = 0x10000000000000000_BN;
+        execDepth = 0;
     }
 
     // Set the main stack to the passed data
-    void setStack(const Stack &stk) { stack = stk; }
+    void setStack(const Stack &stk, int newSize = -1)
+    {
+        if (newSize == -1)
+        {
+            int count = 0;
+            for (auto &item : stk)
+            {
+                count += item.size();
+            }
+            newSize = count;
+        }
+        stack = stk;
+        stackSize = newSize;
+    }
     // Overwrite a stack entry with the passed data.  0 is the stack top, -1 is a special number indicating to push
     // an item onto the stack top.
-    void setStackItem(int idx, const StackItem &item)
+    void setStackItem(int idxFromEnd, const StackItem &item)
     {
-        if (idx == -1)
+        if (idxFromEnd == -1)
         {
-            stack.push_back(item);
+            PushStack(item);
         }
         else
         {
-            stack[stack.size() - idx - 1] = item;
+            // idxFromEnd labels elements in the array backwards.  0 refers to stack[stack.size()-1].
+            // So first convert idxFromEnd to indexing from the beginning of the std::vector
+            int index = stack.size() - idxFromEnd - 1;
+            if ((index >= (int)stack.size()) || (index < 0))
+            {
+                throw std::runtime_error("ScriptMachine.setStackItem: access beyond the end of the stack");
+            }
+            // Now grab the item at that index
+            StackItem &cur = stack.at(index);
+            // Get the sizes of the items that we are removing and adding
+            int curSize = cur.size();
+            int itemSize = item.size();
+            // Check the total based on those sizes
+            CheckAndUpdateStackSize(itemSize - curSize);
+            // finally replace the item
+            stack.at(index) = item;
         }
     }
 
     // Overwrite an altstack entry with the passed data.  0 is the stack top, -1 is a special number indicating to push
     // the item onto the top.
-    void setAltStackItem(int idx, const StackItem &item)
+    void setAltStackItem(int idxFromEnd, const StackItem &item)
     {
-        if (idx == -1)
+        if (idxFromEnd == -1)
         {
-            altstack.push_back(item);
+            PushAltStack(item);
         }
         else
         {
-            altstack[altstack.size() - idx - 1] = item;
+            // idxFromEnd labels elements in the array backwards.  0 refers to altstack[altstack.size()-1].
+            // So first convert idxFromEnd to indexing from the beginning of the std::vector
+            int index = altstack.size() - idxFromEnd - 1;
+            if ((index >= (int)stack.size()) || (index < 0))
+            {
+                throw std::runtime_error("ScriptMachine.setAltstackItem: access beyond the end of the altstack");
+            }
+            // Now grab the item at that index
+            StackItem &cur = altstack.at(index);
+            // Get the sizes of the items that we are removing and adding
+            unsigned int curSize = cur.size();
+            unsigned int itemSize = item.size();
+            // Check the total based on those sizes
+            unsigned int currentTotal = altStackSize + stackSize + itemSize - curSize;
+            if (currentTotal > maxStackUse)
+            {
+                throw std::runtime_error("ScriptMachine.setAltStackItem: stack memory exceeded");
+            }
+            // Update the stats if we have a new max altstack use
+            if (currentTotal > stats.maxStackBytes)
+                stats.maxStackBytes = currentTotal;
+            // update the total altstack size
+            altStackSize += itemSize - curSize;
+            // finally replace the item
+            altstack.at(index) = item;
         }
     }
 
     // Load or modify the main stack
-    Stack &modifyStack() { return stack; }
+    // Stack &modifyStack() { return stack; }
     // Load or modify the alt stack
-    Stack &modifyAltStack() { return stack; }
+    // Stack &modifyAltStack() { return altstack; }
     // Set the alt stack to the passed data
-    void setAltStack(const Stack &stk) { altstack = stk; }
+    void setAltStack(const Stack &stk, int newSize = -1)
+    {
+        if (newSize == -1)
+        {
+            int count = 0;
+            for (auto &item : stk)
+            {
+                count += item.size();
+            }
+            newSize = count;
+        }
+
+        altstack = stk;
+        altStackSize = newSize;
+    }
     // Get the main stack
     const Stack &getStack() { return stack; }
     // Get the alt stack
@@ -472,6 +682,16 @@ public:
     unsigned int getOpCount() { return stats.nOpCount; }
     /** Return execution statistics */
     const ScriptMachineResourceTracker &getStats() { return stats; }
+
+    friend bool VerifyTemplate(const CScript &templat,
+        const CScript &constraint,
+        const CScript &satisfier,
+        unsigned int flags,
+        unsigned int maxOps,
+        unsigned int maxActualSigops,
+        const ScriptImportedState &sis,
+        ScriptError *serror,
+        ScriptMachineResourceTracker *tracker);
 };
 
 bool EvalScript(Stack &stack,
@@ -511,9 +731,6 @@ bool VerifyTemplate(const CScript &templat,
 extern const std::string strMessageMagic;
 
 bool CheckPubKeyEncoding(const std::vector<uint8_t> &vchSig, unsigned int flags, ScriptError *serror);
-
-// Applies the specifier to the data in sis to generate items that are pushed onto the passed stack.
-ScriptError EvalPushTxState(const VchType &specifier, const ScriptImportedState &sis, Stack &stack);
 
 extern uint64_t maxSatoScriptOps;
 extern uint64_t maxScriptTemplateOps;

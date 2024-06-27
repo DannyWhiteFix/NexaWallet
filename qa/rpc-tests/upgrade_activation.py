@@ -23,9 +23,10 @@ decimal.getcontext().prec = 16
 
 class UpgradeActivationTest(BitcoinTestFramework):
 
-    def setup_chain(self):
+    def setup_chain(self,bitcoinConfDict=None, wallets=None):
         print("Initializing test directory "+self.options.tmpdir)
-        initialize_chain_clean(self.options.tmpdir, 2, self.confDict)
+        # initialize_chain_clean(self.options.tmpdir, 2, self.confDict)
+        initialize_chain(self.options.tmpdir, bitcoinConfDict, wallets)
 
     def setup_network(self):
         self.nodes = []
@@ -34,43 +35,117 @@ class UpgradeActivationTest(BitcoinTestFramework):
         self.nodes.append(start_node(1, self.options.tmpdir, []))
         interconnect_nodes(self.nodes)
 
-    def testWideStack(self, shouldItWork):
-        """ Test wide stack operations """
-        # Make a tx that uses too much stack
+    def testStackLimit(self, dups, shouldItWork):
+        """ Test max stack size """
         tx = CTransaction()
-        scr = CScript([bytes([1,2]), OP_DUP, OP_CAT,  # 4
+
+        scrList = [bytes([1,2]), OP_DUP, OP_CAT,  # 4
                        OP_DUP, OP_CAT, OP_DUP, OP_CAT, OP_DUP, OP_CAT, OP_DUP, OP_CAT, OP_DUP, OP_CAT, # 128
-                       OP_DUP, OP_CAT, OP_DUP, OP_CAT, OP_DUP, OP_CAT, OP_DROP, OP_TRUE
-        ])
-        tx.vout.append(CTxOut(10000, scr))
+                       OP_DUP, OP_CAT, OP_DUP, OP_CAT, OP_DUP # 2 items of 512 bytes each
+        ]
+        scrList += [OP_2DUP] * (dups-1)
+        scrList += [OP_2DROP] * dups
+
+        out = TxOut(nValue=10000)
+        scr = CScript(scrList)
+        out.setLockingToTemplate(scr,None)
+        tx.vout.append(out)
+
         h = tx.toHex()
+        # print("Transaction: " + h)
+
         frtReturn = self.nodes[0].fundrawtransaction(h)
         sgnReturn = self.nodes[0].signrawtransaction(frtReturn["hex"])
-        print(sgnReturn)
         fundedTx = CTransaction().fromHex(sgnReturn["hex"])
-        print(fundedTx)
+        # print("Funded signed transaction: " + str(fundedTx)[0:200])
         self.nodes[0].sendrawtransaction(sgnReturn["hex"])
 
         txs = CTransaction()
         # spend it
         for idx in range(0, len(fundedTx.vout)):
             if fundedTx.vout[idx].nValue == 10000:  # its my output
-                txs.vin.append(fundedTx.SpendOutput(idx))  # I don't have to sign it because its anyone can spend
+                inp = fundedTx.SpendOutput(idx)
+                inp.setUnlockingToTemplate(scr, None, None)
+                txs.vin.append(inp)  # I don't have to sign it because its anyone can spend
                 break
+        txs.vout.append(TxOut(TxOut.TYPE_SATOSCRIPT, 9000, CScript()))
+        # print(txs)
+        # print("http://debug.nexa.org/tx/%s?idx=0&utxo=%s" % (txs.toHex(), out.toHex()))
 
-        txs.vout.append(CTxOut(9000, scr))
-        print(txs)
+        validatedResult = self.nodes[0].validaterawtransaction(txs.toHex())
+        if not shouldItWork:
+            assert "mandatory-script-verify-flag-failed" in validatedResult["inputs_flags"]['inputs'][0]['errors'][0]
+            return
 
         try:
             spendTxSend = self.nodes[0].sendrawtransaction(txs.toHex())
-            print(spendTxSend)
+            # print("Spending TX: %s" % spendTxSend)
+            assert shouldItWork, "Large stack worked"
+        except JSONRPCException as e:
+            assert not shouldItWork, "Large stack did not work: %s" % e
+
+
+    def testWideStack(self, shouldItWork, template=True):
+        """ Test wide stack operations """
+        # Make a tx that uses too much stack
+        tx = CTransaction()
+        scr = CScript([bytes([1,2]), OP_DUP, OP_CAT,  # 4
+                       OP_DUP, OP_CAT, OP_DUP, OP_CAT, OP_DUP, OP_CAT, OP_DUP, OP_CAT, OP_DUP, OP_CAT, # 128
+                       OP_DUP, OP_CAT, OP_DUP, OP_CAT, OP_DUP, OP_CAT,
+                       OP_DROP, OP_TRUE if not template else OP_NOP
+        ])
+        if template:
+            out = TxOut(nValue=10000)
+            out.setLockingToTemplate(scr,None)
+            tx.vout.append(out)
+        else:
+            tx.vout.append(CTxOut(10000, scr))
+        h = tx.toHex()
+        frtReturn = self.nodes[0].fundrawtransaction(h)
+        sgnReturn = self.nodes[0].signrawtransaction(frtReturn["hex"])
+        assert len(sgnReturn.get("errors",[])) ==0, print("Error funding transaction: %s" % sgnReturn)
+        # print(sgnReturn)
+        fundedTx = CTransaction().fromHex(sgnReturn["hex"])
+        # print(fundedTx)
+        vrt = self.nodes[0].validaterawtransaction(sgnReturn["hex"])
+        # print(vrt)
+        self.nodes[0].sendrawtransaction(sgnReturn["hex"])
+
+        txs = CTransaction()
+        # spend it
+        for idx in range(0, len(fundedTx.vout)):
+            if fundedTx.vout[idx].nValue == 10000:  # its my output
+                if template:
+                    inp = fundedTx.SpendOutput(idx)
+                    inp.setUnlockingToTemplate(scr, None, None)
+                    txs.vin.append(inp)  # I don't have to sign it because its anyone can spend
+                else:
+                    txs.vin.append(fundedTx.SpendOutput(idx))  # I don't have to sign it because its anyone can spend
+                break
+
+        txs.vout.append(CTxOut(9000, scr))
+        # print(txs)
+        # print(txs.toHex())
+
+        # vrt = self.nodes[0].validaterawtransaction(txs.toHex())
+        # print(vrt)
+
+        try:
+            spendTxSend = self.nodes[0].sendrawtransaction(txs.toHex())
+            # print(spendTxSend)
             assert shouldItWork, "Large stack width worked"
         except JSONRPCException as e:
+            if shouldItWork:
+                print(txs)
+                print(txs.toHex())
             assert not shouldItWork, "Large stack width did not work: %s" % e
 
     def preupgradeTests(self):
         """Add any tests here that should run prior to the upgrade"""
         self.testWideStack(False)
+        # testStackLimit N checks a stack of size N*1024 made up of 2 512 byte stack items
+        self.testStackLimit(500, True)
+        self.testStackLimit(1024, False)
         pass
 
     def atUpgradeTests(self):
@@ -80,21 +155,21 @@ class UpgradeActivationTest(BitcoinTestFramework):
     def postupgradeTests(self):
         """Add any tests here that should run after the upgrade"""
         self.testWideStack(True)
+
+        # testStackLimit N checks a stack of size N*1024 made up of 2 512 byte stack items
+        self.testStackLimit(1024, True)  # So this is the max
+        self.testStackLimit(1, True)
+        self.testStackLimit(11, True)
+        self.testStackLimit(111, True)
+        self.testStackLimit(1111, False) # Nothing above 1MB (1024*1024) will work
+        self.testStackLimit(1025, False)
         pass
 
-
     def run_test(self):
-
         # Mine some blocks to get utxos etc
 
-        # Generate enough blocks that we can spend some coinbase.
-        nBlocks = 101
-        self.nodes[0].generate(nBlocks-1)
-        self.sync_all()
-        self.nodes[0].generate(1)
-        assert_equal(self.nodes[0].getblockcount(), 101)
-
-        # mine a few blocks 1 second apart so we can get a more meaningful "mediantime"
+        # mine a few blocks 1 second apart so we can get a meaningful "mediantime"
+        # that does not contain the gap between the cached blockchain and this run
         bestblock = self.nodes[0].getbestblockhash()
         lastblocktime = self.nodes[0].getblockheader(bestblock)['time']
         mocktime = lastblocktime
@@ -102,7 +177,7 @@ class UpgradeActivationTest(BitcoinTestFramework):
             mocktime = mocktime + 120
             self.nodes[0].setmocktime(mocktime)
             self.nodes[0].generate(1)
-        assert_equal(self.nodes[0].getblockcount(), 111)
+        assert_equal(self.nodes[0].getblockcount(), 210)
 
         self.preupgradeTests()
 
@@ -150,7 +225,6 @@ class UpgradeActivationTest(BitcoinTestFramework):
         assert_equal(blockchaininfo['forkactive'], True)
         assert_equal(blockchaininfo['forkenforcednextblock'], False)
         assert_greater_than(blockchaininfo['mediantime'], activationtime)
-
         self.postupgradeTests()
 
         # Mine a few more blocks. Nothing should change regarding activation.

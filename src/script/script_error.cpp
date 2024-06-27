@@ -34,6 +34,8 @@ const char *ScriptErrorString(const ScriptError serror)
         return "Operation limit exceeded";
     case SCRIPT_ERR_STACK_SIZE:
         return "Stack size limit exceeded";
+    case SCRIPT_ERR_STACK_BYTES:
+        return "Stack total length limit exceeded";
     case SCRIPT_ERR_SIG_COUNT:
         return "Signature count negative or greater than pubkey count";
     case SCRIPT_ERR_PUBKEY_COUNT:

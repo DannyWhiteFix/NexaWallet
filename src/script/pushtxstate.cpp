@@ -12,8 +12,9 @@
 #include "script/sign.h"
 #include "uint256.h"
 
-ScriptError EvalPushTxState(const VchType &specifier, const ScriptImportedState &sis, Stack &stack)
+ScriptError EvalPushTxState(const VchType &specifier, ScriptMachine &sm)
 {
+    const ScriptImportedState &sis = sm.sis;
     ScriptError ret = SCRIPT_ERR_OK;
 
     auto specIter = specifier.begin();
@@ -30,25 +31,25 @@ ScriptError EvalPushTxState(const VchType &specifier, const ScriptImportedState 
     case PushTxStateSpecifier::TX_ID:
     {
         uint256 hash = sis.tx->GetId();
-        stack.push_back(StackItem(hash.begin(), hash.end()));
+        sm.PushStack(StackItem(hash.begin(), hash.end()));
     }
     break;
     case PushTxStateSpecifier::TX_IDEM:
     {
         uint256 hash = sis.tx->GetIdem();
-        stack.push_back(StackItem(hash.begin(), hash.end()));
+        sm.PushStack(StackItem(hash.begin(), hash.end()));
     }
     break;
     case PushTxStateSpecifier::TX_INCOMING_AMOUNT:
     {
         CScriptNum bn = CScriptNum::fromIntUnchecked(sis.txInAmount);
-        stack.push_back(bn.vchStackItem());
+        sm.PushStack(bn.vchStackItem());
     }
     break;
     case PushTxStateSpecifier::TX_OUTGOING_AMOUNT:
     {
         CScriptNum bn = CScriptNum::fromIntUnchecked(sis.txOutAmount);
-        stack.push_back(bn.vchStackItem());
+        sm.PushStack(bn.vchStackItem());
     }
     break;
 
@@ -86,7 +87,7 @@ ScriptError EvalPushTxState(const VchType &specifier, const ScriptImportedState 
                     if (nth == 0)
                     {
                         CScriptNum bn = CScriptNum::fromIntUnchecked(vIdx);
-                        stack.push_back(bn.vchStackItem());
+                        sm.PushStack(bn.vchStackItem());
                         found = true;
                         break;
                     }
@@ -106,7 +107,7 @@ ScriptError EvalPushTxState(const VchType &specifier, const ScriptImportedState 
                     if (nth == 0)
                     {
                         CScriptNum bn = CScriptNum::fromIntUnchecked(vIdx);
-                        stack.push_back(bn.vchStackItem());
+                        sm.PushStack(bn.vchStackItem());
                         found = true;
                         break;
                     }
@@ -144,30 +145,30 @@ ScriptError EvalPushTxState(const VchType &specifier, const ScriptImportedState 
         switch (*specCur)
         {
         case PushTxStateSpecifier::GROUP_INCOMING_AMOUNT:
-            stack.push_back((nogrp ? zero : CScriptNum::fromIntUnchecked(gb->input)).vchStackItem());
+            sm.PushStack((nogrp ? zero : CScriptNum::fromIntUnchecked(gb->input)).vchStackItem());
             break;
         case PushTxStateSpecifier::GROUP_OUTGOING_AMOUNT:
-            stack.push_back((nogrp ? zero : CScriptNum::fromIntUnchecked(gb->output)).vchStackItem());
+            sm.PushStack((nogrp ? zero : CScriptNum::fromIntUnchecked(gb->output)).vchStackItem());
             break;
         case PushTxStateSpecifier::GROUP_INCOMING_COUNT:
-            stack.push_back((nogrp ? zero : CScriptNum::fromIntUnchecked(gb->numInputs)).vchStackItem());
+            sm.PushStack((nogrp ? zero : CScriptNum::fromIntUnchecked(gb->numInputs)).vchStackItem());
             break;
         case PushTxStateSpecifier::GROUP_OUTGOING_COUNT:
-            stack.push_back((nogrp ? zero : CScriptNum::fromIntUnchecked(gb->numOutputs)).vchStackItem());
+            sm.PushStack((nogrp ? zero : CScriptNum::fromIntUnchecked(gb->numOutputs)).vchStackItem());
             break;
         case PushTxStateSpecifier::GROUP_COVENANT_HASH:
             if ((nogrp) || (gb->covenant.size() == 0))
             {
-                stack.push_back(OP_FALSE);
+                sm.PushStack(OP_FALSE);
             }
             else
             {
                 StackItem si(gb->covenant.begin(), gb->covenant.end());
-                stack.push_back(si);
+                sm.PushStack(si);
             }
             break;
         case PushTxStateSpecifier::GROUP_AUTHORITY_FLAGS:
-            stack.push_back(nogrp ? zero.vchStackItem() : StackItem((uint64_t)gb->ctrlPerms));
+            sm.PushStack(nogrp ? zero.vchStackItem() : StackItem((uint64_t)gb->ctrlPerms));
             break;
         }
     }

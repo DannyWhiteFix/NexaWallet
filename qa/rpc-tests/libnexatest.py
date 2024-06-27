@@ -31,7 +31,6 @@ class MyTest (BitcoinTestFramework):
         self.sync_all()
 
     def runScriptMachineTests(self):
-
         # Check basic script
         sm = libnexa.ScriptMachine()
         worked = sm.eval(CScript([OP_1, OP_0, OP_5, OP_6, OP_TOALTSTACK, OP_TOALTSTACK]))

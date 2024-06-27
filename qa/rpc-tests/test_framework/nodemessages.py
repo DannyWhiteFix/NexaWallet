@@ -4,6 +4,7 @@ import struct
 import random
 import hashlib
 import decimal
+import pdb
 from binascii import hexlify, unhexlify
 import time
 from codecs import encode
@@ -14,6 +15,8 @@ from test_framework.schnorr import sign
 from test_framework.siphash import siphash256
 import test_framework.util as util
 from test_framework.constants import *
+from test_framework.scriptop import *
+from test_framework.script import CScript
 
 MY_VERSION = 80003 # past bip-152 for compactblocks
 
@@ -689,6 +692,14 @@ class CTxIn(object):
         self.nSequence = struct.unpack("<I", f.read(4))[0]
         self.amount = struct.unpack("<q", f.read(8))[0]
 
+    def setUnlockingToTemplate(self, templateScript, constraintArgs, satisfierArgs):
+        if satisfierArgs is None:
+            satisfierArgs = []
+        scr = [bytes(templateScript)]
+        if constraintArgs != None: scr.append(bytes(constraintArgs))
+        scr += satisfierArgs
+        self.scriptSig = CScript(scr)
+
     def serialize(self, stype):
         r = b""
         r += struct.pack("<B", self.t)
@@ -704,6 +715,9 @@ class CTxIn(object):
 
 # General transaction output
 class TxOut(object):
+    TYPE_SATOSCRIPT = 0
+    TYPE_TEMPLATE = 1
+    
     def __init__(self, typ=0, nValue=0, scriptPubKey=b""):
 
         assert(isinstance(scriptPubKey,bytes))
@@ -729,6 +743,13 @@ class TxOut(object):
         """Return true if this TxOut (compared by value) is in the passed transaction"""
         return self.findIn(tx) >= 0
 
+    def setLockingToTemplate(self, templateScript, constraintArgs, publicArgs=[], group=None, groupQty=None):
+        self.t = TxOut.TYPE_TEMPLATE
+        hashTemplate = hash160(templateScript)
+        hashArgs = hash160(constraintArgs) if (constraintArgs != None) else OP_0
+        grpPfx = [ OP_0 ] if (group == None) else [ group, groupQty]
+        self.scriptPubKey = CScript(grpPfx + [hashTemplate, hashArgs] + publicArgs)
+
 
     def deserialize(self, f):
         self.t   = struct.unpack("<B", f.read(1))[0]
@@ -741,6 +762,15 @@ class TxOut(object):
         r += ser_string(self.scriptPubKey)
         return r
 
+    def fromHex(self, hexdata):
+        """Overwrite the contents of this object with the deserialized data in the passed parameter"""
+        self.deserialize(hexdata)
+        return self
+    def toHex(self):
+        """Return the hex string serialization of this object"""
+        return hexlify(self.serialize()).decode("utf-8")
+
+    
     def __repr__(self):
         return "TxOut(type=%x, nValue=%i.%08i scriptPubKey=%s)" % (self.t, self.nValue // COIN, self.nValue % COIN, hexlify(self.scriptPubKey))
 
@@ -2532,6 +2562,32 @@ class msg_blocktxn(object):
     def __repr__(self):
         return "msg_blocktxn(block_transactions=%s)" % (repr(self.block_transactions))
 
+def fundSignSend(node, tx):
+    """Fund, sign, then send the passed CTransaction, returning the final CTransaction"""
+    frtReturn = node.fundrawtransaction(tx.toHex())
+    sgnReturn = node.signrawtransaction(frtReturn["hex"])
+    fundedTx = CTransaction().fromHex(sgnReturn["hex"])
+    node.sendrawtransaction(fundedTx.toHex())
+    return fundedTx
+
+def fundSignSendSpend(node, tx, finalOutScript=None, relay=True):
+    """Fund, sign, then send the passed CTransaction.  Then spend all its (non-change) outputs, (with the expectation that a valid sigScript is null)"""
+    fundedTx = fundSignSend(node, tx)
+    txs = CTransaction()
+    amountIn = 0
+    for idx, vout in enumerate(fundedTx.vout):
+        if vout.isIn(tx):  # if the output is in the original tx
+            txs.vin.append(fundedTx.SpendOutput(idx))
+            amountIn += vout.nValue
+    if finalOutScript is None: finalOutScript = CScript([OP_1])
+    if len(txs.serialize()) < 100:
+        txs.vout.append(CTxOut(0, CScript([OP_RETURN, b"                                                                      "])))
+    feeGuess = len(txs.serialize()) + 100
+    txs.vout.append(CTxOut(amountIn-feeGuess, finalOutScript))
+    if relay: node.sendrawtransaction(txs)
+    return txs
+
+
 
 def Test():
     import doctest
@@ -2563,4 +2619,5 @@ def varint_test():
 def testCTransactionCopyConstruct():
     a = CTransaction()
     b = CTransaction(a)
+
 

@@ -2117,7 +2117,7 @@ extern "C" JNIEXPORT jstring Java_org_nexa_libnexakotlin_ScriptMachine_getStackI
             int64_t t = item.asInt64(false); // TODO report minimal encoding
             ret += " " + std::to_string(t);
         }
-        catch (scriptnum_error &e)
+        catch (script_error &e)
         {
             ret += " NaN";
         }

@@ -1913,7 +1913,7 @@ void dbgDumpStack(const Stack &stack)
                 printf("%u (top%d) Num: %ld Hex: %s Script: %s\n", i, (int)i - (int)sz, (long int)itemAsInt.getint64(),
                     item.hex().c_str(), ScriptToAsmStr(CScript(item), false).c_str());
             }
-            catch (scriptnum_error const &)
+            catch (script_error const &)
             {
                 printf("%u (top%d) Num: NaN Hex: %s Script: %s\n", i, (int)i - (int)sz, item.hex().c_str(),
                     ScriptToAsmStr(CScript(item), false).c_str());
