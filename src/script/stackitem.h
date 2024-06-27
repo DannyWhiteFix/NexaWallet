@@ -200,10 +200,27 @@ public:
 
     // No BigNum is "empty"
     bool empty() const { return (isVch() && vch.empty()); }
+
+    /** Size returns the actual number of bytes if the stack item is a bytearray.
+        If the item is a bignum, it returns the size of the bignum in rounded-up sign-magnitude format.
+        Specifically, it is the number of bytes needed to store the magnitude of the number plus 1 extra byte
+        allocated for the sign.
+
+        This simple size encoding is the stack-size consensus accounting of the size of bignums.  The actual bytes
+        required by the internal representation my vary.
+     */
     size_t size(void) const
     {
-        requireType(StackElementType::VCH);
-        return vch.size();
+        if (isVch())
+        {
+            return vch.size();
+        }
+        if (isBigNum())
+        {
+            return n.magSize() + 1;
+        }
+        throw BadOpOnType("Invalid stack type");
+        return 0;
     }
 
     void clear(void)

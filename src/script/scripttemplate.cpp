@@ -90,9 +90,9 @@ bool VerifyTemplate(const CScript &templat,
     }
 
     // The data the constraint script leaves for the template goes on the altstack.
-    sm.setAltStack(sm.getStack());
+    sm.setAltStack(sm.getStack(), sm.stackSize);
     // The data the satisfier script leaves for the template goes on the main stack (just like traditional BTC).
-    sm.setStack(ssm.getStack());
+    sm.setStack(ssm.getStack(), ssm.stackSize);
 
     // Step 3, evaluate the template
     if (!sm.Eval(templat))

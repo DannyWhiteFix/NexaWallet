@@ -125,7 +125,7 @@ static bool MatchLabelPublic(const CScript &script, std::vector<valtype> &dataCa
         }
         dataCarriage.emplace_back(data);
     }
-    catch (scriptnum_error &)
+    catch (script_error &)
     {
         return false;
     }

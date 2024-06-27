@@ -5,6 +5,7 @@
 #include "script/stackitem.h"
 #include "script/script.h"
 #include "script/script_flags.h"
+#include "util.h"
 
 #include <limits>
 
@@ -16,11 +17,20 @@ bool withinStackWidth(unsigned int size, uint64_t scriptFlags)
 {
     // Ignore stack width if we are choosing to not enforce it
     if (scriptFlags & SCRIPT_RELAX_STACK_WIDTH)
+    {
+        // The width of a single stack item pedantically cannot be larger then the entire stack
+        if (scriptFlags & SCRIPT_ENFORCE_STACK_TOTAL)
+            return size <= MAX_SCRIPT_STACK_SIZE;
         return true;
-    // other wise check the size
-    if (size <= GENESIS_MAX_SCRIPT_ELEMENT_SIZE)
-        return true;
-    return false;
+    }
+    // otherwise check the size
+    if (size > GENESIS_MAX_SCRIPT_ELEMENT_SIZE)
+        return false;
+
+    // The width of a single stack item pedantically cannot be larger then the entire stack
+    if (scriptFlags & SCRIPT_ENFORCE_STACK_TOTAL)
+        return size <= MAX_SCRIPT_STACK_SIZE;
+    return true;
 }
 
 uint64_t StackItem::asUint64(bool requireMinimal) const

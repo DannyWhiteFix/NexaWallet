@@ -4,7 +4,6 @@
 
 #ifndef NEXA_PUSHTXSTATE_H
 #define NEXA_PUSHTXSTATE_H
-#include "interpreter.h"
 #include "script/script_error.h"
 
 #include <vector>
@@ -25,10 +24,11 @@ enum PushTxStateSpecifier
     GROUP_AUTHORITY_FLAGS = 0xE,
 };
 
-class ScriptImportedState;
+class ScriptMachine;
 
 typedef std::vector<unsigned char> VchType;
 
-ScriptError EvalPushTxState(const VchType &specifier, const ScriptImportedState &sis, Stack &stack);
+// Applies the specifier to the data in sm.sis to generate items that are pushed onto the passed stack.
+ScriptError EvalPushTxState(const VchType &specifier, ScriptMachine &sm);
 
 #endif

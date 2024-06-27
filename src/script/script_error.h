@@ -95,6 +95,8 @@ typedef enum ScriptError_t
     SCRIPT_ERR_INVALID_STATE_SPECIFIER,
     SCRIPT_ERR_INITIAL_STATE,
 
+    SCRIPT_ERR_STACK_BYTES, // Stack total length limit exceeded
+
     SCRIPT_ERR_ERROR_COUNT
 } ScriptError;
 

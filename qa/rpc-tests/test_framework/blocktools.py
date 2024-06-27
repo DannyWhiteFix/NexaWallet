@@ -8,9 +8,11 @@ import binascii
 import random
 import copy
 
-from .mininode import *
-from .script import CScript, OP_TRUE, OP_CHECKSIG, OP_DROP, OP_DUP, OP_HASH160, OP_EQUALVERIFY, OP_CHECKSIG, OP_RETURN, OP_NOP
+from .script import CScript
+from .scriptop import OP_TRUE, OP_CHECKSIG, OP_DROP, OP_DUP, OP_HASH160, OP_EQUALVERIFY, OP_CHECKSIG, OP_RETURN, OP_NOP
 from .util import BTC, COINBASE_REWARD, uint256ToRpcHex, rpcHexToUint256
+from .mininode import *
+
 import test_framework.cashaddr as cashaddr
 
 # Minimum size a transaction can have.
