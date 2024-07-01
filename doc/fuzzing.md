@@ -10,40 +10,43 @@ single data structures.
 
 ## Building AFL
 
-It is recommended to always use the latest version of afl:
+It is recommended to always install the latest version of AFLplusplus from https://github.com/AFLplusplus.
+
+See https://github.com/AFLplusplus/AFLplusplus/blob/stable/docs/INSTALL.md for installation details.
+Summary:
 ```
-wget http://lcamtuf.coredump.cx/afl/releases/afl-latest.tgz
-tar -zxvf afl-latest.tgz
-cd afl-<version>
-make
-export AFLPATH=$PWD
-cd llvm_mode
-make
-cd ..
-<optionally edit Makefile to install locally>
-[sudo] make install
+sudo apt-get update
+sudo apt-get install -y build-essential python3-dev automake cmake git flex bison libglib2.0-dev libpixman-1-dev python3-setuptools cargo libgtk-3-dev
+# try to install llvm 14 and install the distro default if that fails
+sudo apt-get install -y lld-14 llvm-14 llvm-14-dev clang-14 || sudo apt-get install -y lld llvm llvm-dev clang
+sudo apt-get install -y gcc-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-plugin-dev libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev
+sudo apt-get install -y ninja-build # for QEMU mode
+git clone https://github.com/AFLplusplus/AFLplusplus
+cd AFLplusplus
+make distrib
+sudo make install
 ```
 
 For fast fuzzing (see below), the `afl-clang-fast` and
-`afl-clang-fast++` AFL drivers should be build and used. They are in
-the `llvm_mode` subdirectory of AFL.
+`afl-clang-fast++` AFL drivers should be build and used.
 
 ## Instrumentation
+
+Before building Nexa with AFL, ensure that it can be built normally (see doc/build-unix.md).
 
 To build Nexa using AFL instrumentation (this assumes that the
 `AFLPATH` was set as above):
 ```
-./configure [--disable-ccache] --disable-shared --enable-tests CC=${AFLPATH}/afl-clang-fast CXX=${AFLPATH}/afl-clang-fast++
+./autogen.sh
+mkdir afl
+cd afl
+../configure --disable-shared --enable-tests CC=`which afl-clang-fast` CXX=`which afl-clang-fast++`
 export AFL_HARDEN=1
 cd src/
-make test/test_nexa_fuzzy
+make -j12 V=1 test/test_nexa_fuzzy
 ```
 
-Disabling ccache should be optional here, and is added above solely to
-save some HDD space.
-
-The fuzzer is _a lot_ faster now when run in LLVM persistent mode. To
-enable LLVM persistent mode, `test_nexa_fuzzy` has to be built with
+The fuzzer is _a lot_ faster now when run in LLVM persistent mode. To enable LLVM persistent mode, `test_nexa_fuzzy` has to be built with
 clang/clang++. But if you MUST use g++ you can still do it by setting CC and CXX appropriately:
 ```
 ./configure [--disable-ccache] --disable-shared --enable-tests CC=${AFLPATH}/afl-gcc CXX=${AFLPATH}/afl-g++
@@ -110,6 +113,47 @@ AFL documentation.
 it will (pretty much) behave like it would have been compiled without
 fuzzer options. It can, however, be used this way to retest test cases
 from the fuzzer.
+
+## Parallel fuzzing
+
+AFL is single threaded and you are expected to launch multiple instances to do parallel fuzzing.  The following "konsole" example command and tabs file starts up 24 verifyscript fuzzers.  Note that one fuzzer is marked with the flag -M and the rest -S.
+
+It is expected that your current directory is nexa/<build dir>/src/test, and you have created a "scriptFuzzInputs" directory with input patterns (begin with src/test/fuzzvectors/verifyscript*.bin) and an empty output directory named "sfo".
+Expected to be launched from the nexa/<build dir>/src/test directory:
+
+Create a file named "afltabs":
+```
+title: %n;; profile: big;; command: /usr/bin/top
+title: r0;; profile: big;; command: /usr/local/bin/afl-fuzz -t 4000 -i ./scriptFuzzInputs -o sfo -M r0 -m 100 -- ./test_nexa_fuzzy verifyscript
+title: r1;; profile: big;; command: /usr/local/bin/afl-fuzz -t 4000 -i ./scriptFuzzInputs -o sfo -S r1 -m 100 -- ./test_nexa_fuzzy verifyscript
+title: r2;; profile: big;; command: /usr/local/bin/afl-fuzz -t 4000 -i ./scriptFuzzInputs -o sfo -S r2 -m 100 -- ./test_nexa_fuzzy verifyscript
+title: r3;; profile: big;; command: /usr/local/bin/afl-fuzz -t 4000 -i ./scriptFuzzInputs -o sfo -S r3 -m 100 -- ./test_nexa_fuzzy verifyscript
+title: r4;; profile: big;; command: /usr/local/bin/afl-fuzz -t 4000 -i ./scriptFuzzInputs -o sfo -S r4 -m 100 -- ./test_nexa_fuzzy verifyscript
+title: r5;; profile: big;; command: /usr/local/bin/afl-fuzz -t 4000 -i ./scriptFuzzInputs -o sfo -S r5 -m 100 -- ./test_nexa_fuzzy verifyscript
+title: r6;; profile: big;; command: /usr/local/bin/afl-fuzz -t 4000 -i ./scriptFuzzInputs -o sfo -S r6 -m 100 -- ./test_nexa_fuzzy verifyscript
+title: r7;; profile: big;; command: /usr/local/bin/afl-fuzz -t 4000 -i ./scriptFuzzInputs -o sfo -S r7 -m 100 -- ./test_nexa_fuzzy verifyscript
+title: r8;; profile: big;; command: /usr/local/bin/afl-fuzz -t 4000 -i ./scriptFuzzInputs -o sfo -S r8 -m 100 -- ./test_nexa_fuzzy verifyscript
+title: r9;; profile: big;; command: /usr/local/bin/afl-fuzz -t 4000 -i ./scriptFuzzInputs -o sfo -S r9 -m 100 -- ./test_nexa_fuzzy verifyscript
+title: r10;; profile: big;; command: /usr/local/bin/afl-fuzz -t 4000 -i ./scriptFuzzInputs -o sfo -S r10 -m 100 -- ./test_nexa_fuzzy verifyscript
+title: r11;; profile: big;; command: /usr/local/bin/afl-fuzz -t 4000 -i ./scriptFuzzInputs -o sfo -S r11 -m 100 -- ./test_nexa_fuzzy verifyscript
+title: r12;; profile: big;; command: /usr/local/bin/afl-fuzz -t 4000 -i ./scriptFuzzInputs -o sfo -S r12 -m 100 -- ./test_nexa_fuzzy verifyscript
+title: r13;; profile: big;; command: /usr/local/bin/afl-fuzz -t 4000 -i ./scriptFuzzInputs -o sfo -S r13 -m 100 -- ./test_nexa_fuzzy verifyscript
+title: r14;; profile: big;; command: /usr/local/bin/afl-fuzz -t 4000 -i ./scriptFuzzInputs -o sfo -S r14 -m 100 -- ./test_nexa_fuzzy verifyscript
+title: r15;; profile: big;; command: /usr/local/bin/afl-fuzz -t 4000 -i ./scriptFuzzInputs -o sfo -S r15 -m 100 -- ./test_nexa_fuzzy verifyscript
+title: r16;; profile: big;; command: /usr/local/bin/afl-fuzz -t 4000 -i ./scriptFuzzInputs -o sfo -S r16 -m 100 -- ./test_nexa_fuzzy verifyscript
+title: r17;; profile: big;; command: /usr/local/bin/afl-fuzz -t 4000 -i ./scriptFuzzInputs -o sfo -S r17 -m 100 -- ./test_nexa_fuzzy verifyscript
+title: r18;; profile: big;; command: /usr/local/bin/afl-fuzz -t 4000 -i ./scriptFuzzInputs -o sfo -S r18 -m 100 -- ./test_nexa_fuzzy verifyscript
+title: r19;; profile: big;; command: /usr/local/bin/afl-fuzz -t 4000 -i ./scriptFuzzInputs -o sfo -S r19 -m 100 -- ./test_nexa_fuzzy verifyscript
+title: r20;; profile: big;; command: /usr/local/bin/afl-fuzz -t 4000 -i ./scriptFuzzInputs -o sfo -S r20 -m 100 -- ./test_nexa_fuzzy verifyscript
+title: r21;; profile: big;; command: /usr/local/bin/afl-fuzz -t 4000 -i ./scriptFuzzInputs -o sfo -S r21 -m 100 -- ./test_nexa_fuzzy verifyscript
+title: r22;; profile: big;; command: /usr/local/bin/afl-fuzz -t 4000 -i ./scriptFuzzInputs -o sfo -S r22 -m 100 -- ./test_nexa_fuzzy verifyscript
+title: r23;; profile: big;; command: /usr/local/bin/afl-fuzz -t 4000 -i ./scriptFuzzInputs -o sfo -S r23 -m 100 -- ./test_nexa_fuzzy verifyscript
+```
+
+```
+konsole --hold --tabs-from-file afltabs
+```
+
 
 ## Extending
 

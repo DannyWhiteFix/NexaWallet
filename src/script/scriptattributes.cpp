@@ -109,11 +109,12 @@ bool IsScriptGrouped(const CScript &script, CScript::const_iterator *pcin, CGrou
         grp->invalid = true;
         return false;
     }
-    // Must be true based on the opcode test
-    DbgAssert(groupId.size() >= 0x20, {
+    // if opcodeGrp is a pushdata then the size could still be too small
+    if (groupId.size() < 0x20)
+    {
         grp->invalid = true;
         return false;
-    });
+    }
 
     // Quantity must be a 2, 4, or 8 byte number
     if ((opcodeQty != 2) && (opcodeQty != 4) && (opcodeQty != 8))

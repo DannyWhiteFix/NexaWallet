@@ -12,9 +12,7 @@ import sys
 import argparse
 import io
 import struct
-
-# to run this program, create a symlink in this directory to the bchscript compiler
-import bchscript
+import pdb
 
 modDir = os.path.dirname(os.path.realpath(__file__))
 
@@ -27,6 +25,18 @@ def ser_string(s):
         return struct.pack("<BI", 254, len(s)) + s
     return struct.pack("<BQ", 255, len(s)) + s
 
+scripts = [ "515293",
+            "515c95529856",
+            "51995604123456788184",
+            "020100816081965297",
+            "0201008160819452939a9b",
+            "52529576549599",
+
+            "5352559376957d936c93048237785485055aa55aa5007b7c859304ffffff7f85",
+            "5380060102030405066c76a87c76aa7ca97b7b7e7c7eaa7c88",
+            "06000201030405060102030405066c78867d63756967697568",
+            "06000201030405060102030405066c767e787e7c7e787e787e787e7c7e767e7c7e7601147f7b01327f537a7b7e7b7e7c7eaa69"
+            ]
 
 def Test():
     try:
@@ -47,16 +57,15 @@ def Test():
     binTx = bytearray.fromhex(hexTx)
     binPrevouts = bytearray.fromhex(hexPrevouts)
 
-    fname = modDir + os.sep + "fuzzScriptStarter.bch"
-    inp = open(modDir + os.sep + "fuzzScriptStarter.bch", "r")
-    ret = bchscript.compile(inp,"", fname)
+    ret = []
+    for s in scripts:
+        ret.append(bytes.fromhex(s))
 
-    inp = bchscript.script2bin(ret["inp"]["constraint"])
-    del ret["inp"]
-    for (k, v) in ret.items():
+    inp = bytes()
+    k = 0
+    for out in ret:
         fname = "scriptFuzzInputs/aflinput%s.bin" % k
         print("Creating %s" % fname)
-        out = bchscript.script2bin(v["constraint"])
         f = open(fname,"wb")
         flags = 0xd47df # standard + opcode enabling flags
         version = 1  # protocol version -- unused in this
@@ -71,6 +80,7 @@ def Test():
         f.write(ser_string(binTx))
         f.write(ser_string(binPrevouts))
         f.close()
+        k+=1
     fname = modDir + os.sep + "scriptnumAFL.hex"
     allScripts = open(fname, "r").read()
     allScripts = allScripts.split()

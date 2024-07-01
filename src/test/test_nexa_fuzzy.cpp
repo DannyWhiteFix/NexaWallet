@@ -353,14 +353,17 @@ protected:
         unsigned int inputIdx;
 
         *ds >> flags;
+        // If either of these are set, both must be set
+        // otherwise the fuzzer can easily hit memory errors.
+        if (flags & (SCRIPT_RELAX_STACK_WIDTH | SCRIPT_ENFORCE_STACK_TOTAL))
+        {
+            flags |= (SCRIPT_RELAX_STACK_WIDTH | SCRIPT_ENFORCE_STACK_TOTAL);
+        }
         *ds >> inputIdx;
         *ds >> scriptsig_raw;
         *ds >> scriptpubkey_raw;
         *ds >> tx_raw;
         *ds >> coins_raw;
-
-        if ((flags & SCRIPT_VERIFY_CLEANSTACK) != 0)
-            flags |= SCRIPT_VERIFY_P2SH;
 
         ScriptError error;
         ScriptMachineResourceTracker stats;
