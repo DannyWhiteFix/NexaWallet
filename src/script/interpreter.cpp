@@ -2672,15 +2672,24 @@ void ScriptMachine::DbgConsistencyCheck()
     {
         size += s.size();
     }
-    DbgAssert(stackSize == size, );
-
-    DbgAssert(stats.maxStackBytes <= MAX_SCRIPT_STACK_SIZE, );
-
-    size = 0;
+    unsigned int altsize = 0;
     for (auto &s : altstack)
     {
-        size += s.size();
+        altsize += s.size();
     }
-    DbgAssert(altStackSize == size, );
+    auto prevop = pc - 1;
+    auto prevop2 = prevop;
+
+    opcodetype opcode;
+    StackItem vchPushValue;
+    script->GetOp(prevop2, opcode, vchPushValue);
+
+    // printf("%d: OP: %s pushsize: %d error: %s\n", (prevop - pbegin),GetOpName(opcode), (int) vchPushValue.size(),
+    // ScriptErrorString(error)); printf("    STK: %d elems %d bytes ALT: %d elems %d bytes\n", (int) stack.size(),
+    // size, (int) altstack.size(), altsize);
+
+    DbgAssert(stackSize == size, );
+    DbgAssert(stats.maxStackBytes <= MAX_SCRIPT_STACK_SIZE, );
+    DbgAssert(altStackSize == altsize, );
 #endif
 }
