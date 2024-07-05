@@ -38,6 +38,9 @@ add_definitions(-DLIGHT -DANDROID -Wno-tautological-constant-compare -DBOOST_SYS
 set(libsrc
              # Provides a relative path to your source file(s).
              libnexa.cpp
+             libnexa_jvm.cpp
+             libnexa_common.cpp
+             libnexa_common.h
              ../config.cpp
              ../config.h
              ../base58.cpp
@@ -81,6 +84,7 @@ set(libsrc
              ../uint256.h
              ../utilstrencodings.cpp
              ../utilstrencodings.h
+	     ../utilgrouptoken.cpp
              ../cashaddrenc.cpp
              ../cashaddrenc.h
              ../cashaddr.cpp

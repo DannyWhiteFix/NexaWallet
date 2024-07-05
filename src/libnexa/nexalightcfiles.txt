@@ -1,4 +1,6 @@
 libnexa/libnexa.cpp
+libnexa/libnexa_common.cpp
+libnexa/libnexa_jvm.cpp
 base58.cpp
 script/interpreter.cpp
 script/script.cpp
@@ -26,6 +28,7 @@ hashwrapper.cpp
 key.cpp
 uint256.cpp
 utilstrencodings.cpp
+utilgrouptoken.cpp
 cashaddrenc.cpp
 cashaddr.cpp
 pubkey.cpp

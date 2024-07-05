@@ -5,13 +5,29 @@
 #ifndef LIBNEXA_H
 #define LIBNEXA_H
 
+// Preface any Shared Library API definition with this macro.  This will ensure that the function is available for
+// external linkage.
+// For example:
+// SLAPI int myExportedFunc(unsigned char *buf, int num);
+// If windows build, export all the APIs as dll symbols
+#ifndef CINTEROP
+#ifdef __MINGW32__
+#define SLAPI extern "C" __declspec(dllexport)
+#else
+#ifdef __MINGW64__
+#define SLAPI extern "C" __declspec(dllexport)
+#else
+#define SLAPI extern "C" __attribute__((visibility("default")))
+#endif
+#endif
+#endif
+
 // This removes an unneeded define that confuses the Kotlin/Native binding program
 #ifdef CINTEROP
 #define SLAPI
 #endif
 
 #include "stdint.h"
-#include "util.h"
 
 #include <stdbool.h>
 
@@ -49,8 +65,8 @@ SLAPI void get_libnexa_error_string(char *buf, uint64_t buflen);
 /** Returns 0 if invalid, -sizeNeeded if you did not give a large enough buffer, or the length of the result if it
     worked.
  */
-SLAPI int encode64(const unsigned char* data, int size, char* result, unsigned int resultMaxLen);
-SLAPI int decode64(const char* data, unsigned char* result, unsigned int resultMaxLen);
+SLAPI int encode64(const unsigned char* data, int size, char* result, int resultMaxLen);
+SLAPI int decode64(const char* data, unsigned char* result, int resultMaxLen);
 
 /** Convert binary data to a hex string.  The provided result buffer must be 2*length+1 bytes.
  */
@@ -201,23 +217,23 @@ SLAPI int verifyMessage(const unsigned char* message, unsigned int msgLen,
                          const unsigned char* sig, unsigned int sigLen,
                          unsigned char *result, unsigned int resultLen);
 
-SLAPI bool verifyBlockHeader(int chainSelector, const unsigned char *serializedHeader, unsigned int serLen);
+SLAPI bool verifyBlockHeader(int chainSelector, const unsigned char *serializedHeader, int serLen);
 
-SLAPI int encodeCashAddr(int chainSelector, int typ, const unsigned char *data, unsigned int len, char *result, unsigned int resultMaxLen);
+SLAPI int encodeCashAddr(int chainSelector, int typ, const unsigned char *data, int len, char *result, int resultMaxLen);
 
-SLAPI int decodeCashAddr(int chainSelector, const char *addrstr, unsigned char *result, unsigned int resultMaxLen);
+SLAPI int decodeCashAddr(int chainSelector, const char *addrstr, unsigned char *result, int resultMaxLen);
 
-SLAPI int decodeCashAddrContent(int chainSelector, const char* addrstr, unsigned char *result, unsigned int resultMaxLen, unsigned char *type);
+SLAPI int decodeCashAddrContent(int chainSelector, const char* addrstr, unsigned char *result, int resultMaxLen, unsigned char *type);
 
-SLAPI int serializeScript(const uint8_t *script, const unsigned int lenScript, uint8_t *result, unsigned int resultMaxLen);
+SLAPI int serializeScript(const uint8_t *script, const unsigned int lenScript, uint8_t *result, int resultMaxLen);
 
-SLAPI int pubkeyToScriptTemplate(const unsigned char *pubkey, unsigned int lenPubkey, unsigned char *result, unsigned int resultMaxLen);
+SLAPI int pubkeyToScriptTemplate(const unsigned char *pubkey, int lenPubkey, unsigned char *result, int resultMaxLen);
 
-SLAPI int groupIdFromAddr(int chainSelector,  const char *addrstr, unsigned char *result, unsigned int resultMaxLen);
+SLAPI int groupIdFromAddr(int chainSelector,  const char *addrstr, unsigned char *result, int resultMaxLen);
 
-SLAPI int groupIdToAddr(int chainSelector, const unsigned char *data, unsigned int len, char *result, unsigned int resultMaxLen);
+SLAPI int groupIdToAddr(int chainSelector, const unsigned char *data, int len, char *result, int resultMaxLen);
 
-SLAPI int decodeWifPrivateKey(int chainSelector, const char *secretWIF, unsigned char *result, unsigned int resultMaxLen);
+SLAPI int decodeWifPrivateKey(int chainSelector, const char *secretWIF, unsigned char *result, int resultMaxLen);
 
 /** Calculates the sha256 of data, and places it in result.  Result must be 32 bytes */
 SLAPI void sha256(const unsigned char* data, unsigned int len, unsigned char* result);
@@ -237,14 +253,7 @@ SLAPI unsigned int getDifficultyBitsFromWork(unsigned char *work256Bits);
 The size of the result array must be allocated to be at least 32 bytes bigger than maxSize to account for the
 serialization overhead.
 */
-SLAPI int createBloomFilter(const unsigned char* data,
-    unsigned int len,
-    double falsePosRate,
-    unsigned int capacity,
-    unsigned int maxSize,
-    unsigned int flags,
-    unsigned int tweak,
-    unsigned char* result);
+SLAPI int createBloomFilter(const unsigned char* data, unsigned int len, double falsePosRate, int capacity, int maxSize, int flags, int tweak, unsigned char* result);
 
 SLAPI int extractFromMerkleBlock(int numTxes, const unsigned char *merkleProofPath, int mppLen,
                                  const unsigned char *hashIn, int numHashes,

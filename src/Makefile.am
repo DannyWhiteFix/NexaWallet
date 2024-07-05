@@ -62,9 +62,6 @@ endif
 
 if BUILD_NEXA_LIBS
 LIBNEXA=libnexa.la
-if ENABLE_JAVALIBNEXA
-LIBNEXA_JVM=libnexa_jvm.la
-endif # ENABLE_JAVALIBNEXA
 endif # BUILD_NEXA_LIBS
 
 if ENABLE_WALLET
@@ -499,14 +496,8 @@ libnexa_a_common_SOURCES = \
 libnexa_a_SOURCES = \
   libnexa/libnexa.cpp \
   libnexa/libnexa.h \
-  $(libnexa_a_common_SOURCES)
-
-if ENABLE_JAVALIBNEXA
-libnexa_jvm_a_SOURCES = \
   libnexa/libnexa_jvm.cpp \
-  libnexa/libnexa.h \
   $(libnexa_a_common_SOURCES)
-endif
 
 
 # crypto primitives library
@@ -826,18 +817,6 @@ libnexa_la_CPPFLAGS = $(AM_CPPFLAGS) $(NEXA_INCLUDES) $(BOOST_CPPFLAGS) -I$(buil
 libnexa_la_CXXFLAGS = $(AM_CXXFLAGS) -DPIC
 # $(PIE_FLAGS)
 
-if ENABLE_JAVALIBNEXA
-libnexa_jvm_la_SOURCES = $(libnexa_jvm_a_SOURCES) $(crypto_libnexa_crypto_a_SOURCES) $(falcon512_libnexa_falcon512_a_SOURCES)
-
-if GLIBC_BACK_COMPAT
-libnexa_jvm_la_SOURCES += compat/glibc_compat.cpp
-endif
-
-libnexa_jvm_la_LDFLAGS = $(AM_LDFLAGS) $(CRYPTO_LIBS) $(BOOST_LIBS) -no-undefined $(RELDFLAGS) $(PTHREAD_FLAGS)
-libnexa_jvm_la_LIBADD = $(LIBSECP256K1)
-libnexa_jvm_la_CPPFLAGS = $(AM_CPPFLAGS) $(NEXA_INCLUDES) $(BOOST_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include $(JNI_CXXFLAGS) -DBUILD_BITCOIN_INTERNAL
-libnexa_jvm_la_CXXFLAGS = $(AM_CXXFLAGS) -DPIC
-endif # ENABLE_JAVALIBNEXA
 #
 endif # BUILD_NEXA_LIBS
 #

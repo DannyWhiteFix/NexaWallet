@@ -27,7 +27,7 @@ SLAPI unsigned int get_libnexa_error() { return get_error_code(); }
 
 SLAPI void get_libnexa_error_string(char *buf, uint64_t buflen) { get_error_string(buf, buflen); }
 
-SLAPI int encode64(const unsigned char *data, int size, char *result, unsigned int resultMaxLen)
+SLAPI int encode64(const unsigned char *data, int size, char *result, int resultMaxLen)
 {
     auto dataAsStr = EncodeBase64(data, size);
     if (dataAsStr.size() > std::numeric_limits<int>::max())
@@ -35,7 +35,7 @@ SLAPI int encode64(const unsigned char *data, int size, char *result, unsigned i
         set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
         return -1;
     }
-    const size_t outsz = dataAsStr.size();
+    const int outsz = dataAsStr.size();
     if (outsz >= resultMaxLen)
     {
         set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
@@ -45,7 +45,7 @@ SLAPI int encode64(const unsigned char *data, int size, char *result, unsigned i
     return (int)outsz;
 }
 
-SLAPI int decode64(const char *data, unsigned char *result, unsigned int resultMaxLen)
+SLAPI int decode64(const char *data, unsigned char *result, int resultMaxLen)
 {
     bool invalid = true;
     auto dataBytes = DecodeBase64(data, &invalid);
@@ -59,7 +59,7 @@ SLAPI int decode64(const char *data, unsigned char *result, unsigned int resultM
         set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
         return -1;
     }
-    const size_t outsz = dataBytes.size();
+    const int outsz = dataBytes.size();
     if (outsz > resultMaxLen)
     {
         set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
@@ -844,7 +844,7 @@ SLAPI int verifyMessage(const unsigned char *message,
     }
 }
 
-SLAPI bool verifyBlockHeader(int chainSelector, const unsigned char *serializedHeader, unsigned int serLen)
+SLAPI bool verifyBlockHeader(int chainSelector, const unsigned char *serializedHeader, int serLen)
 {
     checkSigInit();
     const CChainParams *cp = GetChainParams(static_cast<ChainSelector>(chainSelector));
@@ -868,12 +868,7 @@ SLAPI bool verifyBlockHeader(int chainSelector, const unsigned char *serializedH
     return result;
 }
 
-SLAPI int encodeCashAddr(int chainSelector,
-    int typ,
-    const unsigned char *data,
-    unsigned int len,
-    char *result,
-    unsigned int resultMaxLen)
+SLAPI int encodeCashAddr(int chainSelector, int typ, const unsigned char *data, int len, char *result, int resultMaxLen)
 {
     CTxDestination dst = CNoDestination();
 
@@ -918,7 +913,7 @@ SLAPI int encodeCashAddr(int chainSelector,
         return 0;
     }
     std::string addrAsStr(EncodeCashAddr(dst, *cp));
-    const size_t sz = addrAsStr.size();
+    const int sz = addrAsStr.size();
     if (sz > std::numeric_limits<int>::max())
     {
         set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
@@ -934,7 +929,7 @@ SLAPI int encodeCashAddr(int chainSelector,
 }
 
 
-SLAPI int decodeCashAddr(int chainSelector, const char *addrstr, unsigned char *result, unsigned int resultMaxLen)
+SLAPI int decodeCashAddr(int chainSelector, const char *addrstr, unsigned char *result, int resultMaxLen)
 {
     const CChainParams *cp = GetChainParams((ChainSelector)chainSelector);
     if (cp == nullptr)
@@ -944,7 +939,7 @@ SLAPI int decodeCashAddr(int chainSelector, const char *addrstr, unsigned char *
     CTxDestination dst = DecodeCashAddr(addrstr, *cp);
     std::vector<unsigned char> resultv;
     std::visit(PubkeyExtractor(resultv, *cp), dst);
-    const size_t sz = resultv.size();
+    const int sz = resultv.size();
     if (sz > std::numeric_limits<int>::max())
     {
         set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
@@ -962,7 +957,7 @@ SLAPI int decodeCashAddr(int chainSelector, const char *addrstr, unsigned char *
 SLAPI int decodeCashAddrContent(int chainSelector,
     const char *addrstr,
     unsigned char *result,
-    unsigned int resultMaxLen,
+    int resultMaxLen,
     unsigned char *type)
 {
     const CChainParams *cp = GetChainParams((ChainSelector)chainSelector);
@@ -971,7 +966,7 @@ SLAPI int decodeCashAddrContent(int chainSelector,
         return 0;
     }
     CashAddrContent content = DecodeCashAddrContent(addrstr, *cp);
-    const size_t hash_size = content.hash.size();
+    const int hash_size = content.hash.size();
     if (hash_size > std::numeric_limits<int>::max())
     {
         set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
@@ -987,10 +982,7 @@ SLAPI int decodeCashAddrContent(int chainSelector,
     return (int)hash_size;
 }
 
-SLAPI int serializeScript(const uint8_t *script,
-    const unsigned int lenScript,
-    uint8_t *result,
-    unsigned int resultMaxLen)
+SLAPI int serializeScript(const uint8_t *script, const unsigned int lenScript, uint8_t *result, int resultMaxLen)
 {
     std::vector<uint8_t> vec(script, script + lenScript);
     CDataStream ssData(SER_NETWORK, PROTOCOL_VERSION);
@@ -1006,14 +998,11 @@ SLAPI int serializeScript(const uint8_t *script,
 }
 
 // TODO - add support for creating a script template destination that includes a specific group / amount
-SLAPI int pubkeyToScriptTemplate(const unsigned char *pubkey,
-    unsigned int lenPubkey,
-    unsigned char *result,
-    unsigned int resultMaxLen)
+SLAPI int pubkeyToScriptTemplate(const unsigned char *pubkey, int lenPubkey, unsigned char *result, int resultMaxLen)
 {
     // CScript P2pktOutput(const CPubKey &pubkey, const CGroupTokenID &group = NoGroup, CAmount grpQuantity = 0);
     const CScript scriptTemplate = P2pktOutput(CPubKey(&pubkey[0], &pubkey[0] + lenPubkey));
-    const size_t scriptTemplateSize = scriptTemplate.size();
+    const int scriptTemplateSize = scriptTemplate.size();
     if (scriptTemplateSize > std::numeric_limits<int>::max())
     {
         set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
@@ -1029,11 +1018,7 @@ SLAPI int pubkeyToScriptTemplate(const unsigned char *pubkey,
 }
 
 
-SLAPI int groupIdToAddr(int chainSelector,
-    const unsigned char *data,
-    unsigned int len,
-    char *result,
-    unsigned int resultMaxLen)
+SLAPI int groupIdToAddr(int chainSelector, const unsigned char *data, int len, char *result, int resultMaxLen)
 {
     if (len < 32)
     {
@@ -1052,7 +1037,7 @@ SLAPI int groupIdToAddr(int chainSelector,
         return 0;
     }
     std::string addrAsStr(EncodeGroupToken(grp, *cp));
-    const size_t sz = addrAsStr.size();
+    const int sz = addrAsStr.size();
     if (sz > std::numeric_limits<int>::max())
     {
         set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
@@ -1068,7 +1053,7 @@ SLAPI int groupIdToAddr(int chainSelector,
 }
 
 
-SLAPI int groupIdFromAddr(int chainSelector, const char *addrstr, unsigned char *result, unsigned int resultMaxLen)
+SLAPI int groupIdFromAddr(int chainSelector, const char *addrstr, unsigned char *result, int resultMaxLen)
 {
     const CChainParams *cp = GetChainParams((ChainSelector)chainSelector);
     if (cp == nullptr)
@@ -1097,10 +1082,7 @@ SLAPI int groupIdFromAddr(int chainSelector, const char *addrstr, unsigned char 
 }
 
 
-SLAPI int decodeWifPrivateKey(int chainSelector,
-    const char *secretWIF,
-    unsigned char *result,
-    unsigned int resultMaxLen)
+SLAPI int decodeWifPrivateKey(int chainSelector, const char *secretWIF, unsigned char *result, int resultMaxLen)
 {
     const CChainParams *cp = GetChainParams(static_cast<ChainSelector>(chainSelector));
     if (cp == nullptr)
@@ -1215,10 +1197,10 @@ SLAPI unsigned int getDifficultyBitsFromWork(unsigned char *work256Bits)
 SLAPI int createBloomFilter(const unsigned char *data,
     unsigned int len,
     double falsePosRate,
-    unsigned int capacity,
-    unsigned int maxSize,
-    unsigned int flags,
-    unsigned int tweak,
+    int capacity,
+    int maxSize,
+    int flags,
+    int tweak,
     unsigned char *result)
 {
     if (capacity < 10)
@@ -1231,7 +1213,7 @@ SLAPI int createBloomFilter(const unsigned char *data,
         return 0;
     }
 
-    int maxx = (capacity > len) ? capacity : len;
+    int maxx = (capacity > (int)len) ? capacity : len;
     CBloomFilter bloom(maxx, falsePosRate, tweak, flags, maxSize);
 
     const unsigned char *elemData = data;
