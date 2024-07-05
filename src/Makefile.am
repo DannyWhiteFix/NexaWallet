@@ -61,8 +61,8 @@ LIBNEXA_ZMQ=libnexa_zmq.a
 endif
 
 if BUILD_NEXA_LIBS
-LIBBITCOINCASH=libnexa.la
-endif
+LIBNEXA=libnexa.la
+endif # BUILD_NEXA_LIBS
 
 if ENABLE_WALLET
 LIBNEXA_WALLET=libnexa_wallet.a
@@ -91,7 +91,7 @@ EXTRA_LIBRARIES += \
   $(LIBNEXA_WALLET) \
   $(LIBNEXA_ZMQ)
 
-lib_LTLIBRARIES = $(LIBBITCOINCASH)
+lib_LTLIBRARIES = $(LIBNEXA) $(LIBNEXA_JVM)
 
 bin_PROGRAMS =
 noinst_PROGRAMS =
@@ -262,6 +262,7 @@ BITCOIN_CORE_H = \
   wallet/wallet.h \
   wallet/walletdb.h \
   wallet/grouptokencache.h \
+  utilgrouptoken.h \
   wallet/grouptokenwallet.h \
   zmq/zmqabstractnotifier.h \
   zmq/zmqconfig.h\
@@ -369,6 +370,7 @@ libnexa_server_a_SOURCES = \
   validationinterface.cpp \
   versionbits.cpp \
   wallet/grouptokencache.cpp \
+  utilgrouptoken.cpp \
   $(BITCOIN_CORE_H)
 
 if ENABLE_ZMQ
@@ -400,8 +402,11 @@ libnexa_wallet_a_SOURCES = \
 libnexa_a_CPPFLAGS = $(AM_CPPFLAGS) $(NEXA_INCLUDES)
 libnexa_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
-libnexa_a_SOURCES = \
-  libnexa/libnexa.cpp \
+libnexa_a_common_SOURCES = \
+  libnexa/libnexa_common.cpp \
+  libnexa/libnexa_common.h \
+  libnexa/libnexa_script_machine.cpp \
+  libnexa/libnexa_script_machine.h \
   base58.cpp \
   base58.h \
   merkleblock.cpp \
@@ -484,8 +489,15 @@ libnexa_a_SOURCES = \
   bloom.h \
   utilstrencodings.cpp \
   utilstrencodings.h \
+  utilgrouptoken.cpp \
   datastream.h \
   streams.h
+
+libnexa_a_SOURCES = \
+  libnexa/libnexa.cpp \
+  libnexa/libnexa.h \
+  libnexa/libnexa_jvm.cpp \
+  $(libnexa_a_common_SOURCES)
 
 
 # crypto primitives library
@@ -804,7 +816,9 @@ libnexa_la_LIBADD = $(LIBSECP256K1)
 libnexa_la_CPPFLAGS = $(AM_CPPFLAGS) $(NEXA_INCLUDES) $(BOOST_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include $(JNI_CXXFLAGS) -DBUILD_BITCOIN_INTERNAL
 libnexa_la_CXXFLAGS = $(AM_CXXFLAGS) -DPIC
 # $(PIE_FLAGS)
-endif
+
+#
+endif # BUILD_NEXA_LIBS
 #
 
 CLEANFILES = $(EXTRA_LIBRARIES)

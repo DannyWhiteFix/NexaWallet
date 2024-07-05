@@ -1,488 +1,48 @@
 // Copyright (c) 2015-2022 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-/* clang-format off */
-// must be first for windows
-#include "compat.h"
-/* clang-format on */
 
-#ifdef ANDROID // Workaround to fix gradle build
-#define SECP256K1_INLINE inline
-#endif
+#include "libnexa.h"
+#include "libnexa_common.h"
 
-#include <algorithm>
-#include <chrono>
-#include <ctime>
-#include <string>
-#include <vector>
-
-#include "arith_uint256.h"
-#include "base58.h"
-#include "bloom.h"
-#include "capd/capd.h"
-#include "cashaddrenc.h"
-#include "chainparams.h"
-#include "coins.h"
-#include "consensus/validation.h"
-#include "crypto/aes.h"
-#include "dstencode.h"
-#include "merkleblock.h"
-#include "policy/policy.h"
-#include "random.h"
-#include "script/scripttemplate.h"
-#include "script/sign.h"
-#include "streams.h"
-#include "tinyformat.h"
-#include "uint256.h"
-#include "util.h"
-#include "utilstrencodings.h"
-
-#if defined(ANDROID) // log sighash calculations
-#include <android/log.h>
-#define p(...) __android_log_print(ANDROID_LOG_DEBUG, "libnexa", __VA_ARGS__)
-#elif defined(JAVA)
-#define p(...)
-// tinyformat::format(std::cout, __VA_ARGS__)
-#else
+#ifdef DEBUG
+#ifdef IOS
 #define p(...) // tinyformat::format(std::cout, __VA_ARGS__)
-#endif
-
-#if defined(JAVA)
-#include <jni.h>
-
-// On windows we need to set JNI calls to be exported from the DLL
-#ifdef __MINGW32__
-#undef JNIEXPORT
-#define JNIEXPORT __declspec(dllexport)
-#else
-#ifdef __MINGW64__
-#undef JNIEXPORT
-#define JNIEXPORT __declspec(dllexport)
-#endif
-#endif
-
-#endif
-
-// clang-format off
-
-// Major version MUST be incremented if any backward incompatible changes are
-// introduced to the public API. It MAY also include minor and revision level changes.
-// Minor and revision versions MUST be reset to 0 when major version is incremented.
-#define MAJOR(major) 1000000 * major
-
-// Minor version MUST be incremented if new, backward compatible functionality is
-// introduced to the public API. It MUST be incremented if any public API
-// functionality is marked as deprecated. It MAY be incremented if substantial
-// new functionality or improvements are introduced within the private code.
-// It MAY include patch level changes. Revision version MUST be reset to 0 when
-// minor version is incremented.
-#define MINOR(minor) 1000 * minor
-
-// Revision version MUST be incremented if only backward compatible bug fixes are
-// introduced. A bug fix is defined as an internal change that fixes incorrect behavior.
-#define REVISION(revision) 1 * revision
-static const int LIBNEXA_VERSION = MAJOR(1) + MINOR(1) + REVISION(0);
-
-// clang-format on
-
-SLAPI int libnexaVersion() { return LIBNEXA_VERSION; }
+#else // not IOS
+#define p(...) tinyformat::format(std::cout, __VA_ARGS__)
+#endif // IOS
+#else // not DEBUG
+#define p(...)
+#endif // DEBUG
 
 // in headervalidation.cpp
 bool CheckBlockHeader(const Consensus::Params &consensusParams,
     const CBlockHeader &block,
     CValidationState &state,
-    bool fCheckPOW = true);
-
-// DER-encoded ECDSA is more like 72 but better to be safe
-// Schnorr is only 64, but this must also include a few extra bytes for the sighashtype
-#define MAX_SIG_LEN 100
-
-
-static bool sigInited = false;
-ECCVerifyHandle *verifyContext = nullptr;
-CChainParams *libnexaParams = nullptr;
-
-const int CLIENT_VERSION = 0; // 0 because app should report its version, not this lib
-
-bool CheckBlockHeader(const Consensus::Params &consensusParams,
-    const CBlockHeader &block,
-    CValidationState &state,
     bool fCheckPOW);
 
+SLAPI int32_t libnexaVersion() { return LIBNEXA_VERSION; }
 
-// This section of this file provides simple or NO-OP implementations of functions used by the larger codebase
+SLAPI unsigned int get_libnexa_error() { return get_error_code(); }
 
-// The time stuff is reimplemented here to avoid a dependency on utiltime, which both
-// implements mocktime (using atomics) and has other dependencies for time formatting and logging
-int64_t GetAdjustedTime()
-{
-    time_t now = time(nullptr);
-    return now;
-}
-int64_t GetTime()
-{
-    time_t now = time(nullptr);
-    return now;
-}
-int64_t GetTimeMicros()
-{
-    std::chrono::time_point<std::chrono::system_clock> clock_now = std::chrono::system_clock::now();
-    int64_t now = std::chrono::duration_cast<std::chrono::microseconds>(clock_now.time_since_epoch()).count();
-    return now;
-}
-
-
-#ifdef DEBUG_LOCKORDER // Not debugging the lockorder in libnexa even if its defined
-void AssertLockHeldInternal(const char *pszName, const char *pszFile, unsigned int nLine, void *cs) {}
-void AssertLockNotHeldInternal(const char *pszName, const char *pszFile, unsigned int nLine, void *cs) {}
-void EnterCritical(const char *pszName,
-    const char *pszFile,
-    unsigned int nLine,
-    void *cs,
-    LockType locktype,
-    OwnershipType ownership,
-    bool fTry)
-{
-}
-void LeaveCritical(void *cs) {}
-void AssertWriteLockHeldInternal(const char *pszName,
-    const char *pszFile,
-    unsigned int nLine,
-    CSharedCriticalSection *cs)
-{
-}
-void AssertRecursiveWriteLockHeldInternal(const char *pszName,
-    const char *pszFile,
-    unsigned int nLine,
-    CRecursiveSharedCriticalSection *cs)
-{
-}
-CCriticalSection::CCriticalSection() : name(nullptr) {}
-CCriticalSection::CCriticalSection(const char *n) : name(n) {}
-CCriticalSection::~CCriticalSection() {}
-CSharedCriticalSection::CSharedCriticalSection() : name(nullptr) {}
-CSharedCriticalSection::CSharedCriticalSection(const char *n) : name(n) {}
-CSharedCriticalSection::~CSharedCriticalSection() {}
-CRecursiveSharedCriticalSection::CRecursiveSharedCriticalSection() : name(nullptr) {}
-CRecursiveSharedCriticalSection::CRecursiveSharedCriticalSection(const char *n) : name(n) {}
-CRecursiveSharedCriticalSection::~CRecursiveSharedCriticalSection() {}
-#endif // DEBUG_LOCKORDER
-
-#ifdef DEBUG_PAUSE
-bool pauseOnDbgAssert = false;
-std::mutex dbgPauseMutex;
-std::condition_variable dbgPauseCond;
-void DbgPause()
-{
-#ifdef __linux__ // The thread ID returned by gettid is very useful since its shown in gdb
-    printf("\n!!! Process %d, Thread %ld (%lx) paused !!!\n", getpid(), syscall(SYS_gettid), pthread_self());
-#else
-    printf("\n!!! Process %d paused !!!\n", getpid());
-#endif
-    std::unique_lock<std::mutex> lk(dbgPauseMutex);
-    dbgPauseCond.wait(lk);
-}
-extern "C" void DbgResume() { dbgPauseCond.notify_all(); }
-
-#endif // DEBUG_PAUSE
-
-// Stop the logging.  TODO we can offer an API that lets the app install a log callback function and then call it
-// here so that the app can get our logs and do whatever it wants with them.
-int LogPrintStr(const std::string &str) { return str.size(); }
-namespace Logging
-{
-std::atomic<uint64_t> categoriesEnabled = 0; // 64 bit log id mask.
-};
-
-// I don't want to pull in the args stuff so always pick the defaults
-bool GetBoolArg(const std::string &strArg, bool fDefault) { return fDefault; }
-// libnexa does not support versionbits right now so just supply this which is used in chainparams
-struct ForkDeploymentInfo
-{
-    /** Deployment name */
-    const char *name;
-    /** Whether GBT clients can safely ignore this rule in simplified usage */
-    bool gbt_force;
-    /** What is this client's vote? */
-    bool myVote;
-};
-struct ForkDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_BITS_DEPLOYMENTS];
-
-// Must match the equivalent object in calling language code (e.g. PayAddressType)
-// Matches the CashAddrType enum used for address types in cashaddrenc.h with the addition of NONE
-typedef enum
-{
-    PayAddressTypeP2PKH = 0,
-    PayAddressTypeP2SH = 1,
-    PayAddressTypeGROUP = 11, // This defines a group (not a destination address), is a placeholder only
-    PayAddressTypeTEMPLATE = 19, // Generalized pay to script template
-    PayAddressTypeNONE = 255 // arbitrary, use max value to signify no destination
-} PayAddressType;
-
-// Must match the equivalent object in calling language code (e.g. ChainSelector)
-typedef enum
-{
-    AddrBlockchainNexa = 1,
-    AddrBlockchainTestnet = 2,
-    AddrBlockchainRegtest = 3,
-    AddrBlockchainBCH = 4,
-    AddrBlockchainBchTestnet = 5,
-    AddrBlockchainBchRegtest = 6
-} ChainSelector;
-
-class PubkeyExtractor
-{
-protected:
-    const CChainParams &params;
-    std::vector<unsigned char> &dest;
-
-public:
-    PubkeyExtractor(std::vector<unsigned char> &destination, const CChainParams &p) : params(p), dest(destination) {}
-    void operator()(const CKeyID &id) const
-    {
-        dest.resize(21);
-        dest[0] = PayAddressTypeP2PKH;
-        memcpy(&dest[1], id.begin(), 20); // pubkey is 20 bytes
-    }
-    void operator()(const CScriptID &id) const
-    {
-        dest.resize(21);
-        dest[0] = PayAddressTypeP2SH;
-        memcpy(&dest[1], id.begin(), 20); // pubkey is 20 bytes
-    }
-    void operator()(const CNoDestination &) const
-    {
-        dest.resize(1);
-        dest[0] = PayAddressTypeNONE;
-    }
-    void operator()(const ScriptTemplateDestination &id) const
-    {
-        // There may be no pubkey here or we can't find it anyway... extract and return the script
-        dest.resize(1);
-        dest[0] = PayAddressTypeTEMPLATE;
-        dest = id.appendTo(dest);
-    }
-};
-
-
-/**  Subset of BCH chainparams so we can convert addresses and do other light-client operations
- */
-class BchRegtestParams : public CChainParams
-{
-public:
-    BchRegtestParams()
-    {
-        strNetworkID = "regtest"; // Do not use the const string because of ctor execution order issues
-        consensus.nSubsidyHalvingInterval = 150;
-        consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nPowTargetSpacing = 10 * 60;
-        consensus.fPowAllowMinDifficultyBlocks = true;
-        consensus.fPowNoRetargeting = true;
-        consensus.powAlgorithm = 0;
-        consensus.initialSubsidy = 50 * COIN;
-        // The half life for the ASERT DAA. For every (nASERTHalfLife) seconds behind schedule the blockchain gets,
-        // difficulty is cut in half. Doubled if blocks are ahead of schedule.
-        // Two days
-        consensus.nASERTHalfLife = 2 * 24 * 60 * 60;
-
-        pchMessageStart[0] = 0xfa;
-        pchMessageStart[1] = 0xbf;
-        pchMessageStart[2] = 0xb5;
-        pchMessageStart[3] = 0xda;
-        /*
-        pchCashMessageStart[0] = 0xda;
-        pchCashMessageStart[1] = 0xb5;
-        pchCashMessageStart[2] = 0xbf;
-        pchCashMessageStart[3] = 0xfa;
-        */
-        nDefaultPort = DEFAULT_REGTESTNET_PORT;
-        nPruneAfterHeight = 1000;
-
-        vFixedSeeds.clear(); //! Regtest mode doesn't have any fixed seeds.
-        vSeeds.clear(); //! Regtest mode doesn't have any DNS seeds.
-
-        fMiningRequiresPeers = false;
-        fDefaultConsistencyChecks = true;
-        fRequireStandard = false;
-        fMineBlocksOnDemand = true;
-        fTestnetToBeDeprecatedFieldRPC = false;
-
-        checkpointData =
-            (CCheckpointData){{{0, uint256S("0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206")}}, 0};
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<uint8_t>(1, 111);
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<uint8_t>(1, 196);
-        base58Prefixes[SECRET_KEY] = std::vector<uint8_t>(1, 239);
-        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
-        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
-        cashaddrPrefix = "bchreg";
-    }
-};
-static BchRegtestParams bchRegtestParams;
-
-/**
- * Testnet (v4)
- */
-class BchTestnet4Params : public CChainParams
-{
-public:
-    BchTestnet4Params()
-    {
-        strNetworkID = "test4"; // Do not use the const string because of ctor execution order issues
-        consensus.nSubsidyHalvingInterval = 210000;
-        consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-
-        consensus.nPowTargetSpacing = 10 * 60;
-        consensus.fPowAllowMinDifficultyBlocks = true;
-        consensus.fPowNoRetargeting = false;
-        consensus.powAlgorithm = 0;
-        consensus.initialSubsidy = 50 * COIN;
-        // The half life for the ASERT DAA. For every (nASERTHalfLife) seconds behind schedule the blockchain gets,
-        // difficulty is cut in half. Doubled if blocks are ahead of schedule.
-        // One hour
-        consensus.nASERTHalfLife = 60 * 60;
-
-        pchMessageStart[0] = 0xcd;
-        pchMessageStart[1] = 0x22;
-        pchMessageStart[2] = 0xa7;
-        pchMessageStart[3] = 0x92;
-        /*
-        pchCashMessageStart[0] = 0xe2;
-        pchCashMessageStart[1] = 0xb7;
-        pchCashMessageStart[2] = 0xda;
-        pchCashMessageStart[3] = 0xaf;
-        */
-        nDefaultPort = 28333;
-        nPruneAfterHeight = 1000;
-
-        vFixedSeeds.clear();
-        vSeeds.clear();
-        // nodes with support for servicebits filtering should be at the top
-        vSeeds.emplace_back(CDNSSeedData("bitcoinforks.org", "testnet4-seed-bch.bitcoinforks.org", true));
-        vSeeds.emplace_back(CDNSSeedData("toom.im", "testnet4-seed-bch.toom.im", true));
-        vSeeds.emplace_back(CDNSSeedData("loping.net", "seed.tbch4.loping.net", true));
-
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<uint8_t>(1, 111);
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<uint8_t>(1, 196);
-        base58Prefixes[SECRET_KEY] = std::vector<uint8_t>(1, 239);
-        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
-        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
-        cashaddrPrefix = "bchtest";
-
-        fMiningRequiresPeers = true;
-        fDefaultConsistencyChecks = false;
-        fRequireStandard = false;
-        fMineBlocksOnDemand = false;
-        fTestnetToBeDeprecatedFieldRPC = true;
-
-        // clang-format off
-        checkpointData = CCheckpointData();
-        MapCheckpoints &checkpoints = checkpointData.mapCheckpoints;
-        checkpoints[     0] = uint256S("0x000000001dd410c49a788668ce26751718cc797474d3152a5fc073dd44fd9f7b");
-        checkpoints[ 16845] = uint256S("0x00000000fb325b8f34fe80c96a5f708a08699a68bbab82dba4474d86bd743077");
-        // clang-format on
-
-        // Data as of block
-        // 0000000019df558b6686b1a1c3e7aee0535c38052651b711f84eebafc0cc4b5e
-        // (height 5677)
-        checkpointData.nTimeLastCheckpoint = 1599886634;
-    }
-};
-
-static BchTestnet4Params bchTestnet4Params;
-
-
-CChainParams *GetChainParams(ChainSelector chainSelector)
-{
-    if (chainSelector == AddrBlockchainNexa)
-        return &Params(CBaseChainParams::NEXA);
-    else if (chainSelector == AddrBlockchainTestnet)
-        return &Params(CBaseChainParams::TESTNET);
-    else if (chainSelector == AddrBlockchainRegtest)
-        return &Params(CBaseChainParams::REGTEST);
-    else if (chainSelector == AddrBlockchainBCH)
-        return &Params(CBaseChainParams::LEGACY_UNIT_TESTS);
-    else if (chainSelector == AddrBlockchainBchTestnet)
-        return &bchTestnet4Params;
-    else if (chainSelector == AddrBlockchainBchRegtest)
-        return &bchRegtestParams;
-    else
-        return nullptr;
-}
-
-
-class CDecodablePartialMerkleTree : public CPartialMerkleTree
-{
-public:
-    std::vector<uint256> &accessHashes() { return vHash; }
-    CDecodablePartialMerkleTree(unsigned int ntx, const unsigned char *bitField, int bitFieldLen)
-    {
-        nTransactions = ntx;
-        vBits.resize(bitFieldLen * 8);
-        for (unsigned int p = 0; p < vBits.size(); p++)
-            vBits[p] = (bitField[p / 8] & (1 << (p % 8))) != 0;
-        fBad = false;
-    }
-};
-
-
-// No-op this RPC function that is unused in .so context
-extern UniValue token(const UniValue &params, bool fHelp) { return UniValue(); }
-// helper functions
-namespace
-{
-void checkSigInit()
-{
-    if (!sigInited)
-    {
-        sigInited = true;
-        SHA256AutoDetect();
-        ECC_Start();
-        verifyContext = new ECCVerifyHandle();
-    }
-}
-
-CKey LoadKey(const unsigned char *src)
-{
-    CKey secret;
-    checkSigInit();
-    secret.Set(src, src + 32, true);
-    return secret;
-}
-
-#if 0
-// This function is temporarily removed since it is not used.  However it will be needed for interfacing to
-// languages that handle binary data poorly, since it allows transaction information to be communicated via hex strings
-
-// From core_read.cpp #include "core_io.h"
-    bool DecodeHexTx(CTransaction &tx, const std::string &strHexTx)
-    {
-        if (!IsHex(strHexTx))
-            return false;
-
-        std::vector<unsigned char> txData(ParseHex(strHexTx));
-        CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
-        try
-        {
-            ssData >> tx;
-        }
-        catch (const std::exception &)
-        {
-            return false;
-        }
-
-        return true;
-    }
-#endif
-} // namespace
+SLAPI void get_libnexa_error_string(char *buf, uint64_t buflen) { get_error_string(buf, buflen); }
 
 SLAPI int encode64(const unsigned char *data, int size, char *result, int resultMaxLen)
 {
     auto dataAsStr = EncodeBase64(data, size);
-    int outsz = dataAsStr.size();
+    if (dataAsStr.size() > std::numeric_limits<int>::max())
+    {
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        return -1;
+    }
+    const int outsz = dataAsStr.size();
     if (outsz >= resultMaxLen)
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
         return -outsz;
+    }
     strncpy(result, dataAsStr.c_str(), resultMaxLen);
-    return outsz;
+    return (int)outsz;
 }
 
 SLAPI int decode64(const char *data, unsigned char *result, int resultMaxLen)
@@ -491,13 +51,22 @@ SLAPI int decode64(const char *data, unsigned char *result, int resultMaxLen)
     auto dataBytes = DecodeBase64(data, &invalid);
     if (invalid)
     {
+        set_error(LIBNEXA_ERROR::DECODE_FAILURE, "data passed in was invalid base64\n");
         return 0;
     }
-    int outsz = dataBytes.size();
+    if (dataBytes.size() > std::numeric_limits<int>::max())
+    {
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        return -1;
+    }
+    const int outsz = dataBytes.size();
     if (outsz > resultMaxLen)
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
         return -outsz;
+    }
     memcpy(result, &dataBytes[0], outsz);
-    return outsz;
+    return (int)outsz;
 }
 
 /** Convert binary data to a hex string.  The provided result buffer must be 2*length+1 bytes.
@@ -505,10 +74,19 @@ SLAPI int decode64(const char *data, unsigned char *result, int resultMaxLen)
 SLAPI int Bin2Hex(const unsigned char *val, int length, char *result, unsigned int resultLen)
 {
     std::string s = GetHex(val, length);
-    if (s.size() >= resultLen)
+    const size_t sz = s.size() + 1; // add one for \n
+    if (sz > std::numeric_limits<int>::max())
+    {
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        return -1;
+    }
+    if (sz >= resultLen)
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
         return 0; // need 1 more for /0
+    }
     strncpy(result, s.c_str(), resultLen);
-    return 1;
+    return (int)sz;
 }
 
 /** Derive a BIP-0044 heirarchial deterministic wallet key */
@@ -525,13 +103,14 @@ SLAPI int hd44DeriveChildKey(const unsigned char *secretSeed,
     CKey derivedSecret;
     if ((secretSeedLen < 16) || (secretSeedLen > 64))
     {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "invalid seed len, len was < 16 or > 64\n");
         return -1;
     }
     checkSigInit();
     std::string derivPath;
     int ret = Hd44DeriveChildKey(
         secretSeed, secretSeedLen, purpose, coinType, account, change, index, derivedSecret, nullptr);
-    memcpy(secret, derivedSecret.begin(), 32);
+    std::memcpy(secret, derivedSecret.begin(), 32);
     // if (keypath != nullptr) keypath[0] = 0;
     // strcpy(keypath, derivPath.c_str());
     return ret;
@@ -545,14 +124,23 @@ SLAPI int GetPubKey(const unsigned char *keyData, unsigned char *result, unsigne
     CKey key = LoadKey(keyData);
     if (key.IsValid() == false)
     {
+        set_error(LIBNEXA_ERROR::DECODE_FAILURE, "data passed in decoded to an invalid key\n");
         return 0;
     }
     CPubKey pubkey = key.GetPubKey();
-    unsigned int size = pubkey.size();
+    size_t size = pubkey.size();
+    if (size > std::numeric_limits<int>::max())
+    {
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        return -1;
+    }
     if (size > resultLen)
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
         return 0;
+    }
     std::copy(pubkey.begin(), pubkey.end(), result);
-    return size;
+    return (int)size;
 }
 
 /** Sign data (compatible with BCH OP_CHECKDATASIG) */
@@ -569,13 +157,22 @@ SLAPI int SignHashEDCSA(const unsigned char *data,
     std::vector<uint8_t> sig;
     if (!key.SignECDSA(hash, sig))
     {
+        set_error(LIBNEXA_ERROR::DECODE_FAILURE, "data passed in decoded to an invalid key\n");
         return 0;
     }
     unsigned int sigSize = sig.size();
+    if (sigSize > std::numeric_limits<int>::max())
+    {
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        return -1;
+    }
     if (sigSize > resultLen)
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
         return 0;
+    }
     std::copy(sig.begin(), sig.end(), result);
-    return sigSize;
+    return (int)sigSize;
 }
 
 SLAPI int txid(const unsigned char *txData, int txbuflen, unsigned char *result)
@@ -588,9 +185,11 @@ SLAPI int txid(const unsigned char *txData, int txbuflen, unsigned char *result)
     }
     catch (const std::exception &)
     {
+        set_error(LIBNEXA_ERROR::DECODE_FAILURE, "tx data provided failed to decode\n");
         return 0;
     }
     uint256 ret = tx.GetId();
+    // no need to check retlen, will always be 64
     int retlen = ret.size();
     memcpy(result, ret.begin(), retlen);
     return retlen;
@@ -606,9 +205,11 @@ SLAPI int txidem(const unsigned char *txData, int txbuflen, unsigned char *resul
     }
     catch (const std::exception &)
     {
+        set_error(LIBNEXA_ERROR::DECODE_FAILURE, "tx data provided failed to decode\n");
         return 0;
     }
     uint256 ret = tx.GetIdem();
+    // no need to check retlen, will always be 64
     int retlen = ret.size();
     memcpy(result, ret.begin(), retlen);
     return retlen;
@@ -624,10 +225,11 @@ SLAPI int blockHash(const unsigned char *data, int len, unsigned char *result)
     }
     catch (const std::exception &)
     {
+        set_error(LIBNEXA_ERROR::DECODE_FAILURE, "block header data provided failed to decode\n");
         return 0;
     }
-
     uint256 hash = blkHeader.GetHash();
+    // no need to check hashlen, will always be 64
     int hashlen = hash.size();
     memcpy(result, hash.begin(), hashlen);
     return hashlen;
@@ -664,12 +266,14 @@ SLAPI int SignTxECDSA(const unsigned char *txData,
     }
     catch (const std::exception &)
     {
+        set_error(LIBNEXA_ERROR::DECODE_FAILURE, "tx data provided failed to decode\n");
         return 0;
     }
-
     if (inputIdx >= tx.vin.size())
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "input index is greater than tx vin size\n");
         return 0;
-
+    }
     CScript priorScript(prevoutScript, prevoutScript + priorScriptLen);
     CKey key = LoadKey(keyData);
 
@@ -678,14 +282,23 @@ SLAPI int SignTxECDSA(const unsigned char *txData,
     std::vector<unsigned char> sig;
     if (!key.SignECDSA(sighash, sig))
     {
+        set_error(LIBNEXA_ERROR::DECODE_FAILURE, "data passed in decoded to an invalid key\n");
         return 0;
     }
     sig.push_back(sigHashType);
-    unsigned int sigSize = sig.size();
+    const size_t sigSize = sig.size();
+    if (sigSize > std::numeric_limits<int>::max())
+    {
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        return -1;
+    }
     if (sigSize > resultLen)
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
         return 0;
+    }
     std::copy(sig.begin(), sig.end(), result);
-    return sigSize;
+    return (int)sigSize;
 }
 
 /** Sign one input of a transaction
@@ -718,11 +331,13 @@ SLAPI int signBchTxOneInputUsingSchnorr(const unsigned char *txData,
     }
     catch (const std::exception &)
     {
+        set_error(LIBNEXA_ERROR::DECODE_FAILURE, "tx data provided failed to decode\n");
         return 0;
     }
 
     if (inputIdx >= tx.vin.size())
     {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "input index larger than the tx vin size\n");
         return 0;
     }
 
@@ -734,19 +349,26 @@ SLAPI int signBchTxOneInputUsingSchnorr(const unsigned char *txData,
     std::vector<unsigned char> sig;
     if (!key.SignSchnorr(sighash, sig))
     {
+        set_error(LIBNEXA_ERROR::DECODE_FAILURE, "data passed in decoded to an invalid key\n");
         return 0;
     }
     // CPubKey pub = key.GetPubKey();
     // p("Sign BCH Schnorr: sig: %s, pubkey: %s sighash: %s\n", HexStr(sig).c_str(),
     //    HexStr(pub.begin(), pub.end()).c_str(), sighash.GetHex().c_str());
     sig.push_back(sigHashType);
-    unsigned int sigSize = sig.size();
+    const size_t sigSize = sig.size();
+    if (sigSize > std::numeric_limits<int>::max())
+    {
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        return -1;
+    }
     if (sigSize > resultLen)
     {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
         return 0;
     }
     std::copy(sig.begin(), sig.end(), result);
-    return sigSize;
+    return (int)sigSize;
 }
 
 /** Sign one input of a transaction
@@ -774,8 +396,8 @@ SLAPI int signTxOneInputUsingSchnorr(const unsigned char *txData,
     std::vector<uint8_t> sigHashVec(hashType, hashType + hashTypeLen);
     SigHashType sigHashType;
     sigHashType.fromBytes(sigHashVec);
-    // p("SigHashType vec size: %d, %d, %s(%s): invalid: %d\n", sigHashVec.size(), hashTypeLen,
-    //    sigHashType.ToString().c_str(), sigHashType.HexStr().c_str(), sigHashType.isInvalid());
+    p("SigHashType vec size: %d, %d, %s(%s): invalid: %d\n", sigHashVec.size(), hashTypeLen,
+        sigHashType.ToString().c_str(), sigHashType.HexStr().c_str(), sigHashType.isInvalid());
 
     CDataStream ssData((char *)txData, (char *)txData + txbuflen, SER_NETWORK, PROTOCOL_VERSION);
     try
@@ -784,11 +406,13 @@ SLAPI int signTxOneInputUsingSchnorr(const unsigned char *txData,
     }
     catch (const std::exception &)
     {
+        set_error(LIBNEXA_ERROR::DECODE_FAILURE, "tx data provided failed to decode\n");
         return 0;
     }
 
     if (inputIdx >= tx.vin.size())
     {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "input index larger than tx vin size\n");
         return 0;
     }
 
@@ -806,15 +430,22 @@ SLAPI int signTxOneInputUsingSchnorr(const unsigned char *txData,
     {
         return 0;
     }
-    // CPubKey pub = key.GetPubKey();
-    // p("Sign Schnorr: sig: %s, pubkey: %s sighash: %s\n", HexStr(sig).c_str(), HexStr(pub.begin(), pub.end()).c_str(),
-    //    sighash.GetHex().c_str());
+    p("Sign Schnorr: sig: %s, pubkey: %s sighash: %s\n", HexStr(sig).c_str(), key.GetPubKey().GetHex().c_str(),
+        sighash.GetHex().c_str());
     sigHashType.appendToSig(sig);
-    unsigned int sigSize = sig.size();
+    const size_t sigSize = sig.size();
+    if (sigSize > std::numeric_limits<int>::max())
+    {
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        return -1;
+    }
     if (sigSize > resultLen)
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
         return 0;
+    }
     std::copy(sig.begin(), sig.end(), result);
-    return sigSize;
+    return (int)sigSize;
 }
 
 SLAPI int SignTxSchnorr(const unsigned char *txData,
@@ -851,18 +482,172 @@ SLAPI int SignHashSchnorr(const unsigned char *hash, const unsigned char *keyDat
 
     if (!key.SignSchnorr(sighash, sig))
     {
+        set_error(LIBNEXA_ERROR::DECODE_FAILURE, "data passed in decoded to an invalid key\n");
         return 0;
     }
-    unsigned int sigSize = sig.size();
+    const size_t sigSize = sig.size();
+    if (sigSize > std::numeric_limits<int>::max())
+    {
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        return -1;
+    }
     if (sigSize > MAX_SIG_LEN) // should never happen for the constant-sized schnorr signatures
+    {
         return 0;
+    }
     std::copy(sig.begin(), sig.end(), result);
-    return sigSize;
+    return (int)sigSize;
+}
+
+static const std::vector<std::string> descriptionTitles = {"ticker", "name", "url", "hash", "decimals"};
+
+SLAPI int parseGroupDescription(const uint8_t *in, const uint64_t inlen, uint8_t *out, uint64_t outlen)
+{
+    std::vector<std::string> _vDesc;
+    CScript script(in, in + inlen);
+    if (!GetTokenDescription(script, _vDesc))
+    {
+        set_error(LIBNEXA_ERROR::DECODE_FAILURE, "failed to get token description from the script provided\n");
+        return -1;
+    }
+    // {} : and ,      (11)
+    // 0 is "ticker"    (8)
+    // 1 is "name"      (6)
+    // 2 is "url"       (5)
+    // 3 is "hash"      (6)
+    // 4 is "decimals"  (10)
+
+    // for ease of copy, build the json object in a std::string first
+    std::string result = "{";
+    for (size_t i = 0; i < _vDesc.size(); ++i)
+    {
+        result = result + "\"" + descriptionTitles[i] + "\":\"" + _vDesc[i] + "\",";
+    }
+    result = result + "}";
+    const size_t result_size = result.size() + 1; // +1 for \0
+    if (result_size > std::numeric_limits<int>::max())
+    {
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        return -1;
+    }
+    // check that out buffer has enough space
+    if (outlen < result_size)
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
+        return -1;
+    }
+    // copy result into the out buffer
+    strncpy((char *)out, result.c_str(), outlen);
+    return (int)result_size;
 }
 
 
-// These "C" functions are not needed in android, since java-naming-convention equivalents are defined
-#ifndef ANDROID
+SLAPI int getArgsHashFromScriptPubkey(const uint8_t *spkIn, const uint64_t spkInLen, uint8_t *out, uint64_t outlen)
+{
+    if (outlen < 20)
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "output buffer must be 20 bytes or larger\n");
+        return -1;
+    }
+
+    CScript scriptIn(spkIn, spkIn + spkInLen);
+    scriptIn.type = ScriptType::TEMPLATE;
+    CGroupTokenInfo groupInfo;
+    std::vector<uint8_t> templateHash;
+    std::vector<uint8_t> argsHash;
+
+    ScriptTemplateError sctError = GetScriptTemplate(scriptIn, &groupInfo, &templateHash, &argsHash, nullptr);
+    if (sctError != ScriptTemplateError::OK)
+    {
+        set_error(LIBNEXA_ERROR::DECODE_FAILURE, "failed to get script template from script provided\n");
+        return -1;
+    }
+    const size_t size_argsHash = argsHash.size();
+    if (size_argsHash > std::numeric_limits<int>::max())
+    {
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        return -1;
+    }
+    if (size_argsHash > outlen)
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
+        return -1;
+    }
+    std::copy(argsHash.begin(), argsHash.end(), out);
+    return (int)size_argsHash;
+}
+
+SLAPI int getTemplateHashFromScriptPubkey(const uint8_t *spkIn, const uint64_t spkInLen, uint8_t *out, uint64_t outlen)
+{
+    if (outlen < 20)
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "output buffer must be larger than 20 bytes\n");
+        return -1;
+    }
+
+    CScript scriptIn(spkIn, spkIn + spkInLen);
+    scriptIn.type = ScriptType::TEMPLATE;
+    CGroupTokenInfo groupInfo;
+    std::vector<uint8_t> templateHash;
+    std::vector<uint8_t> argsHash;
+
+    ScriptTemplateError sctError = GetScriptTemplate(scriptIn, &groupInfo, &templateHash, &argsHash, nullptr);
+    if (sctError != ScriptTemplateError::OK)
+    {
+        set_error(LIBNEXA_ERROR::DECODE_FAILURE, "failed to get script template from script provided\n");
+        return -1;
+    }
+    const size_t size_templateHash = templateHash.size();
+    if (size_templateHash > std::numeric_limits<int>::max())
+    {
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        return -1;
+    }
+    if (size_templateHash > outlen)
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
+        return -1;
+    }
+    std::copy(templateHash.begin(), templateHash.end(), out);
+    return (int)size_templateHash;
+}
+
+SLAPI int getGroupTokenInfoFromScriptPubkey(const uint8_t *spkIn,
+    const uint64_t spkInLen,
+    uint8_t *grpId,
+    const uint64_t grpIdlimit,
+    uint64_t *grpFlags,
+    int64_t *grpAmount)
+{
+    CScript scriptIn(spkIn, spkIn + spkInLen);
+    scriptIn.type = ScriptType::TEMPLATE;
+    CGroupTokenInfo groupInfo;
+    std::vector<uint8_t> templateHash;
+    std::vector<uint8_t> argsHash;
+
+    ScriptTemplateError sctError = GetScriptTemplate(scriptIn, &groupInfo, &templateHash, &argsHash, nullptr);
+    if (sctError != ScriptTemplateError::OK)
+    {
+        set_error(LIBNEXA_ERROR::DECODE_FAILURE, "failed to get script template from script provided\n");
+        return -1;
+    }
+
+    const size_t grpIdSize = groupInfo.associatedGroup.bytes().size();
+    if (grpIdSize > std::numeric_limits<int>::max())
+    {
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        return -1;
+    }
+    if (grpIdSize > grpIdlimit)
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
+        return -1;
+    }
+    std::copy(groupInfo.associatedGroup.bytes().begin(), groupInfo.associatedGroup.bytes().end(), grpId);
+    *grpFlags = (uint64_t)groupInfo.controllingGroupFlags;
+    *grpAmount = groupInfo.quantity;
+    return (int)grpIdSize;
+}
 
 SLAPI int signMessage(const unsigned char *message,
     unsigned int msgLen,
@@ -872,7 +657,10 @@ SLAPI int signMessage(const unsigned char *message,
     unsigned int resultLen)
 {
     if (secretLen != 32)
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "secret must be 32 bytes\n");
         return 0;
+    }
 
     checkSigInit();
 
@@ -886,18 +674,31 @@ SLAPI int signMessage(const unsigned char *message,
     std::vector<unsigned char> vchSig;
     if (!key.SignCompact(msgHash, vchSig)) // signing will only fail if the key is bogus
     {
+        set_error(LIBNEXA_ERROR::DECODE_FAILURE, "data passed in decoded to an invalid key\n");
         return 0;
     }
-    unsigned int sz = vchSig.size();
-    if (sz == 0)
-        return 0;
+    const size_t sz = vchSig.size();
+    // check that the size of a returned sig can be represented properly as an int, it should always be
+    // CPubKey::COMPACT_SIGNATURE_SIZE
+    static_assert(CPubKey::COMPACT_SIGNATURE_SIZE < std::numeric_limits<int>::max());
+    if (sz != CPubKey::COMPACT_SIGNATURE_SIZE)
+    {
+        // this will only happen if std::vector::resize() is broken
+        // or there is an implementation error in libsecp256k1 that is returning bad
+        // ECDSA sigs
+        set_error(LIBNEXA_ERROR::INTERNAL_ERROR, "produced an ECDSA signature of an invalid size\n");
+        return -1;
+    }
     if (sz > resultLen)
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
         return 0;
+    }
 
     // __android_log_print(ANDROID_LOG_INFO, APPNAME, "signing sigSize %d data %s\n", vchSig.size(),
     // GetHex(vchSig.begin(), vchSig.size()).c_str());
     memcpy(result, vchSig.data(), sz);
-    return sz;
+    return (int)sz;
 }
 
 SLAPI int capdSolve(const unsigned char *message, unsigned int msgLen, unsigned char *result, unsigned int resultLen)
@@ -917,15 +718,24 @@ SLAPI int capdSolve(const unsigned char *message, unsigned int msgLen, unsigned 
     // the message time field.  But we do not return the changed time.  Callers should manually do this if they
     // want an offset.  Since such an ancient message is unrelayable this must be an invalid capd message anyway.
     if (msg.createTime < 31536000)
+    {
         return -2;
+    }
     bool solved = msg.Solve(msg.createTime);
     if (solved)
     {
-        unsigned int sz = msg.nonce.size();
+        const size_t sz = msg.nonce.size();
+        if (sz > std::numeric_limits<int>::max())
+        {
+            set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+            return -1;
+        }
         if (sz > resultLen)
+        {
             return 0;
+        }
         memcpy(result, msg.nonce.data(), sz);
-        return sz;
+        return (int)sz;
     }
     return 0;
 }
@@ -960,11 +770,18 @@ SLAPI int capdHash(const unsigned char *message, unsigned int msgLen, unsigned c
         return 0;
     }
     uint256 hash = msg.CalcHash();
-    unsigned int sz = hash.size();
+    const size_t sz = hash.size();
+    if (sz > std::numeric_limits<int>::max())
+    {
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        return -1;
+    }
     if (sz > resultLen)
+    {
         return 0;
+    }
     memcpy(result, hash.begin(), sz);
-    return sz;
+    return (int)sz;
 }
 
 
@@ -978,7 +795,10 @@ SLAPI int verifyMessage(const unsigned char *message,
     unsigned int resultLen)
 {
     if (addrLen != 20)
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "address must be 20 bytes\n");
         return 0;
+    }
 
     checkSigInit();
 
@@ -992,21 +812,36 @@ SLAPI int verifyMessage(const unsigned char *message,
     CPubKey pubkey;
     std::vector<unsigned char> sigv(sig, sig + sigLen);
     if (!pubkey.RecoverCompact(msgHash, sigv))
+    {
+        set_error(LIBNEXA_ERROR::DECODE_FAILURE, "could not recover pubkey from msg and sig data provided\n");
         return 0;
+    }
 
     CKeyID pkAddr = pubkey.GetID();
     CKeyID passedAddr = CKeyID(uint160(addr));
     //__android_log_print(ANDROID_LOG_INFO, APPNAME, "pkAddr %s\n", pkAddr.GetHex().c_str());
     //__android_log_print(ANDROID_LOG_INFO, APPNAME, "passedAddr %s\n", passedAddr.GetHex().c_str());
-    unsigned int sz = pubkey.size();
+    const size_t sz = pubkey.size();
+    if (sz > std::numeric_limits<int>::max())
+    {
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        return -1;
+    }
     if (sz > resultLen)
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
         return 0;
-
+    }
     memcpy(result, pubkey.begin(), sz);
+    const int res = (int)sz;
     if (pkAddr == passedAddr)
-        return sz;
+    {
+        return res;
+    }
     else
-        return -sz;
+    {
+        return -res;
+    }
 }
 
 SLAPI bool verifyBlockHeader(int chainSelector, const unsigned char *serializedHeader, int serLen)
@@ -1025,6 +860,7 @@ SLAPI bool verifyBlockHeader(int chainSelector, const unsigned char *serializedH
     }
     catch (const std::exception &)
     {
+        set_error(LIBNEXA_ERROR::DECODE_FAILURE, "block header data failed to decode\n");
         return false;
     }
     CValidationState state;
@@ -1040,6 +876,7 @@ SLAPI int encodeCashAddr(int chainSelector, int typ, const unsigned char *data, 
     {
         if (len != 20)
         {
+            set_error(LIBNEXA_ERROR::INVALID_ARG, "type was p2pkh or p2sh but the address len was not 20 bytes\n");
             return 0;
         }
         uint160 tmp((const uint8_t *)data);
@@ -1066,6 +903,7 @@ SLAPI int encodeCashAddr(int chainSelector, int typ, const unsigned char *data, 
     }
     else
     {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "invalid addres type provided\n");
         return 0;
     }
 
@@ -1075,11 +913,19 @@ SLAPI int encodeCashAddr(int chainSelector, int typ, const unsigned char *data, 
         return 0;
     }
     std::string addrAsStr(EncodeCashAddr(dst, *cp));
-    int sz = addrAsStr.size();
+    const int sz = addrAsStr.size();
+    if (sz > std::numeric_limits<int>::max())
+    {
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        return -1;
+    }
     if (sz >= resultMaxLen)
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
         return -sz;
+    }
     strncpy(result, addrAsStr.c_str(), sz);
-    return sz;
+    return (int)sz;
 }
 
 
@@ -1093,13 +939,19 @@ SLAPI int decodeCashAddr(int chainSelector, const char *addrstr, unsigned char *
     CTxDestination dst = DecodeCashAddr(addrstr, *cp);
     std::vector<unsigned char> resultv;
     std::visit(PubkeyExtractor(resultv, *cp), dst);
-    int sz = resultv.size();
+    const int sz = resultv.size();
+    if (sz > std::numeric_limits<int>::max())
+    {
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        return -1;
+    }
     if (sz > resultMaxLen)
     {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
         return -sz;
     }
     memcpy(result, &resultv[0], sz);
-    return sz;
+    return (int)sz;
 }
 
 SLAPI int decodeCashAddrContent(int chainSelector,
@@ -1115,23 +967,34 @@ SLAPI int decodeCashAddrContent(int chainSelector,
     }
     CashAddrContent content = DecodeCashAddrContent(addrstr, *cp);
     const int hash_size = content.hash.size();
+    if (hash_size > std::numeric_limits<int>::max())
+    {
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        return -1;
+    }
     if (hash_size > resultMaxLen)
     {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
         return -hash_size;
     }
     memcpy(result, &content.hash[0], hash_size);
     memcpy(type, &content.type, 1);
-    return hash_size;
+    return (int)hash_size;
 }
 
-SLAPI int serializeScript(const uint8_t *script, const int lenScript, uint8_t *result, int resultMaxLen)
+SLAPI int serializeScript(const uint8_t *script, const unsigned int lenScript, uint8_t *result, int resultMaxLen)
 {
     std::vector<uint8_t> vec(script, script + lenScript);
     CDataStream ssData(SER_NETWORK, PROTOCOL_VERSION);
     ssData << vec;
-    const int data_size = ssData.size();
+    const size_t data_size = ssData.size();
+    if (data_size > std::numeric_limits<int>::max())
+    {
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        return -1;
+    }
     std::memcpy(result, ssData.data(), data_size);
-    return data_size;
+    return (int)data_size;
 }
 
 // TODO - add support for creating a script template destination that includes a specific group / amount
@@ -1140,12 +1003,18 @@ SLAPI int pubkeyToScriptTemplate(const unsigned char *pubkey, int lenPubkey, uns
     // CScript P2pktOutput(const CPubKey &pubkey, const CGroupTokenID &group = NoGroup, CAmount grpQuantity = 0);
     const CScript scriptTemplate = P2pktOutput(CPubKey(&pubkey[0], &pubkey[0] + lenPubkey));
     const int scriptTemplateSize = scriptTemplate.size();
+    if (scriptTemplateSize > std::numeric_limits<int>::max())
+    {
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        return -1;
+    }
     if (scriptTemplateSize > resultMaxLen)
     {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
         return -scriptTemplateSize;
     }
     std::memcpy(result, &scriptTemplate[0], scriptTemplateSize);
-    return scriptTemplateSize;
+    return (int)scriptTemplateSize;
 }
 
 
@@ -1153,10 +1022,12 @@ SLAPI int groupIdToAddr(int chainSelector, const unsigned char *data, int len, c
 {
     if (len < 32)
     {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "input data < 32 bytes\n");
         return -len;
     }
     if (len > 520)
     {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "input data > 520 bytes\n");
         return -len;
     }
     CGroupTokenID grp((uint8_t *)data, len);
@@ -1166,11 +1037,19 @@ SLAPI int groupIdToAddr(int chainSelector, const unsigned char *data, int len, c
         return 0;
     }
     std::string addrAsStr(EncodeGroupToken(grp, *cp));
-    int sz = addrAsStr.size();
+    const int sz = addrAsStr.size();
+    if (sz > std::numeric_limits<int>::max())
+    {
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        return -1;
+    }
     if (sz >= resultMaxLen)
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
         return -sz;
+    }
     strncpy(result, addrAsStr.c_str(), resultMaxLen);
-    return sz;
+    return (int)sz;
 }
 
 
@@ -1182,18 +1061,22 @@ SLAPI int groupIdFromAddr(int chainSelector, const char *addrstr, unsigned char 
         return 0;
     }
     CGroupTokenID gid = DecodeGroupToken(addrstr, *cp);
-    size_t size = gid.bytes().size();
+    const size_t size = gid.bytes().size();
     if (size < 32) // min group id size
     {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "input data < 32 bytes\n");
         return -size;
     }
     if (size > 520) // max group id size
     {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "input data > 520 bytes\n");
         return -size;
     }
     if (size > (unsigned int)resultMaxLen)
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
         return -size;
-
+    }
     memcpy(result, &gid.bytes().front(), size);
     return size;
 }
@@ -1217,335 +1100,20 @@ SLAPI int decodeWifPrivateKey(int chainSelector, const char *secretWIF, unsigned
     {
         return 0;
     }
-    auto sz = key.size();
-    if (sz > (unsigned int)resultMaxLen)
-        return -sz;
-    memcpy(result, static_cast<const uint8_t *>(key.begin()), sz);
-    return sz;
-}
-#endif
-
-#ifndef LIGHT // The script interpreter is not available in light clients
-
-/*
-Since the ScriptMachine is often going to be initialized, called and destructed within a single stack frame, it
-does not make copies of the data it is using.  But higher-level language and debugging interaction use the
-ScriptMachine across stack frames.  Therefore it is necessary to create a class to hold all of this data on behalf
-of the ScriptMachine.
- */
-class ScriptMachineData
-{
-public:
-    ScriptMachineData() : sm(nullptr), tx(nullptr), sis(nullptr), script(nullptr) {}
-    ScriptMachine *sm;
-
-    CTransactionRef tx;
-    std::shared_ptr<BaseSignatureChecker> checker;
-    std::shared_ptr<ScriptImportedState> sis;
-    std::shared_ptr<CScript> script;
-
-    ~ScriptMachineData()
+    const size_t sz = key.size();
+    if (sz > std::numeric_limits<int>::max())
     {
-        if (sm)
-        {
-            delete sm;
-            sm = nullptr;
-        }
-    }
-};
-
-// Create a ScriptMachine with no transaction context -- useful for tests and debugging
-// This ScriptMachine can't CHECKSIG or CHECKSIGVERIFY
-SLAPI void *CreateNoContextScriptMachine(unsigned int flags)
-{
-    ScriptMachineData *smd = new ScriptMachineData();
-    smd->sis = std::make_shared<ScriptImportedState>();
-    smd->sm = new ScriptMachine(flags, *smd->sis, 0xffffffff, 0xffffffff);
-    return (void *)smd;
-}
-
-// Create a ScriptMachine operating in the context of a particular transaction and input.
-// The transaction, input index, and input amount are used in CHECKSIG and CHECKSIGVERIFY to generate the hash that
-// the signature validates.
-void *CreateScriptMachine(unsigned int flags,
-    unsigned int inputIdx,
-    unsigned char *txData,
-    int txbuflen,
-    unsigned char *coinData,
-    int coinbuflen,
-    std::string *errorDetails)
-{
-    checkSigInit();
-
-    ScriptMachineData *smd = new ScriptMachineData();
-    std::shared_ptr<CTransaction> txref = std::make_shared<CTransaction>();
-    std::vector<CTxOut> coins;
-
-    {
-        CDataStream ssData((char *)txData, (char *)txData + txbuflen, SER_NETWORK, PROTOCOL_VERSION);
-        try
-        {
-            ssData >> *txref;
-        }
-        catch (const std::exception &)
-        {
-            if (errorDetails)
-                *errorDetails = "Error deserializing transaction";
-            delete smd;
-            return 0;
-        }
-    }
-
-    {
-        CDataStream ssData((char *)coinData, (char *)coinData + coinbuflen, SER_NETWORK, PROTOCOL_VERSION);
-        try
-        {
-            ssData >> coins;
-        }
-        catch (const std::exception &)
-        {
-            if (errorDetails)
-                *errorDetails = "Error deserializing UTXO list";
-            delete smd;
-            return 0;
-        }
-    }
-
-    // The passed coins vector needs to be the txout for each vin, so the sizes must be the same
-    if (coins.size() != txref->vin.size())
-    {
-        if (errorDetails)
-            *errorDetails = "Error: UTXO list length does not match tx vin length";
-        delete smd;
-        return 0;
-    }
-
-    CValidationState state;
-    {
-        // Construct a view of all the supplied coins
-        CCoinsView coinsDummy;
-        CCoinsViewCache prevouts(&coinsDummy);
-        for (size_t i = 0; i < coins.size(); i++)
-        {
-            // We assume that the passed coins are in the proper order so their outpoint is what is specified
-            // in the tx.  We further assume height 1 and not coinbase.  These fields are not accessible from scripts
-            // so should not affect execution.
-            prevouts.AddCoin(txref->vin[i].prevout, Coin(coins[i], 1, false), false);
-        }
-
-        // Fill the validation state with derived data about this transaction
-        /* This pulls in too much stuff (in particular it needs to determine input coin height,
-           to check coinbase spendability, which requires knowing the tip height).
-           Think about refactoring CheckTxInputs to take the tip height as a parameter for functional isolation
-           For now, calculate the needed data directly.
-           Leaving this "canonical" code in for reference purposes
-        if (!Consensus::CheckTxInputs(txref, state, prevouts))
-        {
-            delete smd;
-            return 0;
-        }
-        */
-        CAmount amountIn = 0;
-        for (size_t i = 0; i < txref->vin.size(); i++)
-        {
-            amountIn += txref->vin[i].amount;
-        }
-        CAmount amountOut = 0;
-        for (size_t i = 0; i < txref->vout.size(); i++)
-        {
-            amountOut += txref->vout[i].nValue;
-        }
-        state.inAmount = amountIn;
-        state.outAmount = amountOut;
-        state.fee = amountIn - amountOut;
-        if (!CheckGroupTokens(*txref, state, prevouts))
-        {
-            if (errorDetails)
-                *errorDetails = std::string("Error: ") + state.GetRejectReason() + " " + state.GetDebugMessage();
-            delete smd;
-            return 0;
-        }
-    }
-
-    smd->tx = txref;
-    // Its ok to get the bare tx pointer: the life of the CTransaction is the same as TransactionSignatureChecker
-    // -1 is the inputAmount -- no longer used
-    smd->checker = std::make_shared<TransactionSignatureChecker>(smd->tx.get(), inputIdx, flags);
-    smd->sis = std::make_shared<ScriptImportedState>(&(*smd->checker), smd->tx, state, coins, inputIdx);
-    // max ops and max sigchecks are set to the maximum value with the intention that the caller will check these if
-    // needed because many uses of the script machine are for debugging and experimental scripts.
-    smd->sm = new ScriptMachine(flags, *smd->sis, 0xffffffff, 0xffffffff);
-    return (void *)smd;
-}
-
-// Create a ScriptMachine operating in the context of a particular transaction and input.
-// The transaction, input index, and input amount are used in CHECKSIG and CHECKSIGVERIFY to generate the hash that
-// the signature validates.
-SLAPI void *CreateScriptMachine(unsigned int flags,
-    unsigned int inputIdx,
-    unsigned char *txData,
-    int txbuflen,
-    unsigned char *coinData,
-    int coinbuflen)
-{
-    return CreateScriptMachine(flags, inputIdx, txData, txbuflen, coinData, coinbuflen, nullptr);
-}
-
-
-// Release a ScriptMachine context
-SLAPI void SmRelease(void *smId)
-{
-    ScriptMachineData *smd = (ScriptMachineData *)smId;
-    if (!smd)
-        return;
-    delete smd;
-}
-
-// Copy the provided ScriptMachine, returning a new ScriptMachine id that exactly matches the current one
-SLAPI void *SmClone(void *smId)
-{
-    ScriptMachineData *from = (ScriptMachineData *)smId;
-    ScriptMachineData *to = new ScriptMachineData();
-    to->script = from->script;
-    to->sis = from->sis;
-    to->tx = from->tx;
-    to->sis->tx = to->tx; // Get it pointing to the right object even though they are currently the same
-    to->sm = new ScriptMachine(*from->sm);
-    return (void *)to;
-}
-
-
-// Evaluate a script within the context of this script machine
-SLAPI bool SmEval(void *smId, unsigned char *scriptBuf, unsigned int scriptLen)
-{
-    ScriptMachineData *smd = (ScriptMachineData *)smId;
-
-    CScript script(scriptBuf, scriptBuf + scriptLen);
-    bool ret = smd->sm->Eval(script);
-    return ret;
-}
-
-// Step-by-step interface: start evaluating a script within the context of this script machine
-SLAPI bool SmBeginStep(void *smId, unsigned char *scriptBuf, unsigned int scriptLen)
-{
-    ScriptMachineData *smd = (ScriptMachineData *)smId;
-    // shared_ptr will auto-release the old one
-    smd->script = std::make_shared<CScript>(scriptBuf, scriptBuf + scriptLen);
-    bool ret = smd->sm->BeginStep(*smd->script);
-    return ret;
-}
-
-// Step-by-step interface: execute the next instruction in the script
-SLAPI unsigned int SmStep(void *smId)
-{
-    ScriptMachineData *smd = (ScriptMachineData *)smId;
-    unsigned int ret = smd->sm->Step();
-    return ret;
-}
-
-// Step-by-step interface: get the current position in this script, specified in bytes offset from the script start
-SLAPI int SmPos(void *smId)
-{
-    ScriptMachineData *smd = (ScriptMachineData *)smId;
-    return smd->sm->getPos();
-}
-
-
-// Step-by-step interface: End script evaluation
-SLAPI bool SmEndStep(void *smId)
-{
-    ScriptMachineData *smd = (ScriptMachineData *)smId;
-    bool ret = smd->sm->EndStep();
-    return ret;
-}
-
-
-// Revert the script machine to initial conditions
-SLAPI void SmReset(void *smId)
-{
-    ScriptMachineData *smd = (ScriptMachineData *)smId;
-    smd->sm->Reset();
-}
-
-
-// Get a stack item, 0 = stack, 1 = altstack,  pass a buffer at least 520 bytes in size
-// returns length of the item or -1 if no item.  0 is the stack top
-SLAPI void SmSetStackItem(void *smId,
-    unsigned int stack,
-    int index,
-    StackElementType t,
-    const unsigned char *value,
-    unsigned int valsize)
-{
-    ScriptMachineData *smd = (ScriptMachineData *)smId;
-
-    const std::vector<StackItem> &stk = (stack == 0) ? smd->sm->getStack() : smd->sm->getAltStack();
-    if (((int)stk.size()) <= index)
-        return;
-
-    StackItem si;
-    if (t == StackElementType::VCH)
-    {
-        si = StackItem(value, value + valsize);
-    }
-    else if (t == StackElementType::BIGNUM)
-    {
-        BigNum bn;
-        bn.deserialize(value, valsize);
-        si = StackItem(bn);
-    }
-    else
-    {
-        return;
-    }
-
-    if (stack == 0)
-    {
-        smd->sm->setStackItem(index, si);
-    }
-    else if (stack == 1)
-    {
-        smd->sm->setAltStackItem(index, si);
-    }
-}
-
-// Get a stack item, 0 = stack, 1 = altstack,  pass a buffer at least 520 bytes in size
-// returns length of the item or -1 if no item.  0 is the stack top
-SLAPI int SmGetStackItem(void *smId, unsigned int stack, unsigned int index, StackElementType *t, unsigned char *result)
-{
-    ScriptMachineData *smd = (ScriptMachineData *)smId;
-
-    const std::vector<StackItem> &stk = (stack == 0) ? smd->sm->getStack() : smd->sm->getAltStack();
-    if (stk.size() <= index)
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
         return -1;
-    index = stk.size() - index - 1; // reverse it so 0 is stack top
-
-    const StackItem &item = stk[index];
-
-    *t = item.type;
-    if (item.type == StackElementType::VCH)
-    {
-        int sz = item.size();
-        memcpy(result, item.data().data(), sz);
-        return sz;
     }
-    else if (item.type == StackElementType::BIGNUM)
+    if (sz > (unsigned int)resultMaxLen)
     {
-        int sz = item.num().serialize(result, 512);
-        return (sz);
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
+        return -sz;
     }
-    else
-        return 0;
+    memcpy(result, static_cast<const uint8_t *>(key.begin()), sz);
+    return (int)sz;
 }
-
-// Returns the last error generated during script evaluation (if any)
-SLAPI unsigned int SmGetError(void *smId)
-{
-    ScriptMachineData *smd = (ScriptMachineData *)smId;
-    return (unsigned int)smd->sm->getError();
-}
-
-#endif // LIGHT
 
 // result must be 32 bytes
 SLAPI void sha256(const unsigned char *data, unsigned int len, unsigned char *result)
@@ -1594,9 +1162,13 @@ SLAPI int cryptAES256CBC(unsigned int encrypt,
         nBytes = crypter.Decrypt(data, len, result);
     }
     else
+    {
         return -1;
+    }
     if (nBytes == 0)
+    {
         return -2;
+    }
     return len;
 }
 
@@ -1609,7 +1181,7 @@ SLAPI void getWorkFromDifficultyBits(unsigned long int nBits, unsigned char *res
     memcpy(result, ui.begin(), 32);
 }
 
-SLAPI uint32_t getDifficultyBitsFromWork(unsigned char *work256Bits)
+SLAPI unsigned int getDifficultyBitsFromWork(unsigned char *work256Bits)
 {
     uint256 ui(work256Bits);
     arith_uint256 work = UintToArith256(ui);
@@ -1625,21 +1197,23 @@ SLAPI uint32_t getDifficultyBitsFromWork(unsigned char *work256Bits)
 SLAPI int createBloomFilter(const unsigned char *data,
     unsigned int len,
     double falsePosRate,
-    unsigned int capacity,
-    unsigned int maxSize,
-    unsigned int flags,
-    unsigned int tweak,
+    int capacity,
+    int maxSize,
+    int flags,
+    int tweak,
     unsigned char *result)
 {
     if (capacity < 10)
+    {
         capacity = 10; // sanity check the capacity
+    }
 
     if (!((falsePosRate >= 0) && (falsePosRate <= 1.0)))
     {
         return 0;
     }
 
-    int maxx = (capacity > len) ? capacity : len;
+    int maxx = (capacity > (int)len) ? capacity : len;
     CBloomFilter bloom(maxx, falsePosRate, tweak, flags, maxSize);
 
     const unsigned char *elemData = data;
@@ -1655,12 +1229,18 @@ SLAPI int createBloomFilter(const unsigned char *data,
     serializer << bloom;
     //__android_log_print(ANDROID_LOG_INFO, APPNAME, "Bloom size: %d Bloom serialized size: %d numAddrs: %d\n",
     //    (unsigned int)bloom.vDataSize(), (unsigned int)serializer.size(), (unsigned int)len);
-    int ret = serializer.size();
-
+    const size_t ret = serializer.size();
+    if (ret > std::numeric_limits<int>::max())
+    {
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        return -1;
+    }
     if (!result)
+    {
         return 0; // failed
+    }
     memcpy(result, serializer.data(), ret);
-    return ret;
+    return (int)ret;
 }
 
 // Since partial Merkle blocks are just trees of hashes, this structure is the same for Nexa and BCH
@@ -1689,15 +1269,24 @@ SLAPI int extractFromMerkleBlock(int numTxes,
     unsigned char *dest = result;
     unsigned char *end = result + resultLen;
 
-    int ret = matches.size() + 1;
+    const size_t ret = matches.size() + 1;
+    if (ret > std::numeric_limits<int>::max())
+    {
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        return -1;
+    }
     if (dest + HASH_LEN > end)
-        return ret;
+    {
+        return (int)ret;
+    }
 
     memcpy(dest, merkleRoot.begin(), HASH_LEN);
 
     dest += HASH_LEN;
     if (dest > end)
-        return ret;
+    {
+        return (int)ret;
+    }
 
     // Fill the rest with transaction hashes
     for (size_t i = 0; i < matches.size(); i++)
@@ -1705,1435 +1294,12 @@ SLAPI int extractFromMerkleBlock(int numTxes,
         memcpy(dest, matches[i].begin(), HASH_LEN);
         dest += HASH_LEN;
         if (dest > end)
-            return ret;
-    }
-    return ret;
-}
-
-
-#ifdef JAVA
-
-#define APPNAME "BU.wallet.libnexa"
-
-jclass secRandomClass = nullptr;
-jmethodID secRandom = nullptr;
-JNIEnv *javaEnv = nullptr; // Only use for getting random numbers
-
-class ByteArrayAccessor
-{
-public:
-    JNIEnv *env;
-    jbyteArray &obj;
-    uint8_t *data;
-    size_t size;
-
-    std::vector<uint8_t> vec() { return std::vector<uint8_t>(data, data + size); }
-    ByteArrayAccessor(JNIEnv *e, jbyteArray &arg) : env(e), obj(arg)
-    {
-        size = env->GetArrayLength(obj);
-        data = (uint8_t *)env->GetByteArrayElements(obj, nullptr);
-    }
-
-    ~ByteArrayAccessor()
-    {
-        size = 0;
-        if (data)
-            env->ReleaseByteArrayElements(obj, (jbyte *)data, 0);
-    }
-};
-
-// credit: https://stackoverflow.com/questions/41820039/jstringjni-to-stdstringc-with-utf8-characters
-std::string toString(JNIEnv *env, jstring jStr)
-{
-    if (!jStr)
-        return "";
-
-    const jclass stringClass = env->GetObjectClass(jStr);
-    const jmethodID getBytes = env->GetMethodID(stringClass, "getBytes", "(Ljava/lang/String;)[B");
-    const jbyteArray stringJbytes = (jbyteArray)env->CallObjectMethod(jStr, getBytes, env->NewStringUTF("UTF-8"));
-
-    size_t length = (size_t)env->GetArrayLength(stringJbytes);
-    jbyte *pBytes = env->GetByteArrayElements(stringJbytes, nullptr);
-
-    std::string ret = std::string((char *)pBytes, length);
-    env->ReleaseByteArrayElements(stringJbytes, pBytes, JNI_ABORT);
-
-    env->DeleteLocalRef(stringJbytes);
-    env->DeleteLocalRef(stringClass);
-    return ret;
-}
-
-jint triggerJavaIllegalStateException(JNIEnv *env, const char *message)
-{
-    jclass exc = env->FindClass("java/lang/IllegalStateException");
-    if (nullptr == exc)
-        return 0;
-    return env->ThrowNew(exc, message);
-}
-
-/** converts a arith_uint256 into something that java BigInteger can grab */
-jbyteArray encodeUint256(JNIEnv *env, arith_uint256 value)
-{
-    const size_t size = 256 / 8;
-    jbyteArray result = env->NewByteArray(size);
-    if (result != nullptr)
-    {
-        jbyte *data = env->GetByteArrayElements(result, nullptr);
-        if (data != nullptr)
         {
-            int i;
-            for (i = (int)(size - 1); i >= 0; i--)
-            {
-                data[i] = (jbyte)(value.GetLow64() & 0xFF);
-                value >>= 8;
-            }
-            env->ReleaseByteArrayElements(result, data, 0);
+            return (int)ret;
         }
     }
-    return result;
+    return (int)ret;
 }
-
-jbyteArray makeJByteArray(JNIEnv *env, const uint256 &hash)
-{
-    jbyteArray bArray = env->NewByteArray(256 / 8);
-    jbyte *dest = env->GetByteArrayElements(bArray, 0);
-    const int8_t *buf = (const int8_t *)hash.begin();
-    memcpy(dest, buf, 256 / 8);
-    env->ReleaseByteArrayElements(bArray, dest, 0); // release my changes into the jbyteArray
-    return bArray;
-}
-
-jbyteArray makeJByteArray(JNIEnv *env, const uint8_t *buf, const size_t size)
-{
-    jbyteArray bArray = env->NewByteArray(size);
-    jbyte *dest = env->GetByteArrayElements(bArray, 0);
-    memcpy(dest, buf, size);
-    env->ReleaseByteArrayElements(bArray, dest, 0);
-    return bArray;
-}
-
-jbyteArray makeJByteArray(JNIEnv *env, const std::string &buf)
-{
-    jbyteArray bArray = env->NewByteArray(buf.size());
-    jbyte *dest = env->GetByteArrayElements(bArray, 0);
-    memcpy(dest, buf.c_str(), buf.size());
-    env->ReleaseByteArrayElements(bArray, dest, 0);
-    return bArray;
-}
-
-jbyteArray makeJByteArray(JNIEnv *env, std::vector<unsigned char> &buf)
-{
-    jbyteArray bArray = env->NewByteArray(buf.size());
-    jbyte *dest = env->GetByteArrayElements(bArray, 0);
-    memcpy(dest, &buf[0], buf.size());
-    env->ReleaseByteArrayElements(bArray, dest, 0);
-    return bArray;
-}
-
-extern "C" JNIEXPORT jint JNICALL Java_org_nexa_libnexakotlin_libnexaVersion(JNIEnv *env, jobject ths)
-{
-    return LIBNEXA_VERSION;
-}
-
-#ifndef LIGHT
-extern "C" JNIEXPORT jlong JNICALL Java_org_nexa_libnexakotlin_ScriptMachine_create(JNIEnv *env,
-    jobject ths,
-    jbyteArray tx,
-    jbyteArray outpoints,
-    jint inputIdx,
-    jint flags)
-{
-    ByteArrayAccessor txb(env, tx);
-    ByteArrayAccessor outpointb(env, outpoints);
-
-    if (flags == -1)
-        flags = STANDARD_SCRIPT_VERIFY_FLAGS;
-    std::string error;
-    void *sm = CreateScriptMachine(flags, inputIdx, txb.data, txb.size, outpointb.data, outpointb.size, &error);
-    if (sm == nullptr)
-    {
-        triggerJavaIllegalStateException(env, error.c_str());
-    }
-    return ((jlong)sm);
-}
-
-extern "C" JNIEXPORT jlong JNICALL Java_org_nexa_libnexakotlin_ScriptMachine_createTemplateContext(JNIEnv *env,
-    jobject ths,
-    jbyteArray tx,
-    jbyteArray outpoints,
-    jbyteArray satisfierba,
-    jbyteArray constraintba,
-    jint inputIdx,
-    jint flags)
-{
-    ByteArrayAccessor txb(env, tx);
-    ByteArrayAccessor outpointb(env, outpoints);
-    ByteArrayAccessor satbaa(env, satisfierba);
-    ByteArrayAccessor conbaa(env, constraintba);
-
-    CScript satisfier(satbaa.data, satbaa.data + satbaa.size);
-    CScript constraint(conbaa.data, conbaa.data + conbaa.size);
-
-    if (!satisfier.IsPushOnly())
-    {
-        triggerJavaIllegalStateException(env, "satisfier is not push-only");
-        return 0;
-    }
-    if (!constraint.IsPushOnly())
-    {
-        triggerJavaIllegalStateException(env, "constraint is not push-only");
-        return 0;
-    }
-
-    if (flags == -1)
-        flags = STANDARD_SCRIPT_VERIFY_FLAGS;
-
-    const unsigned int maxOps = 0xffffffff;
-    ScriptImportedState noSis;
-    ScriptMachine ssm(flags, noSis, maxOps, 0);
-    if (!ssm.Eval(satisfier))
-    {
-        triggerJavaIllegalStateException(env, ScriptErrorString(ssm.getError()));
-        return 0;
-    }
-    ScriptMachine csm(flags, noSis, maxOps, 0);
-    if (!csm.Eval(constraint))
-    {
-        triggerJavaIllegalStateException(env, ScriptErrorString(csm.getError()));
-        return 0;
-    }
-
-    std::string error;
-    void *smh = CreateScriptMachine(flags, inputIdx, txb.data, txb.size, outpointb.data, outpointb.size, &error);
-
-    if (smh)
-    {
-        // copy over the stacks that were created by running the constraint and satisfier
-        ScriptMachineData *smd = (ScriptMachineData *)smh;
-        smd->sm->setAltStack(csm.getStack());
-        smd->sm->setStack(ssm.getStack());
-    }
-    else
-    {
-        triggerJavaIllegalStateException(env, error.c_str());
-        return 0;
-    }
-    return ((jlong)smh);
-}
-
-
-extern "C" JNIEXPORT jlong JNICALL Java_org_nexa_libnexakotlin_ScriptMachine_createNoContext(JNIEnv *env,
-    jobject ths,
-    jint flags)
-{
-    if (flags == -1)
-        flags = STANDARD_SCRIPT_VERIFY_FLAGS;
-    void *sm = CreateNoContextScriptMachine(flags);
-    return ((jlong)sm);
-}
-
-
-extern "C" JNIEXPORT jboolean Java_org_nexa_libnexakotlin_ScriptMachine_eval(JNIEnv *env,
-    jobject ths,
-    jlong smid,
-    jbyteArray scriptBytes,
-    jboolean run)
-{
-    ByteArrayAccessor script(env, scriptBytes);
-    bool ret = true;
-    if (run)
-    {
-        ret = SmEval((void *)smid, script.data, script.size);
-    }
-    else
-    {
-        ret = SmBeginStep((void *)smid, script.data, script.size);
-    }
-    return ret;
-}
-
-extern "C" JNIEXPORT jboolean JNICALL Java_org_nexa_libnexakotlin_ScriptMachine_cont(JNIEnv *env,
-    jobject ths,
-    jlong smid)
-{
-    ScriptMachineData *smd = (ScriptMachineData *)smid;
-    if ((!smd) || (!smd->sm))
-    {
-        triggerJavaIllegalStateException(env, "internal error: no script machine");
-        return false;
-    }
-    return smd->sm->Continue();
-}
-
-extern "C" JNIEXPORT jboolean JNICALL Java_org_nexa_libnexakotlin_ScriptMachine_step(JNIEnv *env,
-    jobject ths,
-    jlong smid)
-{
-    ScriptMachineData *smd = (ScriptMachineData *)smid;
-    if ((!smd) || (!smd->sm))
-    {
-        triggerJavaIllegalStateException(env, "internal error: no script machine");
-        return false;
-    }
-    if (!smd->sm->isMoreSteps())
-    {
-        triggerJavaIllegalStateException(env, "completed");
-        return false;
-    }
-    return smd->sm->Step();
-}
-
-
-extern "C" JNIEXPORT void JNICALL Java_org_nexa_libnexakotlin_ScriptMachine_swapStacks(JNIEnv *env,
-    jobject ths,
-    jlong smid)
-{
-    ScriptMachineData *smd = (ScriptMachineData *)smid;
-    if ((!smd) || (!smd->sm))
-        triggerJavaIllegalStateException(env, "internal error: no script machine");
-    else
-    {
-        Stack tmp = smd->sm->getStack();
-        smd->sm->setStack(smd->sm->getAltStack());
-        smd->sm->setAltStack(tmp);
-    }
-}
-
-extern "C" JNIEXPORT jstring Java_org_nexa_libnexakotlin_ScriptMachine_getError(JNIEnv *env, jobject ths, jlong smid)
-{
-    ScriptMachineData *smd = (ScriptMachineData *)smid;
-    if ((!smd) || (!smd->sm))
-    {
-        triggerJavaIllegalStateException(env, "internal error: no script machine");
-        return nullptr;
-    }
-
-    auto err = smd->sm->getError();
-
-    std::string ret(ScriptErrorString(err));
-    ret += "(" + std::to_string(err) + ")";
-    return env->NewStringUTF(ret.c_str());
-}
-
-// Step-by-step interface: get current position in this script, in bytes offset from the script start
-extern "C" JNIEXPORT jint Java_org_nexa_libnexakotlin_ScriptMachine_getPos(JNIEnv *env, jobject ths, jlong smId)
-
-{
-    ScriptMachineData *smd = (ScriptMachineData *)smId;
-    if ((!smd) || (!smd->sm))
-    {
-        triggerJavaIllegalStateException(env, "internal error: no script machine");
-        return -1;
-    }
-    return smd->sm->getPos();
-}
-
-// Step-by-step interface: get current position in this script, in bytes offset from the script start
-extern "C" JNIEXPORT jint Java_org_nexa_libnexakotlin_ScriptMachine_setPos(JNIEnv *env,
-    jobject ths,
-    jlong smId,
-    jint pos)
-
-{
-    ScriptMachineData *smd = (ScriptMachineData *)smId;
-    if ((!smd) || (!smd->sm))
-    {
-        triggerJavaIllegalStateException(env, "internal error: no script machine");
-        return -1;
-    }
-    if (pos < 0)
-    {
-        triggerJavaIllegalStateException(env, "internal error: no script machine");
-        return -1;
-    }
-    return smd->sm->setPos(pos);
-}
-
-
-// Step-by-step interface: get current position in this script, in bytes offset from the script start
-extern "C" JNIEXPORT jstring Java_org_nexa_libnexakotlin_ScriptMachine_getBMD(JNIEnv *env, jobject ths, jlong smId)
-
-{
-    ScriptMachineData *smd = (ScriptMachineData *)smId;
-    if ((!smd) || (!smd->sm))
-    {
-        triggerJavaIllegalStateException(env, "internal error: no script machine");
-        return nullptr;
-    }
-    return env->NewStringUTF(smd->sm->bigNumModulo.str(16).c_str());
-}
-
-// Step-by-step interface: get current position in this script, in bytes offset from the script start
-extern "C" JNIEXPORT bool Java_org_nexa_libnexakotlin_ScriptMachine_modify(JNIEnv *env,
-    jobject ths,
-    jlong smId,
-    jint offset,
-    jbyteArray data)
-
-{
-    ScriptMachineData *smd = (ScriptMachineData *)smId;
-    if ((!smd) || (!smd->sm))
-    {
-        triggerJavaIllegalStateException(env, "internal error: no script machine");
-        return false;
-    }
-    ByteArrayAccessor d(env, data);
-    return smd->sm->ModifyScript(offset, d.data, d.size);
-}
-
-
-/** This makes sense to give as text because we don't want the higher layers to have to parse the BigNum format
-    and certainly don't want to expose the internal bignum representation
-*/
-extern "C" JNIEXPORT jstring Java_org_nexa_libnexakotlin_ScriptMachine_getStackItemText(JNIEnv *env,
-    jobject ths,
-    jlong smid,
-    jint whichStack,
-    jint index)
-{
-    ScriptMachineData *smd = (ScriptMachineData *)smid;
-    if ((!smd) || (!smd->sm))
-    {
-        triggerJavaIllegalStateException(env, "internal error: no script machine");
-        return nullptr;
-    }
-
-    const std::vector<StackItem> &stk = (whichStack == 0) ? smd->sm->getStack() : smd->sm->getAltStack();
-    if ((int)stk.size() <= index)
-        return env->NewStringUTF("");
-    index = stk.size() - index - 1;
-    const StackItem &item = stk[index];
-    std::string ret;
-    // return TYPE SIZE string(hex or false) DECIMAL
-    if (item.type == StackElementType::VCH)
-    {
-        size_t sz = item.size();
-        // special case for false stack item because insanity of interpreter
-        if (sz == 0)
-            return env->NewStringUTF((ret + "BYTES 0 false 0").c_str());
-        ret += "BYTES " + std::to_string(sz) + " " + item.hex() + "h";
-        try
-        {
-            int64_t t = item.asInt64(false); // TODO report minimal encoding
-            ret += " " + std::to_string(t);
-        }
-        catch (script_error &e)
-        {
-            ret += " NaN";
-        }
-        catch (BadOpOnType &e)
-        {
-            ret += " NaN";
-        }
-    }
-    else if (item.type == StackElementType::BIGNUM)
-    {
-        const BigNum &num = item.num();
-        size_t sz = num.magSize();
-        ret += "BIGNUM " + std::to_string(sz) + " " + item.hex() + "h " + num.str();
-    }
-    else
-    {
-        ret += "UNKNW"; // this sw needs to be updated for the newly added type
-    }
-
-    return env->NewStringUTF(ret.c_str());
-}
-
-
-extern "C" JNIEXPORT jboolean JNICALL Java_org_nexa_libnexakotlin_ScriptMachine_delete(JNIEnv *env,
-    jobject ths,
-    jlong smid)
-{
-    SmRelease((void *)smid);
-    return true;
-}
-
-
-#endif // ifndef ANDROID
-
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_capdSolve(JNIEnv *env,
-    jobject ths,
-    jbyteArray jmessage)
-{
-    ByteArrayAccessor message(env, jmessage);
-    CDataStream dataStrm((char *)message.data, (char *)message.data + message.size, SER_NETWORK, PROTOCOL_VERSION);
-    CapdMsg msg;
-    try
-    {
-        dataStrm >> msg;
-    }
-    catch (const std::exception &)
-    {
-        // p("libnexa capd deserialize error");
-        return jbyteArray();
-    }
-    // one year of seconds.  This is not going to work because Solve interprets this as an offset from "now" and changes
-    // the message time field.  But we do not return the changed time.  Callers should manually do this if they
-    // want an offset.  Since such an ancient message is unrelayable this must be an invalid capd message anyway.
-    if (msg.createTime < 31536000)
-        return jbyteArray();
-    bool solved = msg.Solve(msg.createTime);
-    if (solved)
-    {
-        return makeJByteArray(env, msg.nonce);
-    }
-    return jbyteArray();
-}
-
-extern "C" JNIEXPORT jboolean JNICALL Java_org_nexa_libnexakotlin_Native_capdCheck(JNIEnv *env,
-    jobject ths,
-    jbyteArray jmessage)
-{
-    ByteArrayAccessor message(env, jmessage);
-    CDataStream dataStrm((char *)message.data, (char *)message.data + message.size, SER_NETWORK, PROTOCOL_VERSION);
-    CapdMsg msg;
-    try
-    {
-        dataStrm >> msg;
-    }
-    catch (const std::exception &)
-    {
-        return false;
-    }
-    return msg.DoesPowMeetTarget();
-}
-
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_capdHash(JNIEnv *env,
-    jobject ths,
-    jbyteArray jmessage)
-{
-    ByteArrayAccessor message(env, jmessage);
-    CDataStream dataStrm((char *)message.data, (char *)message.data + message.size, SER_NETWORK, PROTOCOL_VERSION);
-    CapdMsg msg;
-    try
-    {
-        dataStrm >> msg;
-    }
-    catch (const std::exception &)
-    {
-        // p("libnexa capd deserialize error");
-        return jbyteArray();
-    }
-    uint256 hash = msg.CalcHash();
-    // p("C hash: %s\n", HexStr(hash.begin(), hash.end()).c_str());
-    jbyteArray ret = makeJByteArray(env, hash);
-    return ret;
-}
-
-
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_signMessage(JNIEnv *env,
-    jobject ths,
-    jbyteArray jmessage,
-    jbyteArray secret)
-{
-    ByteArrayAccessor message(env, jmessage);
-    ByteArrayAccessor privkey(env, secret);
-    if (privkey.size != 32)
-        return jbyteArray();
-
-    checkSigInit();
-
-    CKey key = LoadKey((const unsigned char *)privkey.data);
-
-    CHashWriter ss(SER_GETHASH, 0);
-    ss << strMessageMagic << message.vec();
-
-    uint256 msgHash = ss.GetHash();
-    // __android_log_print(ANDROID_LOG_INFO, APPNAME, "signing msgHash %s\n", msgHash.GetHex().c_str());
-    std::vector<unsigned char> vchSig;
-    if (!key.SignCompact(msgHash, vchSig)) // signing will only fail if the key is bogus
-    {
-        return jbyteArray();
-    }
-    if (vchSig.size() == 0)
-        return jbyteArray();
-
-    // __android_log_print(ANDROID_LOG_INFO, APPNAME, "signing sigSize %d data %s\n", vchSig.size(),
-    // GetHex(vchSig.begin(), vchSig.size()).c_str());
-    return makeJByteArray(env, vchSig);
-}
-
-extern "C" JNIEXPORT jboolean JNICALL Java_bitcoinunlimited_libbitcoincash_Wallet_verifyDataSchnorr(JNIEnv *env,
-    jobject ths,
-    jbyteArray jmessage,
-    jbyteArray jpubkey,
-    jbyteArray jsig)
-{
-    ByteArrayAccessor message(env, jmessage);
-    ByteArrayAccessor pubkeybytes(env, jpubkey);
-    ByteArrayAccessor sig(env, jsig);
-    message.vec();
-    std::vector<unsigned char> vchHash(32);
-    CSHA256().Write(message.data, message.size).Finalize(vchHash.data());
-    uint256 messageHash(vchHash);
-    CPubKey pubkey(pubkeybytes.vec());
-    if (sig.size != 64)
-        return false;
-    return pubkey.VerifySchnorr(messageHash, sig.vec());
-}
-
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_verifyMessage(JNIEnv *env,
-    jobject ths,
-    jbyteArray jmessage,
-    jbyteArray addrBytes,
-    jbyteArray sigBytes)
-{
-    ByteArrayAccessor message(env, jmessage);
-    ByteArrayAccessor addr(env, addrBytes);
-    ByteArrayAccessor sig(env, sigBytes);
-    CTxDestination destination;
-
-    // There are only a few script types that we can extract a pubkey from.  If the data size is
-    // 24, its a binary format script template address
-    if (addr.size == 24)
-    {
-        ScriptTemplateDestination st;
-        std::vector<unsigned char> vec(addr.data, addr.data + addr.size);
-        CDataStream ssData(vec, SER_NETWORK, PROTOCOL_VERSION);
-        ssData >> st;
-        destination = st;
-    }
-    // If the data size is 20 its a raw pubkeyhash
-    else if (addr.size == 20)
-    {
-        destination = CKeyID(uint160(addr.data));
-    }
-    // If it was neither of those or they didn't decode, try string decoding of any blockchain
-    if (!IsValidDestination(destination))
-    {
-        // decode this address as if it was a string
-        auto s = std::string(addr.data, addr.data + addr.size);
-        destination = DecodeDestination(s, Params(CBaseChainParams::NEXA));
-        if (!IsValidDestination(destination))
-        {
-            destination = DecodeDestination(s, Params(CBaseChainParams::TESTNET));
-            if (!IsValidDestination(destination))
-            {
-                destination = DecodeDestination(s, Params(CBaseChainParams::REGTEST));
-                if (!IsValidDestination(destination))
-                {
-                    destination = DecodeDestination(s, Params(CBaseChainParams::LEGACY_UNIT_TESTS));
-                    if (!IsValidDestination(destination))
-                    {
-                        return jbyteArray();
-                    }
-                }
-            }
-        }
-    }
-
-    checkSigInit();
-
-    CHashWriter ss(SER_GETHASH, 0);
-    ss << strMessageMagic << message.vec();
-
-    uint256 msgHash = ss.GetHash();
-    CPubKey pubkey;
-    if (!pubkey.RecoverCompact(msgHash, sig.vec()))
-    {
-        return jbyteArray();
-    }
-
-    ScriptTemplateDestination *st = nullptr;
-    const CKeyID *keyID = std::get_if<CKeyID>(&destination);
-    if (keyID)
-    {
-        if (pubkey.GetID() != *keyID)
-        {
-            return jbyteArray();
-        }
-    }
-    else if ((st = std::get_if<ScriptTemplateDestination>(&destination)) != nullptr)
-    {
-        CGroupTokenInfo groupInfo;
-        std::vector<unsigned char> templateHash;
-
-        // We do not understand this address as a script template so cannot verify this
-        if (ScriptTemplateError::OK != GetScriptTemplate(st->toScript(), &groupInfo, &templateHash))
-        {
-            return jbyteArray();
-        }
-        // We cannot figure out the pubkeyhash of a template type that we do not understand
-        if (templateHash != P2PKT_ID)
-        {
-            return jbyteArray();
-        }
-        // ok see if this pubkey makes the same p2pkt script as was given to us
-        ScriptTemplateDestination signedBy(P2pktOutput(pubkey));
-        if (!(*st == signedBy))
-        {
-            return jbyteArray();
-        }
-    }
-    else // We don't know this destination type
-    {
-        return jbyteArray();
-    }
-
-    // checks succeeded, this is a good sig
-    auto pkv = std::vector<unsigned char>(pubkey.begin(), pubkey.end());
-    return makeJByteArray(env, pkv);
-}
-
-
-extern "C" JNIEXPORT jstring JNICALL Java_org_nexa_libnexakotlin_Native_encode64(JNIEnv *env,
-    jobject ths,
-    jbyteArray jdata)
-{
-    ByteArrayAccessor data(env, jdata);
-    auto dataAsStr = EncodeBase64(data.data, data.size);
-    return env->NewStringUTF(dataAsStr.c_str());
-}
-
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_decode64(JNIEnv *env,
-    jobject ths,
-    jstring jdata)
-{
-    std::string data = toString(env, jdata);
-    bool invalid = true;
-    auto dataBytes = DecodeBase64(data.c_str(), &invalid);
-    if (invalid)
-    {
-        triggerJavaIllegalStateException(env, "bad encoding");
-        return jbyteArray();
-    }
-    return makeJByteArray(env, dataBytes);
-}
-
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_signOneInputUsingECDSA(JNIEnv *env,
-    jobject ths,
-    jbyteArray txData,
-    jint sigHashType,
-    jlong inputIdx,
-    jlong inputAmount,
-    jbyteArray prevoutScript,
-    jbyteArray secret)
-{
-    ByteArrayAccessor tx(env, txData);
-    ByteArrayAccessor prevout(env, prevoutScript);
-    ByteArrayAccessor privkey(env, secret);
-    if (privkey.size != 32)
-        return jbyteArray();
-
-    unsigned char result[MAX_SIG_LEN];
-    uint32_t resultLen = SignTxECDSA(tx.data, tx.size, inputIdx, inputAmount, prevout.data, prevout.size, sigHashType,
-        privkey.data, result, MAX_SIG_LEN);
-
-    if (resultLen == 0)
-        return jbyteArray();
-    return makeJByteArray(env, result, resultLen);
-}
-
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_signOneInputUsingSchnorr(JNIEnv *env,
-    jobject ths,
-    jbyteArray txData,
-    jbyteArray hashType,
-    jlong inputIdx,
-    jlong inputAmount,
-    jbyteArray prevoutScript,
-    jbyteArray secret)
-{
-    ByteArrayAccessor tx(env, txData);
-    ByteArrayAccessor prevout(env, prevoutScript);
-    ByteArrayAccessor privkey(env, secret);
-    ByteArrayAccessor sigHashType(env, hashType);
-    if (privkey.size != 32)
-        return jbyteArray();
-
-    unsigned char result[MAX_SIG_LEN];
-    uint32_t resultLen = signTxOneInputUsingSchnorr(tx.data, tx.size, inputIdx, inputAmount, prevout.data, prevout.size,
-        sigHashType.data, sigHashType.size, privkey.data, result, MAX_SIG_LEN);
-
-    if (resultLen == 0)
-    {
-        triggerJavaIllegalStateException(env, "signing operation failed");
-        return nullptr;
-    }
-    return makeJByteArray(env, result, resultLen);
-}
-
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_signOneBchInputUsingSchnorr(JNIEnv *env,
-    jobject ths,
-    jbyteArray txData,
-    jint sigHashType,
-    jlong inputIdx,
-    jlong inputAmount,
-    jbyteArray prevoutScript,
-    jbyteArray secret)
-{
-    ByteArrayAccessor tx(env, txData);
-    ByteArrayAccessor prevout(env, prevoutScript);
-    ByteArrayAccessor privkey(env, secret);
-    if (privkey.size != 32)
-        return jbyteArray();
-
-    unsigned char result[MAX_SIG_LEN];
-    uint32_t resultLen = signBchTxOneInputUsingSchnorr(tx.data, tx.size, inputIdx, inputAmount, prevout.data,
-        prevout.size, sigHashType, privkey.data, result, MAX_SIG_LEN);
-
-    if (resultLen == 0)
-    {
-        triggerJavaIllegalStateException(env, "signing operation failed");
-        return nullptr;
-    }
-    return makeJByteArray(env, result, resultLen);
-}
-
-
-/** Create a bloom filter */
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_createBloomFilter(JNIEnv *env,
-    jobject ths,
-    jobjectArray arg,
-    jdouble falsePosRate,
-    jint capacity,
-    jint maxSize,
-    jint flags,
-    jint tweak)
-{
-    jclass byteArrayClass = env->FindClass("[B");
-    size_t len = env->GetArrayLength(arg);
-    if (capacity < 10)
-        capacity = 10; // sanity check the capacity
-
-    if (!((falsePosRate >= 0) && (falsePosRate <= 1.0)))
-    {
-        triggerJavaIllegalStateException(env, "incorrect false positive rate");
-        return nullptr;
-    }
-
-    CBloomFilter bloom(std::max((size_t)capacity, len), falsePosRate, tweak, flags, maxSize);
-
-    for (size_t i = 0; i < len; i++)
-    {
-        jobject obj = env->GetObjectArrayElement(arg, i);
-        if (!env->IsInstanceOf(obj, byteArrayClass))
-        {
-            triggerJavaIllegalStateException(env, "incorrect element data type (must be ByteArray)");
-            return nullptr;
-        }
-        jbyteArray elem = (jbyteArray)obj;
-        jbyte *elemData = env->GetByteArrayElements(elem, 0);
-        if (elemData == NULL)
-        {
-            triggerJavaIllegalStateException(env, "incorrect element data type (must be ByteArray)");
-            return nullptr;
-        }
-        size_t elemLen = env->GetArrayLength(elem);
-        bloom.insert(std::vector<unsigned char>(elemData, elemData + elemLen));
-        env->ReleaseByteArrayElements(elem, elemData, 0);
-    }
-
-    CDataStream serializer(SER_NETWORK, PROTOCOL_VERSION);
-    serializer << bloom;
-    //__android_log_print(ANDROID_LOG_INFO, APPNAME, "Bloom size: %d Bloom serialized size: %d numAddrs: %d\n",
-    //    (unsigned int)bloom.vDataSize(), (unsigned int)serializer.size(), (unsigned int)len);
-    jbyteArray ret = env->NewByteArray(serializer.size());
-    jbyte *retData = env->GetByteArrayElements(ret, 0);
-
-    if (!retData)
-        return ret; // failed
-    memcpy(retData, serializer.data(), serializer.size());
-
-    env->ReleaseByteArrayElements(ret, retData, 0);
-    return ret;
-}
-
-/** Get work from nbits */
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_getWorkFromDifficultyBits(JNIEnv *env,
-    jobject ths,
-    jlong nBits)
-{
-    arith_uint256 result = GetWorkForDifficultyBits((uint32_t)nBits);
-    return encodeUint256(env, result);
-}
-
-/** Get work from nbits */
-extern "C" JNIEXPORT jint JNICALL Java_org_nexa_libnexakotlin_Native_getDifficultyBitsFromWork(JNIEnv *env,
-    jobject ths,
-    jbyteArray work)
-{
-    ByteArrayAccessor data(env, work);
-    return getDifficultyBitsFromWork(data.data);
-}
-
-
-/** Given a private key, return its corresponding public key */
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_getPubKey(JNIEnv *env,
-    jobject ths,
-    jbyteArray arg)
-{
-    size_t len = env->GetArrayLength(arg);
-    jbyte *data = env->GetByteArrayElements(arg, nullptr);
-
-    if (len != 32)
-    {
-        std::stringstream err;
-        err << "GetPubKey: Incorrect length for argument 'secret'. "
-            << "Expected 32, got " << len << ".";
-        triggerJavaIllegalStateException(env, err.str().c_str());
-        return nullptr;
-    }
-
-    CKey k = LoadKey((const unsigned char *)data);
-    if (!k.IsValid())
-    {
-        triggerJavaIllegalStateException(env, "invalid secret");
-        return nullptr;
-    }
-    CPubKey pub = k.GetPubKey();
-    jbyteArray bArray = env->NewByteArray(pub.size());
-    jbyte *dest = env->GetByteArrayElements(bArray, 0);
-    memcpy(dest, pub.begin(), pub.size());
-
-    env->ReleaseByteArrayElements(arg, data, 0);
-    env->ReleaseByteArrayElements(bArray, dest, 0);
-    return bArray;
-}
-
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_signHashSchnorr(JNIEnv *env,
-    jobject ths,
-    jbyteArray message,
-    jbyteArray secret)
-{
-    ByteArrayAccessor data(env, message);
-    ByteArrayAccessor privkey(env, secret);
-    if (privkey.size != 32)
-    {
-        std::stringstream err;
-        err << "signDataUsingSchnorr: Incorrect length for argument 'secret'. "
-            << "Expected 32, got " << privkey.size << ".";
-        triggerJavaIllegalStateException(env, err.str().c_str());
-        return nullptr;
-    }
-
-    if (data.size == 0)
-    {
-        triggerJavaIllegalStateException(env, "signDataUsingSchnorr: Cannot sign data of 0 length.");
-        return nullptr;
-    }
-    if (data.size != 32)
-    {
-        triggerJavaIllegalStateException(env, "signDataUsingSchnorr: Must sign a 32 byte hash.");
-        return nullptr;
-    }
-
-    unsigned char result[MAX_SIG_LEN];
-    uint32_t resultLen = SignHashSchnorr(data.data, privkey.data, result);
-
-    if (resultLen == 0)
-    {
-        triggerJavaIllegalStateException(env, "signDataUsingSchnorr: Failed to sign data.");
-        return nullptr;
-    }
-    return makeJByteArray(env, result, resultLen);
-}
-
-
-extern "C" JNIEXPORT jstring JNICALL Java_org_nexa_libnexakotlin_Native_encodeCashAddr(JNIEnv *env,
-    jobject ths,
-    jbyte chainSelector,
-    jbyte typ,
-    jbyteArray arg)
-{
-    jbyte *data = env->GetByteArrayElements(arg, 0);
-    size_t len = env->GetArrayLength(arg);
-    CTxDestination dst = CNoDestination();
-
-    if ((typ == PayAddressTypeP2PKH) || (typ == PayAddressTypeP2SH))
-    {
-        if (len != 20)
-        {
-            triggerJavaIllegalStateException(env, "bad address argument length");
-            return nullptr;
-        }
-        uint160 tmp((const uint8_t *)data);
-        if (typ == PayAddressTypeP2PKH)
-        {
-            dst = CKeyID(tmp);
-        }
-        else if (typ == PayAddressTypeP2SH)
-        {
-            dst = CScriptID(tmp);
-        }
-    }
-    else if (typ == PayAddressTypeTEMPLATE)
-    {
-        // A PayAddress contains a serialized script
-        // Really the "right" way to do this is to just encode the exact bytes without stripping off
-        // the serialization and putting it back on but that does not work with the "Destination" code.
-        // As it is, any additional parts (currently none are defined) to the PayAddress will be removed
-        ScriptTemplateDestination st;
-        std::vector<unsigned char> vec(data, data + len);
-        CDataStream ssData(vec, SER_NETWORK, PROTOCOL_VERSION);
-        ssData >> st;
-        dst = st;
-    }
-    else
-    {
-        triggerJavaIllegalStateException(env, "Address type cannot be encoded to cashaddr");
-        return nullptr;
-    }
-
-    env->ReleaseByteArrayElements(arg, data, 0);
-
-    const CChainParams *cp = GetChainParams((ChainSelector)chainSelector);
-    if (cp == nullptr)
-    {
-        triggerJavaIllegalStateException(env, "Unknown blockchain selection");
-        return nullptr;
-    }
-    std::string addrAsStr(EncodeCashAddr(dst, *cp));
-    return env->NewStringUTF(addrAsStr.c_str());
-}
-
-
-extern "C" JNIEXPORT jstring JNICALL Java_org_nexa_libnexakotlin_Native_groupIdToAddr(JNIEnv *env,
-    jobject ths,
-    jbyte chainSelector,
-    jbyteArray arg)
-{
-    size_t len = env->GetArrayLength(arg);
-    if (len < 32)
-    {
-        triggerJavaIllegalStateException(env, "bad address argument length too small");
-        return nullptr;
-    }
-    if (len > 520)
-    {
-        triggerJavaIllegalStateException(env, "bad address argument length too large");
-        return nullptr;
-    }
-    jbyte *data = env->GetByteArrayElements(arg, 0);
-
-    CGroupTokenID grp((uint8_t *)data, len);
-
-    env->ReleaseByteArrayElements(arg, data, 0);
-
-    const CChainParams *cp = GetChainParams((ChainSelector)chainSelector);
-    if (cp == nullptr)
-    {
-        triggerJavaIllegalStateException(env, "Unknown blockchain selection");
-        return nullptr;
-    }
-    std::string addrAsStr(EncodeGroupToken(grp, *cp));
-    return env->NewStringUTF(addrAsStr.c_str());
-}
-
-
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_groupIdFromAddr(JNIEnv *env,
-    jobject ths,
-    jbyte chainSelector,
-    jstring addrstr)
-{
-    const CChainParams *cp = GetChainParams((ChainSelector)chainSelector);
-    if (cp == nullptr)
-    {
-        triggerJavaIllegalStateException(env, "Unknown blockchain selection");
-        return nullptr;
-    }
-    auto addr = toString(env, addrstr);
-    CGroupTokenID gid = DecodeGroupToken(addr, *cp);
-    size_t size = gid.bytes().size();
-    if (size < 32) // min group id size
-    {
-        triggerJavaIllegalStateException(env, "Address is not a group (too small)");
-        return nullptr;
-    }
-    if (size > 520) // max group id size
-    {
-        triggerJavaIllegalStateException(env, "Address is not a group (too large)");
-        return nullptr;
-    }
-
-    jbyteArray bArray = env->NewByteArray(size);
-    jbyte *data = env->GetByteArrayElements(bArray, 0);
-    memcpy((uint8_t *)data, &gid.bytes().front(), size);
-    env->ReleaseByteArrayElements(bArray, data, 0);
-    return bArray;
-}
-
-
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_decodeCashAddr(JNIEnv *env,
-    jobject ths,
-    jbyte chainSelector,
-    jstring addrstr)
-{
-    const CChainParams *cp = GetChainParams((ChainSelector)chainSelector);
-    if (cp == nullptr)
-    {
-        triggerJavaIllegalStateException(env, "Unknown blockchain selection");
-        return nullptr;
-    }
-
-    CTxDestination dst = DecodeCashAddr(toString(env, addrstr), *cp);
-    std::vector<unsigned char> result;
-    std::visit(PubkeyExtractor(result, *cp), dst);
-    jbyteArray bArray = env->NewByteArray(result.size());
-    jbyte *data = env->GetByteArrayElements(bArray, 0);
-    memcpy(data, &result[0], result.size());
-    env->ReleaseByteArrayElements(bArray, data, 0);
-    return bArray;
-}
-
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_decodeWifPrivateKey(JNIEnv *env,
-    jobject ths,
-    jbyte chainSelector,
-    jstring secretWIF)
-{
-    const CChainParams *cp = GetChainParams(static_cast<ChainSelector>(chainSelector));
-    if (cp == nullptr)
-    {
-        triggerJavaIllegalStateException(env, "Unknown blockchain selection");
-        return nullptr;
-    }
-    CBitcoinSecret secret;
-    const std::string wif = toString(env, secretWIF);
-    const bool ok = secret.SetString(*cp, wif);
-
-    if (!ok)
-    {
-        triggerJavaIllegalStateException(env, "Invalid private key");
-        return nullptr;
-    }
-    const CKey key = secret.GetKey();
-    if (!key.IsValid())
-    {
-        triggerJavaIllegalStateException(env, "Private key outside allowed range");
-        return nullptr;
-    }
-    return makeJByteArray(env, static_cast<const uint8_t *>(key.begin()), key.size());
-}
-
-// many of the args are long so that the hardened selectors (i.e. 0x80000000) are not negative
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_deriveHd44ChildKey(JNIEnv *env,
-    jobject ths,
-    jbyteArray masterSecretBytes,
-    jlong purpose,
-    jlong coinType,
-    jlong account,
-    jint change,
-    jint index)
-{
-    size_t mslen = env->GetArrayLength(masterSecretBytes);
-    if ((mslen < 16) || (mslen > 64))
-    {
-        triggerJavaIllegalStateException(env, "key derivation failure -- master secret is incorrect length");
-        return nullptr;
-    }
-
-    jbyte *msdata = env->GetByteArrayElements(masterSecretBytes, 0);
-
-    CKey secret;
-    Hd44DeriveChildKey((unsigned char *)msdata, mslen, purpose, coinType, account, change, index, secret, nullptr);
-
-    jbyteArray bArray = env->NewByteArray(32);
-    jbyte *data = env->GetByteArrayElements(bArray, 0);
-    if (secret.size() != 32)
-    {
-        triggerJavaIllegalStateException(env, "key derivation failure -- derived secret is incorrect length");
-        return nullptr;
-    }
-    memcpy(data, secret.begin(), 32);
-    env->ReleaseByteArrayElements(bArray, data, 0);
-    return bArray;
-}
-
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_sha256(JNIEnv *env,
-    jobject ths,
-    jbyteArray arg)
-{
-    size_t len = env->GetArrayLength(arg);
-    jbyte *data = env->GetByteArrayElements(arg, 0);
-
-    jbyteArray bArray = env->NewByteArray(32);
-    jbyte *dest = env->GetByteArrayElements(bArray, 0);
-    sha256((unsigned char *)data, len, (unsigned char *)dest);
-
-    env->ReleaseByteArrayElements(arg, data, 0);
-    env->ReleaseByteArrayElements(bArray, dest, 0);
-    return bArray;
-}
-
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_hash256(JNIEnv *env,
-    jobject ths,
-    jbyteArray arg)
-{
-    size_t len = env->GetArrayLength(arg);
-    jbyte *data = env->GetByteArrayElements(arg, 0);
-
-    jbyteArray bArray = env->NewByteArray(32);
-    jbyte *dest = env->GetByteArrayElements(bArray, 0);
-    hash256((unsigned char *)data, len, (unsigned char *)dest);
-
-    env->ReleaseByteArrayElements(arg, data, 0);
-    env->ReleaseByteArrayElements(bArray, dest, 0);
-    return bArray;
-}
-
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_hash160(JNIEnv *env,
-    jobject ths,
-    jbyteArray arg)
-{
-    size_t len = env->GetArrayLength(arg);
-    jbyte *data = env->GetByteArrayElements(arg, 0);
-
-    jbyteArray bArray = env->NewByteArray(20);
-    jbyte *dest = env->GetByteArrayElements(bArray, 0);
-    hash160((unsigned char *)data, len, (unsigned char *)dest);
-
-    env->ReleaseByteArrayElements(arg, data, 0);
-    env->ReleaseByteArrayElements(bArray, dest, 0);
-    return bArray;
-}
-
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_blockHash(JNIEnv *env,
-    jobject ths,
-    jbyteArray arg)
-{
-    size_t len = env->GetArrayLength(arg);
-    jbyte *data = env->GetByteArrayElements(arg, 0);
-
-    jbyteArray bArray = env->NewByteArray(32);
-    jbyte *dest = env->GetByteArrayElements(bArray, 0);
-
-    CDataStream dataStrm((char *)data, (char *)data + len, SER_NETWORK, PROTOCOL_VERSION);
-    CBlockHeader blkHeader;
-    dataStrm >> blkHeader;
-
-    uint256 hash = blkHeader.GetHash();
-    memcpy(dest, hash.begin(), 256 / 8);
-    // unpins the java objects
-    env->ReleaseByteArrayElements(arg, data, 0);
-    env->ReleaseByteArrayElements(bArray, dest, 0);
-    return bArray;
-}
-
-extern "C" JNIEXPORT jboolean JNICALL Java_org_nexa_libnexakotlin_Native_verifyBlockHeader(JNIEnv *env,
-    jobject ths,
-    jbyte chainSelector,
-    jbyteArray arg)
-{
-    const CChainParams *cp = GetChainParams(static_cast<ChainSelector>(chainSelector));
-    if (cp == nullptr)
-    {
-        triggerJavaIllegalStateException(env, "Unknown blockchain selection");
-        return false;
-    }
-    size_t len = env->GetArrayLength(arg);
-    jbyte *data = env->GetByteArrayElements(arg, 0);
-
-    CDataStream dataStrm((char *)data, (char *)data + len, SER_NETWORK, PROTOCOL_VERSION);
-    CBlockHeader blkHeader;
-    dataStrm >> blkHeader;
-
-    CValidationState state;
-    bool result = CheckBlockHeader(cp->GetConsensus(), blkHeader, state, true);
-
-    // unpins the java objects
-    env->ReleaseByteArrayElements(arg, data, 0);
-    return result;
-}
-
-
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_txid(JNIEnv *env,
-    jobject ths,
-    jbyteArray arg)
-{
-    size_t len = env->GetArrayLength(arg);
-    jbyte *data = env->GetByteArrayElements(arg, 0);
-
-    jbyteArray bArray = env->NewByteArray(32);
-    jbyte *dest = env->GetByteArrayElements(bArray, 0);
-
-    txid((unsigned char *)data, len, (unsigned char *)dest);
-
-    // unpins the java objects
-    env->ReleaseByteArrayElements(arg, data, 0);
-    env->ReleaseByteArrayElements(bArray, dest, 0);
-    return bArray;
-}
-
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_txidem(JNIEnv *env,
-    jobject ths,
-    jbyteArray arg)
-{
-    size_t len = env->GetArrayLength(arg);
-    jbyte *data = env->GetByteArrayElements(arg, 0);
-
-    jbyteArray bArray = env->NewByteArray(32);
-    jbyte *dest = env->GetByteArrayElements(bArray, 0);
-
-    txidem((unsigned char *)data, len, (unsigned char *)dest);
-
-    // unpins the java objects
-    env->ReleaseByteArrayElements(arg, data, 0);
-    env->ReleaseByteArrayElements(bArray, dest, 0);
-    return bArray;
-}
-
-
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_cryptAES256CBC(JNIEnv *env,
-    jobject ths,
-    jbyteArray message,
-    jbyteArray secret,
-    jbyteArray initial,
-    jboolean encrypt)
-{
-    ByteArrayAccessor data(env, message);
-    ByteArrayAccessor privkey(env, secret);
-    ByteArrayAccessor iv(env, initial);
-
-    if (privkey.size != AES256_KEYSIZE)
-        return jbyteArray();
-    if (iv.size != AES_BLOCKSIZE)
-        return jbyteArray();
-    if ((data.size % AES_BLOCKSIZE) != 0)
-        return jbyteArray();
-
-    jbyteArray ret = env->NewByteArray(data.size);
-    jbyte *dest = env->GetByteArrayElements(ret, 0);
-
-    int nBytes = 0;
-    if (encrypt)
-    {
-        AES256CBCEncrypt crypter(privkey.data, iv.data, false);
-        nBytes = crypter.Encrypt(data.data, data.size, (unsigned char *)dest);
-    }
-    else
-    {
-        AES256CBCDecrypt crypter(privkey.data, iv.data, false);
-        nBytes = crypter.Decrypt(data.data, data.size, (unsigned char *)dest);
-    }
-    if (nBytes == 0)
-        return jbyteArray();
-    // this copies the generated data from the C buffer into the java bytearray
-    env->ReleaseByteArrayElements(ret, dest, 0);
-    return ret;
-}
-
-
-// Since partial Merkle blocks are just trees of hashes, this structure is the same for Nexa and BCH
-jobjectArray JNICALL
-MerkleBlock_Extract(JNIEnv *env, jobject ths, jint numTxes, jbyteArray merkleProofPath, jobjectArray hashArray)
-{
-    const unsigned int HASH_LEN = 32;
-    size_t hashArrayLen = env->GetArrayLength(hashArray);
-
-    jbyte *mppData = env->GetByteArrayElements(merkleProofPath, 0);
-    size_t mppLen = env->GetArrayLength(merkleProofPath);
-    CDecodablePartialMerkleTree tree(numTxes, (const unsigned char *)mppData, mppLen);
-    env->ReleaseByteArrayElements(merkleProofPath, mppData, 0);
-
-    // Copy the hashes out of the java wrapper objects into the PartialMerkleTree
-    auto &hashes = tree.accessHashes();
-    hashes.resize(hashArrayLen);
-    for (size_t i = 0; i < hashArrayLen; i++)
-    {
-        jbyteArray elem = (jbyteArray)env->GetObjectArrayElement(hashArray, i);
-        jbyte *elemData = env->GetByteArrayElements(elem, 0);
-        size_t elemLen = env->GetArrayLength(elem);
-        if (elemLen != HASH_LEN)
-        {
-            triggerJavaIllegalStateException(env, "invalid hash: bad length");
-            return nullptr;
-        }
-        hashes[i] = uint256((unsigned char *)elemData);
-        env->ReleaseByteArrayElements(elem, elemData, 0);
-    }
-
-    std::vector<uint256> matches;
-    std::vector<unsigned int> matchIndexes;
-    uint256 merkleRoot = tree.ExtractMatches(matches, matchIndexes);
-
-    jclass elementClass = env->GetObjectClass(merkleProofPath); // get the class of a jbyteArray
-    jobjectArray ret = env->NewObjectArray(matches.size() + 1, elementClass, nullptr);
-
-    // Put the merkle root in the first slot
-    {
-        jbyteArray bArray = env->NewByteArray(HASH_LEN);
-        jbyte *dest = env->GetByteArrayElements(bArray, 0);
-        memcpy(dest, merkleRoot.begin(), HASH_LEN);
-        env->ReleaseByteArrayElements(bArray, dest, 0);
-        env->SetObjectArrayElement(ret, 0, bArray);
-    }
-
-    // Fill the rest with transactions hashes
-    for (size_t i = 0; i < matches.size(); i++)
-    {
-        jbyteArray bArray = env->NewByteArray(HASH_LEN);
-        jbyte *dest = env->GetByteArrayElements(bArray, 0);
-        memcpy(dest, matches[i].begin(), HASH_LEN);
-        env->ReleaseByteArrayElements(bArray, dest, 0);
-        env->SetObjectArrayElement(ret, i + 1, bArray);
-    }
-    return ret;
-}
-
-extern "C" JNIEXPORT jobjectArray JNICALL Java_org_nexa_libnexakotlin_Native_extractFromMerkleBlock(JNIEnv *env,
-    jobject ths,
-    jint numTxes,
-    jbyteArray merkleProofPath,
-    jobjectArray hashArray)
-{
-    return MerkleBlock_Extract(env, ths, numTxes, merkleProofPath, hashArray);
-}
-
-extern "C" JNIEXPORT jboolean JNICALL Java_org_nexa_libnexakotlin_Native_initializeLibNexa(JNIEnv *env, jobject ths)
-{
-    javaEnv = env;
-
-    // A chain selection parameter should be part of every libnexa API, but the underlying code still
-    // requires a default to be set so pick Nexa as the default.
-    SelectParams("nexa");
-
-#ifdef ANDROID
-    // initialize the env globals and hook up the random number generator
-    jclass c = env->FindClass("org/nexa/libnexakotlin/Native");
-    if (c == nullptr)
-    {
-        __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "class not found\n");
-        triggerJavaIllegalStateException(env, "Cannot connect to SecureRandomBytes java function");
-        return false;
-    }
-    else
-    {
-        secRandomClass = reinterpret_cast<jclass>(env->NewGlobalRef(c));
-        //__android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "class found: %x", secRandomClass);
-        // Get the method that you want to call
-        secRandom = env->GetStaticMethodID(c, "SecureRandomBytes", "([B)V");
-        //__android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "method ID: %x", secRandom);
-    }
-#endif // ANDROID
-
-    // must be below the random number generator hookup
-    checkSigInit();
-
-    return true;
-}
-
-#ifdef ANDROID
-void RandAddSeedPerfmon()
-{
-    // Android random # generator is already seeded so nothing to do
-}
-
-// Implement in Android by calling into the java SecureRandom implementation.
-// You must provide this Java API
-SLAPI int RandomBytes(unsigned char *buf, int num)
-{
-    jbyteArray bArray = javaEnv->NewByteArray(num);
-    javaEnv->CallStaticVoidMethod(secRandomClass, secRandom, bArray);
-    javaEnv->GetByteArrayRegion(bArray, 0, num, (jbyte *)buf);
-    javaEnv->DeleteLocalRef(bArray);
-    return num;
-}
-// Implement APIs normally provided by random.cpp calling openssl
-void GetRandBytes(unsigned char *buf, int num) { RandomBytes(buf, num); }
-void GetStrongRandBytes(unsigned char *buf, int num) { RandomBytes(buf, num); }
-
-#endif // ANDROID
-#endif // JAVA
 
 #ifdef IOS
 #include <Security/Security.h>
@@ -3169,7 +1335,7 @@ void GetStrongRandBytes(unsigned char *buf, int num)
         sleep(100);
     }
 }
-#endif
+#endif // IOS
 
 #if !defined(JAVA) && !defined(ANDROID) && !defined(IOS)
 /** Return random bytes from cryptographically acceptable random sources */
@@ -3179,4 +1345,4 @@ SLAPI int RandomBytes(unsigned char *buf, int num)
     return num;
 }
 
-#endif
+#endif // !defined(JAVA) && !defined(ANDROID) && !defined(IOS)

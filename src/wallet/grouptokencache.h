@@ -5,22 +5,8 @@
 #ifndef TOKEN_CACHE_H
 #define TOKEN_CACHE_H
 
-#include "consensus/grouptokens.h"
 #include "sync.h"
-
-static const unsigned int DEFAULT_OP_RETURN_GROUP_ID = 88888888;
-
-struct CAuth
-{
-    int nMint = 0;
-    int nMelt = 0;
-    int nRenew = 0;
-    int nRescript = 0;
-    int nSubgroup = 0;
-};
-
-// Retrieve token descriptions using an OP_RETURN
-bool GetTokenDescription(const CScript &script, std::vector<std::string> &_vDesc);
+#include "utilgrouptoken.h"
 
 // Accumulate token authorities and mintages which can then be apply to their respective caches
 void AccumulateTokenData(CTransactionRef ptx,
