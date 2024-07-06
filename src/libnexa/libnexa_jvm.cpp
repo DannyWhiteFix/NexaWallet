@@ -42,10 +42,6 @@ bool CheckBlockHeader(const Consensus::Params &consensusParams,
 
 #define APPNAME "BU.wallet.libnexa"
 
-jclass secRandomClass = nullptr;
-jmethodID secRandom = nullptr;
-JNIEnv *javaEnv = nullptr; // Only use for getting random numbers
-
 class ByteArrayAccessor
 {
 public:
@@ -159,34 +155,10 @@ jbyteArray makeJByteArray(JNIEnv *env, std::vector<unsigned char> &buf)
 
 extern "C" JNIEXPORT jboolean JNICALL Java_org_nexa_libnexakotlin_Native_initializeLibNexa(JNIEnv *env, jobject ths)
 {
-    javaEnv = env;
-
     // A chain selection parameter should be part of every libnexa API, but the underlying code still
     // requires a default to be set so pick Nexa as the default.
     SelectParams("nexa");
-
-#ifdef ANDROID
-    // initialize the env globals and hook up the random number generator
-    jclass c = env->FindClass("org/nexa/libnexakotlin/Native");
-    if (c == nullptr)
-    {
-        __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "class not found\n");
-        triggerJavaIllegalStateException(env, "Cannot connect to SecureRandomBytes java function");
-        return false;
-    }
-    else
-    {
-        secRandomClass = reinterpret_cast<jclass>(env->NewGlobalRef(c));
-        //__android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "class found: %x", secRandomClass);
-        // Get the method that you want to call
-        secRandom = env->GetStaticMethodID(c, "SecureRandomBytes", "([B)V");
-        //__android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "method ID: %x", secRandom);
-    }
-#endif // ANDROID
-
-    // must be below the random number generator hookup
     checkSigInit();
-
     return true;
 }
 
@@ -1129,28 +1101,6 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_crypt
     env->ReleaseByteArrayElements(ret, dest, 0);
     return ret;
 }
-
-#ifdef ANDROID
-void RandAddSeedPerfmon()
-{
-    // Android random # generator is already seeded so nothing to do
-}
-
-// Implement in Android by calling into the java SecureRandom implementation.
-// You must provide this Java API
-SLAPI int RandomBytes(unsigned char *buf, int num)
-{
-    jbyteArray bArray = javaEnv->NewByteArray(num);
-    javaEnv->CallStaticVoidMethod(secRandomClass, secRandom, bArray);
-    javaEnv->GetByteArrayRegion(bArray, 0, num, (jbyte *)buf);
-    javaEnv->DeleteLocalRef(bArray);
-    return num;
-}
-// Implement APIs normally provided by random.cpp calling openssl
-void GetRandBytes(unsigned char *buf, int num) { RandomBytes(buf, num); }
-void GetStrongRandBytes(unsigned char *buf, int num) { RandomBytes(buf, num); }
-
-#endif // ANDROID
 
 
 /////// Script machine JVM ////////

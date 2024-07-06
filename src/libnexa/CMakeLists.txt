@@ -64,6 +64,8 @@ set(libsrc
              ../capd/capd.h
              ../crypto/aes.cpp
              ../crypto/aes.h
+             ../crypto/chacha20.cpp
+             ../crypto/chacha20.h
              ../crypto/sha256.cpp
              ../crypto/hmac_sha512.cpp
              ../crypto/hmac_sha512.h
@@ -105,6 +107,10 @@ set(libsrc
              ../merkleblock.cpp
              ../merkleblock.h
              ../streams.h
+             ../random.cpp
+             ../random.h
+             ../randomenv.cpp
+             ../randomenv.h
              ../rsm/include/recursive_shared_mutex.h
              ../validation/headervalidation.cpp
              )
