@@ -2667,9 +2667,10 @@ bool ProcessMessages(CNode *pfrom)
             break; // let someone else do something periodically
     }
 
+    if (!vPriorityRecvQ_delay.empty())
     {
-        LOCK(cs_priorityRecvQ);
         // re-add the priority messages we delayed back to the queue so that we can try them again later
+        LOCK(cs_priorityRecvQ);
         vPriorityRecvQ.insert(vPriorityRecvQ.end(), vPriorityRecvQ_delay.begin(), vPriorityRecvQ_delay.end());
         if (!vPriorityRecvQ.empty())
             fPriorityRecvMsg.store(true);
