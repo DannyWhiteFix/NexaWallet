@@ -150,13 +150,6 @@ void FlushTxAdmission()
 void EnqueueTxForAdmission(CTxInputData &txd, bool fOrphan)
 {
     LOCK(csTxInQ);
-    // If I have lots of deferred tx, its probably because there's too much volume, so defer new ones right away
-    if (txDeferQ.size() > 1000)
-    {
-        txDeferQ.push(txd);
-        return;
-    }
-
 
     // Otherwise go ahead and put them on the queue
     TestConflictEnqueueTx(txd, fOrphan);
@@ -164,6 +157,8 @@ void EnqueueTxForAdmission(CTxInputData &txd, bool fOrphan)
 
 static void TestConflictEnqueueTx(CTxInputData &txd, bool fOrphan)
 {
+    AssertLockHeld(csTxInQ);
+
     bool conflict = false;
     for (auto &inp : txd.tx->vin)
     {
@@ -461,64 +456,91 @@ void _CommitTxToMempool()
     txCommitQFinal->clear();
     delete txCommitQFinal;
 
-    // Process deferred transactions after we commit to the mempool
-    std::map<uint256, CTxInputData> mapWasDeferred;
+    // Process the defer queue and retest for incoming conflicts if necessary
     {
         LOCK(csTxInQ);
-        // Clear the filter of incoming conflicts, and put all queued tx on the deferred queue since they've been
-        // deferred
-        // LOG(MEMPOOL, "txadmission incoming filter reset.  Current txInQ size: %d\n", txInQ.size());
+        // Clear the filter of incoming conflicts, and put all queued tx on the deferred queue since
+        // they've been deferred
         incomingConflicts.reset();
-        while (!txInQ.empty())
-        {
-            txDeferQ.push(txInQ.front());
-            txInQ.pop();
-        }
+        // LOG(MEMPOOL, "txadmission incoming filter reset.  Current txInQ size: %ld. Current txOrphanQ size: %ld\n",
+        //    txInQ.size(), txOrphanQ.size());
 
-        // Move the previously deferred txns into active processing.
+        // Swap out all the queues into temporaries and then process them in order of txDeferQ, txOrphanQ and
+        // then txInQ.
+        std::queue<CTxInputData> temp_txDeferQ;
+        std::queue<CTxInputData> temp_txOrphanQ;
+        std::queue<CTxInputData> temp_txInQ;
 
-        // We MUST push the first item in the defer queue to the input queue without checking it against incoming
-        // conflicts.  This is fine because the first insert into an empty incomingConflicts must succeed.
-        // A transaction's inputs could cause a false positive match against each other.  By pushing the first
+        std::swap(txDeferQ, temp_txDeferQ);
+        std::swap(txOrphanQ, temp_txOrphanQ);
+        std::swap(txInQ, temp_txInQ);
+
+        // Special Case: We MUST push the first item in the defer queue to the input queue without checking it
+        // against incoming conflicts.  This is fine because the first insert into an empty incomingConflicts must
+        // succeed. A transaction's inputs could cause a false positive match against each other.  By pushing the first
         // deferred tx without checking, we can still use the efficient fastfilter checkAndSet function for most queue
         // filter checking but mop up the extremely rare tx whose inputs have false positive matches here.
-        if (!txDeferQ.empty())
+        if (!temp_txDeferQ.empty())
         {
-            const CTxInputData &first = txDeferQ.front();
+            const CTxInputData &first = temp_txDeferQ.front();
 
             for (const auto &inp : first.tx->vin)
             {
                 incomingConflicts.insert(inp.prevout.hash);
             }
-            txInQ.push(first);
+            txInQ.push(std::move(first));
+            temp_txDeferQ.pop();
+
             cvTxInQ.notify_one();
-            txDeferQ.pop();
         }
 
-        // Use a map to store the txns so that we end up removing duplicates which could have arrived
-        // from re-requests.
-        // LOG(MEMPOOL, "popping txdeferQ, size %d\n", txDeferQ.size());
-        // this could be a lot more efficient
         uint64_t count = 0;
-        uint64_t maxmove = max(avgCommitBatchSize * 2, minCommitBatchSize);
-        while ((!txDeferQ.empty()) && (count < maxmove))
+        uint64_t maxmove = std::max(avgCommitBatchSize * 2, minCommitBatchSize);
+        // LOG(MEMPOOL, "txdeferQ, size %ld\n", temp_txDeferQ.size());
+        while ((!temp_txDeferQ.empty()) && (count < maxmove))
         {
+            // const uint256 &hash = temp_txDeferQ.front().tx->GetId();
+            // LOG(MEMPOOL, "attempt enqueue deferred %s\n", hash.ToString());
             count++;
-            const uint256 &hash = txDeferQ.front().tx->GetId();
-            mapWasDeferred.emplace(hash, txDeferQ.front());
-            txDeferQ.pop();
+            TestConflictEnqueueTx(temp_txDeferQ.front(), false);
+            temp_txDeferQ.pop();
         }
-    }
-
-    if (!mapWasDeferred.empty())
-        LOG(MEMPOOL, "Enqueueing %d deferred tx\n", mapWasDeferred.size());
-
-    {
-        LOCK(csTxInQ);
-        for (auto &it : mapWasDeferred)
+        // LOG(MEMPOOL, "txOrphanQ, size %ld\n", temp_txOrphanQ.size());
+        while ((!temp_txOrphanQ.empty()) && (count < maxmove))
         {
-            // LOG(MEMPOOL, "attempt enqueue deferred %s\n", it.first.ToString());
-            TestConflictEnqueueTx(it.second, false);
+            // const uint256 &hash = temp_txOrphanQ.front().tx->GetId();
+            // LOG(MEMPOOL, "attempt enqueue orphan %s\n", hash.ToString());
+            count++;
+            TestConflictEnqueueTx(temp_txOrphanQ.front(), false);
+            temp_txOrphanQ.pop();
+        }
+        // LOG(MEMPOOL, "txInQ, size %ld\n", temp_txInQ.size());
+        while ((!temp_txInQ.empty()) && (count < maxmove))
+        {
+            // const uint256 &hash = temp_txInQ.front().tx->GetId();
+            // LOG(MEMPOOL, "attempt enqueue txn %s\n", hash.ToString());
+            count++;
+            TestConflictEnqueueTx(temp_txInQ.front(), false);
+            temp_txInQ.pop();
+        }
+
+        // Now that we've tried to enqueue everything again there may be some
+        // that didn't make it. This should be rare if ever, but we have to
+        // move them back to the txDeferQ.
+        while (!temp_txDeferQ.empty())
+        {
+            txDeferQ.push(std::move(temp_txDeferQ.front()));
+            temp_txDeferQ.pop();
+        }
+        while (!temp_txOrphanQ.empty())
+        {
+            txDeferQ.push(std::move(temp_txOrphanQ.front()));
+            temp_txOrphanQ.pop();
+        }
+        while (!temp_txInQ.empty())
+        {
+            txDeferQ.push(std::move(temp_txInQ.front()));
+            temp_txInQ.pop();
         }
     }
 
