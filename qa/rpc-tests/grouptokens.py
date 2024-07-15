@@ -617,15 +617,16 @@ class GroupTokensTest (BitcoinTestFramework):
 
         ### Test that the instant transaction delay works for tokens
         # 1) Send a token from node2 to a new address on node2.  Even with
-        #    and instantdelay setting the balance should update immmediately because
-        #    the sourc of the tokens is ourselves and is trusted.
-        # 2) Send a token from one node to another. The instant delay should be in effect.
+        #    and instantdelay setting the balance should update immediately because
+        #    the source of the tokens is ourselves and is trusted.
+        # 2) Send a token from node0 to node2. The instant delay should be in effect.
         logging.info("testing instant transactions")
         self.sync_all()
         self.nodes[0].generate(1)
         self.sync_blocks()
         self.nodes[0].generate(2)
         self.sync_blocks()
+        sync_wallets(self.nodes)
 
         instantDelay = 3
         self.nodes[0].set("wallet.instantDelay=3");
@@ -644,21 +645,38 @@ class GroupTokensTest (BitcoinTestFramework):
         assert(endTime <= totalTimeAllowed)
         self.sync_all()
 
-        # Send to another node - the instant delay should be visible
+        # Send from node0 to node2- the instant delay should be visible
         addr2 = self.nodes[2].getnewaddress()
         self.nodes[0].generate(1)
         self.sync_blocks()
-        self.nodes[0].token("send", grp0Id, addr2, 10)
+        sync_wallets(self.nodes)
+        self.nodes[0].token("send", grp0Id, addr2, 2)
         while (self.nodes[2].gettxpoolinfo()['size'] == 0):
             time.sleep(.1)
         time.sleep(instantDelay - 1.5) # wait until just before the delay expires
         assert_equal(self.nodes[2].token("balance", grp0Id, addr2)['balance_satoshis'], 0)
-        time.sleep(1.5) # wait the last second and the balance should update (wait just a little longer for the tx to get into the txpool)
-        assert_equal(self.nodes[2].token("balance", grp0Id, addr2)['balance_satoshis'], 10)
+        time.sleep(2) # wait the last second and the balance should update (wait just a little longer for the tx to get into the txpool)
+        assert_equal(self.nodes[2].token("balance", grp0Id, addr2)['balance_satoshis'], 2)
 
+        # send from node0 to node2, but make node2 have an wallet.instantLimit value
+        # which would be larger than any NEX amount associated with the token transaction. This
+        # transaction should not be considered instantly confirmed.
+        self.nodes[2].set("wallet.instantLimit=10000000");
+        addr2a = self.nodes[2].getnewaddress()
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        sync_wallets(self.nodes)
+        self.nodes[0].token("send", grp0Id, addr2a, 8)
+        self.sync_all()
+        time.sleep(instantDelay + 1) # wait one second extra to be sure
+        assert(self.nodes[0].token("balance", grp0Id, addr2a)['balance_satoshis'] == 0)
+
+        # generate a block and the balance should now update
+        self.nodes[2].generate(1)
+        waitFor(30, lambda: self.nodes[2].token("balance", grp0Id, addr2a)['balance_satoshis'] == 8)
 
         ### Test instant transactions for tokens can be turned off.
-        #   1) send tokens back to node0 and observer that the balance does not
+        #   1) send tokens back to node0 and check that the balance does not
         #      update after the instantDelay has expired
         self.nodes[0].set("wallet.instant=false");
         self.nodes[1].set("wallet.instant=false");
@@ -672,7 +690,7 @@ class GroupTokensTest (BitcoinTestFramework):
 
         # generate a block and the balance should now update
         self.nodes[0].generate(1)
-        assert(self.nodes[0].token("balance", grp0Id, addr3)['balance_satoshis'] == 25)
+        waitFor(30, lambda: self.nodes[0].token("balance", grp0Id, addr3)['balance_satoshis'] == 25)
 
 
         # Check mint/melt is updated correctly

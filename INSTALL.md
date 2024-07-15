@@ -213,6 +213,12 @@ be spent to oneself with a higher fee and thus get quicker inclusion in a block 
 By default QT wallet users have instant transactions turned on whereas users running `nexad` will have it turned off by default. In order
 to turn on instant transactions you can add  `-wallet.instant=true` as one of your startup options.
 
+Other setings you can make are to the delay period and also the cutoff amount. To modify the instant delay you can add, for
+example, `-wallet.instantDelay=2` where 2 is the number of seconds to wait for a double spend proof before confirming this transaction.
+To modify the cutoff amount you can enter `wallet.instantLimit=10000000` which would prevent any transaction received with greater than
+10000000 NEX from being considered as instantly confirmed (NOTE: if you set an instant cutoff value then any *tokens* you receive, other
+than NEX, will not be considered as instantly confirmed and must wait for actual inclusion in a block before being spendable.).
+
 ### Minimize Disk Usage
 
 If you are running Linux, its possible to minimize your disk usage by turning off Rostrum.  This prevents your node from providing light wallets

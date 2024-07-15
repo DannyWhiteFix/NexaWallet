@@ -520,6 +520,11 @@ CTweak<uint32_t> instantTxnsDelay("wallet.instantDelay",
     strprintf("Time in seconds to wait before making an instant transaction spendable (default: %d)",
         DEFAULT_INSTANT_TRANSACTION_DELAY),
     DEFAULT_INSTANT_TRANSACTION_DELAY);
+CTweak<uint64_t> instantTxnsLimit("wallet.instantLimit",
+    strprintf("The amount of NEX below which a transaction may be considered instantly confirmed. A zero "
+              "means that this feature is turned off and all transctions will be candidates. (default: %d)",
+        DEFAULT_INSTANT_TRANSACTION_CUTOFF),
+    DEFAULT_INSTANT_TRANSACTION_CUTOFF);
 CTweak<bool> autoTxns("wallet.auto",
     strprintf("Auto consolidate utxos by creating a valid chain of transactions during transaction creation, with"
               " each transaction not exceeding  the consensus input limit of %d  (default: false)",
