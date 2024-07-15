@@ -32,7 +32,7 @@ SLAPI int encode64(const unsigned char *data, int size, char *result, int result
     auto dataAsStr = EncodeBase64(data, size);
     if (dataAsStr.size() > std::numeric_limits<int>::max())
     {
-        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
         return -1;
     }
     const int outsz = dataAsStr.size();
@@ -42,6 +42,7 @@ SLAPI int encode64(const unsigned char *data, int size, char *result, int result
         return -outsz;
     }
     strncpy(result, dataAsStr.c_str(), resultMaxLen);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return (int)outsz;
 }
 
@@ -56,7 +57,7 @@ SLAPI int decode64(const char *data, unsigned char *result, int resultMaxLen)
     }
     if (dataBytes.size() > std::numeric_limits<int>::max())
     {
-        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
         return -1;
     }
     const int outsz = dataBytes.size();
@@ -66,6 +67,7 @@ SLAPI int decode64(const char *data, unsigned char *result, int resultMaxLen)
         return -outsz;
     }
     memcpy(result, &dataBytes[0], outsz);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return (int)outsz;
 }
 
@@ -77,7 +79,7 @@ SLAPI int Bin2Hex(const unsigned char *val, int length, char *result, unsigned i
     const size_t sz = s.size() + 1; // add one for \n
     if (sz > std::numeric_limits<int>::max())
     {
-        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
         return -1;
     }
     if (sz >= resultLen)
@@ -86,6 +88,7 @@ SLAPI int Bin2Hex(const unsigned char *val, int length, char *result, unsigned i
         return 0; // need 1 more for /0
     }
     strncpy(result, s.c_str(), resultLen);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return (int)sz;
 }
 
@@ -113,6 +116,7 @@ SLAPI int hd44DeriveChildKey(const unsigned char *secretSeed,
     std::memcpy(secret, derivedSecret.begin(), 32);
     // if (keypath != nullptr) keypath[0] = 0;
     // strcpy(keypath, derivPath.c_str());
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return ret;
 }
 
@@ -131,7 +135,7 @@ SLAPI int GetPubKey(const unsigned char *keyData, unsigned char *result, unsigne
     size_t size = pubkey.size();
     if (size > std::numeric_limits<int>::max())
     {
-        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
         return -1;
     }
     if (size > resultLen)
@@ -140,6 +144,7 @@ SLAPI int GetPubKey(const unsigned char *keyData, unsigned char *result, unsigne
         return 0;
     }
     std::copy(pubkey.begin(), pubkey.end(), result);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return (int)size;
 }
 
@@ -163,7 +168,7 @@ SLAPI int SignHashEDCSA(const unsigned char *data,
     unsigned int sigSize = sig.size();
     if (sigSize > std::numeric_limits<int>::max())
     {
-        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
         return -1;
     }
     if (sigSize > resultLen)
@@ -172,6 +177,7 @@ SLAPI int SignHashEDCSA(const unsigned char *data,
         return 0;
     }
     std::copy(sig.begin(), sig.end(), result);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return (int)sigSize;
 }
 
@@ -192,6 +198,7 @@ SLAPI int txid(const unsigned char *txData, int txbuflen, unsigned char *result)
     // no need to check retlen, will always be 64
     int retlen = ret.size();
     memcpy(result, ret.begin(), retlen);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return retlen;
 }
 
@@ -212,6 +219,7 @@ SLAPI int txidem(const unsigned char *txData, int txbuflen, unsigned char *resul
     // no need to check retlen, will always be 64
     int retlen = ret.size();
     memcpy(result, ret.begin(), retlen);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return retlen;
 }
 
@@ -232,6 +240,7 @@ SLAPI int blockHash(const unsigned char *data, int len, unsigned char *result)
     // no need to check hashlen, will always be 64
     int hashlen = hash.size();
     memcpy(result, hash.begin(), hashlen);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return hashlen;
 }
 
@@ -289,7 +298,7 @@ SLAPI int SignTxECDSA(const unsigned char *txData,
     const size_t sigSize = sig.size();
     if (sigSize > std::numeric_limits<int>::max())
     {
-        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
         return -1;
     }
     if (sigSize > resultLen)
@@ -298,6 +307,7 @@ SLAPI int SignTxECDSA(const unsigned char *txData,
         return 0;
     }
     std::copy(sig.begin(), sig.end(), result);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return (int)sigSize;
 }
 
@@ -359,7 +369,7 @@ SLAPI int signBchTxOneInputUsingSchnorr(const unsigned char *txData,
     const size_t sigSize = sig.size();
     if (sigSize > std::numeric_limits<int>::max())
     {
-        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
         return -1;
     }
     if (sigSize > resultLen)
@@ -368,6 +378,7 @@ SLAPI int signBchTxOneInputUsingSchnorr(const unsigned char *txData,
         return 0;
     }
     std::copy(sig.begin(), sig.end(), result);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return (int)sigSize;
 }
 
@@ -436,7 +447,7 @@ SLAPI int signTxOneInputUsingSchnorr(const unsigned char *txData,
     const size_t sigSize = sig.size();
     if (sigSize > std::numeric_limits<int>::max())
     {
-        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
         return -1;
     }
     if (sigSize > resultLen)
@@ -445,6 +456,7 @@ SLAPI int signTxOneInputUsingSchnorr(const unsigned char *txData,
         return 0;
     }
     std::copy(sig.begin(), sig.end(), result);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return (int)sigSize;
 }
 
@@ -488,14 +500,16 @@ SLAPI int SignHashSchnorr(const unsigned char *hash, const unsigned char *keyDat
     const size_t sigSize = sig.size();
     if (sigSize > std::numeric_limits<int>::max())
     {
-        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
         return -1;
     }
     if (sigSize > MAX_SIG_LEN) // should never happen for the constant-sized schnorr signatures
     {
+        set_error(LIBNEXA_ERROR::INTERNAL_ERROR, "produced a Schnorr signature of an invalid size\n");
         return 0;
     }
     std::copy(sig.begin(), sig.end(), result);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return (int)sigSize;
 }
 
@@ -527,7 +541,7 @@ SLAPI int parseGroupDescription(const uint8_t *in, const uint64_t inlen, uint8_t
     const size_t result_size = result.size() + 1; // +1 for \0
     if (result_size > std::numeric_limits<int>::max())
     {
-        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
         return -1;
     }
     // check that out buffer has enough space
@@ -538,6 +552,7 @@ SLAPI int parseGroupDescription(const uint8_t *in, const uint64_t inlen, uint8_t
     }
     // copy result into the out buffer
     strncpy((char *)out, result.c_str(), outlen);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return (int)result_size;
 }
 
@@ -565,7 +580,7 @@ SLAPI int getArgsHashFromScriptPubkey(const uint8_t *spkIn, const uint64_t spkIn
     const size_t size_argsHash = argsHash.size();
     if (size_argsHash > std::numeric_limits<int>::max())
     {
-        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
         return -1;
     }
     if (size_argsHash > outlen)
@@ -574,6 +589,7 @@ SLAPI int getArgsHashFromScriptPubkey(const uint8_t *spkIn, const uint64_t spkIn
         return -1;
     }
     std::copy(argsHash.begin(), argsHash.end(), out);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return (int)size_argsHash;
 }
 
@@ -600,7 +616,7 @@ SLAPI int getTemplateHashFromScriptPubkey(const uint8_t *spkIn, const uint64_t s
     const size_t size_templateHash = templateHash.size();
     if (size_templateHash > std::numeric_limits<int>::max())
     {
-        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
         return -1;
     }
     if (size_templateHash > outlen)
@@ -609,6 +625,7 @@ SLAPI int getTemplateHashFromScriptPubkey(const uint8_t *spkIn, const uint64_t s
         return -1;
     }
     std::copy(templateHash.begin(), templateHash.end(), out);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return (int)size_templateHash;
 }
 
@@ -635,7 +652,7 @@ SLAPI int getGroupTokenInfoFromScriptPubkey(const uint8_t *spkIn,
     const size_t grpIdSize = groupInfo.associatedGroup.bytes().size();
     if (grpIdSize > std::numeric_limits<int>::max())
     {
-        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
         return -1;
     }
     if (grpIdSize > grpIdlimit)
@@ -646,6 +663,7 @@ SLAPI int getGroupTokenInfoFromScriptPubkey(const uint8_t *spkIn,
     std::copy(groupInfo.associatedGroup.bytes().begin(), groupInfo.associatedGroup.bytes().end(), grpId);
     *grpFlags = (uint64_t)groupInfo.controllingGroupFlags;
     *grpAmount = groupInfo.quantity;
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return (int)grpIdSize;
 }
 
@@ -698,6 +716,7 @@ SLAPI int signMessage(const unsigned char *message,
     // __android_log_print(ANDROID_LOG_INFO, APPNAME, "signing sigSize %d data %s\n", vchSig.size(),
     // GetHex(vchSig.begin(), vchSig.size()).c_str());
     memcpy(result, vchSig.data(), sz);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return (int)sz;
 }
 
@@ -712,6 +731,7 @@ SLAPI int capdSolve(const unsigned char *message, unsigned int msgLen, unsigned 
     catch (const std::exception &)
     {
         p("libnexa capd deserialize error");
+        set_error(LIBNEXA_ERROR::DECODE_FAILURE, "data passed in failed to decode to a capd message\n");
         return -1;
     }
     // one year of seconds.  This is not going to work because Solve interprets this as an offset from "now" and changes
@@ -719,6 +739,7 @@ SLAPI int capdSolve(const unsigned char *message, unsigned int msgLen, unsigned 
     // want an offset.  Since such an ancient message is unrelayable this must be an invalid capd message anyway.
     if (msg.createTime < 31536000)
     {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "message create time must be at least 31536000\n");
         return -2;
     }
     bool solved = msg.Solve(msg.createTime);
@@ -727,16 +748,20 @@ SLAPI int capdSolve(const unsigned char *message, unsigned int msgLen, unsigned 
         const size_t sz = msg.nonce.size();
         if (sz > std::numeric_limits<int>::max())
         {
-            set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+            set_error(
+                LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
             return -1;
         }
         if (sz > resultLen)
         {
+            set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
             return 0;
         }
         memcpy(result, msg.nonce.data(), sz);
+        set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
         return (int)sz;
     }
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return 0;
 }
 
@@ -753,6 +778,7 @@ SLAPI int capdCheck(const unsigned char *message, unsigned int msgLen)
         p("libnexa capd deserialize error");
         return -1;
     }
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return msg.DoesPowMeetTarget();
 }
 
@@ -767,20 +793,23 @@ SLAPI int capdHash(const unsigned char *message, unsigned int msgLen, unsigned c
     catch (const std::exception &)
     {
         p("libnexa capd deserialize error");
+        set_error(LIBNEXA_ERROR::DECODE_FAILURE, "data passed in failed to decode to a capd message\n");
         return 0;
     }
     uint256 hash = msg.CalcHash();
     const size_t sz = hash.size();
     if (sz > std::numeric_limits<int>::max())
     {
-        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
         return -1;
     }
     if (sz > resultLen)
     {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
         return 0;
     }
     memcpy(result, hash.begin(), sz);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return (int)sz;
 }
 
@@ -824,7 +853,7 @@ SLAPI int verifyMessage(const unsigned char *message,
     const size_t sz = pubkey.size();
     if (sz > std::numeric_limits<int>::max())
     {
-        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
         return -1;
     }
     if (sz > resultLen)
@@ -834,6 +863,7 @@ SLAPI int verifyMessage(const unsigned char *message,
     }
     memcpy(result, pubkey.begin(), sz);
     const int res = (int)sz;
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     if (pkAddr == passedAddr)
     {
         return res;
@@ -850,6 +880,7 @@ SLAPI bool verifyBlockHeader(int chainSelector, const unsigned char *serializedH
     const CChainParams *cp = GetChainParams(static_cast<ChainSelector>(chainSelector));
     if (cp == nullptr)
     {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "invalid chain selector\n");
         return false;
     }
     CDataStream dataStrm((char *)serializedHeader, (char *)serializedHeader + serLen, SER_NETWORK, PROTOCOL_VERSION);
@@ -865,6 +896,7 @@ SLAPI bool verifyBlockHeader(int chainSelector, const unsigned char *serializedH
     }
     CValidationState state;
     bool result = CheckBlockHeader(cp->GetConsensus(), blkHeader, state, true);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return result;
 }
 
@@ -910,13 +942,14 @@ SLAPI int encodeCashAddr(int chainSelector, int typ, const unsigned char *data, 
     const CChainParams *cp = GetChainParams((ChainSelector)chainSelector);
     if (cp == nullptr)
     {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "invalid chain selector\n");
         return 0;
     }
     std::string addrAsStr(EncodeCashAddr(dst, *cp));
     const int sz = addrAsStr.size();
     if (sz > std::numeric_limits<int>::max())
     {
-        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
         return -1;
     }
     if (sz >= resultMaxLen)
@@ -925,6 +958,7 @@ SLAPI int encodeCashAddr(int chainSelector, int typ, const unsigned char *data, 
         return -sz;
     }
     strncpy(result, addrAsStr.c_str(), sz);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return (int)sz;
 }
 
@@ -934,6 +968,7 @@ SLAPI int decodeCashAddr(int chainSelector, const char *addrstr, unsigned char *
     const CChainParams *cp = GetChainParams((ChainSelector)chainSelector);
     if (cp == nullptr)
     {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "invalid chain selector\n");
         return 0;
     }
     CTxDestination dst = DecodeCashAddr(addrstr, *cp);
@@ -942,7 +977,7 @@ SLAPI int decodeCashAddr(int chainSelector, const char *addrstr, unsigned char *
     const int sz = resultv.size();
     if (sz > std::numeric_limits<int>::max())
     {
-        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
         return -1;
     }
     if (sz > resultMaxLen)
@@ -951,6 +986,7 @@ SLAPI int decodeCashAddr(int chainSelector, const char *addrstr, unsigned char *
         return -sz;
     }
     memcpy(result, &resultv[0], sz);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return (int)sz;
 }
 
@@ -963,13 +999,14 @@ SLAPI int decodeCashAddrContent(int chainSelector,
     const CChainParams *cp = GetChainParams((ChainSelector)chainSelector);
     if (cp == nullptr)
     {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "invalid chain selector\n");
         return 0;
     }
     CashAddrContent content = DecodeCashAddrContent(addrstr, *cp);
     const int hash_size = content.hash.size();
     if (hash_size > std::numeric_limits<int>::max())
     {
-        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
         return -1;
     }
     if (hash_size > resultMaxLen)
@@ -979,6 +1016,7 @@ SLAPI int decodeCashAddrContent(int chainSelector,
     }
     memcpy(result, &content.hash[0], hash_size);
     memcpy(type, &content.type, 1);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return (int)hash_size;
 }
 
@@ -990,10 +1028,11 @@ SLAPI int serializeScript(const uint8_t *script, const unsigned int lenScript, u
     const size_t data_size = ssData.size();
     if (data_size > std::numeric_limits<int>::max())
     {
-        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
         return -1;
     }
     std::memcpy(result, ssData.data(), data_size);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return (int)data_size;
 }
 
@@ -1005,7 +1044,7 @@ SLAPI int pubkeyToScriptTemplate(const unsigned char *pubkey, int lenPubkey, uns
     const int scriptTemplateSize = scriptTemplate.size();
     if (scriptTemplateSize > std::numeric_limits<int>::max())
     {
-        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
         return -1;
     }
     if (scriptTemplateSize > resultMaxLen)
@@ -1014,6 +1053,7 @@ SLAPI int pubkeyToScriptTemplate(const unsigned char *pubkey, int lenPubkey, uns
         return -scriptTemplateSize;
     }
     std::memcpy(result, &scriptTemplate[0], scriptTemplateSize);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return (int)scriptTemplateSize;
 }
 
@@ -1034,13 +1074,14 @@ SLAPI int groupIdToAddr(int chainSelector, const unsigned char *data, int len, c
     const CChainParams *cp = GetChainParams((ChainSelector)chainSelector);
     if (cp == nullptr)
     {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "invalid chain selector\n");
         return 0;
     }
     std::string addrAsStr(EncodeGroupToken(grp, *cp));
     const int sz = addrAsStr.size();
     if (sz > std::numeric_limits<int>::max())
     {
-        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
         return -1;
     }
     if (sz >= resultMaxLen)
@@ -1049,6 +1090,7 @@ SLAPI int groupIdToAddr(int chainSelector, const unsigned char *data, int len, c
         return -sz;
     }
     strncpy(result, addrAsStr.c_str(), resultMaxLen);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return (int)sz;
 }
 
@@ -1059,6 +1101,7 @@ SLAPI int groupIdFromAddr(int chainSelector, const char *addrstr, unsigned char 
     if (cp == nullptr)
     {
         return 0;
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "invalid chain selector\n");
     }
     CGroupTokenID gid = DecodeGroupToken(addrstr, *cp);
     const size_t size = gid.bytes().size();
@@ -1078,6 +1121,7 @@ SLAPI int groupIdFromAddr(int chainSelector, const char *addrstr, unsigned char 
         return -size;
     }
     memcpy(result, &gid.bytes().front(), size);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return size;
 }
 
@@ -1087,6 +1131,7 @@ SLAPI int decodeWifPrivateKey(int chainSelector, const char *secretWIF, unsigned
     const CChainParams *cp = GetChainParams(static_cast<ChainSelector>(chainSelector));
     if (cp == nullptr)
     {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "invalid chain selector\n");
         return 0;
     }
     CBitcoinSecret secret;
@@ -1103,7 +1148,7 @@ SLAPI int decodeWifPrivateKey(int chainSelector, const char *secretWIF, unsigned
     const size_t sz = key.size();
     if (sz > std::numeric_limits<int>::max())
     {
-        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
         return -1;
     }
     if (sz > (unsigned int)resultMaxLen)
@@ -1112,6 +1157,7 @@ SLAPI int decodeWifPrivateKey(int chainSelector, const char *secretWIF, unsigned
         return -sz;
     }
     memcpy(result, static_cast<const uint8_t *>(key.begin()), sz);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return (int)sz;
 }
 
@@ -1121,6 +1167,7 @@ SLAPI void sha256(const unsigned char *data, unsigned int len, unsigned char *re
     CSHA256 sha;
     sha.Write((const unsigned char *)data, len);
     sha.Finalize((unsigned char *)result);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
 }
 
 
@@ -1130,6 +1177,7 @@ SLAPI void hash256(const unsigned char *data, unsigned int len, unsigned char *r
     CHash256 hash;
     hash.Write((const unsigned char *)data, len);
     hash.Finalize((unsigned char *)result);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
 }
 
 
@@ -1139,6 +1187,7 @@ SLAPI void hash160(const unsigned char *data, unsigned int len, unsigned char *r
     CHash160 hash;
     hash.Write((const unsigned char *)data, len);
     hash.Finalize((unsigned char *)result);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
 }
 
 // result buffer length must be len (or more) bytes, secret must be 32 bytes, iv must be 16 or more bytes, len must be a
@@ -1169,6 +1218,7 @@ SLAPI int cryptAES256CBC(unsigned int encrypt,
     {
         return -2;
     }
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return len;
 }
 
@@ -1179,6 +1229,7 @@ SLAPI void getWorkFromDifficultyBits(unsigned long int nBits, unsigned char *res
     uint256 ui = ArithToUint256(work);
     ui.reverse();
     memcpy(result, ui.begin(), 32);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
 }
 
 SLAPI unsigned int getDifficultyBitsFromWork(unsigned char *work256Bits)
@@ -1189,6 +1240,7 @@ SLAPI unsigned int getDifficultyBitsFromWork(unsigned char *work256Bits)
     // ~x (bitflip) is mathematically (2**256) - 1 - x
     // ~x/x is (2**256)/x - 1/x - x/x or (2**256)/x - 1 because 1/x is 0 in integral math
     work = ~work / work;
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return work.GetCompact(false);
 }
 
@@ -1203,13 +1255,23 @@ SLAPI int createBloomFilter(const unsigned char *data,
     int tweak,
     unsigned char *result)
 {
+    if (!result)
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "result was a null pointer\n");
+        return 0; // failed
+    }
     if (capacity < 10)
     {
         capacity = 10; // sanity check the capacity
     }
-
-    if (!((falsePosRate >= 0) && (falsePosRate <= 1.0)))
+    if (falsePosRate < 0)
     {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "false positive rate less than 0.0\n");
+        return 0;
+    }
+    if (falsePosRate > 1.0)
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "false positive rate greater than 1.0\n");
         return 0;
     }
 
@@ -1232,13 +1294,10 @@ SLAPI int createBloomFilter(const unsigned char *data,
     const size_t ret = serializer.size();
     if (ret > std::numeric_limits<int>::max())
     {
-        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
         return -1;
     }
-    if (!result)
-    {
-        return 0; // failed
-    }
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     memcpy(result, serializer.data(), ret);
     return (int)ret;
 }
@@ -1272,9 +1331,10 @@ SLAPI int extractFromMerkleBlock(int numTxes,
     const size_t ret = matches.size() + 1;
     if (ret > std::numeric_limits<int>::max())
     {
-        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int");
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
         return -1;
     }
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     if (dest + HASH_LEN > end)
     {
         return (int)ret;
@@ -1342,6 +1402,7 @@ void GetStrongRandBytes(unsigned char *buf, int num)
 SLAPI int RandomBytes(unsigned char *buf, int num)
 {
     GetStrongRandBytes(buf, num);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return num;
 }
 
