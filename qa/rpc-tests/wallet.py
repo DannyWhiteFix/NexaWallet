@@ -348,7 +348,7 @@ class WalletTest (BitcoinTestFramework):
         self.sync_all()
         node_2_bal += 2000000
         txObjNotBroadcasted = self.nodes[0].gettransaction(txIdNotBroadcasted)
-        assert_equal(self.nodes[2].getbalance(), node_2_bal)
+        waitFor(30, lambda: self.nodes[2].getbalance(), node_2_bal)
 
         #create another tx
         txIdNotBroadcasted  = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(addrType), 2000000)
@@ -594,17 +594,139 @@ class WalletTest (BitcoinTestFramework):
         assert_equal(coinbase_tx_1["transactions"][0]["satoshi"], int(COINBASE_REWARD/2*BTC))
         assert_equal(len(self.nodes[0].listsinceblock(blocks[1])["transactions"]), 0)
 
+        ### Test that the instant transaction delay works for sending NEX
+        # 1) Send coins from node2 to a new address on node2.  Even with
+        #    and instantdelay setting the balance should update immediately because
+        #    the source of the coins is ourselves and is trusted.
+        # 2) Send coins from node0 to node2. The instant delay should be in effect.
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+        self.node_args = [['-usehd=0'], ['-usehd=0'], ['-usehd=0']]
+        self.nodes = start_nodes(3, self.options.tmpdir, self.node_args)
+        connect_nodes_full(self.nodes)
+        sync_blocks(self.nodes)
+
+        logging.info("testing instant transactions")
+        self.nodes[0].set("wallet.instant=true");
+        self.nodes[1].set("wallet.instant=true");
+        self.nodes[2].set("wallet.instant=true");
+
+        instantDelay = 3
+        self.nodes[0].set("wallet.instantDelay=3");
+        self.nodes[1].set("wallet.instantDelay=3");
+        self.nodes[2].set("wallet.instantDelay=3");
+
+        connect_nodes_full(self.nodes)
+        self.sync_all()
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        self.nodes[0].generate(2)
+        self.sync_blocks()
+
+        # Send to our own node - there should be no instant delay
+        addr1 = self.nodes[2].getnewaddress()
+        balance2 = self.nodes[2].getbalance();
+        sendQty = 1000000
+        self.nodes[2].sendtoaddress(addr1, sendQty)
+        startTime = time.time()
+        endTime = startTime
+        totalTimeAllowed = startTime + instantDelay
+        while ((self.nodes[2].getbalance() < (balance2 - sendQty) + 1) and (endTime < totalTimeAllowed)):
+            time.sleep(0.1)
+            endTime = time.time()
+        assert(endTime <= totalTimeAllowed)
+        self.sync_all()
+
+        # Send from node0 to node2- the instant delay should be visible
+        addr2 = self.nodes[2].getnewaddress()
+        balance2 = self.nodes[2].getbalance();
+        sendQty = 1000
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        sync_wallets(self.nodes)
+        self.nodes[0].sendtoaddress(addr2, sendQty)
+        while (self.nodes[2].gettxpoolinfo()['size'] == 0):
+            time.sleep(.1)
+        time.sleep(instantDelay - 1.5) # wait until just before the delay expires
+        assert_equal(self.nodes[2].getbalance(), balance2)
+        time.sleep(2) # wait the last second and the balance should update (wait just a little longer for the tx to get into the txpool)
+        assert_equal(self.nodes[2].getbalance(), balance2 + sendQty)
+
+        # send from node0 to node2, but make node2 have an wallet.instantLimit value
+        # which would be larger than any NEX amount associated with the token transaction. This
+        # transaction should not be considered instantly confirmed.
+        self.nodes[2].set("wallet.instantLimit=100000");
+        addr2a = self.nodes[2].getnewaddress()
+        balance2 = self.nodes[2].getbalance();
+        sendQty = 100001
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        sync_wallets(self.nodes)
+        self.nodes[0].sendtoaddress(addr2a, sendQty)
+        self.sync_all()
+        time.sleep(instantDelay + 1) # wait one second extra to be sure
+        assert_equal(self.nodes[2].getbalance(), balance2)
+
+        # generate a block and the balance should now update
+        self.nodes[2].generate(1)
+        waitFor(waitTime, lambda: self.nodes[2].getbalance() == balance2 + sendQty)
+
+        # now send a transaction at the limit of the instantLimit. The transaction should be
+        # confirmed within the delay period
+        # send from node0 to node2, but make node2 have an wallet.instantLimit value
+        # which would be larger than any NEX amount associated with the token transaction. This
+        # transaction should not be considered instantly confirmed.
+        logging.info("testing instant cutoff")
+        self.nodes[2].set("wallet.instantLimit=100000");
+        addr2a = self.nodes[2].getnewaddress()
+        balance2 = self.nodes[2].getbalance();
+        sendQty = 100000
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        sync_wallets(self.nodes)
+        self.nodes[0].sendtoaddress(addr2a, sendQty)
+        while (self.nodes[2].gettxpoolinfo()['size'] == 0):
+            time.sleep(.1)
+        time.sleep(instantDelay - 1.5) # wait until just before the delay expires
+        assert_equal(self.nodes[2].getbalance(), balance2)
+        time.sleep(2) # wait the last second and the balance should update (wait just a little longer for the tx to get into the txpool)
+        assert_equal(self.nodes[2].getbalance(), balance2 + sendQty)
+
+
+        ### Test instant transactions for tokens can be turned off.
+        #   1) send coins back to node0 and check that the balance does not
+        #      update after the instantDelay has expired
+        self.nodes[0].set("wallet.instant=false");
+        self.nodes[1].set("wallet.instant=false");
+        self.nodes[2].set("wallet.instant=false");
+
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        sync_wallets(self.nodes)
+        addr3 = self.nodes[2].getnewaddress()
+        balance2 = self.nodes[2].getbalance();
+        sendQty = 100000
+        self.nodes[0].sendtoaddress(addr3, sendQty)
+        self.sync_all()
+        time.sleep(instantDelay + 1) # wait one second extra to be sure
+        assert_equal(self.nodes[2].getbalance(), balance2)
+
+        # generate a block and the balance should now update
+        self.nodes[0].generate(1)
+        waitFor(waitTime, lambda:self.nodes[2].getbalance() == balance2 + sendQty)
 
         ### Check coin consolidation
         # Note: Every time we consolidate we also create 1 coin, so if we consolidate 10 coins
         # we'll end up with only 9 less.
+        logging.info("check coin consolidation")
         disconnect_all(self.nodes[0])
         coins_before = len(self.nodes[0].listunspent(0))
         coins_to_leave = coins_before - 2
         self.nodes[0].consolidate(2000, coins_to_leave)
         waitFor(waitTime, lambda: coins_before == len(self.nodes[0].listunspent(0)) + 2)
-
-        self.nodes[0].generate(115)
+ 
+        self.nodes[0].generate(110)
+        sync_wallets(self.nodes)
         coins_before = len(self.nodes[0].listunspent(0))
         self.nodes[0].consolidate(10, 20)
         waitFor(waitTime, lambda: len(self.nodes[0].listunspent(0)) == 20)
@@ -647,6 +769,7 @@ class WalletTest (BitcoinTestFramework):
         logging.info("Output of the consolidate command with address destination specified:\n" + str(a))
 
         # do a full consolidation.
+        logging.info("check full coin consolidation")
         self.nodes[0].consolidate(5000,1)
 
 
@@ -667,7 +790,6 @@ class WalletTest (BitcoinTestFramework):
         addr = self.nodes[0].getnewaddress()
         self.nodes[0].sendtoaddress(addr, balance, "", "", True)
         waitFor(waitTime, lambda: len(self.nodes[0].listunspent(0)) == 1)
-
 
 
 if __name__ == '__main__':

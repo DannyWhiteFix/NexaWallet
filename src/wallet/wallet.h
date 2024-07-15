@@ -60,6 +60,9 @@ static const bool DEFAULT_SPEND_ZEROCONF_CHANGE = true;
 static const bool DEFAULT_SEND_FREE_TRANSACTIONS = false;
 //! Default number of seconds to wait for an instant transaction to be spendable
 static const uint32_t DEFAULT_INSTANT_TRANSACTION_DELAY = 5;
+//! Default amount of NEXA below which a transaction *may* be considered and instant transaction
+//  A zero means this feature is turned off and *all* transactions will be considered potential candidates.
+static const uint32_t DEFAULT_INSTANT_TRANSACTION_CUTOFF = 0;
 //! -txconfirmtarget default
 static const unsigned int DEFAULT_TX_CONFIRM_TARGET = 2;
 //! Largest (in bytes) free transaction we're willing to creat

@@ -61,6 +61,7 @@ extern CTweak<bool> useBIP69;
 extern CTweak<bool> feeEstimationTweak;
 extern CTweak<bool> instantTxns;
 extern CTweak<uint32_t> instantTxnsDelay;
+extern CTweak<uint64_t> instantTxnsLimit;
 extern CTweak<bool> autoTxns;
 extern bool fRelayPriority;
 
@@ -2277,6 +2278,35 @@ bool CWalletTx::IsTrusted() const
         // not be in the orphanpool, but if it's in the txpool then by default we know it is not in the orphanpool.
         if (!InMempool())
             return false;
+
+        // Check if the instant cutoff has been triggered and if so then do not consider this transaction
+        // as an instant one.
+        uint64_t nInstantLimit = instantTxnsLimit.Value() * COIN;
+        if (nInstantLimit > 0)
+        {
+            // count up the value we have received into our wallet.
+            uint64_t nTotalValue = 0;
+            for (const CTxOut &txout : vout)
+            {
+                if (pwallet->IsMine(txout) != ISMINE_NO)
+                {
+                    nTotalValue += txout.nValue;
+                    if (nTotalValue > nInstantLimit)
+                    {
+                        return false;
+                    }
+
+                    // If value is good then check if this is a group token. Group tokens are not
+                    // allowed to be instantly spendable if instantLimit is defined and the token
+                    // is not sent from yourself.
+                    CGroupTokenInfo grp(txout.scriptPubKey);
+                    if (grp.associatedGroup != NoGroup)
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
 
         // Time delay for when an instant transaction can be spendable. Default is a few seconds
         // but can be modified by the tweak.  If the transaction is from ourselves or is some change
