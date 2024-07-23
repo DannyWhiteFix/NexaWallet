@@ -408,7 +408,7 @@ void CommitTxToMempool(int nCorral)
             LOCK(orphanpool.cs_blockprocessing);
             if (orphanpool.vPostBlockProcessing.empty())
                 break;
-            pblock = orphanpool.vPostBlockProcessing.front();
+            pblock = std::move(orphanpool.vPostBlockProcessing.front());
             orphanpool.vPostBlockProcessing.pop_front();
         }
         int64_t nStart = GetStopwatchMicros();
@@ -417,6 +417,21 @@ void CommitTxToMempool(int nCorral)
         int64_t nEnd = GetStopwatchMicros();
         LOG(BENCH, "Processed block %s for orphans in: %.2fms\n", pblock->GetHash().ToString(),
             (nEnd - nStart) * 0.001);
+    }
+
+    // Process orphans for any recent transactions added to the txpool
+    while (true)
+    {
+        std::vector<CTransactionRef> vWhatChanged;
+        {
+            LOCK(orphanpool.cs_processorphans);
+            if (orphanpool.vProcessOrphans.empty())
+                break;
+            vWhatChanged = std::move(orphanpool.vProcessOrphans.front());
+            orphanpool.vProcessOrphans.pop_front();
+        }
+
+        ProcessOrphans(vWhatChanged);
     }
 }
 void _CommitTxToMempool()
@@ -427,8 +442,9 @@ void _CommitTxToMempool()
     // However, the incomingConflicts detector is not reset until all the transactions are committed to the mempool.
     std::map<uint256, CTxCommitData> *txCommitQFinal = nullptr;
 
-    std::vector<CTransactionRef> vWhatChanged;
     {
+        std::vector<CTransactionRef> vWhatChanged;
+
         // We must hold the mempool lock for the duration because we want to be sure that we don't end up
         // doing this loop in the middle of a reorg where we might be clearing the mempool.
         WRITELOCK(mempool.cs_txmempool);
@@ -447,6 +463,9 @@ void _CommitTxToMempool()
             mempool._addUnchecked(data.entry, !IsInitialBlockDownload());
             vWhatChanged.push_back(data.entry.GetSharedTx());
         }
+
+        LOCK(orphanpool.cs_processorphans);
+        orphanpool.vProcessOrphans.push_back(std::move(vWhatChanged));
     }
 
 #ifdef ENABLE_WALLET
@@ -521,9 +540,6 @@ void _CommitTxToMempool()
             TestConflictEnqueueTx(it.second, false);
         }
     }
-
-    // Process orphanpool for newly arrived transactions
-    ProcessOrphans(vWhatChanged);
 
     return;
 }
