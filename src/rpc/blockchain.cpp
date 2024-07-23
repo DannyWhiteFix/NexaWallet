@@ -1661,7 +1661,7 @@ UniValue mempoolInfoToJSON()
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("size", (int64_t)mempool.size());
     ret.pushKV("bytes", (int64_t)mempool.GetTotalTxSize());
-    ret.pushKV("usage", (int64_t)mempool.DynamicMemoryUsage());
+    ret.pushKV("usage", (int64_t)mempool.DynamicMemoryUsage(false));
     ret.pushKV("maxtxpool", maxTxPool.Value() * ONE_MEGABYTE);
     int64_t minfee = (int64_t)::minRelayTxFee.GetFeePerK();
     ret.pushKV("txpoolminfee", ValueFromAmount(minfee));

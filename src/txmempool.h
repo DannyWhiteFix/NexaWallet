@@ -533,15 +533,26 @@ public:
     }
 
 private:
-    typedef std::map<TxIdIter, setEntries, CompareIteratorById> cacheMap;
-
     struct TxLinks
     {
         setEntries parents;
         setEntries children;
     };
 
-    typedef std::map<TxIdIter, TxLinks, CompareIteratorById> txlinksMap;
+    struct TxHasher
+    {
+        size_t operator()(const TxIdIter &iter) const { return iter->GetSharedTx()->GetId().GetCheapHash(); }
+    };
+    struct OutPointHasher
+    {
+        size_t operator()(const COutPoint &out) const { return out.hash.GetCheapHash(); }
+    };
+    struct uint256Hasher
+    {
+        size_t operator()(const uint256 &hash) const { return hash.GetCheapHash(); }
+    };
+
+    typedef std::unordered_map<TxIdIter, TxLinks, TxHasher> txlinksMap;
     txlinksMap mapLinks;
 
     void _UpdateParent(TxIdIter entry, TxIdIter parent, bool add);
@@ -549,14 +560,14 @@ private:
 
 public:
     // Connects an output to the transaction that spends it.
-    std::map<COutPoint, CInPoint> mapNextTx;
+    std::unordered_map<COutPoint, CInPoint, OutPointHasher> mapNextTx;
 
     // Keeps track of prioritized transactions as a map of priority and fee deltas
-    std::map<uint256, std::pair<double, CAmount> > mapDeltas; // uint256 is txId or idem
+    std::unordered_map<uint256, std::pair<double, CAmount>, uint256Hasher> mapDeltas; // uint256 is txId or idem
 
     // Map an outpoint to the transaction that created it
     // value is a pair of the txidem and index of the output in the transaction
-    typedef std::map<COutPoint, std::pair<uint256, size_t> > OutpointMap;
+    typedef std::unordered_map<COutPoint, std::pair<uint256, size_t>, OutPointHasher> OutpointMap;
 
     OutpointMap outpointMap;
 
@@ -833,8 +844,8 @@ public:
     bool WriteFeeEstimates(CAutoFile &fileout) const;
     bool ReadFeeEstimates(CAutoFile &filein);
 
-    size_t DynamicMemoryUsage() const;
-    size_t _DynamicMemoryUsage() const; // no locks taken
+    size_t DynamicMemoryUsage(bool fCalcBucketSize = false);
+    size_t _DynamicMemoryUsage(bool fCalcBucketSize = false); // no locks taken
 
 private:
     /** Update ancestors of hash to add/remove it as a descendant transaction. */
