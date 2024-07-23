@@ -118,9 +118,9 @@ class AbandonConflictTest(BitcoinTestFramework):
         # Remove using high relay fee again
         stop_node(self.nodes[0],0)
         self.nodes[0]=start_node(0, self.options.tmpdir, ["-debug=net,mempool","-logtimemicros","-relay.priority=1","-relay.minRelayTxFee=10000", "-wallet.payTxFee=10000", "-relay.limitFreeRelay=0"])
-        assert(len(self.nodes[0].getrawtxpool()) == 0)
+        waitFor(waitTime, lambda: len(self.nodes[0].getrawtxpool()) == 0)
         newbalance = self.nodes[0].getbalance()
-        assert(newbalance == balance - Decimal("2499960"))
+        waitFor(waitTime, lambda: newbalance == balance - Decimal("2499960"))
         balance = newbalance
 
         # Create a double spend of AB1 by spending again from only A's 10 output

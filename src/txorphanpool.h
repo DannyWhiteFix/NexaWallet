@@ -51,6 +51,9 @@ public:
     CCriticalSection cs_blockprocessing;
     std::deque<ConstCBlockRef> vPostBlockProcessing GUARDED_BY(cs_blockprocessing);
 
+    CCriticalSection cs_processorphans;
+    std::deque<std::vector<CTransactionRef>> vProcessOrphans GUARDED_BY(cs_processorphans);
+
     CTxOrphanPool();
 
     //! Do we already have this orphan in the orphan pool
