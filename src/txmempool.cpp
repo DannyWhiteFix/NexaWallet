@@ -91,7 +91,7 @@ void CTxMemPoolEntry::UpdateRuntimeSigOps(uint64_t _runtimeSigOpCount, uint64_t 
     runtimeSighashBytes = _runtimeSighashBytes;
 }
 
-// vHashesToUpdate is the set of transaction Ids from a disconnected block
+// vTxIdsToUpdate is the set of transaction Ids from a disconnected block
 // which has been re-added to the mempool.
 // for each entry, look for descendants that are outside hashesToUpdate, and
 // add fee/size information for such descendants to the parent.
@@ -99,10 +99,6 @@ void CTxMemPoolEntry::UpdateRuntimeSigOps(uint64_t _runtimeSigOpCount, uint64_t 
 void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vTxIdsToUpdate)
 {
     WRITELOCK(cs_txmempool);
-    // For each entry in vTxIdsToUpdate, store the set of in-mempool, but not
-    // in-vTxIdsToUpdate transactions, so that we don't have to recalculate
-    // descendants when we come across a previously seen entry.
-    cacheMap mapMemPoolDescendantsToUpdate;
 
     // Use a set for lookups into vTxIdsToUpdate (these entries are already
     // accounted for in the state of their ancestors)
@@ -129,7 +125,8 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vTxIdsT
         // include them, and update their setMemPoolParents to include this tx.
         for (int j = 0;; j++)
         {
-            std::map<COutPoint, CInPoint>::const_iterator iter = mapNextTx.find(COutPoint(hash, j));
+            std::unordered_map<COutPoint, CInPoint, OutPointHasher>::const_iterator iter =
+                mapNextTx.find(COutPoint(hash, j));
             if (iter == mapNextTx.end())
                 break;
             const uint256 &childHash = iter->second.ptx->GetId();
@@ -185,21 +182,14 @@ bool CTxMemPool::_CalculateMemPoolAncestors(const CTxMemPoolEntry &entry,
         for (unsigned int i = 0; i < tx.vin.size(); i++)
         {
             auto prevout = outpointMap.find(tx.vin[i].prevout);
-            bool fInOutpointMap = true;
             if (prevout == outpointMap.end())
             {
-                fInOutpointMap = false;
+                continue;
             }
-            uint256 phash = prevout->second.first;
+            const uint256 &phash = prevout->second.first;
             TxIdIter piter = mapTx.find(phash);
             if (piter != mapTx.end()) // If the parent is still in the txpool...
             {
-                if (!fInOutpointMap)
-                {
-                    DbgAssert("ERROR: mempool inconsistent, entry in txpool but no outpointMap entry!", );
-                    continue;
-                }
-
                 parentHashes.insert(piter);
                 if (parentHashes.size() + 1 > limitAncestorCount)
                 {
@@ -208,8 +198,6 @@ bool CTxMemPool::_CalculateMemPoolAncestors(const CTxMemPoolEntry &entry,
                     return false;
                 }
             }
-            else if (fInOutpointMap)
-                DbgAssert("ERROR: mempool inconsistent, outpointMap entry found but no entry in txpool!", );
         }
     }
     else
@@ -634,7 +622,7 @@ bool CTxMemPool::_addUnchecked(const CTxMemPoolEntry &entry, bool fCurrentEstima
     // Update transaction for any feeDelta created by PrioritiseTransaction
     // TODO: refactor so that the fee delta is calculated before inserting
     // into mapTx.  Either id or idem can be used
-    std::map<uint256, std::pair<double, CAmount> >::const_iterator pos = mapDeltas.find(txid);
+    std::unordered_map<uint256, std::pair<double, CAmount>, uint256Hasher>::const_iterator pos = mapDeltas.find(txid);
     if (pos == mapDeltas.end())
         pos = mapDeltas.find(txidem);
     if (pos != mapDeltas.end())
@@ -812,7 +800,8 @@ void CTxMemPool::_removeRecursive(const CTransaction &origTx, std::list<CTransac
         // the mempool for any reason.
         for (unsigned int i = 0; i < origTx.vout.size(); i++)
         {
-            std::map<COutPoint, CInPoint>::iterator it = mapNextTx.find(COutPoint(origTx.GetIdem(), i));
+            std::unordered_map<COutPoint, CInPoint, OutPointHasher>::iterator it =
+                mapNextTx.find(COutPoint(origTx.GetIdem(), i));
             if (it == mapNextTx.end())
                 continue;
             TxIdIter nextit = mapTx.find(it->second.ptx->GetId());
@@ -895,7 +884,7 @@ void CTxMemPool::_removeConflicts(const CTransaction &tx, std::list<CTransaction
     // Remove transactions which depend on inputs of tx, recursively
     for (const CTxIn &txin : tx.vin)
     {
-        std::map<COutPoint, CInPoint>::iterator it = mapNextTx.find(txin.prevout);
+        std::unordered_map<COutPoint, CInPoint, OutPointHasher>::iterator it = mapNextTx.find(txin.prevout);
         if (it != mapNextTx.end())
         {
             const CTransaction &txConflict = *it->second.ptx;
@@ -969,7 +958,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef> &vtx,
 
         // Add any additional dirty chain tips from set of mempool txn chain tips that need to be
         // updated.
-        for (uint256 hash : setDirtyTxnChainTips)
+        for (const uint256 &hash : setDirtyTxnChainTips)
         {
             // if the txn still exists then add it to the set of chaintips
             auto it = mapTx.find(hash);
@@ -1130,7 +1119,7 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
                 assert(pcoins->HaveCoin(txin.prevout));
             }
             // Check whether its inputs are marked in mapNextTx.
-            std::map<COutPoint, CInPoint>::const_iterator it3 = mapNextTx.find(txin.prevout);
+            std::unordered_map<COutPoint, CInPoint, OutPointHasher>::const_iterator it3 = mapNextTx.find(txin.prevout);
             assert(it3 != mapNextTx.end());
             assert(it3->second.ptx.get() == &tx);
             assert(it3->second.n == i);
@@ -1168,7 +1157,7 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         for (unsigned int j = 0; j < tx.vout.size(); j++)
         {
             auto outpoint = tx.OutpointAt(j);
-            std::map<COutPoint, CInPoint>::const_iterator next = mapNextTx.find(outpoint);
+            std::unordered_map<COutPoint, CInPoint, OutPointHasher>::const_iterator next = mapNextTx.find(outpoint);
             if (next != mapNextTx.end())
             {
                 TxIdIter childit = mapTx.find(next->second.ptx->GetId());
@@ -1212,7 +1201,8 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             stepsSinceLastRemove = 0;
         }
     }
-    for (std::map<COutPoint, CInPoint>::const_iterator it = mapNextTx.begin(); it != mapNextTx.end(); it++)
+    for (std::unordered_map<COutPoint, CInPoint, OutPointHasher>::const_iterator it = mapNextTx.begin();
+         it != mapNextTx.end(); it++)
     {
         const uint256 &hash = it->second.ptx->GetId();
         indexed_transaction_set::const_iterator it2 = mapTx.find(hash);
@@ -1480,7 +1470,7 @@ void CTxMemPool::ApplyDeltas(const uint256 hash, double &dPriorityDelta, CAmount
 void CTxMemPool::_ApplyDeltas(const uint256 hash, double &dPriorityDelta, CAmount &nFeeDelta) const
 {
     AssertLockHeld(cs_txmempool);
-    std::map<uint256, std::pair<double, CAmount> >::const_iterator pos = mapDeltas.find(hash);
+    std::unordered_map<uint256, std::pair<double, CAmount>, uint256Hasher>::const_iterator pos = mapDeltas.find(hash);
     if (pos == mapDeltas.end())
     {
         return;
@@ -1498,7 +1488,7 @@ void CTxMemPool::ClearPrioritisation(const uint256 hash)
 void CTxMemPool::_ClearPrioritisation(const uint256 hash)
 {
     uint256 h = hash;
-    std::map<uint256, std::pair<double, CAmount> >::const_iterator pos = mapDeltas.find(h);
+    std::unordered_map<uint256, std::pair<double, CAmount>, uint256Hasher>::const_iterator pos = mapDeltas.find(h);
     if (pos == mapDeltas.end())
     {
         // Look for the hash as an idem
@@ -1556,21 +1546,33 @@ bool CTxMemPool::exists(const COutPoint &outpoint) const
     return (outpointMap.count(outpoint) > 0);
 }
 
-size_t CTxMemPool::DynamicMemoryUsage() const
+size_t CTxMemPool::DynamicMemoryUsage(bool fCalcBucketSize)
 {
     READLOCK(cs_txmempool);
     // Estimate the overhead of mapTx to be 15 pointers + an allocation, as no exact formula for
     // boost::multi_index_contained is implemented.
-    return _DynamicMemoryUsage();
+    return _DynamicMemoryUsage(fCalcBucketSize);
 }
 
-size_t CTxMemPool::_DynamicMemoryUsage() const
+size_t CTxMemPool::_DynamicMemoryUsage(bool fCalcBucketSize)
 {
     AssertLockHeld(cs_txmempool);
+
+    // Rehash the txpool maps if we are empty. Rehashing will remove the most of the buckets
+    // which can be a significant portion (2%-3%) of txpool usage.
+    if (mapTx.size() == 0)
+    {
+        mapNextTx.rehash(0);
+        mapDeltas.rehash(0);
+        outpointMap.rehash(0);
+        mapLinks.rehash(0);
+    }
+
     // Estimate the overhead of mapTx to be 15 pointers + an allocation, as no exact formula for
     // boost::multi_index_contained is implemented.
     return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 15 * sizeof(void *)) * mapTx.size() +
-           memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + memusage::DynamicUsage(mapLinks) +
+           memusage::DynamicUsage(mapNextTx, fCalcBucketSize) + memusage::DynamicUsage(mapDeltas, fCalcBucketSize) +
+           memusage::DynamicUsage(mapLinks, fCalcBucketSize) + memusage::DynamicUsage(outpointMap, fCalcBucketSize) +
            cachedInnerUsage;
 }
 

@@ -145,16 +145,23 @@ private:
 };
 
 template <typename X, typename Y>
-static inline size_t DynamicUsage(const std::unordered_set<X, Y> &s)
+static inline size_t DynamicUsage(const std::unordered_set<X, Y> &s, bool fCalcBucketSize = true)
 {
-    return MallocUsage(sizeof(unordered_node<X>)) * s.size() + MallocUsage(sizeof(void *) * s.bucket_count());
+    uint64_t nDynamicUsage = MallocUsage(sizeof(unordered_node<X>)) * s.size();
+    if (fCalcBucketSize)
+        nDynamicUsage += MallocUsage(sizeof(void *) * s.bucket_count());
+
+    return nDynamicUsage;
 }
 
 template <typename X, typename Y, typename Z>
-static inline size_t DynamicUsage(const std::unordered_map<X, Y, Z> &m)
+static inline size_t DynamicUsage(const std::unordered_map<X, Y, Z> &m, bool fCalcBucketSize = true)
 {
-    return MallocUsage(sizeof(unordered_node<std::pair<const X, Y> >)) * m.size() +
-           MallocUsage(sizeof(void *) * m.bucket_count());
+    uint64_t nDynamicUsage = MallocUsage(sizeof(unordered_node<std::pair<const X, Y> >)) * m.size();
+    if (fCalcBucketSize)
+        nDynamicUsage += MallocUsage(sizeof(void *) * m.bucket_count());
+
+    return nDynamicUsage;
 }
 } // namespace memusage
 
