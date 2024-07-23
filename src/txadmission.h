@@ -59,30 +59,6 @@ extern CCriticalSection cs_walletprocessing;
 extern std::deque<CSyncWithWallets> vPostBlockProcessing;
 
 
-// A consistent moment in the data state
-class Snapshot
-{
-public:
-    CSharedCriticalSection cs_snapshot;
-    uint64_t tipHeight;
-    uint64_t tipMedianTimePast;
-    int64_t adjustedTime;
-    CBlockIndex *tip; // CBlockIndexes are never deleted once created (even if the tip changes) so we can use this ptr
-    CCoinsViewCache *coins;
-    CCoinsViewMemPool *cvMempool;
-
-    void Load(void);
-
-    Snapshot() : coins(nullptr), cvMempool(nullptr) {}
-    ~Snapshot()
-    {
-        if (cvMempool)
-            delete cvMempool;
-    }
-};
-
-extern Snapshot txHandlerSnap;
-
 // Tracks data about a transaction that hasn't yet been processed
 class CTxInputData
 {
@@ -179,8 +155,7 @@ bool AcceptToMemoryPool(CTxMemPool &pool,
     TransactionClass allowedTx = TransactionClass::DEFAULT);
 
 /** (try to) add transaction to memory pool **/
-bool ParallelAcceptToMemoryPool(Snapshot &ss,
-    CTxMemPool &pool,
+bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
     CValidationState &state,
     const CTransactionRef &ptx,
     bool fLimitFree,
@@ -217,8 +192,8 @@ void ThreadTxAdmission();
  *
  * See consensus/consensus.h for flag definitions.
  */
-bool CheckFinalTx(const CTransactionRef tx, int flags = -1, const Snapshot *ss = nullptr);
-bool CheckFinalTx(const CTransaction *tx, int flags = -1, const Snapshot *ss = nullptr);
+bool CheckFinalTx(const CTransactionRef tx, int flags = -1);
+bool CheckFinalTx(const CTransaction *tx, int flags = -1);
 
 /*
  * Check if transaction will be BIP 68 final in the next block to be created.
@@ -234,8 +209,7 @@ bool CheckFinalTx(const CTransaction *tx, int flags = -1, const Snapshot *ss = n
 bool CheckSequenceLocks(const CTransactionRef tx,
     int flags,
     LockPoints *lp = nullptr,
-    bool useExistingLockPoints = false,
-    const Snapshot *ss = nullptr);
+    bool useExistingLockPoints = false);
 
 // This needs to be held whenever the chain state changes (block added or chain rewind) so that
 // transactions are not processed during chain state updates and so once the chain state is updated we can
@@ -249,11 +223,7 @@ public:
         _CommitTxToMempool();
     }
 
-    ~TxAdmissionPause()
-    {
-        txHandlerSnap.Load(); // Load the new block into the transaction processor's state snapshot
-        txProcessingCorral.Exit(CORRAL_TX_PAUSE);
-    }
+    ~TxAdmissionPause() { txProcessingCorral.Exit(CORRAL_TX_PAUSE); }
 };
 
 #endif

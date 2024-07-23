@@ -2333,8 +2333,8 @@ bool ProcessMessage(CNode *pfrom,
         bool fMissingInputs = false;
         std::vector<COutPoint> vCoinsToUncache;
         bool isRespend = false;
-        ParallelAcceptToMemoryPool(txHandlerSnap, mempool, state, std::move(ptx), AreFreeTxnsAllowed(), &fMissingInputs,
-            fOverrideFees, txClass, vCoinsToUncache, &isRespend, &debugger);
+        ParallelAcceptToMemoryPool(mempool, state, std::move(ptx), AreFreeTxnsAllowed(), &fMissingInputs, fOverrideFees,
+            txClass, vCoinsToUncache, &isRespend, &debugger);
 
         std::string result = DebuggerToString(debugger);
         pfrom->PushMessageWithCookie(NetMsgType::RESTXVAL, msgCookie | 0xFFFF, nonce, result);

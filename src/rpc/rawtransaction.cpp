@@ -1670,8 +1670,8 @@ UniValue validaterawtransaction(const UniValue &params, bool fHelp)
         bool fMissingInputs = false;
         std::vector<COutPoint> vCoinsToUncache;
         bool isRespend = false;
-        ParallelAcceptToMemoryPool(txHandlerSnap, mempool, state, std::move(ptx), AreFreeTxnsAllowed(), &fMissingInputs,
-            fOverrideFees, txClass, vCoinsToUncache, &isRespend, &debugger);
+        ParallelAcceptToMemoryPool(mempool, state, std::move(ptx), AreFreeTxnsAllowed(), &fMissingInputs, fOverrideFees,
+            txClass, vCoinsToUncache, &isRespend, &debugger);
     }
     else if (fHaveChain)
     {
