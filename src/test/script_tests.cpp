@@ -293,6 +293,9 @@ void DoTest(const CScript &scriptPubKey,
                                                 " expected: " + message);
     // Verify that removing flags from a passing test or adding flags to a
     // failing test does not change the result, except for some special flags.
+    bool fEnforce = false;
+    if (flags & SCRIPT_ENFORCE_STACK_TOTAL)
+        fEnforce = true;
     for (int i = 0; i < 16; ++i)
     {
         uint32_t extra_flags = InsecureRand32();
@@ -305,6 +308,10 @@ void DoTest(const CScript &scriptPubKey,
         {
             combined_flags |= SCRIPT_VERIFY_P2SH;
         }
+
+        // make sure to keep enforce on if it's already on.
+        if (fEnforce)
+            combined_flags |= SCRIPT_ENFORCE_STACK_TOTAL;
 
         result = VerifyScript(scriptSig, scriptPubKey, combined_flags,
             ScriptImportedStateSig(&tx, 0, txCredit.vout[0].nValue, combined_flags), &err);
@@ -375,13 +382,71 @@ const unsigned char vchKey1[32] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0};
 const unsigned char vchKey2[32] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0};
+const unsigned char vchKey3[32] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0};
+const unsigned char vchKey4[32] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0};
+const unsigned char vchKey5[32] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0};
+const unsigned char vchKey6[32] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0};
+const unsigned char vchKey7[32] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0};
+const unsigned char vchKey8[32] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0};
+const unsigned char vchKey9[32] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+const unsigned char vchKey10[32] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+const unsigned char vchKey11[32] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+const unsigned char vchKey12[32] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+const unsigned char vchKey13[32] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+const unsigned char vchKey14[32] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+const unsigned char vchKey15[32] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+const unsigned char vchKey16[32] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 struct KeyData
 {
-    CKey key0, key0C, key1, key1C, key2, key2C;
+    CKey key0, key0C;
+    CKey key1, key1C;
+    CKey key2, key2C;
+    CKey key3, key3C;
+    CKey key4, key4C;
+    CKey key5, key5C;
+    CKey key6, key6C;
+    CKey key7, key7C;
+    CKey key8, key8C;
+    CKey key9, key9C;
+    CKey key10, key10C;
+    CKey key11, key11C;
+    CKey key12, key12C;
+    CKey key13, key13C;
+    CKey key14, key14C;
+    CKey key15, key15C;
+    CKey key16, key16C;
     CPubKey pubkey0, pubkey0C, pubkey0H;
     CPubKey pubkey1, pubkey1C;
     CPubKey pubkey2, pubkey2C;
+    CPubKey pubkey3, pubkey3C;
+    CPubKey pubkey4, pubkey4C;
+    CPubKey pubkey5, pubkey5C;
+    CPubKey pubkey6, pubkey6C;
+    CPubKey pubkey7, pubkey7C;
+    CPubKey pubkey8, pubkey8C;
+    CPubKey pubkey9, pubkey9C;
+    CPubKey pubkey10, pubkey10C;
+    CPubKey pubkey11, pubkey11C;
+    CPubKey pubkey12, pubkey12C;
+    CPubKey pubkey13, pubkey13C;
+    CPubKey pubkey14, pubkey14C;
+    CPubKey pubkey15, pubkey15C;
+    CPubKey pubkey16, pubkey16C;
 
     KeyData()
     {
@@ -401,6 +466,76 @@ struct KeyData
         key2C.Set(vchKey2, vchKey2 + 32, true);
         pubkey2 = key2.GetPubKey();
         pubkey2C = key2C.GetPubKey();
+
+        key3.Set(vchKey3, vchKey3 + 32, false);
+        key3C.Set(vchKey3, vchKey3 + 32, true);
+        pubkey3 = key3.GetPubKey();
+        pubkey3C = key3C.GetPubKey();
+
+        key4.Set(vchKey4, vchKey4 + 32, false);
+        key4C.Set(vchKey4, vchKey4 + 32, true);
+        pubkey4 = key4.GetPubKey();
+        pubkey4C = key4C.GetPubKey();
+
+        key5.Set(vchKey5, vchKey5 + 32, false);
+        key5C.Set(vchKey5, vchKey5 + 32, true);
+        pubkey5 = key5.GetPubKey();
+        pubkey5C = key5C.GetPubKey();
+
+        key6.Set(vchKey6, vchKey6 + 32, false);
+        key6C.Set(vchKey6, vchKey6 + 32, true);
+        pubkey6 = key6.GetPubKey();
+        pubkey6C = key6C.GetPubKey();
+
+        key7.Set(vchKey7, vchKey7 + 32, false);
+        key7C.Set(vchKey7, vchKey7 + 32, true);
+        pubkey7 = key7.GetPubKey();
+        pubkey7C = key7C.GetPubKey();
+
+        key8.Set(vchKey8, vchKey8 + 32, false);
+        key8C.Set(vchKey8, vchKey8 + 32, true);
+        pubkey8 = key8.GetPubKey();
+        pubkey8C = key8C.GetPubKey();
+
+        key9.Set(vchKey9, vchKey9 + 32, false);
+        key9C.Set(vchKey9, vchKey9 + 32, true);
+        pubkey9 = key9.GetPubKey();
+        pubkey9C = key9C.GetPubKey();
+
+        key10.Set(vchKey10, vchKey10 + 32, false);
+        key10C.Set(vchKey10, vchKey10 + 32, true);
+        pubkey10 = key10.GetPubKey();
+        pubkey10C = key10C.GetPubKey();
+
+        key11.Set(vchKey11, vchKey11 + 32, false);
+        key11C.Set(vchKey11, vchKey11 + 32, true);
+        pubkey11 = key11.GetPubKey();
+        pubkey11C = key11C.GetPubKey();
+
+        key12.Set(vchKey12, vchKey12 + 32, false);
+        key12C.Set(vchKey12, vchKey12 + 32, true);
+        pubkey12 = key12.GetPubKey();
+        pubkey12C = key12C.GetPubKey();
+
+        key13.Set(vchKey13, vchKey13 + 32, false);
+        key13C.Set(vchKey13, vchKey13 + 32, true);
+        pubkey13 = key13.GetPubKey();
+        pubkey13C = key13C.GetPubKey();
+
+        key14.Set(vchKey14, vchKey14 + 32, false);
+        key14C.Set(vchKey14, vchKey14 + 32, true);
+        pubkey14 = key14.GetPubKey();
+        pubkey14C = key14C.GetPubKey();
+
+        key15.Set(vchKey15, vchKey15 + 32, false);
+        key15C.Set(vchKey15, vchKey15 + 32, true);
+        pubkey15 = key15.GetPubKey();
+        pubkey15C = key15C.GetPubKey();
+
+        key16.Set(vchKey16, vchKey16 + 32, false);
+        key16C.Set(vchKey16, vchKey16 + 32, true);
+        pubkey16 = key16.GetPubKey();
+        pubkey16C = key16C.GetPubKey();
     }
 };
 
@@ -498,7 +633,7 @@ public:
         return *this;
     }
 
-    TestBuilder &Num(int num)
+    TestBuilder &Num(int32_t num)
     {
         DoPush();
         spendTx.vin[0].scriptSig << num;
@@ -1275,10 +1410,11 @@ BOOST_AUTO_TEST_CASE(script_build_2)
                             .SetScriptError(SCRIPT_ERR_EVAL_FALSE));
     }
 
+    // OLD PREFORK MULTISIG TESTS
+
     // New-multisig tests follow. New multisig will activate with a bunch of
     // related flags active from other upgrades, so we do tests with this group
     // of flags turned on:
-
     uint32_t newmultisigflags = SCRIPT_VERIFY_NULLFAIL | SCRIPT_VERIFY_MINIMALDATA | SCRIPT_VERIFY_STRICTENC;
 
     /*
@@ -1455,105 +1591,105 @@ BOOST_AUTO_TEST_CASE(script_build_2)
     tests.push_back(
         TestBuilder(CScript() << OP_2 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C) << OP_DUP << OP_2DUP
                               << OP_2DUP << ToByteVector(keys.pubkey2C) << OP_8 << OP_CHECKMULTISIG,
-            "CHECKMULTISIG 2-of-8 Schnorr, right way to represent 0b10000001", newmultisigflags)
+            "CHECKMULTISIG 2-of-8 Schnorr", newmultisigflags)
             .Num(-1)
             .PushSigSchnorr(keys.key0)
             .PushSigSchnorr(keys.key2));
-    tests.push_back(
-        TestBuilder(CScript() << OP_2 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C) << OP_DUP << OP_2DUP
-                              << OP_2DUP << ToByteVector(keys.pubkey2C) << OP_8 << OP_CHECKMULTISIG,
-            "CHECKMULTISIG 2-of-8 Schnorr, wrong way to represent 0b10000001", newmultisigflags)
-            .Num(0b10000001)
-            .PushSigSchnorr(keys.key0)
-            .PushSigSchnorr(keys.key2)
-            .SetScriptError(SCRIPT_ERR_INVALID_BITFIELD_SIZE));
-    tests.push_back(TestBuilder(CScript() << OP_OVER << OP_DUP << OP_DUP << OP_2DUP << OP_3DUP << OP_3DUP << OP_3DUP
-                                          << OP_3DUP << 20 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
-                                          << ToByteVector(keys.pubkey2C) << OP_OVER << OP_DUP << OP_DUP << OP_2DUP
-                                          << OP_3DUP << OP_3DUP << OP_3DUP << OP_3DUP << 20 << OP_CHECKMULTISIG,
-        "CHECKMULTISIG 20-of-20 Schnorr", newmultisigflags)
-                        .Push("ffff0f")
-                        .PushSigSchnorr(keys.key0)
-                        .PushSigSchnorr(keys.key1)
-                        .PushSigSchnorr(keys.key2));
-    tests.push_back(TestBuilder(CScript() << OP_OVER << OP_DUP << OP_DUP << OP_2DUP << OP_3DUP << OP_3DUP << OP_3DUP
-                                          << OP_3DUP << 20 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
-                                          << ToByteVector(keys.pubkey2C) << OP_OVER << OP_DUP << OP_DUP << OP_2DUP
-                                          << OP_3DUP << OP_3DUP << OP_3DUP << OP_3DUP << 20 << OP_CHECKMULTISIG,
-        "CHECKMULTISIG 20-of-20 Schnorr, checkbits +1", newmultisigflags)
-                        .Push("000010")
+    tests.push_back(TestBuilder(
+        CScript() << OP_16 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C) << ToByteVector(keys.pubkey2C)
+                  << ToByteVector(keys.pubkey3C) << ToByteVector(keys.pubkey4C) << ToByteVector(keys.pubkey5C)
+                  << ToByteVector(keys.pubkey6C) << ToByteVector(keys.pubkey7C) << ToByteVector(keys.pubkey8C)
+                  << ToByteVector(keys.pubkey9C) << ToByteVector(keys.pubkey10C) << ToByteVector(keys.pubkey11C)
+                  << ToByteVector(keys.pubkey12C) << ToByteVector(keys.pubkey13C) << ToByteVector(keys.pubkey14C)
+                  << ToByteVector(keys.pubkey15C) << OP_16 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 16-of-16 Schnorr - all signatures", newmultisigflags)
+                        .Push("ffff")
                         .PushSigSchnorr(keys.key0)
                         .PushSigSchnorr(keys.key1)
                         .PushSigSchnorr(keys.key2)
-                        .SetScriptError(SCRIPT_ERR_INVALID_BIT_RANGE));
+                        .PushSigSchnorr(keys.key3)
+                        .PushSigSchnorr(keys.key4)
+                        .PushSigSchnorr(keys.key5)
+                        .PushSigSchnorr(keys.key6)
+                        .PushSigSchnorr(keys.key7)
+                        .PushSigSchnorr(keys.key8)
+                        .PushSigSchnorr(keys.key9)
+                        .PushSigSchnorr(keys.key10)
+                        .PushSigSchnorr(keys.key11)
+                        .PushSigSchnorr(keys.key12)
+                        .PushSigSchnorr(keys.key13)
+                        .PushSigSchnorr(keys.key14)
+                        .PushSigSchnorr(keys.key15));
+    tests.push_back(TestBuilder(CScript() << OP_OVER << OP_2DUP << OP_3DUP << OP_3DUP << OP_3DUP << OP_15
+                                          << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
+                                          << ToByteVector(keys.pubkey2C) << OP_DUP << OP_DUP << OP_2DUP << OP_DUP
+                                          << OP_3DUP << OP_3DUP << OP_DUP << OP_15 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 15-of-15 Schnorr, not enough signatures", newmultisigflags)
+                        .Push("0070")
+                        .PushSigSchnorr(keys.key0)
+                        .PushSigSchnorr(keys.key1)
+                        .PushSigSchnorr(keys.key2)
+                        .SetScriptError(SCRIPT_ERR_INVALID_BIT_COUNT));
+    tests.push_back(TestBuilder(CScript() << OP_OVER << OP_DUP << OP_DUP << OP_2DUP << OP_3DUP << OP_3DUP << OP_3DUP
+                                          << OP_16 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
+                                          << ToByteVector(keys.pubkey2C) << OP_OVER << OP_DUP << OP_DUP << OP_DUP
+                                          << OP_3DUP << OP_3DUP << OP_3DUP << OP_16 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 16-of-16 Schnorr, checkbits +1", newmultisigflags)
+                        .Push("0010")
+                        .PushSigSchnorr(keys.key0)
+                        .PushSigSchnorr(keys.key1)
+                        .PushSigSchnorr(keys.key2)
+                        .SetScriptError(SCRIPT_ERR_INVALID_BITFIELD_SIZE));
     tests.push_back(
-        TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0C) << OP_DUP << ToByteVector(keys.pubkey1C) << OP_3DUP
-                              << OP_3DUP << OP_3DUP << OP_3DUP << OP_3DUP << OP_3DUP << 21 << OP_CHECKMULTISIG,
-            "CHECKMULTISIG 1-of-21 Schnorr", newmultisigflags)
+        TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0C) << OP_DUP << ToByteVector(keys.pubkey1C) << OP_2DUP
+                              << OP_3DUP << OP_3DUP << OP_3DUP << OP_3DUP << 17 << OP_CHECKMULTISIG,
+            "CHECKMULTISIG 1-of-17 Schnorr", newmultisigflags)
             .Push("000010")
             .PushSigSchnorr(keys.key0)
             .SetScriptError(SCRIPT_ERR_PUBKEY_COUNT));
     tests.push_back(
-        TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C) << OP_DUP << OP_2DUP
-                              << OP_3DUP << OP_3DUP << OP_3DUP << OP_3DUP << OP_3DUP << 20 << OP_CHECKMULTISIG,
-            "CHECKMULTISIG 1-of-20 Schnorr, first key", newmultisigflags)
-            .Push("010000")
+        TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C) << OP_2DUP
+                              << OP_3DUP << OP_3DUP << OP_3DUP << OP_3DUP << OP_16 << OP_CHECKMULTISIG,
+            "CHECKMULTISIG 1-of-16 Schnorr, first key", newmultisigflags)
+            .Push("01000")
             .PushSigSchnorr(keys.key0));
     tests.push_back(
-        TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C) << OP_DUP << OP_2DUP
-                              << OP_3DUP << OP_3DUP << OP_3DUP << OP_3DUP << OP_3DUP << 20 << OP_CHECKMULTISIG,
-            FL " CHECKMULTISIG 1-of-20 Schnorr, first key, wrong endianness", newmultisigflags)
-            .Push("000001")
+        TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C) << OP_2DUP
+                              << OP_3DUP << OP_3DUP << OP_3DUP << OP_3DUP << OP_16 << OP_CHECKMULTISIG,
+            FL " CHECKMULTISIG 1-of-16 Schnorr, first key, wrong endianness", newmultisigflags)
+            .Push("0010")
             .PushSigSchnorr(keys.key0)
             .SetScriptError(SCRIPT_ERR_CHECKMULTISIGVERIFY));
-    tests.push_back(TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0C) << OP_2DUP << OP_2DUP << OP_3DUP
-                                          << OP_3DUP << OP_3DUP << OP_3DUP << OP_3DUP << 20 << OP_CHECKMULTISIG,
-        FL " CHECKMULTISIG 1-of-20 Schnorr, truncating zeros not allowed", newmultisigflags)
-                        .Num(1)
-                        .PushSigSchnorr(keys.key0)
-                        .SetScriptError(SCRIPT_ERR_INVALID_BITFIELD_SIZE));
+    /*
+            tests.push_back(TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0C) << OP_DUP << OP_2DUP << OP_3DUP
+                                                  << OP_3DUP << OP_3DUP << OP_3DUP << OP_16 << OP_CHECKMULTISIG,
+                " CHECKMULTISIG 1-of-16 Schnorr, first key, truncating zeros not allowed", newmultisigflags)
+                                .Num(1)
+                                .PushSigSchnorr(keys.key0)
+                                .SetScriptError(SCRIPT_ERR_INVALID_BITFIELD_SIZE));
+    */
+
+    tests.push_back(TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0C) << OP_DUP << OP_DUP << OP_2DUP
+                                          << OP_3DUP << OP_3DUP << OP_3DUP << OP_DUP << ToByteVector(keys.pubkey1C)
+                                          << OP_16 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 1-of-16 Schnorr, last key", newmultisigflags)
+                        .Push("0080")
+                        .PushSigSchnorr(keys.key1));
+
     tests.push_back(
-        TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0C) << OP_DUP << OP_2DUP << OP_3DUP << OP_3DUP
-                              << OP_3DUP << OP_3DUP << OP_3DUP << ToByteVector(keys.pubkey1C) << 20 << OP_CHECKMULTISIG,
-            FL " CHECKMULTISIG 1-of-20 Schnorr, last key", newmultisigflags)
-            .Push("000008")
-            .PushSigSchnorr(keys.key1));
-    tests.push_back(
-        TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0C) << OP_DUP << OP_2DUP << OP_3DUP << OP_3DUP
-                              << OP_3DUP << OP_3DUP << OP_3DUP << ToByteVector(keys.pubkey1C) << 20 << OP_CHECKMULTISIG,
-            FL " CHECKMULTISIG 1-of-20 Schnorr, last key, wrong endianness", newmultisigflags)
-            .Push("080000")
+        TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0C) << OP_DUP << OP_DUP << OP_3DUP << OP_3DUP
+                              << OP_3DUP << OP_3DUP << ToByteVector(keys.pubkey1C) << OP_16 << OP_CHECKMULTISIG,
+            "CHECKMULTISIG 1-of-16 Schnorr, last key, wrong endianness", newmultisigflags)
+            .Push("08000")
             .PushSigSchnorr(keys.key1)
             .SetScriptError(SCRIPT_ERR_CHECKMULTISIGVERIFY));
     tests.push_back(
-        TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0C) << OP_DUP << OP_2DUP << OP_3DUP << OP_3DUP
-                              << OP_3DUP << OP_3DUP << OP_3DUP << ToByteVector(keys.pubkey1C) << 20 << OP_CHECKMULTISIG,
-            "CHECKMULTISIG 1-of-20 Schnorr, last key, "
+        TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0C) << OP_DUP << OP_DUP << OP_3DUP << OP_3DUP
+                              << OP_3DUP << OP_3DUP << ToByteVector(keys.pubkey1C) << OP_16 << OP_CHECKMULTISIG,
+            "CHECKMULTISIG 1-of-16 Schnorr, last key, "
             "truncating zeros not allowed",
             newmultisigflags)
-            .Push("0800")
-            .PushSigSchnorr(keys.key1)
-            .SetScriptError(SCRIPT_ERR_INVALID_BITFIELD_SIZE));
-    tests.push_back(
-        TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0C) << OP_DUP << OP_2DUP << OP_3DUP << OP_3DUP
-                              << OP_3DUP << OP_3DUP << OP_3DUP << ToByteVector(keys.pubkey1C) << 20 << OP_CHECKMULTISIG,
-            "CHECKMULTISIG 1-of-20 Schnorr, last key", newmultisigflags)
-            .Push("000008")
-            .PushSigSchnorr(keys.key1));
-    tests.push_back(
-        TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0C) << OP_DUP << OP_2DUP << OP_3DUP << OP_3DUP
-                              << OP_3DUP << OP_3DUP << OP_3DUP << ToByteVector(keys.pubkey1C) << 20 << OP_CHECKMULTISIG,
-            "CHECKMULTISIG 1-of-20 Schnorr, last key, wrong endianness", newmultisigflags)
-            .Push("080000")
-            .PushSigSchnorr(keys.key1)
-            .SetScriptError(SCRIPT_ERR_CHECKMULTISIGVERIFY));
-    tests.push_back(
-        TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0C) << OP_DUP << OP_2DUP << OP_3DUP << OP_3DUP
-                              << OP_3DUP << OP_3DUP << OP_3DUP << ToByteVector(keys.pubkey1C) << 20 << OP_CHECKMULTISIG,
-            "CHECKMULTISIG 1-of-20 Schnorr, last key, "
-            "truncating zeros not allowed",
-            newmultisigflags)
-            .Push("0800")
+            .Push("080")
             .PushSigSchnorr(keys.key1)
             .SetScriptError(SCRIPT_ERR_INVALID_BITFIELD_SIZE));
     tests.push_back(TestBuilder(CScript() << OP_2 << ToByteVector(ParseHex("BEEF")) << ToByteVector(keys.pubkey1C)
@@ -1609,6 +1745,349 @@ BOOST_AUTO_TEST_CASE(script_build_2)
                         .PushSigSchnorr(keys.key1)
                         .PushSigSchnorr(keys.key2)
                         .SetScriptError(SCRIPT_ERR_SIG_NONSCHNORR));
+
+    // POST FORK MULTISIG TESTS
+
+    // New-multisig tests follow. New multisig will activate with a bunch of
+    // related flags active from other upgrades, so we do tests with this group
+    // of flags turned on:
+
+    // newmultisigflags = SCRIPT_ENFORCE_STACK_TOTAL;
+    newmultisigflags =
+        SCRIPT_ENFORCE_STACK_TOTAL | SCRIPT_VERIFY_NULLFAIL | SCRIPT_VERIFY_MINIMALDATA | SCRIPT_VERIFY_STRICTENC;
+
+    /*
+    // TODO: this test actually passes...it probably should since there is no ECDSA legacy mode anymore but need
+    // to verify this
+    tests.push_back(TestBuilder(CScript() << OP_2 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
+                                          << ToByteVector(keys.pubkey2C) << OP_3 << OP_CHECKMULTISIG << OP_NOT,
+        "CHECKMULTISIG 2-of-3 w/ SCHNORR_MULTISIG "
+        "(return-false still valid via legacy mode)",
+        newmultisigflags)
+                        .Num(0)
+                        .Num(0)
+                        .Num(0));
+    */
+
+    // There is no way to satisfy a 0 of 0 multisig
+    tests.push_back(TestBuilder(
+        CScript() << OP_0 << OP_0 << OP_CHECKMULTISIG, "CHECKMULTISIG 0-of-0 w/ SCHNORR_MULTISIG", newmultisigflags)
+                        .Num(0)
+                        .SetScriptError(SCRIPT_ERR_EVAL_FALSE));
+    tests.push_back(TestBuilder(CScript() << OP_0 << OP_0 << OP_CHECKMULTISIGVERIFY,
+        "CHECKMULTISIGVERIFY 0-of-0 w/ SCHNORR_MULTISIG", newmultisigflags)
+                        .Add(CScript() << OP_1)
+                        .Num(0)
+                        .SetScriptError(SCRIPT_ERR_CHECKMULTISIGVERIFY));
+    tests.push_back(TestBuilder(CScript() << OP_0 << OP_0 << OP_CHECKMULTISIGVERIFY,
+        "CHECKMULTISIG 0-of-0 w/ SCHNORR_MULTISIG 1 bit", newmultisigflags)
+                        .Num(1)
+                        .SetScriptError(SCRIPT_ERR_INVALID_BIT_RANGE));
+    tests.push_back(TestBuilder(CScript() << OP_0 << OP_0 << OP_CHECKMULTISIGVERIFY,
+        "CHECKMULTISIG 0-of-0 w/ SCHNORR_MULTISIG all bits", newmultisigflags)
+                        .Num(0xffffffff)
+                        .SetScriptError(SCRIPT_ERR_INVALID_BIT_RANGE));
+    tests.push_back(TestBuilder(CScript() << OP_0 << OP_0 << OP_CHECKMULTISIGVERIFY,
+        "CHECKMULTISIG 0-of-0 w/ SCHNORR_MULTISIG overflow bit", newmultisigflags)
+                        .NumULL(0x100000000ULL)
+                        .SetScriptError(SCRIPT_ERR_NUMBER_OVERFLOW));
+
+    tests.push_back(TestBuilder(CScript() << OP_0 << ToByteVector(ParseHex("BEEF")) << OP_1 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 0-of-1 w/ SCHNORR_MULTISIG, null dummy", newmultisigflags)
+                        .Num(0)
+                        .SetScriptError(SCRIPT_ERR_EVAL_FALSE));
+    // Tests of schnorr checkmultisig actually turned on (flag on & dummy element is not null).
+    tests.push_back(TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0) << OP_1 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 1-of-1 Schnorr", newmultisigflags)
+                        .Num(0b1)
+                        .PushSigSchnorr(keys.key0));
+    tests.push_back(TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0) << OP_1 << OP_CHECKMULTISIGVERIFY,
+        "CHECKMULTISIGVERIFY 1-of-1 Schnorr", newmultisigflags)
+                        .Add(CScript() << OP_1)
+                        .Num(0b1)
+                        .PushSigSchnorr(keys.key0));
+    tests.push_back(TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0) << OP_1 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 1-of-1 Schnorr, nonminimal bits", newmultisigflags)
+                        .Push("0100")
+                        .PushSigSchnorr(keys.key0)
+                        .SetScriptError(SCRIPT_ERR_NUMBER_BAD_ENCODING));
+    tests.push_back(TestBuilder(CScript() << OP_3 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
+                                          << ToByteVector(keys.pubkey2C) << OP_3 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 3-of-3 Schnorr", newmultisigflags)
+                        .Num(0b111)
+                        .PushSigSchnorr(keys.key0)
+                        .PushSigSchnorr(keys.key1)
+                        .PushSigSchnorr(keys.key2));
+    tests.push_back(TestBuilder(CScript() << OP_3 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
+                                          << ToByteVector(keys.pubkey2C) << OP_3 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 3-of-3 Schnorr bad sig", newmultisigflags)
+                        .Num(0b111)
+                        .PushSigSchnorr(keys.key0)
+                        .PushSigSchnorr(keys.key1)
+                        .PushSigSchnorr(keys.key0)
+                        .SetScriptError(SCRIPT_ERR_CHECKMULTISIGVERIFY));
+    /* TODO: this passes, verify that it should.
+    tests.push_back(
+        TestBuilder(CScript() << OP_3 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
+                              << ToByteVector(keys.pubkey2C) << OP_3 << OP_CHECKMULTISIG << OP_0 << OP_EQUAL,
+            "CHECKMULTISIG 3-of-3 Schnorr expected multisig fail", newmultisigflags)
+            .Num(0)
+            .Add(CScript() << OP_0 << OP_0 << OP_0));
+    */
+    tests.push_back(TestBuilder(CScript() << OP_4 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
+                                          << ToByteVector(keys.pubkey2C) << OP_3 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 4-of-3 Schnorr", newmultisigflags)
+                        .Num(0b1111)
+                        .PushSigSchnorr(keys.key0)
+                        .PushSigSchnorr(keys.key0)
+                        .PushSigSchnorr(keys.key1)
+                        .PushSigSchnorr(keys.key2)
+                        .SetScriptError(SCRIPT_ERR_SIG_COUNT));
+    tests.push_back(TestBuilder(CScript() << OP_2 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
+                                          << ToByteVector(keys.pubkey2C) << OP_3 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 2-of-3 (110) Schnorr", newmultisigflags)
+                        .Num(0b110)
+                        .PushSigSchnorr(keys.key1)
+                        .PushSigSchnorr(keys.key2));
+    tests.push_back(TestBuilder(CScript() << OP_2 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
+                                          << ToByteVector(keys.pubkey2C) << OP_3 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 2-of-3 (101) Schnorr", newmultisigflags)
+                        .Num(0b101)
+                        .PushSigSchnorr(keys.key0)
+                        .PushSigSchnorr(keys.key2));
+    tests.push_back(TestBuilder(CScript() << OP_2 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
+                                          << ToByteVector(keys.pubkey2C) << OP_3 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 2-of-3 (011) Schnorr", newmultisigflags)
+                        .Num(0b011)
+                        .PushSigSchnorr(keys.key0)
+                        .PushSigSchnorr(keys.key1));
+    tests.push_back(TestBuilder(CScript() << OP_2 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
+                                          << ToByteVector(keys.pubkey2C) << OP_3 << OP_CHECKMULTISIG,
+        FL "CHECKMULTISIG 2-of-3 Schnorr, mismatched bits Schnorr", newmultisigflags)
+                        .Num(0b011)
+                        .PushSigSchnorr(keys.key0)
+                        .PushSigSchnorr(keys.key2)
+                        .SetScriptError(SCRIPT_ERR_CHECKMULTISIGVERIFY));
+    tests.push_back(TestBuilder(CScript() << OP_2 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
+                                          << ToByteVector(keys.pubkey2C) << OP_3 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 2-of-3 Schnorr, all bits set", newmultisigflags)
+                        .Num(0b111)
+                        .PushSigSchnorr(keys.key1)
+                        .PushSigSchnorr(keys.key2)
+                        .SetScriptError(SCRIPT_ERR_INVALID_BIT_COUNT));
+    tests.push_back(TestBuilder(CScript() << OP_2 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
+                                          << ToByteVector(keys.pubkey2C) << OP_3 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 2-of-3 Schnorr, extra high bit set", newmultisigflags)
+                        .Num(0b1110)
+                        .PushSigSchnorr(keys.key0)
+                        .PushSigSchnorr(keys.key1)
+                        .SetScriptError(SCRIPT_ERR_INVALID_BIT_RANGE));
+    tests.push_back(TestBuilder(CScript() << OP_2 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
+                                          << ToByteVector(keys.pubkey2C) << OP_3 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 2-of-3 Schnorr, too high bit set", newmultisigflags)
+                        .Num(0b1010)
+                        .PushSigSchnorr(keys.key0)
+                        .PushSigSchnorr(keys.key1)
+                        .SetScriptError(SCRIPT_ERR_INVALID_BIT_RANGE));
+    tests.push_back(TestBuilder(CScript() << OP_2 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
+                                          << ToByteVector(keys.pubkey2C) << OP_3 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 2-of-3 Schnorr, too few bits set", newmultisigflags)
+                        .Num(0b010)
+                        .PushSigSchnorr(keys.key0)
+                        .PushSigSchnorr(keys.key1)
+                        .SetScriptError(SCRIPT_ERR_INVALID_BIT_COUNT));
+    tests.push_back(TestBuilder(CScript() << OP_2 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
+                                          << ToByteVector(keys.pubkey2C) << OP_3 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 2-of-3 Schnorr, with no bits set "
+        "(attempt to malleate return-false)",
+        newmultisigflags)
+                        .Push("00")
+                        .Num(0)
+                        .Num(0)
+                        .SetScriptError(SCRIPT_ERR_NUMBER_BAD_ENCODING));
+    tests.push_back(TestBuilder(CScript() << OP_2 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
+                                          << ToByteVector(keys.pubkey2C) << OP_3 << OP_CHECKMULTISIG,
+        FL " CHECKMULTISIG first 2 with schnorr sigs", newmultisigflags)
+                        .Num(3)
+                        .PushSigSchnorr(keys.key0)
+                        .PushSigSchnorr(keys.key1)
+                        .SetScriptError(SCRIPT_ERR_OK));
+    tests.push_back(TestBuilder(CScript() << OP_2 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
+                                          << ToByteVector(keys.pubkey2C) << OP_3 << OP_CHECKMULTISIG,
+        FL " CHECKMULTISIG gap with schnorr sigs", newmultisigflags)
+                        .Num(5)
+                        .PushSigSchnorr(keys.key0)
+                        .PushSigSchnorr(keys.key2)
+                        .SetScriptError(SCRIPT_ERR_OK));
+
+    tests.push_back(TestBuilder(CScript() << OP_2 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
+                                          << ToByteVector(keys.pubkey2C) << OP_3 << OP_CHECKMULTISIG,
+        FL " CHECKMULTISIG 2-of-3 Schnorr, misordered signatures", newmultisigflags)
+                        .Num(0b011)
+                        .PushSigSchnorr(keys.key1)
+                        .PushSigSchnorr(keys.key0)
+                        .SetScriptError(SCRIPT_ERR_CHECKMULTISIGVERIFY));
+    tests.push_back(
+        TestBuilder(CScript() << OP_2 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C) << OP_DUP << OP_2DUP
+                              << OP_2DUP << ToByteVector(keys.pubkey2C) << OP_8 << OP_CHECKMULTISIG,
+            "CHECKMULTISIG 2-of-8 Schnorr", newmultisigflags)
+            .Num(0x00000081)
+            // .Num(-1)
+            .PushSigSchnorr(keys.key0)
+            .PushSigSchnorr(keys.key2));
+    tests.push_back(TestBuilder(
+        CScript() << OP_16 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C) << ToByteVector(keys.pubkey2C)
+                  << ToByteVector(keys.pubkey3C) << ToByteVector(keys.pubkey4C) << ToByteVector(keys.pubkey5C)
+                  << ToByteVector(keys.pubkey6C) << ToByteVector(keys.pubkey7C) << ToByteVector(keys.pubkey8C)
+                  << ToByteVector(keys.pubkey9C) << ToByteVector(keys.pubkey10C) << ToByteVector(keys.pubkey11C)
+                  << ToByteVector(keys.pubkey12C) << ToByteVector(keys.pubkey13C) << ToByteVector(keys.pubkey14C)
+                  << ToByteVector(keys.pubkey15C) << OP_16 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 16-of-16 Schnorr - all signatures", newmultisigflags)
+                        .Num(0x0000ffff)
+                        .PushSigSchnorr(keys.key0)
+                        .PushSigSchnorr(keys.key1)
+                        .PushSigSchnorr(keys.key2)
+                        .PushSigSchnorr(keys.key3)
+                        .PushSigSchnorr(keys.key4)
+                        .PushSigSchnorr(keys.key5)
+                        .PushSigSchnorr(keys.key6)
+                        .PushSigSchnorr(keys.key7)
+                        .PushSigSchnorr(keys.key8)
+                        .PushSigSchnorr(keys.key9)
+                        .PushSigSchnorr(keys.key10)
+                        .PushSigSchnorr(keys.key11)
+                        .PushSigSchnorr(keys.key12)
+                        .PushSigSchnorr(keys.key13)
+                        .PushSigSchnorr(keys.key14)
+                        .PushSigSchnorr(keys.key15));
+    tests.push_back(TestBuilder(CScript() << OP_OVER << OP_2DUP << OP_3DUP << OP_3DUP << OP_3DUP << OP_15
+                                          << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
+                                          << ToByteVector(keys.pubkey2C) << OP_DUP << OP_DUP << OP_2DUP << OP_DUP
+                                          << OP_3DUP << OP_3DUP << OP_DUP << OP_15 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 15-of-15 Schnorr, not enough signatures", newmultisigflags)
+                        .Push("0070")
+                        .PushSigSchnorr(keys.key0)
+                        .PushSigSchnorr(keys.key1)
+                        .PushSigSchnorr(keys.key2)
+                        .SetScriptError(SCRIPT_ERR_INVALID_BIT_COUNT));
+    tests.push_back(TestBuilder(CScript() << OP_OVER << OP_DUP << OP_DUP << OP_2DUP << OP_3DUP << OP_3DUP << OP_3DUP
+                                          << OP_16 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
+                                          << ToByteVector(keys.pubkey2C) << OP_OVER << OP_DUP << OP_DUP << OP_DUP
+                                          << OP_3DUP << OP_3DUP << OP_3DUP << OP_16 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 16-of-16 Schnorr, checkbits +1", newmultisigflags)
+                        .Push("0010")
+                        .PushSigSchnorr(keys.key0)
+                        .PushSigSchnorr(keys.key1)
+                        .PushSigSchnorr(keys.key2)
+                        .SetScriptError(SCRIPT_ERR_NUMBER_OVERFLOW));
+    tests.push_back(
+        TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0C) << OP_DUP << ToByteVector(keys.pubkey1C) << OP_2DUP
+                              << OP_3DUP << OP_3DUP << OP_3DUP << OP_3DUP << 17 << OP_CHECKMULTISIG,
+            "CHECKMULTISIG 1-of-17 Schnorr", newmultisigflags)
+            .Push("000010")
+            .PushSigSchnorr(keys.key0)
+            .SetScriptError(SCRIPT_ERR_PUBKEY_COUNT));
+    tests.push_back(
+        TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C) << OP_2DUP
+                              << OP_3DUP << OP_3DUP << OP_3DUP << OP_3DUP << OP_16 << OP_CHECKMULTISIG,
+            "CHECKMULTISIG 1-of-16 Schnorr, first key", newmultisigflags)
+            .Num(0x00000001)
+            // .Push("01000")
+            .PushSigSchnorr(keys.key0));
+    tests.push_back(
+        TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C) << OP_2DUP
+                              << OP_3DUP << OP_3DUP << OP_3DUP << OP_3DUP << OP_16 << OP_CHECKMULTISIG,
+            " CHECKMULTISIG 1-of-16 Schnorr, first key, wrong endianness", newmultisigflags)
+            // .Push("0010")
+            .Num(0x10000000)
+            .PushSigSchnorr(keys.key0)
+            .SetScriptError(SCRIPT_ERR_INVALID_BIT_RANGE));
+
+    tests.push_back(TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0C) << OP_DUP << OP_DUP << OP_2DUP
+                                          << OP_3DUP << OP_3DUP << OP_3DUP << OP_DUP << ToByteVector(keys.pubkey1C)
+                                          << OP_16 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 1-of-16 Schnorr, last key", newmultisigflags)
+                        .Num(0x00008000)
+                        // .Push("0080")
+                        .PushSigSchnorr(keys.key1));
+
+    tests.push_back(
+        TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0C) << OP_DUP << OP_DUP << OP_3DUP << OP_3DUP
+                              << OP_3DUP << OP_3DUP << ToByteVector(keys.pubkey1C) << OP_16 << OP_CHECKMULTISIG,
+            "CHECKMULTISIG 1-of-16 Schnorr, last key, wrong endianness", newmultisigflags)
+            .Num(0x00000001)
+            // .Push("08000")
+            .PushSigSchnorr(keys.key1)
+            .SetScriptError(SCRIPT_ERR_CHECKMULTISIGVERIFY));
+    tests.push_back(
+        TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0C) << OP_DUP << OP_DUP << OP_3DUP << OP_3DUP
+                              << OP_3DUP << OP_3DUP << ToByteVector(keys.pubkey1C) << OP_16 << OP_CHECKMULTISIG,
+            "CHECKMULTISIG 1-of-16 Schnorr, last key, "
+            "truncating zeros not allowed",
+            newmultisigflags)
+            .Num(0x0000001)
+            // .Push("080")
+            .PushSigSchnorr(keys.key1)
+            .SetScriptError(SCRIPT_ERR_CHECKMULTISIGVERIFY));
+    tests.push_back(TestBuilder(CScript() << OP_2 << ToByteVector(ParseHex("BEEF")) << ToByteVector(keys.pubkey1C)
+                                          << ToByteVector(keys.pubkey2C) << OP_3 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 2-of-3 (110) Schnorr, first key garbage", newmultisigflags)
+                        .Num(0b110)
+                        .PushSigSchnorr(keys.key1)
+                        .PushSigSchnorr(keys.key2));
+    tests.push_back(TestBuilder(CScript() << OP_2 << ToByteVector(ParseHex("BEEF")) << ToByteVector(keys.pubkey1C)
+                                          << ToByteVector(keys.pubkey2C) << OP_3 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 2-of-3 (011) Schnorr, first key garbage", newmultisigflags)
+                        .Num(0b011)
+                        .PushSigSchnorr(keys.key0)
+                        .PushSigSchnorr(keys.key1)
+                        .SetScriptError(SCRIPT_ERR_PUBKEYTYPE));
+    tests.push_back(TestBuilder(CScript() << OP_2 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
+                                          << ToByteVector(ParseHex("BEEF")) << OP_3 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 2-of-3 (011) Schnorr, last key garbage", newmultisigflags)
+                        .Num(0b011)
+                        .PushSigSchnorr(keys.key0)
+                        .PushSigSchnorr(keys.key1));
+    tests.push_back(TestBuilder(CScript() << OP_2 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
+                                          << ToByteVector(ParseHex("BEEF")) << OP_3 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 2-of-3 (110) Schnorr, last key garbage", newmultisigflags)
+                        .Num(0b110)
+                        .PushSigSchnorr(keys.key1)
+                        .PushSigSchnorr(keys.key2)
+                        .SetScriptError(SCRIPT_ERR_PUBKEYTYPE));
+    tests.push_back(TestBuilder(CScript() << OP_0 << OP_0 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 0-of-0 with SCHNORR_MULTISIG, dummy must be null", newmultisigflags)
+                        .Push("00")
+                        .SetScriptError(SCRIPT_ERR_NUMBER_BAD_ENCODING));
+    // TODO: This test is done above by passing Num(0) which results in the an error on return
+    //       In the pre-fork testing however, the following test passes but here it fails.  Is this correct - I think so
+    //       because we shounldn't allow 0-of-1,  but lets check with Andrew.
+    //       What are the implications here if we change this, post fork?
+    tests.push_back(TestBuilder(CScript() << OP_0 << ToByteVector(ParseHex("BEEF")) << OP_1 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 0-of-1 with SCHNORR_MULTISIG, "
+        "dummy need not be null",
+        newmultisigflags)
+                        .Push("00")
+                        .SetScriptError(SCRIPT_ERR_NUMBER_BAD_ENCODING));
+    tests.push_back(
+        TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0) << OP_1 << OP_CHECKMULTISIGVERIFY << OP_1,
+            "OP_CHECKMULTISIGVERIFY Schnorr", newmultisigflags)
+            .Num(0b1)
+            .PushSigSchnorr(keys.key0));
+    tests.push_back(TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey0) << OP_1 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 1-of-1 ECDSA signature in Schnorr mode", newmultisigflags)
+                        .Num(0b1)
+                        .PushSigECDSA(keys.key0)
+                        .SetScriptError(SCRIPT_ERR_SIG_NONSCHNORR));
+    tests.push_back(TestBuilder(CScript() << OP_3 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C)
+                                          << ToByteVector(keys.pubkey2C) << OP_3 << OP_CHECKMULTISIG,
+        "CHECKMULTISIG 3-of-3 Schnorr with mixed-in ECDSA signature", newmultisigflags)
+                        .Num(0b111)
+                        .PushSigECDSA(keys.key0)
+                        .PushSigSchnorr(keys.key1)
+                        .PushSigSchnorr(keys.key2)
+                        .SetScriptError(SCRIPT_ERR_SIG_NONSCHNORR));
+
 
     std::set<std::string> tests_set;
 

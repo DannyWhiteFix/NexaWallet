@@ -64,10 +64,10 @@ void TestGetSigOpCount()
 
     uint160 dummy;
     const CScript s1 = CScript() << OP_1 << ToByteVector(dummy) << ToByteVector(dummy) << OP_2 << OP_CHECKMULTISIG;
-    CheckScriptSigOps(s1, 2, 20, 0);
+    CheckScriptSigOps(s1, 2, MAX_PUBKEYS_PER_MULTISIG, 0);
 
     const CScript s2 = CScript(s1) << OP_IF << OP_CHECKSIG << OP_ENDIF;
-    CheckScriptSigOps(s2, 3, 21, 0);
+    CheckScriptSigOps(s2, 3, MAX_PUBKEYS_PER_MULTISIG + 1, 0);
 
     std::vector<CPubKey> keys;
     for (int i = 0; i < 3; i++)
@@ -78,7 +78,7 @@ void TestGetSigOpCount()
     }
 
     const CScript s3 = GetScriptForMultisig(1, keys);
-    CheckScriptSigOps(s3, 3, 20, 0);
+    CheckScriptSigOps(s3, 3, MAX_PUBKEYS_PER_MULTISIG, 0);
 
     const CScript p2sh = GetScriptForDestination(CScriptID(s3));
     CheckScriptSigOps(p2sh, 0, 0, 0);
@@ -90,10 +90,10 @@ void TestGetSigOpCount()
     BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(SCRIPT_VERIFY_NONE, scriptSig2), 0U);
 
     const CScript s4 = CScript(s1) << OP_IF << OP_CHECKDATASIG << OP_ENDIF;
-    CheckScriptSigOps(s4, 2, 20, 1);
+    CheckScriptSigOps(s4, 2, MAX_PUBKEYS_PER_MULTISIG, 1);
 
     const CScript s5 = CScript(s4) << OP_CHECKDATASIGVERIFY;
-    CheckScriptSigOps(s5, 2, 20, 2);
+    CheckScriptSigOps(s5, 2, MAX_PUBKEYS_PER_MULTISIG, 2);
 }
 
 BOOST_AUTO_TEST_CASE(GetSigOpCount)

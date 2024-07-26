@@ -67,7 +67,7 @@ static const int MAX_OPS_PER_SCRIPT = 201;
 static const int MAX_OPS_PER_SCRIPT_TEMPLATE = 50000;
 
 // Maximum number of public keys per multisig
-static const int MAX_PUBKEYS_PER_MULTISIG = 20;
+static const int MAX_PUBKEYS_PER_MULTISIG = 16;
 
 // Maximum script length in bytes
 static const int MAX_SCRIPT_SIZE = 10000;

@@ -1388,7 +1388,7 @@ UniValue getblockchaininfo(const UniValue &params, bool fHelp)
             "  \"difficulty\": xxxxxx,     (numeric) the current difficulty\n"
             "  \"mediantime\": xxxxxx,     (numeric) median time for the current best block\n"
             "  \"forktime\": xxxxxx,       (numeric)  time when the fork becomes active on the next block\n"
-            "  \"forkactive\": xxxxxx,     (bool) is the fork active, true for all blocks with a median tiume past >= "
+            "  \"forkactive\": xxxxxx,     (bool) is the fork active, true for all blocks with a median time past >= "
             "activation time\n"
             "  \"forkenforcednextblock\": xx,(bool) will the new  fork rules be enforced on the next block mined, true "
             "only for the first block with MTP >= activation time \n"
