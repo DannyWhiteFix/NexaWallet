@@ -2,14 +2,36 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <script/bitfield.h>
+#include "script/bitfield.h"
 
-#include <script/script_error.h>
+#include "script/script.h"
 
-#include <cstddef>
-#include <limits>
+bool DecodeBitfield(const std::vector<uint8_t> &vch,
+    uint32_t size,
+    uint32_t &bitfield,
+    ScriptError *serror,
+    uint32_t _flags,
+    bool _fRequireMinimal,
+    size_t _maxIntegerSize)
+{
+    if (size > 32)
+    {
+        return set_error(serror, SCRIPT_ERR_INVALID_BITFIELD_SIZE);
+    }
 
-bool DecodeBitfield(const std::vector<uint8_t> &vch, unsigned size, uint32_t &bitfield, ScriptError *serror)
+    // Get the bitfield
+    bitfield = CScriptNum(vch, _fRequireMinimal, _maxIntegerSize).getint32();
+
+    // Check that the bitfield range is correct
+    const uint32_t mask = (uint64_t(1) << size) - 1;
+    if ((uint32_t)(bitfield & mask) != bitfield)
+    {
+        return set_error(serror, SCRIPT_ERR_INVALID_BIT_RANGE);
+    }
+
+    return true;
+}
+bool DecodeBitfield(const std::vector<uint8_t> &vch, uint32_t size, uint32_t &bitfield, ScriptError *serror)
 {
     if (size > 32)
     {

@@ -1284,6 +1284,13 @@ UniValue signrawtransaction(const UniValue &params, bool fHelp)
     // Script verification errors
     UniValue vErrors(UniValue::VARR);
 
+    auto flags = STANDARD_SCRIPT_VERIFY_FLAGS;
+    CBlockIndex *tip = chainActive.Tip();
+    if (tip && IsFork1Enabled(tip))
+    {
+        flags |= POST_UPGRADE_MANDATORY_SCRIPT_VERIFY_FLAGS;
+    }
+
     // Use CTransaction for the constant parts of the
     // transaction to avoid rehashing.
     const CTransaction txConst(mergedTx);
@@ -1301,7 +1308,7 @@ UniValue signrawtransaction(const UniValue &params, bool fHelp)
         const CScript &prevPubKey = coin->out.scriptPubKey;
         const CAmount &amount = coin->out.nValue;
 
-        SignSignature(keystore, prevPubKey, mergedTx, i, amount, sigHashType, sigType);
+        SignSignature(keystore, prevPubKey, mergedTx, i, amount, sigHashType, sigType, &flags);
         // merge in other signatures:
 
         // We can't sign any sophisticated introspection contracts anyway so we'll never verify a script that requires
@@ -1311,16 +1318,10 @@ UniValue signrawtransaction(const UniValue &params, bool fHelp)
         {
             txin.scriptSig =
                 CombineSignatures(prevPubKey, TransactionSignatureChecker(&txConst, i, SCRIPT_ENABLE_SIGHASH_FORKID),
-                    txin.scriptSig, txv.vin[i].scriptSig);
-        }
-        ScriptError serror = SCRIPT_ERR_OK;
-        auto flags = STANDARD_SCRIPT_VERIFY_FLAGS;
-        CBlockIndex *tip = chainActive.Tip();
-        if (tip && IsFork1Enabled(tip))
-        {
-            flags |= POST_UPGRADE_MANDATORY_SCRIPT_VERIFY_FLAGS;
+                    txin.scriptSig, txv.vin[i].scriptSig, &flags);
         }
 
+        ScriptError serror = SCRIPT_ERR_OK;
         MutableTransactionSignatureChecker tsc(&mergedTx, i, amount, flags);
         ScriptImportedState sis(&tsc, txref, unnecessaryState, spentCoins, i);
         if (!VerifyScript(txin.scriptSig, prevPubKey, flags, sis, &serror))

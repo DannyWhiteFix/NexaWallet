@@ -144,7 +144,8 @@ public:
 bool ProduceSignature(const BaseSignatureCreator &creator,
     const CScript &scriptPubKey,
     CScript &scriptSig,
-    bool verify = true);
+    bool verify = true,
+    unsigned int *flags = nullptr);
 
 /** Produce a script signature for a transaction. */
 bool SignSignature(const CKeyStore &keystore,
@@ -153,19 +154,22 @@ bool SignSignature(const CKeyStore &keystore,
     unsigned int nIn,
     const CAmount &amount,
     SigHashType sigHashType = defaultSigHashType,
-    uint32_t nSigType = SIGTYPE_SCHNORR);
+    uint32_t nSigType = SIGTYPE_SCHNORR,
+    unsigned int *flags = nullptr);
 bool SignSignature(const CKeyStore &keystore,
     const CTxOut &spendingThis,
     CMutableTransaction &txTo,
     unsigned int nIn,
     SigHashType sigHashType = defaultSigHashType,
-    uint32_t nSigType = SIGTYPE_SCHNORR);
+    uint32_t nSigType = SIGTYPE_SCHNORR,
+    unsigned int *flags = nullptr);
 
 /** Combine two script signatures using a generic signature checker, intelligently, possibly with OP_0 placeholders. */
 CScript CombineSignatures(const CScript &scriptPubKey,
     const BaseSignatureChecker &checker,
     const CScript &scriptSig1,
-    const CScript &scriptSig2);
+    const CScript &scriptSig2,
+    unsigned int *flags = nullptr);
 
 template <typename BYTEARRAY>
 std::vector<unsigned char> signmessage(const BYTEARRAY &data, const CKey &key)

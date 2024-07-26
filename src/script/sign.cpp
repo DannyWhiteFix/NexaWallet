@@ -192,7 +192,11 @@ static bool SignStep(const BaseSignatureCreator &creator,
     return false;
 }
 
-bool ProduceSignature(const BaseSignatureCreator &creator, const CScript &fromPubKey, CScript &scriptSig, bool verify)
+bool ProduceSignature(const BaseSignatureCreator &creator,
+    const CScript &fromPubKey,
+    CScript &scriptSig,
+    bool verify,
+    unsigned int *flags)
 {
     txnouttype whichType;
     if (!SignStep(creator, fromPubKey, scriptSig, whichType))
@@ -228,7 +232,16 @@ bool ProduceSignature(const BaseSignatureCreator &creator, const CScript &fromPu
     {
         ScriptImportedState sis(&creator.Checker());
         ScriptError serror;
-        bool ret = VerifyScript(scriptSig, fromPubKey, sis.checker->flags(), sis, &serror);
+
+        // Add fork flags if there are any
+        unsigned int tmp = 0;
+        tmp |= sis.checker->flags();
+        if (flags)
+        {
+            tmp = tmp | *flags;
+        }
+
+        bool ret = VerifyScript(scriptSig, fromPubKey, tmp, sis, &serror);
         if (!ret)
         {
             LOGA("Internal sign verification failed with error %s\n", ScriptErrorString(serror));
@@ -244,7 +257,8 @@ bool SignSignature(const CKeyStore &keystore,
     unsigned int nIn,
     const CAmount &amount,
     SigHashType sigHashType,
-    uint32_t nSigType)
+    uint32_t nSigType,
+    unsigned int *flags)
 {
     assert(nIn < txTo.vin.size());
     CTxIn &txin = txTo.vin[nIn];
@@ -255,7 +269,7 @@ bool SignSignature(const CKeyStore &keystore,
 
     CTransaction txToConst(txTo);
     TransactionSignatureCreator creator(&keystore, &txToConst, nIn, sigHashType);
-    return ProduceSignature(creator, fromPubKey, txin.scriptSig);
+    return ProduceSignature(creator, fromPubKey, txin.scriptSig, flags);
 }
 
 bool SignSignature(const CKeyStore &keystore,
@@ -263,7 +277,8 @@ bool SignSignature(const CKeyStore &keystore,
     CMutableTransaction &txTo,
     unsigned int nIn,
     SigHashType sigHashType,
-    uint32_t nSigType)
+    uint32_t nSigType,
+    unsigned int *flags)
 {
     assert(nIn < txTo.vin.size());
     CTxIn &txin = txTo.vin[nIn];
@@ -412,7 +427,8 @@ static CScript CombineSignatures(const CScript &scriptPubKey,
 CScript CombineSignatures(const CScript &scriptPubKey,
     const BaseSignatureChecker &checker,
     const CScript &scriptSig1,
-    const CScript &scriptSig2)
+    const CScript &scriptSig2,
+    unsigned int *flags)
 {
     txnouttype txType;
     std::vector<std::vector<uint8_t> > vSolutions;
@@ -421,9 +437,15 @@ CScript CombineSignatures(const CScript &scriptPubKey,
     Stack stack1;
     // scriptSig should have no ops in them, only data pushes.  Send MAX_OPS_PER_SCRIPT to mirror existing
     // behavior exactly.
-    EvalScript(stack1, scriptSig1, SCRIPT_VERIFY_STRICTENC, MAX_OPS_PER_SCRIPT, ScriptImportedState());
+    unsigned int tmp = SCRIPT_VERIFY_STRICTENC;
+    if (flags)
+    {
+        // Add fork flags if there are any
+        tmp = tmp | *flags;
+    }
+    EvalScript(stack1, scriptSig1, tmp, MAX_OPS_PER_SCRIPT, ScriptImportedState());
     Stack stack2;
-    EvalScript(stack2, scriptSig2, SCRIPT_VERIFY_STRICTENC, MAX_OPS_PER_SCRIPT, ScriptImportedState());
+    EvalScript(stack2, scriptSig2, tmp, MAX_OPS_PER_SCRIPT, ScriptImportedState());
 
     return CombineSignatures(scriptPubKey, checker, txType, vSolutions, stack1, stack2);
 }

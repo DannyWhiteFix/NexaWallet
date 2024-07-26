@@ -155,26 +155,151 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.sync_blocks()
         waitFor(60, lambda: self.nodes[2].getbalance() == bal+Decimal('1200000.00')) #node2 has both keys of the 2of2 ms addr., tx should affect the balance
 
-
-        # 2of3 test from different nodes
-        bal = self.nodes[2].getbalance()
+        # 2of16 test from different nodes
+        addr01 = self.nodes[0].getnewaddress()
+        addr02 = self.nodes[0].getnewaddress()
         addr1 = self.nodes[1].getnewaddress()
         addr2 = self.nodes[2].getnewaddress()
         addr3 = self.nodes[2].getnewaddress()
+        addr4 = self.nodes[2].getnewaddress()
+        addr5 = self.nodes[2].getnewaddress()
+        addr6 = self.nodes[2].getnewaddress()
+        addr7 = self.nodes[2].getnewaddress()
+        addr8 = self.nodes[2].getnewaddress()
+        addr9 = self.nodes[2].getnewaddress()
+        addr10 = self.nodes[2].getnewaddress()
+        addr11 = self.nodes[2].getnewaddress()
+        addr12 = self.nodes[2].getnewaddress()
+        addr13 = self.nodes[2].getnewaddress()
+        addr14 = self.nodes[2].getnewaddress()
+        addr15 = self.nodes[2].getnewaddress()
+        addr16 = self.nodes[2].getnewaddress()
+        addr17 = self.nodes[2].getnewaddress()
+        addr18 = self.nodes[2].getnewaddress()
+        addr19 = self.nodes[2].getnewaddress()
+        addr20 = self.nodes[2].getnewaddress()
+        addr21 = self.nodes[2].getnewaddress()
 
+        addr01Obj = self.nodes[0].validateaddress(addr01)
+        addr02Obj = self.nodes[0].validateaddress(addr02)
         addr1Obj = self.nodes[1].validateaddress(addr1)
         addr2Obj = self.nodes[2].validateaddress(addr2)
         addr3Obj = self.nodes[2].validateaddress(addr3)
+        addr4Obj = self.nodes[2].validateaddress(addr4)
+        addr5Obj = self.nodes[2].validateaddress(addr5)
+        addr6Obj = self.nodes[2].validateaddress(addr6)
+        addr7Obj = self.nodes[2].validateaddress(addr7)
+        addr8Obj = self.nodes[2].validateaddress(addr8)
+        addr9Obj = self.nodes[2].validateaddress(addr9)
+        addr10Obj = self.nodes[2].validateaddress(addr10)
+        addr11Obj = self.nodes[2].validateaddress(addr11)
+        addr12Obj = self.nodes[2].validateaddress(addr12)
+        addr13Obj = self.nodes[2].validateaddress(addr13)
+        addr14Obj = self.nodes[2].validateaddress(addr14)
+        addr15Obj = self.nodes[2].validateaddress(addr15)
+        addr16Obj = self.nodes[2].validateaddress(addr16)
+        addr17Obj = self.nodes[2].validateaddress(addr17)
+        addr18Obj = self.nodes[2].validateaddress(addr18)
+        addr19Obj = self.nodes[2].validateaddress(addr19)
+        addr20Obj = self.nodes[2].validateaddress(addr20)
+        addr21Obj = self.nodes[2].validateaddress(addr21)
 
-        mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey']])
+        # mine a few blocks 1 second apart so we can get a more meaningful "mediantime"
+        logging.info("starting fork tests")
+        bestblock = self.nodes[2].getbestblockhash()
+        lastblocktime = self.nodes[2].getblockheader(bestblock)['time']
+        mocktime = lastblocktime
+        for i in range(10):
+            mocktime = mocktime + 120
+            self.nodes[0].setmocktime(mocktime)
+            self.nodes[1].setmocktime(mocktime)
+            self.nodes[2].setmocktime(mocktime)
+            self.nodes[2].generate(1)
+        assert_equal(self.nodes[2].getblockcount(), 120)
+        self.sync_blocks()
+
+        # set the harfork activation to just a few blocks ahead
+        bestblock = self.nodes[2].getbestblockhash()
+        lastblocktime = self.nodes[2].getblockheader(bestblock)['time']
+        activationtime = lastblocktime + 240
+        self.nodes[0].set("consensus.fork1Time=" + str(activationtime))
+        self.nodes[1].set("consensus.fork1Time=" + str(activationtime))
+        self.nodes[2].set("consensus.fork1Time=" + str(activationtime))
+
+        blockchaininfo = self.nodes[2].getblockchaininfo()
+        assert_equal(blockchaininfo['forktime'], activationtime)
+        assert_equal(blockchaininfo['forkactive'], False)
+        assert_equal(blockchaininfo['forkenforcednextblock'], False)
+        assert_greater_than(activationtime, blockchaininfo['mediantime'])
+
+        # Mine just up to the hard fork activation minus 1 (activationtime will still be greater than mediantime).
+        for i in range(5):
+            mocktime = mocktime + 120
+            self.nodes[0].setmocktime(mocktime)
+            self.nodes[1].setmocktime(mocktime)
+            self.nodes[2].setmocktime(mocktime)
+            self.nodes[2].generate(1)
+            blockchaininfo = self.nodes[2].getblockchaininfo()
+            assert_equal(blockchaininfo['forkactive'], False)
+            assert_equal(blockchaininfo['forkenforcednextblock'], False)
+            assert_greater_than(activationtime, blockchaininfo['mediantime']) # activationtime > mediantime
+        self.sync_blocks()
+
+        # Should not be able to create a multisig with more than 15 pubkeys because the script size limit will be exceeded.
+        # This is actually not correct, we should be able to create 16 but for the stack limitations.  Once the hard fork
+        # is activated, we should be able to create 16.
+        try:
+            mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey'], addr6Obj['pubkey'], addr7Obj['pubkey'], addr8Obj['pubkey'], addr9Obj['pubkey'], addr10Obj['pubkey'],addr11Obj['pubkey'],addr12Obj['pubkey'],addr13Obj['pubkey'],addr14Obj['pubkey'], addr15Obj['pubkey']])
+        except JSONRPCException as e:
+            assert(e.error["message"] == "redeemScript exceeds size limit: 547")
+
+        # Try to create with one more than the maximum of 8. This should fail as there is a bug in the current
+        # implementation which the hardfork will fix.
+        mSigObj = self.nodes[2].addmultisigaddress(1, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey'], addr6Obj['pubkey'], addr7Obj['pubkey'], addr8Obj['pubkey'], addr9Obj['pubkey']])
+        mSigObjValid = self.nodes[1].validateaddress(mSigObj)
+
+        txId = self.nodes[2].sendtoaddress(mSigObj, 2200000)
+        decTx = self.nodes[2].gettransaction(txId)
+        rawTx = self.nodes[2].decoderawtransaction(decTx['hex'])
+        sPK = rawTx['vout'][0]['scriptPubKey']['hex']
+
+        txDetails = self.nodes[2].gettransaction(txId, True)
+        decrawTx = self.nodes[2].decoderawtransaction(txDetails['hex'])
+        vout = False
+        for outpoint in decrawTx['vout']:
+            if outpoint['value'] == Decimal('2200000.00'):
+                vout = outpoint
+                break
+
+        inputs = [{ "outpoint" : vout["outpoint"], "scriptPubKey" : vout['scriptPubKey']['hex'], "amount":str(vout['value']) }]
+        outputs = { self.nodes[2].getnewaddress() : 2190000 }
+        rawTx = self.nodes[2].createrawtransaction(inputs, outputs)
+        rawTxSigned = self.nodes[2].signrawtransaction(rawTx, inputs)
+        assert_equal(rawTxSigned['complete'], False)
+
+        # Create one with the maximum number of pubkeys (currently only 8 will work - this is a bug in the current codebase
+        # which the hardfork1 changes will also fix.
+        bal = self.nodes[2].getbalance()
+        mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey'], addr6Obj['pubkey'], addr7Obj['pubkey'], addr8Obj['pubkey']])
         mSigObjValid = self.nodes[2].validateaddress(mSigObj)
 
         txId = self.nodes[0].sendtoaddress(mSigObj, 2200000)
         decTx = self.nodes[0].gettransaction(txId)
         rawTx = self.nodes[0].decoderawtransaction(decTx['hex'])
         sPK = rawTx['vout'][0]['scriptPubKey']['hex']
+
+        # Mine right up to the activation time
+        mocktime = mocktime + 120
+        self.nodes[0].setmocktime(mocktime)
+        self.nodes[1].setmocktime(mocktime)
+        self.nodes[2].setmocktime(mocktime)
         self.nodes[0].generate(1)
-        self.sync_blocks()
+        self.sync_all()
+
+        # fork still not active
+        blockchaininfo = self.nodes[2].getblockchaininfo()
+        assert_equal(blockchaininfo['forkactive'], False)
+        assert_equal(blockchaininfo['forkenforcednextblock'], False)
 
         #THIS IS A INCOMPLETE FEATURE
         #NODE2 HAS TWO OF THREE KEY AND THE FUNDS SHOULD BE SPENDABLE AND COUNT AT BALANCE CALCULATION
@@ -195,7 +320,70 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawTxPartialSigned = self.nodes[1].signrawtransaction(rawTx, inputs)
         assert_equal(rawTxPartialSigned['complete'], False) #node1 only has one key, can't comp. sign the tx
         rawTxSigned = self.nodes[2].signrawtransaction(rawTx, inputs)
-        assert_equal(rawTxSigned['complete'], True) #node2 can sign the tx compl., own two of three keys
+        assert_equal(rawTxSigned['complete'], True) #node2 can sign the tx compl., own two of 16 keys
+        self.nodes[2].enqueuerawtransaction(rawTxSigned['hex'],"flush")
+        rawTx = self.nodes[0].decoderawtransaction(rawTxSigned['hex'])
+        self.sync_all()
+
+        # Fork should be active after the next block mined (median time will be greater than or equal to blocktime)
+        logging.info("activate fork")
+        mocktime = mocktime + 120
+        self.nodes[0].setmocktime(mocktime)
+        self.nodes[1].setmocktime(mocktime)
+        self.nodes[2].setmocktime(mocktime)
+        self.nodes[2].generate(1)
+        self.sync_blocks()
+        blockchaininfo = self.nodes[2].getblockchaininfo()
+        assert_equal(blockchaininfo['forkactive'], True)
+        assert_equal(blockchaininfo['forkenforcednextblock'], True)
+
+        # Check balance - NOTE: after the fork on mainnet and we remove the forking upgrade test we still
+        # need to keep this line as it is part of the above test that we will be keeping.
+        assert_equal(self.nodes[0].getbalance(), bal+COINBASE_REWARD+Decimal('2190000.00')) #block reward + tx
+
+
+        # after the hardfork is activated try to create one with 17 pubkeys
+        logging.info("post fork testing")
+        try:
+            mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey'], addr6Obj['pubkey'], addr7Obj['pubkey'], addr8Obj['pubkey'], addr9Obj['pubkey'], addr10Obj['pubkey'],addr11Obj['pubkey'],addr12Obj['pubkey'],addr13Obj['pubkey'],addr14Obj['pubkey'], addr15Obj['pubkey'],addr16Obj['pubkey'], addr17Obj['pubkey']])
+        except JSONRPCException as e:
+            assert(e.error["message"] == "Number of addresses involved in the multisignature address creation > 16")
+
+
+        # Create one with the maximum of 16 pubkeys
+        bal = self.nodes[2].getbalance()
+        mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey'], addr6Obj['pubkey'], addr7Obj['pubkey'], addr8Obj['pubkey'], addr9Obj['pubkey'], addr10Obj['pubkey'],addr11Obj['pubkey'],addr12Obj['pubkey'],addr13Obj['pubkey'],addr14Obj['pubkey'], addr15Obj['pubkey'], addr16Obj['pubkey']])
+
+        txId = self.nodes[0].sendtoaddress(mSigObj, 2200000)
+        decTx = self.nodes[0].gettransaction(txId)
+        rawTx = self.nodes[0].decoderawtransaction(decTx['hex'])
+        sPK = rawTx['vout'][0]['scriptPubKey']['hex']
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        blockchaininfo = self.nodes[2].getblockchaininfo()
+        assert_equal(blockchaininfo['forkactive'], True)
+        assert_equal(blockchaininfo['forkenforcednextblock'], False)
+
+        #THIS IS A INCOMPLETE FEATURE
+        #NODE2 HAS TWO OF THREE KEY AND THE FUNDS SHOULD BE SPENDABLE AND COUNT AT BALANCE CALCULATION
+        assert_equal(self.nodes[2].getbalance(), bal) #for now, assume the funds of a 2of3 multisig tx are not marked as spendable
+
+        txDetails = self.nodes[0].gettransaction(txId, True)
+        decrawTx = self.nodes[0].decoderawtransaction(txDetails['hex'])
+        vout = False
+        for outpoint in decrawTx['vout']:
+            if outpoint['value'] == Decimal('2200000.00'):
+                vout = outpoint
+                break
+
+        bal = self.nodes[0].getbalance()
+        inputs = [{ "outpoint" : vout["outpoint"], "scriptPubKey" : vout['scriptPubKey']['hex'], "amount":str(vout['value']) }]
+        outputs = { self.nodes[0].getnewaddress() : 2190000 }
+        rawTx = self.nodes[2].createrawtransaction(inputs, outputs)
+        rawTxPartialSigned = self.nodes[1].signrawtransaction(rawTx, inputs)
+        assert_equal(rawTxPartialSigned['complete'], False) #node1 only has one key, can't comp. sign the tx
+        rawTxSigned = self.nodes[2].signrawtransaction(rawTx, inputs)
+        assert_equal(rawTxSigned['complete'], True) #node2 can sign the tx compl., own two of 16 keys
         self.nodes[2].enqueuerawtransaction(rawTxSigned['hex'],"flush")
         rawTx = self.nodes[0].decoderawtransaction(rawTxSigned['hex'])
         self.sync_all()
@@ -203,10 +391,176 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.sync_blocks()
         assert_equal(self.nodes[0].getbalance(), bal+COINBASE_REWARD+Decimal('2190000.00')) #block reward + tx
 
+        ### More testing of different multisigs
+        logging.info("additional multisig tests")
+        # 1 of 16, only last key signed.
+        mSigObj = self.nodes[2].addmultisigaddress(1, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey'], addr6Obj['pubkey'], addr7Obj['pubkey'], addr8Obj['pubkey'], addr9Obj['pubkey'], addr10Obj['pubkey'],addr11Obj['pubkey'],addr12Obj['pubkey'],addr13Obj['pubkey'],addr14Obj['pubkey'], addr15Obj['pubkey'], addr01Obj['pubkey']])
+        mSigObj = self.nodes[1].addmultisigaddress(1, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey'], addr6Obj['pubkey'], addr7Obj['pubkey'], addr8Obj['pubkey'], addr9Obj['pubkey'], addr10Obj['pubkey'],addr11Obj['pubkey'],addr12Obj['pubkey'],addr13Obj['pubkey'],addr14Obj['pubkey'], addr15Obj['pubkey'], addr01Obj['pubkey']])
+        mSigObj = self.nodes[0].addmultisigaddress(1, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey'], addr6Obj['pubkey'], addr7Obj['pubkey'], addr8Obj['pubkey'], addr9Obj['pubkey'], addr10Obj['pubkey'],addr11Obj['pubkey'],addr12Obj['pubkey'],addr13Obj['pubkey'],addr14Obj['pubkey'], addr15Obj['pubkey'], addr01Obj['pubkey']])
+
+        txId = self.nodes[0].sendtoaddress(mSigObj, 2200000)
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+
+        txDetails = self.nodes[0].gettransaction(txId, True)
+        decrawTx2 = self.nodes[0].decoderawtransaction(txDetails['hex'])
+        vout = False
+        for outpoint in decrawTx2['vout']:
+            if outpoint['value'] == Decimal('2200000.00'):
+                vout = outpoint
+                break
+
+        inputs = [{ "outpoint" : vout["outpoint"], "scriptPubKey" : vout['scriptPubKey']['hex'], "amount":str(vout['value']) }]
+        outputs = { self.nodes[0].getnewaddress() : 2190000 }
+        rawTx2 = self.nodes[0].createrawtransaction(inputs, outputs)
+        rawTxPartialSigned2 = self.nodes[0].signrawtransaction(rawTx2, inputs)
+        assert_equal(rawTxPartialSigned2['complete'], True)
+
+        # 1 of 16, only first key signed.
+        mSigObj = self.nodes[2].addmultisigaddress(1, [addr01Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey'], addr6Obj['pubkey'], addr7Obj['pubkey'], addr8Obj['pubkey'], addr9Obj['pubkey'], addr10Obj['pubkey'],addr11Obj['pubkey'],addr12Obj['pubkey'],addr13Obj['pubkey'],addr14Obj['pubkey'], addr15Obj['pubkey'], addr16Obj['pubkey']])
+        mSigObj = self.nodes[1].addmultisigaddress(1, [addr01Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey'], addr6Obj['pubkey'], addr7Obj['pubkey'], addr8Obj['pubkey'], addr9Obj['pubkey'], addr10Obj['pubkey'],addr11Obj['pubkey'],addr12Obj['pubkey'],addr13Obj['pubkey'],addr14Obj['pubkey'], addr15Obj['pubkey'], addr16Obj['pubkey']])
+        mSigObj = self.nodes[0].addmultisigaddress(1, [addr01Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey'], addr6Obj['pubkey'], addr7Obj['pubkey'], addr8Obj['pubkey'], addr9Obj['pubkey'], addr10Obj['pubkey'],addr11Obj['pubkey'],addr12Obj['pubkey'],addr13Obj['pubkey'],addr14Obj['pubkey'], addr15Obj['pubkey'], addr16Obj['pubkey']])
+
+        txId = self.nodes[0].sendtoaddress(mSigObj, 2200000)
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+
+        txDetails = self.nodes[0].gettransaction(txId, True)
+        decrawTx2 = self.nodes[0].decoderawtransaction(txDetails['hex'])
+        vout = False
+        for outpoint in decrawTx2['vout']:
+            if outpoint['value'] == Decimal('2200000.00'):
+                vout = outpoint
+                break
+
+        inputs = [{ "outpoint" : vout["outpoint"], "scriptPubKey" : vout['scriptPubKey']['hex'], "amount":str(vout['value']) }]
+        outputs = { self.nodes[0].getnewaddress() : 2190000 }
+        rawTx2 = self.nodes[0].createrawtransaction(inputs, outputs)
+        rawTxPartialSigned2 = self.nodes[0].signrawtransaction(rawTx2, inputs)
+        assert_equal(rawTxPartialSigned2['complete'], True)
+
+        # 1 of 16, only middle key signed.
+        mSigObj = self.nodes[2].addmultisigaddress(1, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey'], addr6Obj['pubkey'], addr7Obj['pubkey'], addr01Obj['pubkey'], addr9Obj['pubkey'], addr10Obj['pubkey'],addr11Obj['pubkey'],addr12Obj['pubkey'],addr13Obj['pubkey'],addr14Obj['pubkey'], addr15Obj['pubkey'], addr16Obj['pubkey']])
+        mSigObj = self.nodes[1].addmultisigaddress(1, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey'], addr6Obj['pubkey'], addr7Obj['pubkey'], addr01Obj['pubkey'], addr9Obj['pubkey'], addr10Obj['pubkey'],addr11Obj['pubkey'],addr12Obj['pubkey'],addr13Obj['pubkey'],addr14Obj['pubkey'], addr15Obj['pubkey'], addr16Obj['pubkey']])
+        mSigObj = self.nodes[0].addmultisigaddress(1, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey'], addr6Obj['pubkey'], addr7Obj['pubkey'], addr01Obj['pubkey'], addr9Obj['pubkey'], addr10Obj['pubkey'],addr11Obj['pubkey'],addr12Obj['pubkey'],addr13Obj['pubkey'],addr14Obj['pubkey'], addr15Obj['pubkey'], addr16Obj['pubkey']])
+
+        txId = self.nodes[0].sendtoaddress(mSigObj, 2200000)
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+
+        txDetails = self.nodes[0].gettransaction(txId, True)
+        decrawTx2 = self.nodes[0].decoderawtransaction(txDetails['hex'])
+        vout = False
+        for outpoint in decrawTx2['vout']:
+            if outpoint['value'] == Decimal('2200000.00'):
+                vout = outpoint
+                break
+
+        inputs = [{ "outpoint" : vout["outpoint"], "scriptPubKey" : vout['scriptPubKey']['hex'], "amount":str(vout['value']) }]
+        outputs = { self.nodes[0].getnewaddress() : 2190000 }
+        rawTx2 = self.nodes[0].createrawtransaction(inputs, outputs)
+        rawTxPartialSigned2 = self.nodes[0].signrawtransaction(rawTx2, inputs)
+        assert_equal(rawTxPartialSigned2['complete'], True)
+
+        # 2 of 16, only first and last key signed.
+        mSigObj = self.nodes[2].addmultisigaddress(2, [addr01Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey'], addr6Obj['pubkey'], addr7Obj['pubkey'], addr8Obj['pubkey'], addr9Obj['pubkey'], addr10Obj['pubkey'],addr11Obj['pubkey'],addr12Obj['pubkey'],addr13Obj['pubkey'],addr14Obj['pubkey'], addr15Obj['pubkey'], addr02Obj['pubkey']])
+        mSigObj = self.nodes[1].addmultisigaddress(2, [addr01Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey'], addr6Obj['pubkey'], addr7Obj['pubkey'], addr8Obj['pubkey'], addr9Obj['pubkey'], addr10Obj['pubkey'],addr11Obj['pubkey'],addr12Obj['pubkey'],addr13Obj['pubkey'],addr14Obj['pubkey'], addr15Obj['pubkey'], addr02Obj['pubkey']])
+        mSigObj = self.nodes[0].addmultisigaddress(2, [addr01Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey'], addr6Obj['pubkey'], addr7Obj['pubkey'], addr8Obj['pubkey'], addr9Obj['pubkey'], addr10Obj['pubkey'],addr11Obj['pubkey'],addr12Obj['pubkey'],addr13Obj['pubkey'],addr14Obj['pubkey'], addr15Obj['pubkey'], addr02Obj['pubkey']])
+
+        txId = self.nodes[0].sendtoaddress(mSigObj, 2200000)
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+
+        txDetails = self.nodes[0].gettransaction(txId, True)
+        decrawTx2 = self.nodes[0].decoderawtransaction(txDetails['hex'])
+        vout = False
+        for outpoint in decrawTx2['vout']:
+            if outpoint['value'] == Decimal('2200000.00'):
+                vout = outpoint
+                break
+
+        inputs = [{ "outpoint" : vout["outpoint"], "scriptPubKey" : vout['scriptPubKey']['hex'], "amount":str(vout['value']) }]
+        outputs = { self.nodes[0].getnewaddress() : 2190000 }
+        rawTx2 = self.nodes[0].createrawtransaction(inputs, outputs)
+        rawTxPartialSigned2 = self.nodes[0].signrawtransaction(rawTx2, inputs)
+        assert_equal(rawTxPartialSigned2['complete'], True)
+
+        # test for 3 of 5 multisig
+        mSigObj = self.nodes[2].addmultisigaddress(3, [addr01Obj['pubkey'], addr02Obj['pubkey'], addr1Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey']])
+        mSigObj = self.nodes[1].addmultisigaddress(3, [addr01Obj['pubkey'], addr02Obj['pubkey'], addr1Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey']])
+        mSigObj = self.nodes[0].addmultisigaddress(3, [addr01Obj['pubkey'], addr02Obj['pubkey'], addr1Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey']])
+
+        txId = self.nodes[0].sendtoaddress(mSigObj, 2200000)
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+
+        txDetails = self.nodes[0].gettransaction(txId, True)
+        decrawTx2 = self.nodes[0].decoderawtransaction(txDetails['hex'])
+        vout = False
+        for outpoint in decrawTx2['vout']:
+            if outpoint['value'] == Decimal('2200000.00'):
+                vout = outpoint
+                break
+
+        inputs = [{ "outpoint" : vout["outpoint"], "scriptPubKey" : vout['scriptPubKey']['hex'], "amount":str(vout['value']) }]
+        outputs = { self.nodes[0].getnewaddress() : 2190000 }
+        rawTx2 = self.nodes[0].createrawtransaction(inputs, outputs)
+
+        # partially sign the transaction. Using node 0 there are 2 keys that will be signing.
+        rawTxPartialSigned2 = self.nodes[0].signrawtransaction(rawTx2, inputs)
+        assert_equal(rawTxPartialSigned2['complete'], False)
+
+        # now sign the partially signed transaction using node 1 which has the final 3rd key needed.
+        rawTxSigned = self.nodes[1].signrawtransaction(rawTxPartialSigned2['hex'], inputs)
+        assert_equal(rawTxSigned['complete'], True)
+        self.nodes[2].enqueuerawtransaction(rawTxSigned['hex'],"flush")
+        rawTx = self.nodes[0].decoderawtransaction(rawTxSigned['hex'])
+
+        # test for 5 of 5 multisig
+        mSigObj = self.nodes[2].addmultisigaddress(5, [addr01Obj['pubkey'], addr02Obj['pubkey'], addr1Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey']])
+        mSigObj = self.nodes[1].addmultisigaddress(5, [addr01Obj['pubkey'], addr02Obj['pubkey'], addr1Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey']])
+        mSigObj = self.nodes[0].addmultisigaddress(5, [addr01Obj['pubkey'], addr02Obj['pubkey'], addr1Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey']])
+
+        txId = self.nodes[0].sendtoaddress(mSigObj, 2200000)
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+
+        txDetails = self.nodes[0].gettransaction(txId, True)
+        decrawTx2 = self.nodes[0].decoderawtransaction(txDetails['hex'])
+        vout = False
+        for outpoint in decrawTx2['vout']:
+            if outpoint['value'] == Decimal('2200000.00'):
+                vout = outpoint
+                break
+
+        inputs = [{ "outpoint" : vout["outpoint"], "scriptPubKey" : vout['scriptPubKey']['hex'], "amount":str(vout['value']) }]
+        outputs = { self.nodes[0].getnewaddress() : 2190000 }
+        rawTx2 = self.nodes[0].createrawtransaction(inputs, outputs)
+
+        # partially sign the transaction. Using node 0 there are 2 keys that will be signing.
+        rawTxPartialSigned2 = self.nodes[0].signrawtransaction(rawTx2, inputs)
+        assert_equal(rawTxPartialSigned2['complete'], False)
+
+        # now sign the partially signed transaction using node 1
+        rawTxPartialSigned3 = self.nodes[1].signrawtransaction(rawTxPartialSigned2['hex'], inputs)
+        assert_equal(rawTxPartialSigned3['complete'], False)
+
+        # now sign the partially signed transaction using node 3 which has all the final keys needed
+        rawTxSigned = self.nodes[2].signrawtransaction(rawTxPartialSigned3['hex'], inputs)
+        assert_equal(rawTxSigned['complete'], True)
+
+        self.nodes[2].enqueuerawtransaction(rawTxSigned['hex'],"flush")
+        rawTx = self.nodes[0].decoderawtransaction(rawTxSigned['hex'])
+
+        self.sync_all()
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+
         #########################################
         # standard/nonstandard sendrawtransaction
         #########################################
 
+        logging.info("standard and nonstandard sendrawtransaction")
         wallet = self.nodes[0].listunspent()
         wallet.sort(key=lambda x: x["amount"], reverse=False)
         utxo = wallet.pop()

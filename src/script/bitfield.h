@@ -10,6 +10,13 @@
 #include <cstdint>
 #include <vector>
 
-bool DecodeBitfield(const std::vector<uint8_t> &vch, unsigned size, uint32_t &bitfield, ScriptError *serror);
+bool DecodeBitfield(const std::vector<uint8_t> &vch,
+    uint32_t size,
+    uint32_t &bitfield,
+    ScriptError *serror,
+    uint32_t _flags,
+    bool _fRequireMinimal,
+    size_t _maxIntegerSize);
+bool DecodeBitfield(const std::vector<uint8_t> &vch, uint32_t size, uint32_t &bitfield, ScriptError *serror);
 
 #endif // NEXA_SCRIPT_BITFIELD_H

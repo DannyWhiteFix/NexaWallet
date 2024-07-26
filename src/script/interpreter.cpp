@@ -265,6 +265,7 @@ std::tuple<bool, opcodetype, StackItem, ScriptError> ScriptMachine::Peek()
     }
     else if (!withinStackWidth(vchPushValue.size()))
         set_error(&err, SCRIPT_ERR_PUSH_SIZE);
+
     pc = oldpc;
     bool fExec = vfExec.all_true();
     return std::tuple<bool, opcodetype, StackItem, ScriptError>(fExec, opcode, vchPushValue, err);
@@ -472,6 +473,7 @@ bool ScriptMachine::Eval(const CScript &_script)
     {
         ret = Step();
         DbgConsistencyCheck();
+
         if (!ret)
             break;
     }
@@ -1657,21 +1659,31 @@ bool ScriptMachine::Step()
                         fSuccess = true;
                         stats.consensusSigCheckCount += nSigsCount; // 2020-05-15 sigchecks consensus rule
                         // SCHNORR MULTISIG
-                        static_assert(MAX_PUBKEYS_PER_MULTISIG < 32,
-                            "Multisig dummy element decoded as bitfield can't represent more than 32 keys");
-                        uint32_t checkBits = 0;
+                        static_assert(
+                            MAX_PUBKEYS_PER_MULTISIG < 32, "Multisig bitfield can't represent more than 32 keys");
 
-                        // Dummy element is to be interpreted as a bitfield
-                        // that represent which pubkeys should be checked.
-                        const valtype &vchDummy = stacktop(-idxDummy);
-                        if (!DecodeBitfield(vchDummy, nKeysCount, checkBits, serror))
+                        // Decode the bitfield
+                        uint32_t checkBits = 0;
+                        const valtype &vchDummy = stacktop(-idxDummy); // which pubkeys should be checked
+                        if (flags & SCRIPT_ENFORCE_STACK_TOTAL) // hardfork1 activated
                         {
-                            // serror is set
-                            return false;
+                            if (!DecodeBitfield(
+                                    vchDummy, nKeysCount, checkBits, serror, flags, fRequireMinimal, maxIntegerSize))
+                            {
+                                // serror is set
+                                return false;
+                            }
+                        }
+                        else
+                        {
+                            if (!DecodeBitfield(vchDummy, nKeysCount, checkBits, serror))
+                            {
+                                // serror is set
+                                return false;
+                            }
                         }
 
-                        // The bitfield doesn't set the right number of
-                        // signatures.
+                        // Check that the bitfield sets the right number of signatures.
                         if (countBits(checkBits) != uint32_t(nSigsCount))
                         {
                             return set_error(serror, SCRIPT_ERR_INVALID_BIT_COUNT);

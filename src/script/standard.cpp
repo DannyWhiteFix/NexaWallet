@@ -67,7 +67,7 @@ static bool MatchPayToPubkey(const CScript &script, valtype &pubkey)
 
 static bool MatchPayToPubkeyHash(const CScript &script, valtype &pubkeyhash)
 {
-    // Bitcoin address tx, sender provides hash of pubkey, receiver provides signature and pubkey
+    // address tx, sender provides hash of pubkey, receiver provides signature and pubkey
     // Template: "OP_DUP << OP_HASH160 << OP_PUBKEYHASH << OP_EQUALVERIFY << OP_CHECKSIG"
 
     if (script.size() == 25 && script[0] == OP_DUP && script[1] == OP_HASH160 &&
