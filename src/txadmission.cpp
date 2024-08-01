@@ -726,21 +726,29 @@ void ThreadTxAdmission()
                         }
                     }
 
+                    // We want to send a reject if the transaction might be an orphan because it could just as
+                    // easily be already spent.
                     int nDoS = 0;
-                    if (state.IsInvalid(nDoS))
+                    bool invalid = state.IsInvalid(nDoS);
+                    if (invalid || fMissingInputs)
                     {
-                        LOG(MEMPOOL, "%s from peer=%s was not accepted: %s\ntx: %s", tx->GetId().ToString(),
-                            txd.nodeName, FormatStateMessage(state), EncodeHexTx(*tx));
-                        if (state.GetRejectCode() <
-                            REJECT_INTERNAL) // Never send AcceptToMemoryPool's internal codes over P2P
+                        if (invalid)
+                            LOG(MEMPOOL, "%s from peer=%s was not accepted: %s\ntx: %s", tx->GetId().ToString(),
+                                txd.nodeName, FormatStateMessage(state), EncodeHexTx(*tx));
+                        // Never send AcceptToMemoryPool's internal codes over P2P
+                        unsigned char rejectCode = fMissingInputs ? REJECT_ORPHAN : state.GetRejectCode();
+                        if (rejectCode < REJECT_INTERNAL)
                         {
                             CNodeRef from = connmgr->FindNodeFromId(txd.nodeId);
-                            if (from)
+                            // Send a reject if we know who this tx came from, AND the tx is invalid or
+                            // its an orphan and the node is a light client.  We need to tell light clients about
+                            // orphans because an orphan may also be already-spent or just completely made up.
+                            // The light client should not show this transaction unless its in a full node's txpool.
+                            if (from && (invalid || from->fClient))
                             {
                                 std::string strCommand = NetMsgType::TX;
                                 from->PushMessageWithCookie(NetMsgType::REJECT, txd.msgCookie | 0xFFFF, strCommand,
-                                    (unsigned char)state.GetRejectCode(),
-                                    state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), inv.hash);
+                                    rejectCode, state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), inv.hash);
                                 if (nDoS > 0)
                                 {
                                     dosMan.Misbehaving(from.get(), nDoS);

@@ -35,6 +35,11 @@ static const unsigned char REJECT_LIMITED = 0x47;
 */
 static const unsigned char REJECT_RETRY = 0x48;
 
+/** Used when a temporary condition (such as rate limiting) prevents the processing of a response.
+ Currently used when too many historical blocks have been requested.
+*/
+static const unsigned char REJECT_ORPHAN = 0x49;
+
 /** Capture information about block/transaction validation */
 class CValidationState
 {
