@@ -7,6 +7,7 @@
 
 #include "script/script_error.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 
