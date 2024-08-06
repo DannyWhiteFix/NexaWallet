@@ -407,8 +407,8 @@ SLAPI int signTxOneInputUsingSchnorr(const unsigned char *txData,
     std::vector<uint8_t> sigHashVec(hashType, hashType + hashTypeLen);
     SigHashType sigHashType;
     sigHashType.fromBytes(sigHashVec);
-    p("SigHashType vec size: %d, %d, %s(%s): invalid: %d\n", sigHashVec.size(), hashTypeLen,
-        sigHashType.ToString().c_str(), sigHashType.HexStr().c_str(), sigHashType.isInvalid());
+    // p("SigHashType vec size: %d, %d, %s(%s): invalid: %d\n", sigHashVec.size(), hashTypeLen,
+    //    sigHashType.ToString().c_str(), sigHashType.HexStr().c_str(), sigHashType.isInvalid());
 
     CDataStream ssData((char *)txData, (char *)txData + txbuflen, SER_NETWORK, PROTOCOL_VERSION);
     try
@@ -441,8 +441,8 @@ SLAPI int signTxOneInputUsingSchnorr(const unsigned char *txData,
     {
         return 0;
     }
-    p("Sign Schnorr: sig: %s, pubkey: %s sighash: %s\n", HexStr(sig).c_str(), key.GetPubKey().GetHex().c_str(),
-        sighash.GetHex().c_str());
+    // p("Sign Schnorr: sig: %s, pubkey: %s sighash: %s\n", HexStr(sig).c_str(), key.GetPubKey().GetHex().c_str(),
+    //    sighash.GetHex().c_str());
     sigHashType.appendToSig(sig);
     const size_t sigSize = sig.size();
     if (sigSize > std::numeric_limits<int>::max())
