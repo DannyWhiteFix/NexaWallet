@@ -63,13 +63,14 @@ class BlockchainTest(BitcoinTestFramework):
 
 
     def _forking_test(self):
-        LONGER = 5
+        LONGER = 2
         if True:
+            self.sync_blocks()
+            nblocks = self.nodes[1].getblockcount() + (10*LONGER)
             self.nodes[1].generate(10*LONGER)
-            nblocks = self.nodes[1].getblockcount()
             node2 = start_node(2, self.options.tmpdir, self.node_opts)
             self.nodes.append(node2)
-            node2 = self.nodes[2]
+            #node2 = self.nodes[2]
             connect_nodes(node2, 0)
             node3 = start_node(3, self.options.tmpdir, self.node_opts)
             self.nodes.append(node3)
@@ -82,16 +83,23 @@ class BlockchainTest(BitcoinTestFramework):
 
         # sort of simultaneously create blocks (we'd need to have an async generate to really do so,
         # but this is likely to generate on another node before it has a chance to sync
-        for i in range(0,5):
+        block_range = 5
+        for i in range(0,block_range):
             for n in self.nodes:
                 n.generate(1)
+        self.sync_blocks()
 
         besthashes = [x.getbestblockhash() for x in self.nodes]
         print("Node tips: ", besthashes)
-        # now force convergence
+        # Now force convergence by mining a longer chain on node1.
+        # For the purpose of this test we make it longer than just 1 more block because our
+        # test is not perfect and the simulaneous blocks being mined above are not always simultaneos
+        # and so the chain is sometimes of different length and ends up being longer than the range
+        # we had specified.
+        gen_blocks = block_range + 5
         count = self.nodes[1].getblockcount()
-        self.nodes[1].generate(6)
-        count = count + 6
+        self.nodes[1].generate(gen_blocks)
+        count = count + gen_blocks
         waitFor(waitTime, lambda: self.nodes[0].getblockcount() == count)
         waitFor(waitTime, lambda: self.nodes[2].getblockcount() == count)
         waitFor(waitTime, lambda: self.nodes[3].getblockcount() == count)
