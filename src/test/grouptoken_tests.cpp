@@ -6,6 +6,8 @@
 #include "consensus/merkle.h"
 #include "main.h"
 #include "miner.h"
+#include "net_processing.h"
+#include "protocol.h"
 #include "script/sighashtype.h"
 #include "test/test_nexa.h"
 #include "test/testutil.h"
@@ -1395,7 +1397,6 @@ static bool tryBlock(const std::vector<CMutableTransaction> &txns,
 
 static bool tryMempool(const CTransaction &tx, CValidationState &state)
 {
-    LOCK(cs_main);
     bool inputsMissing = false;
     return AcceptToMemoryPool(mempool, state, MakeTransactionRef(tx), true, &inputsMissing, false);
 }
@@ -1550,6 +1551,23 @@ BOOST_FIXTURE_TEST_CASE(grouptoken_blockchain, TestChain100Setup)
     txns[0] = tx({grpAuth, toks}, {OutputData(gp2pkh(gid, a1, 1), 2)});
     ret = tryBlock(txns, p2pkh(a2), tipblk, state);
     BOOST_CHECK(ret);
+
+
+    // make a tokeninfo request
+    CAddress addr1(ipaddress(0xa0b0c001, 10000));
+    CDataStream vRecv1(SER_NETWORK, PROTOCOL_VERSION);
+
+    vRecv1.clear();
+    std::vector<CExtInv> vExtInv;
+
+    CExtInv extinv(MSG_TOKENINFO, gid.bytes());
+    vExtInv.push_back(extinv);
+
+    CNode dummyNode1(INVALID_SOCKET, addr1, "", true);
+    SetConnected(dummyNode1);
+    vRecv1 << vExtInv;
+    ProcessMessage(&dummyNode1, NetMsgType::EXTGETDATA, 0, vRecv1, GetStopwatchMicros());
+    BOOST_CHECK_EQUAL(dummyNode1.vLowPrioritySendMsg.size(), 1);
 }
 
 BOOST_AUTO_TEST_CASE(grouptoken_descriptions)

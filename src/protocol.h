@@ -119,6 +119,11 @@ extern const char *INV;
  */
 extern const char *GETDATA;
 /**
+ * The extgetdata message requests one or more data objects from another node using
+ * a variable length byte vector to store the hash.
+ */
+extern const char *EXTGETDATA;
+/**
  * The merkleblock message is a reply to a getdata message which requested a
  * block using the inventory type MSG_MERKLEBLOCK.
  * @since protocol version 70001 as described by BIP37.
@@ -324,8 +329,6 @@ extern const char *XPEDITEDTXN;
  * @since protocol version 70014.
  * @see https://bitcoin.org/en/developer-reference#sendcmpct
  *
- * NOTE: Compact Blocks is not currently supported by BU.  We only process this
- * message for reporting which of our peers have announced they have CB enabled
  */
 extern const char *SENDCMPCT;
 
@@ -426,6 +429,12 @@ extern const char *CAPDQUERYREPLY;
  * Remove an installed notification only if EXTVERSION capd enabled
  */
 extern const char *CAPDREMOVENOTIFY;
+
+/**
+ * Token info sent with explicit solicitation from a GETDATA of MSG_TOKENINFO type
+ * @since protocol version 80006.
+ */
+extern const char *TOKENINFO;
 
 }; // namespace NetMsgType
 
@@ -607,8 +616,38 @@ public:
     uint256 hash;
 };
 
+// Extended Inv messages store a byte vector rather than a uint256 and so
+// can hold smaller or larger values and thus have more flexibility when needed.
+class CExtInv
+{
+public:
+    CExtInv();
+    CExtInv(uint8_t typeIn, const std::vector<uint8_t> &hashIn);
+    CExtInv(const std::string &strType, const std::vector<uint8_t> &hashIn);
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream &s, Operation ser_action)
+    {
+        READWRITE(type);
+        READWRITE(hash);
+    }
+
+    /// returns true if this extinv is one of any of the extinv types ever used.
+    bool IsKnownType() const;
+    const char *GetCommand() const;
+    std::string ToString() const;
+
+    // TODO: make private (improves encapsulation)
+public:
+    uint8_t type;
+    std::vector<uint8_t> hash;
+};
+
 enum
 {
+    // CInv types
     MSG_TX = 1,
     MSG_BLOCK = 2,
     // Nodes may always request a MSG_FILTERED_BLOCK/MSG_CMPCT_BLOCK in a getdata, however,
@@ -624,7 +663,10 @@ enum
     // message, which solves the conflict with MSG_THINBLOCK and MSG_CMPCT_BLOCK.
     MSG_THINBLOCK = MSG_CMPCT_BLOCK,
 
-    MSG_DOUBLESPENDPROOF = 7
+    MSG_DOUBLESPENDPROOF = 7,
+
+    // CExtInv types.  They begin at 100 to allow room to add more CInv types without affect CExtInv types.
+    MSG_TOKENINFO = 100
 };
 
 #endif // NEXA_PROTOCOL_H

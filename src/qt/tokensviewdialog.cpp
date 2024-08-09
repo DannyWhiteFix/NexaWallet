@@ -425,14 +425,14 @@ void TokensViewDialog::on_tokenTable_itemDoubleClicked()
 
             if (nDecimal)
             {
-                double nDisplayTokens = (double)(tokenmint.GetTokenMint(grpID)) / pow(10, nDecimal);
+                double nDisplayTokens = (double)(tokenmint.GetTokenMint(grpID).first) / pow(10, nDecimal);
                 QString strDisplayMintage = QString::number(nDisplayTokens, 'f', nDecimal);
                 infoString.append("<b> " + tr("Total Mintage:") + "</b>  " + strDisplayMintage + "<br>");
             }
             else
             {
-                infoString.append(
-                    "<b> " + tr("Total Mintage:") + "</b>  " + QString::number(tokenmint.GetTokenMint(grpID)) + "<br>");
+                infoString.append("<b> " + tr("Total Mintage:") + "</b>  " +
+                                  QString::number(tokenmint.GetTokenMint(grpID).first) + "<br>");
             }
         }
         else
@@ -519,14 +519,14 @@ void TokensViewDialog::on_tokenTable_itemDoubleClicked()
 
             if (nDecimal)
             {
-                double nDisplayTokens = (double)(tokenmint.GetTokenMint(grpID)) / pow(10, nDecimal);
+                double nDisplayTokens = (double)(tokenmint.GetTokenMint(grpID).first) / pow(10, nDecimal);
                 QString strDisplayMintage = QString::number(nDisplayTokens, 'f', nDecimal);
                 infoString.append("<b> " + tr("Total Mintage:") + "</b>  " + strDisplayMintage + "<br>");
             }
             else
             {
-                infoString.append(
-                    "<b> " + tr("Total Mintage:") + "</b>  " + QString::number(tokenmint.GetTokenMint(grpID)) + "<br>");
+                infoString.append("<b> " + tr("Total Mintage:") + "</b>  " +
+                                  QString::number(tokenmint.GetTokenMint(grpID).first) + "<br>");
             }
         }
         else

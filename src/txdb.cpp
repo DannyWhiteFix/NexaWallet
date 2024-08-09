@@ -852,9 +852,9 @@ bool CTokenDescriptionDB::WriteDesc(const CGroupTokenID &grpID, const std::vecto
     return Write(std::make_pair(DB_TOKEN_DESC, grpID), desc);
 }
 
-bool CTokenDescriptionDB::ReadSyncFlag(bool &fSyncFlag) const { return Read(DB_TOKEN_DESC, fSyncFlag); }
+bool CTokenDescriptionDB::ReadSyncFlag(bool &fSyncFlag) const { return Read(DB_TOKEN_DESC_SYNC_FLAG, fSyncFlag); }
 
-bool CTokenDescriptionDB::WriteSyncFlag(const bool fSyncFlag) { return Write(DB_TOKEN_DESC, fSyncFlag); }
+bool CTokenDescriptionDB::WriteSyncFlag(const bool fSyncFlag) { return Write(DB_TOKEN_DESC_SYNC_FLAG, fSyncFlag); }
 
 const std::vector<CGroupTokenID> CTokenDescriptionDB::GetAllTokenGroups()
 {
@@ -887,20 +887,20 @@ CTokenMintageDB::CTokenMintageDB(size_t n_cache_size, bool f_memory, bool f_wipe
 {
 }
 
-bool CTokenMintageDB::ReadMint(const CGroupTokenID &grpID, CAmount &mint) const
+bool CTokenMintageDB::ReadMint(const CGroupTokenID &grpID, mint_entry &entry) const
 {
     // Store group id keys as uint256 so that they are all the same size.
-    return Read(std::make_pair(DB_TOKEN_MINT, SerializeHash(grpID)), mint);
+    return Read(std::make_pair(DB_TOKEN_MINT, SerializeHash(grpID)), entry);
 }
 
-bool CTokenMintageDB::WriteMint(const CGroupTokenID &grpID, const CAmount mint)
+bool CTokenMintageDB::WriteMint(const CGroupTokenID &grpID, const mint_entry entry)
 {
-    return Write(std::make_pair(DB_TOKEN_MINT, SerializeHash(grpID)), mint);
+    return Write(std::make_pair(DB_TOKEN_MINT, SerializeHash(grpID)), entry);
 }
 
-bool CTokenMintageDB::ReadSyncFlag(bool &fSyncFlag) const { return Read(DB_TOKEN_DESC, fSyncFlag); }
+bool CTokenMintageDB::ReadSyncFlag(bool &fSyncFlag) const { return Read(DB_TOKEN_MINT_SYNC_FLAG, fSyncFlag); }
 
-bool CTokenMintageDB::WriteSyncFlag(const bool fSyncFlag) { return Write(DB_TOKEN_DESC, fSyncFlag); }
+bool CTokenMintageDB::WriteSyncFlag(const bool fSyncFlag) { return Write(DB_TOKEN_MINT_SYNC_FLAG, fSyncFlag); }
 
 
 TxIndexDB::TxIndexDB(size_t n_cache_size, bool f_memory, bool f_wipe)

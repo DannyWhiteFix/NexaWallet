@@ -33,7 +33,7 @@ bool GetTokenDescription(const CScript &script, std::vector<std::string> &_vDesc
     {
         if (op != OP_0)
         {
-            if (count != 4)
+            if (count < 4)
             {
                 if (count == 3)
                 {
@@ -47,7 +47,7 @@ bool GetTokenDescription(const CScript &script, std::vector<std::string> &_vDesc
                     _vDesc.push_back(s);
                 }
             }
-            else // 5th parameter in op return is the number of decimals
+            else if (count == 4) // 5th parameter in op return is the number of decimals
             {
                 uint8_t amt;
                 if (0 <= op && op <= OP_PUSHDATA4)
@@ -61,8 +61,6 @@ bool GetTokenDescription(const CScript &script, std::vector<std::string> &_vDesc
                 _vDesc.push_back(std::to_string(amt));
             }
         }
-        else
-            _vDesc.push_back("");
         count++;
     }
 

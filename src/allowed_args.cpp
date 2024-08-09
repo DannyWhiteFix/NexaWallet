@@ -150,7 +150,7 @@ void AllowedArgs::checkArg(const std::string &strArg, const std::string &strValu
         // Put a warning to stdout and in debug.log to notify the user that this parameter has no effect
         // on the current session. TODO: use a warning dialog if running nexa-qt
         std::string str =
-            strprintf(_("Option %s is not in effect due to missing feature disabled a compile time."), strArg);
+            strprintf(_("Option %s is not in effect due to missing feature disabled at compile time."), strArg);
         LOGA(str);
         printf("%s\n", str.c_str());
         return;

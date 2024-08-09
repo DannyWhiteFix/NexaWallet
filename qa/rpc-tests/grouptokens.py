@@ -44,12 +44,16 @@ class GroupTokensTest (BitcoinTestFramework):
     def checkGroupNew(self, txjson, ticker=None, name = None, url = None, sha = None):
         hasGroupOutput = 0
         groupFlags = 0
+        genesis_address = ""
         for t in txjson["vout"]:
             asm = t["scriptPubKey"]["asm"].split()
             assert(len(asm) > 0)  # output script must be something
             if "group" in t["scriptPubKey"]:
                 hasGroupOutput += 1
                 groupFlags = int(asm[1], 10)
+                if "addresses" in t["scriptPubKey"]:
+                    genesis_address = t["scriptPubKey"]["addresses"][0]
+
         assert(hasGroupOutput == 1)
         assert(groupFlags < 0)  # verify group bit set (highest bit set causes bitcoind asm script decoder to output a negative number)
         if ticker:
@@ -62,8 +66,15 @@ class GroupTokensTest (BitcoinTestFramework):
                     assert bytes.fromhex(asm[4]).decode() == url
                     assert bytes.fromhex(asm[5])[::-1] == bytes.fromhex(sha)
 
-    def checkTokenInfo(self, node, grpId, ticker="", name="", url="", url_hash="", balance="0", mintage=0):
-        info = node.token("info")
+        return genesis_address
+
+    def checkTokenInfo(self, node, grpId, ticker="", name="", url="", url_hash="", balance=0, mintage=0, decimals="0", genesis=[]):
+        info = []
+        if (grpId == None):
+            info = node.token("info")
+        else:
+            info = node.token("info", grpId)
+
         if (grpId not in info):
             raise Exception("Group Id not found")
 
@@ -71,6 +82,9 @@ class GroupTokensTest (BitcoinTestFramework):
         assert_equal(info[grpId]['name'], name)
         assert_equal(info[grpId]['url'], url)
         assert_equal(info[grpId]['hash'], url_hash)
+        assert_equal(info[grpId]['decimals'], decimals)
+        if (len(genesis) != 0):
+           assert(info[grpId]['genesis_address'] in genesis)
         assert_equal(info[grpId]['balance_satoshis'], balance)
         assert_equal(info[grpId]['mintage_satoshis'], mintage)
 
@@ -84,6 +98,9 @@ class GroupTokensTest (BitcoinTestFramework):
         assert_equal(info[grpId]['name'], name)
         assert_equal(info[grpId]['url'], url)
         assert_equal(info[grpId]['hash'], url_hash)
+        assert_equal(info[grpId]['decimals'], decimals)
+        if (len(genesis) != 0):
+           assert(info[grpId]['genesis_address'] in genesis)
         assert_equal(info[grpId]['balance_satoshis'], balance)
         assert_equal(info[grpId]['mintage_satoshis'], mintage)
 
@@ -282,12 +299,12 @@ class GroupTokensTest (BitcoinTestFramework):
         grp0Id = t["groupIdentifier"]
         self.checkTokenInfo(self.nodes[0], grp0Id)
 
-        t = self.nodes[0].token("new", auth0Addr, "TICK", "NameGoesHere", "https://www.nexa.org", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63")
+        t = self.nodes[0].token("new", auth0Addr, "TICK", "NameGoesHere", "https://www.nexa.org", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63", "5")
         raw = self.nodes[0].decoderawtransaction(self.nodes[0].gettransaction(t["transaction"])["hex"])
         self.checkGroupNew(raw,"TICK", "NameGoesHere", "https://www.nexa.org", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63")
-        self.checkTokenInfo(self.nodes[0], t["groupIdentifier"], "TICK", "NameGoesHere", "https://www.nexa.org", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63")
+        self.checkTokenInfo(self.nodes[0], t["groupIdentifier"], "TICK", "NameGoesHere", "https://www.nexa.org", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63", 0, 0, "5")
 
-        t = self.nodes[0].token("new", "TICK2", "AnotherNameGoesHere", "https://www.nexa.org/smthing", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63")
+        t = self.nodes[0].token("new", "TICK2", "AnotherNameGoesHere", "https://www.nexa.org/smthing", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63", "0")
         self.checkGroupNew(self.nodes[0].decoderawtransaction(self.nodes[0].gettransaction(t["transaction"])["hex"]),
         "TICK2", "AnotherNameGoesHere", "https://www.nexa.org/smthing", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63")
         self.checkTokenInfo(self.nodes[0], t["groupIdentifier"], "TICK2", "AnotherNameGoesHere", "https://www.nexa.org/smthing", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63")
@@ -536,7 +553,7 @@ class GroupTokensTest (BitcoinTestFramework):
         assert(self.nodes[1].token("balance", grpId)['balance_satoshis'] == 1000)
         # This should fail because the grp2Id was created for an address on node[2]
         try:
-            self.checkTokenInfo(self.nodes[0], grp2Id, "","","","", 300)
+            self.checkTokenInfo(self.nodes[0], grp2Id, "","","","", 300, 1100)
             assert False
         except:
             pass
@@ -544,7 +561,7 @@ class GroupTokensTest (BitcoinTestFramework):
         self.checkTokenInfo(self.nodes[0], grpId, "","","","", 3000, 4000)
         # This should fail because the grp2Id was created for an address on node[0]
         try:
-            self.checkTokenInfo(self.nodes[1], grpId, "","","","", 1000)
+            self.checkTokenInfo(self.nodes[1], grpId, "","","","", 1000, 4000)
             assert False
         except:
             pass
@@ -893,7 +910,7 @@ class GroupTokensTest (BitcoinTestFramework):
 
         # Create basic token and check that the authority is tracked
         authGrpId1 = self.nodes[2].token("new", "NEXA", "NEXA.org" "" "" "2")["groupIdentifier"]
-        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 1)
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'] == 1)
         try:
             self.nodes[2].token("authority", "count", authGrpId1)["mint"]
             assert(0)  # should have raised exception
@@ -908,13 +925,13 @@ class GroupTokensTest (BitcoinTestFramework):
 
         addr2 = self.nodes[2].getnewaddress()
         self.nodes[2].token("mint", authGrpId1, addr2, 1000)
-        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 1)
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'] == 1)
         self.nodes[2].token("mint", authGrpId1, addr2, 1200)
-        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 2)
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'] == 2)
         self.nodes[2].token("mint", authGrpId1, addr2, 100)
-        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 3)
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'] == 3)
         self.nodes[2].token("melt", authGrpId1, 150)
-        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 4)
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'] == 4)
         self.nodes[2].generate(1) # must mine a block for tracking to update
         assert_equal(self.nodes[2].token("authority", "count", authGrpId1)["mint"], "1")
         assert_equal(self.nodes[2].token("authority", "count", authGrpId1)["melt"], "1")
@@ -925,11 +942,11 @@ class GroupTokensTest (BitcoinTestFramework):
         # The new token creation transaction is in the same block as the first mint
         authGrpId2 = self.nodes[2].token("new")["groupIdentifier"]
         authGrpId3 = self.nodes[2].token("new")["groupIdentifier"]
-        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 2)
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'] == 2)
 
         addr2 = self.nodes[2].getnewaddress()
         self.nodes[2].token("mint", authGrpId2, addr2, 100)
-        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 1)
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'] == 3)
         self.nodes[2].generate(1); # must mine a block for tracking to update
         assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["mint"], "1")
         assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["melt"], "1")
@@ -946,7 +963,7 @@ class GroupTokensTest (BitcoinTestFramework):
         # Create other authorities and check the counts
         addr2 = self.nodes[2].getnewaddress()
         self.nodes[2].token("authority", "create", authGrpId2, addr2, "mint", "nochild", "rescript")
-        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 1)
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'] == 1)
         self.nodes[2].generate(1); # must mine a block for tracking to update
         assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["mint"], "2")
         assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["melt"], "1")
@@ -956,7 +973,7 @@ class GroupTokensTest (BitcoinTestFramework):
 
         addr2 = self.nodes[2].getnewaddress()
         self.nodes[2].token("authority", "create", authGrpId2, addr2, "melt", "rescript")
-        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 1)
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'] == 1)
         self.nodes[2].generate(1) # must mine a block for tracking to update
         assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["mint"], "2")
         assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["melt"], "2")
@@ -966,7 +983,7 @@ class GroupTokensTest (BitcoinTestFramework):
 
         # create authority with same receiving address
         self.nodes[2].token("authority", "create", authGrpId2, addr2, "mint", "melt")
-        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 1)
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'] == 1)
         self.nodes[2].generate(1) # must mine a block for tracking to update
         assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["mint"], "3")
         assert_equal(self.nodes[2].token("authority", "count", authGrpId2)["melt"], "3")
@@ -984,7 +1001,7 @@ class GroupTokensTest (BitcoinTestFramework):
         # create a token authority to an address on another peer
         addr0 = self.nodes[0].getnewaddress()
         self.nodes[2].token("authority", "create", authGrpId2, addr0, "mint", "melt", "nochild")
-        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 1)
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'] == 1)
         self.nodes[2].generate(1) # must mine a block for tracking to update
         self.sync_blocks()
         assert_equal(self.nodes[0].token("authority", "count", authGrpId1)["mint"], "1")
@@ -1050,7 +1067,7 @@ class GroupTokensTest (BitcoinTestFramework):
         self.nodes[2].generate(80) # must mine a block for tracking to update and also need coins for fees
 
         authGrpId4 = self.nodes[2].token("new", "NEXA", "NEXA.org" "" "" "2")["groupIdentifier"]
-        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'], 1)
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'] == 1)
         try:
             self.nodes[2].token("authority", "count", authGrpId4)["mint"]
             assert(0)  # should have raised exception
@@ -1087,6 +1104,71 @@ class GroupTokensTest (BitcoinTestFramework):
         assert_equal(self.nodes[2].token("authority", "count", authGrpId4)["renew"], "0")
         assert_equal(self.nodes[2].token("authority", "count", authGrpId4)["rescript"], "0")
         assert_equal(self.nodes[2].token("authority", "count", authGrpId4)["subgroup"], "0")
+
+
+        ###### Test that the token genesis address is correctly saved and retrieved
+        logging.info("testing genesis address is saved and retreived")
+
+        # clear txpools
+        self.nodes[2].generate(3) # re-org to this chain
+        self.sync_blocks()
+        self.nodes[0].generate(1) # clear out txpool
+        self.sync_blocks()
+
+        # check for a group genesis
+        t = self.nodes[0].token("new", auth0Addr, "TICK", "NameGoesHere", "https://www.nexa.org", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63", "5")
+        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()['size'] == 1)
+        self.nodes[0].generate(1) #genesis not updated until block  mined.
+
+        raw = self.nodes[0].decoderawtransaction(self.nodes[0].gettransaction(t["transaction"])["hex"])
+        genesis = self.checkGroupNew(raw,"TICK", "NameGoesHere", "https://www.nexa.org", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63")
+        self.checkTokenInfo(self.nodes[0], t["groupIdentifier"], "TICK", "NameGoesHere", "https://www.nexa.org", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63", 0, 0, "5", [genesis])
+
+        # Check for a subgroup genesis.
+        # We have to create the subgroup then mint to an address. For a subgroup, the address minted to is the genesis address.
+        sub0Addr = self.nodes[0].getnewaddress()
+        sub1 = self.nodes[0].token("subgroup", t["groupIdentifier"], "subgroupdata1")
+        self.nodes[0].token("mint", sub1, sub0Addr, 1000)
+        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()['size'] == 1)
+        self.nodes[0].generate(1) #genesis not updated until block  mined.
+        sync_wallet(10, self.nodes[0])
+        self.checkTokenInfo(self.nodes[0], sub1, "TICK", "NameGoesHere", "https://www.nexa.org", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63", 1000, 1000, "5", [sub0Addr])
+
+        # Make another mint for the same subgroup. But to a different address.
+        # The original genesis address "sub0Addr" should not have changed.
+        sub0Addr_2 = self.nodes[0].getnewaddress()
+        self.nodes[0].token("mint", sub1, sub0Addr_2, 1000)
+        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()['size'] == 1)
+        self.nodes[0].generate(1) #genesis not updated until block  mined.
+        sync_wallet(10, self.nodes[0])
+        self.checkTokenInfo(self.nodes[0], sub1, "TICK", "NameGoesHere", "https://www.nexa.org", 
+"1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63", 2000, 2000, "5", [sub0Addr])
+
+        # make the subgroup genesis mint to another peer, in this case node1
+        sub1Addr = self.nodes[1].getnewaddress()
+        sub2 = self.nodes[0].token("subgroup", t["groupIdentifier"], "subgroupdata2")
+        self.nodes[0].token("mint", sub2, sub1Addr, 1000)
+        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()['size'] == 1)
+        self.nodes[0].generate(1) #genesis not updated until block  mined.
+        # balance on node0 should be zero because mintage went to node1
+        sync_wallet(10, self.nodes[0])
+        self.checkTokenInfo(self.nodes[0], sub2, "TICK", "NameGoesHere", "https://www.nexa.org", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63", 0, 1000, "5", [sub1Addr])
+
+        # Create multiple subgroup mints that are mined in the same block.
+        # The genesis will be "one of" the addresses minted to.
+        sub0Addr1 = self.nodes[0].getnewaddress()
+        sub0Addr2 = self.nodes[0].getnewaddress()
+        sub0Addr3 = self.nodes[0].getnewaddress()
+        sub3 = self.nodes[0].token("subgroup", t["groupIdentifier"], "subgroupdata3")
+        self.nodes[0].token("mint", sub3, sub0Addr1, 1000)
+        self.nodes[0].token("mint", sub3, sub0Addr2, 2000)
+        self.nodes[0].token("melt", sub3, 400)
+        self.nodes[0].token("melt", sub3, 100)
+        self.nodes[0].token("mint", sub3, sub0Addr3, 1000)
+        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()['size'] == 5)
+        self.nodes[0].generate(1) #genesis not updated until block  mined.
+        sync_wallet(10, self.nodes[0])
+        self.checkTokenInfo(self.nodes[0], sub3, "TICK", "NameGoesHere", "https://www.nexa.org", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63", 3500, 3500, "5", [sub0Addr1, sub0Addr2, sub0Addr3])
 
 
         logging.info("test complete")

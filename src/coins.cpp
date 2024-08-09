@@ -424,6 +424,7 @@ double CCoinsViewCache::GetPriority(const CTransaction &tx,
     CAmount &inChainInputValue,
     bool &fSpendsCoinbase) const
 {
+    inChainInputValue = 0;
     if (tx.IsCoinBase())
     {
         fSpendsCoinbase = false;
@@ -431,7 +432,6 @@ double CCoinsViewCache::GetPriority(const CTransaction &tx,
     }
 
     READLOCK(cs_utxo);
-    inChainInputValue = 0;
     double dResult = 0.0;
     for (const CTxIn &txin : tx.vin)
     {

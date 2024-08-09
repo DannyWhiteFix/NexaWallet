@@ -32,6 +32,8 @@
 #include "validation/validation.h"
 #include "validationinterface.h"
 #include "version.h"
+#include "wallet/grouptokencache.h"
+
 
 extern std::atomic<int64_t> nTimeBestReceived;
 extern std::atomic<int> nPreferredDownload;
@@ -412,6 +414,118 @@ void static ProcessGetData(CNode *pfrom,
     }
 
     // Erase all messages inv's we processed
+    vInv.erase(vInv.begin(), it);
+
+    if (!vNotFound.empty())
+    {
+        // Let the peer know that we didn't find what it asked for, so it doesn't
+        // have to wait around forever. Currently only SPV clients actually care
+        // about this message: it's needed when they are recursively walking the
+        // dependencies of relevant unconfirmed transactions. SPV clients want to
+        // do that because they want to know about (and store and rebroadcast and
+        // risk analyze) the dependencies of transactions relevant to them, without
+        // having to download the entire memory pool.
+        pfrom->PushMessageWithCookie(NetMsgType::NOTFOUND, msgCookie | 0xFFFF, vNotFound);
+    }
+}
+
+template <class T>
+void static ProcessExtGetData(CNode *pfrom,
+    const Consensus::Params &consensusParams,
+    std::deque<std::pair<T, uint32_t> > &vInv)
+{
+    std::vector<T> vNotFound;
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+
+    auto it = vInv.begin();
+    uint32_t replyCookieCount = 0;
+    int cur = 0;
+    int sz = vInv.size();
+    uint32_t msgCookie = 0;
+    LOG(NET, "Processing %d EXTINVs\n", sz);
+    while (it != vInv.end())
+    {
+        // If the cookie has changed, restart the reply count.  This might happen in weird cases where the invs
+        // were deferred.
+        uint32_t nextMsgCookie = it->second;
+        if (nextMsgCookie != msgCookie)
+            replyCookieCount = 0;
+        msgCookie = nextMsgCookie;
+        cur++;
+
+        // NOTE: commented out for now, but may be used in the future.
+        // bool lastInv = (sz == cur);
+        // uint32_t oneReplyPerInvCookie = (lastInv ? (msgCookie | 0xFFFF) : (msgCookie + replyCookieCount));
+
+        // Don't bother if send buffer is too full to respond anyway except we always consume at least one inv.
+        // Otherwise we could get into an infinite loop where we never
+        // process a message that's too large for our send buffer size.
+        if (cur != 0 && pfrom->nSendSize >= nMaxSendBufferSize + ss.size())
+        {
+            break;
+        }
+        if (shutdown_threads.load() == true)
+        {
+            // I am in the middle of communicating with this node, so I want to make sure it gets an explicit close
+            // rather than timing out since I am breaking the request/reply protocol by quitting.
+            pfrom->CloseSocketDisconnect();
+            return;
+        }
+
+        // start processing inventory here
+        const T &inv = it->first;
+        it++;
+
+        if (inv.type == MSG_TOKENINFO)
+        {
+            // Get the token info associated with the group id and return
+            // a tokeninfo object.
+            CGroupTokenID groupID(inv.hash);
+            const std::vector<std::string> vInfo = tokencache.GetTokenDesc(groupID);
+            if (vInfo.size() >= DESC_ENTRY_SIZE)
+            {
+                CTokenInfo ti;
+                ti.groupId = groupID.bytes();
+                ti.name = std::move(vInfo[1]);
+                ti.ticker = std::move(vInfo[0]);
+                ti.url = std::move(vInfo[2]);
+                ti.hash = uint256S(vInfo[3]);
+                try
+                {
+                    ti.decimals = std::stoi(vInfo[4]);
+                }
+                catch (...)
+                {
+                    pfrom->PushMessageWithCookie(NetMsgType::REJECT, replyCookieCount,
+                        std::string(NetMsgType::TOKENINFO), REJECT_INVALID,
+                        strprintf(
+                            "decimals information requested was not decoded for group id: %s", inv.ToString().c_str()),
+                        inv.hash);
+                    continue;
+                }
+                ti.genesisAddress = tokenmint.GetTokenGenesis(groupID);
+                pfrom->PushMessage(NetMsgType::TOKENINFO, ti);
+            }
+            else
+            {
+                pfrom->PushMessageWithCookie(NetMsgType::REJECT, replyCookieCount, std::string(NetMsgType::TOKENINFO),
+                    REJECT_INVALID,
+                    strprintf("token information requested was not found for id: %s", inv.ToString().c_str()),
+                    inv.hash);
+            }
+            replyCookieCount++;
+        }
+        else
+        {
+            vNotFound.push_back(inv);
+        }
+
+        // TODO: Track requests for our extended getdata.  Currently we don't need to do
+        // this because we don't share EXTINV's with other peers yet.
+        // GetMainSignals().Inventory(inv.hash);
+    }
+
+    // Erase all messages extinv's we processed
     vInv.erase(vInv.begin(), it);
 
     if (!vNotFound.empty())
@@ -1088,7 +1202,7 @@ bool ProcessMessage(CNode *pfrom,
 
         std::vector<CInv> vInv;
         vRecv >> vInv;
-        // BU check size == 0 to be intolerant of an empty and useless request
+        // check size == 0 to be intolerant of an empty and useless request
         if ((vInv.size() > MAX_INV_SZ) || (vInv.size() == 0))
         {
             dosMan.Misbehaving(pfrom, 20);
@@ -1147,7 +1261,7 @@ bool ProcessMessage(CNode *pfrom,
 
         std::vector<CInv2> vInv;
         vRecv >> vInv;
-        // BU check size == 0 to be intolerant of an empty and useless request
+        // check size == 0 to be intolerant of an empty and useless request
         if ((vInv.size() > MAX_INV_SZ) || (vInv.size() == 0))
         {
             dosMan.Misbehaving(pfrom, 20);
@@ -1192,6 +1306,54 @@ bool ProcessMessage(CNode *pfrom,
         {
             LOCK(pfrom->csRecvGetData);
             pfrom->vRecvGetData2.insert(pfrom->vRecvGetData2.end(), invDeque.begin(), invDeque.end());
+        }
+    }
+
+    // Peer wants new style inventory (CExtInv) messages
+    else if (strCommand == NetMsgType::EXTGETDATA)
+    {
+        if (fImporting || fReindex)
+        {
+            LOG(NET, "received getdata from %s but importing\n", pfrom->GetLogName());
+            return true;
+        }
+
+        std::vector<CExtInv> vInv;
+        vRecv >> vInv;
+        // check size == 0 to be intolerant of an empty and useless request
+        if ((vInv.size() > MAX_INV_SZ) || (vInv.size() == 0))
+        {
+            dosMan.Misbehaving(pfrom, 20);
+            return error("message extgetdata size() = %u", vInv.size());
+        }
+
+        // Validate that EXTINVs are a valid type
+        std::deque<std::pair<CExtInv, uint32_t> > invDeque;
+        for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
+        {
+            const CExtInv &inv = vInv[nInv];
+            if (!inv.IsKnownType())
+            {
+                dosMan.Misbehaving(pfrom, 20, BanReasonInvalidInventory);
+                return error("message extinv invalid type = %u", inv.type);
+            }
+
+            invDeque.push_back(std::pair<CExtInv, uint32_t>(inv, msgCookie));
+        }
+
+        if (fDebug || (invDeque.size() != 1))
+            LOG(NET, "received extgetdata (%u invsz) peer=%s\n", invDeque.size(), pfrom->GetLogName());
+
+        if ((fDebug && invDeque.size() > 0) || (invDeque.size() == 1))
+            LOG(NET, "received extgetdata for: %s peer=%s\n", invDeque[0].first.ToString(), pfrom->GetLogName());
+
+        // Run process extgetdata and process as much of the extgetdata's as we can before taking the lock
+        // and appending the remainder to the vRecvExtGetData queue.
+        ProcessExtGetData(pfrom, chainparams.GetConsensus(), invDeque);
+        if (!invDeque.empty())
+        {
+            LOCK(pfrom->csRecvGetData);
+            pfrom->vRecvExtGetData.insert(pfrom->vRecvExtGetData.end(), invDeque.begin(), invDeque.end());
         }
     }
 

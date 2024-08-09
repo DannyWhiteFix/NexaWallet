@@ -43,6 +43,7 @@ FalseScriptImportedState fsis;
 extern void noui_connect();
 
 extern CTweak<uint32_t> limitFreeRelay;
+extern uint64_t nMaxSendBufferSize;
 
 BasicTestingSetup::BasicTestingSetup(const std::string &chainName)
 {
@@ -96,6 +97,9 @@ TestingSetup::TestingSetup(const std::string &chainName) : BasicTestingSetup(cha
     // to allow all cache entries to be flushed).
     dbcacheTweak.Set(5);
     nCoinCacheMaxSize.store(5000000);
+
+    // Set the max send buffer size.
+    nMaxSendBufferSize = 10000 * 1000;
 
     // Make sure there are 3 script check threads running for each queue
     SoftSetArg("-par", std::to_string(3));
