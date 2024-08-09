@@ -29,6 +29,7 @@ bench_bench_nexa_SOURCES = \
   bench/data.h \
   bench/data.cpp \
   bench/crypto_hash.cpp \
+  bench/crypto_ec.cpp \
   bench/merkle_root.cpp \
   bench/murmur_hash.cpp \
   bench/rpc_mempool.cpp \
