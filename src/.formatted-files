@@ -503,6 +503,7 @@ bench/ccoins_caching.cpp
 bench/checkqueue.cpp
 bench/coin_selection.cpp
 bench/crypto_hash.cpp
+bench/crypto_ec.cpp
 bench/Examples.cpp
 bench/mempool_eviction.cpp
 bench/merkle_root.cpp
