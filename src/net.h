@@ -385,6 +385,7 @@ public:
     CCriticalSection csRecvGetData;
     std::deque<std::pair<CInv, uint32_t> > vRecvGetData GUARDED_BY(csRecvGetData);
     std::deque<std::pair<CInv2, uint32_t> > vRecvGetData2 GUARDED_BY(csRecvGetData);
+    std::deque<std::pair<CExtInv, uint32_t> > vRecvExtGetData GUARDED_BY(csRecvGetData);
 
     CCriticalSection cs_vRecvMsg;
     std::deque<CNetMessage> vRecvMsg_handshake GUARDED_BY(cs_vRecvMsg);

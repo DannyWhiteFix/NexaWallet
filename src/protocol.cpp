@@ -23,6 +23,7 @@ const char *ADDR = "addr";
 const char *ADDRV2 = "addrv2";
 const char *INV = "inv";
 const char *GETDATA = "getdata";
+const char *EXTGETDATA = "extgetdata";
 const char *MERKLEBLOCK = "merkleblock";
 const char *GETBLOCKS = "getblocks";
 const char *GETHEADERS = "getheaders";
@@ -89,20 +90,22 @@ const char *CAPDMSG = "capdmsg";
 const char *CAPDQUERY = "capdq";
 const char *CAPDQUERYREPLY = "capdqreply";
 const char *CAPDREMOVENOTIFY = "capdremove";
+
+const char *TOKENINFO = "tokeninfo";
 }; // namespace NetMsgType
 
-static const char *ppszTypeName[] = {
-    "ERROR", // Should never occur
-    NetMsgType::TX,
-    NetMsgType::BLOCK,
-    "filtered block", // Should never occur
-    NetMsgType::THINBLOCK, // thinblock or compact block
-    NetMsgType::XTHINBLOCK,
-    NetMsgType::GRAPHENEBLOCK,
-    NetMsgType::DSPROOF,
-};
-
 /* clang-format off */
+static std::map<const int, const char *> ppszTypeName = {
+    // "ERROR",  Should never occur
+    {MSG_TX, NetMsgType::TX},
+    {MSG_BLOCK, NetMsgType::BLOCK},
+    // "filtered block",  Should never occur
+    {MSG_THINBLOCK, NetMsgType::THINBLOCK}, // thinblock or compact block
+    {MSG_XTHINBLOCK, NetMsgType::XTHINBLOCK},
+    {MSG_GRAPHENEBLOCK, NetMsgType::GRAPHENEBLOCK},
+    {MSG_DOUBLESPENDPROOF, NetMsgType::DSPROOF},
+    {MSG_TOKENINFO, NetMsgType::TOKENINFO}
+};
 /** All known message types. Keep this in the same order as the list of
  * messages above and in protocol.h.
  */
@@ -113,6 +116,7 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::ADDRV2,
     NetMsgType::INV,
     NetMsgType::GETDATA,
+    NetMsgType::EXTGETDATA,
     NetMsgType::MERKLEBLOCK,
     NetMsgType::GETBLOCKS,
     NetMsgType::GETHEADERS,
@@ -166,7 +170,8 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::CAPDGETINFO,
     NetMsgType::CAPDINFO,
     NetMsgType::CAPDQUERY,
-    NetMsgType::CAPDQUERYREPLY
+    NetMsgType::CAPDQUERYREPLY,
+    NetMsgType::TOKENINFO
 };
 /* clang-format on */
 
@@ -266,16 +271,17 @@ CInv::CInv(int typeIn, const uint256 &hashIn)
 
 CInv::CInv(const std::string &strType, const uint256 &hashIn)
 {
-    unsigned int i;
-    for (i = 1; i < ARRAYLEN(ppszTypeName); i++)
+    bool fFound = false;
+    for (auto &mi : ppszTypeName)
     {
-        if (strType == ppszTypeName[i])
+        if (strType == mi.second)
         {
-            type = i;
+            type = mi.first;
+            fFound = true;
             break;
         }
     }
-    if (i == ARRAYLEN(ppszTypeName))
+    if (!fFound)
         throw std::out_of_range(strprintf("CInv::CInv(string, uint256): unknown type '%s'", strType));
     hash = hashIn;
 }
@@ -305,17 +311,18 @@ CInv2::CInv2(uint8_t typeIn, const uint256 &hashIn)
 
 CInv2::CInv2(const std::string &strType, const uint256 &hashIn)
 {
-    unsigned int i;
-    for (i = 1; i < ARRAYLEN(ppszTypeName); i++)
+    bool fFound = false;
+    for (auto &mi : ppszTypeName)
     {
-        if (strType == ppszTypeName[i])
+        if (strType == mi.second)
         {
-            type = i;
+            type = mi.first;
+            fFound = true;
             break;
         }
     }
-    if (i == ARRAYLEN(ppszTypeName))
-        throw std::out_of_range(strprintf("CInv::CInv(string, uint256): unknown type '%s'", strType));
+    if (!fFound)
+        throw std::out_of_range(strprintf("CInv2::CInv2(string, uint256): unknown type '%s'", strType));
     hash = hashIn;
 }
 
@@ -327,7 +334,51 @@ const char *CInv2::GetCommand() const
         throw std::out_of_range(strprintf("CInv::GetCommand(): type=%d unknown type", type));
     return ppszTypeName[type];
 }
-
 std::string CInv2::ToString() const { return strprintf("%s %s", GetCommand(), hash.ToString()); }
+
+CExtInv::CExtInv()
+{
+    type = 0;
+    hash.clear();
+}
+
+CExtInv::CExtInv(uint8_t typeIn, const std::vector<uint8_t> &hashIn)
+{
+    type = typeIn;
+    hash = hashIn;
+}
+
+CExtInv::CExtInv(const std::string &strType, const std::vector<uint8_t> &hashIn)
+{
+    bool fFound = false;
+    for (auto &mi : ppszTypeName)
+    {
+        if (strType == mi.second)
+        {
+            type = mi.first;
+            fFound = true;
+            break;
+        }
+    }
+    if (!fFound)
+        throw std::out_of_range(strprintf("CExtInv::CExtInv(string, std:vector<uint8_t>): unknown type '%s'", strType));
+    hash = hashIn;
+}
+
+bool CExtInv::IsKnownType() const { return (type >= 100 && type <= 100); }
+const char *CExtInv::GetCommand() const
+{
+    if (!IsKnownType())
+        throw std::out_of_range(strprintf("CExtInv::GetCommand(): type=%d unknown type", type));
+    return ppszTypeName[type];
+}
+
+std::string CExtInv::ToString() const
+{
+    // Limit the string size to 64 bytes maximum to prevent log file DOS attacks, but also to accommodate
+    // larger (or smaller) than standard 32 byte inv's, as could be the case with subgroup token id's.
+    size_t nMaxBytes = std::min((size_t)64, hash.size());
+    return strprintf("%s %s", GetCommand(), GetHex(&hash.data()[0], nMaxBytes));
+}
 
 const std::vector<std::string> &getAllNetMessageTypes() { return allNetMessageTypesVec; }

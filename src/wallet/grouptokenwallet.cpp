@@ -219,7 +219,7 @@ void GetAllGroupDescriptions(const CWallet *wallet,
         // If there is no OP_RETURN then just return empty strings for the token descriptions
         if (!fOpReturn && !desc.count(tg.associatedGroup))
         {
-            desc[tg.associatedGroup] = std::vector<std::string>({"", "", "", "", "", "", "", "", "", ""});
+            desc[tg.associatedGroup] = vDefaultDesc;
         }
     }
 }
@@ -963,9 +963,10 @@ extern UniValue token(const UniValue &params, bool fHelp)
             "token [info, new, mint, melt, balance, send, authority, tracker, subgroup, mintage] \n"
             "\nToken functions.\n"
             "'info' returns a list of all tokens with their groupId and associated token-name, token-ticker "
-            "descUrl, descHash, the number of mint/melt/renew/rescript/subgroup authorities, and also "
-            "the finest balance (in satoshis) and finest mintage numbers (in satoshis) for this token, but "
-            "only for tokens created in this wallet\n"
+            "descUrl, descHash, decimals, genesis_address, the number of mint/melt/renew/rescript/subgroup "
+            "authorities, and also the finest balance (in satoshis) and finest mintage numbers (in satoshis) for "
+            "all tokens created in this wallet, or if a group id is specific, it will return the info just for that "
+            "group regardless of whether it was created in this wallet\n"
             "'new' creates a new token type. args: [address] [token-ticker token-name [descUrl descHash decimals]]\n"
             "'mint' creates new tokens. args: groupId address quantity\n"
             "'melt' removes tokens from circulation. args: groupId quantity\n"
@@ -1004,7 +1005,9 @@ extern UniValue token(const UniValue &params, bool fHelp)
             "\n"
             "\nExamples:\n"
             "\nGet token info\n" +
-            HelpExampleCli("token", "info") + "\nCreate a new token\n" + HelpExampleCli("token", "new APPL apple") +
+            HelpExampleCli("token", "info") +
+            HelpExampleCli("token", "info nexa:nqtsq5g59472zwd85c2esgslh6wh025r0x43ttlv2xy98jd0") +
+            "\nCreate a new token\n" + HelpExampleCli("token", "new APPL apple") +
             HelpExampleCli("token", "new nexa:nqtsq5g59472zwd85c2esgslh6wh025r0x43ttlv2xy98jd0 ORNGE orange") +
             HelpExampleCli("token", "new nexa:nqtsq5g5ltvwgj6ga6vlyxcay22uh2m8zy0rxzp8sf884gp9 GRP grape "
                                     "http://nexa.org "
@@ -1032,7 +1035,8 @@ extern UniValue token(const UniValue &params, bool fHelp)
             HelpExampleCli(
                 "token", "authority count nexa:tpyte9hwr6ew0agt67a0y2fnnccc0d8r62lwryq44rfhzmv7ngqqqza82qdu0") +
             "\nMake subgroups\n " +
-            HelpExampleCli("token", "subgroup nexa:tpyte9hwr6ew0agt67a0y2fnnccc0d8r62lwryq44rfhzmv7ngqqqza82qdum 1") +
+            HelpExampleCli(
+                "token", "subgroup nexa:tpyte9hwr6ew0agt67a0y2fnnccc0d8r62lwryq44rfhzmv7ngqqqza82qdum data1") +
             "\nAdd token tracker\n " +
             HelpExampleCli("token", "tracker add nexa:tpyte9hwr6ew0agt67a0y2fnnccc0d8r62lwryq44rfhzmv7ngqqqza82qdum") +
             "\nRemove token tracker\n " +
@@ -1171,7 +1175,7 @@ extern UniValue token(const UniValue &params, bool fHelp)
                     RPC_INVALID_REQUEST, "Token authority count is unavailable because the database needs a reindex");
             }
 
-            auto info = tokencache.GetTokenDesc(grpID.parentGroup());
+            auto info = tokencache.GetTokenDesc(grpID);
             if (info.size() >= 10)
             {
                 UniValue ret(UniValue::VOBJ);
@@ -1681,8 +1685,17 @@ extern UniValue token(const UniValue &params, bool fHelp)
             std::unordered_map<CGroupTokenID, std::vector<std::string> > desc;
             GetAllGroupDescriptions(wallet, desc, grpID);
 
-            std::vector<COutput> coins;
+            // If a group id was specified and no desc found then do a direct lookup
+            // since this group id is not in this wallet, otherwise, get all token balances
+            // from the wallet.
+            if (desc.empty())
+            {
+                desc[grpID] = tokencache.GetTokenDesc(grpID);
+            }
+
+            // Get all balances from the wallet for each token
             std::unordered_map<CGroupTokenID, CAmount> balances;
+            std::vector<COutput> coins;
             wallet->FilterCoins(coins,
                 [&balances](const COutput &coin)
                 {
@@ -1697,6 +1710,7 @@ extern UniValue token(const UniValue &params, bool fHelp)
                     return false; // I don't want to actually filter anything
                 });
 
+            // Format output
             UniValue ret(UniValue::VOBJ);
             for (const auto &item : desc)
             {
@@ -1714,13 +1728,14 @@ extern UniValue token(const UniValue &params, bool fHelp)
                 {
                     entry.pushKV("decimals", info[4]);
                 }
+                entry.pushKV("genesis_address", tokenmint.GetTokenGenesis(item.first));
 
                 if (balances.count(item.first))
                     entry.pushKV("balance_satoshis", balances[item.first]);
                 else
-                    entry.pushKV("balance_satoshis", "0");
+                    entry.pushKV("balance_satoshis", 0);
 
-                entry.pushKV("mintage_satoshis", tokenmint.GetTokenMint(item.first));
+                entry.pushKV("mintage_satoshis", tokenmint.GetTokenMint(item.first).first);
 
                 // encode all items for each individual group id
                 ret.pushKV(EncodeGroupToken(item.first), entry);
@@ -1841,7 +1856,7 @@ extern UniValue token(const UniValue &params, bool fHelp)
             GetAllGroupDescriptions(wallet, desc, dummyID);
 
             UniValue ret(UniValue::VOBJ);
-            ret.pushKV("mintage_satoshis", tokenmint.GetTokenMint(grpID));
+            ret.pushKV("mintage_satoshis", tokenmint.GetTokenMint(grpID).first);
             auto &info = desc[grpID];
             if (info.size() >= 5)
                 ret.pushKV("decimals", info[4]);

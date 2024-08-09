@@ -5,8 +5,15 @@
 #ifndef TOKEN_CACHE_H
 #define TOKEN_CACHE_H
 
+#include "consensus/grouptokens.h"
+#include "dstencode.h"
 #include "sync.h"
 #include "utilgrouptoken.h"
+
+
+// Empty description vector
+static const unsigned int DESC_ENTRY_SIZE = 10;
+static const std::vector<std::string> vDefaultDesc{"", "", "", "", "0", "0", "0", "0", "0", "0"};
 
 // Accumulate token authorities and mintages which can then be apply to their respective caches
 void AccumulateTokenData(CTransactionRef ptx,
@@ -27,7 +34,7 @@ private:
     size_t nMaxCacheSize GUARDED_BY(cs_tokencache) = 1000;
 
 public:
-    CTokenDescCache(){};
+    CTokenDescCache() { assert(vDefaultDesc.size() == DESC_ENTRY_SIZE); };
 
     /** Add a token description to the cache */
     void AddTokenDesc(const CGroupTokenID &_grpID, const std::vector<std::string> &_desc);
@@ -49,7 +56,7 @@ public:
     /** Find token descriptions from new transactions, that have arrived either
      *  through txadmission or from new blocks, and store them to cache
      */
-    void ProcessTokenDescriptions(CTransactionRef ptx);
+    CGroupTokenInfo ProcessTokenDescriptions(CTransactionRef ptx);
 
     /** Apply the accumulated token authories and add them to the cache and database */
     void ApplyTokenAuthorities(std::map<CGroupTokenID, CAuth> &accumulatedAuthoriies);
@@ -62,16 +69,18 @@ extern CTokenDescCache tokencache;
 class CTokenMintCache
 {
 private:
+    typedef std::pair<uint64_t, std::string> mint_entry;
+
     mutable CCriticalSection cs_tokenmint;
 
     /** an in memory cache of blocks */
-    std::map<const CGroupTokenID, CAmount> cache GUARDED_BY(cs_tokenmint);
+    std::map<const CGroupTokenID, mint_entry> cache GUARDED_BY(cs_tokenmint);
 
     /** Maximum number of cache elements */
     size_t nMaxCacheSize GUARDED_BY(cs_tokenmint) = 10000;
 
     /** Add to the in memory cache */
-    void AddToCache(const CGroupTokenID &_grpID, const CAmount _mint);
+    void AddToCache(const CGroupTokenID &_grpID, const mint_entry &entry);
 
     /** Add a token mintage to the database and cache */
     void AddTokenMint(const CGroupTokenID &_grpID, const CAmount _mint);
@@ -82,8 +91,14 @@ private:
 public:
     CTokenMintCache(){};
 
+    /** Add the genesis info to the mintage database */
+    void AddTokenGenesis(const CGroupTokenID &_grpID, const mint_entry &entry);
+
     /** Find and return a token mintage description from the cache */
-    uint64_t GetTokenMint(const CGroupTokenID &_grpID);
+    mint_entry GetTokenMint(const CGroupTokenID &_grpID);
+
+    /** Find and return a token genesis pubkey from the cache */
+    std::string GetTokenGenesis(const CGroupTokenID &_grpID);
 
     /** Add the saved token mints and melts, and apply them to the cache and the mintage database */
     void ApplyTokenMintages(std::map<CGroupTokenID, CAmount> &accumulatedMintages);
@@ -99,5 +114,35 @@ public:
     bool GetSyncFlag();
 };
 extern CTokenMintCache tokenmint;
+
+// Token info object which gets returned via GETDATA and CNetMessage::TOKENINFO request
+class CTokenInfo
+{
+public:
+    std::vector<uint8_t> groupId;
+    std::string name;
+    std::string ticker;
+    std::string url;
+    uint256 hash;
+    uint32_t decimals;
+    std::string genesisAddress;
+
+public:
+    CTokenInfo(){};
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream &s, Operation ser_action)
+    {
+        READWRITE(groupId);
+        READWRITE(name);
+        READWRITE(ticker);
+        READWRITE(url);
+        READWRITE(hash);
+        READWRITE(decimals);
+        READWRITE(genesisAddress);
+    }
+};
 
 #endif

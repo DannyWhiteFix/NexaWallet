@@ -21,6 +21,8 @@ class CBlockFileInfo;
 class CBlockIndex;
 class uint256;
 
+typedef std::pair<uint64_t, std::string> mint_entry;
+
 extern CTweak<uint64_t> dbcacheTweak;
 
 static const bool DEFAULT_TXINDEX = false;
@@ -226,8 +228,8 @@ class CTokenMintageDB : public CDBWrapper
 public:
     CTokenMintageDB(size_t n_cache_size, bool fMemory = false, bool fWipe = false);
 
-    bool ReadMint(const CGroupTokenID &grpID, CAmount &mint) const;
-    bool WriteMint(const CGroupTokenID &grpID, const CAmount mint);
+    bool ReadMint(const CGroupTokenID &grpID, mint_entry &entry) const;
+    bool WriteMint(const CGroupTokenID &grpID, const mint_entry entry);
     bool ReadSyncFlag(bool &fSyncFlag) const;
     bool WriteSyncFlag(const bool fSyncFlag);
 };
