@@ -27,7 +27,6 @@
 uint64_t maxSatoScriptOps = MAX_OPS_PER_SCRIPT;
 uint64_t maxScriptTemplateOps = MAX_OPS_PER_SCRIPT_TEMPLATE;
 
-
 /** Implements script binary arithmetic and comparison opcodes that use BigNums.
     Declared here because its only needed in the interpreter even though it is implemented in BigNum.cpp
 */
@@ -497,6 +496,9 @@ bool ScriptMachine::Step()
     bool fRequireMinimal = (flags & SCRIPT_VERIFY_MINIMALDATA) != 0;
     const bool integers64Bit = (flags & SCRIPT_ALLOW_64_BIT_INTEGERS) != 0;
     const bool nativeIntrospection = (flags & SCRIPT_ALLOW_NATIVE_INTROSPECTION) != 0;
+
+    // TODO - rename this
+    const bool negativeOP_ROLL_OP_PICK = (flags & SCRIPT_NEG_OP_ROLL_OP_PICK) != 0;
 
     const size_t maxIntegerSize =
         integers64Bit ? CScriptNum::MAXIMUM_ELEMENT_SIZE_64_BIT : CScriptNum::MAXIMUM_ELEMENT_SIZE_32_BIT;
@@ -1100,18 +1102,82 @@ bool ScriptMachine::Step()
                     {
                         return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
                     }
-                    const int64_t n = CScriptNum(stacktop(-1), fRequireMinimal, maxIntegerSize).getint64();
+                    // get top stack as script num
+                    const CScriptNum sc_n = CScriptNum(stacktop(-1), fRequireMinimal, maxIntegerSize);
                     PopStack();
-                    if (n < 0 || uint64_t(n) >= stack.size())
+                    // get modulus / absolute value
+                    const std::optional<CScriptNum> abs_n = sc_n.abs();
+                    // This is only false if value is -2^63
+                    if (!abs_n)
                     {
-                        return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+                        return set_error(serror, SCRIPT_ERR_INVALID_NUMBER_RANGE);
                     }
-                    StackItem si = stackItemAt(-n - 1);
-                    if (opcode == OP_ROLL)
+                    int64_t n = abs_n->getint64();
+                    // 0 is the same result either way, consider it positive for historical reasons
+                    const bool positive = (sc_n >= 0);
+                    // if n was positive before we took the abs, copy/move the item at
+                    // index n to the top of the stack. if n was negative, copy/move
+                    // the top stack item to index abs(n) in the stack (it is now index
+                    // n pushing everything after it back(down) 1)
+                    //
+                    // order of operations: evaluate the stack for index n, perform the
+                    // copy/move, if move, erase element that was moved
+                    //
+                    if (positive)
                     {
-                        EraseStackItemAt(-n - 1);
+                        // we do not allow == stack.size() because we would be copy/moving
+                        // the item after the last item (random memory)
+                        if (uint64_t(n) >= stack.size())
+                        {
+                            return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+                        }
+                        // copy/move stack item at index N to the top of the stack
+                        StackItem si = stackItemAt(-n - 1);
+                        if (opcode == OP_ROLL)
+                        {
+                            // In the roll case, items are moved, so no stack size change occurs
+                            stack.push_back(si);
+                            // another item was added to the stack, index -n-1 is now
+                            // off by one, subtract 1 to compensate
+                            stack.erase(stack.end() - n - 1 - 1);
+                        }
+                        else
+                        {
+                            // in the pick case, an item is added so use the helper function that tracks
+                            // stack size changes.
+                            PushStack(si);
+                        }
                     }
-                    PushStack(si);
+                    else
+                    {
+                        if (!negativeOP_ROLL_OP_PICK)
+                        {
+                            return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+                        }
+                        // we allow == stack.size() because it is possible to copy/move an item
+                        // to be the new last item
+                        if (uint64_t(n) > stack.size())
+                        {
+                            return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+                        }
+                        // copy/move stack item at the top of the stack to index N
+                        StackItem si = stacktop(-1);
+                        // inserts are always done before an index but we read the stack backwards
+                        // from its internal data structure representation, to compensate do not
+                        // subtract 1 from n to offset the end
+                        if (opcode == OP_ROLL)
+                        {
+                            // No size change because we are moving the item
+                            stack.insert(stack.end() - n, si);
+                            stack.pop_back();
+                        }
+                        else
+                        {
+                            // Inserting the item, so the size changes
+                            CheckAndUpdateStackSize(si.size());
+                            stack.insert(stack.end() - n, si);
+                        }
+                    }
                 }
                 break;
 

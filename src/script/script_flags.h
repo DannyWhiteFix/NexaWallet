@@ -103,6 +103,8 @@ enum
     SCRIPT_RELAX_STACK_WIDTH = (1U << 26),
     // Flag which determines if the script interpretor should enforce a maximum # of bytes for the entire stack
     SCRIPT_ENFORCE_STACK_TOTAL = (1U << 27),
+    // Flag which determines if OP_ROLL and OP_PICK can be passed negative indexes
+    SCRIPT_NEG_OP_ROLL_OP_PICK = (1U << 28),
 };
 
 #endif // NEXA_SCRIPT_SCRIPTFLAGS_H

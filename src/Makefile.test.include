@@ -129,6 +129,7 @@ NEXA_TESTS =\
   test/sanity_tests.cpp \
   test/schnorr_tests.cpp \
   test/script_bitfield_tests.cpp \
+  test/script_op_roll_pick_tests.cpp \
   test/script_P2SH_tests.cpp \
   test/script_standard_tests.cpp \
   test/script_tests.cpp \
