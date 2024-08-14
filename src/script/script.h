@@ -498,6 +498,20 @@ public:
         return CScriptNum(valid64BitRange(_value) ? -_value : _value);
     }
 
+    ScriptNumResult abs() const noexcept
+    {
+        if (!valid64BitRange(_value))
+        {
+            return std::nullopt;
+        }
+        // no branching way to get the abs of a number
+        int64_t n = _value;
+        const uint64_t mask = n >> 63; // mask of sign bit
+        n ^= mask; // toggle the bits if _value is negative using xor
+        n -= mask; // subtract mask (+1 for negatives and +0/no-op for positives)
+        return CScriptNum(n);
+    }
+
     constexpr int32_t getint32() const
     {
         if (_value > std::numeric_limits<int>::max())

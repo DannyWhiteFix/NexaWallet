@@ -35,6 +35,51 @@ class UpgradeActivationTest(BitcoinTestFramework):
         self.nodes.append(start_node(1, self.options.tmpdir, []))
         interconnect_nodes(self.nodes)
 
+    def testSomeScript(self, scriptList, shouldItWork):
+        tx = CTransaction()
+        out = TxOut(nValue=10000)
+        scr = CScript(scriptList)
+        out.setLockingToTemplate(scr,None)
+        tx.vout.append(out)
+
+        h = tx.toHex()
+
+        frtReturn = self.nodes[0].fundrawtransaction(h)
+        sgnReturn = self.nodes[0].signrawtransaction(frtReturn["hex"])
+        fundedTx = CTransaction().fromHex(sgnReturn["hex"])
+        # print("Funded signed transaction: " + str(fundedTx)[0:200])
+        self.nodes[0].sendrawtransaction(sgnReturn["hex"])
+
+        txs = CTransaction()
+        # spend it
+        for idx in range(0, len(fundedTx.vout)):
+            if fundedTx.vout[idx].nValue == 10000:  # its my output
+                inp = fundedTx.SpendOutput(idx)
+                inp.setUnlockingToTemplate(scr, None, None)
+                txs.vin.append(inp)  # I don't have to sign it because its anyone can spend
+                break
+        txs.vout.append(TxOut(TxOut.TYPE_SATOSCRIPT, 9000, CScript()))
+
+        validatedResult = self.nodes[0].validaterawtransaction(txs.toHex())
+        if not shouldItWork:
+            assert "mandatory-script-verify-flag-failed" in validatedResult["inputs_flags"]['inputs'][0]['errors'][0]
+            return
+
+        try:
+            spendTxSend = self.nodes[0].sendrawtransaction(txs.toHex())
+            # print("Spending TX: %s" % spendTxSend)
+            assert shouldItWork, "Large stack worked"
+        except JSONRPCException as e:
+            assert not shouldItWork, "Large stack did not work: %s" % e
+
+
+    def testNegOpRoll(self, shouldItWork):
+        self.testSomeScript([ bytes([0x55]), OP_DUP, OP_DUP, OP_DEPTH, OP_NEGATE, OP_ROLL, OP_2DROP, OP_DROP], shouldItWork)
+    def testNegOpPick(self, shouldItWork):
+        self.testSomeScript([ bytes([0x55]), OP_DUP, OP_DUP, OP_DEPTH, OP_NEGATE, OP_PICK, OP_2DROP, OP_2DROP], shouldItWork)
+
+
+
     def testStackLimit(self, dups, shouldItWork):
         """ Test max stack size """
         tx = CTransaction()
@@ -142,11 +187,12 @@ class UpgradeActivationTest(BitcoinTestFramework):
 
     def preupgradeTests(self):
         """Add any tests here that should run prior to the upgrade"""
+        self.testNegOpRoll(False)
+        self.testNegOpPick(False)
         self.testWideStack(False)
         # testStackLimit N checks a stack of size N*1024 made up of 2 512 byte stack items
         self.testStackLimit(500, True)
         self.testStackLimit(1024, False)
-        pass
 
     def atUpgradeTests(self):
         """Add any tests here that should run when the current block is not upgraded but the next one will be"""
@@ -154,6 +200,8 @@ class UpgradeActivationTest(BitcoinTestFramework):
 
     def postupgradeTests(self):
         """Add any tests here that should run after the upgrade"""
+        self.testNegOpRoll(True)
+        self.testNegOpPick(True)
         self.testWideStack(True)
 
         # testStackLimit N checks a stack of size N*1024 made up of 2 512 byte stack items
@@ -163,7 +211,7 @@ class UpgradeActivationTest(BitcoinTestFramework):
         self.testStackLimit(111, True)
         self.testStackLimit(1111, False) # Nothing above 1MB (1024*1024) will work
         self.testStackLimit(1025, False)
-        pass
+
 
     def run_test(self):
         # Mine some blocks to get utxos etc

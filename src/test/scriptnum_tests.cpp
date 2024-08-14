@@ -861,5 +861,52 @@ BOOST_AUTO_TEST_CASE(bignumscript_test)
         true);
 }
 
+BOOST_AUTO_TEST_CASE(abs_test)
+{
+    // check min
+    long long a = std::numeric_limits<long long>::min();
+    auto sn = CScriptNum::fromInt(a);
+    BOOST_CHECK(sn == std::nullopt);
+    // check 0
+    a = 0;
+    sn = CScriptNum::fromInt(a);
+    BOOST_CHECK(sn->abs()->getint64() == std::llabs(a));
+    // check max
+    a = std::numeric_limits<long long>::max();
+    sn = CScriptNum::fromInt(a);
+    BOOST_CHECK(sn->abs()->getint64() == std::llabs(a));
+    // check random numbers inbetween min and max
+    a = std::numeric_limits<long long>::min();
+    int64_t start = GetTimeMillis();
+    while (true)
+    {
+        sn = CScriptNum::fromInt(a);
+        if (sn)
+        {
+            BOOST_CHECK(sn->abs()->getint64() == std::llabs(a));
+        }
+        // incrementing by 1 will finish but it will take hours. increment by some random larger
+        // number to finish in a reasonable amount of time
+        long long rand_num = rand();
+        rand_num = rand_num * 566;
+        long long next_num = a + rand_num;
+        // check for overflow
+        if (next_num < a)
+        {
+            break;
+        }
+        int64_t now = GetTimeMillis();
+        // on a modern cpu, iterating through the int64_t space incrementing by
+        // rand() * 566 finishes in a reasonable amount of time (minute or two)
+        // but on slower cpus this may take a while. spend at most 2 minutes checking for
+        // failures
+        if (now > start + 120000)
+        {
+            break;
+        }
+        a = next_num;
+        // printf("a = %lli \n", a);
+    }
+}
 
 BOOST_AUTO_TEST_SUITE_END()
