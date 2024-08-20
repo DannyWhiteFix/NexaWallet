@@ -312,6 +312,8 @@ class BlockchainTest(BitcoinTestFramework):
         self.sync_all()
         assert_equal(blockcount + 10, self.nodes[0].getblockcount())
         assert_equal(blockcount + 10, self.nodes[1].getblockcount())
+        assert_equal(blockcount + 10, self.nodes[2].getblockcount())
+        assert_equal(blockcount + 10, self.nodes[3].getblockcount())
 
         # Now Rollback the chain on Node 0 by 5 blocks
         logging.info ("Test that rollbackchain() works")
@@ -322,11 +324,14 @@ class BlockchainTest(BitcoinTestFramework):
 
         # Invalidate the chaintip on Node 0 and then mine more blocks on Node 1
         # - Node1 should advance in chain length but Node 0 shoudd not follow.
+        node0_blockhash = self.nodes[0].getbestblockhash()
         self.nodes[1].generate(5)
+        waitFor(waitTime, lambda: blockcount + 5 == self.nodes[1].getblockcount())
         time.sleep(2) # give node0 a chance to sync (it shouldn't)
 
         assert_equal(self.nodes[0].getblockcount() + 10, self.nodes[1].getblockcount())
         assert_not_equal(self.nodes[0].getbestblockhash(), self.nodes[1].getbestblockhash())
+        assert_equal(self.nodes[0].getbestblockhash(), node0_blockhash)
 
         # Now mine blocks on node0 which will extend the chain beyond node1.
         self.nodes[0].generate(12)
@@ -338,12 +343,12 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getblockcount(), self.nodes[1].getblockcount())
         assert_equal(self.nodes[0].getbestblockhash(), self.nodes[1].getbestblockhash())
 
-
         # Test that we can only rollback the chain by max 100 blocks
         self.nodes[0].generate(100)
         self.sync_all()
 
         # Roll back by 101 blocks, this should fail
+        logging.info ("Test rollbackchain() by 101")
         blockcount = self.nodes[0].getblockcount()
         try:
             self.nodes[0].rollbackchain(self.nodes[0].getblockcount() - 101)
@@ -377,6 +382,8 @@ class BlockchainTest(BitcoinTestFramework):
 
         ### Test that we can rollback the chain beyond a forkpoint and then reconnect
         #   the blocks on either chain
+
+        logging.info ("Test rollbackchain() beyond forkpoint")
 
         # Mine a few blocks
         self.nodes[0].generate(50)

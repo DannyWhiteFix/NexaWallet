@@ -371,6 +371,9 @@ void CParallelValidation::Quit(std::map<boost::thread::id, CHandleBlockMsgThread
 
     // Send signal for PV thread to exit
     iter->second.fQuit = true;
+
+    // We are finished with this thread so reset the reorg flag.
+    iter->second.fIsReorgInProgress = false;
 }
 
 bool CParallelValidation::QuitReceived(const boost::thread::id this_id, const bool fParallel)
@@ -433,6 +436,19 @@ bool CParallelValidation::IsReorgInProgress()
     while (mi != mapBlockValidationThreads.end())
     {
         if ((*mi).second.fIsReorgInProgress)
+            return true;
+        mi++;
+    }
+    return false;
+}
+
+bool CParallelValidation::BlockExtendsChain(const ConstCBlockRef pblock)
+{
+    LOCK(cs_blockvalidationthread);
+    map<boost::thread::id, CHandleBlockMsgThreads>::iterator mi = mapBlockValidationThreads.begin();
+    while (mi != mapBlockValidationThreads.end())
+    {
+        if (pblock->GetBlockHeader().hashPrevBlock == (*mi).second.hash)
             return true;
         mi++;
     }
