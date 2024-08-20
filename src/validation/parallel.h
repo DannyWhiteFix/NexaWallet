@@ -249,6 +249,7 @@ public:
     /** Is there a re-org in progress */
     void MarkReorgInProgress(const boost::thread::id this_id, const bool fReorg, const bool fParallel);
     bool IsReorgInProgress();
+    bool BlockExtendsChain(const ConstCBlockRef pblock);
 
     /** Update the nMostWorkOurFork when a new header arrives */
     void UpdateMostWorkOurFork(const CBlockHeader &header);

@@ -3559,16 +3559,19 @@ bool _ActivateBestChain(CValidationState &state,
         if (!fOneDone && PV && PV->IsReorgInProgress())
         {
             // find out if this block and chain are more work than the chain
-            // being reorg'd to.  If not then just return.  If so then kill the reorg and
-            // start connecting this chain.
+            // being reorg'd to. If so then kill the reorg and
+            // start connecting this chain. If not then just return if the block
+            // does not extend the chain.
             if (pindexMostWork->chainWork() > PV->MaxWorkChainBeingProcessed())
             {
                 // kill all validating threads except our own.
                 boost::thread::id this_id(boost::this_thread::get_id());
                 PV->StopAllValidationThreads(this_id);
             }
-            else
+            else if (!PV->BlockExtendsChain(pblock))
+            {
                 return true;
+            }
         }
 
         if (!ActivateBestChainStep(state, chainparams, pindexMostWork,
