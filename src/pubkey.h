@@ -171,7 +171,19 @@ public:
     bool RecoverCompact(const uint256 &hash, const std::vector<uint8_t> &vchSig);
 
     //! Turn this public key into an uncompressed public key.
+    //  (this means add the positive y coordinate value, which is possible because the curve is almost a function
+    //   -- it reflects across the x axis)
     bool Decompress();
+
+    //! Turn this public key into a compressed public key.
+    //  (remove the y coordinate value)
+    bool Compress();
+
+    //! Get the raw coordinate bytes of this pubkey
+    //  This drops the type byte at the beginning so returns either 32 or 64 bytes (x or x and y coordinates)
+    //  depending on whether this is compressed or uncompressed.
+    //  This means in the compressed key case, you lose information about whether the y is pos or neg (aka even or odd)
+    bool Raw(std::vector<uint8_t> &raw);
 
     //! Derive BIP32 child pubkey.
     bool Derive(CPubKey &pubkeyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode &cc) const;

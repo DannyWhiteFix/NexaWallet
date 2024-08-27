@@ -33,6 +33,13 @@ static const std::string addr2 = "1F5y5E5FMc5YzdJtB9hLaUe43GDxEKXENJ";
 static const std::string addr1C = "1NoJrossxPBKfCHuJXT4HadJrXRE9Fxiqs";
 static const std::string addr2C = "1CRj2HyM1CXWzHAXLQtiGLyggNT9WQqsDs";
 
+static const std::string rawpub1 = "0b4c866585dd868a9d62348a9cd008d6a312937048fff31670e7e920cfc7a7447b5f0bba9e01e6fe473"
+                                   "5c8383e6e7a3347a0fd72381b8f797a19f694054e5a69";
+static const std::string rawpub2 = "183905ae25e815634ce7f5d9bedbaa2c39032ab98c75b5e88fe43f8dd8246f3c5473ccd4ab475e6a9e6"
+                                   "620b52f5ce2fd15a2de32cbe905154b3a05844af70785";
+static const std::string rawpub1c = "0b4c866585dd868a9d62348a9cd008d6a312937048fff31670e7e920cfc7a744";
+static const std::string rawpub2c = "183905ae25e815634ce7f5d9bedbaa2c39032ab98c75b5e88fe43f8dd8246f3c";
+
 static const std::string strAddressBad = "1HV9Lc3sNHZxwj4Zk6fB38tEmBryq2cBiF";
 
 #ifdef KEY_TESTS_DUMPINFO
@@ -135,6 +142,16 @@ BOOST_AUTO_TEST_CASE(key_test1)
     CPubKey pubkey1C = key1C.GetPubKey();
     CPubKey pubkey2C = key2C.GetPubKey();
 
+    std::vector<uint8_t> v;
+    pubkey1.Raw(v);
+    BOOST_CHECK(HexStr(v) == rawpub1);
+    pubkey2.Raw(v);
+    BOOST_CHECK(HexStr(v) == rawpub2);
+    pubkey1C.Raw(v);
+    BOOST_CHECK(HexStr(v) == rawpub1c);
+    pubkey2C.Raw(v);
+    BOOST_CHECK(HexStr(v) == rawpub2c);
+
     BOOST_CHECK(key1.VerifyPubKey(pubkey1));
     BOOST_CHECK(!key1.VerifyPubKey(pubkey1C));
     BOOST_CHECK(!key1.VerifyPubKey(pubkey2));
@@ -159,6 +176,26 @@ BOOST_AUTO_TEST_CASE(key_test1)
     BOOST_CHECK(DecodeDestination(addr2) == CTxDestination(pubkey2.GetID()));
     BOOST_CHECK(DecodeDestination(addr1C) == CTxDestination(pubkey1C.GetID()));
     BOOST_CHECK(DecodeDestination(addr2C) == CTxDestination(pubkey2C.GetID()));
+
+    CPubKey pubkey1c = pubkey1;
+    pubkey1c.Compress();
+    BOOST_CHECK(pubkey1c.IsValid());
+    BOOST_CHECK(pubkey1c.size() == 33);
+    pubkey1c.Decompress();
+    BOOST_CHECK(pubkey1c == pubkey1);
+    BOOST_CHECK(pubkey1c.IsValid());
+    BOOST_CHECK(pubkey1c.size() == 65);
+
+
+    CPubKey pubkey2c = pubkey2;
+    pubkey2c.Compress();
+    BOOST_CHECK(pubkey2c.IsValid());
+    BOOST_CHECK(pubkey2c.size() == 33);
+    pubkey2c.Decompress();
+    BOOST_CHECK(pubkey2c == pubkey2);
+    BOOST_CHECK(pubkey2c.IsValid());
+    BOOST_CHECK(pubkey2c.size() == 65);
+
 
     for (int n = 0; n < 16; n++)
     {
@@ -224,10 +261,48 @@ BOOST_AUTO_TEST_CASE(key_test1)
         BOOST_CHECK(key1C.SignSchnorr(hashMsg, ssign1C));
         BOOST_CHECK(key2C.SignSchnorr(hashMsg, ssign2C));
 
+        std::vector<uint8_t> ssign1N, ssign2N, ssign1CN, ssign2CN;
+        uint8_t nonce[32] = {1, 2, 3, 4, 5, 6, 7, 8};
+
+
+        BOOST_CHECK(key1.SignSchnorrWithNonce(hashMsg, nonce, ssign1N));
+        BOOST_CHECK(key2.SignSchnorrWithNonce(hashMsg, nonce, ssign2N));
+        BOOST_CHECK(key1C.SignSchnorrWithNonce(hashMsg, nonce, ssign1CN));
+        BOOST_CHECK(key2C.SignSchnorrWithNonce(hashMsg, nonce, ssign2CN));
+
+        // This section executes tests specific to the operation of Schnorr signatures, which are described
+        // in BIP340: https://bips.xyz/340.  You will need to be familiar with Schnorr to follow the rest of
+        // this comment.
+        // In review, the signature is formulated as: pairs (R, s) that satisfy s (*) G = R + hash(R || m) (*) P
+        // where (*) is group multiplication by a scalar (or group addition N times).
+        // and where R is "public nonce", which is the private nonce provided in the function call (*) G.
+        // Group multiplication by a scalar (*) is also used in Schnorr to convert a private key to a public key.
+        // So what this test does is it gets the "pubkey" of the nonce (so the public nonce), and then
+        // breaks the signature into its R, s components (which is just splitting it in half)
+        // and compares these two numbers.
+        // This proves that SignSchnorrWithNonce really did create a signature using the provided nonce.
+        auto nonceAsKey = CKey();
+        nonceAsKey.Set(nonce, nonce + 32, false);
+        auto pubNonce = nonceAsKey.GetPubKey();
+        BOOST_CHECK(pubNonce.Compress());
+        std::vector<uint8_t> rawPubNonce;
+        BOOST_CHECK(pubNonce.Raw(rawPubNonce));
+        BOOST_CHECK(std::equal(ssign1N.begin(), ssign1N.begin() + 32, rawPubNonce.begin()));
+        // If you use the same nonce then the R part of the signature will be the same
+        BOOST_CHECK(std::equal(ssign1N.begin(), ssign1N.begin() + 32, ssign2N.begin()));
+        BOOST_CHECK(std::equal(ssign1N.begin(), ssign1N.begin() + 32, ssign2N.begin()));
+        BOOST_CHECK(std::equal(ssign1N.begin(), ssign1N.begin() + 32, ssign1CN.begin()));
+        BOOST_CHECK(std::equal(ssign1N.begin(), ssign1N.begin() + 32, ssign2CN.begin()));
+
         BOOST_CHECK(pubkey1.VerifySchnorr(hashMsg, ssign1));
         BOOST_CHECK(!pubkey1.VerifySchnorr(hashMsg, ssign2));
         BOOST_CHECK(pubkey1.VerifySchnorr(hashMsg, ssign1C));
         BOOST_CHECK(!pubkey1.VerifySchnorr(hashMsg, ssign2C));
+
+        BOOST_CHECK(pubkey1.VerifySchnorr(hashMsg, ssign1N));
+        BOOST_CHECK(!pubkey1.VerifySchnorr(hashMsg, ssign2N));
+        BOOST_CHECK(pubkey1.VerifySchnorr(hashMsg, ssign1CN));
+        BOOST_CHECK(!pubkey1.VerifySchnorr(hashMsg, ssign2CN));
 
         BOOST_CHECK(!pubkey2.VerifySchnorr(hashMsg, ssign1));
         BOOST_CHECK(pubkey2.VerifySchnorr(hashMsg, ssign2));

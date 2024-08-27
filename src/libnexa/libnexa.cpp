@@ -460,6 +460,7 @@ SLAPI int signTxOneInputUsingSchnorr(const unsigned char *txData,
     return (int)sigSize;
 }
 
+// deprecated
 SLAPI int SignTxSchnorr(const unsigned char *txData,
     int txbuflen,
     unsigned int inputIdx,
@@ -476,6 +477,11 @@ SLAPI int SignTxSchnorr(const unsigned char *txData,
         hashTypeLen, keyData, result, resultLen);
 }
 
+// deprecated
+SLAPI int SignHashSchnorr(const unsigned char *hash, const unsigned char *keyData, unsigned char *result)
+{
+    return signHashSchnorr(hash, keyData, result);
+}
 
 /** Sign data via the Schnorr signature algorithm.  hash must be 32 bytes.
     All buffer arguments should be in binary-serialized data.
@@ -484,7 +490,7 @@ SLAPI int SignTxSchnorr(const unsigned char *txData,
 
     The returned signature will not have a sighashtype byte.
 */
-SLAPI int SignHashSchnorr(const unsigned char *hash, const unsigned char *keyData, unsigned char *result)
+SLAPI int signHashSchnorr(const unsigned char *hash, const unsigned char *keyData, unsigned char *result)
 {
     uint256 sighash(hash);
     std::vector<unsigned char> sig;
@@ -512,6 +518,39 @@ SLAPI int SignHashSchnorr(const unsigned char *hash, const unsigned char *keyDat
     set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return (int)sigSize;
 }
+
+SLAPI int signHashSchnorrWithNonce(const unsigned char *hash,
+    const unsigned char *keyData,
+    const unsigned char *nonce,
+    unsigned char *result)
+{
+    uint256 sighash(hash);
+    std::vector<unsigned char> sig;
+    checkSigInit();
+
+    CKey key = LoadKey(keyData);
+
+    if (!key.SignSchnorrWithNonce(sighash, nonce, sig))
+    {
+        set_error(LIBNEXA_ERROR::DECODE_FAILURE, "data passed in decoded to an invalid key\n");
+        return 0;
+    }
+    const size_t sigSize = sig.size();
+    if (sigSize > std::numeric_limits<int>::max())
+    {
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
+        return -1;
+    }
+    if (sigSize > MAX_SIG_LEN) // should never happen for the constant-sized schnorr signatures
+    {
+        set_error(LIBNEXA_ERROR::INTERNAL_ERROR, "produced a Schnorr signature of an invalid size\n");
+        return 0;
+    }
+    std::copy(sig.begin(), sig.end(), result);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
+    return (int)sigSize;
+}
+
 
 static const std::vector<std::string> descriptionTitles = {"ticker", "name", "url", "hash", "decimals"};
 
@@ -874,6 +913,44 @@ SLAPI int verifyMessage(const unsigned char *message,
     }
 }
 
+SLAPI bool verifyDataSchnorr(const unsigned char *message,
+    unsigned int msgLen,
+    const unsigned char *pubkey,
+    int lenPubkey,
+    const unsigned char *sig) // sig must be 64 bytes
+{
+    checkSigInit();
+    CHashWriter ss(SER_GETHASH, 0);
+    ss << strMessageMagic << std::vector<unsigned char>(message, message + msgLen);
+    uint256 messageHash = ss.GetHash();
+    CPubKey pk(&pubkey[0], &pubkey[0] + lenPubkey);
+    // If the pubkey is not valid, VerifySchnorr will return false, and an invalid pubkey can never
+    // have signed a message.  While for debugging it might be nice to check and return an error
+    // this is less efficient, but is placed here commented out for dev debugging.
+    // if (!pk.isFullyValid())
+    //     set_error(LIBNEXA_ERROR::INVALID_ARG, "bad pubkey\n");
+    std::vector<uint8_t> sigv(sig, sig + 64);
+    return pk.VerifySchnorr(messageHash, sigv);
+}
+
+SLAPI bool verifyHashSchnorr(const unsigned char *hash,
+    const unsigned char *pubkey,
+    int lenPubkey,
+    const unsigned char *sig) // sig must be 64 bytes
+{
+    checkSigInit();
+    uint256 messageHash(hash);
+    CPubKey pk(&pubkey[0], &pubkey[0] + lenPubkey);
+    // If the pubkey is not valid, VerifySchnorr will return false, and an invalid pubkey can never
+    // have signed a message.  While for debugging it might be nice to check and return an error
+    // this is less efficient, but is placed here commented out for dev debugging.
+    // if (!pk.isFullyValid())
+    //     set_error(LIBNEXA_ERROR::INVALID_ARG, "bad pubkey\n");
+    std::vector<uint8_t> sigv(sig, sig + 64);
+    return pk.VerifySchnorr(messageHash, sigv);
+}
+
+
 SLAPI bool verifyBlockHeader(int chainSelector, const unsigned char *serializedHeader, int serLen)
 {
     checkSigInit();
@@ -899,6 +976,7 @@ SLAPI bool verifyBlockHeader(int chainSelector, const unsigned char *serializedH
     set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
     return result;
 }
+
 
 SLAPI int encodeCashAddr(int chainSelector, int typ, const unsigned char *data, int len, char *result, int resultMaxLen)
 {

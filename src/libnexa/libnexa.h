@@ -166,21 +166,25 @@ SLAPI int SignTxSchnorr(const unsigned char *txData,
     unsigned char *result,
     unsigned int resultLen);
 
-/** Sign data via the Schnorr signature algorithm.  hash must be 32 bytes.
+/** TODO convenience function that hashes the provided data.
+    Sign data via the Schnorr signature algorithm.
     All buffer arguments should be in binary-serialized data.
-    The transaction (txData) must contain the COutPoint (tx hash and vout) of all relevant inputs,
-    however, it is not necessary to provide the spend script.
-
     The returned signature will not have a sighashtype byte.
-*/
-SLAPI int SignHashSchnorr(const unsigned char *hash,
+
+SLAPI int SignDataSchnorr(const unsigned char *data, int datalen,
     const unsigned char *keyData,
     unsigned char *result);
+*/
 
 /* Sign a hash (presumably the hash of some data) using a Schnorr signature.  Result must be at least 64 bytes. */
-SLAPI int SignHashSchnorr(const unsigned char *hash,
+SLAPI int signHashSchnorr(const unsigned char *hash,
     const unsigned char *keyData,
     unsigned char *result);
+
+/* Sign a hash (presumably the hash of some data) using a Schnorr signature, with the provided 32 byte private nonce
+   (often specified as 'k' in the Schnorr sig description.  Result must be at least 64 bytes. */
+SLAPI int signHashSchnorrWithNonce(const unsigned char *hash, const unsigned char *keyData, const unsigned char *nonce,
+                                   unsigned char *result);
 
 // takes in the op_return script bytes of the token genesis
 // returns an ascii encoded json object that is the token genesis description in out
@@ -268,6 +272,12 @@ SLAPI int capdHash(const unsigned char *message, unsigned int msgLen, unsigned c
 // secret must be 32 bytes, iv must be 16 or more bytes
 // result buffer length must be len (or more) bytes
 SLAPI int cryptAES256CBC(unsigned int encrypt, const unsigned char *data, unsigned int len, const unsigned char *secret, const unsigned char *iv, unsigned char *result);
+
+SLAPI bool verifyDataSchnorr(const unsigned char *message, unsigned int msgLen, const unsigned char *pubkey,
+                             int lenPubkey, const unsigned char *sig);
+
+SLAPI bool verifyHashSchnorr(const unsigned char *hash,const unsigned char *pubkey,int lenPubkey,
+                             const unsigned char *sig);
 
 /** Return random bytes from cryptographically acceptable random sources */
 SLAPI int RandomBytes(unsigned char *buf, int num);
