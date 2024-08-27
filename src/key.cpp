@@ -327,6 +327,33 @@ bool CKey::SignSchnorr(const uint256 &hash, std::vector<uint8_t> &vchSig, uint32
     return true;
 }
 
+static int provided_nonce_function(unsigned char *nonce32,
+    const unsigned char *msg32,
+    const unsigned char *key32,
+    const unsigned char *algo16,
+    void *data,
+    unsigned int counter)
+{
+    arith_uint256 nonce = UintToArith256(uint256((uint8_t *)data));
+    nonce += counter;
+    uint256 added = ArithToUint256(nonce);
+    std::memcpy(nonce32, added.begin(), 32);
+    return 1;
+}
+
+bool CKey::SignSchnorrWithNonce(const uint256 &hash, const uint8_t *nonce, std::vector<uint8_t> &vchSig) const
+{
+    if (!fValid)
+    {
+        return false;
+    }
+    vchSig.resize(64);
+    int ret = secp256k1_schnorr_sign(
+        secp256k1_context_sign, &vchSig[0], hash.begin(), begin(), provided_nonce_function, nonce);
+    assert(ret);
+    return true;
+}
+
 bool CKey::VerifyPubKey(const CPubKey &pubkey) const
 {
     if (pubkey.IsCompressed() != fCompressed)

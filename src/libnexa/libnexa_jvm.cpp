@@ -409,33 +409,70 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_signH
     if (privkey.size != 32)
     {
         std::stringstream err;
-        err << "signDataUsingSchnorr: Incorrect length for argument 'secret'. "
+        err << "signHashSchnorr: Incorrect length for argument 'secret'. "
             << "Expected 32, got " << privkey.size << ".";
         triggerJavaIllegalStateException(env, err.str().c_str());
         return nullptr;
     }
 
-    if (data.size == 0)
-    {
-        triggerJavaIllegalStateException(env, "signDataUsingSchnorr: Cannot sign data of 0 length.");
-        return nullptr;
-    }
     if (data.size != 32)
     {
-        triggerJavaIllegalStateException(env, "signDataUsingSchnorr: Must sign a 32 byte hash.");
+        triggerJavaIllegalStateException(env, "signHashSchnorr: Must sign a 32 byte hash.");
         return nullptr;
     }
 
     unsigned char result[MAX_SIG_LEN];
-    uint32_t resultLen = SignHashSchnorr(data.data, privkey.data, result);
+    uint32_t resultLen = signHashSchnorr(data.data, privkey.data, result);
 
     if (resultLen == 0)
     {
-        triggerJavaIllegalStateException(env, "signDataUsingSchnorr: Failed to sign data.");
+        triggerJavaIllegalStateException(env, "signHashSchnorr: Failed to sign data.");
         return nullptr;
     }
     return makeJByteArray(env, result, resultLen);
 }
+
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_signHashSchnorrWithNonce(JNIEnv *env,
+    jobject ths,
+    jbyteArray message,
+    jbyteArray secret,
+    jbyteArray nonce)
+{
+    ByteArrayAccessor data(env, message);
+    ByteArrayAccessor k(env, message);  // Schnorr private nonce is typically "k" in the literature
+    ByteArrayAccessor privkey(env, secret);
+    if (privkey.size != 32)
+    {
+        std::stringstream err;
+        err << "signHashSchnorrWithNonce: Incorrect length for argument 'secret'. "
+            << "Expected 32, got " << privkey.size << ".";
+        triggerJavaIllegalStateException(env, err.str().c_str());
+        return nullptr;
+    }
+
+    if (data.size != 32)
+    {
+        triggerJavaIllegalStateException(env, "signHashSchnorrWithNonce: Must sign a 32 byte hash.");
+        return nullptr;
+    }
+    if (k.size != 32)
+    {
+        triggerJavaIllegalStateException(env, "signHashSchnorrWithNonce: Private nonce must be 32 bytes.");
+        return nullptr;
+    }
+
+    unsigned char result[MAX_SIG_LEN];
+    uint32_t resultLen = signHashSchnorrWithNonce(data.data, privkey.data, k.data, result);
+
+    if (resultLen == 0)
+    {
+        triggerJavaIllegalStateException(env, "signHashSchnorrWithNonce: Failed to sign data.");
+        return nullptr;
+    }
+    return makeJByteArray(env, result, resultLen);
+}
+
+
 
 // libnexa-inconsistency: no parseGroupDescription equivalent
 
@@ -975,24 +1012,53 @@ extern "C" JNIEXPORT jobjectArray JNICALL Java_org_nexa_libnexakotlin_Native_ext
     return MerkleBlock_Extract(env, ths, numTxes, merkleProofPath, hashArray);
 }
 
-extern "C" JNIEXPORT jboolean JNICALL Java_bitcoinunlimited_libbitcoincash_Wallet_verifyDataSchnorr(JNIEnv *env,
+extern "C" JNIEXPORT jboolean JNICALL Java_org_nexa_libnexakotlin_Native_verifyHashSchnorr(JNIEnv *env,
     jobject ths,
-    jbyteArray jmessage,
+    jbyteArray jhash,
     jbyteArray jpubkey,
     jbyteArray jsig)
 {
-    ByteArrayAccessor message(env, jmessage);
+    ByteArrayAccessor hash(env, jhash);
     ByteArrayAccessor pubkeybytes(env, jpubkey);
     ByteArrayAccessor sig(env, jsig);
-    message.vec();
+    if (hash.size != 32)
+    {
+        triggerJavaIllegalStateException(env, "verifyHashSchnorr: Must verify a 32 byte hash.");
+        return false;
+    }
+
+    uint256 messageHash(hash.data);
+    CPubKey pubkey(pubkeybytes.vec());
+    if (sig.size != 64)
+    {
+        triggerJavaIllegalStateException(env, "verifyHashSchnorr: Schnorr signature must be 64 bytes.");
+        return false;
+    }
+    return pubkey.VerifySchnorr(messageHash, sig.vec());
+}
+
+extern "C" JNIEXPORT jboolean JNICALL Java_org_nexa_libnexakotlin_Native_verifyDataSchnorr(JNIEnv *env,
+    jobject ths,
+    jbyteArray jdata,
+    jbyteArray jpubkey,
+    jbyteArray jsig)
+{
+    ByteArrayAccessor message(env, jdata);
+    ByteArrayAccessor pubkeybytes(env, jpubkey);
+    ByteArrayAccessor sig(env, jsig);
+
     std::vector<unsigned char> vchHash(32);
     CSHA256().Write(message.data, message.size).Finalize(vchHash.data());
     uint256 messageHash(vchHash);
     CPubKey pubkey(pubkeybytes.vec());
     if (sig.size != 64)
+    {
+        triggerJavaIllegalStateException(env, "verifyHashSchnorr: Schnorr signature must be 64 bytes.");
         return false;
+    }
     return pubkey.VerifySchnorr(messageHash, sig.vec());
 }
+
 
 extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_capdSolve(JNIEnv *env,
     jobject ths,

@@ -141,6 +141,13 @@ public:
     bool SignSchnorr(const uint256 &hash, std::vector<uint8_t> &vchSig, uint32_t test_case = 0) const;
 
     /**
+     * Create a Schnorr signature, using the provided nonce.  It is a property of Schnorr that the nonce must be unique
+     * or you will divulge your private key!  So use the deterministic nonce function: [SignSchnorr()] unless you
+     * are implementing an algorithm that specifically needs to provide the nonce.
+     */
+    bool SignSchnorrWithNonce(const uint256 &hash, const uint8_t *nonce, std::vector<uint8_t> &vchSig) const;
+
+    /**
      * Create a compact signature (65 bytes), which allows reconstructing the used public key.
      * The format is one header byte, followed by two times 32 bytes for the serialized r and s values.
      * The header byte: 0x1B = first key with even y, 0x1C = first key with odd y,

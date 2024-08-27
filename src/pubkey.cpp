@@ -338,6 +338,39 @@ bool CPubKey::Decompress()
     return true;
 }
 
+bool CPubKey::Compress()
+{
+    if (!IsValid())
+        return false;
+    secp256k1_pubkey pubkey;
+    if (!secp256k1_ec_pubkey_parse(secp256k1_context_verify, &pubkey, &(*this)[0], size()))
+    {
+        return false;
+    }
+    unsigned char pub[PUBLIC_KEY_SIZE];
+    size_t publen = PUBLIC_KEY_SIZE;
+    secp256k1_ec_pubkey_serialize(secp256k1_context_verify, pub, &publen, &pubkey, SECP256K1_EC_COMPRESSED);
+    Set(pub, pub + publen);
+    return true;
+}
+
+bool CPubKey::Raw(std::vector<uint8_t> &raw)
+{
+    if (!IsValid())
+        return false;
+    if (IsCompressed())
+    {
+        raw.resize(32);
+        std::memcpy(&raw[0], begin() + 1, 32);
+    }
+    else
+    {
+        raw.resize(64);
+        std::memcpy(&raw[0], begin() + 1, 64);
+    }
+    return true;
+}
+
 bool CPubKey::Derive(CPubKey &pubkeyChild, ChainCode &ccChild, unsigned int _nChild, const ChainCode &cc) const
 {
     assert(IsValid());
