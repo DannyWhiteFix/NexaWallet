@@ -871,6 +871,18 @@ BOOST_AUTO_TEST_CASE(abs_test)
     a = 0;
     sn = CScriptNum::fromInt(a);
     BOOST_CHECK(sn->abs()->getint64() == std::llabs(a));
+
+    // check -1
+    int b = -1;
+    sn = CScriptNum::fromInt(b);
+    BOOST_CHECK(sn->abs()->getint64() == std::llabs(b));
+    int32_t c = -1;
+    sn = CScriptNum::fromInt(c);
+    BOOST_CHECK(sn->abs()->getint64() == std::llabs(c));
+    int64_t d = -1;
+    sn = CScriptNum::fromInt(d);
+    BOOST_CHECK(sn->abs()->getint64() == std::llabs(d));
+
     // check max
     a = std::numeric_limits<long long>::max();
     sn = CScriptNum::fromInt(a);
@@ -888,7 +900,7 @@ BOOST_AUTO_TEST_CASE(abs_test)
         // incrementing by 1 will finish but it will take hours. increment by some random larger
         // number to finish in a reasonable amount of time
         long long rand_num = rand();
-        rand_num = rand_num * 566;
+        rand_num = rand_num * 4237;
         long long next_num = a + rand_num;
         // check for overflow
         if (next_num < a)
