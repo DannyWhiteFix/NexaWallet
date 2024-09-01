@@ -54,10 +54,9 @@ struct CSyncWithWallets
     std::shared_ptr<std::list<CTransactionRef> > ptxConflicted;
     bool fSetIndex;
 };
-#endif
 extern CCriticalSection cs_walletprocessing;
 extern std::deque<CSyncWithWallets> vPostBlockProcessing;
-
+#endif
 
 // Tracks data about a transaction that hasn't yet been processed
 class CTxInputData

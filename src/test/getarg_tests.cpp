@@ -130,16 +130,22 @@ BOOST_AUTO_TEST_CASE(stringarg)
 
 BOOST_AUTO_TEST_CASE(intarg)
 {
+#ifdef ENABLE_WALLET
     ResetArgs("");
     BOOST_CHECK_EQUAL(GetArg("-zapwallettxes", 11), 11);
     BOOST_CHECK_EQUAL(GetArg("-zapwallettxes", 0), 0);
 
     ResetArgs("-zapwallettxes"); // is an optional int argument
     BOOST_CHECK_EQUAL(GetArg("-zapwallettxes", 11), 0);
+#endif
 
+#ifdef ENABLE_WALLET
     ResetArgs("-zapwallettxes=11 -maxreceivebuffer=12");
     BOOST_CHECK_EQUAL(GetArg("-zapwallettxes", 0), 11);
+#else
+    ResetArgs("-maxreceivebuffer=12");
     BOOST_CHECK_EQUAL(GetArg("-maxreceivebuffer", 11), 12);
+#endif
 
     ResetArgs("-par=-1");
     BOOST_CHECK_EQUAL(GetArg("-par", 0), -1);
@@ -154,9 +160,11 @@ BOOST_AUTO_TEST_CASE(doubledash)
     ResetArgs("--listen");
     BOOST_CHECK_EQUAL(GetBoolArg("-listen", false), true);
 
+#ifdef ENABLE_WALLET
     ResetArgs("--uacomment=verbose --zapwallettxes=1");
     BOOST_CHECK_EQUAL(GetArg("-uacomment", ""), "verbose");
     BOOST_CHECK_EQUAL(GetArg("-zapwallettxes", 0), 1);
+#endif
 }
 
 BOOST_AUTO_TEST_CASE(boolargno)
@@ -184,17 +192,27 @@ BOOST_AUTO_TEST_CASE(boolargno)
 
 BOOST_AUTO_TEST_CASE(tweakArgs)
 {
+#ifdef ENABLE_WALLET
     ResetArgs("-mining.comment=I_Am_A_Meat_Popsicle -mining.coinbaseReserve=250 -wallet.maxTxFee=0.001");
+#else
+    ResetArgs("-mining.comment=I_Am_A_Meat_Popsicle -mining.coinbaseReserve=250");
+#endif
     BOOST_CHECK_EQUAL(GetArg("-mining.comment", "foo"), "I_Am_A_Meat_Popsicle");
     BOOST_CHECK_EQUAL(GetArg("-mining.coinbaseReserve", 100), 250);
+#ifdef ENABLE_WALLET
     BOOST_CHECK_EQUAL(GetArg("-wallet.maxTxFee", ""), "0.001");
-
+#endif
     // Test ConfigFile accepts tweaks
+#ifdef ENABLE_WALLET
     ResetArgs("-mining.comment=I_Am_A_Meat_Popsicle -mining.coinbaseReserve=250 -wallet.maxTxFee=0.001", CONFIGFILE);
+#else
+    ResetArgs("-mining.comment=I_Am_A_Meat_Popsicle -mining.coinbaseReserve=250", CONFIGFILE);
+#endif
     BOOST_CHECK_EQUAL(GetArg("-mining.comment", "foo"), "I_Am_A_Meat_Popsicle");
     BOOST_CHECK_EQUAL(GetArg("-mining.coinbaseReserve", 100), 250);
+#ifdef ENABLE_WALLET
     BOOST_CHECK_EQUAL(GetArg("-wallet.maxTxFee", ""), "0.001");
-
+#endif
     // Test ConfigFile rejects unknown tweaks
     BOOST_CHECK_THROW(ResetArgs("-some.tweak=something", CONFIGFILE), std::runtime_error);
 

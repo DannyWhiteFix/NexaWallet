@@ -185,6 +185,80 @@ build-ubuntu-tests-nodeps:
     rules:
       - if: $CI_PIPELINE_SOURCE != "schedule"
 
+######################################################
+######## x86_64 Linux + deps as via system lib with no wallet
+######################################################
+.cache-ubuntu-nodeps-nowallet:
+    extends: .ubuntu_ccache_scripts
+    cache:
+        <<: *global_cache_settings
+        key: ubuntu_cache-nodeps-nowallet
+
+build-ubuntu-nodeps-nowallet-qt:
+    stage: build
+    extends: .cache-ubuntu-nodeps-nowallet
+    needs: []
+    script:
+        - ./autogen.sh
+        - mkdir build; cd build
+        - ../configure --cache-file=config.cache --with-gui=qt5 --disable-wallet --enable-glibc-back-compat --enable-reduce-exports
+        - make -j `nproc`
+        - ccache --show-stats
+    artifacts:
+        when: always
+        paths:
+            - ./build/src/nexad
+            - ./build/src/nexa-cli
+            - ./build/src/nexa-miner
+            - ./build/src/nexa-tx
+            - ./build/src/test/test_nexa
+            - ./build/src/bench/bench_nexa
+            - ./build/src/qt/test/test_nexa-qt
+            - ./build/config.log #in case of configure failure
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
+
+build-ubuntu-nodeps-nowallet:
+    stage: build
+    extends: .cache-ubuntu-nodeps-nowallet
+    needs: []
+    script:
+        - ./autogen.sh
+        - mkdir build; cd build
+        - ../configure --cache-file=config.cache --with-gui=no --disable-wallet --enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-tests
+        - make -j `nproc`
+        - ccache --show-stats
+    artifacts:
+        when: on_failure
+        paths:
+            - ./build/config.log
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
+
+build-ubuntu-tests-nodeps-nowallet:
+    stage: build_tests
+    extends: .cache-ubuntu-nodeps-nowallet
+    needs: ["build-ubuntu-nodeps-nowallet-qt"]
+    cache: {}
+    script:
+        - (cd build/src; ./test/test_nexa;)
+    dependencies:
+        - build-ubuntu-nodeps-nowallet-qt
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
+
+build-ubuntu-tests-nodeps-nowallet-qt:
+    stage: build_tests
+    extends: .cache-ubuntu-nodeps-nowallet
+    needs: ["build-ubuntu-nodeps-nowallet-qt"]
+    cache: {}
+    script:
+        - (cd build/src; ./qt/test/test_nexa-qt)
+    dependencies:
+        - build-ubuntu-nodeps-nowallet-qt
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
+
 
 ######################################################
 ######## Linux 64 bit, source deps
