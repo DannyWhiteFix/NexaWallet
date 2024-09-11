@@ -1399,7 +1399,7 @@ bool AppInit2(Config &config)
     LOGA("* Using %.1fMiB for chain state database\n", cacheConfig.nCoinDBCache * (1.0 / 1024 / 1024));
     LOGA("* Using %.1fMiB for in-memory UTXO set\n", nCoinCacheMaxSize * (1.0 / 1024 / 1024));
 
-    // Set the flag so we don't processing token mintages during the startup where we check blocks.
+    // Set the flag so we don't process token mintages and authorities during the startup where we check blocks.
     fVerifyDB.store(true);
 
     bool fLoaded = false;
@@ -1472,6 +1472,15 @@ bool AppInit2(Config &config)
                 {
                     strLoadError = _("Error initializing block database");
                     break;
+                }
+
+                // Set the token sync flag if this is a new chain.  If this flag is not set and a chain is present
+                // then the operator will be presented with a "reindex on next startup" option if/when they try to
+                // activate the QT token wallet.
+                if (chainActive.Height() == 0)
+                {
+                    tokencache.SetSyncFlag(true);
+                    tokenmint.SetSyncFlag(true);
                 }
 
                 // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks

@@ -3142,12 +3142,6 @@ bool ConnectTip(CValidationState &state,
         tokenmint.ApplyTokenMintages(accumulatedMintages);
         tokencache.ApplyTokenAuthorities(accumulatedAuthorities);
     }
-    if (pindexNew->height() == 1)
-    {
-        // Set the flag so we know we created the token indexes from genesis
-        tokencache.SetSyncFlag(true);
-        tokenmint.SetSyncFlag(true);
-    }
 
     // Write the blockchain state to disk. This should be done after UpdateTip to make sure the tip
     // is set correctly when calling FlushStateToDisk(). (This is because the automatic -cache.dbcache adjustment
