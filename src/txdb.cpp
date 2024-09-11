@@ -446,6 +446,10 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
     pcursor->Seek(make_pair(DB_BLOCK_INDEX, uint256()));
 
     // Load mapBlockIndex
+    uint64_t ONE_WEEK_OF_BLOCKS = ONE_DAY_OF_BLOCKS * 7;
+    uint64_t nSkip = 0;
+    uint64_t nSkipTo = 1; // always check at least the first key
+    FastRandomContext ctx;
     while (pcursor->Valid())
     {
         if (shutdown_threads.load() == true)
@@ -473,8 +477,16 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 // Update the global atomic value
                 SetLargestNextMaxBlockSize(diskindex.nNextMaxBlockSize);
 
-                if (!CheckProofOfWork(pindexNew->header.GetMiningHash(), pindexNew->tgtBits(), Params().GetConsensus()))
-                    return error("LoadBlockIndex(): CheckProofOfWork failed: %s", pindexNew->ToString());
+                // Proof of work in NEXA takes a signifcant amount of time greatly affecting the loading of the block
+                // index so just spot check, randomly, once per week.
+                if (nSkip++ == nSkipTo)
+                {
+                    if (!CheckProofOfWork(
+                            pindexNew->header.GetMiningHash(), pindexNew->tgtBits(), Params().GetConsensus()))
+                        return error("LoadBlockIndex(): CheckProofOfWork failed: %s", pindexNew->ToString());
+                    nSkip = 0;
+                    nSkipTo = std::max((uint64_t)1, ctx.randrange(ONE_WEEK_OF_BLOCKS));
+                }
 
                 pcursor->Next();
             }
