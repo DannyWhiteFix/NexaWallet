@@ -361,8 +361,8 @@ static void addConnectionOptions(AllowedArgs &allowedArgs)
                 DEFAULT_PROXYRANDOMIZE))
         .addArg("seednode=<ip>", requiredStr, _("Connect to a node to retrieve peer addresses, and disconnect"))
         .addArg("timeout=<n>", requiredInt,
-            strprintf(
-                _("Specify connection timeout in milliseconds (minimum: 1, default: %d)"), DEFAULT_CONNECT_TIMEOUT))
+            strprintf(_("Specify connection timeout in milliseconds (minimum: 1, default: %d)"),
+                DEFAULT_CONNECT_TIMEOUT + DEFAULT_EXPECTED_MAX_LATENCY))
         .addArg("torcontrol=<ip>:<port>", requiredStr,
             strprintf(_("Tor control port to use if onion listening enabled (default: %s)"), DEFAULT_TOR_CONTROL))
         .addArg("torpassword=<pass>", requiredStr, _("Tor control port password (default: empty)"))

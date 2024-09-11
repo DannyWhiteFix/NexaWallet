@@ -114,8 +114,6 @@ struct ListenSocket
 bool fDiscover = true;
 bool fListen = true;
 uint64_t nLocalServices = NODE_NETWORK;
-// BU moved to globals.cpp: CCriticalSection cs_mapLocalHost;
-// BU moved to globals.cpp: map<CNetAddr, LocalServiceInfo> mapLocalHost;
 static bool vfLimited[NET_MAX] = {};
 static CNode *pnodeLocalHost = nullptr;
 uint64_t nLocalHostNonce = 0;
@@ -125,11 +123,8 @@ extern CTweak<int> maxConnections;
 
 bool fAddressesInitialized = false;
 
-// BU moved to global.cpp
-// extern vector<CNode*> vNodes;
-// extern CCriticalSection cs_vNodes;
-// map<CInv, CDataStream> mapRelay;
-// CCriticalSection cs_mapRelay;
+// Average connection time
+int nAvgConnectTime = nConnectTimeout;
 
 extern deque<string> vOneShots;
 extern CCriticalSection cs_vOneShots;
@@ -150,7 +145,7 @@ extern CSemaphore *semOutboundAddNode; // BU: separate semaphore for -addnodes
 std::condition_variable messageHandlerCondition;
 std::mutex wakeableDelayMutex;
 
-// BU  Connection Slot mitigation - used to determine how many connection attempts over time
+// Connection Slot mitigation - used to determine how many connection attempts over time
 extern std::map<CNetAddr, ConnectionHistory> mapInboundConnectionTracker;
 extern CCriticalSection cs_mapInboundConnectionTracker;
 
@@ -365,7 +360,7 @@ std::atomic<uint64_t> CNode::nMaxOutboundTimeframe{60 * 60 * 24}; // 1 day
 std::atomic<uint64_t> CNode::nMaxOutboundCycleStartTime{0};
 std::atomic<uint64_t> CNode::nMaxOutboundTotalBytesSentInCycle{0};
 
-// BU: FindNode() functions enforce holding of cs_vNodes lock to prevent use-after-free errors
+// FindNode() functions enforce holding of cs_vNodes lock to prevent use-after-free errors
 static CNode *FindNode(const CNetAddr &ip)
 {
     AssertLockHeld(cs_vNodes);
@@ -436,7 +431,6 @@ CNode *ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure
         if (IsLocal(addrConnect))
             return nullptr;
 
-        // BU: Add lock on cs_vNodes as FindNode now requries it to prevent potential use-after-free errors
         LOCK(cs_vNodes);
         // Look for an existing connection
         CNode *pnode = FindNode((CService)addrConnect);
@@ -453,12 +447,22 @@ CNode *ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure
     LOG(NET, "trying connection %s lastseen=%.1fhrs\n", pszDest ? pszDest : addrConnect.ToString(),
         pszDest ? 0.0 : (double)(GetAdjustedTime() - addrConnect.nTime) / 3600.0);
 
+    // We reset to the default if we're starting up or if we've lost all out connections but
+    // the network comes back up again.
+    if (vNodes.empty())
+    {
+        nAvgConnectTime = nConnectTimeout;
+        addrman.ResetCounters();
+    }
+
     // Connect
+    int nStartConnect = GetTimeMillis();
     SOCKET hSocket = INVALID_SOCKET;
     bool proxyConnectionFailed = false;
-    if (pszDest ? ConnectSocketByName(addrConnect, hSocket, pszDest, Params().GetDefaultPort(), nConnectTimeout,
-                      &proxyConnectionFailed) :
-                  ConnectSocket(addrConnect, hSocket, nConnectTimeout, &proxyConnectionFailed))
+    int nTimeout = nAvgConnectTime + DEFAULT_EXPECTED_MAX_LATENCY;
+    if (pszDest ? ConnectSocketByName(
+                      addrConnect, hSocket, pszDest, Params().GetDefaultPort(), nTimeout, &proxyConnectionFailed) :
+                  ConnectSocket(addrConnect, hSocket, nTimeout, &proxyConnectionFailed))
     {
         if (!IsSelectableSocket(hSocket))
         {
@@ -466,6 +470,11 @@ CNode *ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure
             CloseSocket(hSocket);
             return nullptr;
         }
+
+        // Update the connection timeout by taking the average of the last two values and add back
+        // in the expected maximum network latency.
+        int nConnectTime = GetTimeMillis() - nStartConnect;
+        nAvgConnectTime = (nAvgConnectTime + nConnectTime) / 2;
 
         addrman.Attempt(addrConnect, fCountFailure);
 
@@ -2174,7 +2183,7 @@ void ThreadOpenConnections()
     {
         ProcessOneShot();
 
-        MilliSleep(500);
+        MilliSleep(100);
 
         // Only connect out to one peer per network group (/16 for IPv4).
         // Do this here so we don't have to critsect vNodes inside mapAddresses critsect.
@@ -2194,7 +2203,7 @@ void ThreadOpenConnections()
                     nOutbound++;
 
                     // If sync is not yet complete then disconnect any pruned outbound connections
-                    if (IsInitialBlockDownload() && !(pnode->nServices & NODE_NETWORK))
+                    if (IsInitialBlockDownload() && pnode->fSuccessfullyConnected && !(pnode->nServices & NODE_NETWORK))
                         pNonNodeNetwork = pnode;
                 }
             }
@@ -2245,11 +2254,11 @@ void ThreadOpenConnections()
         CSemaphoreGrant grant(*semOutbound, true);
         if (!grant)
         {
-            // If the try_wait() fails, meaning all grants are currently in use, then we wait for one minute
-            // to check again whether we should disconnect any nodes.  We don't have to check this too often
-            // as this is most relevant during IBD.
-            for (auto j = 0; (j < 120) && (shutdown_threads.load() == false); j++)
-                MilliSleep(500);
+            // If the try_wait() fails, meaning all grants are currently in use, then we wait for a short
+            // time to check again whether we should disconnect any nodes.  We don't have to check this too
+            // often as this is most relevant during IBD.
+            for (auto j = 0; (j < 25) && (shutdown_threads.load() == false); j++)
+                MilliSleep(100);
             continue;
         }
         if (shutdown_threads.load() == true)
@@ -2258,7 +2267,7 @@ void ThreadOpenConnections()
         }
 
         // Add seed nodes if DNS seeds are all down (an infrastructure attack?).
-        if (addrman.size() == 0 && (GetTime() - nStart > 60))
+        if (addrman.size() == 0 && (GetTime() - nStart > 5))
         {
             static bool done = false;
             if (!done)
@@ -2392,9 +2401,9 @@ void ThreadOpenConnections()
 
 void ThreadOpenAddedConnections()
 {
-    // BU: This intial sleep fixes a timing issue where a remote peer may be trying to connect using addnode
-    //     at the same time this thread is starting up causing both an outbound and an inbound -addnode connection
-    //     to be possible, when it should not be.
+    //  This intial sleep fixes a timing issue where a remote peer may be trying to connect using addnode
+    //  at the same time this thread is starting up causing both an outbound and an inbound -addnode connection
+    //  to be possible, when it should not be.
     for (int j = 0; j < 30; j++)
     {
         MilliSleep(500);
@@ -2402,7 +2411,7 @@ void ThreadOpenAddedConnections()
             return;
     }
 
-    // BU: we need our own separate semaphore for -addnodes otherwise we won't be able to reconnect
+    // We need our own separate semaphore for -addnodes otherwise we won't be able to reconnect
     //     after a remote node restarts, becuase all the outgoing connection slots will already be filled.
     if (semOutboundAddNode == nullptr)
     {
@@ -2495,7 +2504,7 @@ void ThreadOpenAddedConnections()
 
         for (vector<CService> &vserv : lservAddressesToAdd)
         {
-            // BU: always allow us to add a node manually. Whenever we use -addnode the maximum InBound connections are
+            // Always allow us to add a node manually. Whenever we use -addnode the maximum InBound connections are
             // reduced by
             //     the same number.  Here we use our own semaphore to ensure we have the outbound slots we need and can
             //     reconnect to
@@ -2535,7 +2544,7 @@ bool OpenNetworkConnection(const CAddress &addrConnect,
         return false;
     }
     {
-        // BU: Add lock on cs_vNodes as FindNode now requries it to prevent potential use-after-free errors
+        // Add lock on cs_vNodes as FindNode now requries it to prevent potential use-after-free errors
         LOCK(cs_vNodes);
         if (!pszDest)
         {

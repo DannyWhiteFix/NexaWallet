@@ -63,15 +63,20 @@ public:
         READWRITE(nAttempts);
     }
 
-    void Init()
+    void Reset()
     {
         nLastSuccess = 0;
         nLastTry = 0;
         nLastCountAttempt = 0;
         nAttempts = 0;
+    }
+
+    void Init()
+    {
+        Reset();
         nRefCount = 0;
-        fInTried = false;
         nRandomPos = -1;
+        fInTried = false;
     }
 
     CAddrInfo(const CAddress &addrIn, const CNetAddr &addrSource) : CAddress(addrIn), source(addrSource) { Init(); }
@@ -539,6 +544,11 @@ public:
         nNew = 0;
         nLastGood = 1; // Initially at 1 so that "never" is strictly worse.
     }
+
+    //! This is used when all network connections get dropped and then the network
+    //  is re-established sometime later. In order to rapidly re-connect we need to
+    //  reset all counters and start fresh as though the node had been restarted.
+    void ResetCounters();
 
     CAddrMan() { Clear(); }
     ~CAddrMan() { nKey.SetNull(); }
