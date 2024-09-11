@@ -406,13 +406,11 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
     if (newOnly && nNew == 0) // If we only want a new address, but there are no new addresses, return error
         return CAddrInfo();
 
-    // BU: select is stuck never finding an address in vvNew, if network connectivity drops.  It is interesting because
-    // dumping
-    // vvNew shows there there are one or two valid entries.  However, breakpoints set outside of the
+    // Select is stuck never finding an address in vvNew, if network connectivity drops.  It is interesting because
+    // dumping vvNew shows there there are one or two valid entries.  However, breakpoints set outside of the
     // loop are never hit.  Could there be an issue with pseudo-random # generation?
-    // The chosen approach (aborting after a time) is a compromise between
-    // quality and changing the code as little as possible.  Higher layer code does handle invalid addreses with a
-    // delay loop.
+    // The chosen approach (aborting after a time) is a compromise between quality and changing the code as little
+    // as possible.  Higher layer code does handle invalid addresses with a delay loop.
     int nTries = 0;
 
     // Use a 50% chance for choosing between tried and new table entries.
@@ -711,4 +709,14 @@ CAddrInfo CAddrMan::SelectTriedCollision_()
     int id_old = vvTried[tried_bucket][tried_bucket_pos];
 
     return mapInfo[id_old];
+}
+
+void CAddrMan::ResetCounters()
+{
+    LOCK(cs_addrman);
+    for (std::map<int, CAddrInfo>::iterator it = mapInfo.begin(); it != mapInfo.end(); it++)
+    {
+        CAddrInfo &info = (*it).second;
+        info.Reset();
+    }
 }

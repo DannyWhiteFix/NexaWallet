@@ -37,10 +37,10 @@
 #endif
 
 // Settings
-// BU move to globals.cpp
 extern proxyType proxyInfo[NET_MAX];
 extern proxyType nameProxy;
 extern CCriticalSection cs_proxyInfos;
+
 int nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
 bool fNameLookup = DEFAULT_NAME_LOOKUP;
 
