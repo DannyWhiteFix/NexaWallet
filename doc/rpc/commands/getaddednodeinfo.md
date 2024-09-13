@@ -1,0 +1,34 @@
+```
+getaddednodeinfo dns ( "node" )
+
+Returns information about the given added node, or all added nodes
+(note that onetry addnodes are not listed here)
+If dns is false, only a list of added nodes will be provided,
+otherwise connected information will also be available.
+
+Arguments:
+1. dns        (boolean, required) If false, only a list of added nodes will be provided, otherwise connected information will also be available.
+2. "node"   (string, optional) If provided, return information about this specific node, otherwise all nodes are returned.
+
+Result:
+[
+  {
+    "addednode" : "192.168.0.201",          (string) The node ip address
+    "connected" : true|false,               (boolean) If connected
+    "addresses" : [
+       {
+         "address" : "192.168.0.201:7228",  (string) The  server host and port
+         "connected" : "outbound"           (string) connection, inbound or outbound
+       }
+       ,...
+     ]
+  }
+  ,...
+]
+
+Examples:
+> nexa-cli getaddednodeinfo true
+> nexa-cli getaddednodeinfo true "192.168.0.201"
+> curl --user myusername --data-binary '{"jsonrpc": "1.0", "id":"curltest", "method": "getaddednodeinfo", "params": [true, "192.168.0.201"] }' -H 'content-type: text/plain;' http://127.0.0.1:7227/
+
+```

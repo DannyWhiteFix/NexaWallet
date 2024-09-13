@@ -1,0 +1,5 @@
+```
+stop
+
+Stop Nexa server.
+```
