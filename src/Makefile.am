@@ -151,6 +151,7 @@ BITCOIN_CORE_H = \
   consensus/consensus.h \
   consensus/grouptokens.h \
   consensus/tx_verify.h \
+  copyright.h \
   core_io.h \
   core_memusage.h \
   cuckoocache.h \
