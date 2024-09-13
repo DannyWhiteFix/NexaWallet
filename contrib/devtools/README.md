@@ -82,6 +82,19 @@ Usage: `git-subtree-check.sh DIR COMMIT`
 
 `COMMIT` may be omitted, in which case `HEAD` is used.
 
+gen-manpages.py
+===============
+
+A small script to automatically create manpages in ../../doc/man by running the release binaries with the -help option.
+This requires help2man which can be found at: https://www.gnu.org/software/help2man/
+
+With in-tree builds this tool can be run from any directory within the
+repository. To use this tool with out-of-tree builds set `BUILDDIR`. For
+example:
+
+```bash
+BUILDDIR=$PWD/build contrib/devtools/gen-manpages.py
+```
 github-merge.sh
 ===============
 

@@ -7,6 +7,7 @@
 #include "rpc/client.h"
 #include "chainparamsbase.h"
 #include "clientversion.h"
+#include "copyright.h"
 #include "rpc/protocol.h"
 #include "util.h"
 #include "utilstrencodings.h"
@@ -143,10 +144,13 @@ UniValue CallRPC(const string &strMethod, const UniValue &params)
     return reply;
 }
 
-
 // This function returns either one of EXIT_ codes when it's expected to stop the process or
 // CONTINUE_EXECUTION when it's expected to continue further.
-int AppInitRPC(const std::string &usage, const AllowedArgs::AllowedArgs &allowedArgs, int argc, char *argv[])
+int AppInitRPC(const std::string description,
+    const std::string &usage,
+    const AllowedArgs::AllowedArgs &allowedArgs,
+    int argc,
+    char *argv[])
 {
     try
     {
@@ -159,10 +163,15 @@ int AppInitRPC(const std::string &usage, const AllowedArgs::AllowedArgs &allowed
     }
     if (mapArgs.count("-?") || mapArgs.count("-h") || mapArgs.count("-help") || mapArgs.count("-version"))
     {
-        std::string strUsage = strprintf(_("%s "), _(PACKAGE_NAME)) + " " + FormatFullVersion() + "\n";
+        std::string strUsage =
+            strprintf(_("%s"), _(PACKAGE_NAME)) + " " + description + " " + FormatFullVersion() + "\n";
         if (!mapArgs.count("-version"))
         {
             strUsage += usage + "\n" + allowedArgs.helpMessage();
+        }
+        else
+        {
+            strUsage += FormatParagraph(LicenseInfo());
         }
 
         fprintf(stdout, "%s", strUsage.c_str());

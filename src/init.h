@@ -35,7 +35,4 @@ static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
 extern CTweak<uint32_t> minRelayFee;
 extern CTweak<bool> avoidReconsiderMostWorkChain;
 
-/** Returns licensing information (for -version) */
-std::string LicenseInfo();
-
 #endif // NEXA_INIT_H

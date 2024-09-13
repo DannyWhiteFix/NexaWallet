@@ -32,6 +32,10 @@ UniValue ParseNonRFCJSONValue(const std::string &strVal);
 // Initialize apps that use the nexa.conf configuration file and flags.
 // This function returns either EXIT_FAILURE or EXIT_SUCCESS codes (stdlib.h) when it's expected to stop the process
 // or CONTINUE_EXECUTION when it's expected to continue further.
-int AppInitRPC(const std::string &usage, const AllowedArgs::AllowedArgs &allowedArgs, int argc, char *argv[]);
+int AppInitRPC(const std::string description,
+    const std::string &usage,
+    const AllowedArgs::AllowedArgs &allowedArgs,
+    int argc,
+    char *argv[]);
 
 #endif // NEXA_RPC_CLIENT_H

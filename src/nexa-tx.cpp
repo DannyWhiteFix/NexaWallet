@@ -13,6 +13,7 @@
 #include "coins.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
+#include "copyright.h"
 #include "core_io.h"
 #include "dstencode.h"
 #include "keystore.h"
@@ -80,10 +81,17 @@ static int AppInitRawTx(int argc, char *argv[])
         std::string strUsage =
             strprintf(_("%s nexa-tx utility version"), _(PACKAGE_NAME)) + " " + FormatFullVersion() + "\n";
 
+
+        if (mapArgs.count("-version"))
+        {
+            strUsage += FormatParagraph(LicenseInfo());
+        }
         fprintf(stdout, "%s", strUsage.c_str());
 
         if (mapArgs.count("-version"))
+        {
             return false;
+        }
 
         strUsage = "\n" + _("Usage:") + "\n" + "  nexa-tx [options] <hex-tx> [commands]  " +
                    _("Update hex-encoded nexa transaction") + "\n" + "  nexa-tx [options] -create [commands]   " +

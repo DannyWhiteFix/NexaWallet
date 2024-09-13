@@ -11,6 +11,7 @@
 #include "chainparams.h"
 #include "clientversion.h"
 #include "config.h"
+#include "copyright.h"
 #include "forks_csv.h"
 #include "fs.h"
 #include "httprpc.h"

@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     {
         std::string appname("bench_nexa");
         std::string usage = "\n" + std::string("Usage:") + "\n" + "  " + appname + " [options] " + "\n";
-        int ret = AppInitRPC(usage, AllowedArgs::NexaBench(), argc, argv);
+        int ret = AppInitRPC("benchmarking utility", usage, AllowedArgs::NexaBench(), argc, argv);
         if (ret != CONTINUE_EXECUTION)
             return ret;
     }

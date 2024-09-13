@@ -814,7 +814,7 @@ int main(int argc, char *argv[])
     {
         std::string appname("nexa-miner");
         std::string usage = "\n" + _("Usage:") + "\n" + "  " + appname + " [options] " + "\n";
-        ret = AppInitRPC(usage, NexaMinerArgs(), argc, argv);
+        ret = AppInitRPC("cpu miner", usage, NexaMinerArgs(), argc, argv);
         if (ret != CONTINUE_EXECUTION)
             return ret;
     }
