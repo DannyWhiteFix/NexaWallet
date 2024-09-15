@@ -39,6 +39,39 @@ uint64_t undofile_chunk_size = DEFAULT_UNDOFILE_CHUNK_SIZE;
  */
 BlockDBMode BLOCK_DB_MODE = DEFAULT_BLOCK_DB_MODE;
 
+static void InitBlockTreeDB(std::string folder, uint64_t _nBlockTreeDBCache)
+{
+    // Check if we had scheduled a reindex on last shutdown
+    uint64_t nChainTx = 0;
+    try
+    {
+        // Startup the database with the reindex (wipe database) flag set to false and get the value of nChainTx
+        pblocktree = new CBlockTreeDB(_nBlockTreeDBCache, folder, false, false);
+        bool fScheduledReindex = false;
+        bool fRead = pblocktree->ReadReindexing(fScheduledReindex);
+        if (fRead && fScheduledReindex)
+        {
+            fReindex = true;
+        }
+        nChainTx = pblocktree->GetBestBlockHeaderChainTx();
+    }
+    catch (...)
+    {
+        LOGA("Block index is corrupt.  Automatically initiating a reindex\n");
+        fReindex = true;
+    }
+    if (fReindex)
+    {
+        delete pblocktree;
+        pblocktree = nullptr;
+
+        // Restart the database and wipe the data but re-add the nChainTx after restart.
+        pblocktree = new CBlockTreeDB(_nBlockTreeDBCache, folder, false, true);
+        pblocktree->WriteBestBlockHeaderChainTx(nChainTx);
+    }
+    nTotalChainTx.store(nChainTx);
+}
+
 void InitializeBlockStorage(const int64_t &_nBlockTreeDBCache,
     const int64_t &_nBlockDBCache,
     const int64_t &_nBlockUndoDBCache)
@@ -55,59 +88,15 @@ void InitializeBlockStorage(const int64_t &_nBlockTreeDBCache,
     blockcache.Init();
     if (BLOCK_DB_MODE == SEQUENTIAL_BLOCK_FILES) // BLOCK_DB_MODE 0
     {
-        // Check if we had scheduled a reindex on last shutdown
-        uint64_t nChainTx = 0;
-        try
-        {
-            // Startup the database with the reindex (wipe database) flag set to false and get the value of nChainTx
-            pblocktree = new CBlockTreeDB(_nBlockTreeDBCache, "blocks", false, false);
-            bool fScheduledReindex = false;
-            bool fRead = pblocktree->ReadReindexing(fScheduledReindex);
-            if (fRead && fScheduledReindex)
-            {
-                nChainTx = pblocktree->GetBestBlockHeaderChainTx();
-                fReindex = true;
-            }
-        }
-        catch (...)
-        {
-            LOGA("Block index is corrupt.  Automatically initiating a reindex\n");
-            fReindex = true;
-        }
-        if (fReindex)
-        {
-            delete pblocktree;
-            pblocktree = nullptr;
-
-            // Restart the database and wipe the data but re-add the nChainTx after restart.
-            pblocktree = new CBlockTreeDB(_nBlockTreeDBCache, "blocks", false, true);
-            pblocktree->WriteBestBlockHeaderChainTx(nChainTx);
-            nTotalChainTx.store(nChainTx);
-        }
+        InitBlockTreeDB("blocks", _nBlockTreeDBCache);
 
         delete pblockdb;
         pblockdb = nullptr;
     }
     else if (BLOCK_DB_MODE == LEVELDB_BLOCK_STORAGE) // BLOCK_DB_MODE 1
     {
-        // Check if we had scheduled a reindex on last shutdown
-        try
-        {
-            pblocktree = new CBlockTreeDB(_nBlockTreeDBCache, "blockdb", false, false);
-            bool fScheduledReindex = false;
-            bool fRead = pblocktree->ReadReindexing(fScheduledReindex);
-            delete pblocktree;
-            if (fRead && fScheduledReindex)
-                fReindex = true;
-        }
-        catch (...)
-        {
-            LOGA("Block index is corrupt.  Automatically initiating a reindex\n");
-            fReindex = true;
-        }
+        InitBlockTreeDB("blockdb", _nBlockTreeDBCache);
 
-        // Create the db with the appropriate fReindex flag set.
-        pblocktree = new CBlockTreeDB(_nBlockTreeDBCache, "blockdb", false, fReindex);
         if (fs::exists(GetDataDir() / "blockdb" / "blocks"))
         {
             for (fs::recursive_directory_iterator it(GetDataDir() / "blockdb" / "blocks");
@@ -185,8 +174,8 @@ bool DetermineStorageSync(BlockDBMode &_otherMode)
     GetBlockTreeOther(_otherMode);
     CDiskBlockIndex bestIndexMode;
     CDiskBlockIndex bestIndexOther;
-    pblocktree->FindBlockIndex(bestHashMode, &bestIndexMode);
-    pblocktreeother->FindBlockIndex(bestHashOther, &bestIndexOther);
+    pblocktree->FindBlockIndex(bestHashMode, bestIndexMode);
+    pblocktreeother->FindBlockIndex(bestHashOther, bestIndexOther);
 
     // if the best height of the storage type we are using is higher than any other type, return false
     if (bestIndexMode.height() >= bestIndexOther.height())

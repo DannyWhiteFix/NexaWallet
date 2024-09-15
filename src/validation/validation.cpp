@@ -758,6 +758,13 @@ bool LoadBlockIndex()
     // Load block index from databases
     if (!fReindex && !LoadBlockIndexDB())
         return false;
+
+    // If the loaded chain has a wrong genesis, bail out immediately
+    // (we're likely using a testnet datadir, or the other way around).
+    READLOCK(cs_mapBlockIndex);
+    if (!mapBlockIndex.empty() && mapBlockIndex.count(Params().GetConsensus().hashGenesisBlock) == 0)
+        return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
+
     return true;
 }
 
