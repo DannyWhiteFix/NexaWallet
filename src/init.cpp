@@ -534,9 +534,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles, uint64_t nTxIndexCache)
         }
         pblocktree->WriteReindexing(false);
         fReindex = false;
-        LOGA("Reindexing finished\n");
-        // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
-        InitBlockIndex(chainparams);
+        LOGA("Reindexing finished");
     }
     if (fRequestShutdown)
         return;
@@ -1446,31 +1444,39 @@ bool AppInit2(Config &config)
 
                 if (fReindex)
                 {
-                    pblocktree->WriteReindexing(true);
                     // If we're reindexing in prune mode, wipe away unusable block files and all undo data files
                     if (fPruneMode)
                         CleanupBlockRevFiles();
                 }
 
+                // Check the database for the genesis.
                 uiInterface.InitMessage(_("Loading block index..."));
+                CDiskBlockIndex pindex;
+                bool fHaveGenesis = pblocktree->FindBlockIndex(Params().GetConsensus().hashGenesisBlock, pindex);
+
+                // If genesis found and we have only 1 or less chain tx then load the genesis,
+                // but if we don't find the genesis and do have chaintx then we are on the wrong chain.
+                if (!fHaveGenesis)
+                {
+                    if (fReindex || pblocktree->GetBestBlockHeaderChainTx() <= 0)
+                    {
+                        if (!InitBlockIndex(chainparams))
+                        {
+                            strLoadError = _("Error initializing block database");
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        strLoadError = _("Incorrect or no genesis block found. Wrong datadir for network?");
+                        break;
+                    }
+                }
+
+                // Load the block index.
                 if (!LoadBlockIndex())
                 {
                     strLoadError = strprintf("Error loading block database from %s", GetDataDir());
-                    break;
-                }
-
-                {
-                    READLOCK(cs_mapBlockIndex);
-                    // If the loaded chain has a wrong genesis, bail out immediately
-                    // (we're likely using a testnet datadir, or the other way around).
-                    if (!mapBlockIndex.empty() && mapBlockIndex.count(chainparams.GetConsensus().hashGenesisBlock) == 0)
-                        return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
-                }
-
-                // Initialize the block index (no-op if non-empty database was already loaded)
-                if (!InitBlockIndex(chainparams))
-                {
-                    strLoadError = _("Error initializing block database");
                     break;
                 }
 

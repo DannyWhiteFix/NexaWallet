@@ -301,7 +301,7 @@ uint64_t CBlockTreeDB::GetBestBlockHeaderChainTx() const
 {
     uint64_t nChainTx = 0;
     if (!Read(DB_BEST_BLOCKHEADER_CHAINTX, nChainTx))
-        return 1;
+        return 0;
     return nChainTx;
 }
 
@@ -395,48 +395,9 @@ bool CBlockTreeDB::ReadFlag(const std::string &name, bool &fValue)
     return true;
 }
 
-bool CBlockTreeDB::FindBlockIndex(uint256 blockhash, CDiskBlockIndex *pindex)
+bool CBlockTreeDB::FindBlockIndex(uint256 blockhash, CDiskBlockIndex &pindex)
 {
-    std::unique_ptr<CDBIterator> pcursor(NewIterator());
-    pcursor->Seek(make_pair(DB_BLOCK_INDEX, uint256()));
-    // Load mapBlockIndex
-    while (pcursor->Valid())
-    {
-        if (shutdown_threads.load() == true)
-        {
-            return false;
-        }
-        std::pair<char, uint256> key;
-        if (pcursor->GetKey(key) && key.first == DB_BLOCK_INDEX)
-        {
-            if (key.second == blockhash)
-            {
-                if (pcursor->GetValue(*pindex))
-                {
-                    /* TODO: blockhash is different than mining hash
-                    if (!CheckProofOfWork(blockhash, pindex->tgtBits(), Params().GetConsensus()))
-                    {
-                        return error("LoadBlockIndex(): CheckProofOfWork failed: %s", pindex->ToString());
-                    }
-                    */
-                    return true;
-                }
-                else
-                {
-                    return error("FindBlockIndex() : failed to read value");
-                }
-            }
-            else
-            {
-                pcursor->Next();
-            }
-        }
-        else
-        {
-            break;
-        }
-    }
-    return error("FindBlockIndex(): couldnt find index with requested hash %s", blockhash.GetHex().c_str());
+    return Read(make_pair(DB_BLOCK_INDEX, blockhash), pindex);
 }
 
 bool CBlockTreeDB::LoadBlockIndexGuts()
