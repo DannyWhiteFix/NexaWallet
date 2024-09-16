@@ -23,13 +23,55 @@ workflow:
         - if: $CI_COMMIT_BRANCH == "dev"
         - if: $CI_PIPELINE_SOURCE == "schedule"
 
+# nice overview of tasks dependency in gitalb CI
+# https://www.reddit.com/r/gitlab/comments/1bqzxba/comment/kx61xuc/
+# (archived: https://archive.is/NYGlN)
 stages:
     - static_checks
+    - documentation
     - build_depends
     - build
     - build_tests
     - qa_tests
     - benchmark_tests
+
+#####################
+# building RPCs doc #
+#####################
+
+doc_tests:
+    stage: documentation
+    image: python:3.10.13
+    before_script:
+        - cd doc/rpc/
+        - pip3 install -r requirements.txt
+    script:
+        - mkdocs build --verbose --site-dir test
+    artifacts:
+        paths:
+          - test
+    rules:
+        - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
+
+pages:
+    stage: documentation
+    image: python:3.10.13
+    before_script:
+        - cd doc/rpc/
+        - pip3 install -r requirements.txt
+    script:
+        - mkdocs build --verbose
+        # gitlab pages needs the static website content to be stored in
+        # a folder named `public` placed at the root dir of the project
+        # (it doesn't need to be committedi thou)
+        # (https://docs.gitlab.com/ee/user/project/pages/public_folder.html#should-you-commit-the-public-folder)
+        - mv public ../../
+    artifacts:
+        paths:
+          - public
+    rules:
+        - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+
 
 cache: &global_cache_settings
     paths:
