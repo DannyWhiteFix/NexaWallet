@@ -43,6 +43,7 @@ public:
         ProxyPortTor, // int
         DisplayUnit, // BitcoinUnits::Unit
         ThirdPartyTxUrls, // QString
+        ThirdPartyTokenUrls, // QString
         Language, // QString
         CoinControlFeatures, // bool
         ThreadsScriptVerif, // int
@@ -70,6 +71,7 @@ public:
     bool getMinimizeOnClose() { return fMinimizeOnClose; }
     int getDisplayUnit() { return nDisplayUnit; }
     QString getThirdPartyTxUrls() { return strThirdPartyTxUrls; }
+    QString getThirdPartyTokenUrls() { return strThirdPartyTokenUrls; }
     bool getProxySettings(QNetworkProxy &proxy) const;
     bool getCoinControlFeatures() { return fCoinControlFeatures; }
     const QString &getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
@@ -84,6 +86,7 @@ private:
     QString language;
     int nDisplayUnit;
     QString strThirdPartyTxUrls;
+    QString strThirdPartyTokenUrls;
     bool fCoinControlFeatures;
     /* settings that were overriden by command-line */
     QString strOverriddenByCommandLine;
@@ -99,5 +102,6 @@ Q_SIGNALS:
 
 // Returns nullptr if this URL is valid, otherwise returns an untranslated error message
 const char *isInvalidThirdPartyTxUrlString(QString value);
+const char *isInvalidThirdPartyTokenUrlString(QString value);
 
 #endif // NEXA_QT_OPTIONSMODEL_H

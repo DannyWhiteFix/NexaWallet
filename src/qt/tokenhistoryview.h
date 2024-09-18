@@ -72,7 +72,7 @@ private:
     QLineEdit *amountWidget;
 
     QMenu *contextMenu;
-    QSignalMapper *mapperThirdPartyTxUrls;
+    QSignalMapper *mapperthirdPartyTokenUrls;
 
     QFrame *dateRangeWidget;
     QDateTimeEdit *dateFrom;
@@ -95,7 +95,7 @@ private Q_SLOTS:
     void copyTxID();
     void copyTxIdem();
     void copyTxHex();
-    void openThirdPartyTxUrl(QString url);
+    void openthirdPartyTokenUrl(QString url);
     void updateWatchOnlyColumn(bool fHaveWatchOnly);
 
 Q_SIGNALS:

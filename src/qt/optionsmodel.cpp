@@ -71,6 +71,10 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("strThirdPartyTxUrls", "https://explorer.nexa.org/tx/%s");
     strThirdPartyTxUrls = settings.value("strThirdPartyTxUrls", "").toString();
 
+    if (!settings.contains("strThirdPartyTokenUrls"))
+        settings.setValue("strThirdPartyTokenUrls", "https://explorer.nexa.org/token/%s");
+    strThirdPartyTokenUrls = settings.value("strThirdPartyTokenUrls", "").toString();
+
     if (!settings.contains("fCoinControlFeatures"))
         settings.setValue("fCoinControlFeatures", false);
     fCoinControlFeatures = settings.value("fCoinControlFeatures", false).toBool();
@@ -299,6 +303,8 @@ QVariant OptionsModel::data(const QModelIndex &index, int role) const
             return nDisplayUnit;
         case ThirdPartyTxUrls:
             return strThirdPartyTxUrls;
+        case ThirdPartyTokenUrls:
+            return strThirdPartyTokenUrls;
         case Language:
             return settings.value("language");
         case CoinControlFeatures:
@@ -326,6 +332,28 @@ const char *isInvalidThirdPartyTxUrlString(QString value)
     {
         // remove whitespace and replace our tx placeholder with some valid URL data for validity checking.
         QUrl url = QUrl(listUrls[i].replace("%s", "tx").trimmed(), QUrl::StrictMode);
+        if (!url.isValid())
+        {
+            return ("URL is invalid");
+        }
+        if (url.scheme().toLower() != "https")
+        {
+            return ("URL must be https");
+        }
+    }
+    return nullptr;
+}
+
+const char *isInvalidThirdPartyTokenUrlString(QString value)
+{
+    // Check that the URLs are valid, and https.  Requiring https ensures that certain schemes that auto-execute
+    // cannot be used.  Although the user would need to explicitly configure such to happen, preventing
+    // this configuration protects the average user, and there isn't much application for weird schemes.
+    QStringList listUrls = value.split("|", QString::SkipEmptyParts);
+    for (int i = 0; i < listUrls.size(); ++i)
+    {
+        // remove whitespace and replace our token placeholder with some valid URL data for validity checking.
+        QUrl url = QUrl(listUrls[i].replace("%s", "token").trimmed(), QUrl::StrictMode);
         if (!url.isValid())
         {
             return ("URL is invalid");
@@ -498,6 +526,19 @@ bool OptionsModel::setData(const QModelIndex &index, const QVariant &value, int 
                 {
                     strThirdPartyTxUrls = value.toString();
                     settings.setValue("strThirdPartyTxUrls", strThirdPartyTxUrls);
+                    setRestartRequired(true);
+                }
+            }
+            break;
+        case ThirdPartyTokenUrls:
+            if (strThirdPartyTokenUrls != value.toString())
+            {
+                const char *ret = isInvalidThirdPartyTokenUrlString(value.toString());
+
+                if (ret == nullptr)
+                {
+                    strThirdPartyTokenUrls = value.toString();
+                    settings.setValue("strThirdPartyTokenUrls", strThirdPartyTokenUrls);
                     setRestartRequired(true);
                 }
             }

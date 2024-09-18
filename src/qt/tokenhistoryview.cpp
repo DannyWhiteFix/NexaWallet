@@ -166,10 +166,10 @@ TokenHistoryView::TokenHistoryView(const PlatformStyle *platformStyle, QWidget *
     contextMenu->addAction(copyTxHexAction);
     contextMenu->addAction(showDetailsAction);
 
-    mapperThirdPartyTxUrls = new QSignalMapper(this);
+    mapperthirdPartyTokenUrls = new QSignalMapper(this);
 
     // Connect actions
-    connect(mapperThirdPartyTxUrls, SIGNAL(mapped(QString)), this, SLOT(openThirdPartyTxUrl(QString)));
+    connect(mapperthirdPartyTokenUrls, SIGNAL(mapped(QString)), this, SLOT(openthirdPartyTokenUrl(QString)));
 
     connect(dateWidget, SIGNAL(activated(int)), this, SLOT(chooseDate(int)));
     connect(typeWidget, SIGNAL(activated(int)), this, SLOT(chooseType(int)));
@@ -225,18 +225,18 @@ void TokenHistoryView::setModel(WalletModel *_model)
                 SLOT(updateDisplayedTokens(bool)));
 
             // Add third party transaction URLs to context menu
-            QStringList listUrls = _model->getOptionsModel()->getThirdPartyTxUrls().split("|", QString::SkipEmptyParts);
+            QStringList listUrls = _model->getOptionsModel()->getThirdPartyTokenUrls().split("|", QString::SkipEmptyParts);
             for (int i = 0; i < listUrls.size(); ++i)
             {
                 QString host = QUrl(listUrls[i].trimmed(), QUrl::StrictMode).host();
                 if (!host.isEmpty())
                 {
-                    QAction *thirdPartyTxUrlAction = new QAction(host, this); // use host as menu item label
+                    QAction *thirdPartyTokenUrlAction = new QAction(host, this); // use host as menu item label
                     if (i == 0)
                         contextMenu->addSeparator();
-                    contextMenu->addAction(thirdPartyTxUrlAction);
-                    connect(thirdPartyTxUrlAction, SIGNAL(triggered()), mapperThirdPartyTxUrls, SLOT(map()));
-                    mapperThirdPartyTxUrls->setMapping(thirdPartyTxUrlAction, listUrls[i].trimmed());
+                    contextMenu->addAction(thirdPartyTokenUrlAction);
+                    connect(thirdPartyTokenUrlAction, SIGNAL(triggered()), mapperthirdPartyTokenUrls, SLOT(map()));
+                    mapperthirdPartyTokenUrls->setMapping(thirdPartyTokenUrlAction, listUrls[i].trimmed());
                 }
             }
         }
@@ -389,7 +389,7 @@ void TokenHistoryView::showDetails()
     }
 }
 
-void TokenHistoryView::openThirdPartyTxUrl(QString url)
+void TokenHistoryView::openthirdPartyTokenUrl(QString url)
 {
     if (!tokenHistoryView || !tokenHistoryView->selectionModel())
         return;
