@@ -9,6 +9,7 @@
 #include "addresstablemodel.h"
 #include "consensus/grouptokens.h"
 #include "dstencode.h"
+#include "guiutil.h"
 #include "optionsmodel.h"
 #include "platformstyle.h"
 #include "qt/guiconstants.h"
@@ -23,10 +24,12 @@
 #include <algorithm>
 
 #include <QClipboard>
+#include <QDesktopServices>
 #include <QHeaderView>
 #include <QKeyEvent>
 #include <QMessageBox>
 #include <QPalette>
+#include <QSignalMapper>
 
 extern CTweak<bool> tokenWhitelist;
 
@@ -61,6 +64,7 @@ TokensViewDialog::TokensViewDialog(const PlatformStyle *_platformStyle, const Co
     ui->tokenTable->setDragEnabled(false);
     ui->tokenTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     ui->tokenTable->setAutoScroll(false);
+    ui->tokenTable->setContextMenuPolicy(Qt::CustomContextMenu);
 
     ui->addressBookButton->setIcon(platformStyle->SingleColorIcon(":/icons/address-book"));
     ui->pasteButton->setIcon(platformStyle->SingleColorIcon(":/icons/editpaste"));
@@ -73,6 +77,13 @@ TokensViewDialog::TokensViewDialog(const PlatformStyle *_platformStyle, const Co
 
     GUIUtil::setupAddressWidget(ui->payTo, this);
     GUIUtil::setupAmountWidget(ui->payAmount, this, 0);
+
+    // Actions
+    mapperThirdPartyTokenUrls = new QSignalMapper(this);
+    QAction *copyGrpIDAction = new QAction(tr("Copy token id"), this);
+
+    contextMenu = new QMenu(this);
+    contextMenu->addAction(copyGrpIDAction);
 
     // This timer will be fired repeatedly to update the table balances
     // and taking into account whether instant transaction is turned on or not.
@@ -96,6 +107,11 @@ TokensViewDialog::TokensViewDialog(const PlatformStyle *_platformStyle, const Co
 
     setManageDisplayedTokensButton(tokenWhitelist.Value());
 
+    // Connect actions
+    connect(ui->tokenTable, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
+    connect(copyGrpIDAction, SIGNAL(triggered()), this, SLOT(copyGrpID()));
+    connect(mapperThirdPartyTokenUrls, SIGNAL(mapped(QString)), this, SLOT(openThirdPartyTokenUrl(QString)));
+
     // subscribe to core signals
     pwalletMain->NotifyTransactionChanged.connect(
         boost::bind(RefreshTokenWallet, this, boost::arg<1>(), boost::arg<2>(), boost::arg<3>()));
@@ -106,6 +122,40 @@ TokensViewDialog::~TokensViewDialog()
 {
     delete uiTokenDesc;
     delete ui;
+}
+
+void TokensViewDialog::contextualMenu(const QPoint &point)
+{
+    QList selectedItems = ui->tokenTable->selectedItems();
+    if (selectedItems.size() >= 1)
+    {
+        contextMenu->exec(QCursor::pos());
+    }
+}
+void TokensViewDialog::copyGrpID()
+{
+    QList selectedItems = ui->tokenTable->selectedItems();
+    QString strGrpIDSelected;
+    if (selectedItems.size() >= 1)
+    {
+        // get the grpID
+        strGrpIDSelected = selectedItems[0]->text();
+
+        // Copy first item
+        GUIUtil::setClipboard(strGrpIDSelected);
+    }
+}
+
+void TokensViewDialog::openThirdPartyTokenUrl(QString url)
+{
+    QList selectedItems = ui->tokenTable->selectedItems();
+    QString strGrpIDSelected;
+    if (selectedItems.size() >= 1)
+    {
+        // get the grpID
+        strGrpIDSelected = selectedItems[0]->text();
+    }
+    QDesktopServices::openUrl(QUrl::fromUserInput(url.replace("%s", strGrpIDSelected)));
 }
 
 void TokensViewDialog::checkBalanceChanged()
@@ -739,4 +789,23 @@ void TokensViewDialog::setModel(WalletModel *_model)
     this->model = _model; // need this for the send address selection dialog
     connect(_model->getOptionsModel(), SIGNAL(tokenWhitelistButtonChanged(bool)), this,
         SLOT(setManageDisplayedTokensButton(bool)));
+
+    if (_model->getOptionsModel())
+    {
+        // Add third party transaction URLs to context menu
+        QStringList listUrls = model->getOptionsModel()->getThirdPartyTokenUrls().split("|", QString::SkipEmptyParts);
+        for (int i = 0; i < listUrls.size(); ++i)
+        {
+            QString host = QUrl(listUrls[i].trimmed(), QUrl::StrictMode).host();
+            if (!host.isEmpty())
+            {
+                QAction *thirdPartyTokenUrlAction = new QAction(host, this); // use host as menu item label
+                if (i == 0)
+                    contextMenu->addSeparator();
+                contextMenu->addAction(thirdPartyTokenUrlAction);
+                connect(thirdPartyTokenUrlAction, SIGNAL(triggered()), mapperThirdPartyTokenUrls, SLOT(map()));
+                mapperThirdPartyTokenUrls->setMapping(thirdPartyTokenUrlAction, listUrls[i].trimmed());
+            }
+        }
+    }
 }

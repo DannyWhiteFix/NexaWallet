@@ -6,6 +6,7 @@
 #define NEXA_QT_TOKENSVIEWDIALOG_H
 
 #include "config.h"
+#include "guiutil.h"
 #include "qt/tokendescdialog.h"
 #include "walletmodel.h"
 
@@ -15,6 +16,11 @@
 
 class Config;
 class PlatformStyle;
+
+QT_BEGIN_NAMESPACE
+class QMenu;
+class QSignalMapper;
+QT_END_NAMESPACE
 
 namespace Ui
 {
@@ -36,6 +42,9 @@ private:
     Ui::TokensViewDialog *ui;
     WalletModel *model;
 
+    QMenu *contextMenu;
+    QSignalMapper *mapperThirdPartyTokenUrls;
+
     const PlatformStyle *platformStyle;
     const Config *cfg;
 
@@ -52,6 +61,9 @@ public Q_SLOTS:
     void refresh();
 
 private Q_SLOTS:
+    void contextualMenu(const QPoint &point);
+    void copyGrpID();
+    void openThirdPartyTokenUrl(QString url);
     void showEvent(QShowEvent *event);
     void on_addressBookButton_clicked();
     void on_deleteButton_clicked();
