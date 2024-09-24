@@ -73,7 +73,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         self.nodes[0].sendtoaddress(self.nodes[3].getnewaddress(), watchonly_amount/2)
         watchonly_txid = self.nodes[0].sendtoaddress(watchonly_address, watchonly_amount)
-
+        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()["size"] == 5)
         self.nodes[0].generate(1)
         self.sync_blocks()
         self.checkBal(self.nodes[1])
@@ -376,7 +376,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # create similar transaction over sendtoaddress
         txId = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 1000.1)
-        waitFor(30, lambda : self.nodes[0].getrawtxpool(True)[txId]['fee'], True);
+        waitFor(30, lambda : txId in self.nodes[0].getrawtxpool(True), True);
         signedFee2 = self.nodes[0].getrawtxpool(True)[txId]['fee']
 
         # compare fee to make sure both constructions are reasonable
@@ -400,7 +400,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # create same transaction over sendtoaddress
         txId = self.nodes[0].sendmany("", outputs)
-        waitFor(30, lambda : self.nodes[0].getrawtxpool(True)[txId]['fee'], True);
+        waitFor(30, lambda : txId in self.nodes[0].getrawtxpool(True), True);
         signedFee = self.nodes[0].getrawtxpool(True)[txId]['fee']
 
         # compare fee
@@ -428,7 +428,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         #create same transaction over sendtoaddress
         txId = self.nodes[0].sendtoaddress(mSigObj, 1000.1)
-        waitFor(30, lambda : self.nodes[0].getrawtxpool(True)[txId]['fee'], True);
+        waitFor(30, lambda : txId in self.nodes[0].getrawtxpool(True), True);
         signedFee = self.nodes[0].getrawtxpool(True)[txId]['fee']
 
         #compare fee
@@ -463,7 +463,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         #create same transaction over sendtoaddress
         txId = self.nodes[0].sendtoaddress(mSigObj, 1000.1)
-        waitFor(30, lambda : self.nodes[0].getrawtxpool(True)[txId]['fee'], True);
+        waitFor(30, lambda : txId in self.nodes[0].getrawtxpool(True), True)
         signedFee = self.nodes[0].getrawtxpool(True)[txId]['fee']
 
         #compare fee
@@ -605,6 +605,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         #create same transaction over sendtoaddress
         txId = self.nodes[1].sendmany("", outputs)
+        waitFor(30, lambda : txId in self.nodes[0].getrawtxpool(True), True)
         signedFee = self.nodes[1].getrawtxpool(True)[txId]['fee']
 
         #compare fee

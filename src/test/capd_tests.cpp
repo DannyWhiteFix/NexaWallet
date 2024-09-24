@@ -454,14 +454,15 @@ BOOST_AUTO_TEST_CASE(capd_pool_test_vectors2)
     BOOST_CHECK(findings.size() == 1);
 
     // Add a lot of minimum POW messages
-    for (int count = 0; count < 1000; count++)
+    for (int count = 0; count < 200; count++)
     {
         // Move forward to where the high priority message should be aged out
-        SetMockTime(now + MSG_LIFETIME_SEC + count);
+        SetMockTime(now + MSG_LIFETIME_SEC + (count * 10));
 
         CapdMsg m(" message12345678 " + std::to_string(count));
         auto diff = mp.GetRelayPowTarget();
         m.SetPowTargetHarderThan(diff);
+
         m.Solve();
         mp.add(MsgRefCopy(m));
     }

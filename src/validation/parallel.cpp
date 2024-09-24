@@ -633,9 +633,10 @@ void HandleBlockMessageThread(CNodeRef noderef, const string strCommand, ConstCB
             if ((strCommand != NetMsgType::BLOCK) &&
                 (IsThinBlocksEnabled() || IsGrapheneBlockEnabled() || IsCompactBlocksEnabled()))
             {
-                LOG(THIN | GRAPHENE | CMPCT, "Processed Block %s reconstructed from (%s) in %.2f seconds, peer=%s\n",
+                LOG(THIN | GRAPHENE | CMPCT,
+                    "Processed Block %s reconstructed from (%s) in %.2f seconds, peer:%s  result: %s\n",
                     hash.ToString(), strCommand, (double)(GetStopwatchMicros() - startTime) / 1000000.0,
-                    pfrom->GetLogName());
+                    pfrom->GetLogName(), state.GetLogString());
 
                 if (strCommand == NetMsgType::GRAPHENEBLOCK || strCommand == NetMsgType::GRAPHENETX)
                     graphenedata.UpdateValidationTime(nValidationTime);
@@ -646,8 +647,9 @@ void HandleBlockMessageThread(CNodeRef noderef, const string strCommand, ConstCB
             }
             else
             {
-                LOG(THIN | GRAPHENE | CMPCT, "Processed Regular Block %s in %.2f seconds, peer=%s\n", hash.ToString(),
-                    (double)(GetStopwatchMicros() - startTime) / 1000000.0, pfrom->GetLogName());
+                LOG(THIN | GRAPHENE | CMPCT, "Processed Regular Block %s in %.2f seconds, peer:%s  result: %s\n",
+                    hash.ToString(), (double)(GetStopwatchMicros() - startTime) / 1000000.0, pfrom->GetLogName(),
+                    state.GetLogString());
             }
         }
 

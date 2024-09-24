@@ -28,11 +28,11 @@ static std::vector<ScriptImportedState> createForAllInputs(CTransactionRef tx,
     // Figure out transaction validation state so we can provide the data to the script machine
     CValidationState state;
     {
-        if (!Consensus::CheckTxInputs(tx, state, coinsCache, Params()))
+        if (!Consensus::CheckTxInputs(tx, state, coinsCache, coinsCache, Params()))
         {
             assert(0); // If we can't eval the inputs correctly we can't build up the validation state data
         }
-        if (!CheckGroupTokens(*tx, state, coinsCache))
+        if (!CheckGroupTokens(*tx, state, coinsCache, coinsCache))
         {
             assert(0); // If we can't eval the inputs correctly we can't build up the validation state data
         }
@@ -100,9 +100,11 @@ BOOST_AUTO_TEST_CASE(opcodes_basic)
     CMutableTransaction tx;
     tx.vin.resize(2);
     tx.vin[0].prevout = in1;
+    tx.vin[0].amount = 2000;
     tx.vin[0].scriptSig = CScript() << OP_0;
     tx.vin[0].nSequence = 0x010203;
     tx.vin[1].prevout = in2;
+    tx.vin[1].amount = 3000;
     tx.vin[1].scriptSig = CScript() << OP_1;
     tx.vin[1].nSequence = 0xbeeff00d;
     tx.vout.resize(3);

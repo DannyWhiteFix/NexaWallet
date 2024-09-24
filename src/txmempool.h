@@ -138,6 +138,8 @@ public:
     CTxMemPoolEntry(const CTxMemPoolEntry &other) = default;
     CTxMemPoolEntry &operator=(const CTxMemPoolEntry &) = default;
 
+    ~CTxMemPoolEntry();
+
     const CTransaction &GetTx() const { return *this->tx; }
     CTransactionRef GetSharedTx() const { return this->tx; }
     /**
@@ -359,6 +361,17 @@ public:
     bool IsNull() const { return (ptx == nullptr && n == (uint32_t)-1); }
     size_t DynamicMemoryUsage() const { return 0; }
 
+    // Create an ordering for std containers like set
+    bool operator<(const CInPoint &b) const
+    {
+        // Check n first because its very quick
+        if (n < b.n)
+            return true;
+        else if (n > b.n)
+            return false;
+        return (ptx->GetId() < b.ptx->GetId());
+    }
+
     /** returns the outpoint associated with this object */
     COutPoint GetOutPoint() const
     {
@@ -555,12 +568,27 @@ private:
     typedef std::unordered_map<TxIdIter, TxLinks, TxHasher> txlinksMap;
     txlinksMap mapLinks;
 
-    void _UpdateParent(TxIdIter entry, TxIdIter parent, bool add);
-    void _UpdateChild(TxIdIter entry, TxIdIter child, bool add);
+    /** Update the links in both the parent and child to eachother in a consistent fashion */
+    bool _UpdateParentChild(TxIdIter parent, TxIdIter child, bool add);
+
+    /** DO NOT USE: The parent/child relationship needs to be updated consistently in both the parent's children,
+        and the child's parents.  Use _UpdateParentChild to ensure this happens!
+        Returns true if any change was needed.  In the add==true case, this means the entry was actually added
+        (it didn't already exist).  In the add==false case, this means that the entry was removed (it existed).
+     */
+    bool _UpdateParent(TxIdIter entry, TxIdIter parent, bool add);
+    /** DO NOT USE: The parent/child relationship needs to be updated consistently in both the parent's children,
+        and the child's parents.  Use _UpdateParentChild to ensure this happens!
+        Returns true if any change was needed.  In the add==true case, this means the entry was actually added
+        (it didn't already exist).  In the add==false case, this means that the entry was removed (it existed).
+     */
+    bool _UpdateChild(TxIdIter entry, TxIdIter child, bool add);
 
 public:
     // Connects an output to the transaction that spends it.
     std::unordered_map<COutPoint, CInPoint, OutPointHasher> mapNextTx;
+    // Connects an output to the transaction that looks at it.
+    std::map<COutPoint, std::set<CInPoint> > mapRoTx;
 
     // Keeps track of prioritized transactions as a map of priority and fee deltas
     std::unordered_map<uint256, std::pair<double, CAmount>, uint256Hasher> mapDeltas; // uint256 is txId or idem
@@ -641,7 +669,7 @@ public:
     void removeRecursive(const CTransaction &tx, std::list<CTransactionRef> &removed);
     void _removeRecursive(const CTransaction &tx, std::list<CTransactionRef> &removed);
     void removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight, int flags);
-    void removeConflicts(const CTransaction &tx, std::list<CTransactionRef> &removed);
+    // void removeConflicts(const CTransaction &tx, std::list<CTransactionRef> &removed);
     void _removeConflicts(const CTransaction &tx, std::list<CTransactionRef> &removed);
     void removeForBlock(const std::vector<CTransactionRef> &vtx,
         uint64_t nBlockHeight,

@@ -75,6 +75,9 @@ void RespendDetector::CheckForRespend(const CTxMemPool &pool, const CTransaction
     for (const CTxIn &in : ptx->vin)
     {
         const COutPoint outpoint = in.prevout;
+        // a read only input cannot conflict with anything
+        if (in.IsReadOnly())
+            continue;
 
         if (doubleSpendProofs.Value())
         {
@@ -174,6 +177,9 @@ bool RespendDetector::IsInteresting() const
 {
     return std::any_of(begin(actions), end(actions), [](const RespendActionPtr &a) { return a->IsInteresting(); });
 }
+
+const std::vector<COutPoint> &RespendDetector::getConflicts() const { return conflictingOutpoints; }
+
 
 int RespendDetector::GetDsproof() const { return dsproof; }
 } // namespace respend

@@ -35,6 +35,7 @@ namespace Consensus
 bool CheckTxInputs(const CTransactionRef tx,
     CValidationState &state,
     const CCoinsViewCache &inputs,
+    const CCoinsViewCache &readonlyCoins,
     const CChainParams &chainparams);
 } // namespace Consensus
 

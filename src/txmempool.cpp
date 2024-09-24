@@ -31,6 +31,7 @@
 
 extern std::atomic<bool> fMempoolTests;
 
+static CTxMemPool::setEntries emptySetEntries;
 using namespace std;
 CTxMemPoolEntry::CTxMemPoolEntry()
     : tx(), nFee(), nTime(0), entryPriority(0), entryHeight(0), hadNoDependencies(0), inChainInputValue(0),
@@ -40,6 +41,8 @@ CTxMemPoolEntry::CTxMemPoolEntry()
     nUsageSize = 0;
     feeDelta = 0;
 }
+
+CTxMemPoolEntry::~CTxMemPoolEntry() { tx = nullptr; }
 
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef _tx,
     const CAmount &_nFee,
@@ -59,7 +62,7 @@ CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef _tx,
     nUsageSize = RecursiveDynamicUsage(*tx);
 
     CAmount nValueIn = tx->GetValueOut() + nFee;
-    assert(inChainInputValue <= nValueIn);
+    DbgAssert(inChainInputValue <= nValueIn, );
     feeDelta = 0;
 
     nCountWithAncestors = 1;
@@ -136,8 +139,7 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vTxIdsT
             // are in the block (which are already accounted for).
             if (setChildren.insert(childIter).second && !setAlreadyIncluded.count(childHash))
             {
-                _UpdateChild(it, childIter, true);
-                _UpdateParent(childIter, it, true);
+                _UpdateParentChild(it, childIter, true);
             }
         }
     }
@@ -186,6 +188,11 @@ bool CTxMemPool::_CalculateMemPoolAncestors(const CTxMemPoolEntry &entry,
             {
                 continue;
             }
+            if (tx.vin[i].IsReadOnly())
+            {
+                errString = strprintf("TX has a read-only txpool input.  It should NOT be in the txpool!");
+                DbgAssert(!tx.vin[i].IsReadOnly(), return false);
+            }
             const uint256 &phash = prevout->second.first;
             TxIdIter piter = mapTx.find(phash);
             if (piter != mapTx.end()) // If the parent is still in the txpool...
@@ -227,7 +234,7 @@ bool CTxMemPool::_CalculateMemPoolAncestors(const CTxMemPoolEntry &entry,
             }
             else
             {
-                parentHashes.erase(stageit);
+                parentHashes.erase(parentElemIter);
                 continue;
             }
         }
@@ -277,7 +284,7 @@ void CTxMemPool::_UpdateAncestorsOf(bool add, TxIdIter it)
     // add or remove this tx as a child of each parent
     for (TxIdIter piter : setParents)
     {
-        _UpdateChild(piter, it, add);
+        _UpdateParentChild(piter, it, add);
     }
 }
 
@@ -356,9 +363,12 @@ void CTxMemPool::UpdateChildrenForRemoval(TxIdIter it)
 {
     AssertWriteLockHeld(cs_txmempool);
     const setEntries &setMemPoolChildren = GetMemPoolChildren(it);
-    for (TxIdIter updateIt : setMemPoolChildren)
+    // This awkwardness is because the iterator is not stable if it is the element being deleted
+    for (auto child = setMemPoolChildren.begin(); child != setMemPoolChildren.end();)
     {
-        _UpdateParent(updateIt, it, false);
+        auto deleteMe = child;
+        child++;
+        _UpdateParentChild(it, *deleteMe, false);
     }
 }
 
@@ -644,7 +654,34 @@ bool CTxMemPool::_addUnchecked(const CTxMemPoolEntry &entry, bool fCurrentEstima
     std::set<COutPoint> setParents;
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {
-        mapNextTx.emplace(tx.vin[i].prevout, CInPoint{txref, i});
+        auto &prevout = tx.vin[i].prevout;
+        if (tx.vin[i].IsReadOnly())
+        {
+            auto &deps = mapRoTx[prevout];
+            size_t sz = deps.size();
+            LOG(MEMPOOL, "starting deps of this UTXO: %d", sz);
+            deps.emplace(CInPoint{txref, i});
+            if (deps.size() == sz)
+            {
+                LOG(MEMPOOL, "REPEAT RO ADD");
+            }
+            LOG(MEMPOOL, "Added RO dependency for TX idem %s to UTXO %s. mapRoTx size: %d, Deps of this UTXO: %d",
+                txref->GetIdem().GetHex(), prevout.GetHex(), mapRoTx.size(), deps.size());
+            auto &deps2 = mapRoTx[prevout];
+            LOG(MEMPOOL, "Recheck Deps of this UTXO: %d", deps2.size());
+            for (const auto &it : mapRoTx)
+            {
+                LOG(MEMPOOL, "RO Entry: %s has %s deps", it.first.GetHex(), it.second.size());
+                for (const auto &depsIt : it.second)
+                {
+                    LOG(MEMPOOL, "   %s:%d", depsIt.ptx->GetIdem().GetHex(), depsIt.n);
+                }
+            }
+        }
+        else
+        {
+            mapNextTx.emplace(tx.vin[i].prevout, CInPoint{txref, i});
+        }
         setParents.insert(tx.vin[i].prevout);
     }
 
@@ -673,7 +710,7 @@ bool CTxMemPool::_addUnchecked(const CTxMemPoolEntry &entry, bool fCurrentEstima
         TxIdIter pit = mapTx.find(phash);
         if (pit != mapTx.end())
         {
-            _UpdateParent(newit, pit, true);
+            _UpdateParentChild(pit, newit, true);
         }
     }
 
@@ -702,9 +739,35 @@ void CTxMemPool::removeUnchecked(TxIdIter it)
         m_dspStorage->remove(it->dsproof);
 
     const CTransaction &tx = it->GetTx();
+    const CTransactionRef &txref = it->GetSharedTx();
     const uint256 &hash = tx.GetId();
+    uint32_t idx = 0;
     for (const CTxIn &txin : tx.vin)
-        mapNextTx.erase(txin.prevout);
+    {
+        // A read only input is not spending the input so it is not the one in mapNextTx
+        if (txin.IsReadOnly())
+        {
+            auto entry = mapRoTx.find(txin.prevout);
+            if (entry != mapRoTx.end())
+            {
+                LOG(MEMPOOL, "Removed RO dependency to UTXO %s for txidem: %s", txin.prevout.GetHex(),
+                    txref->GetIdem().GetHex());
+                // Remove this entry because we are removing this transaction from the txpool
+                entry->second.erase(CInPoint{txref, idx});
+                // Nothing left so clean up the entire entry
+                if (entry->second.size() == 0)
+                {
+                    LOG(MEMPOOL, "Removed RO dependency to UTXO %s entirely (now empty)", txin.prevout.GetHex());
+                    mapRoTx.erase(entry);
+                }
+            }
+        }
+        else
+        {
+            mapNextTx.erase(txin.prevout);
+        }
+        idx++;
+    }
     for (size_t i = 0; i < tx.vout.size(); i++)
     {
         outpointMap.erase(tx.OutpointAt(i));
@@ -713,6 +776,60 @@ void CTxMemPool::removeUnchecked(TxIdIter it)
     totalTxSize -= it->GetTxSize();
     cachedInnerUsage -= it->DynamicMemoryUsage();
     cachedInnerUsage -= memusage::DynamicUsage(mapLinks[it].parents) + memusage::DynamicUsage(mapLinks[it].children);
+
+    // Erase this entry in the parents and children
+    auto linksForIt = mapLinks.find(it);
+    if (linksForIt != mapLinks.end())
+    {
+        for (auto &txlink : linksForIt->second.parents)
+        {
+            if (_UpdateChild(txlink, it, false))
+                mapTx.modify(txlink, update_ancestor_state(0, 0, 0, 0, true));
+        }
+        for (auto &txlink : linksForIt->second.children)
+        {
+            if (_UpdateParent(txlink, it, false))
+                mapTx.modify(txlink, update_ancestor_state(0, 0, 0, 0, true));
+        }
+    }
+
+    /* This code iterates thru the entire mapLinks cleaning up any references to the element to be deleted.
+       It is very inefficient, but is a good check that mapLinks is consistent, so is being left in the code
+       commented out. */
+#if 0
+    for (auto &txlink : mapLinks)
+    {
+        //if (_UpdateChild(txlink.first, it, false) || _UpdateParent(txlink.first, it, false))
+        //{
+            // Mark it as dirty
+        //    mapTx.modify(txlink.first, update_ancestor_state(0, 0, 0, 0, true));
+        //}
+
+        // This code directly does what the prior if clause accomplishes
+        int changed = 0;
+        auto tmpit = txlink.second.parents.find(it);
+        if (tmpit != txlink.second.parents.end())
+        {
+            txlink.second.parents.erase(tmpit);
+            cachedInnerUsage -= memusage::IncrementalDynamicUsage(emptySetEntries);
+            changed++;
+        }
+        tmpit = txlink.second.children.find(it);
+        if (tmpit != txlink.second.children.end())
+        {
+            txlink.second.children.erase(tmpit);
+            cachedInnerUsage -= memusage::IncrementalDynamicUsage(emptySetEntries);
+            changed++;
+        }
+        if (changed)
+        {
+            LOGA("ERROR: STILL HAD TO CLEAN MAPLINKS");
+            // Mark it as dirty
+            mapTx.modify(txlink.first, update_ancestor_state(0, 0, 0, 0, true));
+        }
+    }
+#endif
+
     mapLinks.erase(it);
     mapTx.erase(it);
     nTransactionsUpdated++;
@@ -800,13 +917,31 @@ void CTxMemPool::_removeRecursive(const CTransaction &origTx, std::list<CTransac
         // the mempool for any reason.
         for (unsigned int i = 0; i < origTx.vout.size(); i++)
         {
-            std::unordered_map<COutPoint, CInPoint, OutPointHasher>::iterator it =
-                mapNextTx.find(COutPoint(origTx.GetIdem(), i));
-            if (it == mapNextTx.end())
-                continue;
-            TxIdIter nextit = mapTx.find(it->second.ptx->GetId());
-            assert(nextit != mapTx.end());
-            txToRemove.insert(nextit);
+            COutPoint outpt = COutPoint(origTx.GetIdem(), i);
+            auto it = mapNextTx.find(outpt);
+            if (it != mapNextTx.end())
+            {
+                TxIdIter nextit = mapTx.find(it->second.ptx->GetId());
+                assert(nextit != mapTx.end());
+                txToRemove.insert(nextit);
+            }
+            auto it2 = mapRoTx.find(outpt);
+            if (it2 != mapRoTx.end())
+            {
+                // A read only input MUST NOT refer to an uncommitted transaction, so there cannot be any tx in the
+                // pool that imports an output of a tx in the pool
+                DbgAssert(false, );
+                for (const auto &cinp : it2->second)
+                {
+                    TxIdIter nextit = mapTx.find(cinp.ptx->GetId());
+                    if (nextit != mapTx.end())
+                    {
+                        LOG(MEMPOOL, "Removing txidem: %s due to consumed read-only input",
+                            nextit->GetSharedTx()->GetIdem().GetHex());
+                        txToRemove.insert(nextit);
+                    }
+                }
+            }
         }
     }
     setEntries setAllRemoves;
@@ -819,6 +954,7 @@ void CTxMemPool::_removeRecursive(const CTransaction &origTx, std::list<CTransac
         removed.push_back(it->GetSharedTx());
     }
     _RemoveStaged(setAllRemoves);
+    setAllRemoves.clear();
 
     // As a final step we must resubmit whatever is in the CommitQ and CommitQFinal in case
     // there are any anscestors that were removed from the mempool above.
@@ -872,12 +1008,13 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
     }
 }
 
+/*
 void CTxMemPool::removeConflicts(const CTransaction &tx, std::list<CTransactionRef> &removed)
 {
     WRITELOCK(cs_txmempool);
     _removeConflicts(tx, removed);
 }
-
+*/
 void CTxMemPool::_removeConflicts(const CTransaction &tx, std::list<CTransactionRef> &removed)
 {
     AssertWriteLockHeld(cs_txmempool);
@@ -891,6 +1028,24 @@ void CTxMemPool::_removeConflicts(const CTransaction &tx, std::list<CTransaction
             if (txConflict != tx)
             {
                 _removeRecursive(txConflict, removed);
+            }
+        }
+
+        // Since the inputs are consumed, I can no longer reference them in read-only inputs
+        // Any tx that used this input as a read only needs to be removed.
+        if (!txin.IsReadOnly()) // UTXO is being consumed
+        {
+            LOG(MEMPOOL, "Consumed UTXO %s. mapRoTx size: %d", txin.prevout.GetHex(), mapRoTx.size());
+            auto it2 = mapRoTx.find(txin.prevout);
+            if (it2 != mapRoTx.end())
+            {
+                LOG(MEMPOOL, "UTXO %s has %d RO children", it2->second.size());
+                for (const auto &cinp : it2->second)
+                {
+                    CTransactionRef txref = cinp.ptx;
+                    _removeRecursive(*txref, removed);
+                }
+                mapRoTx.erase(it2);
             }
         }
     }
@@ -919,7 +1074,54 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef> &vtx,
     // mapTxnChaiTips.
     mapEntryHistory mapTxnChainTips;
     setEntries setAncestorsFromBlock;
+    setEntries setReadOnlyDependents;
     {
+        // Check for readonly ancestors
+        // This must be done before removeUnchecked is called because removeUnchecked will wipe out
+        // a tx without any checking...
+        for (const auto &tx : vtx)
+        {
+            // Since the inputs are consumed, I can no longer reference them in read-only inputs
+            // Any transactions in the pool that use them need to go.
+            for (unsigned int i = 0; i < tx->vin.size(); i++)
+            {
+                if (!tx->vin[i].IsReadOnly()) // UTXO is being consumed
+                {
+                    LOG(MEMPOOL, "Consumed UTXO %s", tx->vin[i].prevout.GetHex());
+                    // So remove all txes that use the UTXO
+                    auto it2 = mapRoTx.find(tx->vin[i].prevout);
+                    if (it2 != mapRoTx.end())
+                    {
+                        LOG(MEMPOOL, "UTXO %s has %d RO children", it2->second.size());
+                        for (const auto &cinp : it2->second)
+                        {
+                            const uint256 &dephash = cinp.ptx->GetId();
+                            auto mapTxItem = mapTx.find(dephash);
+                            if (mapTxItem != mapTx.end())
+                            {
+                                LOG(MEMPOOL,
+                                    "Removing TX id %s (idem: %s) due to spend of readonly dependency %s in input %d",
+                                    dephash.GetHex(), cinp.ptx->GetIdem().GetHex(), tx->vin[i].prevout.GetHex(),
+                                    cinp.n);
+                                setReadOnlyDependents.insert(mapTxItem);
+                            }
+                        }
+                        mapRoTx.erase(it2);
+                    }
+                }
+            }
+        }
+
+        LOG(MEMPOOL, "Removing %d read only dependents", setReadOnlyDependents.size());
+        for (TxIdIter it : setReadOnlyDependents)
+        {
+            setAncestorsFromBlock.erase(it);
+            mapTxnChainTips.erase(it);
+            removeUnchecked(it);
+        }
+        setReadOnlyDependents.clear();
+
+
         setEntries setTxnsInBlock;
         for (const auto &tx : vtx)
         {
@@ -933,26 +1135,30 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef> &vtx,
             // Get all ancestors from related to txns in the block. Stop looking if we've already looked up
             // this set of ancestors before; we don't want to be traversing the same part of the ancestor
             // tree more than once.
-            setEntries setAncestors;
             if (it->IsDirty() || it->GetCountWithAncestors() > 1)
             {
                 uint64_t nNoLimit = std::numeric_limits<uint64_t>::max();
                 std::string dummy;
+                setEntries setAncestors;
                 _CalculateMemPoolAncestors(*it, setAncestors, nNoLimit, nNoLimit, dummy, &setAncestorsFromBlock, false);
                 setAncestorsFromBlock.insert(setAncestors.begin(), setAncestors.end());
             }
             setTxnsInBlock.insert(it);
 
             const setEntries &setMemPoolChildren = GetMemPoolChildren(it);
-            for (TxIdIter updateIt : setMemPoolChildren)
+            // This awkwardness is because the iterator is not stable if it is the element being deleted
+            for (auto updateIt = setMemPoolChildren.begin(); updateIt != setMemPoolChildren.end();)
             {
+                auto &child = *updateIt;
                 // Get the current ancestor state values and save them for later comparison
-                ancestor_state ancestorState(updateIt->GetSizeWithAncestors(), updateIt->GetModFeesWithAncestors(),
-                    updateIt->GetCountWithAncestors(), updateIt->GetSigOpCountWithAncestors());
-                mapTxnChainTips.emplace(updateIt, ancestorState);
+                ancestor_state ancestorState(child->GetSizeWithAncestors(), child->GetModFeesWithAncestors(),
+                    child->GetCountWithAncestors(), child->GetSigOpCountWithAncestors());
+                mapTxnChainTips.emplace(child, ancestorState);
 
+                auto deleteMe = child;
+                updateIt++;
                 // Remove each block entry from the parent map in mapLinks
-                _UpdateParent(updateIt, it, false);
+                _UpdateParentChild(it, deleteMe, false);
             }
         }
 
@@ -980,6 +1186,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef> &vtx,
             mapTxnChainTips.erase(it);
             removeUnchecked(it);
         }
+        setTxnsInBlock.clear();
 
         // This is a safeguard in the case where ancestors of transactions in this block have re-entered
         // the mempool, possibly from a re-org. This should never happen and would likely indicate a locking
@@ -991,6 +1198,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef> &vtx,
             {
                 removeUnchecked(it);
             }
+            setAncestorsFromBlock.clear();
         }
     }
 
@@ -1085,44 +1293,68 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         unsigned int parentSigOpCount = 0;
 
         bool inMempool = false;
+        bool inOutpointMap = false;
         for (const CTxIn &txin : tx.vin)
         {
-            // Check that every mempool transaction's inputs refer to available coins, or other mempool tx's.
-            OutpointMap::const_iterator opm = outpointMap.find(txin.prevout);
-            if (opm != outpointMap.end())
+            if (!txin.IsReadOnly())
             {
-                indexed_transaction_set::const_iterator it2 = mapTx.find(opm->second.first);
-                if (it2 != mapTx.end())
+                // Check that every mempool transaction's inputs refer to available coins, or other mempool tx's.
+                OutpointMap::const_iterator opm = outpointMap.find(txin.prevout);
+                if (opm != outpointMap.end())
                 {
-                    inMempool = true;
-                    const CTransaction &tx2 = it2->GetTx();
-                    size_t n = opm->second.second;
-                    assert(!tx2.vout[n].IsNull());
-                    assert(tx2.OutpointAt(n) == txin.prevout);
-                    fDependsWait = true;
-                    if (setParentCheck.insert(it2).second)
+                    inOutpointMap = true;
+                    indexed_transaction_set::const_iterator it2 = mapTx.find(opm->second.first);
+                    if (it2 != mapTx.end())
                     {
-                        parentSizes += it2->GetTxSize();
-                        parentSigOpCount += it2->GetSigOpCount();
+                        inMempool = true;
+                        const CTransaction &tx2 = it2->GetTx();
+                        size_t n = opm->second.second;
+                        assert(!tx2.vout[n].IsNull());
+                        assert(tx2.OutpointAt(n) == txin.prevout);
+                        fDependsWait = true;
+                        if (setParentCheck.insert(it2).second)
+                        {
+                            parentSizes += it2->GetTxSize();
+                            parentSigOpCount += it2->GetSigOpCount();
+                        }
                     }
                 }
             }
 
             if (!inMempool)
             {
-                if (!pcoins->HaveCoin(txin.prevout))
+                if (txin.IsReadOnly()) // Read only inputs are unaffected by txpool contents
                 {
-                    LOGA("Mempool entry is missing input %d: %s", i, txin.prevout.hash.ToString());
-                    LOGA("TX hex: %s", EncodeHexTx(tx));
-                    LOGA("TX: %s", tx.ToString());
+                    if (!pcoinsTip->HaveCoin(txin.prevout))
+                    {
+                        LOGA("Txpool entry is missing input %d:%s %s", i, txin.prevout.hash.ToString(),
+                            inOutpointMap ? "(in outpoints)" : "");
+                        LOGA("TX hex: %s", EncodeHexTx(tx));
+                        LOGA("TX: %s", tx.ToString());
+                    }
+                    DbgAssert(pcoinsTip->HaveCoin(txin.prevout), );
                 }
-                assert(pcoins->HaveCoin(txin.prevout));
+                else
+                {
+                    if (!pcoins->HaveCoin(txin.prevout))
+                    {
+                        LOGA("Txpool entry is missing input %d:%s %s", i, txin.prevout.hash.ToString(),
+                            inOutpointMap ? "(in outpoints)" : "");
+                        LOGA("TX hex: %s", EncodeHexTx(tx));
+                        LOGA("TX: %s", tx.ToString());
+                    }
+                    DbgAssert(pcoins->HaveCoin(txin.prevout), );
+                }
             }
-            // Check whether its inputs are marked in mapNextTx.
-            std::unordered_map<COutPoint, CInPoint, OutPointHasher>::const_iterator it3 = mapNextTx.find(txin.prevout);
-            assert(it3 != mapNextTx.end());
-            assert(it3->second.ptx.get() == &tx);
-            assert(it3->second.n == i);
+
+            if (!txin.IsReadOnly())
+            {
+                // Check whether its inputs are marked in mapNextTx.
+                const auto it3 = mapNextTx.find(txin.prevout);
+                assert(it3 != mapNextTx.end());
+                assert(it3->second.ptx.get() == &tx);
+                assert(it3->second.n == i);
+            }
             i++;
         }
         assert(setParentCheck == GetMemPoolParents(it));
@@ -1145,10 +1377,30 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
                 nSigOpCheck += ancestorIt->GetSigOpCount();
             }
 
-            assert(it->GetCountWithAncestors() == nCountCheck);
-            assert(it->GetSizeWithAncestors() == nSizeCheck);
-            assert(it->GetSigOpCountWithAncestors() == nSigOpCheck);
-            assert(it->GetModFeesWithAncestors() == nFeesCheck);
+            if (it->GetCountWithAncestors() != nCountCheck)
+            {
+                LOG(MEMPOOL, "TXPOOL Consistency check error: GetCountWithAncestors is: %d, calculated %d",
+                    it->GetCountWithAncestors(), nCountCheck);
+            }
+            DbgAssert(it->GetCountWithAncestors() == nCountCheck, );
+            if (it->GetSizeWithAncestors() != nSizeCheck)
+            {
+                LOG(MEMPOOL, "TXPOOL Consistency check error: GetSizeWithAncestors is: %d, calculated %d",
+                    it->GetSizeWithAncestors(), nSizeCheck);
+            }
+            DbgAssert(it->GetSizeWithAncestors() == nSizeCheck, );
+            if (it->GetSigOpCountWithAncestors() != nSigOpCheck)
+            {
+                LOG(MEMPOOL, "TXPOOL Consistency check error: GetSigOpCountWithAncestors is: %d, calculated %d",
+                    it->GetSigOpCountWithAncestors(), nSigOpCheck);
+            }
+            DbgAssert(it->GetSigOpCountWithAncestors() == nSigOpCheck, );
+            if (it->GetModFeesWithAncestors() != nFeesCheck)
+            {
+                LOG(MEMPOOL, "TXPOOL Consistency check error: GetModFeesWithAncestors is: %d, calculated %d",
+                    it->GetModFeesWithAncestors(), nFeesCheck);
+            }
+            DbgAssert(it->GetModFeesWithAncestors() == nFeesCheck, );
         }
 
         // Check children against mapNextTx
@@ -1172,34 +1424,68 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         assert(setChildrenCheck == GetMemPoolChildren(it));
 
         if (fDependsWait)
+        {
             waitingOnDependants.push_back(&(*it));
+        }
         else
         {
-            CValidationState state;
-            // Use the largest maxOps since this code is not meant to validate that constraint
-            assert(CheckInputs(it->GetSharedTx(), state, mempoolDuplicate, false, 0, false, nullptr, Params()));
+            for (const CTxIn &input : tx.vin)
+            {
+                if (input.IsReadOnly())
+                {
+                    if (!pcoins->HaveCoin(input.prevout))
+                    {
+                        LOG(MEMPOOL, "TXPOOL Consistency check error: checking readonly inputs failed\n");
+                        DbgAssert(false, );
+                    }
+                }
+                else
+                {
+                    if (!mempoolDuplicate.HaveCoin(input.prevout))
+                    {
+                        LOG(MEMPOOL, "TXPOOL Consistency check error: checking consumed inputs failed\n");
+                        DbgAssert(false, );
+                    }
+                }
+            }
             UpdateCoins(tx, mempoolDuplicate, 1000000);
         }
     }
     unsigned int stepsSinceLastRemove = 0;
     while (!waitingOnDependants.empty())
     {
+        LOGA("waiting on deps %d", waitingOnDependants.size());
         const CTxMemPoolEntry *entry = waitingOnDependants.front();
         waitingOnDependants.pop_front();
         CValidationState state;
-        if (!mempoolDuplicate.HaveInputs(entry->GetTx()))
+        bool valid = true;
+        for (const CTxIn &input : entry->GetTx().vin)
         {
-            waitingOnDependants.push_back(entry);
-            stepsSinceLastRemove++;
-            assert(stepsSinceLastRemove < waitingOnDependants.size());
+            if (input.IsReadOnly())
+            {
+                continue;
+            }
+            if (!mempoolDuplicate.HaveCoin(input.prevout))
+            {
+                valid = false;
+                waitingOnDependants.push_back(entry);
+                if (stepsSinceLastRemove >= waitingOnDependants.size())
+                {
+                    LOGA("TXPOOL Consistency check error: stepsSinceLastRemove < waitingOnDependants (%d < %d)\n",
+                        stepsSinceLastRemove, waitingOnDependants.size());
+                    DbgAssert(false, );
+                    break;
+                }
+            }
         }
-        else
+        if (valid == false)
         {
-            // Use the largest maxOps since this code is not meant to validate that constraint
-            assert(CheckInputs(entry->GetSharedTx(), state, mempoolDuplicate, false, 0, false, nullptr, Params()));
-            UpdateCoins(entry->GetTx(), mempoolDuplicate, 1000000);
-            stepsSinceLastRemove = 0;
+            break;
         }
+        // Use the largest maxOps since this code is not meant to validate that constraint
+        assert(CheckInputs(entry->GetSharedTx(), state, mempoolDuplicate, false, 0, false, nullptr, Params()));
+        UpdateCoins(entry->GetTx(), mempoolDuplicate, 1000000);
+        stepsSinceLastRemove = 0;
     }
     for (std::unordered_map<COutPoint, CInPoint, OutPointHasher>::const_iterator it = mapNextTx.begin();
          it != mapNextTx.end(); it++)
@@ -1633,32 +1919,46 @@ int CTxMemPool::Remove(const uint256 &txhash, std::vector<COutPoint> *vCoinsToUn
     return stage.size();
 }
 
-void CTxMemPool::_UpdateChild(TxIdIter entry, TxIdIter child, bool add)
+bool CTxMemPool::_UpdateParentChild(TxIdIter parent, TxIdIter child, bool add)
+{
+    AssertWriteLockHeld(cs_txmempool);
+    bool ret = _UpdateChild(parent, child, add);
+    ret |= _UpdateParent(child, parent, add);
+    return ret;
+}
+
+bool CTxMemPool::_UpdateChild(TxIdIter entry, TxIdIter child, bool add)
 {
     setEntries s;
     AssertWriteLockHeld(cs_txmempool);
     if (add && mapLinks[entry].children.insert(child).second)
     {
         cachedInnerUsage += memusage::IncrementalDynamicUsage(s);
+        return true;
     }
     else if (!add && mapLinks[entry].children.erase(child))
     {
         cachedInnerUsage -= memusage::IncrementalDynamicUsage(s);
+        return true;
     }
+    return false;
 }
 
-void CTxMemPool::_UpdateParent(TxIdIter entry, TxIdIter parent, bool add)
+bool CTxMemPool::_UpdateParent(TxIdIter entry, TxIdIter parent, bool add)
 {
     setEntries s;
     AssertWriteLockHeld(cs_txmempool);
     if (add && mapLinks[entry].parents.insert(parent).second)
     {
         cachedInnerUsage += memusage::IncrementalDynamicUsage(s);
+        return true;
     }
     else if (!add && mapLinks[entry].parents.erase(parent))
     {
         cachedInnerUsage -= memusage::IncrementalDynamicUsage(s);
+        return true;
     }
+    return false;
 }
 
 const CTxMemPool::setEntries &CTxMemPool::GetMemPoolParents(TxIdIter entry) const
@@ -1666,7 +1966,7 @@ const CTxMemPool::setEntries &CTxMemPool::GetMemPoolParents(TxIdIter entry) cons
     AssertLockHeld(cs_txmempool);
     assert(entry != mapTx.end());
     txlinksMap::const_iterator it = mapLinks.find(entry);
-    assert(it != mapLinks.end());
+    DbgAssert(it != mapLinks.end(), return emptySetEntries);
     return it->second.parents;
 }
 
@@ -1708,7 +2008,7 @@ CTransactionRef CTxMemPool::addDoubleSpendProof(const DoubleSpendProof &proof)
 
     auto item = *iter;
     item.dsproof = m_dspStorage->add(proof).second;
-    mapTx.replace(iter, item);
+    mapTx.replace(iter, item); // Preserves iterator and reference validity
     return _get(oldTx->second.ptx->GetId());
 }
 

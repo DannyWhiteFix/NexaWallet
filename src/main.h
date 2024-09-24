@@ -243,9 +243,6 @@ bool GetTransaction(const uint256 &hash,
  */
 bool AreFreeTxnsAllowed();
 
-/** Convert CValidationState to a human-readable message for logging */
-std::string FormatStateMessage(const CValidationState &state);
-
 /** Get the BIP135 state for a given deployment at the current tip. */
 ThresholdState VersionBitsTipState(const Consensus::Params &params, Consensus::DeploymentPos pos);
 

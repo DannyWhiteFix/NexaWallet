@@ -329,6 +329,27 @@ def sync_blocks(rpc_connections, *, wait=1, verbose=1, timeout=60):
         counts = [ x.getblockcount() for x in rpc_connections ]
         if counts == [ counts[0] ]*len(counts):
             return
+        tip = -1
+        tipNode = -1
+        for idx, c in enumerate(counts):
+            if c > tip:
+                tip = c
+                tipNode = idx
+        tipHash = rpc_connections[tipNode].getbestblockhash()
+
+        # This code will check to see if a sync will never happen because trailing nodes have marked the mainchain invalid
+        for idx, node in enumerate(rpc_connections):
+            if idx != tipNode:
+                tips = node.getchaintips()
+                for t in tips:
+                    if t["status"] == "invalid":
+                        mainchainAtInvalidHeight = rpc_connections[tipNode].getblock(t["height"])
+                        mainchainHashAtInvalidHeight = mainchainAtInvalidHeight["hash"]
+                        if t["hash"] == mainchainHashAtInvalidHeight:
+                            s = "sync_blocks: Consensus fork will cause sync to never happen. Best tip is %d:%s but node %d has marked it invalid at block %s (parent %s).  Chaintips:\n%s" % (tip, tipHash, idx, mainchainHashAtInvalidHeight, mainchainAtInvalidHeight["prevblockhash"], pprint.pformat(tips))
+                            logging.error(s)
+                            raise Exception(s)
+
         if verbose and iter>2:
             logging.info("sync blocks (" + str(iter) +"): " + str(counts))
         time.sleep(wait)
@@ -403,6 +424,24 @@ def sync_wallet(timeout, node, onError="timeout in syncWallet", sleepAmt=1.0):
         time.sleep(sleepAmt)
         timeout -= sleepAmt
 
+def sync_wallet_with_txidem(timeout, node, txidem, onError=None, sleepAmt=1.0):
+    """
+    Wait until the wallet has this txidem in its unspent list
+    """
+    timeout = float(timeout)
+    if onError is None:
+        onError = "Wallet never received txidem %s" % txidem
+    waitFor(timeout, lambda: txidem in [x["txidem"] for x in node.listunspent(0)], onError, sleepAmt)
+
+def sync_wallet_with_unconf_txidem(timeout, node, txidem, onError=None, sleepAmt=1.0):
+    """
+    Wait until the wallet has this txidem in its unconfirmed unspent list.  This function is a bit more efficient than
+    sync_wallet_with_txidem, but use the latter if there is any doubt as it checks all tx in the wallet.
+    """
+    timeout = float(timeout)
+    if onError is None:
+        onError = "Wallet does not have UNCONFIRMED txidem %s" % txidem
+    waitFor(timeout, lambda: txidem in [x["txidem"] for x in node.listunspent(0,0)], onError, sleepAmt)
 
 def sync_wallets(nodes, timeout = 30):
     for n in nodes:

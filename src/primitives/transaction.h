@@ -70,6 +70,11 @@ public:
     enum
     {
         UTXO = 0,
+        READONLY = 1,
+        INVALID = 2, // new types must be inserted before invalid in the enum
+        // these following values are used for contextual transaction checks
+        VALID_FORK0_TYPES = 0, // only UTXO type was allowed originally
+        VALID_FORK1_TYPES = 1, // readonly type was added in fork 1
     };
     uint8_t type = UTXO; // Can also be used as versioning
     COutPoint prevout;
@@ -103,6 +108,23 @@ public:
      * multiplying by 512 = 2^9, or equivalently shifting up by
      * 9 bits. */
     static const int SEQUENCE_LOCKTIME_GRANULARITY = 9;
+
+    static const std::string UTXO_TYPE_STR;
+    static const std::string READONLY_TYPE_STR;
+    static const std::string INVALID_TYPE_STR;
+
+    static const std::string typeToString(uint8_t type)
+    {
+        switch (type)
+        {
+        case UTXO:
+            return UTXO_TYPE_STR;
+        case READONLY:
+            return READONLY_TYPE_STR;
+        default:
+            return INVALID_TYPE_STR + "(" + std::to_string((int)type) + ")";
+        }
+    }
 
     CTxIn() { nSequence = SEQUENCE_FINAL; }
     explicit CTxIn(COutPoint prevoutIn,
@@ -142,6 +164,8 @@ public:
 
     friend bool operator!=(const CTxIn &a, const CTxIn &b) { return !(a == b); }
     std::string ToString() const;
+    bool IsReadOnly() const { return type == READONLY; }
+    void SetReadOnly() { type = READONLY; }
 };
 
 /** An output of a transaction.  It contains the public key that the next input
@@ -329,23 +353,26 @@ public:
     // the data ID is defined as a 4 byte pushdata containing a little endian 4 byte integer.
     bool HasData(uint32_t dataID) const;
 
-    // Return sum of txouts.
+    /** Return sum of txouts. */
     CAmount GetValueOut() const;
-    // GetValueIn() is a method on CCoinsViewCache, because
-    // inputs must be known to compute value in.
+    /** Return sum of non-readonly txins. */
+    CAmount GetValueIn() const;
 
-    // Compute priority, given priority of inputs and (optionally) tx size
+    /** Compute priority, given priority of inputs and (optionally) tx size */
     double ComputePriority(double dPriorityInputs, unsigned int nSize = 0) const;
 
-    // Compute modified tx size for priority calculation (optionally given tx size)
+    /** Compute modified tx size for priority calculation (optionally given tx size) */
     unsigned int CalculateModifiedSize(unsigned int nSize = 0) const;
 
+    /** Return true if this transaction is a coinbase (has no inputs) */
     bool IsCoinBase() const { return (vin.size() == 0); }
     friend bool operator==(const CTransaction &a, const CTransaction &b) { return a.id == b.id; }
     friend bool operator!=(const CTransaction &a, const CTransaction &b) { return a.id != b.id; }
+
+    /** Pretty-print representation of this transaction */
     std::string ToString() const;
 
-    // Return the size of the transaction in bytes.
+    /** Return the size of the transaction in bytes. */
     size_t GetTxSize() const;
     /** return this transaction as a hex string.  Useful for debugging and display */
     std::string HexStr() const;

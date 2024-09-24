@@ -7,13 +7,13 @@
 #include "consensus/grouptokens.h"
 #include "main.h"
 
-void AccumulateTokenData(CTransactionRef ptx,
+bool AccumulateTokenData(CTransactionRef ptx,
     CCoinsViewCache &view,
     std::map<CGroupTokenID, CAuth> &accumulatedAuthorities,
     std::map<CGroupTokenID, CAmount> &accumulatedMintages)
 {
     if (ptx->IsCoinBase())
-        return;
+        return true;
 
     struct Amounts
     {
@@ -35,8 +35,8 @@ void AccumulateTokenData(CTransactionRef ptx,
             const CTxOut &txout = coin.out;
             CGroupTokenInfo tg(txout);
 
-            // Get the mintages in the inputs
-            if (tg.associatedGroup != NoGroup && !tg.isAuthority())
+            // Get the mintages in the inputs (no amounts count if read only)
+            if ((!txin.IsReadOnly()) && (tg.associatedGroup != NoGroup) && (!tg.isAuthority()))
             {
                 mintages[tg.associatedGroup].nTokenInputs += tg.quantity;
             }
@@ -44,23 +44,26 @@ void AccumulateTokenData(CTransactionRef ptx,
             // Get the authorities in the inputs
             if (tg.associatedGroup != NoGroup && tg.isAuthority())
             {
-                fHaveInputAuthority = true;
-
-                if (accumulatedAuthorities.count(tg.associatedGroup))
+                // We only let authorities count if the input is consumed or signed
+                if (!txin.IsReadOnly() || (txin.IsReadOnly() && tg.allowsRenew() && (txin.scriptSig.size() != 0)))
                 {
-                    std::swap(authority, accumulatedAuthorities[tg.associatedGroup]);
+                    if (accumulatedAuthorities.count(tg.associatedGroup))
+                    {
+                        std::swap(authority, accumulatedAuthorities[tg.associatedGroup]);
+                    }
+                    fHaveInputAuthority = true;
+                    authority.nMint -= tg.allowsMint();
+                    authority.nMelt -= tg.allowsMelt();
+                    authority.nRenew -= tg.allowsRenew();
+                    authority.nRescript -= tg.allowsRescript();
+                    authority.nSubgroup -= tg.allowsSubgroup();
+                    accumulatedAuthorities[tg.associatedGroup] = authority;
                 }
-                authority.nMint -= tg.allowsMint();
-                authority.nMelt -= tg.allowsMelt();
-                authority.nRenew -= tg.allowsRenew();
-                authority.nRescript -= tg.allowsRescript();
-                authority.nSubgroup -= tg.allowsSubgroup();
-                accumulatedAuthorities[tg.associatedGroup] = authority;
             }
         }
         else
         {
-            DbgAssert(!coin.IsSpent(), );
+            return false;
         }
     }
 
@@ -183,6 +186,7 @@ void AccumulateTokenData(CTransactionRef ptx,
             tokenmint.AddTokenGenesis(tg.associatedGroup, entry);
         }
     }
+    return true;
 }
 
 // Token Description Cache methods

@@ -32,6 +32,8 @@ public:
     bool IsRespend() const;
     int GetDsproof() const;
 
+    const std::vector<COutPoint> &getConflicts() const;
+
     // Respend is interesting enough to trigger full tx validation.
     bool IsInteresting() const;
 

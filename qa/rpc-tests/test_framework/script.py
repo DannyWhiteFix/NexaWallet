@@ -272,6 +272,9 @@ class CScript(bytes):
             lastOpcode = opcode
         return n
 
+    def serialize(self,  serType=0):
+        return bytes(self)
+
 def FindAndDelete(script, sig):
     """Consensus critical, see FindAndDelete() in Satoshi codebase"""
     r = b''

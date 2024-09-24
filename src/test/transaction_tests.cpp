@@ -261,6 +261,7 @@ BOOST_AUTO_TEST_CASE(dynamic_tx_validity)
     BOOST_CHECK(!state.IsValid());
     BOOST_CHECK(state.GetRejectReason() == "bad-txns-invalid-txout-type");
     tx.vout[5].type = tmptype;
+    state.SetNull();
 
     tmptype = tx.vin[5].type;
     tx.vin[5].type = 2;
@@ -269,6 +270,96 @@ BOOST_AUTO_TEST_CASE(dynamic_tx_validity)
     BOOST_CHECK(!state.IsValid());
     BOOST_CHECK(state.GetRejectReason() == "bad-txns-invalid-txin-type");
     tx.vin[5].type = tmptype;
+    state.SetNull();
+
+    // bad readonly input (has a non zero sequence)
+    tmptype = tx.vin[5].type;
+    uint32_t tmpsequence = tx.vin[5].nSequence;
+    CScript tmpsig = tx.vin[5].scriptSig;
+    tx.vin[5].amount = 0;
+    tx.vin[5].type = 1; // READ ONLY with a sequence is invalid
+    tx.vin[5].nSequence = 10;
+    tx.vin[5].scriptSig = CScript();
+    txref = MakeTransactionRef(tx);
+    BOOST_CHECK_MESSAGE(!CheckTransaction(txref, state), "txin type invalid");
+    BOOST_CHECK(!state.IsValid());
+    BOOST_CHECK(state.GetRejectReason() == "bad-txns-invalid-readonly-sequence");
+    tx.vin[5].type = tmptype;
+    tx.vin[5].nSequence = tmpsequence;
+    tx.vin[5].scriptSig = tmpsig;
+    state.SetNull();
+
+    // verify amount is 0 for readonly
+    tx.vin[5].type = 1;
+    tx.vin[5].scriptSig = CScript();
+    tx.vin[5].amount = 1;
+    tx.vin[5].nSequence = 0;
+    txref = MakeTransactionRef(tx);
+    BOOST_CHECK(!CheckTransaction(txref, state));
+    BOOST_CHECK(!state.IsValid());
+    BOOST_CHECK(state.GetRejectReason() == "bad-txns-nonzero-readonly-amount");
+    state.SetNull();
+    tx.vin[5].amount = 0;
+    txref = MakeTransactionRef(tx);
+    BOOST_CHECK(CheckTransaction(txref, state));
+    BOOST_CHECK(state.IsValid());
+
+    state.SetNull();
+
+    // valid readonly input either with or without a scriptSig
+    tx.vin[5].type = 1; // READ ONLY without a scriptsig is valid
+    tx.vin[5].scriptSig = CScript();
+    tx.vin[5].nSequence = 0;
+    tx.vin[5].amount = 0;
+    txref = MakeTransactionRef(tx);
+    BOOST_CHECK(CheckTransaction(txref, state));
+    BOOST_CHECK(state.IsValid());
+    tx.vin[5].scriptSig = CScript() << OP_1;
+    BOOST_CHECK(CheckTransaction(txref, state));
+    BOOST_CHECK(state.IsValid());
+    tx.vin[5].type = tmptype;
+    tx.vin[5].nSequence = tmpsequence;
+    tx.vin[5].scriptSig = tmpsig;
+
+    state.SetNull();
+
+    // same as above but use CTxIn SetReadOnly method
+    // valid readonly input
+    tmptype = tx.vin[5].type;
+    tmpsequence = tx.vin[5].nSequence;
+    tmpsig = tx.vin[5].scriptSig;
+    tx.vin[5].SetReadOnly();
+    tx.vin[5].scriptSig = CScript();
+    tx.vin[5].nSequence = 0;
+    tx.vin[5].amount = 0;
+    txref = MakeTransactionRef(tx);
+    BOOST_CHECK(CheckTransaction(txref, state));
+    BOOST_CHECK(state.IsValid());
+
+    // check repeated RO and consumed input
+    auto old4 = tx.vin[4];
+    tx.vin[4].prevout = tx.vin[5].prevout;
+    tx.vin[4].scriptSig = tmpsig;
+    txref = MakeTransactionRef(tx);
+    BOOST_CHECK(!CheckTransaction(txref, state));
+    BOOST_CHECK(!state.IsValid());
+    BOOST_CHECK(state.GetRejectReason() == "bad-txns-inputs-duplicate");
+
+    // check repeated RO
+    tx.vin[4].SetReadOnly();
+    tx.vin[4].scriptSig = CScript();
+    tx.vin[4].nSequence = 0;
+    tx.vin[4].amount = 0;
+    txref = MakeTransactionRef(tx);
+    BOOST_CHECK(!CheckTransaction(txref, state));
+    BOOST_CHECK(!state.IsValid());
+    BOOST_CHECK(state.GetRejectReason() == "bad-txns-inputs-duplicate");
+
+    tx.vin[4] = old4;
+    tx.vin[5].type = tmptype;
+    tx.vin[5].nSequence = tmpsequence;
+    tx.vin[5].scriptSig = tmpsig;
+    state.SetNull();
 
     // Check that 1 more vout causes a tx failure
     tx.vin.push_back(CTxIn(COutPoint(InsecureRand256()), 100));

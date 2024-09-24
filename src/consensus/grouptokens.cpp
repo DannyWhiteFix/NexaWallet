@@ -117,7 +117,10 @@ CGroupTokenInfo::CGroupTokenInfo(const CTxOut &output)
 #ifndef LIGHT // limit dependencies (CCoinsViewCache).
 // This function determines the consensus validity of the group tokens in this transaction so it not useful
 // in a light wallet (and will not compile because the light wallet does not contain the UTXO)
-bool CheckGroupTokens(const CTransaction &tx, CValidationState &state, const CCoinsViewCache &view)
+bool CheckGroupTokens(const CTransaction &tx,
+    CValidationState &state,
+    const CCoinsViewCache &view,
+    const CCoinsViewCache &readonlyCoins)
 {
     GroupBalanceMapRef gBalanceState = MakeGroupBalanceMapRef();
     // For simple syntax grab a c++ style reference to the shared entity
@@ -175,10 +178,10 @@ bool CheckGroupTokens(const CTransaction &tx, CValidationState &state, const CCo
     for (const auto &inp : tx.vin)
     {
         const COutPoint &prevout = inp.prevout;
-        CoinAccessor coin(view, prevout);
-        if (coin->IsSpent()) // should never happen because you've already CheckInputs(tx,...)
+        const CCoinsViewCache &v = (inp.IsReadOnly()) ? readonlyCoins : view;
+        CoinAccessor coin(v, prevout);
+        if (coin->IsSpent())
         {
-            DbgAssert(!"Checking token group for spent coin", );
             return state.Invalid(false, REJECT_INVALID, "already-spent");
         }
         const CScript &script = coin->out.scriptPubKey;
@@ -189,6 +192,24 @@ bool CheckGroupTokens(const CTransaction &tx, CValidationState &state, const CCo
         // invalid OP_GROUP tx in it.
         if (tokenGrp.invalid)
             continue;
+
+        // Do not count this input based on a variety of read-only situations
+        if (inp.IsReadOnly())
+        {
+            if (!tokenGrp.isAuthority())
+                continue; // ignore for all normal (non-authority) read only inputs
+
+            // for authorities, if the baton isn't set, the authorities MUST NOT activate.
+            // non-baton authorities are meant to be one-use, and allowing authorities to activate within a read only
+            // utxo would defeat that purpose.
+            if (!tokenGrp.allowsRenew())
+                continue;
+            // you have to sign the read-only input if you want the authorities to activate
+            if (inp.scriptSig.size() == 0)
+                continue;
+            // The validity of the scriptSig is checked in the normal transaction validation
+            // so we do not have to recheck it here
+        }
 
         if (tokenGrp.associatedGroup.hasFlag(GroupTokenIdFlags::HOLDS_NEX))
         {

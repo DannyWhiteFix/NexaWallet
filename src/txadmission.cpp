@@ -159,6 +159,11 @@ static void TestConflictEnqueueTx(CTxInputData &txd, bool fOrphan)
     bool conflict = false;
     for (auto &inp : txd.tx->vin)
     {
+        // Read only inputs cannot conflict with existing tx because they are valid in a block that contains a
+        // tx spending the read only input
+        if (inp.IsReadOnly())
+            continue;
+
         if (!incomingConflicts.checkAndSet(inp.prevout.hash))
         {
             conflict = true;
@@ -715,7 +720,7 @@ void ThreadTxAdmission()
                                 else
                                 {
                                     LOGA("Not relaying invalid transaction %s from whitelisted peer=%s (%s)\n",
-                                        tx->GetId().ToString(), txd.nodeName, FormatStateMessage(state));
+                                        tx->GetId().ToString(), txd.nodeName, state.GetLogString());
                                 }
                             }
                             // If the problem wasn't that the tx is an orphan, then uncache the inputs since we likely
@@ -734,7 +739,7 @@ void ThreadTxAdmission()
                     {
                         if (invalid)
                             LOG(MEMPOOL, "%s from peer=%s was not accepted: %s\ntx: %s", tx->GetId().ToString(),
-                                txd.nodeName, FormatStateMessage(state), EncodeHexTx(*tx));
+                                txd.nodeName, state.GetLogString(), EncodeHexTx(*tx));
                         // Never send AcceptToMemoryPool's internal codes over P2P
                         unsigned char rejectCode = fMissingInputs ? REJECT_ORPHAN : state.GetRejectCode();
                         if (rejectCode < REJECT_INTERNAL)
@@ -980,9 +985,13 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
     {
         if (debugger)
         {
-            // debugger->AddInvalidReason(
-            // "tx-txpool-conflict: " + txin.prevout.hash.ToString() + ":" + std::to_string(txin.prevout.n));
-            debugger->AddInvalidReason("txn-txpool-conflict");
+            std::string conflicts("txn-txpool-conflict:");
+            for (auto &c : respend.getConflicts())
+            {
+                conflicts.append(" ");
+                conflicts.append(c.GetHex());
+            }
+            debugger->AddInvalidReason(conflicts);
             debugger->mineable = false;
             debugger->futureMineable = false;
         }
@@ -1012,6 +1021,7 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
             if (pfMissingInputs)
             {
                 *pfMissingInputs = false;
+                int inIdx = 0;
                 for (const CTxIn &txin : tx->vin)
                 {
                     // At this point we begin to collect coins that are potential candidates for uncaching because as
@@ -1025,19 +1035,35 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
                     // any coins in vCoinsToUncache will NOT be uncached.
                     bool fSpent = false;
                     bool fMissingOrSpent = false;
-                    if (!pcoinsTip->HaveCoinInCache(txin.prevout, fSpent))
+                    if (txin.IsReadOnly())
                     {
-                        vCoinsToUncache.push_back(txin.prevout);
-                        if (!view.GetCoinFromDB(txin.prevout))
+                        // Read-only inputs can only refer to confirmed inputs
+                        // look in coins (utxo of blockchain tip, not mempool tip)
+                        // but ignore whether its spent (read-only spent coins are still accessible in this block).
+                        if (!pcoinsTip->GetCoinFromDB(txin.prevout))
                         {
+                            state.missingInput = inIdx;
                             fMissingOrSpent = true;
+                        }
+                    }
+                    else
+                    {
+                        if (!pcoinsTip->HaveCoinInCache(txin.prevout, fSpent))
+                        {
+                            vCoinsToUncache.push_back(txin.prevout);
+                            if (!view.GetCoinFromDB(txin.prevout))
+                            {
+                                state.missingInput = inIdx;
+                                fMissingOrSpent = true;
+                            }
                         }
                     }
                     if (fSpent || fMissingOrSpent)
                     {
                         if (debugger)
                         {
-                            debugger->AddInvalidReason("input-does-not-exist: " + txin.prevout.hash.ToString());
+                            debugger->AddInvalidReason(
+                                "input-does-not-exist: " + std::to_string(inIdx) + " " + txin.prevout.hash.ToString());
                             // missing inputs are not mineable now. it may be mineable
                             // in the future but it is not certain, assume it will not be
                             debugger->mineable = false;
@@ -1045,12 +1071,14 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
                         }
                         // fMissingInputs and not state.IsInvalid() is used to detect this condition, don't set
                         // state.Invalid()
+                        LOG(MEMPOOL, "input-does-not-exist: %d:%s\n", inIdx, txin.prevout.hash.ToString());
                         *pfMissingInputs = true;
                         if (debugger == nullptr)
                         {
                             break; // There is no point checking any more once one fails, for orphans we will recheck
                         }
                     }
+                    inIdx++;
                 }
                 if (*pfMissingInputs == true)
                 {
@@ -1075,8 +1103,23 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
             // Bring the best block into scope
             view.GetBestBlock();
 
-            nValueIn = view.GetValueIn(*tx);
-
+            nValueIn = tx->GetValueIn();
+            // NOTE this view function MUST be executed, so we can cache all inputs, before SetBackend(dummy)
+            CAmount viewValueIn = view.GetValueIn(*tx);
+            if (nValueIn != viewValueIn)
+            {
+                if (debugger)
+                {
+                    debugger->AddInvalidReason(
+                        strprintf("inconsistent input value: tx: %d,  UTXO: %d", nValueIn, viewValueIn));
+                    debugger->mineable = false;
+                    debugger->futureMineable = false;
+                }
+                else
+                {
+                    return state.DoS(1, false, REJECT_INVALID, "inconsistent input value");
+                }
+            }
             // we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
             view.SetBackend(dummy);
 
@@ -1100,7 +1143,8 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
             }
 
             nValueOut = tx->GetValueOut();
-            nFees = nValueIn - nValueOut;
+            nFees = viewValueIn - nValueOut;
+            LOG(MEMPOOL, "Value In: %d  Out: %d  Fees: %d\n", nValueIn, nValueOut, nFees);
             nModifiedFees = nFees; // nModifiedFees includes any fee deltas from PrioritiseTransaction
             double nPriorityDummy = 0;
 
@@ -1141,7 +1185,7 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
                 tx, state, view, true, flags, true, &resourceTracker, chainparams, nullptr, &sighashType, debugger))
         {
             if (state.GetDebugMessage() == "")
-                state.SetDebugMessage("CheckInputs failed");
+                state.SetDebugMessage("CheckConsumedInputs failed");
 
             if (debugger && debugger->InputsCheck1IsValid())
             {
@@ -1151,7 +1195,8 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
             }
             else
             {
-                LOG(MEMPOOL, "CheckInputs failed for tx: %s reason: %s\n", id.ToString(), state.GetDebugMessage());
+                LOG(MEMPOOL, "CheckConsumedInputs failed for tx: %s reason: %s\n", id.ToString(),
+                    state.GetDebugMessage());
                 return false;
             }
         }
@@ -1303,7 +1348,13 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
         {
             if (debugger)
             {
-                debugger->AddInvalidReason("txn-txpool-conflict");
+                std::string conflicts("txn-txpool-conflict:");
+                for (auto &c : respend.getConflicts())
+                {
+                    conflicts.append(" ");
+                    conflicts.append(c.GetHex());
+                }
+                debugger->AddInvalidReason(conflicts);
             }
             else
             {

@@ -116,7 +116,7 @@ void *CreateScriptMachine(unsigned int flags,
         state.inAmount = amountIn;
         state.outAmount = amountOut;
         state.fee = amountIn - amountOut;
-        if (!CheckGroupTokens(*txref, state, prevouts))
+        if (!CheckGroupTokens(*txref, state, prevouts, prevouts))
         {
             if (errorDetails)
             {

@@ -100,6 +100,7 @@ class MyTest (BitcoinTestFramework):
         self.node.sendtoaddress(addr, 10000)
         self.node.sendtoaddress(addr, 10000)
         self.node.sendtoaddress(addr, 10000)
+        waitFor(10, lambda: self.node.gettxpoolinfo()["size"] == 4)
         self.node.generate(1)
 
         # grab a list of coins to work with

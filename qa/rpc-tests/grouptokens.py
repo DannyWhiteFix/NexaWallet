@@ -1083,7 +1083,7 @@ class GroupTokensTest (BitcoinTestFramework):
         self.nodes[2].token("authority","create", authGrpId4, addr2, "MELT", "NOCHILD")
         self.nodes[2].token("authority","create", authGrpId4, addr2, "MINT", "NOCHILD")
         self.nodes[2].token("authority","create", authGrpId4, addr2, "RESCRiPT", "NOCHILD")
-
+        waitFor(10, lambda: self.nodes[2].gettxpoolinfo()["size"] == 3)
         self.nodes[2].generate(1) # must mine a block for tracking to update
         assert_equal(self.nodes[2].token("authority", "count", authGrpId4)["mint"], "2")
         assert_equal(self.nodes[2].token("authority", "count", authGrpId4)["melt"], "2")
