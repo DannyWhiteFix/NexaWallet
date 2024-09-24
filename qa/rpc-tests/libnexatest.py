@@ -17,6 +17,20 @@ import test_framework.libnexa as libnexa
 from test_framework.nodemessages import *
 from test_framework.script import *
 
+def spendOutputOfAmount(amt, tx, templateScript, constraintArgs=None, satisfierArgs=None):
+    for idx in range(0, len(tx.vout)):
+            if tx.vout[idx].nValue == amt:  # its my output
+                inp = tx.SpendOutput(idx)
+                inp.setUnlockingToTemplate(templateScript, constraintArgs, satisfierArgs)
+                return inp
+    return None
+
+def spendOutput(idx, tx, templateScript, constraintArgs=None, satisfierArgs=None):
+    inp = tx.SpendOutput(idx)
+    inp.setUnlockingToTemplate(templateScript, constraintArgs, satisfierArgs)
+    return inp
+
+
 class MyTest (BitcoinTestFramework):
 
     def setup_chain(self, bitcoinConfDict=None, wallets=None):
@@ -29,6 +43,29 @@ class MyTest (BitcoinTestFramework):
         connect_nodes_bi(self.nodes, 0, 1)
         self.is_network_split = False
         self.sync_all()
+
+    def runAddressTests(self):
+        no = self.nodes[0]
+        # Send to an address we create based on a simple script
+        scr = CScript([OP_DROP])
+        addr = libnexa.templateToAddress(libnexa.ChainSelector.AddrBlockchainRegtest, scr)
+        txidem = no.sendtoaddress(addr, 10000)
+        txhex = no.gettransaction(txidem)
+
+        scr2 = CScript([OP_DROP,OP_DROP])
+        addr2 = libnexa.templateToAddress(libnexa.ChainSelector.AddrBlockchainRegtest, scr2)
+
+        # Spend that output to prove we created the correct address
+        paytx = CTransaction(txhex)
+        tx = CTransaction()
+        inp = spendOutput(0, paytx, scr, None, CScript([1]))
+        assert inp
+        tx.vin.append(inp)
+        tx.vout.append(TxOut(0,10000-1000).setLockingToTemplate(scr2, None))
+        txh = no.sendrawtransaction(tx.toHex())
+        assert txh != None
+        assert no.gettxpoolinfo()["size"]==2
+        no.generate(1)  # clean up
 
     def runScriptMachineTests(self):
         # Check basic script
@@ -120,6 +157,7 @@ class MyTest (BitcoinTestFramework):
         assert_equal(err[1], 2)
 
     def run_test(self):
+        self.runAddressTests()
         self.runScriptMachineTests()
         faulted = False
         try:

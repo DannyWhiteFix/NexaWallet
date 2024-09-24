@@ -12,6 +12,10 @@
 #include "tinyformat.h"
 #include "utilstrencodings.h"
 
+const std::string CTxIn::UTXO_TYPE_STR = "UTXO(0)";
+const std::string CTxIn::READONLY_TYPE_STR = "READONLY(1)";
+const std::string CTxIn::INVALID_TYPE_STR = "INVALID";
+
 
 std::string SatoshiOutPoint::ToString() const
 {
@@ -58,6 +62,7 @@ std::string CTxIn::ToString() const
 {
     std::string str;
     str += "CTxIn(";
+    str += "type:" + std::to_string(this->type) + ", ";
     str += prevout.ToString();
     str += strprintf(", scriptSig=%s", HexStr(scriptSig));
     if (nSequence != SEQUENCE_FINAL)
@@ -161,6 +166,20 @@ CAmount CTransaction::GetValueOut() const
             throw std::runtime_error("CTransaction::GetValueOut(): value out of range");
     }
     return nValueOut;
+}
+CAmount CTransaction::GetValueIn() const
+{
+    CAmount amount = 0;
+    for (const auto &i : vin)
+    {
+        if (!i.IsReadOnly())
+        {
+            amount += i.amount;
+            if (!MoneyRange(i.amount) || !MoneyRange(amount))
+                throw std::runtime_error("CTransaction::GetValueIn(): value out of range");
+        }
+    }
+    return amount;
 }
 
 double CTransaction::ComputePriority(double dPriorityInputs, unsigned int nSize) const

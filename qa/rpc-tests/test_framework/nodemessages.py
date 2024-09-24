@@ -5,6 +5,7 @@ import random
 import hashlib
 import decimal
 import pdb
+import io
 from binascii import hexlify, unhexlify
 import time
 from codecs import encode
@@ -656,19 +657,24 @@ class COutPoint(object):
 
 
 class CTxIn(object):
+    UTXO = 0
+    READONLY = 1
     def __init__(self, outpoint=None, amount=0, scriptSig=b"", nSequence=0):
         # ctor determination and input arg conversion
         if type(amount) is decimal.Decimal:
             amount = int(amount*COIN)
         assert(type(amount) is int)
-        if isinstance(outpoint, dict):
-            return self.fromRpcUtxo(outpoint)
         if scriptSig is None: scriptSig = b""
         assert(isinstance(scriptSig, bytes))
 
         # Initialization
         if outpoint is None:
             self.prevout = COutPoint()
+        elif isinstance(outpoint, dict):
+            self.fromRpcUtxo(outpoint)
+            return
+        elif type(outpoint) is str:
+            self.prevout = COutPoint(outpoint)
         else:
             self.prevout = outpoint
         self.t = 0
@@ -683,6 +689,7 @@ class CTxIn(object):
         self.scriptSig = b""
         self.amount = int(d['amount']*COIN)
         self.nSequence = 0
+        return self
 
     def deserialize(self, f):
         self.t = struct.unpack("<B", f.read(1))[0]
@@ -743,12 +750,14 @@ class TxOut(object):
         """Return true if this TxOut (compared by value) is in the passed transaction"""
         return self.findIn(tx) >= 0
 
-    def setLockingToTemplate(self, templateScript, constraintArgs, publicArgs=[], group=None, groupQty=None):
+    def setLockingToTemplate(self, templateScript, constraintArgs, publicArgs=None, group=None, groupQty=None):
         self.t = TxOut.TYPE_TEMPLATE
+        if publicArgs is None: publicArgs = []
         hashTemplate = hash160(templateScript)
         hashArgs = hash160(constraintArgs) if (constraintArgs != None) else OP_0
         grpPfx = [ OP_0 ] if (group == None) else [ group, groupQty]
         self.scriptPubKey = CScript(grpPfx + [hashTemplate, hashArgs] + publicArgs)
+        return self
 
 
     def deserialize(self, f):

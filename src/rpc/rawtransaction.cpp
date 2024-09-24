@@ -176,7 +176,8 @@ void TxToJSON(const CTransaction &tx, const int64_t txTime, const uint256 hashBl
     CAmount outAmt = 0;
     for (const CTxIn &txin : tx.vin)
     {
-        inAmt += txin.amount;
+        if (!txin.IsReadOnly())
+            inAmt += txin.amount;
     }
     for (const CTxOut &txout : tx.vout)
     {
@@ -195,6 +196,7 @@ void TxToJSON(const CTransaction &tx, const int64_t txTime, const uint256 hashBl
     for (const CTxIn &txin : tx.vin)
     {
         UniValue in(UniValue::VOBJ);
+        in.pushKV("type", CTxIn::typeToString(txin.type));
         in.pushKV("outpoint", txin.prevout.hash.GetHex());
         in.pushKV("amount", ValueFromAmount(txin.amount));
         UniValue o(UniValue::VOBJ);
@@ -1677,6 +1679,10 @@ UniValue validaterawtransaction(const UniValue &params, bool fHelp)
     else if (fHaveChain)
     {
         throw JSONRPCError(RPC_TRANSACTION_ALREADY_IN_CHAIN, "transaction already in block chain");
+    }
+    else if (fHaveMempool)
+    {
+        throw JSONRPCError(RPC_TRANSACTION_ALREADY_IN_CHAIN, "transaction already in txpool");
     }
 
     return DebuggerToJSON(debugger);

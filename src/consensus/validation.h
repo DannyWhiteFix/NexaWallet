@@ -61,8 +61,24 @@ public:
     CAmount outAmount = -1;
     CAmount fee = -1;
     GroupBalanceMapRef groupState = nullptr;
+    int missingInput = -1;
 
     CValidationState() : mode(MODE_VALID), nDoS(0), chRejectCode(0), corruptionPossible(false) {}
+
+    void SetNull()
+    {
+        mode = MODE_VALID;
+        nDoS = 0;
+        strRejectReason.clear();
+        chRejectCode = 0;
+        corruptionPossible = false;
+        strDebugMessage.clear();
+        inAmount = -1;
+        outAmount = -1;
+        fee = -1;
+        groupState = nullptr;
+    }
+
     bool DoS(int level,
         bool ret = false,
         unsigned int chRejectCodeIn = 0,
@@ -115,6 +131,13 @@ public:
     std::string GetRejectReason() const { return strRejectReason; }
     std::string GetDebugMessage() const { return strDebugMessage; }
     void SetDebugMessage(const std::string &s) { strDebugMessage = s; }
+
+    /** Convert CValidationState to a human-readable message for logging */
+    std::string GetLogString() const
+    {
+        auto dbgmsg = strDebugMessage.empty() ? "" : ", " + strDebugMessage;
+        return strRejectReason + dbgmsg + " (code " + std::to_string(chRejectCode) + ")";
+    }
 
     /** Set the quantity of satoshis used by this transaction */
     void SetAmounts(CAmount _inAmount, CAmount _outAmount, CAmount _fee)

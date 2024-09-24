@@ -9,7 +9,7 @@
 #ifdef IOS
 #define p(...) // tinyformat::format(std::cout, __VA_ARGS__)
 #else // not IOS
-#define p(...) tinyformat::format(std::cout, __VA_ARGS__)
+#define p(...) // tinyformat::format(std::cout, __VA_ARGS__)
 #endif // IOS
 #else // not DEBUG
 #define p(...)
@@ -1475,7 +1475,7 @@ void GetStrongRandBytes(unsigned char *buf, int num)
 }
 #endif // IOS
 
-#if !defined(JAVA) && !defined(ANDROID) && !defined(IOS)
+#if !defined(ANDROID) && !defined(IOS)
 /** Return random bytes from cryptographically acceptable random sources */
 SLAPI int RandomBytes(unsigned char *buf, int num)
 {

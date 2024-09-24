@@ -542,13 +542,16 @@ set<uint256> CWallet::GetConflicts(const uint256 &txid) const
 
     for (const CTxIn &txin : wtx->vin)
     {
-        if (mapTxSpends.count(txin.prevout) <= 1)
-            continue; // No conflict if zero or one spends
-        range = mapTxSpends.equal_range(txin.prevout);
-        for (TxSpends::const_iterator it2 = range.first; it2 != range.second; ++it2)
+        if (!txin.IsReadOnly())
         {
-            if (it2->second != txid)
-                result.insert(it2->second);
+            if (mapTxSpends.count(txin.prevout) <= 1)
+                continue; // No conflict if zero or one spends
+            range = mapTxSpends.equal_range(txin.prevout);
+            for (TxSpends::const_iterator it2 = range.first; it2 != range.second; ++it2)
+            {
+                if (it2->second != txid)
+                    result.insert(it2->second);
+            }
         }
     }
     return result;
@@ -681,7 +684,7 @@ bool CWallet::IsSpent(const COutPoint &outpoint) const
             bool spent = false;
             for (const CTxIn &in : tx->vin)
             {
-                if (in.prevout == outpoint)
+                if (!in.IsReadOnly() && (in.prevout == outpoint))
                 {
                     spent = true;
                     break;
@@ -734,7 +737,8 @@ void CWallet::AddToSpends(const CWalletTxRef wtx)
 
     for (const CTxIn &txin : wtx->vin)
     {
-        AddToSpends(txin.prevout, txid);
+        if (!txin.IsReadOnly())
+            AddToSpends(txin.prevout, txid);
     }
 }
 
@@ -749,7 +753,8 @@ void CWallet::RemoveFromSpends(const CWalletTxRef wtx)
 
     for (const CTxIn &txin : wtx->vin)
     {
-        RemoveFromSpends(txin.prevout, txid);
+        if (!txin.IsReadOnly())
+            RemoveFromSpends(txin.prevout, txid);
     }
 }
 
@@ -888,6 +893,7 @@ void CWallet::MarkDirty()
 bool CWallet::AddToWallet(CWalletTxRef wtx, bool fFromLoadWallet, CWalletDB *pwalletdb)
 {
     LOCK(cs_wallet);
+    // LOGA("Add to wallet txidem: %s\n", wtx->GetIdem().ToString());
     if (fFromLoadWallet)
     {
         DbgAssert(wtx->nOrderPos != -1, wtx->nOrderPos = IncOrderPosNext(pwalletdb));
@@ -916,18 +922,21 @@ bool CWallet::AddToWallet(CWalletTxRef wtx, bool fFromLoadWallet, CWalletDB *pwa
         AddToSpends(wtx);
         for (const CTxIn &txin : wtx->vin)
         {
-            auto it = mapWallet.find(txin.prevout);
-            // If a parent is conflicted then also mark this wallet as conflicted
-            if (it != mapWallet.end())
+            if (!txin.IsReadOnly()) // inputing a tx readonly can never conflict
             {
-                COutput &prevout = it->second;
-                CWalletTxRef prevtx = prevout.tx;
-                // can't conflict with yourself
-                if ((prevtx->GetIdem() != wtx->GetIdem()) &&
-                    // if unconfirmed and we are not abandoning this prevtx
-                    (prevtx->nIndex == -1) && !prevtx->hashUnset())
+                auto it = mapWallet.find(txin.prevout);
+                // If a parent is conflicted then also mark this wallet as conflicted
+                if (it != mapWallet.end())
                 {
-                    MarkConflicted(prevtx->hashBlock, wtx->GetId());
+                    COutput &prevout = it->second;
+                    CWalletTxRef prevtx = prevout.tx;
+                    // can't conflict with yourself
+                    if ((prevtx->GetIdem() != wtx->GetIdem()) &&
+                        // if unconfirmed and we are not abandoning this prevtx
+                        (prevtx->nIndex == -1) && !prevtx->hashUnset())
+                    {
+                        MarkConflicted(prevtx->hashBlock, wtx->GetId());
+                    }
                 }
             }
         }
@@ -978,18 +987,22 @@ bool CWallet::AddToWallet(CWalletTxRef wtx, bool fFromLoadWallet, CWalletDB *pwa
             // Then determine if any have tokens and if so add them to vtxPrev.
             for (const CTxIn &txin : wtx->vin)
             {
-                auto it = mapWalletUnspent.find(txin.prevout);
-                if (it != mapWalletUnspent.end())
+                if (!txin.IsReadOnly())
                 {
-                    const CTxOut &txout = it->second.GetTxOut();
-                    CGroupTokenInfo tg(txout);
-                    if (tg.associatedGroup != NoGroup)
+                    auto it = mapWalletUnspent.find(txin.prevout);
+                    if (it != mapWalletUnspent.end())
                     {
-                        // Create the partial merkletx's which get added a walletTx which can be later
-                        // used for looking up grouptoken mint/melt operations from each prev outputs's scriptPubKey.
-                        CMutableTransaction mTx;
-                        mTx.vout.push_back(txout);
-                        wtx->vtxPrev.push_back(CMerkleTx(mTx));
+                        const CTxOut &txout = it->second.GetTxOut();
+                        CGroupTokenInfo tg(txout);
+                        if (tg.associatedGroup != NoGroup)
+                        {
+                            // Create the partial merkletx's which get added a walletTx which can be later
+                            // used for looking up grouptoken mint/melt operations from each prev outputs's
+                            // scriptPubKey.
+                            CMutableTransaction mTx;
+                            mTx.vout.push_back(txout);
+                            wtx->vtxPrev.push_back(CMerkleTx(mTx));
+                        }
                     }
                 }
             }
@@ -1142,6 +1155,8 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef &ptx,
         const uint256 &txId = ptx->GetId();
         for (const CTxIn &txin : ptx->vin)
         {
+            if (txin.IsReadOnly())
+                continue; // We are not interested in any random tx that reads our UTXO
             std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(txin.prevout);
             while (range.first != range.second)
             {
@@ -1241,11 +1256,14 @@ bool CWallet::AbandonTransaction(const uint256 &hashTx)
             // available of the outputs it spends. So force those to be recomputed
             for (const CTxIn &txin : wtx->vin)
             {
-                auto access = mapWallet.find(txin.prevout);
-                if (access != mapWallet.end())
+                if (!txin.IsReadOnly())
                 {
-                    access->second.tx->MarkDirty();
-                    AddToWallet(access->second.tx, false, &walletdb);
+                    auto access = mapWallet.find(txin.prevout);
+                    if (access != mapWallet.end())
+                    {
+                        access->second.tx->MarkDirty();
+                        AddToWallet(access->second.tx, false, &walletdb);
+                    }
                 }
             }
         }
@@ -1324,11 +1342,14 @@ void CWallet::MarkConflicted(const uint256 &hashBlock, const uint256 &hashTx)
             // available of the outputs it spends. So force those to be recomputed
             for (const CTxIn &txin : wtx->vin)
             {
-                auto prev = mapWallet.find(txin.prevout);
-                if (prev != mapWallet.end())
+                if (!txin.IsReadOnly())
                 {
-                    prev->second.tx->MarkDirty();
-                    AddToWallet(prev->second.tx, false, &walletdb);
+                    auto prev = mapWallet.find(txin.prevout);
+                    if (prev != mapWallet.end())
+                    {
+                        prev->second.tx->MarkDirty();
+                        AddToWallet(prev->second.tx, false, &walletdb);
+                    }
                 }
             }
         }
@@ -1347,6 +1368,8 @@ void CWallet::SyncTransaction(const CTransactionRef &ptx, const ConstCBlockRef p
     // recomputed, also:
     for (const CTxIn &txin : ptx->vin)
     {
+        if (txin.IsReadOnly())
+            continue; // Inputing a read only UTXO does not change any wallet state
         auto prev = mapWallet.find(txin.prevout);
         if (prev != mapWallet.end())
             prev->second.tx->MarkDirty();
@@ -1355,6 +1378,9 @@ void CWallet::SyncTransaction(const CTransactionRef &ptx, const ConstCBlockRef p
 
 CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter &filter) const
 {
+    if (txin.IsReadOnly())
+        return 0;
+    /*
     LOCK(cs_wallet);
     MapWallet::const_iterator mi = mapWallet.find(txin.prevout);
     if (mi != mapWallet.end())
@@ -1366,6 +1392,11 @@ CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter &filter) const
             if (IsMine(prev->vout[n]) & filter)
                 return prev->vout[n].nValue;
     }
+    return 0;
+    */
+    LOCK(cs_wallet);
+    if (IsMine(txin) & filter)
+        return txin.amount;
     return 0;
 }
 
@@ -1442,9 +1473,12 @@ CAmount CWallet::GetDebit(const CTransaction &tx, const isminefilter &filter) co
     CAmount nDebit = 0;
     for (const CTxIn &txin : tx.vin)
     {
-        nDebit += GetDebit(txin, filter);
-        if (!MoneyRange(nDebit))
-            throw std::runtime_error("CWallet::GetDebit(): value out of range");
+        if (!txin.IsReadOnly())
+        {
+            nDebit += GetDebit(txin, filter);
+            if (!MoneyRange(nDebit))
+                throw std::runtime_error("CWallet::GetDebit(): value out of range");
+        }
     }
     return nDebit;
 }
@@ -2256,6 +2290,8 @@ bool CWalletTx::IsTrusted() const
         // Trusted if all inputs are from us and are in the txpool:
         for (const CTxIn &txin : vin)
         {
+            if (txin.IsReadOnly())
+                continue;
             // Transactions not sent by us: not trusted
             const COutput parent = pwallet->GetWalletCoin(txin.prevout);
             if (parent.isNull())
@@ -2387,6 +2423,7 @@ CAmount CWallet::GetBalance()
     CAmount nTotal = 0;
     {
         LOCK(cs_wallet);
+        // LOGA("Balance unspent: ");
         for (MapWallet::const_iterator it = mapWalletUnspent.begin(); it != mapWalletUnspent.end(); ++it)
         {
             const CWalletTxRef ptx = it->second.tx;
@@ -2395,15 +2432,20 @@ CAmount CWallet::GetBalance()
 
             if (ptx->IsTrusted())
             {
+                // The wallet doesn't report coin in a group UTXO as part of the balance although
+                // technically it is.
                 if (!IsSpent(it->first) && (GetGroupToken(it->second.GetScriptPubKey()) == NoGroup))
                 {
-                    nTotal += GetCredit(it->second.GetTxOut(), ISMINE_SPENDABLE);
+                    CAmount tmp = GetCredit(it->second.GetTxOut(), ISMINE_SPENDABLE);
+                    nTotal += tmp;
+                    // LOGA("%d -> %d (%s)", tmp, nTotal, ptx->GetIdem().GetHex());
                 }
             }
         }
 
 #ifdef DEBUG
-        // Make sure the new and old method have matching totals
+        // LOGA("Balance mapWallet: ");
+        //  Make sure the new and old method have matching totals
         CAmount nTotal2 = 0;
         for (MapWallet::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
@@ -2414,10 +2456,14 @@ CAmount CWallet::GetBalance()
                 {
                     CAmount tmp = ptx->GetAvailableCredit(false);
                     nTotal2 += tmp;
+                    // if (tmp != 0)
+                    //     LOGA("%d -> %d (%s)", tmp, nTotal2,  ptx->GetIdem().GetHex());
                 }
             }
         }
-        assert(nTotal == nTotal2);
+        if (nTotal != nTotal2)
+            LOGA("Balance inconsistency: unspent: %d  mapWallet: %d", nTotal, nTotal2);
+        DbgAssert(nTotal == nTotal2, );
 #endif
     }
 
@@ -3169,14 +3215,19 @@ bool CWallet::FundTransaction(CMutableTransaction &tx,
     coinControl.fAllowWatchOnly = includeWatching;
     for (const CTxIn &txin : tx.vin)
     {
-        coinControl.Select(txin.prevout);
+        // If its a read-only txin, DONT select it here.
+        // It does not pull in any coins so has no effect on funding.
+        if (!txin.IsReadOnly())
+            coinControl.Select(txin.prevout);
     }
 
+    // Create a new transaction with what I'll need to fund the actual one.
     CReserveKey reservekey(this);
     CWalletTx wtx;
     if (!CreateTransaction(vecSend, wtx, reservekey, nFeeRet, nChangePosRet, strFailReason, &coinControl, false))
         return false;
 
+    // Add needed change
     if (nChangePosRet != -1)
     {
         tx.vout.insert(tx.vout.begin() + nChangePosRet, wtx.vout[nChangePosRet]);
@@ -3185,10 +3236,12 @@ bool CWallet::FundTransaction(CMutableTransaction &tx,
         reservekey.KeepKey();
     }
 
-    // Add new txins (keeping original txin scriptSig/order)
+    // Add new txins from wtx into the actual tx (keeping original txin scriptSig/order)
     for (const CTxIn &txin : wtx.vin)
     {
         bool found = false;
+        // Look for the input in the original tx.  If its there, no need to add it again.
+        // (this preserves the original tx input order).
         for (const CTxIn &origTxIn : tx.vin)
         {
             if (txin.prevout == origTxIn.prevout)
@@ -3932,6 +3985,8 @@ bool CWallet::CommitTransaction(CWalletTx &wtxNew, CReserveKey &reservekey, std:
         // Notify that old coins are spent
         for (const CTxIn &txin : storedTx->vin)
         {
+            if (txin.IsReadOnly())
+                continue;
             CWalletTxRef wtx = mapWallet[txin.prevout].tx;
             wtx->BindWallet(this);
             NotifyTransactionChanged(this, wtx->GetIdem(), CT_UPDATED);
@@ -4351,6 +4406,8 @@ set<set<CTxDestination> > CWallet::GetAddressGroupings()
             for (CTxIn txin : wtx->vin)
             {
                 CTxDestination address;
+                if (txin.IsReadOnly())
+                    continue;
                 if (!IsMine(txin)) /* If this input isn't mine, ignore it */
                     continue;
                 if (!ExtractDestination(mapWallet[txin.prevout].GetScriptPubKey(), address))

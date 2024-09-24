@@ -123,6 +123,31 @@ bool ContextualCheckTransaction(const CTransactionRef tx,
     CBlockIndex *const pindexPrev,
     const CChainParams &params)
 {
+    for (const CTxIn &txin : tx->vin)
+    {
+        // if fork 1 has not yet been enabled, only fork 0 types are valid
+        if (!IsFork1Enabled(pindexPrev))
+        {
+            // check if the txin type is outside the range of valid types for the last fork
+            // fork 0 means valid before the first HF
+            if (txin.type > CTxIn::VALID_FORK0_TYPES)
+            {
+                return state.DoS(100, false, REJECT_INVALID, "invalid-txin-type-for-block");
+            }
+        }
+        // template for further hard forks
+        /*
+        // if fork 2 has not yet been enabled, only fork 0 and 1 types are valid
+        if (!IsFork2Enabled(pindexPrev))
+        {
+            if (txin.type > CTxIn::VALID_FORK1_TYPES)
+            {
+                return state.DoS(100, false, REJECT_INVALID, "invalid-txin-type-for-block");
+            }
+        }
+        */
+    }
+
     // Commented out until needed again.
     // const int nHeight = pindexPrev == nullptr ? 0 : pindexPrev->height() + 1;
     // auto consensusParams = params.GetConsensus();
@@ -192,11 +217,30 @@ bool CheckTransaction(const CTransactionRef tx, CValidationState &state)
         if (tx->vin.empty())
             return state.DoS(10, false, REJECT_INVALID, "bad-txns-vin-empty");
 
+        int nConsumed = 0;
         for (const CTxIn &txin : tx->vin)
         {
-            if (txin.type != CTxIn::UTXO)
+            if (txin.type >= CTxIn::INVALID)
+            {
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-invalid-txin-type");
+            }
+            if (txin.IsReadOnly())
+            {
+                if (txin.nSequence != 0)
+                {
+                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-invalid-readonly-sequence");
+                }
+                if (txin.amount != 0)
+                {
+                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-nonzero-readonly-amount");
+                }
+            }
+            else
+                nConsumed++;
         }
+
+        if (nConsumed == 0)
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-vin-entirely-readonly");
 
         // Check for duplicate inputs.
         // Simply checking every pair is O(n^2).
@@ -271,12 +315,28 @@ static int GetSpendHeight(const CCoinsViewCache &inputs)
 bool Consensus::CheckTxInputs(const CTransactionRef tx,
     CValidationState &state,
     const CCoinsViewCache &inputs,
+    const CCoinsViewCache &readonlyCoins,
     const CChainParams &chainparams)
 {
     // This doesn't trigger the DoS code on purpose; if it did, it would make it easier
     // for an attacker to attempt to split the network.
-    if (!inputs.HaveInputs(*tx))
-        return state.Invalid(false, 0, "", "Inputs unavailable");
+    for (const CTxIn &input : tx->vin)
+    {
+        if (input.IsReadOnly())
+        {
+            if (!readonlyCoins.HaveCoin(input.prevout))
+            {
+                return state.Invalid(false, 0, "", "Inputs unavailable");
+            }
+        }
+        else
+        {
+            if (!inputs.HaveCoin(input.prevout))
+            {
+                return state.Invalid(false, 0, "", "Inputs unavailable");
+            }
+        }
+    }
 
     CAmount nValueIn = 0;
     int nSpendHeight = -1;
@@ -285,15 +345,22 @@ bool Consensus::CheckTxInputs(const CTransactionRef tx,
         {
             const COutPoint &prevout = tx->vin[i].prevout;
             Coin coin;
-            inputs.GetCoin(prevout, coin); // Make a copy so I don't hold the utxo lock
+            // Make a copy so I don't hold the utxo lock
+            if (tx->vin[i].IsReadOnly())
+            {
+                readonlyCoins.GetCoin(prevout, coin);
+            }
+            else
+            {
+                inputs.GetCoin(prevout, coin);
+            }
             assert(!coin.IsSpent());
-
+            CAmount nCoinOutValue = tx->vin[i].amount;
             // If prev is coinbase, check that it's matured
             if (coin.IsCoinBase())
             {
                 // Copy these values here because once we unlock and re-lock cs_utxo we can't count on "coin"
                 // still being valid.
-                CAmount nCoinOutValue = coin.out.nValue;
                 int nCoinHeight = coin.nHeight;
 
                 // If there are multiple coinbase spends we still only need to get the spend height once.
@@ -304,19 +371,15 @@ bool Consensus::CheckTxInputs(const CTransactionRef tx,
                 if (nSpendHeight - nCoinHeight < chainparams.GetConsensus().coinbaseMaturity)
                     return state.Invalid(false, REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",
                         strprintf("tried to spend coinbase at depth %d", nSpendHeight - nCoinHeight));
+            }
 
-                // Check for negative or overflow input values.  We use nCoinOutValue which was copied before
-                // we released cs_utxo, because we can't be certain the value didn't change during the time
-                // cs_utxo was unlocked.
+            // Check for negative or overflow input values.  We use nCoinOutValue which was copied before
+            // we released cs_utxo, because we can't be certain the value didn't change during the time
+            // cs_utxo was unlocked.
+            if (tx->vin[i].IsReadOnly() == false)
+            {
                 nValueIn += nCoinOutValue;
                 if (!MoneyRange(nCoinOutValue) || !MoneyRange(nValueIn))
-                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
-            }
-            else
-            {
-                // Check for negative or overflow input values
-                nValueIn += coin.out.nValue;
-                if (!MoneyRange(coin.out.nValue) || !MoneyRange(nValueIn))
                     return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
             }
         }
@@ -324,8 +387,10 @@ bool Consensus::CheckTxInputs(const CTransactionRef tx,
 
     CAmount outAmount = tx->GetValueOut();
     if (nValueIn < outAmount)
+    {
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-in-belowout", false,
             strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(tx->GetValueOut())));
+    }
 
     // Tally transaction fees
     CAmount nTxFee = nValueIn - outAmount;

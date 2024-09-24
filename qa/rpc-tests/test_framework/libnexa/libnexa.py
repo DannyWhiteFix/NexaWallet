@@ -38,9 +38,35 @@ class StackItemType(IntEnum):
     BYTES = 0
     BIGNUM = 1
 
+# match this with values in libnexa_common.h
+class PayAddressType(IntEnum):
+    PayAddressTypeP2PKH = 0
+    PayAddressTypeP2SH = 1
+    PayAddressTypeGROUP = 11
+    PayAddressTypeTEMPLATE = 19
+    PayAddressTypeNONE = 255
+
+class ChainSelector(IntEnum):
+    AddrBlockchainNexa = 1
+    AddrBlockchainTestnet = 2
+    AddrBlockchainRegtest = 3
+    AddrBlockchainBCH = 4
+    AddrBlockchainBchTestnet = 5
+    AddrBlockchainBchRegtest = 6
+
+REGTEST = ChainSelector.AddrBlockchainRegtest
+    
 class Error(BaseException):
     pass
 
+def strToChainSelector(s):
+    if s == "nexa": return ChainSelector.AddrBlockchainNexa
+    if s == "nexatest": return ChainSelector.AddrBlockchainTestnet
+    if s == "nexareg": return ChainSelector.AddrBlockchainRegtest
+    if s == "bch": return ChainSelector.AddrBlockchainBCH
+    if s == "bchtest": return ChainSelector.AddrBlockchainBchTestnet
+    if s == "bchreg": return ChainSelector.AddrBlockchainBchRegtest
+    raise Error("Unknown blockchain")
 
 def init(libbitcoincashfile=None):
     global libnexa
@@ -48,12 +74,15 @@ def init(libbitcoincashfile=None):
         libbitcoincashfile = "libnexa.so"
         try:
             libnexa = CDLL(libbitcoincashfile)
+            print("Loaded %s" % libbitcoincashfile)
         except OSError:
             import os
             dir_path = os.path.dirname(os.path.realpath(__file__))
             libnexa = CDLL(dir_path + os.sep + libbitcoincashfile)
+            print("Loaded %s" % (dir_path + os.sep + libbitcoincashfile))
     else:
         libnexa = CDLL(libbitcoincashfile)
+        print("Loaded %s" % libbitcoincashfile)
     if libnexa is None:
         raise Error("Cannot find %s shared library", libbitcoincashfile)
     libnexa.CreateNoContextScriptMachine.restype = c_void_p
@@ -113,6 +142,45 @@ def signData(data, key):
     result = create_string_buffer(100)
     siglen = libnexa.SignData(data,len(data),key, result, 100)
     return result.raw[0:siglen]
+
+def templateToAddress(chainSelector, templateScript, constraintArgs=None, publicArgs=None, group=None, groupQty=None):
+    if publicArgs is None: publicArgs = []
+    hashTemplate = hash160(templateScript)
+    hashArgs = hash160(constraintArgs) if (constraintArgs != None) else OP_0
+    grpPfx = [ OP_0 ] if (group == None) else [ group, groupQty]
+    lockingScript = CScript(grpPfx + [hashTemplate, hashArgs] + publicArgs)
+    return lockingScriptToTemplateAddress(chainSelector, lockingScript)
+
+def lockingScriptToTemplateAddress(chainSelector, data):
+    return lockingScriptToAddress(chainSelector, PayAddressType.PayAddressTypeTEMPLATE, data)
+
+def lockingScriptToAddress(chainSelector, addrType, data):
+    if type(data) == str:
+        data = unhexlify(data)
+    elif type(data) != bytes:
+        data = data.serialize()
+    if addrType == PayAddressType.PayAddressTypeTEMPLATE:
+        data = ser_bytes(data)
+    result = create_string_buffer(10000)
+    ok = libnexa.encodeCashAddr(chainSelector, addrType, data,len(data), result, 10000)
+    if ok==0: return None
+    return result.raw[0:ok].decode()
+
+def addressToBin(addrStr):
+    """Convert an address to its binary representation (the locking script for script template addresses)"""
+    blockchainStr = addrStr.split(":")[0]
+    addr = addrStr.split(":")[1].encode("utf-8")
+    chain = strToChainSelector(blockchainStr)
+    result = create_string_buffer(len(addrStr))  # Binary representation is going to be smaller than the text rep
+    typ = create_string_buffer(1)
+    # resultlen = libnexa.decodeCashAddrContent(chain.value, addr, result, len(addrStr), typ)
+    resultlen = libnexa.decodeCashAddr(chain.value, addr, result, len(addrStr), typ)
+    if resultlen==0:
+        print(libnexa.get_libnexa_error())
+    # first byte is the type, 2nd byte is the script length (for small scripts anyway -- compact int encoded)
+    scriptlen = result.raw[1]
+    data = result.raw[2:2+scriptlen]
+    return data
 
 def signTxInputECDSA(tx, inputIdx, inputAmount, prevoutScript, key, sigHashType=BTCBCH_SIGHASH_FORKID | BTCBCH_SIGHASH_ALL):
     """Signs one input of a transaction.  Signature is returned.  You must use this signature to construct the spend script

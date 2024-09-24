@@ -605,6 +605,19 @@ void CheckSpendCoins(CAmount base_value,
     GetCoinsMapEntry(test.cache.map(), result_value, result_flags);
     BOOST_CHECK_EQUAL(result_value, expected_value);
     BOOST_CHECK_EQUAL(result_flags, expected_flags);
+    /* Convenient breaking locations for debugging errors in the above tests
+    if (result_value != expected_value)
+    {
+        printf("error\n");
+    }
+    if (result_flags != expected_flags)
+    {
+        printf("flags error\n");
+        CAmount result_value2;
+        char result_flags2;
+        GetCoinsMapEntry(test.cache.map(), result_value2, result_flags2);
+    }
+    */
 };
 
 BOOST_AUTO_TEST_CASE(ccoins_spend)

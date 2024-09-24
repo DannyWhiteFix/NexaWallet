@@ -338,7 +338,10 @@ public:
 };
 
 // Verify that the token groups in this transaction properly balance
-bool CheckGroupTokens(const CTransaction &tx, CValidationState &state, const CCoinsViewCache &view);
+bool CheckGroupTokens(const CTransaction &tx,
+    CValidationState &state,
+    const CCoinsViewCache &view,
+    const CCoinsViewCache &readonlyCoins);
 
 // Return true if any output in this transaction is part of a group
 bool IsAnyTxOutputGrouped(const CTransaction &tx);

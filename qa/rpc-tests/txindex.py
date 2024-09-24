@@ -56,7 +56,7 @@ class TxIndexTest(BitcoinTestFramework):
         waitFor(waitTime, lambda: self.nodes[1].getblockcount() == 101)
         waitFor(waitTime, lambda: self.nodes[1].getinfo()["txindex"] == "synced")
         for i in range(self.nodes[1].getblockcount()):
-            logging.info("Checking block: " + str(i))
+            # logging.info("Checking block: " + str(i))
             blockhash = self.nodes[1].getblockhash(i)
             txns = self.nodes[1].getblock(blockhash)['txid']
             for tx in txns:

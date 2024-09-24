@@ -1108,7 +1108,7 @@ bool CheckInputs(const CTransactionRef &tx,
     bool allPassed = true;
     if (!tx->IsCoinBase())
     {
-        if (!Consensus::CheckTxInputs(tx, state, inputs, chainparams))
+        if (!Consensus::CheckTxInputs(tx, state, inputs, *pcoinsTip, chainparams))
         {
             if (debugger)
             {
@@ -1122,7 +1122,7 @@ bool CheckInputs(const CTransactionRef &tx,
         }
         // Its ok to only check Group semantics if this is not a coinbase transaction because coinbase transactions
         // MUST NOT have any grouped outputs (see CheckTransaction(...)).
-        if (!CheckGroupTokens(*tx, state, inputs))
+        if (!CheckGroupTokens(*tx, state, inputs, *pcoinsTip))
         {
             if (debugger)
             {
@@ -1151,25 +1151,27 @@ bool CheckInputs(const CTransactionRef &tx,
         // this optimisation would allow an invalid chain to be accepted.
         if (fScriptChecks)
         {
-            std::vector<CTxOut> spendingCoins;
-            spendingCoins.reserve(tx->vin.size());
+            // Get all the prevouts that we need to provide to the script for introspection
+            std::vector<CTxOut> inputCoins;
+            inputCoins.reserve(tx->vin.size());
             for (size_t i = 0; i < tx->vin.size(); i++)
             {
                 CoinAccessor coin(inputs, tx->vin[i].prevout);
-                spendingCoins.push_back(coin->out);
+                inputCoins.push_back(coin->out);
             }
             for (size_t i = 0; i < tx->vin.size(); i++)
             {
                 const COutPoint &prevout = tx->vin[i].prevout;
                 const CScript &scriptSig = tx->vin[i].scriptSig;
                 CoinAccessor coin(inputs, prevout);
+                bool scriptCheckNeeded = true;
 
                 if (coin->IsSpent())
                 {
                     if (debugger)
                     {
                         debugger->SetInputCheckResult(false);
-                        debugger->AddInputCheckError(strprintf("COutPoint %s is spent", prevout.ToString().c_str()));
+                        debugger->AddInputCheckError(strprintf("COutPoint %s is spent", prevout.GetHex().c_str()));
                         debugger->FinishCheckInputSession();
                     }
                     return false;
@@ -1181,125 +1183,158 @@ bool CheckInputs(const CTransactionRef &tx,
                 // failures through additional data in, eg, the coins being
                 // spent being checked as a part of CScriptCheck.
                 const CScript scriptPubKey = coin->out.scriptPubKey;
-                const CAmount amount = coin->out.nValue;
+                const CAmount outAmount = coin->out.nValue;
+                const CAmount inpAmount = tx->vin[i].amount;
                 bool inputVerified = true;
                 if (debugger)
                 {
+                    debugger->AddInputCheckMetadata("index", std::to_string(i));
                     debugger->AddInputCheckMetadata("outpoint", prevout.GetHex());
+                    debugger->AddInputCheckMetadata("type", CTxIn::typeToString(tx->vin[i].type));
                     debugger->AddInputCheckMetadata("constraintType", std::to_string((uint8_t)scriptPubKey.type));
                     debugger->AddInputCheckMetadata("constraint", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
                     debugger->AddInputCheckMetadata("satisfier", HexStr(scriptSig.begin(), scriptSig.end()));
-                    debugger->AddInputCheckMetadata("amount", std::to_string(amount));
+                    debugger->AddInputCheckMetadata("amount", std::to_string(outAmount));
                     debugger->AddInputCheckMetadata("sequence", std::to_string(tx->vin[i].nSequence));
-                    debugger->AddInputCheckMetadata("spentAmount", std::to_string(tx->vin[i].amount));
+                    debugger->AddInputCheckMetadata("spentAmount", std::to_string(inpAmount));
                 }
 
-                if (amount != tx->vin[i].amount)
+                if (tx->vin[i].IsReadOnly())
                 {
-                    if (debugger)
+                    if (0 != inpAmount)
                     {
-                        debugger->AddInputCheckError(
-                            strprintf("input-amount-mismatch (prevout: %d, input: %d)", amount, tx->vin[i].amount));
-                        inputVerified = false;
-                        allPassed = false;
+                        if (debugger)
+                        {
+                            debugger->AddInputCheckError(strprintf(
+                                "bad-txns-nonzero-readonly-amount (prevout: %d, input: %d)", outAmount, inpAmount));
+                            inputVerified = false;
+                            allPassed = false;
+                        }
+                        else
+                        {
+                            return state.Invalid(false, REJECT_INVALID, "bad-txns-nonzero-readonly-amount");
+                        }
+                    }
+                    // scriptSigs are optional for read-only inputs (but if they exist, they MUST be correct).
+                    if (scriptSig.size() == 0)
+                        scriptCheckNeeded = false;
+                }
+                else // not read-only, check that the incoming amount matches the prevout
+                {
+                    if (outAmount != inpAmount)
+                    {
+                        if (debugger)
+                        {
+                            debugger->AddInputCheckError(
+                                strprintf("input-amount-mismatch (prevout: %d, input: %d)", outAmount, inpAmount));
+                            inputVerified = false;
+                            allPassed = false;
+                        }
+                        else
+                        {
+                            return state.Invalid(false, REJECT_INVALID, "input-amount-mismatch");
+                        }
+                    }
+                }
+
+                if (scriptCheckNeeded)
+                {
+                    // Verify signature
+                    // We've checked that the input amount == the output amount for those cases where that is required.
+                    // Now check that the signature is correct -- and the signature always signs the amount its
+                    // inputing.
+                    if (pvChecks)
+                    {
+                        pvChecks->push_back(CScriptCheck(
+                            resourceTracker, scriptPubKey, inpAmount, tx, inputCoins, state, i, flags, cacheStore));
                     }
                     else
                     {
-                        return state.Invalid(false, REJECT_INVALID, "input-amount-mismatch");
-                    }
-                }
-
-                // Verify signature
-                if (pvChecks)
-                {
-                    pvChecks->push_back(CScriptCheck(
-                        resourceTracker, scriptPubKey, amount, tx, spendingCoins, state, i, flags, cacheStore));
-                }
-                else
-                {
-                    CScriptCheck check(
-                        resourceTracker, scriptPubKey, amount, tx, spendingCoins, state, i, flags, cacheStore);
-                    if (!check())
-                    {
-                        ScriptError scriptError = check.GetScriptError();
-                        // Compute flags without the optional standardness flags.
-                        // This differs from MANDATORY_SCRIPT_VERIFY_FLAGS as it contains
-                        // additional upgrade flags (see ParallelAcceptToMemoryPool variable
-                        // featureFlags).
-                        uint32_t mandatoryFlags = (flags & ~(STANDARD_NOT_MANDATORY_VERIFY_FLAGS));
-                        if (flags != mandatoryFlags)
+                        CScriptCheck check(
+                            resourceTracker, scriptPubKey, inpAmount, tx, inputCoins, state, i, flags, cacheStore);
+                        if (!check())
                         {
-                            // Check whether the failure was caused by a
-                            // non-mandatory script verification check, such as
-                            // non-standard DER encodings or non-null dummy
-                            // arguments; if so, don't trigger DoS protection to
-                            // avoid splitting the network between upgraded and
-                            // non-upgraded nodes.
-                            CScriptCheck check2(
-                                nullptr, scriptPubKey, amount, tx, spendingCoins, state, i, mandatoryFlags, cacheStore);
-                            if (check2())
+                            ScriptError scriptError = check.GetScriptError();
+                            // Compute flags without the optional standardness flags.
+                            // This differs from MANDATORY_SCRIPT_VERIFY_FLAGS as it contains
+                            // additional upgrade flags (see ParallelAcceptToMemoryPool variable
+                            // featureFlags).
+                            uint32_t mandatoryFlags = (flags & ~(STANDARD_NOT_MANDATORY_VERIFY_FLAGS));
+                            if (flags != mandatoryFlags)
+                            {
+                                // Check whether the failure was caused by a
+                                // non-mandatory script verification check, such as
+                                // non-standard DER encodings or non-null dummy
+                                // arguments; if so, don't trigger DoS protection to
+                                // avoid splitting the network between upgraded and
+                                // non-upgraded nodes.
+                                CScriptCheck check2(nullptr, scriptPubKey, inpAmount, tx, inputCoins, state, i,
+                                    mandatoryFlags, cacheStore);
+                                if (check2())
+                                {
+                                    if (debugger)
+                                    {
+                                        debugger->AddInputCheckError(strprintf(
+                                            "non-mandatory-script-verify-flag (%s)", ScriptErrorString(scriptError)));
+                                        inputVerified = false;
+                                        allPassed = false;
+                                    }
+                                    else
+                                    {
+                                        return state.Invalid(false, REJECT_NONSTANDARD,
+                                            strprintf("non-mandatory-script-verify-flag (%s)",
+                                                ScriptErrorString(scriptError)));
+                                    }
+                                }
+                                // update the error message to reflect the mandatory violation.
+                                scriptError = check2.GetScriptError();
+                            }
+
+                            // Before banning, we need to check whether the transaction would
+                            // be valid on the other side of the upgrade, so as to avoid
+                            // splitting the network between upgraded and non-upgraded nodes.
+                            // Note that this will create strange error messages like
+                            // "upgrade-conditional-script-failure (Opcode missing or not
+                            // understood)".
+                            CScriptCheck check3(
+                                nullptr, scriptPubKey, inpAmount, tx, inputCoins, state, i, mandatoryFlags, cacheStore);
+                            if (check3())
                             {
                                 if (debugger)
                                 {
-                                    debugger->AddInputCheckError(strprintf(
-                                        "non-mandatory-script-verify-flag (%s)", ScriptErrorString(scriptError)));
+                                    debugger->AddInputCheckError(strprintf("upgrade-conditional-script-failure (%s)",
+                                        ScriptErrorString(check.GetScriptError())));
                                     inputVerified = false;
                                     allPassed = false;
                                 }
                                 else
                                 {
-                                    return state.Invalid(false, REJECT_NONSTANDARD,
-                                        strprintf(
-                                            "non-mandatory-script-verify-flag (%s)", ScriptErrorString(scriptError)));
+                                    return state.Invalid(false, REJECT_INVALID,
+                                        strprintf("upgrade-conditional-script-failure (%s)",
+                                            ScriptErrorString(check.GetScriptError())));
                                 }
                             }
-                            // update the error message to reflect the mandatory violation.
-                            scriptError = check2.GetScriptError();
-                        }
 
-                        // Before banning, we need to check whether the transaction would
-                        // be valid on the other side of the upgrade, so as to avoid
-                        // splitting the network between upgraded and non-upgraded nodes.
-                        // Note that this will create strange error messages like
-                        // "upgrade-conditional-script-failure (Opcode missing or not
-                        // understood)".
-                        CScriptCheck check3(
-                            nullptr, scriptPubKey, amount, tx, spendingCoins, state, i, mandatoryFlags, cacheStore);
-                        if (check3())
-                        {
+                            // Failures of other flags indicate a transaction that is
+                            // invalid in new blocks, e.g. a invalid P2SH. We DoS ban
+                            // such nodes as they are not following the protocol. That
+                            // said during an upgrade careful thought should be taken
+                            // as to the correct behavior - we may want to continue
+                            // peering with non-upgraded nodes even after a soft-fork
+                            // super-majority vote has passed.
                             if (debugger)
                             {
-                                debugger->AddInputCheckError(strprintf("upgrade-conditional-script-failure (%s)",
-                                    ScriptErrorString(check.GetScriptError())));
                                 inputVerified = false;
                                 allPassed = false;
+                                debugger->AddInputCheckError(strprintf(
+                                    "mandatory-script-verify-flag-failed (%s)", ScriptErrorString(scriptError)));
                             }
                             else
                             {
-                                return state.Invalid(false, REJECT_INVALID,
-                                    strprintf("upgrade-conditional-script-failure (%s)",
-                                        ScriptErrorString(check.GetScriptError())));
+                                return state.DoS(100, false, REJECT_INVALID,
+                                    strprintf(
+                                        "mandatory-script-verify-flag-failed (%s)", ScriptErrorString(scriptError)));
                             }
-                        }
-
-                        // Failures of other flags indicate a transaction that is
-                        // invalid in new blocks, e.g. a invalid P2SH. We DoS ban
-                        // such nodes as they are not following the protocol. That
-                        // said during an upgrade careful thought should be taken
-                        // as to the correct behavior - we may want to continue
-                        // peering with non-upgraded nodes even after a soft-fork
-                        // super-majority vote has passed.
-                        if (debugger)
-                        {
-                            inputVerified = false;
-                            allPassed = false;
-                            debugger->AddInputCheckError(
-                                strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(scriptError)));
-                        }
-                        else
-                        {
-                            return state.DoS(100, false, REJECT_INVALID,
-                                strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(scriptError)));
                         }
                     }
                 }
@@ -1822,7 +1857,7 @@ bool CheckBlock(const Consensus::Params &consensusParams,
         if (!CheckTransaction(pblock->vtx[i], state))
         {
             return error("CheckBlock(): CheckTransaction of %s failed with %s", pblock->vtx[i]->GetId().ToString(),
-                FormatStateMessage(state));
+                state.GetLogString());
         }
     }
 
@@ -2111,14 +2146,17 @@ DisconnectResult DisconnectBlock(const ConstCBlockRef pblock, const CBlockIndex 
         }
         for (unsigned int j = tx.vin.size(); j-- > 0;)
         {
-            const COutPoint &out = tx.vin[j].prevout;
-            int res = ApplyTxInUndo(std::move(txundo.vprevout[j]), view, out);
-            if (res == DISCONNECT_FAILED)
+            if (!tx.vin[j].IsReadOnly()) // nothing to undo in a read-only input
             {
-                error("DisconnectBlock(): ApplyTxInUndo failed");
-                return DISCONNECT_FAILED;
+                const COutPoint &out = tx.vin[j].prevout;
+                int res = ApplyTxInUndo(std::move(txundo.vprevout[j]), view, out);
+                if (res == DISCONNECT_FAILED)
+                {
+                    error("DisconnectBlock(): ApplyTxInUndo failed");
+                    return DISCONNECT_FAILED;
+                }
+                fClean = fClean && res != DISCONNECT_UNCLEAN;
             }
-            fClean = fClean && res != DISCONNECT_UNCLEAN;
         }
         // At this point, all of txundo.vprevout should have been moved out.
     }
@@ -2292,7 +2330,7 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
     // with the mutex so that the checking of inputs can be done with the chosen scriptcheckqueue.
     CCheckQueue<CScriptCheck> *pScriptQueue(PV->GetScriptCheckQueue());
 
-    // Aquire the control that is used to wait for the script threads to finish. Do this after aquiring the
+    // Acquire the control that is used to wait for the script threads to finish. Do this after aquiring the
     // scoped lock to ensure the scriptqueue is free and available.
     CCheckQueueControl<CScriptCheck> control(fScriptChecks && PV->ThreadCount() ? pScriptQueue : nullptr);
 
@@ -2318,8 +2356,35 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
 
         txResourceTracker.resize(pblock->vtx.size());
 
-        // Outputs then Inputs algorithm: add outputs to the coin cache
-        // and validate lexical ordering
+        // Read Only then Outputs then Inputs algorithm: Check read only before adding outputs
+        for (unsigned int i = 0; i < pblock->vtx.size(); i++)
+        {
+            const CTransactionRef &txref = pblock->vtx[i];
+            for (size_t j = 0; j < txref->vin.size(); j++)
+            {
+                if (txref->vin[j].IsReadOnly())
+                {
+                    CoinAccessor coin(view, txref->vin[j].prevout);
+                    if (coin->IsSpent())
+                    {
+                        LOG(BLK,
+                            "%s: block %s read only input UTXO %s missing or spent in tx.in: %d.%d txid: %s (idem: %s)",
+                            __func__, pblock->GetHash().ToString(), txref->vin[j].prevout.GetHex(), i, j,
+                            txref->GetId().ToString(), txref->GetIdem().GetHex());
+                        DbgAssert(false, );
+                        return state.DoS(100,
+                            error("%s: block %s read only inputs missing or spent in tx.in: %d.%d txid: %s", __func__,
+                                pblock->GetHash().ToString(), i, j, txref->GetId().ToString()),
+                            REJECT_INVALID, "bad-txns-read-only-inputs-missing-or-spent");
+                    }
+                }
+            }
+            if (PV->QuitReceived(this_id, fParallel))
+                return false;
+        }
+
+
+        // Outputs then Inputs algorithm: add outputs to the coin cache and validate lexical ordering
         uint256 prevTxHash;
         for (unsigned int i = 0; i < pblock->vtx.size(); i++)
         {
@@ -2351,14 +2416,39 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
                 }
                 prevTxHash = curTxHash;
             }
+            if (PV->QuitReceived(this_id, fParallel))
+                return false;
         }
 
-        // Start checking Inputs
+        // Do any analysis needed before we start deleting inputs
+        for (unsigned int i = 0; i < pblock->vtx.size(); i++)
+        {
+            const CTransactionRef &txref = pblock->vtx[i];
+            if (!txref->IsCoinBase())
+            {
+                if (!fJustCheck && !fVerifyDB.load())
+                {
+                    if (!AccumulateTokenData(txref, view, accumulatedAuthorities, accumulatedMintages))
+                    {
+                        // We could abort here; but we don't want AccumulateTokenData to be part of consensus
+                        // and the double spend will be caught below during the explicit doublespend checking when
+                        // coins are removed from the view.
+                        LOG(BLK,
+                            "Double spend in block validation accumulate token data -- this should be caught below");
+                    }
+                }
+            }
+            if (PV->QuitReceived(this_id, fParallel))
+                return false;
+        }
+
+        // Start checking consumed Inputs.
         // When in parallel mode then unlock cs_main for this loop to give any other threads
         // a chance to process in parallel. This is crucial for parallel validation to work.
         // NOTE: the only place where cs_main is needed is if we hit PV->ChainWorkHasChanged, which
         //       internally grabs the cs_main lock when needed.
-
+        // I cannot check the read only coins here because I've spending inputs from
+        // other tx in this loop so some read only inputs may be gone (but they were checked in the first step).
         bool fPVtest = pvtest.Value();
         for (unsigned int i = 0; i < pblock->vtx.size(); i++)
         {
@@ -2369,41 +2459,42 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
 
             if (!tx.IsCoinBase())
             {
-                if (!fJustCheck && !fVerifyDB.load())
-                {
-                    AccumulateTokenData(txref, view, accumulatedAuthorities, accumulatedMintages);
-                }
-
                 const char *errCode = nullptr;
                 // Check that transaction is BIP68 final
                 // BIP68 lock checks (as opposed to nLockTime checks) must
                 // be in ConnectBlock because they require the UTXO set
                 prevheights.resize(tx.vin.size());
                 {
-                    bool abort = false;
+                    int badIdx = -1;
                     for (size_t j = 0; j < tx.vin.size(); j++)
                     {
-                        CoinAccessor coin(view, tx.vin[j].prevout);
-                        // isSpend is true for empty coin object (coinEmpty)
-                        if (coin->IsSpent())
+                        if (!tx.vin[j].IsReadOnly())
                         {
-                            abort = true;
-                            errCode = "bad-txns-inputs-missingorspent";
-                            break;
-                        }
-                        prevheights[j] = coin->height();
-                        nFees = nFees + coin->out.nValue;
-                        if (coin->out.nValue != tx.vin[j].amount)
-                        {
-                            abort = true;
-                            LOGA("block %s: TX %d (idem: %s:%d) amount mismatch (%d, %d)\n",
-                                pblock->GetHash().ToString(), i, tx.GetIdem().GetHex(), j, coin->out.nValue,
-                                tx.vin[j].amount);
-                            errCode = "bad-txns-input-amount-mismatch";
-                            break;
+                            CoinAccessor coin(view, tx.vin[j].prevout);
+                            // isSpend is true for empty coin object (coinEmpty)
+                            if (coin->IsSpent())
+                            {
+                                badIdx = j;
+                                LOGA("block %s: TX %d (idem: %s:%d) input missing or spent (%s)\n",
+                                    pblock->GetHash().ToString(), i, tx.GetIdem().GetHex(), j,
+                                    tx.vin[j].prevout.GetHex());
+                                errCode = "bad-txns-inputs-missingorspent";
+                                break;
+                            }
+                            prevheights[j] = coin->height();
+                            nFees = nFees + coin->out.nValue;
+                            if (coin->out.nValue != tx.vin[j].amount)
+                            {
+                                badIdx = j;
+                                LOGA("block %s: TX %d (idem: %s:%d) amount mismatch (%d, %d)\n",
+                                    pblock->GetHash().ToString(), i, tx.GetIdem().GetHex(), j, coin->out.nValue,
+                                    tx.vin[j].amount);
+                                errCode = "bad-txns-input-amount-mismatch";
+                                break;
+                            }
                         }
                     }
-                    if (abort)
+                    if (badIdx >= 0)
                     {
                         // If we were validating at the same time as another block and the other block wins the
                         // validation race and updates the UTXO first, then we may end up here with missing inputs.
@@ -2414,8 +2505,8 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
                             return false;
                         }
                         return state.DoS(100,
-                            error("%s: block %s inputs missing, spent, or invalid in tx %d %s", __func__,
-                                pblock->GetHash().ToString(), i, tx.GetId().ToString()),
+                            error("%s: block %s inputs missing, spent, or invalid in tx %d.%d %s", __func__,
+                                pblock->GetHash().ToString(), i, badIdx, tx.GetId().ToString()),
                             REJECT_INVALID, errCode);
                     }
                 }
@@ -2444,22 +2535,14 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
                         if (!CheckInputs(txref, state, view, fScriptChecks, flags, fCacheResults, &txResourceTracker[i],
                                 chainparams, PV->ThreadCount() ? &vChecks : nullptr))
                         {
-                            return error("%s: block %s CheckInputs on %s failed with %s", __func__,
-                                pblock->GetHash().ToString(), tx.GetId().ToString(), FormatStateMessage(state));
+                            return error("%s: block %s CheckConsumedInputs on %s failed with %s", __func__,
+                                pblock->GetHash().ToString(), tx.GetId().ToString(), state.GetLogString());
                         }
                         control.Add(vChecks);
                         nChecked++;
                     }
                 }
             }
-
-            CTxUndo undoDummy;
-            if (i > 0)
-            {
-                blockundo.vtxundo.push_back(CTxUndo());
-            }
-
-            SpendCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->height());
 
             vPos.push_back(std::make_pair(tx.GetId(), pos));
             pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
@@ -2477,6 +2560,30 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
                 MilliSleep(1000);
             }
         }
+
+        // Finally, spend all inputs.  If there's a doublespend in this block this will catch it
+        // because the inputs are being removed
+        for (unsigned int i = 0; i < pblock->vtx.size(); i++)
+        {
+            const CTransaction &tx = *(pblock->vtx[i]);
+
+            CTxUndo undoDummy;
+            if (i > 0)
+            {
+                blockundo.vtxundo.push_back(CTxUndo());
+            }
+            if (!SpendCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->height()))
+            {
+                return state.DoS(100,
+                    error("%s: block %s inputs missing or spent (possibly doublespent) in tx: %d txid: %s", __func__,
+                        pblock->GetHash().ToString(), i, tx.GetId().ToString()),
+                    REJECT_INVALID, "bad-txns-inputs-missingorspent");
+            }
+            if (PV->QuitReceived(this_id, fParallel))
+                return false;
+        }
+
+
         LOG(BENCH, "Number of CheckInputs() performed: %d  Unverified count: %d\n", nChecked, nUnVerifiedChecked);
 
         // Wait for all sig check threads to finish before updating utxo
@@ -2494,7 +2601,6 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
             {
                 auto txSigChecks = t.GetConsensusSigChecks();
                 blockSigChecks += txSigChecks;
-                LOG(BENCH, "Tx SigChecks performed: %d\n", txSigChecks);
                 if (txSigChecks > MAX_TX_SIGCHECK_COUNT)
                 {
                     return state.DoS(100, false, REJECT_INVALID, "bad-tx-sigchecks", false,
@@ -3086,6 +3192,8 @@ bool ConnectTip(CValidationState &state,
     std::list<CTransactionRef> txConflicted;
     {
         // Stop txadmission, and flush the commitQ, before we flush coin state and remove txn conflicts
+        // Ideally we'd do this here, but we cannot deadlock against cs_main
+        // It is done in ActivateBestChain() where cs_main is locked
         TxAdmissionPause txlock;
 
         // Flush coin state
@@ -3632,28 +3740,25 @@ bool ProcessNewBlock(CValidationState &state,
 {
     const auto &cparams = chainparams.GetConsensus();
     int64_t start = GetStopwatchMicros();
-    LOG(THIN, "Processing new block %s from peer %s.\n", pblock->GetHash().ToString(),
-        pfrom ? pfrom->GetLogName() : "myself");
+    std::string fromName = pfrom ? pfrom->GetLogName() : "myself";
+    std::string hexHash = pblock->GetHash().ToString();
+    LOG(BLK, "Processing new block %s from peer %s.\n", hexHash, fromName);
     // Preliminary checks
     if (!CheckBlockHeader(cparams, *pblock, state, true))
     { // block header is bad
         // demerit the sender
+        LOG(BLK, "Invalid block %s:  from:%s  Bad header:%s\n", hexHash, fromName, state.GetLogString());
         return error("%s: CheckBlockHeader FAILED", __func__);
     }
     if (IsChainNearlySyncd() && !fImporting && !fReindex && connmgr->ExpeditedBlockNodes().size())
     {
-        if (!CheckBlockHeader(cparams, *pblock, state, true))
-        {
-            // block header is bad
-            // demerit the sender
-            return error("%s: CheckBlockHeader FAILED", __func__);
-        }
         SendExpeditedBlock(*pblock, pfrom);
     }
     bool checked = CheckBlock(cparams, pblock, state);
     if (!checked)
     {
-        LOGA("Invalid block: time:%d Tx size:%d len:%d\n", pblock->nTime, pblock->vtx.size(), pblock->GetBlockSize());
+        LOG(BLK, "Invalid block %s: time:%d Tx size:%d len:%d CheckBlock: %s\n", hexHash, pblock->nTime,
+            pblock->vtx.size(), pblock->GetBlockSize(), state.GetLogString());
     }
     else if (IsInitialBlockDownload())
     {
@@ -3694,6 +3799,8 @@ bool ProcessNewBlock(CValidationState &state,
         {
             // If the block was not accepted then reset the fProcessing flag to false.
             requester.BlockRejected(inv, pfrom);
+            LOG(BLK, "Invalid block %s: time:%d TX size:%d len:%d AcceptBlock: %s\n", hexHash, pblock->nTime,
+                pblock->vtx.size(), pblock->GetBlockSize(), state.GetLogString());
             return error("%s: AcceptBlock FAILED", __func__);
         }
         else
@@ -3707,10 +3814,14 @@ bool ProcessNewBlock(CValidationState &state,
     {
         if (state.IsInvalid() || state.IsError())
         {
+            LOG(BLK, "Invalid block %s: time:%d TX size:%d len:%d ActivateBestChain: %s\n", hexHash, pblock->nTime,
+                pblock->vtx.size(), pblock->GetBlockSize(), state.GetLogString());
             return error("%s: ActivateBestChain failed", __func__);
         }
         else
         {
+            LOG(BLK, "Invalid block %s: time:%d TX size:%d len:%d ActivateBestChain failed: %s\n", hexHash,
+                pblock->nTime, pblock->vtx.size(), pblock->GetBlockSize(), state.GetLogString());
             return false;
         }
     }
@@ -3746,14 +3857,15 @@ bool ProcessNewBlock(CValidationState &state,
         }
 
         LOG(BENCH,
-            "ProcessNewBlock, time: %d, block: %s, len: %d, numTx: %d, maxVin: %llu, maxVout: %llu, maxTx:%llu\n",
+            "ProcessNewBlock success, time: %d, block: %s, len: %d, numTx: %d, maxVin: %llu, maxVout: %llu, "
+            "maxTx:%llu\n",
             end - start, pblock->GetHash().ToString(), pblock->GetBlockSize(), pblock->vtx.size(), maxVin, maxVout,
             maxTxSizeLocal);
-        LOG(BENCH, "tx: %s, vin: %llu, vout: %llu, len: %d\n", txIn.GetId().ToString(), txIn.vin.size(),
+        LOG(BENCH, "MaxVin tx: %s, vin: %llu, vout: %llu, len: %d\n", txIn.GetId().ToString(), txIn.vin.size(),
             txIn.vout.size(), ::GetSerializeSize(txIn, SER_NETWORK, PROTOCOL_VERSION));
-        LOG(BENCH, "tx: %s, vin: %llu, vout: %llu, len: %d\n", txOut.GetId().ToString(), txOut.vin.size(),
+        LOG(BENCH, "MaxVout tx: %s, vin: %llu, vout: %llu, len: %d\n", txOut.GetId().ToString(), txOut.vin.size(),
             txOut.vout.size(), ::GetSerializeSize(txOut, SER_NETWORK, PROTOCOL_VERSION));
-        LOG(BENCH, "tx: %s, vin: %llu, vout: %llu, len: %d\n", txLen.GetId().ToString(), txLen.vin.size(),
+        LOG(BENCH, "Max sized tx: %s, vin: %llu, vout: %llu, len: %d\n", txLen.GetId().ToString(), txLen.vin.size(),
             txLen.vout.size(), ::GetSerializeSize(txLen, SER_NETWORK, PROTOCOL_VERSION));
     }
 

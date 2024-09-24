@@ -296,8 +296,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
         CValidationState state;
         if (!TestBlockValidity(state, chainparams, pblock, pindexPrev, false, false))
         {
-            throw std::runtime_error(
-                strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
+            throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, state.GetLogString()));
         }
     }
     return pblocktemplate;

@@ -416,6 +416,20 @@ CTransaction tx2x1(const COutPoint &utxo1, const COutPoint &utxo2, const CScript
     return tx;
 }
 
+CMutableTransaction mtx2x1(const COutPoint &utxo1, const COutPoint &utxo2, const CScript &txo, CAmount amt)
+{
+    CMutableTransaction tx;
+    tx.vin.resize(2);
+    tx.vin[0].prevout = utxo1;
+    tx.vin[1].prevout = utxo2;
+    tx.vout.resize(1);
+    tx.vout[0].SetScript(txo);
+    tx.vout[0].nValue = amt;
+    tx.vin[0].scriptSig = CScript(); // CheckGroupTokens does not validate sig so anything in here
+    tx.nLockTime = 0;
+    return tx;
+}
+
 CTransaction tx3x1(const COutPoint &utxo1,
     const COutPoint &utxo2,
     const COutPoint &utxo3,
@@ -473,6 +487,10 @@ CGroupTokenID MakeSubgroup(CGroupTokenID g, int xtra, int size = 0)
     return CGroupTokenID(sgbytes);
 }
 
+bool CheckGroupTokens(const CTransaction &tx, CValidationState &state, const CCoinsViewCache &view)
+{
+    return CheckGroupTokens(tx, state, view, view);
+}
 
 BOOST_AUTO_TEST_CASE(grouptoken_covenantfunctions)
 {
@@ -1083,6 +1101,29 @@ void basicFunctionsTest(uint32_t scriptFlags)
             t = tx2x1(mintctrl1, putxo, gp2pkh(grp1, u1, 100000), 1);
             ok = CheckGroupTokens(t, state, coins);
             BOOST_CHECK(ok);
+
+            CMutableTransaction mt = tx2x1(putxo, mintChildAuth1, gp2pkh(grp1, u1, 100000), 1);
+            ok = CheckGroupTokens(t, state, coins);
+            BOOST_CHECK(ok);
+            // with minting authority (read-only UTXO signed)
+            mt.vin[1].type = CTxIn::READONLY;
+            mt.vin[1].scriptSig = CScript() << OP_DROP; // anything will pass the group tokens check
+            ok = CheckGroupTokens(mt, state, coins);
+            BOOST_CHECK(ok);
+            // with minting authority (read-only UTXO unsigned) -- FAILS
+            mt.vin[1].scriptSig = CScript();
+            ok = CheckGroupTokens(mt, state, coins);
+            BOOST_CHECK(!ok);
+            // check that it doesn't work if BATON is not set
+            mt = tx2x1(putxo, mintctrl1, gp2pkh(grp1, u1, 100000), 1);
+            mt.vin[1].type = CTxIn::READONLY;
+            mt.vin[1].scriptSig = CScript() << OP_DROP;
+            ok = CheckGroupTokens(mt, state, coins);
+            BOOST_CHECK(!ok);
+            mt.vin[1].scriptSig = CScript();
+            ok = CheckGroupTokens(mt, state, coins);
+            BOOST_CHECK(!ok);
+
             // same, grouped
             t = tx2x1(mintctrl1, putxo, gp2pkh(subgrp1a, u1, 100000), 1);
             ok = CheckGroupTokens(t, state, coins);
@@ -1405,7 +1446,7 @@ static bool tryMempool(const CTransaction &tx, CValidationState &state)
 BOOST_FIXTURE_TEST_CASE(grouptoken_blockchain, TestChain100Setup)
 {
     // fPrintToConsole = true;
-    // LogToggleCategory(Logging::ALL, true);
+    // Logging::LogToggleCategory(ALL, true);
     CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
 
     std::vector<CMutableTransaction> txns;
@@ -1422,6 +1463,7 @@ BOOST_FIXTURE_TEST_CASE(grouptoken_blockchain, TestChain100Setup)
     CBlockRef blk1;
     CBlockRef tipblk;
     CBlockRef badblk; // If I'm expecting a failure, I stick the block in badblk so that I still have the chain tip
+
 
     // just regress making a block
     bool ret = tryBlock(txns, p2pkh(grp1), blk1, state);
@@ -1442,11 +1484,21 @@ BOOST_FIXTURE_TEST_CASE(grouptoken_blockchain, TestChain100Setup)
     }
 
     // Create group
+    int spendCb = 0;
     uint64_t nonce = 0;
-    CGroupTokenID gid = findGroupId(COutPoint(coinbaseTxns[0].GetIdem(), 0), CScript(), GroupTokenIdFlags::NONE,
-        GroupAuthorityFlags::ACTIVE_FLAG_BITS, nonce);
-    txns[0] = tx1x1(COutPoint(coinbaseTxns[0].GetIdem(), 0), gp2pkh(gid, grp0AllAuth, nonce),
-        coinbaseTxns[0].vout[0].nValue, coinbaseKey, coinbaseTxns[0].vout[0].scriptPubKey, false);
+    uint256 txidem = coinbaseTxns[spendCb].GetIdem();
+    COutPoint outpt = COutPoint(txidem, 0);
+    if (1)
+    {
+        auto hasCoin = pcoinsTip->HaveCoin(outpt);
+        Coin c;
+        auto getCoin = pcoinsTip->GetCoin(outpt, c);
+        printf("%d %d", hasCoin, getCoin);
+    }
+    CGroupTokenID gid =
+        findGroupId(outpt, CScript(), GroupTokenIdFlags::NONE, GroupAuthorityFlags::ACTIVE_FLAG_BITS, nonce);
+    txns[0] = tx1x1(outpt, gp2pkh(gid, grp0AllAuth, nonce), coinbaseTxns[spendCb].vout[0].nValue, coinbaseKey,
+        coinbaseTxns[spendCb].vout[0].scriptPubKey, false);
     ret = tryBlock(txns, p2pkh(a2), tipblk, state);
     if (!ret)
         printf("state: %d:%s, %s\n", state.GetRejectCode(), state.GetRejectReason().c_str(),

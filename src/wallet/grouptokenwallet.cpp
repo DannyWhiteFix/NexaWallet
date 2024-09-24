@@ -683,6 +683,19 @@ bool ConstructTx(CWalletTx &wtxNew,
     feeChangeKeyReservation.KeepKey();
     groupChangeKeyReservation.KeepKey();
 
+    if (fRPC) // In RPC calls, make this call synchronous with the fully processed and inserted transaction.
+    {
+        auto idem = wtxNew.GetIdem();
+        CWalletTxRef inwalletRef = nullptr;
+        for (int count = 0; (count < 50) && (inwalletRef == nullptr); count++)
+        {
+            inwalletRef = wallet->GetWalletTx(idem);
+            if (inwalletRef == nullptr)
+                MilliSleep(100);
+        }
+        if (inwalletRef == nullptr)
+            throw JSONRPCError(RPC_WALLET_ERROR, "Transaction did not commit, unknown reason");
+    }
     return true;
 }
 

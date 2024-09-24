@@ -5,6 +5,8 @@
 
 import test_framework.loginit
 import logging
+import pprint
+from copy import copy as scopy
 #logging.getLogger().setLevel(logging.INFO)
 
 #
@@ -21,12 +23,37 @@ from test_framework.script import *
 import decimal
 decimal.getcontext().prec = 16
 
+def fundSignSendParse(node, tx, verbose = False):
+    h = tx.toHex()
+    if verbose:
+        print("Input TX: " + h)
+        print("Decoded: " + pprint.pformat(node.decoderawtransaction(h)))
+    frtReturn = node.fundrawtransaction(h)
+    sgnReturn = node.signrawtransaction(frtReturn["hex"])
+    if True: # if verbose:
+        print("Funded TX: " + str(sgnReturn))
+        print("Decoded: " + pprint.pformat(node.decoderawtransaction(sgnReturn["hex"])))
+    fundedTx = CTransaction().fromHex(sgnReturn["hex"])
+    v = node.validaterawtransaction(sgnReturn["hex"])
+    if verbose:
+        print(pprint.pformat(v))
+    node.sendrawtransaction(sgnReturn["hex"])
+    return fundedTx
+
+def spendOutputOfAmount(amt, tx, templateScript, constraintArgs=None, satisfierArgs=None):
+    for idx in range(0, len(tx.vout)):
+            if tx.vout[idx].nValue == amt:  # its my output
+                inp = tx.SpendOutput(idx)
+                inp.setUnlockingToTemplate(templateScript, constraintArgs, satisfierArgs)
+                return inp
+    return None
+
 class UpgradeActivationTest(BitcoinTestFramework):
 
     def setup_chain(self,bitcoinConfDict=None, wallets=None):
         print("Initializing test directory "+self.options.tmpdir)
-        # initialize_chain_clean(self.options.tmpdir, 2, self.confDict)
-        initialize_chain(self.options.tmpdir, bitcoinConfDict, wallets)
+        initialize_chain_clean(self.options.tmpdir, 2, self.confDict)
+        # initialize_chain(self.options.tmpdir, bitcoinConfDict, wallets)
 
     def setup_network(self):
         self.nodes = []
@@ -77,8 +104,109 @@ class UpgradeActivationTest(BitcoinTestFramework):
         self.testSomeScript([ bytes([0x55]), OP_DUP, OP_DUP, OP_DEPTH, OP_NEGATE, OP_ROLL, OP_2DROP, OP_DROP], shouldItWork)
     def testNegOpPick(self, shouldItWork):
         self.testSomeScript([ bytes([0x55]), OP_DUP, OP_DUP, OP_DEPTH, OP_NEGATE, OP_PICK, OP_2DROP, OP_2DROP], shouldItWork)
+        
+    def testReadOnlyInput(self, shouldItWork):
+        n = self.nodes[0]
+        tx = CTransaction()
+        out = TxOut(nValue=10000)
+        scr = CScript([OP_FROMALTSTACK,OP_FROMALTSTACK, OP_DROP, OP_DROP])  # pop the two public args and always work
+        out.setLockingToTemplate(scr,None, [1,2])
+        tx.vout.append(out)
 
+        out2 = TxOut(nValue=5000)
+        out2.setLockingToTemplate(scr,None, [3,4])
+        tx.vout.append(out2)
 
+        out3 = TxOut(nValue=4000)
+        scr3 = CScript([OP_DROP])  # You have to spend this with 1 push
+        out3.setLockingToTemplate(scr3,None, None)
+        tx.vout.append(out3)
+
+        # Make a TX with an output that we will input readonly
+        preTx = fundSignSendParse(n, tx)
+
+        inp = spendOutputOfAmount(10000, preTx, scr)
+
+        roInp = spendOutputOfAmount(10000, preTx, scr)
+        assert roInp != None
+        roInp.t = CTxIn.READONLY
+        roInp.amount = 0
+        roInp.scriptSig = bytes()
+
+        # Set up another read only output, that we can use to test sig/nosig because a correct sig is a single push
+        roInp3 = spendOutputOfAmount(4000, preTx, scr3, None, [1])
+        assert roInp3 != None
+        roInp3.t = CTxIn.READONLY
+        roInp3.amount = 0
+
+        # Read-only the prev tx -- should not work because not confirmed
+        tx = CTransaction()
+        tx.vin.append(roInp)
+        tx.vout.append(out2)  # This output is worth half of the readonly input
+        try:
+            roTx = fundSignSendParse(n, tx)
+            assert False, "should have failed because read-only needs to be confirmed before use"
+        except JSONRPCException as e:
+            pass # Worked
+
+        blkhash = n.generate(1)[0] # commit preTx so we can access its outputs in the UTXO
+        waitFor(30, lambda: n.getwalletinfo()["syncblock"] == blkhash)
+
+        # Make a TX with a readonly input (should work if post fork), no signature
+        tx = CTransaction()
+        tx.vin.append(scopy(roInp))
+        tx.vout.append(out2)
+        try:
+            roTx = fundSignSendParse(n, tx)
+            assert shouldItWork, "Signing this tx should have failed (pre upgrade)"
+            print("COMMITTING: ")
+            print(pprint.pformat(n.decoderawtransaction(roTx.toHex())))
+        except JSONRPCException as e:
+            if shouldItWork:
+                raise e
+            assert not shouldItWork, "Signing this tx should have succeeded (post upgrade)"
+
+        # nothing more to do pre-upgrade -- tx was rejected
+        if not shouldItWork: return
+
+        # Use the same read only input again
+        tx = CTransaction()
+        tx.vin.append(scopy(roInp))
+        tx.vout.append(out2)
+        try:
+            roTx2 = fundSignSendParse(n, tx)
+            assert shouldItWork, "Signing this tx should have failed (pre upgrade)"
+            print(roTx2)
+            print("COMMITTING: ")
+            print(pprint.pformat(n.decoderawtransaction(roTx2.toHex())))
+        except JSONRPCException as e:
+            if shouldItWork:
+                raise e
+            assert not shouldItWork, "Signing this tx should have succeeded (post upgrade)"
+
+        assert roTx != roTx2
+
+        # RO input with a nonzero bad sig
+        tx = CTransaction()
+        tx.vin.append(scopy(roInp3))
+        tx.vin[0].scriptSig = CScript([1,2,3,4])  # too many pushes
+        tx.vout.append(out2)
+        try:
+            fundSignSendParse(n, tx)
+            assert false
+        except JSONRPCException as e:
+            pass
+
+        # RO input with a nonzero good sig
+        tx = CTransaction()
+        tx.vin.append(scopy(roInp3))
+        tx.vout.append(out2)
+        try:
+            fundSignSendParse(n, tx, True)
+        except JSONRPCException as e:
+            if shouldItWork:
+                raise e
+            assert not shouldItWork, "Signing this tx should have succeeded (post upgrade)"
 
     def testStackLimit(self, dups, shouldItWork):
         """ Test max stack size """
@@ -189,6 +317,7 @@ class UpgradeActivationTest(BitcoinTestFramework):
         """Add any tests here that should run prior to the upgrade"""
         self.testNegOpRoll(False)
         self.testNegOpPick(False)
+        self.testReadOnlyInput(False)
         self.testWideStack(False)
         # testStackLimit N checks a stack of size N*1024 made up of 2 512 byte stack items
         self.testStackLimit(500, True)
@@ -202,6 +331,7 @@ class UpgradeActivationTest(BitcoinTestFramework):
         """Add any tests here that should run after the upgrade"""
         self.testNegOpRoll(True)
         self.testNegOpPick(True)
+        self.testReadOnlyInput(True)
         self.testWideStack(True)
 
         # testStackLimit N checks a stack of size N*1024 made up of 2 512 byte stack items
@@ -215,38 +345,49 @@ class UpgradeActivationTest(BitcoinTestFramework):
 
     def run_test(self):
         # Mine some blocks to get utxos etc
+        self.nodes[1].generate(120)
 
+        # Inject a very controlled amount of utxos into the working wallet
+        addr = self.nodes[0].getnewaddress()
+        for i in range(0,20):
+            self.nodes[1].sendtoaddress(addr, 1000000)
+
+        miningNode = self.nodes[1]
         # mine a few blocks 1 second apart so we can get a meaningful "mediantime"
         # that does not contain the gap between the cached blockchain and this run
-        bestblock = self.nodes[0].getbestblockhash()
-        lastblocktime = self.nodes[0].getblockheader(bestblock)['time']
+        startcount = miningNode.getblockcount()
+        bestblock = miningNode.getbestblockhash()
+        lastblocktime = miningNode.getblockheader(bestblock)['time']
         mocktime = lastblocktime
         for i in range(10):
             mocktime = mocktime + 120
-            self.nodes[0].setmocktime(mocktime)
-            self.nodes[0].generate(1)
-        assert_equal(self.nodes[0].getblockcount(), 210)
-
+            miningNode.setmocktime(mocktime)
+            miningNode.generate(1)
+        assert_equal(miningNode.getblockcount(), startcount+10)
+        sync_blocks(self.nodes)
         self.preupgradeTests()
 
         # set the hardfork activation to just a few blocks ahead
-        bestblock = self.nodes[0].getbestblockhash()
-        lastblocktime = self.nodes[0].getblockheader(bestblock)['time']
+        bestblock = miningNode.getbestblockhash()
+        lastblocktime = miningNode.getblockheader(bestblock)['time']
         activationtime = lastblocktime + 240
-        self.nodes[0].set("consensus.fork1Time=" + str(activationtime))
+        for n in self.nodes:
+            n.set("consensus.fork1Time=" + str(activationtime))
 
-        blockchaininfo = self.nodes[0].getblockchaininfo()
+        blockchaininfo = miningNode.getblockchaininfo()
         assert_equal(blockchaininfo['forktime'], activationtime)
         assert_equal(blockchaininfo['forkactive'], False)
         assert_equal(blockchaininfo['forkenforcednextblock'], False)
         assert_greater_than(activationtime, blockchaininfo['mediantime'])
 
         # Mine just up to the hard fork activation (activationtime will still be greater than mediantime).
-        for i in range(6):
+        for i in range(100):
             mocktime = mocktime + 120
-            self.nodes[0].setmocktime(mocktime)
-            self.nodes[0].generate(1)
-            blockchaininfo = self.nodes[0].getblockchaininfo()
+            for n in self.nodes: n.setmocktime(mocktime)
+            miningNode.generate(1)
+            blockchaininfo = miningNode.getblockchaininfo()
+            if blockchaininfo['forkenforcednextblock'] == True: break
+            # ^ another possibility: if blockchaininfo['mediantime'] >= activationtime: break
             assert_equal(blockchaininfo['forkactive'], False)
             assert_equal(blockchaininfo['forkenforcednextblock'], False)
             assert_greater_than(activationtime, blockchaininfo['mediantime']) # activationtime > mediantime
@@ -257,36 +398,40 @@ class UpgradeActivationTest(BitcoinTestFramework):
         #       first block under the new rules.
         self.atUpgradeTests()
         mocktime = mocktime + 120
-        self.nodes[0].setmocktime(mocktime)
-        self.nodes[0].generate(1)
-        blockchaininfo = self.nodes[0].getblockchaininfo()
+        for n in self.nodes: n.setmocktime(mocktime)
+        miningNode.generate(1)
+        blockchaininfo = miningNode.getblockchaininfo()
         assert_equal(blockchaininfo['forkactive'], True)
-        assert_equal(blockchaininfo['forkenforcednextblock'], True)
-        assert_equal(activationtime, blockchaininfo['mediantime']) # when median time is >= activationtime
 
         # First block mined under new rules:  At this point the nextmaxblocksize can be calculated
         # and will allow for a larger block after the first fork block is mined.
         mocktime = mocktime + 120
-        self.nodes[0].setmocktime(mocktime)
-        self.nodes[0].generate(1)
-        blockchaininfo = self.nodes[0].getblockchaininfo()
-        assert_equal(blockchaininfo['forkactive'], True)
-        assert_equal(blockchaininfo['forkenforcednextblock'], False)
-        assert_greater_than(blockchaininfo['mediantime'], activationtime)
+        for n in self.nodes: n.setmocktime(mocktime)
+        firstForkBlk = miningNode.generate(1)[0]
+        # Wait for all nodes to move to the fork block and activate the fork
+        for n in self.nodes:
+            waitFor(30, lambda: n.getbestblockhash() == firstForkBlk)
+
+            blockchaininfo = miningNode.getblockchaininfo()
+            assert_equal(blockchaininfo['forkactive'], True)
+            assert_equal(blockchaininfo['forkenforcednextblock'], False)
+            assert_greater_than(blockchaininfo['mediantime'], activationtime)
+
         self.postupgradeTests()
 
         # Mine a few more blocks. Nothing should change regarding activation.
         for i in range(10):
             mocktime = mocktime + 120
-            self.nodes[0].setmocktime(mocktime)
-            self.nodes[0].generate(1)
-            blockchaininfo = self.nodes[0].getblockchaininfo()
+            miningNode.setmocktime(mocktime)
+            miningNode.generate(1)
+            blockchaininfo = miningNode.getblockchaininfo()
             assert_equal(blockchaininfo['forkactive'], True)
             assert_equal(blockchaininfo['forkenforcednextblock'], False)
             assert_greater_than(blockchaininfo['mediantime'], activationtime)
 
 if __name__ == '__main__':
     UpgradeActivationTest().main()
+    exit(0)
 
 def Test():
     t = UpgradeActivationTest()

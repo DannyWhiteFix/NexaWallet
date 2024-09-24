@@ -153,12 +153,14 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin &&coin, bool possi
         nBestCoinHeight = it->second.coin.nHeight;
 }
 
-void CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin *moveout)
+bool CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin *moveout)
 {
     WRITELOCK(cs_utxo);
     CCoinsMap::iterator it = FetchCoin(outpoint, nullptr);
     if (it == cacheCoins.end())
-        return;
+        return false;
+    bool alreadySpent = it->second.coin.IsSpent();
+    // LOGA("Spend coin %s: %s", outpoint.GetHex(), alreadySpent ? "but alreadySpent" : "currently unspent");
     cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
     if (moveout)
     {
@@ -173,6 +175,7 @@ void CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin *moveout)
         it->second.flags |= CCoinsCacheEntry::DIRTY;
         it->second.coin.Clear();
     }
+    return !alreadySpent;
 }
 
 static const Coin coinEmpty;
@@ -399,8 +402,12 @@ CAmount CCoinsViewCache::GetValueIn(const CTransaction &tx) const
 
     CAmount nResult = 0;
     for (unsigned int i = 0; i < tx.vin.size(); i++)
-        nResult += _AccessCoin(tx.vin[i].prevout).out.nValue;
-
+    {
+        if (!tx.vin[i].IsReadOnly())
+            nResult += _AccessCoin(tx.vin[i].prevout).out.nValue;
+        else // Cache the coin for later use
+            _AccessCoin(tx.vin[i].prevout);
+    }
     return nResult;
 }
 
@@ -419,6 +426,32 @@ bool CCoinsViewCache::HaveInputs(const CTransaction &tx) const
     return true;
 }
 
+bool CCoinsViewCache::CheckInputsOfType(const CTransaction &tx, int type, std::vector<int> *missingIndexes) const
+{
+    bool ret = true;
+    if (missingIndexes)
+        missingIndexes->clear();
+    if (!tx.IsCoinBase())
+    {
+        for (unsigned int i = 0; i < tx.vin.size(); i++)
+        {
+            if ((type == -1) || (((int)tx.vin[i].type) == type))
+            {
+                if (!HaveCoin(tx.vin[i].prevout))
+                {
+                    ret = false;
+                    if (missingIndexes)
+                        missingIndexes->push_back(i);
+                    else
+                        return false; // If missingIndexes is provided, it checks them all
+                }
+            }
+        }
+    }
+    return ret;
+}
+
+
 double CCoinsViewCache::GetPriority(const CTransaction &tx,
     int nHeight,
     CAmount &inChainInputValue,
@@ -432,20 +465,24 @@ double CCoinsViewCache::GetPriority(const CTransaction &tx,
     }
 
     READLOCK(cs_utxo);
+    fSpendsCoinbase = false;
     double dResult = 0.0;
     for (const CTxIn &txin : tx.vin)
     {
-        const Coin &coin = _AccessCoin(txin.prevout);
-        if (coin.IsCoinBase())
+        if (!txin.IsReadOnly())
         {
-            fSpendsCoinbase = true;
-        }
-        if (coin.IsSpent())
-            continue;
-        if (coin.nHeight <= nHeight)
-        {
-            dResult += coin.out.nValue * (nHeight - coin.nHeight);
-            inChainInputValue += coin.out.nValue;
+            const Coin &coin = _AccessCoin(txin.prevout);
+            if (coin.IsCoinBase())
+            {
+                fSpendsCoinbase = true;
+            }
+            if (coin.IsSpent())
+                continue;
+            if (coin.nHeight <= nHeight)
+            {
+                dResult += coin.out.nValue * (nHeight - coin.nHeight);
+                inChainInputValue += coin.out.nValue;
+            }
         }
     }
 
@@ -522,16 +559,17 @@ CoinModifier::~CoinModifier()
 void AddCoins(CCoinsViewCache &cache, const CTransaction &tx, int nHeight)
 {
     bool fCoinbase = tx.IsCoinBase();
-    const uint256 txid = tx.GetIdem();
+    const uint256 txidem = tx.GetIdem();
     for (size_t i = 0; i < tx.vout.size(); ++i)
     {
         // Pass fCoinbase as the possible_overwrite flag to AddCoin, in order to correctly
         // deal with the pre-BIP30 occurrances of duplicate coinbase transactions.
-        cache.AddCoin(COutPoint(txid, i), Coin(tx.vout[i], nHeight, fCoinbase), fCoinbase);
+        // LOGA("Add coin %s.%d  (%s)", txidem.GetHex(), i, COutPoint(txidem, i).GetHex());
+        cache.AddCoin(COutPoint(txidem, i), Coin(tx.vout[i], nHeight, fCoinbase), fCoinbase);
     }
 }
 
-void SpendCoins(const CTransaction &tx, CCoinsViewCache &inputs, CTxUndo &txundo, int nHeight)
+bool SpendCoins(const CTransaction &tx, CCoinsViewCache &inputs, CTxUndo &txundo, int nHeight)
 {
     // mark inputs spent
     if (!tx.IsCoinBase())
@@ -539,10 +577,21 @@ void SpendCoins(const CTransaction &tx, CCoinsViewCache &inputs, CTxUndo &txundo
         txundo.vprevout.reserve(tx.vin.size());
         for (const CTxIn &txin : tx.vin)
         {
-            txundo.vprevout.emplace_back();
-            inputs.SpendCoin(txin.prevout, &txundo.vprevout.back());
+            if (txin.IsReadOnly())
+            {
+                txundo.vprevout.push_back(Coin());
+            }
+            else
+            {
+                txundo.vprevout.emplace_back();
+                if (!inputs.SpendCoin(txin.prevout, &txundo.vprevout.back()))
+                {
+                    return false;
+                }
+            }
         }
     }
+    return true;
 }
 
 void UpdateCoins(const CTransaction &tx, CCoinsViewCache &inputs, CTxUndo &txundo, int nHeight)

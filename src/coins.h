@@ -332,7 +332,7 @@ public:
      * If no unspent output exists for the passed outpoint, this call
      * has no effect.
      */
-    void SpendCoin(const COutPoint &outpoint, Coin *moveto = nullptr);
+    bool SpendCoin(const COutPoint &outpoint, Coin *moveto = nullptr);
 
     /**
      * Push the modifications applied to this cache to its base.
@@ -390,8 +390,15 @@ public:
      */
     CAmount GetValueIn(const CTransaction &tx) const;
 
-    //! Check whether all prevouts of the transaction are present in the UTXO set represented by this view
+    /** Check whether all prevouts of the transaction are present in the UTXO set represented by this view */
     bool HaveInputs(const CTransaction &tx) const;
+
+    /** Check whether all prevouts of the transaction are present in the UTXO set represented by this view.
+        pass CTxIn.type to only check inputs in tx of a certain type, or pass -1 to check all of them.
+        If missingIndexes == nullptr, it returns false as soon as the first check fails.
+        Otherwise all inputs are checked and any missing are added to missingIndexes (missingIndexes is cleared).
+     */
+    bool CheckInputsOfType(const CTransaction &tx, int type, std::vector<int> *missingIndexes = nullptr) const;
 
     /**
      * Return priority of tx at height nHeight. Also calculate the sum of the values of the inputs
@@ -418,8 +425,10 @@ protected:
 // (pre-BIP34) cases.
 void AddCoins(CCoinsViewCache &cache, const CTransaction &tx, int nHeight);
 
-//! Mark a transaction's inputs as spent in the passed CCoinsViewCache, and create the needed undo information.
-void SpendCoins(const CTransaction &tx, CCoinsViewCache &utxo, CTxUndo &txundo, int nHeight);
+/** Mark a transaction's inputs as spent in the passed CCoinsViewCache, and create the needed undo information.
+ @returns false if the coin does not exist
+ */
+bool SpendCoins(const CTransaction &tx, CCoinsViewCache &utxo, CTxUndo &txundo, int nHeight);
 
 /** Apply the effects of this transaction on the UTXO set represented by view.  This function is equivalent to
 SpendCoins(...); AddCoins(...);
