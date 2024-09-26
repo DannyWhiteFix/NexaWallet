@@ -259,10 +259,10 @@ void ThreadCommitToMempool()
     while (shutdown_threads.load() == false)
     {
         {
-            std::unique_lock<std::mutex> lock(cs_CommitQCondVar);
+            boost::unique_lock<boost::mutex> lock(cs_CommitQCondVar);
             do
             {
-                cvCommitQ.wait_for(lock, std::chrono::milliseconds(2000));
+                cvCommitQ.wait_for(lock, boost::chrono::milliseconds(2000));
                 if (shutdown_threads.load() == true)
                 {
                     return;
