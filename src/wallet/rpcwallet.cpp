@@ -1160,10 +1160,6 @@ UniValue getbalance(const UniValue &params, bool fHelp)
                             HelpExampleCli("getbalance", "\"*\" 6") + "\nAs a json rpc call\n" +
                             HelpExampleRpc("getbalance", "\"*\", 6"));
 
-    // Nothing relies on cs_main, but by locking it here, we ensure that a chain reorg doesn't
-    // cause us to give inconsistent results
-    LOCK2(cs_main, pwalletMain->cs_wallet);
-
     if (params.size() == 0)
         return ValueFromAmount(pwalletMain->GetBalance());
 

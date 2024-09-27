@@ -1357,7 +1357,7 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             }
             i++;
         }
-        assert(setParentCheck == GetMemPoolParents(it));
+        DbgAssert(setParentCheck == GetMemPoolParents(it), );
         // Verify ancestor state is correct.
         if (!it->IsDirty())
         {
