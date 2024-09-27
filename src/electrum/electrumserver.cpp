@@ -76,7 +76,16 @@ bool ElectrumServer::Start(int rpcport, int p2pport, const std::string &network)
     {
         try
         {
-            return Start(rostrum_path(), rostrum_args(rpcport, p2pport, network));
+            // always run rostrum by default on testnet, mainet but not on regtest
+            if (!GetBoolArg("-regtest", false))
+            {
+                return Start(rostrum_path(), rostrum_args(rpcport, p2pport, network));
+            }
+            else
+            {
+                LOGA("Not starting electrum by default on regtest.");
+                return true;
+            }
         }
         catch (std::runtime_error &e) // no rostrum found.  This is ok because the user did not explicitly ask to start
         {
