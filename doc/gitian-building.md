@@ -1,7 +1,7 @@
 Gitian build
 ============
 
-This guide takes for granted that you are using Ubuntu 18.04 or 20.04 as host OS.
+This guide takes for granted that you are using Ubuntu 20.04 as host OS.
 The aim of the document is to be able to produce deterministic binaries using gitian-tools and docker containers.
 
 Prerequisite
@@ -9,22 +9,31 @@ Prerequisite
 
 These are steps that as to be executed once and that don't need to be repeated for every new gitian build process.
 
+First be sure to remove old/deprecated versions of the docker suite, see:
+
+https://docs.docker.com/engine/install/ubuntu/#uninstall-old-version://docs.docker.com/engine/install/ubuntu/#uninstall-old-versions
+
+Install docker from the official repository as descibed here:
+
+https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository
+
+As a final step execute the following commands
+
 ```bash
-sudo apt install git apt-cacher-ng ruby docker.io
 sudo usermod -a -G docker $USER
 exec su -l $USER  #make effective the usermod command
 mkdir -p ~/src
 cd ~/src
 git clone https://gitlab.com/nexa/nexa.git
-git clone https://github.com/devrandom/gitian-builder.git
+git clone https://gitlab.com/nexa/gitian-builder.git
 cd gitian-builder
-bin/make-base-vm --suite focal --arch amd64 --docker
+bin/make-base-vm --suite focal --arch amd64
 ```
 
 Build the binaries
 ------------------
 
-These are the commands to actually produce the linux x86_64 bit executables :
+These are the commands to produce the linux x86_64 bit executables :
 
 ```bash
 cd ~/src/gitian-builder
@@ -36,7 +45,7 @@ Your binaries will be ready to be used in `build/out/` folder.
 
 To compile binaries for MacOSX darwin first you need to get OSX SDK 11.3 from here https://github.com/joseluisq/macosx-sdks
 
-Then issue the following command to have the binaries for osx produced and stored in `build/out`
+Then issue the following commands to compile the osx binaries and stored them in `build/out`
 
 
 ```bash
