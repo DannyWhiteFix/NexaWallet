@@ -1834,7 +1834,18 @@ bool CTxMemPool::exists(const COutPoint &outpoint) const
 
 size_t CTxMemPool::DynamicMemoryUsage(bool fCalcBucketSize)
 {
-    WRITELOCK(cs_txmempool);
+    // Rehash the txpool maps if we are empty. Rehashing will remove the most of the buckets
+    // which can be a significant portion (2%-3%) of txpool usage.
+    if (mapTx.size() == 0)
+    {
+        WRITELOCK(cs_txmempool);
+        mapNextTx.rehash(0);
+        mapDeltas.rehash(0);
+        outpointMap.rehash(0);
+        mapLinks.rehash(0);
+    }
+
+    READLOCK(cs_txmempool);
     // Estimate the overhead of mapTx to be 15 pointers + an allocation, as no exact formula for
     // boost::multi_index_contained is implemented.
     return _DynamicMemoryUsage(fCalcBucketSize);
@@ -1842,17 +1853,7 @@ size_t CTxMemPool::DynamicMemoryUsage(bool fCalcBucketSize)
 
 size_t CTxMemPool::_DynamicMemoryUsage(bool fCalcBucketSize)
 {
-    AssertWriteLockHeld(cs_txmempool);
-
-    // Rehash the txpool maps if we are empty. Rehashing will remove the most of the buckets
-    // which can be a significant portion (2%-3%) of txpool usage.
-    if (mapTx.size() == 0)
-    {
-        mapNextTx.rehash(0);
-        mapDeltas.rehash(0);
-        outpointMap.rehash(0);
-        mapLinks.rehash(0);
-    }
+    AssertLockHeld(cs_txmempool);
 
     // Estimate the overhead of mapTx to be 15 pointers + an allocation, as no exact formula for
     // boost::multi_index_contained is implemented.
