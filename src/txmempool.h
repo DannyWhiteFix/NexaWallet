@@ -885,9 +885,11 @@ private:
     /** Sever link between specified transaction and direct children. */
     void UpdateChildrenForRemoval(TxIdIter entry);
 
-    /** Remove a transaction from the mempool
-     */
+    /** Remove a transaction from the mempool (does not check or remove dependents) */
     void removeUnchecked(TxIdIter entry);
+
+    /** Remove a transaction from the mempool (checks and remove dependents) */
+    int _remove(TxIdIter entry, std::vector<COutPoint> *vCoinsToUncache = nullptr);
 
     /** Temporary storage for double spend proofs */
     std::unique_ptr<DoubleSpendProofStorage> m_dspStorage;

@@ -280,7 +280,13 @@ public:
         return block;
     }
 
-    uint256 GetBlockHash() const { return *phashBlock; }
+    uint256 GetBlockHash() const
+    {
+        if (phashBlock)
+            return *phashBlock;
+        else
+            return header.GetHash();
+    }
     int64_t GetBlockTime() const { return (int64_t)header.nTime; }
     uint64_t GetBlockSize() const { return header.size; }
     enum

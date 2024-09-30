@@ -1044,6 +1044,8 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
                         {
                             state.missingInput = inIdx;
                             fMissingOrSpent = true;
+                            LOG(MEMPOOL, "read-only input-does-not-exist: %d:%s\n", inIdx,
+                                txin.prevout.hash.ToString());
                         }
                     }
                     else
@@ -1055,6 +1057,8 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
                             {
                                 state.missingInput = inIdx;
                                 fMissingOrSpent = true;
+                                LOG(MEMPOOL, "normal input-does-not-exist: %d:%s\n", inIdx,
+                                    txin.prevout.hash.ToString());
                             }
                         }
                     }

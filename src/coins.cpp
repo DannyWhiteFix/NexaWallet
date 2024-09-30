@@ -579,11 +579,12 @@ bool SpendCoins(const CTransaction &tx, CCoinsViewCache &inputs, CTxUndo &txundo
         {
             if (txin.IsReadOnly())
             {
-                txundo.vprevout.push_back(Coin());
+                txundo.vprevout.emplace_back(); // Provide a placeholder in the undo list
             }
             else
             {
                 txundo.vprevout.emplace_back();
+                // LOGA("SpendCoins: Spent %s", txin.prevout.GetHex());
                 if (!inputs.SpendCoin(txin.prevout, &txundo.vprevout.back()))
                 {
                     return false;

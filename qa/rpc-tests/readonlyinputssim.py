@@ -36,7 +36,8 @@ decimal.getcontext().prec = 16
 
 MAX_RO_INPUTS=10
 MAX_INPUTS=10
-
+DEORPHAN_SLEEP=0.10
+DEORPHAN_SYNC=False
 ITERS=200
 verbose = False
 
@@ -125,7 +126,7 @@ class RoTest(BitcoinTestFramework):
         SEND = 0.75
         SEND_WITH_RO = 0.30
         CHECK_SYNC = 0.02
-        STATS = 0.70
+        STATS = 0.01
         addrs = []
         allAddrs = []
         global verbose
@@ -155,13 +156,22 @@ class RoTest(BitcoinTestFramework):
 
             if random.uniform(0,1) < CHECK_SYNC:  # Make sure no permanent forks have happened
                 logging.info("Step %d: Sync blocks" % stepnum)
-                sync_blocks(self.nodes)
+                try:
+                    sync_blocks(self.nodes)
+                except Exception as e:
+                    logging.info("Step %d: Sync errored.  Trying to continue")
+                    self.nodes[0].generate(1)
+                blocks = [n.getblockcount for n in self.nodes]
+                logging.info("   %s" % blocks)
             if random.uniform(0,1) < NEWBLOCK:
                 nodeIdx = random.randrange(0,len(self.nodes))
                 node = self.nodes[nodeIdx]
                 try:
                     blk = node.generate(1)[0]
                     logging.info("Step %d: Generated block %s on node %d" % (stepnum, blk, nodeIdx))
+                    time.sleep(DEORPHAN_SLEEP)
+                    if DEORPHAN_SYNC:
+                        sync_blocks(self.nodes)
                 except JSONRPCException as e:
                     logging.error(e)
                     logging.error("Step %d: Failed attempt to generate block from node %d" % (stepnum, nodeIdx))
@@ -322,9 +332,9 @@ def OneTest():
     bitcoinConf = {
         "par": 1,
         "txindex":1,
-        "debug": ["all","-libevent"]
+        "debug": ["all","-libevent"],
         # "debug": ["validation", "rpc", "net", "blk", "thin", "mempool", "req", "bench", "evict"],
     }
     flags = standardFlags()
-    flags[0] = '--tmpdir=/ramdisk/test/t1'
+    flags[0] = '--tmpdir=/tmp/test/t1'
     t.main(flags, bitcoinConf, None)

@@ -2149,6 +2149,7 @@ DisconnectResult DisconnectBlock(const ConstCBlockRef pblock, const CBlockIndex 
             if (!tx.vin[j].IsReadOnly()) // nothing to undo in a read-only input
             {
                 const COutPoint &out = tx.vin[j].prevout;
+                // LOGA("DisconnectBlock: Restoring UTXO: %s", out.GetHex());
                 int res = ApplyTxInUndo(std::move(txundo.vprevout[j]), view, out);
                 if (res == DISCONNECT_FAILED)
                 {
@@ -2306,8 +2307,7 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
     nFees = 0;
     int64_t nTime2 = GetStopwatchMicros();
     LOG(BLK, "Canonical ordering for %s MTP: %d\n", pblock->GetHash().ToString(), pindex->GetMedianTimePast());
-
-    // Enforce BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY)
+    //  Enforce BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY)
     int nLockTimeFlags = 0;
     nLockTimeFlags |= LOCKTIME_VERIFY_SEQUENCE;
 
@@ -2367,6 +2367,12 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
                     CoinAccessor coin(view, txref->vin[j].prevout);
                     if (coin->IsSpent())
                     {
+                        // Chain got reorged, this is just a block on the wrong chain not a malicious block
+                        if (PV->ChainWorkHasChanged(nStartingChainWork) || PV->QuitReceived(this_id, fParallel))
+                        {
+                            return false;
+                        }
+
                         LOG(BLK,
                             "%s: block %s read only input UTXO %s missing or spent in tx.in: %d.%d txid: %s (idem: %s)",
                             __func__, pblock->GetHash().ToString(), txref->vin[j].prevout.GetHex(), i, j,
@@ -2475,7 +2481,7 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
                             if (coin->IsSpent())
                             {
                                 badIdx = j;
-                                LOGA("block %s: TX %d (idem: %s:%d) input missing or spent (%s)\n",
+                                LOGA("block %s: TX %d (idem: %s:%d) normal input missing or spent (%s)\n",
                                     pblock->GetHash().ToString(), i, tx.GetIdem().GetHex(), j,
                                     tx.vin[j].prevout.GetHex());
                                 errCode = "bad-txns-inputs-missingorspent";
