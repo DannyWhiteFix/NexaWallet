@@ -2421,9 +2421,11 @@ void CWallet::ResendWalletTransactions(int64_t nBestBlockTime)
 CAmount CWallet::GetBalance()
 {
     CAmount nTotal = 0;
+#ifdef DEBUG
+    CAmount nTotal2 = 0;
+#endif
     {
         LOCK(cs_wallet);
-        // LOGA("Balance unspent: ");
         for (MapWallet::const_iterator it = mapWalletUnspent.begin(); it != mapWalletUnspent.end(); ++it)
         {
             const CWalletTxRef ptx = it->second.tx;
@@ -2436,17 +2438,13 @@ CAmount CWallet::GetBalance()
                 // technically it is.
                 if (!IsSpent(it->first) && (GetGroupToken(it->second.GetScriptPubKey()) == NoGroup))
                 {
-                    CAmount tmp = GetCredit(it->second.GetTxOut(), ISMINE_SPENDABLE);
-                    nTotal += tmp;
-                    // LOGA("%d -> %d (%s)", tmp, nTotal, ptx->GetIdem().GetHex());
+                    nTotal += GetCredit(it->second.GetTxOut(), ISMINE_SPENDABLE);
                 }
             }
         }
 
 #ifdef DEBUG
-        // LOGA("Balance mapWallet: ");
         //  Make sure the new and old method have matching totals
-        CAmount nTotal2 = 0;
         for (MapWallet::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTxRef ptx = it->second.tx;
@@ -2454,18 +2452,55 @@ CAmount CWallet::GetBalance()
             {
                 if (ptx->IsTrusted())
                 {
-                    CAmount tmp = ptx->GetAvailableCredit(false);
-                    nTotal2 += tmp;
-                    // if (tmp != 0)
-                    //     LOGA("%d -> %d (%s)", tmp, nTotal2,  ptx->GetIdem().GetHex());
+                    nTotal2 += ptx->GetAvailableCredit(false);
                 }
             }
         }
-        if (nTotal != nTotal2)
-            LOGA("Balance inconsistency: unspent: %d  mapWallet: %d", nTotal, nTotal2);
-        DbgAssert(nTotal == nTotal2, );
 #endif
     }
+
+
+#ifdef DEBUG
+    if (nTotal != nTotal2)
+    {
+        // The totals calculated above may be inconsistent due to parent transactions entering the txpool, because
+        // we "trust" our own transactions ONLY once they are admitted to the txpool.
+        //
+        // We cannot lock and flush the TxAdmission queue here or anyone taking cs_wallet above this function will
+        // deadlock.  Instead, recalculate ignoring whether the balance is trusted or not.
+        LOCK(cs_wallet);
+        // LOGA("UNSPENT: ");
+        CAmount nTotal3 = 0;
+        for (MapWallet::const_iterator it = mapWalletUnspent.begin(); it != mapWalletUnspent.end(); ++it)
+        {
+            const CWalletTxRef ptx = it->second.tx;
+            if (ptx->IsCoinBase() && ptx->GetBlocksToMaturity() > 0)
+                continue;
+
+            if (!IsSpent(it->first) && (GetGroupToken(it->second.GetScriptPubKey()) == NoGroup))
+            {
+                CAmount tmp = GetCredit(it->second.GetTxOut(), ISMINE_SPENDABLE);
+                nTotal3 += tmp;
+                // LOGA("%d -> %d (%s)", tmp, nTotal3, ptx->GetIdem().GetHex());
+            }
+        }
+        // LOGA("MAPTX: ");
+        CAmount nTotal4 = 0;
+        for (MapWallet::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        {
+            const CWalletTxRef ptx = it->second.tx;
+            if (it->first.hash == ptx->GetId()) // If its the tx record
+            {
+                CAmount tmp = ptx->GetAvailableCredit(false);
+                nTotal4 += tmp;
+                // if (tmp != 0) LOGA("%d -> %d (%s)", tmp, nTotal4,  ptx->GetIdem().GetHex());
+            }
+        }
+        if (nTotal3 != nTotal4)
+            LOGA("Balance inconsistency: unspent: %d  mapWallet: %d", nTotal3, nTotal4);
+        DbgAssert(nTotal3 == nTotal4, );
+    }
+#endif
 
     return nTotal;
 }

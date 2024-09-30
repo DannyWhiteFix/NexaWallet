@@ -87,10 +87,6 @@ UniValue getinfo(const UniValue &params, bool fHelp)
         nNodes = vNodes.size();
     }
 
-#ifdef ENABLE_WALLET
-    LOCK(pwalletMain ? &pwalletMain->cs_wallet : nullptr);
-#endif
-
     proxyType proxy;
     GetProxy(NET_IPV4, proxy);
 
@@ -119,6 +115,7 @@ UniValue getinfo(const UniValue &params, bool fHelp)
 #ifdef ENABLE_WALLET
     if (pwalletMain)
     {
+        LOCK(&pwalletMain->cs_wallet);
         obj.pushKV("keypoololdest", pwalletMain->GetOldestKeyPoolTime());
         obj.pushKV("keypoolsize", (int)pwalletMain->GetKeyPoolSize());
     }

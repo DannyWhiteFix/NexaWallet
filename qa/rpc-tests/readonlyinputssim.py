@@ -34,6 +34,9 @@ from test_framework.script import *
 import decimal
 decimal.getcontext().prec = 16
 
+MAX_RO_INPUTS=10
+MAX_INPUTS=10
+
 ITERS=200
 verbose = False
 
@@ -118,11 +121,11 @@ class RoTest(BitcoinTestFramework):
 
 
     def testReadOnlyRandom(self):
-        NEWBLOCK = 0.03
-        SEND = 0.25
-        SEND_WITH_RO = 0.50
-        CHECK_SYNC = 0.005
-        STATS = 0.01
+        NEWBLOCK = 0.20
+        SEND = 0.75
+        SEND_WITH_RO = 0.30
+        CHECK_SYNC = 0.02
+        STATS = 0.70
         addrs = []
         allAddrs = []
         global verbose
@@ -136,6 +139,10 @@ class RoTest(BitcoinTestFramework):
 
         for stepnum in range(0, ITERS):
             if random.uniform(0,1) < STATS:
+                balances = [n.getbalance() for n in self.nodes]
+                for n in self.nodes:
+                    n.getinfo()
+                logging.info([str(x) for x in balances])
                 if verbose:
                     logging.info("Step %d: Stats" % stepnum)
                     logging.info("  TX POOL")
@@ -143,15 +150,27 @@ class RoTest(BitcoinTestFramework):
                         logging.info(pprint.pformat(n.gettxpoolinfo()))
                     logging.info("  NODE")
                     for n in self.nodes:
+                        logging.info(pprint.pformat(balances))
                         logging.info(pprint.pformat(n.getinfo()))
 
             if random.uniform(0,1) < CHECK_SYNC:  # Make sure no permanent forks have happened
                 logging.info("Step %d: Sync blocks" % stepnum)
                 sync_blocks(self.nodes)
             if random.uniform(0,1) < NEWBLOCK:
-                node = random.choice(self.nodes)
-                blk = node.generate(1)[0]
-                logging.info("Step %d: Generated block %s" % (stepnum, blk))
+                nodeIdx = random.randrange(0,len(self.nodes))
+                node = self.nodes[nodeIdx]
+                try:
+                    blk = node.generate(1)[0]
+                    logging.info("Step %d: Generated block %s on node %d" % (stepnum, blk, nodeIdx))
+                except JSONRPCException as e:
+                    logging.error(e)
+                    logging.error("Step %d: Failed attempt to generate block from node %d" % (stepnum, nodeIdx))
+                    txpool = node.gettxpoolinfo()
+                    logging.error(txpool)
+                    rawtxpool = node.getrawtxpool()
+                    logging.error(rawtxpool)
+                    # pdb.set_trace()
+                    raise e
             if random.uniform(0,1) < SEND:
                 node = random.choice(self.nodes)
                 avail = int(node.getbalance()*100)
@@ -174,8 +193,7 @@ class RoTest(BitcoinTestFramework):
                         break
                     tx = CTransaction()
                     # Fill with read only
-                    if True:
-                      for i in range(0,random.randint(0,5)):
+                    for i in range(0,random.randint(0,MAX_RO_INPUTS)):
                         if len(rochoices) == 0:
                             break
                         inputIdx = random.randrange(0, len(rochoices))
@@ -198,7 +216,7 @@ class RoTest(BitcoinTestFramework):
                         break
                     totalSpent = 0
                     spentOutpoint = None  # Remember one spent outpoint
-                    for i in range(0,2): # random.randint(0,10)):
+                    for i in range(0,MAX_INPUTS): # random.randint(0,10)):
                         if len(nodeUnspent) == 0:
                             break
                         uIdx = random.randrange(0,len(nodeUnspent))
@@ -235,7 +253,7 @@ class RoTest(BitcoinTestFramework):
                     dcd = node.decoderawtransaction(sgnReturn["hex"])
                     vld = node.validaterawtransaction(sgnReturn["hex"])
                     if verbose:
-                        logging.info("Sending using %d:\n%s" % (nodeIdx, pprint.pformat(dcd)))
+                        logging.info("  Sending using %d:\n%s" % (nodeIdx, pprint.pformat(dcd)))
                     totalUnspent = len(node.listunspent())
                     txidem = None
                     try:
@@ -254,7 +272,7 @@ class RoTest(BitcoinTestFramework):
                     # meaning that later I could reuse the inputs so I'd have to be tolerant of that
                     # txid = random.choice(self.nodes).sendrawtransaction(sgnReturn["hex"])
 
-                    logging.info("Sent txidem: %s" % txidem)
+                    logging.info("  Sent txidem: %s" % txidem)
                     break
 
 
@@ -293,8 +311,12 @@ if __name__ == '__main__':
     exit(0)
 
 def Test():
+    for i in range(0,100): OneTest()
+    
+    
+def OneTest():
     global ITERS
-    ITERS=200
+    ITERS=500
     t = RoTest()
     t.drop_to_pdb = True
     bitcoinConf = {
