@@ -75,7 +75,7 @@ std::string CBlock::ToString() const
 {
     std::stringstream s;
     s << strprintf("CBlock(hash=%s, height=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, txCount=%u "
-                   ", feePool=%d, nonce=%s, utxo=%s)\n",
+                   ", size=%d, feePool=%d, nonce=%s, utxo=%s)\n",
         GetHash().ToString(), height, hashPrevBlock.ToString(), hashMerkleRoot.ToString(), nTime, nBits, vtx.size(),
         size, feePoolAmt, HexStr(nonce), HexStr(utxoCommitment));
     for (unsigned int i = 0; i < vtx.size(); i++)

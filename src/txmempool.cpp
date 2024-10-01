@@ -1039,7 +1039,7 @@ void CTxMemPool::_removeConflicts(const CTransaction &tx, std::list<CTransaction
             auto it2 = mapRoTx.find(txin.prevout);
             if (it2 != mapRoTx.end())
             {
-                LOG(MEMPOOL, "UTXO %s has %d RO children", it2->second.size());
+                LOG(MEMPOOL, "  UTXO %s has %d RO children", it2->second.size());
                 for (const auto &cinp : it2->second)
                 {
                     CTransactionRef txref = cinp.ptx;
@@ -1074,7 +1074,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef> &vtx,
     // mapTxnChaiTips.
     mapEntryHistory mapTxnChainTips;
     setEntries setAncestorsFromBlock;
-    setEntries setReadOnlyDependents;
+    std::set<uint256> setReadOnlyHashes;
     {
         // Check for readonly ancestors
         // This must be done before removeUnchecked is called because removeUnchecked will wipe out
@@ -1087,7 +1087,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef> &vtx,
             {
                 if (!tx->vin[i].IsReadOnly()) // UTXO is being consumed
                 {
-                    LOG(MEMPOOL, "Consumed UTXO %s", tx->vin[i].prevout.GetHex());
+                    LOG(MEMPOOL, "remove for block %d Consumed UTXO %s", nBlockHeight, tx->vin[i].prevout.GetHex());
                     // So remove all txes that use the UTXO
                     auto it2 = mapRoTx.find(tx->vin[i].prevout);
                     if (it2 != mapRoTx.end())
@@ -1096,15 +1096,10 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef> &vtx,
                         for (const auto &cinp : it2->second)
                         {
                             const uint256 &dephash = cinp.ptx->GetId();
-                            auto mapTxItem = mapTx.find(dephash);
-                            if (mapTxItem != mapTx.end())
-                            {
-                                LOG(MEMPOOL,
-                                    "Removing TX id %s (idem: %s) due to spend of readonly dependency %s in input %d",
-                                    dephash.GetHex(), cinp.ptx->GetIdem().GetHex(), tx->vin[i].prevout.GetHex(),
-                                    cinp.n);
-                                setReadOnlyDependents.insert(mapTxItem);
-                            }
+                            setReadOnlyHashes.insert(dephash);
+                            LOG(MEMPOOL,
+                                "Removing TX id %s (idem: %s) due to spend of readonly dependency %s in input %d",
+                                dephash.GetHex(), cinp.ptx->GetIdem().GetHex(), tx->vin[i].prevout.GetHex(), cinp.n);
                         }
                         mapRoTx.erase(it2);
                     }
@@ -1112,14 +1107,16 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef> &vtx,
             }
         }
 
-        LOG(MEMPOOL, "Removing %d read only dependents", setReadOnlyDependents.size());
-        for (TxIdIter it : setReadOnlyDependents)
+        LOG(MEMPOOL, "Removing %d read only dependents", setReadOnlyHashes.size());
+        for (auto &hash : setReadOnlyHashes)
         {
-            setAncestorsFromBlock.erase(it);
-            mapTxnChainTips.erase(it);
-            removeUnchecked(it);
+            auto iter = mapTx.find(hash);
+            if (iter != mapTx.end())
+            {
+                _remove(iter);
+            }
         }
-        setReadOnlyDependents.clear();
+        setReadOnlyHashes.clear();
 
 
         setEntries setTxnsInBlock;
@@ -1245,6 +1242,7 @@ void CTxMemPool::_clear()
     mapLinks.clear();
     mapTx.clear();
     mapNextTx.clear();
+    mapRoTx.clear();
     outpointMap.clear();
     // Do not clear mapDeltas because that is user configuration -- these tx may be reentering the mempool
     setDirtyTxnChainTips.clear();
@@ -1909,6 +1907,21 @@ int CTxMemPool::Remove(const uint256 &txhash, std::vector<COutPoint> *vCoinsToUn
         // If found get the ID iterator so we can continue to remove
         removeit = mapTx.project<TXID_CONTAINER_IDX>(idemit);
     }
+
+    setEntries stage;
+    _CalculateDescendants(removeit, stage);
+    if (vCoinsToUncache)
+        for (TxIdIter it2 : stage)
+            for (const CTxIn &txin : it2->GetTx().vin)
+                vCoinsToUncache->push_back(txin.prevout);
+    _RemoveStaged(stage);
+    return stage.size();
+}
+
+int CTxMemPool::_remove(TxIdIter removeit, std::vector<COutPoint> *vCoinsToUncache)
+{
+    if (removeit == mapTx.end())
+        return 0;
 
     setEntries stage;
     _CalculateDescendants(removeit, stage);
