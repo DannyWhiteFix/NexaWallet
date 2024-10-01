@@ -484,6 +484,7 @@ class RoTest(BitcoinTestFramework):
             print("Synced")
             blk1 = miningNode.generate(1)[0]
             print("generated: " + blk1)
+            sync_blocks(self.nodes)
             self.testGroupReadOnlyInput()
             bal0 = self.nodes[0].getwalletinfo()["balance"]
             bal1 = self.nodes[1].getwalletinfo()["balance"]
