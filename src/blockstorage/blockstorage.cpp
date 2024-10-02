@@ -651,7 +651,10 @@ bool FlushStateToDiskInternal(CValidationState &state,
     static int64_t nLastSetChain = 0;
     static int64_t nLastCoinsCacheReset = 0;
 
-    LOCK(cs_flushstate);
+    TRY_LOCK(cs_flushstate, lock);
+    if (!lock)
+        return true;
+
     int64_t nNow = GetStopwatchMicros();
     // Avoid writing/flushing immediately after startup.
     if (nLastWrite == 0)
@@ -717,6 +720,7 @@ bool FlushStateToDiskInternal(CValidationState &state,
         }
         // Then update all block file information (which may refer to block and undo files).
         {
+            int tmpLastBlockFile = 0;
             std::vector<std::pair<int, const CBlockFileInfo *> > vFiles;
             {
                 LOCK(cs_LastBlockFile);
@@ -726,9 +730,9 @@ bool FlushStateToDiskInternal(CValidationState &state,
                     vFiles.push_back(std::make_pair(*it, &vinfoBlockFile[*it]));
                     setDirtyFileInfo.erase(it++);
                 }
+                tmpLastBlockFile = nLastBlockFile;
             }
             std::vector<const CBlockIndex *> vBlocks;
-
             vBlocks.reserve(setDirtyBlockIndex.size());
             {
                 WRITELOCK(cs_mapBlockIndex);
@@ -739,11 +743,10 @@ bool FlushStateToDiskInternal(CValidationState &state,
                 }
             }
 
-
             // we write different info depending on block storage system
             if (!pblockdb) // sequential files
             {
-                if (!pblocktree->WriteBatchSync(vFiles, nLastBlockFile, vBlocks))
+                if (!pblocktree->WriteBatchSync(vFiles, tmpLastBlockFile, vBlocks))
                 {
                     return AbortNode(state, "Files to write to block index database");
                 }
