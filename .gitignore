@@ -127,6 +127,7 @@ coverage_percent.txt
 linux-coverage-build
 linux-build
 win32-build
+building_cache
 qa/pull-tester/run-bitcoind-for-test.sh
 qa/pull-tester/tests_config.py
 qa/pull-tester/cache/*
@@ -134,6 +135,7 @@ qa/pull-tester/test.*/*
 qa/pull-tester/validatePerf.csv
 qa/pull-tester/ctorout.txt
 qa/tmp
+qa/venv
 cache/
 share/BitcoindComparisonTool.jar
 

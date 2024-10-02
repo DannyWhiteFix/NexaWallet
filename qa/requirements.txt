@@ -1,0 +1,5 @@
+pip==24.0
+psutil==6.0.0
+pyasyncore==1.0.4
+pyzmq==26.2.0
+zmq==0.0.0
