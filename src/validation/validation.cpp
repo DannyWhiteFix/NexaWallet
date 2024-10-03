@@ -1096,6 +1096,7 @@ void CheckBlockIndex(const Consensus::Params &consensusParams)
 bool CheckInputs(const CTransactionRef &tx,
     CValidationState &state,
     const CCoinsViewCache &inputs,
+    const CCoinsViewCache &readonlyinputs,
     bool fScriptChecks,
     const unsigned int flags,
     bool cacheStore,
@@ -1108,7 +1109,7 @@ bool CheckInputs(const CTransactionRef &tx,
     bool allPassed = true;
     if (!tx->IsCoinBase())
     {
-        if (!Consensus::CheckTxInputs(tx, state, inputs, *pcoinsTip, chainparams))
+        if (!Consensus::CheckTxInputs(tx, state, inputs, readonlyinputs, chainparams))
         {
             if (debugger)
             {
@@ -1122,7 +1123,7 @@ bool CheckInputs(const CTransactionRef &tx,
         }
         // Its ok to only check Group semantics if this is not a coinbase transaction because coinbase transactions
         // MUST NOT have any grouped outputs (see CheckTransaction(...)).
-        if (!CheckGroupTokens(*tx, state, inputs, *pcoinsTip))
+        if (!CheckGroupTokens(*tx, state, inputs, readonlyinputs))
         {
             if (debugger)
             {
@@ -2538,8 +2539,8 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
                         std::vector<CScriptCheck> vChecks;
                         bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks
                                                             (still consult the cache, though) */
-                        if (!CheckInputs(txref, state, view, fScriptChecks, flags, fCacheResults, &txResourceTracker[i],
-                                chainparams, PV->ThreadCount() ? &vChecks : nullptr))
+                        if (!CheckInputs(txref, state, view, *pcoinsTip, fScriptChecks, flags, fCacheResults,
+                                &txResourceTracker[i], chainparams, PV->ThreadCount() ? &vChecks : nullptr))
                         {
                             return error("%s: block %s CheckConsumedInputs on %s failed with %s", __func__,
                                 pblock->GetHash().ToString(), tx.GetId().ToString(), state.GetLogString());

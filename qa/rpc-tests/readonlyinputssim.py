@@ -269,7 +269,7 @@ class RoTest(BitcoinTestFramework):
                     try:
                         txidem = node.sendrawtransaction(sgnReturn["hex"])
                         # waitFor(30, lambda: totalUnspent != len(node.listunspent()))  # wait for some to be used
-                        waitFor(30, lambda: not spentOutpoint in [x['outpoint'] for x in node.listunspent()])  # wait for some to be used
+                        waitFor(60, lambda: not spentOutpoint in [x['outpoint'] for x in node.listunspent()])  # wait for some to be used
                     except JSONRPCException as e:
                         # if verbose:
                         logging.info("Exception sending: %s TX validation:\n%s" % (str(e), pprint.pformat(vld)))

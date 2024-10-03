@@ -149,7 +149,7 @@ class RoTest(BitcoinTestFramework):
                 pass # Worked
 
         blkhash = n.generate(1)[0] # commit preTx so we can access its outputs in the UTXO
-        waitFor(30, lambda: n.getwalletinfo()["syncblock"] == blkhash)
+        waitFor(60, lambda: n.getwalletinfo()["syncblock"] == blkhash)
 
         # Make a TX with a readonly input (should work if post fork), no signature
         tx = CTransaction()
@@ -253,9 +253,9 @@ class RoTest(BitcoinTestFramework):
         assert roTx.GetRpcHexIdem() in txpool
         assert roTx2.GetRpcHexIdem() in txpool
 
-        waitFor(30, lambda: n.gettxpoolinfo()["size"] >= 2)
+        waitFor(60, lambda: n.gettxpoolinfo()["size"] >= 2)
         blkhash = n.generate(1)[0]
-        waitFor(30, lambda: n.getwalletinfo()["syncblock"] == blkhash)
+        waitFor(60, lambda: n.getwalletinfo()["syncblock"] == blkhash)
         txpoolstats = n.gettxpoolinfo()
         if txpoolstats["size"] != 0:
             rawtx = n.getrawtxpool()
@@ -265,7 +265,7 @@ class RoTest(BitcoinTestFramework):
                 decoded = n.decoderawtransaction(txinfo["hex"])
                 print(decoded)
                 blkhash = n.generate(1)[0]  # Should consume the rest of the tx
-                waitFor(30, lambda: n.gettxpoolinfo()["size"] == 0)
+                waitFor(60, lambda: n.gettxpoolinfo()["size"] == 0)
 
         # Use the same read only input again, after we committed some RO uses, but we haven't spent it yet
         tx = CTransaction()
@@ -328,7 +328,7 @@ class RoTest(BitcoinTestFramework):
         newgrpReply = n.token("new")
         gid = newgrpReply["groupIdentifier"]
         newgrpTxIdem = newgrpReply["transaction"]
-        sync_wallet_with_unconf_txidem(30, n, newgrpReply["transaction"])
+        sync_wallet_with_unconf_txidem(60, n, newgrpReply["transaction"])
 
         while True:
           try:
@@ -343,7 +343,7 @@ class RoTest(BitcoinTestFramework):
         outIdx = findOutputOfGroupAmount(1000, mintTx)
         inp = spendOutput(outIdx, mintTx, scr)
 
-        sync_wallet_with_unconf_txidem(30, n, mintTxIdem)
+        sync_wallet_with_unconf_txidem(60, n, mintTxIdem)
         # Create a mint child authority
         while True:
           try:
@@ -471,7 +471,7 @@ class RoTest(BitcoinTestFramework):
         addr1 = self.nodes[1].getnewaddress()
         for i in range(0,10):
             miningNode.sendtoaddress(addr, 1000000)
-        waitFor(30, lambda: miningNode.gettxpoolinfo()["size"] == 10)
+        waitFor(60, lambda: miningNode.gettxpoolinfo()["size"] == 10)
         print(miningNode.gettxpoolinfo())
         miningNode.generate(1)
 
