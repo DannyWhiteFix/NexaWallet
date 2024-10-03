@@ -1481,7 +1481,8 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             break;
         }
         // Use the largest maxOps since this code is not meant to validate that constraint
-        assert(CheckInputs(entry->GetSharedTx(), state, mempoolDuplicate, false, 0, false, nullptr, Params()));
+        assert(
+            CheckInputs(entry->GetSharedTx(), state, mempoolDuplicate, *pcoinsTip, false, 0, false, nullptr, Params()));
         UpdateCoins(entry->GetTx(), mempoolDuplicate, 1000000);
         stepsSinceLastRemove = 0;
     }

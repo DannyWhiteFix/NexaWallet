@@ -1003,8 +1003,13 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
         }
     }
     {
+        // view is used for storing normal coins
         CCoinsView dummy;
         CCoinsViewCache view(&dummy);
+
+        // coinstip is used for storing read only inputs
+        CCoinsView dummy2;
+        CCoinsViewCache coinstip(&dummy2);
 
         CAmount nValueIn = 0;
         LockPoints lp;
@@ -1017,6 +1022,8 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
 
             CCoinsViewMemPool viewMemPool(pcoinsTip, mempool);
             view.SetBackend(viewMemPool);
+            coinstip.SetBackend(*pcoinsTip);
+
             // do all inputs exist?
             if (pfMissingInputs)
             {
@@ -1037,20 +1044,23 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
                     bool fMissingOrSpent = false;
                     if (txin.IsReadOnly())
                     {
-                        // Read-only inputs can only refer to confirmed inputs
-                        // look in coins (utxo of blockchain tip, not mempool tip)
-                        // but ignore whether its spent (read-only spent coins are still accessible in this block).
-                        if (!pcoinsTip->GetCoinFromDB(txin.prevout))
+                        if (!coinstip.HaveCoinInCache(txin.prevout, fSpent))
                         {
-                            state.missingInput = inIdx;
-                            fMissingOrSpent = true;
-                            LOG(MEMPOOL, "read-only input-does-not-exist: %d:%s\n", inIdx,
-                                txin.prevout.hash.ToString());
+                            // Read-only inputs can only refer to confirmed inputs
+                            // look in coins (utxo of blockchain tip, not mempool tip)
+                            // but ignore whether its spent (read-only spent coins are still accessible in this block).
+                            if (!coinstip.GetCoinFromDB(txin.prevout))
+                            {
+                                state.missingInput = inIdx;
+                                fMissingOrSpent = true;
+                                LOG(MEMPOOL, "read-only input-does-not-exist: %d:%s\n", inIdx,
+                                    txin.prevout.hash.ToString());
+                            }
                         }
                     }
                     else
                     {
-                        if (!pcoinsTip->HaveCoinInCache(txin.prevout, fSpent))
+                        if (!view.HaveCoinInCache(txin.prevout, fSpent))
                         {
                             vCoinsToUncache.push_back(txin.prevout);
                             if (!view.GetCoinFromDB(txin.prevout))
@@ -1106,6 +1116,7 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
 
             // Bring the best block into scope
             view.GetBestBlock();
+            coinstip.GetBestBlock();
 
             nValueIn = tx->GetValueIn();
             // NOTE this view function MUST be executed, so we can cache all inputs, before SetBackend(dummy)
@@ -1126,6 +1137,7 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
             }
             // we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
             view.SetBackend(dummy);
+            coinstip.SetBackend(dummy2);
 
             // Only accept BIP68 sequence locked transactions that can be mined in the next
             // block; we don't want our mempool filled up with transactions that can't
@@ -1185,8 +1197,8 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
 
         // Check that input script constraints are satisfied
         unsigned char sighashType = 0;
-        if (!CheckInputs(
-                tx, state, view, true, flags, true, &resourceTracker, chainparams, nullptr, &sighashType, debugger))
+        if (!CheckInputs(tx, state, view, coinstip, true, flags, true, &resourceTracker, chainparams, nullptr,
+                &sighashType, debugger))
         {
             if (state.GetDebugMessage() == "")
                 state.SetDebugMessage("CheckConsumedInputs failed");

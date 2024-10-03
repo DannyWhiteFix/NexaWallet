@@ -81,7 +81,8 @@ void CheckBlockIndex(const Consensus::Params &consensusParams);
  */
 bool CheckInputs(const CTransactionRef &tx,
     CValidationState &state,
-    const CCoinsViewCache &view,
+    const CCoinsViewCache &inputs,
+    const CCoinsViewCache &readonlyinputs,
     bool fScriptChecks,
     const unsigned int flags,
     bool cacheStore,
