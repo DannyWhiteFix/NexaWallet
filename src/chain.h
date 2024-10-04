@@ -20,6 +20,7 @@
 
 extern CSharedCriticalSection cs_mapBlockIndex;
 extern CTweak<uint64_t> nextMaxBlockSize;
+extern uint64_t nDiskBlockIndexVersion;
 
 class CBlockFileInfo
 {
@@ -163,13 +164,13 @@ std::string ToString(BlockStatus s);
 class CBlockIndex
 {
 public:
-    //! pointer to the hash of the block, if any. Memory is owned by this CBlockIndex
+    //! (memory only) pointer to the hash of the block, if any. Memory is owned by this CBlockIndex
     const uint256 *phashBlock;
 
-    //! pointer to the index of the predecessor of this block
+    //! (memory only) pointer to the index of the predecessor of this block
     CBlockIndex *pprev;
 
-    //! pointer to the index of some further predecessor of this block
+    //! (memory only) pointer to the index of some further predecessor of this block
     CBlockIndex *pskip;
 
     //! height of the entry in the chain. The genesis block has height 0
@@ -204,8 +205,7 @@ public:
     //! no longer has an entry in unlinked blocks map.
     bool IsLinked() const { return ((nStatus & BLOCK_LINKED) != 0); }
 
-    //! (memory only) Number of transactions in the chain up to and including this block.
-    //! This value will be non-zero only if and only if transactions for this block and all its parents are available.
+    //! Number of transactions in the chain up to and including this block.
     uint64_t nChainTx;
 
     //! Verification status of this block. See enum BlockStatus
@@ -429,6 +429,12 @@ public:
 
         // max size for the next block in the chain
         READWRITE(nNextMaxBlockSize);
+
+        // chain transaction counts and the skip index hash
+        if (nDiskBlockIndexVersion >= 1)
+        {
+            READWRITE(nChainTx);
+        }
     }
 
     uint256 GetBlockHash() const { return header.GetHash(); }

@@ -97,6 +97,7 @@ CCriticalSection cs_rpcWarmup;
  *  mapBlockIndex then there is also a new entry in setDirtyBlockIndex.  The dirty block index
  *  is written later to disk when it's convenient.
  */
+uint64_t nDiskBlockIndexVersion = 0;
 CSharedCriticalSection cs_mapBlockIndex;
 BlockMap mapBlockIndex GUARDED_BY(cs_mapBlockIndex);
 std::set<CBlockIndex *> setDirtyBlockIndex GUARDED_BY(cs_mapBlockIndex);

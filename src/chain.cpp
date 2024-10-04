@@ -199,7 +199,9 @@ const CBlockIndex *CBlockIndex::GetAncestor(int height) const
 void CBlockIndex::BuildSkip()
 {
     if (pprev)
+    {
         pskip = pprev->GetAncestor(GetSkipHeight(height()));
+    }
 }
 
 std::string CBlockFileInfo::ToString() const

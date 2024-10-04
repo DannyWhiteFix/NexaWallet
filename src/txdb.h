@@ -52,6 +52,8 @@ static const uint64_t nMinMemToKeepAvailable = 300 * 1000 * 1000;
 static const size_t nMaxDBBatchSize = 16 << 20;
 //! Max memory allocated to block tree DB specific cache, if no -txindex (MiB)
 static const int64_t nMaxBlockDBCache = 2;
+//! BlockTreeDB (block index) version.
+static const uint32_t BLOCK_INDEX_VERSION = 1;
 
 /** Get the current available memory */
 uint64_t GetAvailableMemory();
@@ -207,6 +209,8 @@ public:
     bool GetSortedHashIndex(std::vector<std::pair<int, CDiskBlockIndex> > &hashesByHeight);
     uint64_t GetBestBlockHeaderChainTx() const;
     bool WriteBestBlockHeaderChainTx(const uint64_t nChainTx);
+    uint32_t GetBlockIndexVersion() const;
+    bool WriteBlockIndexVersion(const uint32_t nVersion);
 };
 
 /** Access to the token description database (indexes/tokendesc */
