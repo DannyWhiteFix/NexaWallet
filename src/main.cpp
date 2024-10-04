@@ -105,6 +105,7 @@ extern CTweak<uint32_t> limitFreeRelay;
 extern std::map<CNetAddr, ConnectionHistory> mapInboundConnectionTracker;
 extern CCriticalSection cs_mapInboundConnectionTracker;
 
+extern uint64_t nDiskBlockIndexVersion;
 
 /** Number of nodes with fSyncStarted set to true. */
 std::atomic<int> nSyncStarted{0};
@@ -620,6 +621,7 @@ bool LoadExternalBlockFile(const CChainParams &chainparams, FILE *fileIn, CDiskB
     {
         AbortNode(std::string("System error: ") + e.what());
     }
+
     if (nLoaded > 0)
         LOGA("Loaded %i blocks from external file in %dms\n", nLoaded, GetTimeMillis() - nStart);
     return nLoaded > 0;

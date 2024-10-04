@@ -21,24 +21,30 @@ CCoinsViewDB *pcoinsdbview = nullptr;
 
 using namespace std;
 
+// UTXO database
 static const char DB_COIN = 'C';
-static const char DB_BLOCK_FILES = 'f';
+static const char DB_BEST_BLOCK = 'B';
+
+// Transaction index
 static const char DB_TXINDEX = 't';
 static const char DB_TXIDEM_INDEX = 'i';
 static const char DB_OUTPOINT_INDEX = 'p';
 static const char DB_TXINDEX_BLOCK = 'T';
-static const char DB_BLOCK_INDEX = 'b';
 
+// Token databases
 static const char DB_TOKEN_DESC = 'D';
 static const char DB_TOKEN_DESC_SYNC_FLAG = 'd';
 static const char DB_TOKEN_MINT = 'M';
 static const char DB_TOKEN_MINT_SYNC_FLAG = 'm';
 
-static const char DB_BEST_BLOCK = 'B';
-static const char DB_FLAG = 'F';
-static const char DB_REINDEX_FLAG = 'R';
-static const char DB_LAST_BLOCK = 'l';
+// BlockTreeDB
+static const char DB_BLOCK_INDEX = 'b';
+static const char DB_BLOCK_INDEX_VERSION = 'V';
 static const char DB_BEST_BLOCKHEADER_CHAINTX = 'c';
+static const char DB_REINDEX_FLAG = 'R';
+static const char DB_BLOCK_FILES = 'f';
+static const char DB_LAST_BLOCK = 'l';
+static const char DB_FLAG = 'F';
 
 namespace
 {
@@ -278,6 +284,15 @@ CBlockTreeDB::CBlockTreeDB(size_t nCacheSize, string folder, bool fMemory, bool 
 {
 }
 
+uint32_t CBlockTreeDB::GetBlockIndexVersion() const
+{
+    uint32_t nVersion = 0;
+    if (!Read(DB_BLOCK_INDEX_VERSION, nVersion))
+        return 0;
+    return nVersion;
+}
+
+bool CBlockTreeDB::WriteBlockIndexVersion(const uint32_t nVersion) { return Write(DB_BLOCK_INDEX_VERSION, nVersion); }
 bool CBlockTreeDB::ReadBlockFileInfo(int nFile, CBlockFileInfo &info)
 {
     return Read(make_pair(DB_BLOCK_FILES, nFile), info);
@@ -402,8 +417,8 @@ bool CBlockTreeDB::FindBlockIndex(uint256 blockhash, CDiskBlockIndex &pindex)
 
 bool CBlockTreeDB::LoadBlockIndexGuts()
 {
+    uint32_t nBlockIndexVersion = GetBlockIndexVersion();
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
-
     pcursor->Seek(make_pair(DB_BLOCK_INDEX, uint256()));
 
     // Load mapBlockIndex
@@ -434,7 +449,10 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 pindexNew->nSequenceId = diskindex.nSequenceId;
                 pindexNew->nTimeReceived = diskindex.nTimeReceived;
                 pindexNew->nNextMaxBlockSize = diskindex.nNextMaxBlockSize;
-
+                if (nBlockIndexVersion >= 1)
+                {
+                    pindexNew->nChainTx = diskindex.nChainTx;
+                }
                 // Update the global atomic value
                 SetLargestNextMaxBlockSize(diskindex.nNextMaxBlockSize);
 

@@ -533,6 +533,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles, uint64_t nTxIndexCache)
                 return;
         }
         pblocktree->WriteReindexing(false);
+        pblocktree->WriteBlockIndexVersion(BLOCK_INDEX_VERSION);
         fReindex = false;
         LOGA("Reindexing finished");
     }
@@ -544,6 +545,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles, uint64_t nTxIndexCache)
     if (fs::exists(pathBootstrap))
     {
         SetRPCWarmupFinished();
+        nDiskBlockIndexVersion = BLOCK_INDEX_VERSION;
 
         FILE *file = fsbridge::fopen(pathBootstrap, "rb");
         if (file)
@@ -1453,7 +1455,6 @@ bool AppInit2(Config &config)
                 uiInterface.InitMessage(_("Loading block index..."));
                 CDiskBlockIndex pindex;
                 bool fHaveGenesis = pblocktree->FindBlockIndex(Params().GetConsensus().hashGenesisBlock, pindex);
-
                 // If genesis found and we have only 1 or less chain tx then load the genesis,
                 // but if we don't find the genesis and do have chaintx then we are on the wrong chain.
                 if (!fHaveGenesis)
@@ -1473,7 +1474,14 @@ bool AppInit2(Config &config)
                     }
                 }
 
-                // Load the block index.
+                // Check the block index version is correct and if not perform an upgrade
+                if (!UpgradeBlockIndex())
+                {
+                    strLoadError = _("Error upgrading block database");
+                    break;
+                }
+
+                // Now that we have the correct genesis, continue loading the the block index.
                 if (!LoadBlockIndex())
                 {
                     strLoadError = strprintf("Error loading block database from %s", GetDataDir());

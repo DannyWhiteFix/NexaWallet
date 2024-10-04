@@ -43,6 +43,7 @@
 extern CTweak<int> maxReorgDepth;
 extern CTweak<bool> pvtest;
 extern std::atomic<uint64_t> nTotalChainTx;
+extern uint64_t nDiskBlockIndexVersion;
 
 extern CCriticalSection cs_LastBlockFile;
 
@@ -562,21 +563,34 @@ bool LoadBlockIndexDB()
         assert(pindex->header.chainWork == expectedChainWork); // DB corrupted
         // We can link the chain of blocks for which we've received transactions at some point.
         // Pruned nodes may have deleted the block.
-        if (pindex->processed() > 0)
+        uint32_t nVersion = pblocktree->GetBlockIndexVersion();
+        if (nVersion == (BLOCK_INDEX_VERSION - 1))
         {
-            if (pindex->pprev)
+            if (pindex->processed() > 0)
             {
-                // TODO: once we have a network upgrade we can swap nChainTx for IsLinked() and take out
-                //       the update to nStatus with BLOCK_LINKED.
-                if (pindex->pprev->nChainTx)
+                if (pindex->pprev)
                 {
-                    pindex->nChainTx = pindex->pprev->nChainTx + pindex->txCount();
-                    if (pindex->pprev->IsLinked() && (pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TRANSACTIONS)
+                    if (pindex->pprev->nChainTx)
                     {
-                        pindex->nStatus |= BLOCK_LINKED;
+                        pindex->nChainTx = pindex->pprev->nChainTx + pindex->txCount();
+                        if (pindex->pprev->IsLinked() &&
+                            (pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TRANSACTIONS)
+                        {
+                            pindex->nStatus |= BLOCK_LINKED;
+                        }
+                        else
+                        {
+                            if (pindex->nStatus & BLOCK_HAVE_DATA && pindex->pprev->IsValid(BLOCK_VALID_TREE))
+                            {
+                                mapBlocksUnlinked.insert(std::make_pair(pindex->pprev, pindex));
+                            }
+                            pindex->nStatus &= ~BLOCK_LINKED;
+                        }
                     }
                     else
                     {
+                        // This handles a rare condition where someone has previously aborted a sync in progress
+                        // and then tries to restart.
                         if (pindex->nStatus & BLOCK_HAVE_DATA && pindex->pprev->IsValid(BLOCK_VALID_TREE))
                         {
                             mapBlocksUnlinked.insert(std::make_pair(pindex->pprev, pindex));
@@ -586,19 +600,47 @@ bool LoadBlockIndexDB()
                 }
                 else
                 {
-                    // This handles a rare condition where someone has previously aborted a sync in progress
-                    // and then tries to restart.
-                    if (pindex->nStatus & BLOCK_HAVE_DATA && pindex->pprev->IsValid(BLOCK_VALID_TREE))
-                    {
-                        mapBlocksUnlinked.insert(std::make_pair(pindex->pprev, pindex));
-                    }
-                    pindex->nStatus &= ~BLOCK_LINKED;
+                    pindex->nChainTx = pindex->txCount();
+                    pindex->nStatus |= BLOCK_LINKED;
                 }
+            }
+        }
+        else if (nVersion == BLOCK_INDEX_VERSION) // Blockindex is updated so no need to re-calculate nChainTx
+        {
+            if (pindex->processed() > 0)
+            {
+                if (pindex->pprev)
+                {
+                    if (!pindex->IsLinked())
+                    {
+                        // This handles a rare condition where someone has previously aborted a sync in progress
+                        // and then tries to restart.
+                        if (pindex->nStatus & BLOCK_HAVE_DATA && pindex->pprev->IsValid(BLOCK_VALID_TREE))
+                        {
+                            mapBlocksUnlinked.insert(std::make_pair(pindex->pprev, pindex));
+                        }
+                    }
+                }
+                else
+                {
+                    pindex->nStatus |= BLOCK_LINKED;
+                }
+            }
+        }
+        else
+        {
+            // Trigger a -reindex since we don't recognize any versions.
+            bool fRet = uiInterface.ThreadSafeMessageBox(_("Unknown block index version found") + ".\n\n" +
+                                                             _("You will need to run a -reindex on next the startup."),
+                "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
+            if (fRet)
+            {
+                abort();
             }
             else
             {
-                pindex->nChainTx = pindex->txCount();
-                pindex->nStatus |= BLOCK_LINKED;
+                LOGA("Unknown block index version, run -reindex on next startup. Exiting.\n");
+                abort();
             }
         }
 
@@ -753,8 +795,55 @@ void UnloadBlockIndex()
     recentRejects.reset();
 }
 
+bool UpgradeBlockIndex()
+{
+    if (fReindex)
+    {
+        nDiskBlockIndexVersion = BLOCK_INDEX_VERSION;
+        return true;
+    }
+
+    // Check block index version and only upgrade if neccessary
+    if (pblocktree->GetBlockIndexVersion() == BLOCK_INDEX_VERSION)
+    {
+        nDiskBlockIndexVersion = BLOCK_INDEX_VERSION;
+        return true;
+    }
+
+    // Load block index from disk
+    LOGA("Upgrading Block Index...\n");
+    uiInterface.InitMessage(_("Upgrading Block Index..."));
+    if (!LoadBlockIndexDB())
+    {
+        return false;
+    }
+    // Write new upgraded block index data to disk, using std::move() to save
+    // memory during this upgrade process.
+    nDiskBlockIndexVersion = BLOCK_INDEX_VERSION;
+    {
+        WRITELOCK(cs_mapBlockIndex);
+        for (auto mi : mapBlockIndex)
+        {
+            setDirtyBlockIndex.insert(std::move(mi.second));
+        }
+        // Write new version number to disk
+        pblocktree->WriteBlockIndexVersion(BLOCK_INDEX_VERSION);
+    }
+    CValidationState state;
+    FlushStateToDisk(state, FLUSH_STATE_ALWAYS);
+
+    // Now that we've upgraded we can unload everything for a fresh start
+    // We have to unload to clear the now invalid mapBlockIndex entries, this is
+    // because we did an std::move() on them in order to save memory during the upgrade.
+    UnloadBlockIndex();
+
+    return true;
+}
+
 bool LoadBlockIndex()
 {
+    nDiskBlockIndexVersion = BLOCK_INDEX_VERSION;
+
     // Load block index from databases
     if (!fReindex && !LoadBlockIndexDB())
         return false;
@@ -770,6 +859,8 @@ bool LoadBlockIndex()
 
 bool InitBlockIndex(const CChainParams &chainparams)
 {
+    nDiskBlockIndexVersion = BLOCK_INDEX_VERSION;
+
     LOCK(cs_main);
 
     // Initialize global variables that cannot be constructed at startup.
@@ -779,7 +870,7 @@ bool InitBlockIndex(const CChainParams &chainparams)
         return true;
 
     LOGA("Initializing databases...\n");
-
+    nDiskBlockIndexVersion = BLOCK_INDEX_VERSION;
     try
     {
         const CBlock block = chainparams.GenesisBlock();
@@ -812,6 +903,10 @@ bool InitBlockIndex(const CChainParams &chainparams)
     {
         return error("LoadBlockIndex(): failed to initialize block database: %s", e.what());
     }
+
+    // Only set the blockindex version after a succesful initialization. The only other place
+    // we would set the version is after a blockindex upgrade.
+    pblocktree->WriteBlockIndexVersion(BLOCK_INDEX_VERSION);
 
     return true;
 }
