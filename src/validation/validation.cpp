@@ -2703,6 +2703,7 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
             {
                 auto txSigChecks = t.GetConsensusSigChecks();
                 blockSigChecks += txSigChecks;
+                // LOG(BENCH, "Tx SigChecks performed: %d\n", txSigChecks);
                 if (txSigChecks > MAX_TX_SIGCHECK_COUNT)
                 {
                     return state.DoS(100, false, REJECT_INVALID, "bad-tx-sigchecks", false,
@@ -3117,11 +3118,12 @@ static void ResubmitTransactions(const ConstCBlockRef pblock = nullptr)
     // because the readmission code is multithreaded and very efficient, yet the code to slip a tx back into a
     // dependency chain in the mempool performed terribly.
     //
+    // Must have txpause on so that the txCommitQ has been flushed.
+    DbgAssert(txProcessingCorral.region() == CORRAL_TX_PAUSE, LOGA("Resubmitting transactions"));
+
     // We must hold the mempool lock throughout otherwise it would be possible for some txns to slip back into
     // the mempool from the CommitQFinal.
     WRITELOCK(mempool.cs_txmempool);
-    // If tx admission is not paused, the commitment thread will be modifying what this function is clearing
-    DbgAssert(txProcessingCorral.region() != CORRAL_TX_COMMITMENT, LOGA("Resubmit transactions during tx commitment"));
     LOG(MEMPOOL, "Clearing mempool and resubmitting transactions");
     {
         if (pblock)
@@ -3150,9 +3152,6 @@ static void ResubmitTransactions(const ConstCBlockRef pblock = nullptr)
                 txd.msgCookie = 0;
                 EnqueueTxForAdmission(txd);
             });
-
-        // Resumbit and clear all txns currently in the txCommitQ and txCommitQFinal
-        mempool.ResubmitCommitQ();
     }
 }
 /** Disconnect chainActive's tip. */

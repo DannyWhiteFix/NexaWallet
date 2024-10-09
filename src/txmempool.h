@@ -58,6 +58,12 @@ static const int TX_RATE_UPDATE_FREQUENCY_MILLIS = 250;
  * this value then we'll immediately update the correct and current ancestor chain state
  */
 static const uint32_t MAX_UPDATED_CHAIN_STATE = 500;
+/** Because this is a potential DOS vector, only update a limited number of chaintips after processing a block */
+static const uint32_t MAX_CHAINTIPS_TO_UPDATE = 1000;
+/** Because this is a potential DOS vector, only update a limted number of transaction chain states per block */
+static const uint32_t MAX_CHAINED_UPDATES = 5000;
+/** Because this is a potential DOS vector, limit the maximum size of the dirty set. */
+static const uint32_t MAX_DIRTY_CHAIN_TIPS = 1000000;
 
 /** Transaction rate statisics update thread */
 void ThreadUpdateTransactionRateStatistics();
@@ -769,7 +775,7 @@ public:
     /** Update the ancestor state for the set of supplied transaction chains. This step is done after
      *  a block has finished processing and we have already removed the transactions from the mempool
      */
-    void UpdateTxnChainState(mapEntryHistory &mapTxnChainTips);
+    void UpdateTxnChainState(mapEntryHistory &mapTxnChainTips, bool fUpdateAll);
 
     /** Update the ancestor state for this transaction only. Ancestor states can be dirty or not but
      *  there are times when we need to ensure they are not dirty, such as, when we do an rpc call

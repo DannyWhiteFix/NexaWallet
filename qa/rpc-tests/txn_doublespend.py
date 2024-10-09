@@ -9,6 +9,7 @@ import test_framework.loginit
 #
 
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.blocktools import *
 from test_framework.util import *
 
 class TxnDoubleSpendTest(BitcoinTestFramework):
@@ -74,6 +75,35 @@ class TxnDoubleSpendTest(BitcoinTestFramework):
         # Now give doublespend2 to miner:
         doublespend2_txidem = self.nodes[2].sendrawtransaction(doublespend2["hex"])
 
+        # Create a valid chain of transactions that are generated using the input
+        # from the double spent transaction on node0
+        tx_amount = outputs[change_address]
+        txidem = doublespend1_txidem
+        CHAIN_DEPTH = 5
+        self.relayfee = 1000
+        for i in range(1, CHAIN_DEPTH + 1):
+          try:
+              outpoint = COutPoint().fromIdemAndIdx(txidem, 0).rpcHex()
+              inputs = []
+              inputs.append({ "outpoint" : outpoint, "amount" : tx_amount}) # references the prior tx created
+
+              tx_amount = tx_amount - self.relayfee
+              outputs = {}
+              outputs[self.nodes[0].getnewaddress()] = Decimal(tx_amount)
+              rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
+              signed_tx = self.nodes[0].signrawtransaction(rawtx)["hex"]
+              txidem = self.nodes[0].sendrawtransaction(signed_tx, False, "standard", True)
+              self.nodes[0].sendrawtransaction(signed_tx, False, "standard", True) #orphaned
+              logging.info("tx depth %d" % i) # Keep travis from timing out
+              print(str(txidem))
+
+          except JSONRPCException as e: # an exception you don't catch is a testing error
+              print(str(e))
+              raise
+
+        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()['size'] == 6)
+        waitFor(30, lambda: self.nodes[1].gettxpoolinfo()['size'] == 0)
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'] == 1)
 
         ################################################################################################
         # Before mining the block on node2, check the instant transactions functionality by using node1
@@ -137,13 +167,25 @@ class TxnDoubleSpendTest(BitcoinTestFramework):
         # END instant transaction check
         #####################################################################################################
 
+        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()['size'] == 6)
+        waitFor(30, lambda: self.nodes[1].gettxpoolinfo()['size'] == 1)
+        waitFor(30, lambda: self.nodes[2].gettxpoolinfo()['size'] == 1)
+
         # Reconnect the split network, and resend wallet transactions:
         interconnect_nodes(self.nodes)
         self.is_network_split=False
 
+        # Generate a block on node2. The transaction on node2 should be included
+        # in the block and show up as confirmed on node0
         self.nodes[2].generate(1)
         sync_blocks(self.nodes)
-        assert_equal(self.nodes[0].gettransaction(doublespend2_txidem)["confirmations"], 1)
+        waitFor(30, lambda: self.nodes[0].gettransaction(doublespend2_txidem)["confirmations"] == 1)
+
+        # Make sure both txpools are empty after the block is mined. This proves that any
+        # conflicting transactions and their chains were removed from the txpool on node0
+        assert_equal(self.nodes[0].gettxpoolinfo()['size'], 0)
+        assert_equal(self.nodes[1].gettxpoolinfo()['size'], 0)
+        assert_equal(self.nodes[1].gettxpoolinfo()['size'], 0)
 
         # Re-fetch transaction info:
         tx1byid = self.nodes[0].gettransaction(doublespend1["txid"])
