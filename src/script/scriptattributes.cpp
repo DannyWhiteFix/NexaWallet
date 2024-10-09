@@ -8,7 +8,6 @@
 
 CGroupTokenID NoGroup; // No group specified.
 
-static bool IsPushOpcode(opcodetype opcode) { return opcode <= OP_16; }
 CAmount DeserializeAmount(opcodetype opcodeQty, std::vector<unsigned char> &vec)
 {
     /* Disallow raw opcodes or single byte sizes, because having them is an unnecessary decode complication
@@ -217,21 +216,12 @@ ScriptTemplateError GetScriptTemplate(const CScript &script,
     if (!IsPushOpcode(opcode))
         return ScriptTemplateError::INVALID;
     NumericOpcodeToVector(opcode, *templateHash);
+    CScript unused;
+    VchType tmp(templateHash->begin(), templateHash->end());
+    auto err = ParseWellKnownTemplateHashArg(tmp, unused);
+    if (err != ScriptTemplateError::OK)
+        return err;
     size_t templateHashSize = templateHash->size();
-    if ((templateHashSize != CHash160::OUTPUT_SIZE) && (templateHashSize != CHash256::OUTPUT_SIZE))
-    {
-        if (templateHashSize > 0 && templateHashSize < 2) // check for valid well known script template
-        {
-            VchType tmp(templateHash->begin(), templateHash->end());
-            CScript unused;
-            if (ConvertWellKnownTemplateHash(tmp, unused) != SCRIPT_ERR_OK)
-            {
-                return ScriptTemplateError::INVALID;
-            }
-        }
-        else
-            return ScriptTemplateError::INVALID;
-    }
 
     // args hash is third
     std::vector<unsigned char> vchArgsHash;

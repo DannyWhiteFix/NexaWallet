@@ -454,6 +454,7 @@ libnexa_a_common_SOURCES = \
   script/pushtxstate.h \
   script/interpreter.cpp \
   script/interpreter.h \
+  script/op_parse.cpp \
   script/bignum.cpp \
   script/bignum.h \
   script/destinations.h \
@@ -624,6 +625,7 @@ libnexa_common_a_SOURCES = \
   script/pushtxstate.h \
   script/interpreter.cpp \
   script/interpreter.h \
+  script/op_parse.cpp \
   script/script_flags.h \
   script/stackitem.cpp \
   script/stackitem.h \

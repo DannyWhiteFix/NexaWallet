@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(script_op_roll_positive_with_flag)
     // OP_ROLL 0, no-op
     std::vector<uint8_t> expected = {9, 7, 5, 3, 1};
     CScript testScript = CScript() << 9 << 7 << 5 << 3 << 1 << 0 << OP_ROLL;
-    ScriptMachine sm(0 | SCRIPT_NEG_OP_ROLL_OP_PICK, ScriptImportedState(), 0xffffffff, 0xffffffff);
+    ScriptMachine sm(0 | SCRIPT_FORK1_OPCODES, ScriptImportedState(), 0xffffffff, 0xffffffff);
     bool result = sm.Eval(testScript);
     BOOST_CHECK(result);
     std::vector<uint8_t> vchStack = StackToVch(sm.getStack());
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(script_op_roll_negative_with_flag)
     // OP_ROLL 0, no-op
     std::vector<uint8_t> expected = {9, 7, 5, 3, 1};
     CScript testScript = CScript() << 9 << 7 << 5 << 3 << 1 << 0 << OP_NEGATE << OP_ROLL;
-    ScriptMachine sm(0 | SCRIPT_NEG_OP_ROLL_OP_PICK, ScriptImportedState(), 0xffffffff, 0xffffffff);
+    ScriptMachine sm(0 | SCRIPT_FORK1_OPCODES, ScriptImportedState(), 0xffffffff, 0xffffffff);
     bool result = sm.Eval(testScript);
     BOOST_CHECK(result);
     std::vector<uint8_t> vchStack = StackToVch(sm.getStack());
@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE(script_op_pick_positive_with_flag)
     // OP_PICK 0
     std::vector<uint8_t> expected = {9, 7, 5, 3, 1, 1};
     CScript testScript = CScript() << 9 << 7 << 5 << 3 << 1 << 0 << OP_PICK;
-    ScriptMachine sm(0 | SCRIPT_NEG_OP_ROLL_OP_PICK, ScriptImportedState(), 0xffffffff, 0xffffffff);
+    ScriptMachine sm(0 | SCRIPT_FORK1_OPCODES, ScriptImportedState(), 0xffffffff, 0xffffffff);
     bool result = sm.Eval(testScript);
     BOOST_CHECK(result);
     std::vector<uint8_t> vchStack = StackToVch(sm.getStack());
@@ -491,7 +491,7 @@ BOOST_AUTO_TEST_CASE(script_op_pick_negative_with_flag)
     // OP_PICK 0
     std::vector<uint8_t> expected = {9, 7, 5, 3, 1, 1};
     CScript testScript = CScript() << 9 << 7 << 5 << 3 << 1 << 0 << OP_NEGATE << OP_PICK;
-    ScriptMachine sm(0 | SCRIPT_NEG_OP_ROLL_OP_PICK, ScriptImportedState(), 0xffffffff, 0xffffffff);
+    ScriptMachine sm(0 | SCRIPT_FORK1_OPCODES, ScriptImportedState(), 0xffffffff, 0xffffffff);
     bool result = sm.Eval(testScript);
     BOOST_CHECK(result);
     std::vector<uint8_t> vchStack = StackToVch(sm.getStack());

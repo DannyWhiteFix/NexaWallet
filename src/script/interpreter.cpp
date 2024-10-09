@@ -497,8 +497,8 @@ bool ScriptMachine::Step()
     const bool integers64Bit = (flags & SCRIPT_ALLOW_64_BIT_INTEGERS) != 0;
     const bool nativeIntrospection = (flags & SCRIPT_ALLOW_NATIVE_INTROSPECTION) != 0;
 
-    // TODO - rename this
-    const bool negativeOP_ROLL_OP_PICK = (flags & SCRIPT_NEG_OP_ROLL_OP_PICK) != 0;
+    const bool negativeOP_ROLL_OP_PICK = (flags & SCRIPT_FORK1_OPCODES) != 0;
+    const bool opParseEnabled = (flags & SCRIPT_FORK1_OPCODES) != 0;
 
     const size_t maxIntegerSize =
         integers64Bit ? CScriptNum::MAXIMUM_ELEMENT_SIZE_64_BIT : CScriptNum::MAXIMUM_ELEMENT_SIZE_32_BIT;
@@ -1305,6 +1305,17 @@ bool ScriptMachine::Step()
                             const valtype &vch1 = stacktop(-2);
                             const valtype &vch2 = stacktop(-1);
                             fEqual = (vch1 == vch2);
+                            /*  Super-useful script debugging printout
+                            if (opcode == OP_EQUALVERIFY)
+                            {
+                                if (!fEqual)
+                                    printf("%s", strprintf("EQUALVERIFY failed: top: %s != 2nd: %s\n", HexStr(vch2),
+                                                     HexStr(vch1))
+                                                     .c_str());
+                                else
+                                    printf("%s", strprintf("EQUALVERIFY success: top: %s \n", HexStr(vch2)).c_str());
+                            }
+                            */
                             // OP_NOTEQUAL is disabled because it would be too easy to say
                             // something like n != 1 and have some wiseguy pass in 1 with extra
                             // zero bytes after it (numerically, 0x01 == 0x0001 == 0x000001)
@@ -2178,6 +2189,146 @@ bool ScriptMachine::Step()
                     }
                 }
                 break; // end of Native Introspection opcodes (Unary)
+
+                case OP_PARSE:
+                {
+                    if (!opParseEnabled)
+                    {
+                        return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+                    }
+
+                    if (stack.size() < 1)
+                        return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+                    ParseOption parseOption = (ParseOption)CScriptNum(stackItemAt(-1), true, 1).getint64();
+                    PopStack();
+
+                    if (parseOption == ParseOption::OUTPUT_DATA)
+                    {
+                        if (stack.size() < 3)
+                            return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+
+                        int64_t count =
+                            CScriptNum(stackItemAt(-1), false, CScriptNum::MAXIMUM_ELEMENT_SIZE_64_BIT).getint64();
+                        int64_t first =
+                            CScriptNum(stackItemAt(-2), false, CScriptNum::MAXIMUM_ELEMENT_SIZE_64_BIT).getint64();
+                        int64_t whichOutput =
+                            CScriptNum(stackItemAt(-3), false, CScriptNum::MAXIMUM_ELEMENT_SIZE_64_BIT).getint64();
+                        PopStack();
+                        PopStack();
+                        PopStack();
+                        if (first < 0 || count < 0 || whichOutput < 0)
+                            return set_error(serror, SCRIPT_ERR_INVALID_NUMBER_RANGE);
+                        if (whichOutput >= (int64_t)sis.tx->vout.size())
+                            return set_error(serror, SCRIPT_ERR_INVALID_TX_OUTPUT_INDEX);
+                        if (sis.tx->vout[whichOutput].type == CTxOut::TEMPLATE)
+                        {
+                            if (!EvalParseCanonicalLockingBytecode(
+                                    first, count, sis.tx->vout[whichOutput].scriptPubKey))
+                                return false;
+                        }
+                        else if (sis.tx->vout[whichOutput].type == CTxOut::SATOSCRIPT)
+                        {
+                            if (!EvalParseBytecode(first, count, sis.tx->vout[whichOutput].scriptPubKey))
+                                return false;
+                        }
+                        else // the transaction should have been checked for validity first, but clearly was not
+                            return set_error(serror, SCRIPT_ERR_BAD_OPERATION_ON_TYPE);
+                    }
+                    else if (parseOption == ParseOption::PREVOUT_DATA)
+                    {
+                        // You need to have provided the script machine with the prevouts to use this
+                        DbgAssert(sis.spentCoins.size() == sis.tx->vin.size(),
+                            return set_error(serror, SCRIPT_ERR_DATA_REQUIRED));
+
+                        if (stack.size() < 3)
+                            return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+                        int64_t count =
+                            CScriptNum(stackItemAt(-1), false, CScriptNum::MAXIMUM_ELEMENT_SIZE_64_BIT).getint64();
+                        int64_t first =
+                            CScriptNum(stackItemAt(-2), false, CScriptNum::MAXIMUM_ELEMENT_SIZE_64_BIT).getint64();
+                        int64_t whichInput =
+                            CScriptNum(stackItemAt(-3), false, CScriptNum::MAXIMUM_ELEMENT_SIZE_64_BIT).getint64();
+                        PopStack();
+                        PopStack();
+                        PopStack();
+                        if (first < 0 || count < 0 || whichInput < 0)
+                            return set_error(serror, SCRIPT_ERR_INVALID_NUMBER_RANGE);
+                        if (whichInput >= (int64_t)sis.tx->vin.size())
+                            return set_error(serror, SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
+                        if (sis.spentCoins[whichInput].type == CTxOut::TEMPLATE)
+                        {
+                            if (!EvalParseCanonicalLockingBytecode(
+                                    first, count, sis.spentCoins[whichInput].scriptPubKey))
+                                return false;
+                        }
+                        else if (sis.spentCoins[whichInput].type == CTxOut::SATOSCRIPT)
+                        {
+                            if (!EvalParseBytecode(first, count, sis.spentCoins[whichInput].scriptPubKey))
+                                return false;
+                        }
+                        else // the transaction should have been checked for validity first, but clearly was not
+                            return set_error(serror, SCRIPT_ERR_BAD_OPERATION_ON_TYPE);
+                    }
+                    else if (parseOption == ParseOption::INPUT_DATA)
+                    {
+                        // You need to have provided the script machine with the prevouts to use this
+                        DbgAssert(sis.spentCoins.size() == sis.tx->vin.size(),
+                            return set_error(serror, SCRIPT_ERR_DATA_REQUIRED));
+
+                        if (stack.size() < 3)
+                            return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+                        int64_t count =
+                            CScriptNum(stackItemAt(-1), false, CScriptNum::MAXIMUM_ELEMENT_SIZE_64_BIT).getint64();
+                        int64_t first =
+                            CScriptNum(stackItemAt(-2), false, CScriptNum::MAXIMUM_ELEMENT_SIZE_64_BIT).getint64();
+                        int64_t whichInput =
+                            CScriptNum(stackItemAt(-3), false, CScriptNum::MAXIMUM_ELEMENT_SIZE_64_BIT).getint64();
+                        PopStack();
+                        PopStack();
+                        PopStack();
+                        if (first < 0 || count < 0 || whichInput < 0)
+                            return set_error(serror, SCRIPT_ERR_INVALID_NUMBER_RANGE);
+                        if (whichInput >= (int64_t)sis.tx->vin.size())
+                            return set_error(serror, SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
+
+                        auto &coin = sis.spentCoins[whichInput];
+                        if (coin.type == CTxOut::TEMPLATE)
+                        {
+                            if (!EvalParseUnlockingTemplateBytecode(
+                                    first, count, sis.tx->vin[whichInput].scriptSig, coin.scriptPubKey))
+                                return false;
+                        }
+                        else if (sis.spentCoins[whichInput].type == CTxOut::SATOSCRIPT)
+                        {
+                            if (!EvalParseBytecode(first, count, sis.tx->vin[whichInput].scriptSig))
+                                return false;
+                        }
+                        else // the transaction should have been checked for validity first, but clearly was not
+                            return set_error(serror, SCRIPT_ERR_BAD_OPERATION_ON_TYPE);
+                    }
+
+                    else if (parseOption == ParseOption::BYTECODE_DATA)
+                    {
+                        if (stack.size() < 3)
+                            return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+                        int64_t count =
+                            CScriptNum(stackItemAt(-1), false, CScriptNum::MAXIMUM_ELEMENT_SIZE_64_BIT).getint64();
+                        int64_t first =
+                            CScriptNum(stackItemAt(-2), false, CScriptNum::MAXIMUM_ELEMENT_SIZE_64_BIT).getint64();
+                        VchType serializedScript = stackItemAt(-3).asVch();
+                        PopStack();
+                        PopStack();
+                        PopStack();
+                        if (first < 0 || count < 0)
+                            return set_error(serror, SCRIPT_ERR_INVALID_NUMBER_RANGE);
+
+                        if (!EvalParseBytecode(first, count, CScript(serializedScript.begin(), serializedScript.end())))
+                            return false;
+                    }
+                    else
+                        return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+                }
+                break;
 
                 case OP_PLACE:
                 {

@@ -120,6 +120,14 @@ inline std::vector<unsigned char> VchHash(const std::vector<unsigned char> &vch)
     return VchHash(vch.begin(), vch.end());
 }
 
+/** Compute the 256-bit hash of a prevector. */
+template <unsigned int N>
+inline std::vector<unsigned char> VchHash(const prevector<N, unsigned char> &vch)
+{
+    return VchHash(vch.begin(), vch.end());
+}
+
+
 /** A writer stream (for serialization) that computes a 256-bit hash (double SHA256). */
 class CHashWriter
 {

@@ -313,8 +313,57 @@ class UpgradeActivationTest(BitcoinTestFramework):
                 print(txs.toHex())
             assert not shouldItWork, "Large stack width did not work: %s" % e
 
+    def testOpParse(self, shouldItWork):
+        """ Test wide stack operations """
+        # Make a tx that uses op parse
+        tx = CTransaction()
+        scr = CScript([ OP_0, OP_1, OP_1, OP_2, OP_PARSE, OP_DROP])
+
+        out = TxOut(nValue=10000)
+        out.setLockingToTemplate(scr,None)
+        tx.vout.append(out)
+
+        h = tx.toHex()
+        frtReturn = self.nodes[0].fundrawtransaction(h)
+        sgnReturn = self.nodes[0].signrawtransaction(frtReturn["hex"])
+        assert len(sgnReturn.get("errors",[])) ==0, print("Error funding transaction: %s" % sgnReturn)
+        # print(sgnReturn)
+        fundedTx = CTransaction().fromHex(sgnReturn["hex"])
+        # print(fundedTx)
+        vrt = self.nodes[0].validaterawtransaction(sgnReturn["hex"])
+        # print(vrt)
+        self.nodes[0].sendrawtransaction(sgnReturn["hex"])
+
+        txs = CTransaction()
+        # spend it
+        for idx in range(0, len(fundedTx.vout)):
+            if fundedTx.vout[idx].nValue == 10000:  # its my output
+                inp = fundedTx.SpendOutput(idx)
+                inp.setUnlockingToTemplate(scr, None, None)
+                txs.vin.append(inp)  # I don't have to sign it because its anyone can spend
+                break
+
+        txs.vout.append(CTxOut(9000, scr))
+        # print(txs)
+        # print(txs.toHex())
+
+        # vrt = self.nodes[0].validaterawtransaction(txs.toHex())
+        # print(vrt)
+
+        try:
+            spendTxSend = self.nodes[0].sendrawtransaction(txs.toHex())
+            # print(spendTxSend)
+            assert shouldItWork, "OP_PARSE worked"
+        except JSONRPCException as e:
+            assert "Opcode missing" in str(e)
+            if shouldItWork:
+                print(txs)
+                print(txs.toHex())
+            assert not shouldItWork, "OP_PARSE did not work: %s" % e            
+
     def preupgradeTests(self):
         """Add any tests here that should run prior to the upgrade"""
+        self.testOpParse(False)
         self.testNegOpRoll(False)
         self.testNegOpPick(False)
         self.testReadOnlyInput(False)
@@ -329,6 +378,7 @@ class UpgradeActivationTest(BitcoinTestFramework):
 
     def postupgradeTests(self):
         """Add any tests here that should run after the upgrade"""
+        self.testOpParse(True)
         self.testNegOpRoll(True)
         self.testNegOpPick(True)
         self.testReadOnlyInput(True)

@@ -63,6 +63,9 @@ bool VerifyTemplate(const CScript &templat,
     }
 
     ScriptMachine ssm(flags, sis, maxOps, maxActualSigops);
+    // Increase the satisfier script max size after fork1 so you can push entire scripts as args to OP_PARSE if needed
+    // Since the satisfier appears in the tx inputs, this has no effect on the UTXO
+    if (flags & SCRIPT_FORK1_OPCODES) ssm.maxScriptSize = MAX_SCRIPT_TEMPLATE_SIZE;
 
     // Step 1, evaluate the satisfier to produce a stack
     if (!ssm.Eval(satisfier))
@@ -125,6 +128,26 @@ void NumericOpcodeToVector(opcodetype opcode, VchType &templateHash)
         VchType one = {1};
         templateHash = one;
     }
+}
+
+ScriptTemplateError ParseWellKnownTemplateHashArg(VchType &templateHash, CScript &templateScript)
+{
+    size_t templateHashSize = templateHash.size();
+    if ((templateHashSize != CHash160::OUTPUT_SIZE) && (templateHashSize != CHash256::OUTPUT_SIZE))
+    {
+        if (templateHashSize > 0 && templateHashSize < 2) // check for valid well known script template
+        {
+            VchType tmp(templateHash.begin(), templateHash.end());
+            CScript unused;
+            if (ConvertWellKnownTemplateHash(tmp, unused) != SCRIPT_ERR_OK)
+            {
+                return ScriptTemplateError::INVALID;
+            }
+        }
+        else
+            return ScriptTemplateError::INVALID;
+    }
+    return ScriptTemplateError::OK;
 }
 
 ScriptError ConvertWellKnownTemplateHash(VchType &templateHash, CScript &templateScript)
@@ -205,7 +228,7 @@ ScriptError LoadCheckTemplateHash(const CScript &satisfier,
     return SCRIPT_ERR_OK;
 }
 
-CScript ScriptTemplateOutput(const VchType& scriptHash, const VchType &argsHash, const VchType &visibleArgs, const CGroupTokenID& group, CAmount grpQuantity)
+CScript ScriptTemplateLock(const VchType& scriptHash, const VchType &argsHash, const VchType &visibleArgs, const CGroupTokenID& group, CAmount grpQuantity)
 {
     CScript ret;
     if (group != NoGroup)
@@ -226,7 +249,64 @@ CScript ScriptTemplateOutput(const VchType& scriptHash, const VchType &argsHash,
     return ret;
 }
 
-CScript ScriptTemplateOutput(const CScript &templateIn, const CGroupTokenID& group, CAmount grpQuantity)
+CScript ScriptTemplateLock(const VchType& scriptHash, const VchType &argsHash, const CScript &visibleArgs, const CGroupTokenID& group, CAmount grpQuantity)
+{
+    CScript ret;
+    if (group != NoGroup)
+    {
+        if (grpQuantity != -1)
+        {
+            ret = (CScript(ScriptType::TEMPLATE) << group.bytes() << SerializeAmount(grpQuantity) << scriptHash << argsHash) + CScript(visibleArgs.begin(), visibleArgs.end());
+        }
+        else  // Encodes an invalid quantity (for use within addresses)
+        {
+            ret = (CScript(ScriptType::TEMPLATE) << group.bytes() << OP_0 << scriptHash << argsHash) + CScript(visibleArgs.begin(), visibleArgs.end());
+        }
+    }
+    else  // Not grouped
+    {
+        ret = (CScript(ScriptType::TEMPLATE) << OP_0 << scriptHash << argsHash) + visibleArgs;
+    }
+    return ret;
+}
+
+CScript ScriptWellKnownTemplateLock(const uint64_t wellKnownId, const VchType &argsHash, const VchType &visibleArgs, const CGroupTokenID& group, CAmount grpQuantity)
+{
+    CScript ret;
+    VchType constraint;
+    if (wellKnownId == 1) constraint = P2PKT_ID;
+    else assert(false);
+    if (group != NoGroup)
+    {
+        if (grpQuantity != -1)
+        {
+            ret = (CScript(ScriptType::TEMPLATE) << group.bytes() << SerializeAmount(grpQuantity) << wellKnownId << argsHash) + CScript(visibleArgs.begin(), visibleArgs.end());
+        }
+        else  // Encodes an invalid quantity (for use within addresses)
+        {
+            ret = (CScript(ScriptType::TEMPLATE) << group.bytes() << OP_0 << wellKnownId << argsHash) + CScript(visibleArgs.begin(), visibleArgs.end());
+        }
+    }
+    else  // Not grouped
+    {
+        ret = (CScript(ScriptType::TEMPLATE) << OP_0 << wellKnownId << argsHash) + CScript(visibleArgs.begin(), visibleArgs.end());
+    }
+    return ret;
+}
+
+
+
+CScript ScriptTemplateLock(const CScript &constraintScript, const CScript &argsScript,
+    const CScript &visibleArgsScript, const CGroupTokenID &group,
+    CAmount grpQuantity, uint8_t useHash256)
+{
+    VchType argsHash;
+    if (argsScript.size() > 0) argsHash = (useHash256 & 2) ? argsScript.Hash256() : argsScript.Hash160();
+    VchType constraintHash = (useHash256 & 1) ?  constraintScript.Hash256() : constraintScript.Hash160();
+    return ScriptTemplateLock(constraintHash, argsHash, visibleArgsScript, group, grpQuantity);
+}
+
+CScript ScriptTemplateLock(const CScript &templateIn, const CGroupTokenID& group, CAmount grpQuantity)
 {
     CGroupTokenInfo currentGroupInfo;
     VchType scriptHash;
@@ -247,6 +327,24 @@ CScript ScriptTemplateOutput(const CScript &templateIn, const CGroupTokenID& gro
         return CScript().SetInvalid();
     }
 }
+
+CScript ScriptTemplateUnlock(const CScript &constraintScript,
+                             const CScript &satisfierScript, const CScript &argsScript)
+{
+    auto ret = CScript();
+    ret << constraintScript.ToVch();
+    if (argsScript.size() > 0) ret << argsScript.ToVch();
+    return ret + satisfierScript;
+}
+
+CScript ScriptWellKnownTemplateUnlock(uint64_t wellKnownId, const CScript &satisfierScript, const CScript &argsScript)
+{
+    auto ret = CScript();
+    // We do not actually need the constraint script's well known id, we just need to know its is one.
+    if (argsScript.size() > 0) ret << argsScript.ToVch();
+    return ret + satisfierScript;
+}
+
 
 CScript P2pktOutput(const VchType &argsHash, const CGroupTokenID& group, CAmount grpQuantity)
 {

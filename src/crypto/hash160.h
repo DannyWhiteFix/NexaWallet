@@ -78,7 +78,7 @@ inline uint160 Hash160(const prevector<N, unsigned char> &vch)
 {
     return Hash160(vch.begin(), vch.end());
 }
-/** Compute the 160-bit hash of a vector. */
+/** Compute the 160-bit hash of a prevector. */
 template <unsigned int N>
 inline std::vector<unsigned char> VchHash160(const prevector<N, unsigned char> &vch)
 {

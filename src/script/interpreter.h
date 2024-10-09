@@ -692,6 +692,18 @@ public:
         const ScriptImportedState &sis,
         ScriptError *serror,
         ScriptMachineResourceTracker *tracker);
+
+    bool EvalParseBytecode(int64_t first, int64_t count, const CScript &pscript);
+    bool EvalParseBytecode(int64_t first,
+        int64_t count,
+        const CScript &pscript,
+        CScript::const_iterator &pc,
+        const CScript::const_iterator &end);
+    bool EvalParseCanonicalLockingBytecode(int64_t first, int64_t count, const CScript &pscript);
+    bool EvalParseUnlockingTemplateBytecode(int64_t first,
+        int64_t count,
+        const CScript &unlockingScript,
+        const CScript &constraintScript);
 };
 
 bool EvalScript(Stack &stack,

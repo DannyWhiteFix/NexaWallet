@@ -285,6 +285,8 @@ enum opcodetype
     OP_NATIVE_INTROSPECTION_RESERVED1 = 0xce,
     // 207
     OP_NATIVE_INTROSPECTION_RESERVED2 = 0xcf,
+    // 208
+    OP_PARSE = 0xd0,
 
     // NEXA opcodes
     OP_PLACE = 0xe9,
@@ -298,7 +300,21 @@ enum opcodetype
     OP_INVALIDOPCODE = 0xff,
 };
 
+// OP_PARSE parsing algorithms
+enum ParseOption
+{
+    OUTPUT_DATA = 0,
+    PREVOUT_DATA = 1,
+    INPUT_DATA = 2,
+    BYTECODE_DATA = 3,
+};
+
 const char *GetOpName(opcodetype opcode);
+
+/** Returns true if this opcode pushes a constant to the stack
+    This includes OP_PUSHDATAn and OP_x instructions
+ */
+bool IsPushOpcode(opcodetype opcode);
 
 /**
  * Check whether the given stack element data would be minimally pushed using
@@ -938,6 +954,13 @@ public:
     }
 
     std::string GetHex() const;
+    // Compute the hash160 of the serialized script
+    VchType Hash160() const;
+    // Compute the hash256 of the serialized script
+    VchType Hash256() const;
+
+    // return as a vector of chars
+    VchType ToVch() const { return VchType(begin(), end()); }
 };
 
 class CReserveScript
