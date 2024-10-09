@@ -2175,10 +2175,8 @@ void ThreadOpenConnections()
 
     // Initiate network connections
     int64_t nStart = GetStopwatchMicros();
-    unsigned int nDisconnects = 0;
     // Minimum time before next feeler connection (in microseconds).
     int64_t nNextFeeler = PoissonNextSend(nStart, FEELER_INTERVAL);
-
     while (shutdown_threads.load() == false)
     {
         ProcessOneShot();
@@ -2191,8 +2189,6 @@ void ThreadOpenConnections()
         // if the grants are all taken and we want to disconnect a node.
         int nOutbound = 0;
         set<vector<unsigned char> > setConnected;
-        CNode *pNonNodeNetwork = nullptr;
-        bool fDisconnected = false;
         {
             LOCK(cs_vNodes);
             for (CNode *pnode : vNodes)
@@ -2203,48 +2199,10 @@ void ThreadOpenConnections()
                     nOutbound++;
 
                     // If sync is not yet complete then disconnect any pruned outbound connections
-                    if (IsInitialBlockDownload() && pnode->fSuccessfullyConnected && !(pnode->nServices & NODE_NETWORK))
-                        pNonNodeNetwork = pnode;
-                }
-            }
-            if (!fReindex)
-            {
-                if (IsInitialBlockDownload())
-                {
-                    if (pNonNodeNetwork != nullptr)
+                    if (!fReindex && IsInitialBlockDownload() && !(pnode->nServices & NODE_NETWORK))
                     {
-                        pNonNodeNetwork->fDisconnect = true;
-                        fDisconnected = true;
-                        nDisconnects++;
+                        pnode->fDisconnect = true;
                     }
-                }
-            }
-            // In the event that outbound nodes restart or drop off the network over time we need to
-            // replenish the number of disconnects allowed once per day.
-            if (GetStopwatchMicros() - nStart > 86400UL * 1000000UL)
-            {
-                nDisconnects = 0;
-                nStart = GetStopwatchMicros();
-            }
-        }
-
-        // If disconnected then wait for disconnection completion
-        if (fDisconnected)
-        {
-            while (true)
-            {
-                MilliSleep(500);
-                {
-                    LOCK(cs_vNodes);
-                    if (find(vNodes.begin(), vNodes.end(), pNonNodeNetwork) == vNodes.end())
-                    {
-                        nOutbound--;
-                        break;
-                    }
-                }
-                if (shutdown_threads.load() == true)
-                {
-                    return;
                 }
             }
         }
@@ -2260,10 +2218,6 @@ void ThreadOpenConnections()
             for (auto j = 0; (j < 25) && (shutdown_threads.load() == false); j++)
                 MilliSleep(100);
             continue;
-        }
-        if (shutdown_threads.load() == true)
-        {
-            return;
         }
 
         // Add seed nodes if DNS seeds are all down (an infrastructure attack?).
