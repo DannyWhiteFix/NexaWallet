@@ -352,7 +352,12 @@ void CTxMemPool::_UpdateEntryForAncestors(TxIdIter it)
             // we need to save it for later so that the entire chain state can be
             // properly updated at some point in time.
             if (!fParentIsDirty)
-                setDirtyTxnChainTips.insert(it->GetTx().GetId());
+            {
+                if (setDirtyTxnChainTips.size() < MAX_DIRTY_CHAIN_TIPS)
+                {
+                    setDirtyTxnChainTips.insert(it->GetTx().GetId());
+                }
+            }
         }
     }
 
@@ -411,11 +416,11 @@ void CTxMemPool::UpdateTxnChainState(TxIdIter it)
         CTxMemPool::mapEntryHistory mapTxnChainTips;
         mempool.CalculateTxnChainTips(it, mapTxnChainTips);
         if (!mapTxnChainTips.empty())
-            mempool.UpdateTxnChainState(mapTxnChainTips);
+            mempool.UpdateTxnChainState(mapTxnChainTips, true);
     }
 }
 
-void CTxMemPool::UpdateTxnChainState(mapEntryHistory &mapTxnChainTips)
+void CTxMemPool::UpdateTxnChainState(mapEntryHistory &mapTxnChainTips, bool fUpdateAll)
 {
     AssertWriteLockHeld(cs_txmempool);
 
@@ -467,6 +472,7 @@ void CTxMemPool::UpdateTxnChainState(mapEntryHistory &mapTxnChainTips)
     // For each txnChainTip find the difference between the new chain tip ancestor state
     // values and old new ancestor state values and apply them to all of the descendants, and
     // mark the new state as not "dirty".
+    uint32_t updates = 0;
     for (auto iter_tip : mapTxnChainTips)
     {
         // Find difference
@@ -485,10 +491,16 @@ void CTxMemPool::UpdateTxnChainState(mapEntryHistory &mapTxnChainTips)
         // Apply the difference in sorted order
         for (TxIdIter it : setDescendants)
         {
+            if (!fUpdateAll && ++updates > MAX_CHAINED_UPDATES)
+                return;
+
             assert(!mapTxnChainTips.count(it));
             mapTx.modify(it, update_ancestor_state(nAncestorSizeDiff, nAncestorModifiedFeeDiff, nAncestorCountDiff,
                                  nAncestorSigOpsDiff, false));
         }
+
+        // Once fully processed we can remove this chain tip from the dirty set.
+        setDirtyTxnChainTips.erase(iter_tip.first->GetTx().GetId());
     }
 }
 
@@ -900,6 +912,9 @@ void CTxMemPool::ResubmitCommitQ()
 
 void CTxMemPool::_removeRecursive(const CTransaction &origTx, std::list<CTransactionRef> &removed)
 {
+    // Must have txpause on so that the txCommitQ has been flushed.
+    DbgAssert(txProcessingCorral.region() == CORRAL_TX_PAUSE, LOGA("In removeRecursive() but no txpause"));
+
     AssertWriteLockHeld(cs_txmempool);
 
     // Remove transaction from memory pool
@@ -955,10 +970,6 @@ void CTxMemPool::_removeRecursive(const CTransaction &origTx, std::list<CTransac
     }
     _RemoveStaged(setAllRemoves);
     setAllRemoves.clear();
-
-    // As a final step we must resubmit whatever is in the CommitQ and CommitQFinal in case
-    // there are any anscestors that were removed from the mempool above.
-    ResubmitCommitQ();
 }
 
 void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight, int flags)
@@ -1063,6 +1074,9 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef> &vtx,
     std::list<CTransactionRef> &conflicts,
     bool fCurrentEstimate)
 {
+    // Must have txpause on so that the txCommitQ has been flushed.
+    DbgAssert(txProcessingCorral.region() == CORRAL_TX_PAUSE, LOGA("In post block processing: removeForBlock()"));
+
     WRITELOCK(cs_txmempool);
 
     // Process the block for transasction removal and ancestor state updates.
@@ -1072,8 +1086,10 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef> &vtx,
     //
     // While we're updating the child transactions prior to removal we can also gather the
     // mapTxnChaiTips.
-    mapEntryHistory mapTxnChainTips;
+#ifdef DEBUG
     setEntries setAncestorsFromBlock;
+#endif
+    mapEntryHistory mapTxnChainTips;
     std::set<uint256> setReadOnlyHashes;
     {
         // Check for readonly ancestors
@@ -1129,6 +1145,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef> &vtx,
                 continue;
             }
 
+#ifdef DEBUG
             // Get all ancestors from related to txns in the block. Stop looking if we've already looked up
             // this set of ancestors before; we don't want to be traversing the same part of the ancestor
             // tree more than once.
@@ -1140,6 +1157,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef> &vtx,
                 _CalculateMemPoolAncestors(*it, setAncestors, nNoLimit, nNoLimit, dummy, &setAncestorsFromBlock, false);
                 setAncestorsFromBlock.insert(setAncestors.begin(), setAncestors.end());
             }
+#endif
             setTxnsInBlock.insert(it);
 
             const setEntries &setMemPoolChildren = GetMemPoolChildren(it);
@@ -1172,19 +1190,21 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef> &vtx,
                 mapTxnChainTips.emplace(it, ancestorState);
             }
         }
-        setDirtyTxnChainTips.clear();
         // Before the txs in the new block have been removed from the mempool, update policy estimates
         minerPolicyEstimator->processBlock(nBlockHeight, setTxnsInBlock, fCurrentEstimate);
 
         // Remove Transactions that were in the block from the mempool.
         for (TxIdIter it : setTxnsInBlock)
         {
+#ifdef DEBUG
             setAncestorsFromBlock.erase(it);
+#endif
             mapTxnChainTips.erase(it);
             removeUnchecked(it);
         }
         setTxnsInBlock.clear();
 
+#ifdef DEBUG
         // This is a safeguard in the case where ancestors of transactions in this block have re-entered
         // the mempool, possibly from a re-org. This should never happen and would likely indicate a locking
         // issue if it did.
@@ -1197,9 +1217,16 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef> &vtx,
             }
             setAncestorsFromBlock.clear();
         }
+#endif
     }
 
-    // For every chain tip walk through their decendants finding any transaction that have more than one parent.
+    // Because this is a potential DOS vector, only process a limited number of chaintips.
+    while (mapTxnChainTips.size() > MAX_CHAINTIPS_TO_UPDATE)
+    {
+        mapTxnChainTips.erase(mapTxnChainTips.begin());
+    }
+
+    // For every chain tip walk through their descendants finding any transactions that have more than one parent.
     // These will then need to be considered as chain tips.
     mapEntryHistory mapAdditionalChainTips;
     for (auto iter : mapTxnChainTips)
@@ -1221,18 +1248,13 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef> &vtx,
     mapTxnChainTips.insert(mapAdditionalChainTips.begin(), mapAdditionalChainTips.end());
 
     // Update ancestor state for remaining chains
-    UpdateTxnChainState(mapTxnChainTips);
+    UpdateTxnChainState(mapTxnChainTips, false);
 
     // Remove conflicting tx
     for (const auto &tx : vtx)
     {
         _removeConflicts(*tx, conflicts);
     }
-
-    // With the cs_txmepool lock on, resubmit the txCommitQ so we don't allow txns back into
-    // the mempool that may be ancestors of txns that were in the block we just processed.  If we allowed
-    // this then the txns would essentialy be orphans within the mempool.
-    ResubmitCommitQ();
 }
 
 void CTxMemPool::_clear()
