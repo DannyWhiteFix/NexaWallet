@@ -442,10 +442,12 @@ script/pushtxstate.cpp
 script/pushtxstate.h
 script/interpreter.cpp
 script/interpreter.h
+script/op_parse.cpp
 script/ismine.cpp
 script/ismine.h
 script/script.cpp
 script/scriptattributes.cpp
+script/scripttemplate.h
 script/script_error.cpp
 script/script_error.h
 script/script_flags.h

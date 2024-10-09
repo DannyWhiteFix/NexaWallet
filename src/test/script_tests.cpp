@@ -54,7 +54,7 @@ public:
 // Uncomment if you want to output updated JSON tests.
 #define UPDATE_JSON_TESTS
 
-static const unsigned int flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC | SCRIPT_ENABLE_SIGHASH_FORKID;
+static const unsigned int flags = POST_UPGRADE_MANDATORY_SCRIPT_VERIFY_FLAGS;
 
 UniValue read_json(const std::string &jsondata)
 {
@@ -251,7 +251,6 @@ CMutableTransaction BuildCreditingTransaction(const CScript &scriptPubKey, CAmou
     txCredit.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
     txCredit.vout[0].scriptPubKey = scriptPubKey;
     txCredit.vout[0].nValue = nValue;
-
     return txCredit;
 }
 
@@ -267,9 +266,92 @@ CMutableTransaction BuildSpendingTransaction(const CScript &scriptSig, const CMu
     txSpend.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
     txSpend.vout[0].scriptPubKey = CScript();
     txSpend.vout[0].nValue = txCredit.vout[0].nValue;
-
     return txSpend;
 }
+
+CMutableTransaction BuildTemplateCreditingTransaction(const CScript &constraintScript,
+    const CScript &argsScript,
+    const CScript &visibleArgs,
+    CAmount nValue)
+{
+    CMutableTransaction txCredit;
+    txCredit.nVersion = 1;
+    txCredit.nLockTime = 0;
+    txCredit.vin.resize(1);
+    txCredit.vout.resize(1);
+    // This one is basically just a fake since this tx does not need to actually connect with a parent
+    txCredit.vin[0].prevout.SetNull();
+    txCredit.vin[0].scriptSig = CScript() << CScriptNum::fromIntUnchecked(0) << CScriptNum::fromIntUnchecked(0);
+    txCredit.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
+    txCredit.vin[0].amount = nValue;
+    // We will access this one
+    txCredit.vout[0].scriptPubKey = ScriptTemplateLock(constraintScript, argsScript, visibleArgs);
+    txCredit.vout[0].nValue = nValue;
+    txCredit.vout[0].type = CTxOut::TEMPLATE;
+    return txCredit;
+}
+
+CMutableTransaction BuildTemplateSpendingTransaction(const CScript &constraintScript,
+    const CScript &argsScript,
+    const CScript &satisfierScript,
+    const CMutableTransaction &txCredit)
+{
+    CMutableTransaction txSpend;
+    txSpend.nVersion = 1;
+    txSpend.nLockTime = 0;
+    txSpend.vin.resize(1);
+    txSpend.vout.resize(1);
+    txSpend.vin[0] = txCredit.SpendOutput(0);
+
+    txSpend.vin[0].scriptSig = ScriptTemplateUnlock(constraintScript, satisfierScript, argsScript);
+    txSpend.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
+    txSpend.vout[0].scriptPubKey = CScript();
+    txSpend.vout[0].nValue = txCredit.vout[0].nValue;
+    return txSpend;
+}
+
+CMutableTransaction BuildTemplateCreditingTransaction(uint64_t wkTemplate,
+    const CScript &argsScript,
+    const CScript &visibleArgs,
+    CAmount nValue)
+{
+    CMutableTransaction txCredit;
+    txCredit.nVersion = 1;
+    txCredit.nLockTime = 0;
+    txCredit.vin.resize(1);
+    txCredit.vout.resize(1);
+    // This one is basically just a fake since this tx does not need to actually connect with a parent
+    txCredit.vin[0].prevout.SetNull();
+    txCredit.vin[0].scriptSig = CScript() << CScriptNum::fromIntUnchecked(0) << CScriptNum::fromIntUnchecked(0);
+    txCredit.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
+    txCredit.vin[0].amount = nValue;
+    // We will access this one
+    txCredit.vout[0].scriptPubKey =
+        ScriptWellKnownTemplateLock(wkTemplate, argsScript.Hash160(), visibleArgs.ToVch(), NoGroup, 0);
+    txCredit.vout[0].nValue = nValue;
+    txCredit.vout[0].type = CTxOut::TEMPLATE;
+    return txCredit;
+}
+
+CMutableTransaction BuildTemplateSpendingTransaction(uint64_t wkTemplate,
+    const CScript &argsScript,
+    const CScript &satisfierScript,
+    const CMutableTransaction &txCredit)
+{
+    CMutableTransaction txSpend;
+    txSpend.nVersion = 1;
+    txSpend.nLockTime = 0;
+    txSpend.vin.resize(1);
+    txSpend.vout.resize(1);
+    txSpend.vin[0] = txCredit.SpendOutput(0);
+
+    txSpend.vin[0].scriptSig = ScriptWellKnownTemplateUnlock(wkTemplate, satisfierScript, argsScript);
+    txSpend.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
+    txSpend.vout[0].scriptPubKey = CScript();
+    txSpend.vout[0].nValue = txCredit.vout[0].nValue;
+    return txSpend;
+}
+
 
 void DoTest(const CScript &scriptPubKey,
     const CScript &scriptSig,
@@ -2837,6 +2919,394 @@ BOOST_AUTO_TEST_CASE(script_can_append_self)
     d = CScript() << ParseHex(hex) << OP_CHECKSIG << ParseHex(hex) << OP_CHECKSIG;
     s += s;
     BOOST_CHECK(s == d);
+}
+
+
+static std::vector<unsigned char> Serialize(const CScript &s)
+{
+    std::vector<unsigned char> sSerialized(s.begin(), s.end());
+    return sSerialized;
+}
+
+#define PUSH_BYTECODE_DATA OP_3
+
+void ExpectedScriptTemplateFailure(const ScriptError error,
+    CScript &templat,
+    const CScript &args,
+    const CScript &satisfier)
+{
+    auto tracker = ScriptMachineResourceTracker();
+    ScriptError err;
+
+    CMutableTransaction txFrom = BuildCreditingTransaction(templat, 1);
+    CMutableTransaction txTo = BuildSpendingTransaction(CScript(), txFrom);
+    auto sis = ScriptImportedStateSig(&txTo, 0, txFrom.vout[0].nValue, flags);
+    auto vfy = VerifyTemplate(
+        templat, args, satisfier, flags, MAX_OPS_PER_SCRIPT_TEMPLATE, MAX_OPS_PER_SCRIPT, sis, &err, &tracker);
+    BOOST_CHECK(!vfy);
+    if (vfy)
+    {
+        printf("success should have failed");
+    }
+    BOOST_CHECK_MESSAGE(err == error, ScriptErrorString(err));
+}
+
+void ExpectedScriptTemplateSuccess(CScript &templat, const CScript &args, const CScript &satisfier)
+{
+    auto tracker = ScriptMachineResourceTracker();
+    ScriptError err;
+
+    CMutableTransaction txFrom = BuildCreditingTransaction(templat, 1);
+    CMutableTransaction txTo = BuildSpendingTransaction(CScript(), txFrom);
+    auto sis = ScriptImportedStateSig(&txTo, 0, txFrom.vout[0].nValue, flags);
+    auto vfy = VerifyTemplate(
+        templat, CScript(), satisfier, flags, MAX_OPS_PER_SCRIPT_TEMPLATE, MAX_OPS_PER_SCRIPT, sis, &err, &tracker);
+    BOOST_CHECK(vfy);
+    if (!vfy)
+    {
+        printf("failed should have succeeded");
+        auto vfy2 = VerifyTemplate(
+            templat, CScript(), satisfier, flags, MAX_OPS_PER_SCRIPT_TEMPLATE, MAX_OPS_PER_SCRIPT, sis, &err, &tracker);
+    }
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
+}
+
+BOOST_AUTO_TEST_CASE(script_op_parse)
+{
+    auto tracker = ScriptMachineResourceTracker();
+    ScriptError err;
+
+    // Tests parsing bytecode
+    CScript scriptToBeParsed;
+    scriptToBeParsed << OP_1 << ToByteVector(ParseHex("0123456789abcdef")) << OP_EQUAL;
+    auto scriptToBeParsed2 = CScript() << OP_NOP << ToByteVector(ParseHex("0123456789abcdef")) << OP_NOP << OP_0;
+    CScript satisfy;
+    auto ser = Serialize(scriptToBeParsed);
+    satisfy << ser;
+    CScript satisfy2 = CScript() << Serialize(scriptToBeParsed2);
+
+    CScript st;
+    st << OP_1 << OP_1 << PUSH_BYTECODE_DATA << OP_PARSE << ToByteVector(ParseHex("0123456789abcdef"))
+       << OP_EQUALVERIFY;
+    CMutableTransaction txFrom = BuildCreditingTransaction(st, 1);
+    CMutableTransaction txTo = BuildSpendingTransaction(CScript(), txFrom);
+    auto sis = ScriptImportedStateSig(&txTo, 0, txFrom.vout[0].nValue, flags);
+    auto vfy = VerifyTemplate(
+        st, CScript(), satisfy, flags, MAX_OPS_PER_SCRIPT_TEMPLATE, MAX_OPS_PER_SCRIPT, sis, &err, &tracker);
+    BOOST_CHECK(vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
+
+    // REQ1.4: make sure op_parse pushes results in the last to first order.
+    st = CScript() << OP_0 << OP_2 << PUSH_BYTECODE_DATA << OP_PARSE << ToByteVector(ParseHex("0123456789abcdef"))
+                   << OP_EQUALVERIFY << OP_1 << OP_EQUALVERIFY;
+    ExpectedScriptTemplateSuccess(st, CScript(), satisfy);
+    // REQ1.4: negative test: wrong push order
+    st = CScript() << OP_0 << OP_2 << PUSH_BYTECODE_DATA << OP_PARSE << OP_1 << OP_EQUALVERIFY
+                   << ToByteVector(ParseHex("0123456789abcdef")) << OP_EQUALVERIFY;
+    ExpectedScriptTemplateFailure(SCRIPT_ERR_EQUALVERIFY, st, CScript(), satisfy);
+
+
+    // REQ1.4: make sure op_parse pushes results in the last to first order.
+    st = CScript() << OP_0 << OP_2 << PUSH_BYTECODE_DATA << OP_PARSE << OP_0 << OP_EQUALVERIFY
+                   << ToByteVector(ParseHex("0123456789abcdef")) << OP_EQUALVERIFY;
+    ExpectedScriptTemplateSuccess(st, CScript(), satisfy2);
+
+
+    // REQ1.3: Asking for too many -- fails
+    st = CScript() << OP_1 << OP_2 << PUSH_BYTECODE_DATA << OP_PARSE << ToByteVector(ParseHex("0123456789abcdef"))
+                   << OP_EQUALVERIFY;
+    ExpectedScriptTemplateFailure(SCRIPT_ERR_PARSE, st, CScript(), satisfy);
+
+    // REQ1.1: If start, count, whichInput or whichOutput fields are less than 0, the script **MUST** fail
+    st = CScript() << OP_1NEGATE << OP_1 << PUSH_BYTECODE_DATA << OP_PARSE;
+    ExpectedScriptTemplateFailure(SCRIPT_ERR_INVALID_NUMBER_RANGE, st, CScript(), satisfy);
+    // REQ1.1: If start, count, whichInput or whichOutput fields are less than 0, the script **MUST** fail
+    st = CScript() << OP_0 << OP_1NEGATE << PUSH_BYTECODE_DATA << OP_PARSE;
+    ExpectedScriptTemplateFailure(SCRIPT_ERR_INVALID_NUMBER_RANGE, st, CScript(), satisfy);
+
+    // REQ1.0: Invalid parse operation
+    st = CScript() << OP_0 << OP_1 << OP_4 << OP_PARSE;
+    ExpectedScriptTemplateFailure(SCRIPT_ERR_BAD_OPCODE, st, CScript(), satisfy);
+
+    // REQ1.6: The data to be parsed **MUST** be valid for that parse operation
+    // give a number, not a script to OP_PARSE
+    st = CScript() << OP_0 << OP_1 << PUSH_BYTECODE_DATA << OP_PARSE;
+    ExpectedScriptTemplateFailure(SCRIPT_ERR_PARSE, st, CScript(), CScript() << OP_1);
+
+    // REQ1.5: Starting beyond the # of pushes -- fails
+    st = CScript() << OP_2 << OP_1 << PUSH_BYTECODE_DATA << OP_PARSE << ToByteVector(ParseHex("0123456789abcdef"))
+                   << OP_EQUALVERIFY;
+    ExpectedScriptTemplateFailure(SCRIPT_ERR_PARSE, st, CScript(), satisfy);
+
+    // REQ1.4: Starting beyond the # of pushes, but asking for nothing -- works
+    st = CScript() << OP_2 << OP_0 << PUSH_BYTECODE_DATA << OP_PARSE;
+    ExpectedScriptTemplateSuccess(st, CScript(), satisfy);
+
+    for (auto i = 800; i < 10000; i += 237)
+    {
+        CScript holderArgs = CScript();
+        CScript parseThis;
+        for (auto j = 0; j < i; j++)
+        {
+            // just a bunch of different stuff
+            switch (j & 3)
+            {
+            case 0:
+                parseThis << OP_7 << OP_ADD;
+                break;
+            case 1:
+                parseThis << ToByteVector(ParseHex("0123"));
+                // fall thru
+            case 2:
+                parseThis << OP_SUB << OP_NIP;
+                break;
+            case 3:
+                parseThis << OP_0 << OP_1;
+                break;
+            }
+        }
+        CScript satisfyBig;
+        satisfyBig << Serialize(parseThis);
+
+        st = CScript() << (i / 2) << (i / 4) << PUSH_BYTECODE_DATA << OP_PARSE;
+        for (auto j = 0; j < i / 4; j++)
+            st << OP_DROP; // Clean up the stack of stuff extracted from the script
+        ExpectedScriptTemplateSuccess(st, holderArgs, satisfyBig);
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(locking_op_parse)
+{
+    auto trk = ScriptMachineResourceTracker();
+    auto tops = MAX_OPS_PER_SCRIPT_TEMPLATE;
+    auto sops = MAX_OPS_PER_SCRIPT;
+    ScriptError err;
+
+    // Test parsing arbitrary bytecode
+    CScript scriptToBeParsed;
+    scriptToBeParsed << OP_1 << ToByteVector(ParseHex("0123456789abcdef")) << OP_EQUAL;
+    auto scriptToBeParsed2 = CScript() << OP_NOP << ToByteVector(ParseHex("0123456789abcdef")) << OP_NOP << OP_0;
+    CScript satisfy;
+    auto ser = Serialize(scriptToBeParsed);
+    satisfy << ser;
+    CScript satisfy2 = CScript() << Serialize(scriptToBeParsed2);
+    CScript empty;
+
+    CScript st;
+    st << OP_1 << OP_1 << ParseOption::BYTECODE_DATA << OP_PARSE << ToByteVector(ParseHex("0123456789abcdef"))
+       << OP_EQUALVERIFY;
+    CMutableTransaction txFrom = BuildCreditingTransaction(st, 1);
+    CMutableTransaction txTo = BuildSpendingTransaction(CScript(), txFrom);
+    txTo.vout.resize(3);
+    txTo.vout[2].nValue = txTo.vout[0].nValue / 3; // split the $ so that amount is valid
+    txTo.vout[1].nValue = txTo.vout[0].nValue / 3;
+    txTo.vout[0].nValue = txTo.vout[0].nValue / 3;
+
+    // Example normal script
+    CScript parsedScript = CScript() << OP_5 << OP_1 << OP_SUB << ToByteVector(ParseHex("0123456789abcdef")) << OP_DROP
+                                     << OP_DROP;
+    txTo.vout[1].scriptPubKey = parsedScript;
+
+    VchType tHash = parsedScript.Hash160();
+    CScript hiddenArgs = CScript() << ToByteVector(ParseHex("aa")) << ToByteVector(ParseHex("bb"))
+                                   << ToByteVector(ParseHex("cc"));
+    VchType argsHash = hiddenArgs.Hash160();
+    CScript visibleArgs = CScript() << ToByteVector(ParseHex("dd")) << ToByteVector(ParseHex("ee"))
+                                    << ToByteVector(ParseHex("ff"));
+    CGroupTokenID grp1(1);
+    txTo.vout[2].scriptPubKey = ScriptTemplateOutput(tHash, argsHash, ToByteVector(visibleArgs), grp1, 123);
+    txTo.vout[2].type = CTxOut::TEMPLATE;
+
+    auto sis = ScriptImportedStateSig(&txTo, 0, txFrom.vout[0].nValue, flags);
+
+    // Test parsing locking script (output)
+    st = CScript() << OP_1 << OP_1 << OP_2 << ParseOption::OUTPUT_DATA << OP_PARSE
+                   << ToByteVector(ParseHex("0123456789abcdef")) << OP_EQUALVERIFY << OP_1 << OP_EQUALVERIFY;
+    auto vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
+
+    // Try the template output (pushed args start at offset 8)
+    st = CScript() << OP_2 << OP_9 << OP_2 << ParseOption::OUTPUT_DATA << OP_PARSE << ToByteVector(ParseHex("ff"))
+                   << OP_EQUALVERIFY << ToByteVector(ParseHex("ee")) << OP_EQUALVERIFY;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
+
+    // REQ1.2: Try the template output with an illegal output index
+    st = CScript() << OP_3 << OP_9 << OP_2 << ParseOption::OUTPUT_DATA << OP_PARSE << ToByteVector(ParseHex("ff"))
+                   << OP_EQUALVERIFY << ToByteVector(ParseHex("ee")) << OP_EQUALVERIFY;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(!vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_INVALID_TX_OUTPUT_INDEX, ScriptErrorString(err));
+
+    // Try the template output (pushed args start at offset 0)
+    //                output start    count    alg selector              go
+    st = CScript() << OP_2 << OP_0 << OP_9 << ParseOption::OUTPUT_DATA << OP_PARSE << ToByteVector(ParseHex("dd"))
+                   << OP_EQUALVERIFY << OP_0 << OP_EQUALVERIFY << OP_0 << OP_EQUALVERIFY << OP_0 << OP_EQUALVERIFY
+                   << argsHash << OP_EQUALVERIFY // argsHash
+                   << tHash << OP_EQUALVERIFY // template hash
+                   << OP_0 << OP_EQUALVERIFY // auth flags
+                   << 123 << OP_EQUALVERIFY // group amount
+                   << ToByteVector(grp1.bytes()) << OP_EQUALVERIFY;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
+
+    // Grab from some different places
+    st = CScript() << OP_2 << OP_0 << OP_2 << ParseOption::OUTPUT_DATA << OP_PARSE << 123
+                   << OP_EQUALVERIFY // group amount
+                   << ToByteVector(grp1.bytes()) << OP_EQUALVERIFY;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
+
+    st = CScript() << OP_2 << OP_3 << OP_2 << ParseOption::OUTPUT_DATA << OP_PARSE << argsHash
+                   << OP_EQUALVERIFY // argsHash
+                   << tHash << OP_EQUALVERIFY; // template hash
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
+
+    st = CScript() << OP_2 << OP_4 << OP_1 << ParseOption::OUTPUT_DATA << OP_PARSE << argsHash
+                   << OP_EQUALVERIFY; // argsHash
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
+
+    st = CScript() << OP_2 << OP_3 << OP_1 << ParseOption::OUTPUT_DATA << OP_PARSE << tHash
+                   << OP_EQUALVERIFY; // template hash
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
+}
+
+
+BOOST_AUTO_TEST_CASE(unlocking_op_parse)
+{
+    auto trk = ScriptMachineResourceTracker();
+    auto tops = MAX_OPS_PER_SCRIPT_TEMPLATE;
+    auto sops = MAX_OPS_PER_SCRIPT;
+    ScriptError err;
+
+    // Test parsing arbitrary bytecode
+    CScript scriptToBeParsed;
+    scriptToBeParsed << OP_1 << ToByteVector(ParseHex("0123456789abcdef")) << OP_EQUAL;
+    auto scriptToBeParsed2 = CScript() << OP_NOP << ToByteVector(ParseHex("0123456789abcdef")) << OP_NOP << OP_0;
+    CScript satisfy;
+    auto ser = Serialize(scriptToBeParsed);
+    satisfy << ser;
+    CScript satisfy2 = CScript() << Serialize(scriptToBeParsed2);
+    CScript empty;
+
+    CScript constraint;
+    constraint << OP_1 << OP_1 << ParseOption::BYTECODE_DATA << OP_PARSE << ToByteVector(ParseHex("0123456789abcdef"))
+               << OP_EQUALVERIFY << OP_DROP << OP_DROP; // last 2 drops just let there be args
+    CScript args = CScript() << OP_2 << OP_3;
+    CMutableTransaction txFrom = BuildTemplateCreditingTransaction(constraint, args, empty, 1);
+    CMutableTransaction txTo = BuildTemplateSpendingTransaction(constraint, args, empty, txFrom);
+
+    auto sis = ScriptImportedStateSig(&txTo, 0, txFrom.vout[0].nValue, flags);
+    sis.spentCoins.push_back(txFrom.vout[0]);
+
+    // Check unlocking script (input)
+
+    // REQ1.2 invalid input should fail
+    //                input   start    count    alg selector              go
+    CScript st = CScript() << OP_2 << OP_0 << OP_9 << ParseOption::INPUT_DATA << OP_PARSE;
+    auto vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(!vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_INVALID_TX_INPUT_INDEX, ScriptErrorString(err));
+
+    st = CScript() << OP_0 << OP_0 << OP_2 << ParseOption::INPUT_DATA << OP_PARSE << args.ToVch() << OP_EQUALVERIFY
+                   << constraint.ToVch() << OP_EQUALVERIFY;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
+
+    // Too many args
+    st = CScript() << OP_0 << OP_0 << OP_10 << ParseOption::INPUT_DATA << OP_PARSE << OP_NOT << OP_VERIFY << OP_NOT
+                   << OP_VERIFY << OP_NOT << OP_VERIFY << OP_NOT << OP_VERIFY << OP_NOT << OP_VERIFY << OP_NOT
+                   << OP_VERIFY << args.ToVch() << OP_EQUALVERIFY << constraint.ToVch() << OP_EQUALVERIFY;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(!vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_PARSE, ScriptErrorString(err));
+
+    // Exactly correct # of args
+    st = CScript() << OP_0 << OP_0 << OP_8 << ParseOption::INPUT_DATA << OP_PARSE << OP_NOT << OP_VERIFY << OP_NOT
+                   << OP_VERIFY << OP_NOT << OP_VERIFY << OP_NOT << OP_VERIFY << OP_NOT << OP_VERIFY << OP_NOT
+                   << OP_VERIFY << args.ToVch() << OP_EQUALVERIFY << constraint.ToVch() << OP_EQUALVERIFY;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
+
+    constraint == CScript() << OP_1 << OP_1 << ParseOption::BYTECODE_DATA << OP_PARSE
+                            << ToByteVector(ParseHex("0123456789abcdef")) << OP_EQUALVERIFY << OP_DROP
+                            << OP_DROP; // last 2 drops just let there be args
+    args = CScript() << OP_2;
+    CScript publicArgs = CScript() << OP_3;
+
+    txFrom = BuildTemplateCreditingTransaction(constraint, args, publicArgs, 1);
+    txTo = BuildTemplateSpendingTransaction(constraint, args, publicArgs, txFrom);
+    sis = ScriptImportedStateSig(&txTo, 0, txFrom.vout[0].nValue, flags);
+    sis.spentCoins.push_back(txFrom.vout[0]);
+
+    // Exactly correct # of args
+    st = CScript() << OP_0 << OP_0 << OP_9 << ParseOption::INPUT_DATA << OP_PARSE << OP_3 << OP_EQUALVERIFY << OP_NOT
+                   << OP_VERIFY << OP_NOT << OP_VERIFY << OP_NOT << OP_VERIFY << OP_NOT << OP_VERIFY << OP_NOT
+                   << OP_VERIFY << OP_NOT << OP_VERIFY << args.ToVch() << OP_EQUALVERIFY << constraint.ToVch()
+                   << OP_EQUALVERIFY;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
+
+    // Check that a read of a value straight from the satisfier args works
+    st = CScript() << OP_0 << OP_8 << OP_1 << ParseOption::INPUT_DATA << OP_PARSE << OP_3 << OP_EQUALVERIFY;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
+
+    // Check that a too-far read does not work
+    st = CScript() << OP_0 << OP_12 << OP_1 << ParseOption::INPUT_DATA << OP_PARSE << OP_3 << OP_EQUALVERIFY;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(!vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_PARSE, ScriptErrorString(err));
+    // Check that a too-large read does not work
+    st = CScript() << OP_0 << OP_8 << OP_2 << ParseOption::INPUT_DATA << OP_PARSE << OP_3 << OP_EQUALVERIFY;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(!vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_PARSE, ScriptErrorString(err));
+
+    // Try with no hidden args
+    publicArgs = CScript() << OP_3 << OP_4;
+    txFrom = BuildTemplateCreditingTransaction(constraint, empty, publicArgs, 1);
+    txTo = BuildTemplateSpendingTransaction(constraint, empty, publicArgs, txFrom);
+    sis = ScriptImportedStateSig(&txTo, 0, txFrom.vout[0].nValue, flags);
+    sis.spentCoins.push_back(txFrom.vout[0]);
+
+    st = CScript() << OP_0 << OP_0 << OP_9 << ParseOption::INPUT_DATA << OP_PARSE << OP_3 << OP_EQUALVERIFY << OP_NOT
+                   << OP_VERIFY << OP_NOT << OP_VERIFY << OP_NOT << OP_VERIFY << OP_NOT << OP_VERIFY << OP_NOT
+                   << OP_VERIFY << OP_NOT << OP_VERIFY << OP_0 << OP_EQUALVERIFY << constraint.ToVch()
+                   << OP_EQUALVERIFY;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
+
+    // Try with well-known template
+    publicArgs = CScript() << OP_3 << OP_4;
+    txFrom = BuildTemplateCreditingTransaction(1, args, publicArgs, 1);
+    txTo = BuildTemplateSpendingTransaction(1, args, publicArgs, txFrom);
+    sis = ScriptImportedStateSig(&txTo, 0, txFrom.vout[0].nValue, flags);
+    sis.spentCoins.push_back(txFrom.vout[0]);
+
+    st = CScript() << OP_0 << OP_0 << OP_9 << ParseOption::INPUT_DATA << OP_PARSE << OP_3 << OP_EQUALVERIFY << OP_NOT
+                   << OP_VERIFY << OP_NOT << OP_VERIFY << OP_NOT << OP_VERIFY << OP_NOT << OP_VERIFY << OP_NOT
+                   << OP_VERIFY << OP_NOT << OP_VERIFY << args.ToVch() << OP_EQUALVERIFY << p2pkt.ToVch()
+                   << OP_EQUALVERIFY;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

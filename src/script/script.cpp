@@ -5,11 +5,15 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "script/script.h"
+#include "crypto/hash160.h"
+#include "hashwrapper.h"
 #include "script/script_flags.h"
 
 #include <algorithm>
 
 using namespace std;
+
+bool IsPushOpcode(opcodetype opcode) { return opcode <= OP_16; }
 
 const char *GetOpName(opcodetype opcode)
 {
@@ -314,6 +318,8 @@ const char *GetOpName(opcodetype opcode)
         return "OP_SETBMD";
     case OP_EXEC:
         return "OP_EXEC";
+    case OP_PARSE:
+        return "OP_PARSE";
 
     case OP_INVALIDOPCODE:
         return "OP_INVALIDOPCODE";
@@ -540,3 +546,7 @@ bool CScript::IsPushOnly(const_iterator pc) const
 }
 
 bool CScript::IsPushOnly() const { return this->IsPushOnly(begin()); }
+
+VchType CScript::Hash160() const { return VchHash160(*this); }
+
+VchType CScript::Hash256() const { return VchHash(*this); }

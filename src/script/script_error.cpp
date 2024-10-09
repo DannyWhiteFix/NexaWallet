@@ -99,7 +99,7 @@ const char *ScriptErrorString(const ScriptError serror)
     case SCRIPT_ERR_NONCOMPRESSED_PUBKEY:
         return "Using non-compressed public key";
     case SCRIPT_ERR_CLEANSTACK:
-        return "P2SH script evaluation of script does not result in a clean stack";
+        return "Script evaluation does not result in a clean stack";
     case SCRIPT_ERR_MUST_USE_FORKID:
         return "All signatures must include SCRIPT_ENABLE_SIGHASH_FORKID";
     case SCRIPT_ERR_NUMBER_OVERFLOW:
