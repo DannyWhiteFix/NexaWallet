@@ -1431,8 +1431,12 @@ bool CWallet::IsMine(const CTransaction &tx) const
 
 CAmount CWallet::GetCredit(const CTxOut &txout, const isminefilter &filter) const
 {
+    // quickly handle data txouts if they are zero
     if (txout.nValue == 0)
-        return 0; // quickly handle data txouts
+        return 0;
+    if (GetGroupToken(txout.scriptPubKey) != NoGroup)
+        return 0;
+
     if (!MoneyRange(txout.nValue))
         throw std::runtime_error("CWallet::GetCredit(): value out of range");
     return ((IsMine(txout) & filter) ? txout.nValue : 0);
