@@ -31,6 +31,7 @@ For info on building Bitcoin Unlimited from sources, see
 - [Windows Build Notes](doc/build-windows.md)
 - [OpenBSD Build Notes](doc/build-openbsd.md)
 - [macOS Build Notes](doc/build-macos.md)
+- [Alpine Build Notes](doc/build-alpine.md)
 - [Deterministic macOS DMG Notes](doc/README_macos.md)
 - [Gitian Building Guide](doc/gitian-building.md)
 

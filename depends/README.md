@@ -20,14 +20,18 @@ created. To use it for Bitcoin:
 
 Common `host-platform-triplets` for cross compilation are:
 
-- `i686-pc-linux-gnu` for Linux 32 bit
-- `x86_64-pc-linux-gnu` for x86 Linux
+- `i686-pc-linux-gnu` for Linux 32 bit (glibc)
+- `x86_64-pc-linux-gnu` for x86 Linux (glibc)
+- `i686-linux-musl` for Linux 32 bit (musl)
+- `x86_64-linux-musl` for x86 Linux (musl)
 - `i686-w64-mingw32` for Win32
 - `x86_64-w64-mingw32` for Win64
 - `x86_64-apple-darwin` for MacOSX (Intel)
 - `arm64-apple-darwin` for MacOSX (ARM)
-- `arm-linux-gnueabihf` for Linux ARM 32 bit
-- `aarch64-linux-gnu` for Linux ARM 64 bit
+- `arm-linux-gnueabihf` for Linux ARM 32 bit (glibc)
+- `aarch64-linux-gnu` for Linux ARM 64 bit (glibc)
+- `arm-linux-musleabihf` for Linux ARM 32 bit (musl)
+- `aarch64-linux-musl` for Linux ARM 64 bit (musl)
 
 No other options are needed, the paths are automatically configured.
 

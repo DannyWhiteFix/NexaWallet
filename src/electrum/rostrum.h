@@ -4,6 +4,7 @@
 #ifndef ELECTRUM_ROSTRUM_H
 #define ELECTRUM_ROSTRUM_H
 
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <map>
