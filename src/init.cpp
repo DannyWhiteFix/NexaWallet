@@ -496,7 +496,7 @@ static void ReconsiderChainOnStartup()
     }
 }
 
-void ThreadImport(std::vector<fs::path> vImportFiles, uint64_t nTxIndexCache)
+void ThreadImport(std::vector<fs::path> vImportFiles, uint64_t nTxIndexCache, bool fSync)
 {
     const CChainParams &chainparams = Params();
     RenameThread("loadblk");
@@ -510,85 +510,87 @@ void ThreadImport(std::vector<fs::path> vImportFiles, uint64_t nTxIndexCache)
     //       thread is scheduled at a lower priority on Linux systems and therefore may not have the issue.
     MilliSleep(500);
 
-    // -reindex
-    if (fReindex)
+    if (!fSync)
     {
-        SetRPCWarmupFinished();
-
-        CImportingNow imp;
-        int nFile = 0;
-        while (true)
+        // -reindex
+        if (fReindex)
         {
-            CDiskBlockPos pos(nFile, 0);
-            if (!fs::exists(GetBlockPosFilename(pos, "blk")))
-                break; // No block files left to reindex
-            FILE *file = OpenBlockFile(pos, true);
-            if (!file)
-                break; // This error is logged in OpenBlockFile
-            LOGA("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
-            LoadExternalBlockFile(chainparams, file, &pos);
-            nFile++;
+            SetRPCWarmupFinished();
+
+            CImportingNow imp;
+            int nFile = 0;
+            while (true)
+            {
+                CDiskBlockPos pos(nFile, 0);
+                if (!fs::exists(GetBlockPosFilename(pos, "blk")))
+                    break; // No block files left to reindex
+                FILE *file = OpenBlockFile(pos, true);
+                if (!file)
+                    break; // This error is logged in OpenBlockFile
+                LOGA("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
+                LoadExternalBlockFile(chainparams, file, &pos);
+                nFile++;
+
+                if (fRequestShutdown)
+                    return;
+            }
+            pblocktree->WriteReindexing(false);
+            pblocktree->WriteBlockIndexVersion(BLOCK_INDEX_VERSION);
+            fReindex = false;
+            LOGA("Reindexing finished");
+        }
+        if (fRequestShutdown)
+            return;
+
+        // hardcoded $DATADIR/bootstrap.dat
+        fs::path pathBootstrap = GetDataDir() / "bootstrap.dat";
+        if (fs::exists(pathBootstrap))
+        {
+            SetRPCWarmupFinished();
+            nDiskBlockIndexVersion = BLOCK_INDEX_VERSION;
+
+            FILE *file = fsbridge::fopen(pathBootstrap, "rb");
+            if (file)
+            {
+                fs::path pathBootstrapOld = GetDataDir() / "bootstrap.dat.old";
+                LOGA("Importing bootstrap.dat...\n");
+                LoadExternalBlockFile(chainparams, file);
+                RenameOver(pathBootstrap, pathBootstrapOld);
+            }
+            else
+            {
+                LOGA("Warning: Could not open bootstrap file %s\n", pathBootstrap.string());
+            }
+        }
+        if (fRequestShutdown)
+            return;
+
+        // -loadblock=
+        for (const fs::path &path : vImportFiles)
+        {
+            FILE *file = fsbridge::fopen(path, "rb");
+            if (file)
+            {
+                CImportingNow imp;
+                LOGA("Importing blocks file %s...\n", path.string());
+                LoadExternalBlockFile(chainparams, file);
+            }
+            else
+            {
+                LOGA("Warning: Could not open blocks file %s\n", path.string());
+            }
 
             if (fRequestShutdown)
                 return;
         }
-        pblocktree->WriteReindexing(false);
-        pblocktree->WriteBlockIndexVersion(BLOCK_INDEX_VERSION);
-        fReindex = false;
-        LOGA("Reindexing finished");
-    }
-    if (fRequestShutdown)
-        return;
 
-    // hardcoded $DATADIR/bootstrap.dat
-    fs::path pathBootstrap = GetDataDir() / "bootstrap.dat";
-    if (fs::exists(pathBootstrap))
-    {
-        SetRPCWarmupFinished();
-        nDiskBlockIndexVersion = BLOCK_INDEX_VERSION;
-
-        FILE *file = fsbridge::fopen(pathBootstrap, "rb");
-        if (file)
+        if (GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT))
         {
-            fs::path pathBootstrapOld = GetDataDir() / "bootstrap.dat.old";
-            LOGA("Importing bootstrap.dat...\n");
-            LoadExternalBlockFile(chainparams, file);
-            RenameOver(pathBootstrap, pathBootstrapOld);
-        }
-        else
-        {
-            LOGA("Warning: Could not open bootstrap file %s\n", pathBootstrap.string());
-        }
-    }
-    if (fRequestShutdown)
-        return;
-
-    // -loadblock=
-    for (const fs::path &path : vImportFiles)
-    {
-        FILE *file = fsbridge::fopen(path, "rb");
-        if (file)
-        {
-            CImportingNow imp;
-            LOGA("Importing blocks file %s...\n", path.string());
-            LoadExternalBlockFile(chainparams, file);
-        }
-        else
-        {
-            LOGA("Warning: Could not open blocks file %s\n", path.string());
-        }
-
-        if (fRequestShutdown)
+            LOGA("Stopping after block import\n");
+            StartShutdown();
             return;
+        }
     }
-
-    if (GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT))
-    {
-        LOGA("Stopping after block import\n");
-        StartShutdown();
-        return;
-    }
-
     // At this point the genesis block should have been loaded. We pause here and allow
     // the node to complete StartNode() before continuing with ActivateBestChain(). For some
     // reason QT will get hung while activating the chain if we don't do this wait, and it
@@ -601,105 +603,103 @@ void ThreadImport(std::vector<fs::path> vImportFiles, uint64_t nTxIndexCache)
             return;
     }
 
-    // In case a previous shutdown left the chain in an incorrect state, reconsider
-    // the most work chain. This needs to be done before we call ActivateBestChain() even
-    // though it is invoked again after ActivateBestChain().
-    ReconsiderChainOnStartup();
-
-    // If we don't already have one, get an initial snapshot state to use for tx acceptance
+    if (!fSync)
     {
-        TxAdmissionPause pause;
-    }
+        // In case a previous shutdown left the chain in an incorrect state, reconsider
+        // the most work chain. This needs to be done before we call ActivateBestChain() even
+        // though it is invoked again after ActivateBestChain().
+        ReconsiderChainOnStartup();
 
 #ifdef ENABLE_WALLET
-    if (pwalletMain)
-    {
-        // Add wallet transactions that aren't already in a block to mapTransactions
-        uiInterface.InitMessage(_("Reaccepting Wallet Transactions"));
-        pwalletMain->ReacceptWalletTransactions();
-    }
-#endif
-    if (fRequestShutdown)
-        return;
-
-    // Load the mempool if necessary
-    if (persistTxPool.Value())
-    {
-        uiInterface.InitMessage(_("Loading TxPool"));
-        LoadTxPool();
-
-        uiInterface.InitMessage(_("Loading Orphanpool"));
-        orphanpool.LoadOrphanPool();
-
-        // Wait for transactions to finish loading but dont' wait forever
-        size_t nInQ = 0;
-        size_t nDeferQ = 0;
-        size_t nCommitQ = 0;
-        int nIterations = 0;
-        while (1)
+        if (pwalletMain)
         {
-            {
-                LOCK(csTxInQ);
-                nInQ = txInQ.size();
-                nDeferQ = txDeferQ.size();
-            }
-            {
-                LOCK(cs_commitQ);
-                nCommitQ = txCommitQ->size();
-            }
-            if (nInQ == 0 && nDeferQ == 0 && nCommitQ == 0)
-                break;
+            // Add wallet transactions that aren't already in a block to mapTransactions
+            uiInterface.InitMessage(_("Reaccepting Wallet Transactions"));
+            pwalletMain->ReacceptWalletTransactions();
+        }
+#endif
+        if (fRequestShutdown)
+            return;
 
-            MilliSleep(1000);
-            nIterations++;
-            if (nIterations > 120)
+        // Load the mempool if necessary
+        if (persistTxPool.Value())
+        {
+            uiInterface.InitMessage(_("Loading TxPool"));
+            LoadTxPool();
+
+            uiInterface.InitMessage(_("Loading Orphanpool"));
+            orphanpool.LoadOrphanPool();
+
+            // Wait for transactions to finish loading but dont' wait forever
+            size_t nInQ = 0;
+            size_t nDeferQ = 0;
+            size_t nCommitQ = 0;
+            int nIterations = 0;
+            while (1)
             {
-                LOGA("Clearing Queues because they are not empty: txInq %d, txDeferQ %d, txCommitQ %d\n", nInQ, nDeferQ,
-                    nCommitQ);
                 {
                     LOCK(csTxInQ);
-                    while (!txInQ.empty())
-                        txInQ.pop();
-                    while (!txDeferQ.empty())
-                        txDeferQ.pop();
+                    nInQ = txInQ.size();
+                    nDeferQ = txDeferQ.size();
                 }
                 {
                     LOCK(cs_commitQ);
-                    txCommitQ->clear();
+                    nCommitQ = txCommitQ->size();
+                }
+                if (nInQ == 0 && nDeferQ == 0 && nCommitQ == 0)
+                    break;
+
+                MilliSleep(1000);
+                nIterations++;
+                if (nIterations > 120)
+                {
+                    LOGA("Clearing Queues because they are not empty: txInq %d, txDeferQ %d, txCommitQ %d\n", nInQ,
+                        nDeferQ, nCommitQ);
+                    {
+                        LOCK(csTxInQ);
+                        while (!txInQ.empty())
+                            txInQ.pop();
+                        while (!txDeferQ.empty())
+                            txDeferQ.pop();
+                    }
+                    {
+                        LOCK(cs_commitQ);
+                        txCommitQ->clear();
+                    }
                 }
             }
+            fDumpTxPoolLater = !fRequestShutdown;
         }
-        fDumpTxPoolLater = !fRequestShutdown;
+        if (fRequestShutdown)
+            return;
+
+        // scan for better chains in the block chain database, that are not yet connected in the active best chain
+        uiInterface.InitMessage(_("Activating best chain..."));
+        CValidationState state;
+        if (!ActivateBestChain(state, chainparams))
+        {
+            LOGA("WARNING: ActivateBestChain failed on startup\n");
+        }
+        if (fRequestShutdown)
+            return;
+
+        // Reconsider the most work chain again here if we're not already synced. This is necessary
+        // when switching from an ABC/BCHN client or when a operator failed to upgrade their BU
+        // node before a hardfork. This must be done directly after ActivateBestChain() or
+        // a switch from ABC/BCHN to a BU node may not work because some blocks may have been parked.
+        ReconsiderChainOnStartup();
+        if (fRequestShutdown)
+            return;
+
+        // Initialize the atomic flags used for determining whether we are in IBD or whether the chain
+        // is almost synced.
+        IsChainNearlySyncdInit();
+        IsInitialBlockDownloadInit();
+
+        // load messages in capd message pool if capd is on
+        if (msgpoolMaxSize > 0)
+            msgpool.LoadMsgPool();
     }
-    if (fRequestShutdown)
-        return;
-
-    // scan for better chains in the block chain database, that are not yet connected in the active best chain
-    uiInterface.InitMessage(_("Activating best chain..."));
-    CValidationState state;
-    if (!ActivateBestChain(state, chainparams))
-    {
-        LOGA("WARNING: ActivateBestChain failed on startup\n");
-    }
-    if (fRequestShutdown)
-        return;
-
-    // Reconsider the most work chain again here if we're not already synced. This is necessary
-    // when switching from an ABC/BCHN client or when a operator failed to upgrade their BU
-    // node before a hardfork. This must be done directly after ActivateBestChain() or
-    // a switch from ABC/BCHN to a BU node may not work because some blocks may have been parked.
-    ReconsiderChainOnStartup();
-    if (fRequestShutdown)
-        return;
-
-    // Initialize the atomic flags used for determining whether we are in IBD or whether the chain
-    // is almost synced.
-    IsChainNearlySyncdInit();
-    IsInitialBlockDownloadInit();
-
-    // load messages in capd message pool if capd is on
-    if (msgpoolMaxSize > 0)
-        msgpool.LoadMsgPool();
 
     // Startup txindex. If we start it earlier and before ActivateBestChain
     // we can end up grinding slowly through ActivateBestChain when txindex still has unfinished
@@ -1328,8 +1328,8 @@ bool AppInit2(Config &config)
 #endif // ENABLE_WALLET
     // ********************************************************* Step 6: load block chain
 
-    bool fResync = GetBoolArg("-resync", false);
-    if (fResync)
+    bool fSync = GetBoolArg("-resync", false);
+    if (fSync)
     {
         // Doing a full resync of the chain so removing all blockchain files and folders
         fs::path blocksDir = GetDataDir() / "blocks";
@@ -1488,11 +1488,14 @@ bool AppInit2(Config &config)
                     break;
                 }
 
-                // Set the token sync flag if this is a new chain.  If this flag is not set and a chain is present
-                // then the operator will be presented with a "reindex on next startup" option if/when they try to
+                // Set the both the sync and the token sync flags if this is a new chain.
+                //
+                // If the token sync flags are not set and a chain is present then the operator
+                // will be presented with a "reindex on next startup" option if/when they try to
                 // activate the QT token wallet.
-                if (chainActive.Height() == 0)
+                if (chainActive.Height() == 0 && mapBlockIndex.size() == 1 && !fReindex)
                 {
+                    fSync = true;
                     tokencache.SetSyncFlag(true);
                     tokenmint.SetSyncFlag(true);
                 }
@@ -1832,7 +1835,7 @@ bool AppInit2(Config &config)
         for (const std::string &strFile : mapMultiArgs["-loadblock"])
             vImportFiles.push_back(strFile);
     }
-    threadGroup.create_thread(boost::bind(&ThreadImport, vImportFiles, cacheConfig.nTxIndexCache));
+    threadGroup.create_thread(boost::bind(&ThreadImport, vImportFiles, cacheConfig.nTxIndexCache, fSync));
 
     uiInterface.InitMessage(_("Waiting for Genesis Block..."));
     CBlockIndex *tip = nullptr;
@@ -1853,7 +1856,7 @@ bool AppInit2(Config &config)
     if (!strErrors.str().empty())
         return InitError(strErrors.str());
 
-    //// debug print
+    // debug print
     {
         READLOCK(cs_mapBlockIndex);
         LOGA("mapBlockIndex.size() = %u\n", mapBlockIndex.size());
