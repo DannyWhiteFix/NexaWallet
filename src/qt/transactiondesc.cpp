@@ -230,6 +230,8 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
             //
             // Debit
             //
+            CAmount nTotalDebit = 0;
+            CAmount nTotalCredit = 0;
             for (const CTxOut &txout : wtx.vout)
             {
                 // Ignore change
@@ -264,28 +266,33 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
 
                     if (labelPublic == "") // hide on public label txout
                     {
-                        if (toSelf)
+                        if (toSelf && GetGroupToken(txout.scriptPubKey) == NoGroup)
                             strHTML += "<b>" + tr("Credit") + ":</b> " +
                                        BitcoinUnits::formatHtmlWithUnit(unit, txout.nValue) + " ";
 
                         strHTML += "<b>" + tr("Debit") + ":</b> " +
                                    BitcoinUnits::formatHtmlWithUnit(unit, -txout.nValue) + "<br>";
                     }
+
+                    if (GetGroupToken(txout.scriptPubKey) == NoGroup)
+                    {
+                        nTotalCredit += txout.nValue;
+                    }
+                    nTotalDebit -= txout.nValue;
                 }
             }
+            strHTML += "<br>";
 
+            CAmount nTxFee = nDebit - wtx.GetValueOut();
             if (fAllToMe)
             {
                 // Payment to self
-                CAmount nChange = wtx.GetChange();
-                CAmount nValue = nCredit - nChange;
-                strHTML +=
-                    "<b>" + tr("Total debit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -nValue) + "<br>";
-                strHTML +=
-                    "<b>" + tr("Total credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, nValue) + "<br>";
+                strHTML += "<b>" + tr("Total debit") + ":</b> " +
+                           BitcoinUnits::formatHtmlWithUnit(unit, nTotalDebit - nTxFee) + "<br>";
+                strHTML += "<b>" + tr("Total credit") + ":</b> " +
+                           BitcoinUnits::formatHtmlWithUnit(unit, nTotalCredit) + "<br>";
             }
 
-            CAmount nTxFee = nDebit - wtx.GetValueOut();
             if (nTxFee > 0)
                 strHTML +=
                     "<b>" + tr("Transaction fee") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -nTxFee) + "<br>";
