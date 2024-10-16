@@ -124,6 +124,19 @@ class GroupTokensTest (BitcoinTestFramework):
         self.nodes[0].generate(1)
         grp1 = self.nodes[0].token("new")["groupIdentifier"]
 
+        sg_hex = self.nodes[0].token("subgroup", grp1, "0xabc123")
+        sg_hex2 = self.nodes[0].token("subgroup", grp1, "abc123")
+        sg_badhex = self.nodes[0].token("subgroup", grp1, "0xabc123m")
+        sg_badhex2 = self.nodes[0].token("subgroup", grp1, "abc123m")
+        sg_string = self.nodes[0].token("subgroup", grp1, "xabc123")
+        assert(sg_hex == sg_hex2)
+        assert(sg_hex != sg_badhex)
+        assert(sg_hex != sg_badhex2)
+        assert(sg_hex != sg_string)
+        assert(sg_badhex != sg_string)
+        assert(sg_badhex != sg_badhex2)
+        assert(sg_badhex2 != sg_string)
+
         sg1a = self.nodes[0].token("subgroup", grp1, 1)
         tmp  = self.nodes[0].token("subgroup", grp1, "1")
         assert_equal(sg1a, tmp)  # This equality is a feature of this wallet, not subgroups in general
@@ -1141,7 +1154,7 @@ class GroupTokensTest (BitcoinTestFramework):
         waitFor(30, lambda: self.nodes[0].gettxpoolinfo()['size'] == 1)
         self.nodes[0].generate(1) #genesis not updated until block  mined.
         sync_wallet(10, self.nodes[0])
-        self.checkTokenInfo(self.nodes[0], sub1, "TICK", "NameGoesHere", "https://www.nexa.org", 
+        self.checkTokenInfo(self.nodes[0], sub1, "TICK", "NameGoesHere", "https://www.nexa.org",
 "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63", 2000, 2000, "5", [sub0Addr])
 
         # make the subgroup genesis mint to another peer, in this case node1

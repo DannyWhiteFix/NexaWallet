@@ -969,6 +969,8 @@ CGroupTokenID findGroupId(const COutPoint &input,
     return ret;
 }
 
+bool is_number(const std::string &str) { return std::all_of(str.begin(), str.end(), ::isdigit); }
+
 extern UniValue token(const UniValue &params, bool fHelp)
 {
     if (fHelp || params.size() < 1)
@@ -1107,6 +1109,7 @@ extern UniValue token(const UniValue &params, bool fHelp)
 
         int64_t postfixNum = 0;
         bool isNum = false;
+        bool isHexStr = false;
         if (params[curparam].isNum())
         {
             postfixNum = params[curparam].get_int64();
@@ -1115,22 +1118,35 @@ extern UniValue token(const UniValue &params, bool fHelp)
         else // assume string
         {
             std::string postfixStr = params[curparam].get_str();
-            if ((postfixStr.size() >= 2) && (postfixStr[0] == '0') && (postfixStr[1] == 'x'))
-            {
-                throw JSONRPCError(RPC_INVALID_PARAMS, "Invalid parameter: Hex not implemented yet");
-            }
-            try
+            if (is_number(postfixStr))
             {
                 postfixNum = std::stoull(postfixStr);
                 isNum = true;
             }
-            catch (const std::invalid_argument &)
+            else if ((postfixStr.size() >= 2) && (postfixStr[0] == '0') && (postfixStr[1] == 'x'))
+            {
+                std::string substr(postfixStr.begin() + 2, postfixStr.end());
+                if (IsHex(substr))
+                {
+                    std::vector<unsigned char> post = ParseHex(substr);
+                    postfix.insert(postfix.end(), post.begin(), post.end());
+                    isHexStr = true;
+                }
+            }
+            else if (IsHex(postfixStr))
+            {
+                std::vector<unsigned char> post = ParseHex(postfixStr);
+                postfix.insert(postfix.end(), post.begin(), post.end());
+                isHexStr = true;
+            }
+            if (isNum == false && isHexStr == false) // then it is a string
             {
                 for (unsigned int i = 0; i < postfixStr.size(); i++)
+                {
                     postfix.push_back(postfixStr[i]);
+                }
             }
         }
-
         if (isNum)
         {
             CDataStream ss(0, 0);
@@ -1138,7 +1154,6 @@ extern UniValue token(const UniValue &params, bool fHelp)
             for (auto c : ss)
                 postfix.push_back(c);
         }
-
         if (postfix.size() == 0)
         {
             throw JSONRPCError(RPC_INVALID_PARAMS, "Invalid parameter: no subgroup postfix provided");
