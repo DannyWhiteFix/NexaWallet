@@ -45,6 +45,7 @@ set(libsrc
              ../config.h
              ../base58.cpp
              ../script/interpreter.cpp
+             ../script/op_parse.cpp
              ../script/script.cpp
              ../script/script.h
              ../script/scripttemplate.cpp

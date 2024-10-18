@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version=3450200
+version=3460100
 echo "Retrieving SQlite $version..."
 
 set -eu
@@ -14,7 +14,7 @@ else
   echo "Archive $archive already downloaded"
 fi
 
-echo "65230414820d43a6d1445d1d98cfe57e8eb9f7ac0d6a96ad6932e0647cce51db sqlite-amalgamation-3450200.zip" | sha256sum --check || { echo "sha256sum of sqlite3 failed"; exit 1; }
+echo "77823cb110929c2bcb0f5d48e4833b5c59a8a6e40cdea3936b99e199dbbe5784  sqlite-amalgamation-3460100.zip" | sha256sum --check || { echo "sha256sum of sqlite3 failed"; exit 1; }
 
 echo "Extracting..."
 if [ ! -d "$dir_name" ]; then
