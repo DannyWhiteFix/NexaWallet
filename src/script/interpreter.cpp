@@ -499,6 +499,7 @@ bool ScriptMachine::Step()
 
     const bool negativeOP_ROLL_OP_PICK = (flags & SCRIPT_FORK1_OPCODES) != 0;
     const bool opParseEnabled = (flags & SCRIPT_FORK1_OPCODES) != 0;
+    const bool extendedIntrospectionEnabled = (flags & SCRIPT_FORK1_OPCODES) != 0;
 
     const size_t maxIntegerSize =
         integers64Bit ? CScriptNum::MAXIMUM_ELEMENT_SIZE_64_BIT : CScriptNum::MAXIMUM_ELEMENT_SIZE_32_BIT;
@@ -2051,6 +2052,9 @@ bool ScriptMachine::Step()
                 case OP_INPUTSEQUENCENUMBER:
                 case OP_OUTPUTVALUE:
                 case OP_OUTPUTBYTECODE:
+                case OP_INPUTTYPE:
+                case OP_OUTPUTTYPE:
+                case OP_INPUTVALUE:
                 {
                     if (!nativeIntrospection)
                     {
@@ -2076,6 +2080,8 @@ bool ScriptMachine::Step()
                     case OP_OUTPOINTHASH:
                     case OP_INPUTBYTECODE:
                     case OP_INPUTSEQUENCENUMBER:
+                    case OP_INPUTTYPE:
+                    case OP_INPUTVALUE:
                     {
                         int32_t idx = top.getint32();
                         if (idx < 0 || size_t(idx) >= sis.tx->vin.size())
@@ -2135,6 +2141,27 @@ bool ScriptMachine::Step()
                             PushStack(input.scriptSig.begin(), input.scriptSig.end());
                         }
                         break;
+                        case OP_INPUTTYPE:
+                        {
+                            if (!extendedIntrospectionEnabled)
+                                return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+                            const auto n = CScriptNum::fromIntUnchecked(input.type);
+                            PushStack(n.getvch());
+                        }
+                        break;
+                        case OP_INPUTVALUE:
+                        {
+                            if (!extendedIntrospectionEnabled)
+                                return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+                            const auto n = CScriptNum::fromInt(input.amount);
+                            // This is only false if nVaue is -2^63, should not be possible
+                            if (!n)
+                            {
+                                return set_error(serror, SCRIPT_ERR_INVALID_NUMBER_RANGE);
+                            }
+                            PushStack(n->getvch());
+                        }
+                        break;
                         case OP_INPUTSEQUENCENUMBER:
                         {
                             const CScriptNum sn = CScriptNum::fromIntUnchecked(input.nSequence);
@@ -2150,6 +2177,7 @@ bool ScriptMachine::Step()
 
                     case OP_OUTPUTVALUE:
                     case OP_OUTPUTBYTECODE:
+                    case OP_OUTPUTTYPE:
                     {
                         int32_t idx = top.getint32();
                         if (idx < 0 || size_t(idx) >= sis.tx->vout.size())
@@ -2168,6 +2196,14 @@ bool ScriptMachine::Step()
                                 return set_error(serror, SCRIPT_ERR_INVALID_NUMBER_RANGE);
                             }
                             PushStack(bn->getvch());
+                        }
+                        break;
+                        case OP_OUTPUTTYPE:
+                        {
+                            if (!extendedIntrospectionEnabled)
+                                return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+                            const auto n = CScriptNum::fromInt(output.type);
+                            PushStack(n->getvch());
                         }
                         break;
                         case OP_OUTPUTBYTECODE:

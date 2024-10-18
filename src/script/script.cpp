@@ -306,6 +306,15 @@ const char *GetOpName(opcodetype opcode)
     case OP_OUTPUTBYTECODE:
         return "OP_OUTPUTBYTECODE";
         break;
+    case OP_OUTPUTTYPE:
+        return "OP_OUTPUTTYPE";
+        break;
+    case OP_INPUTTYPE:
+        return "OP_INPUTTYPE";
+        break;
+    case OP_INPUTVALUE:
+        return "OP_INPUTVALUE";
+        break;
 
     // NEXA opcodes
     case OP_PLACE:

@@ -104,7 +104,7 @@ class UpgradeActivationTest(BitcoinTestFramework):
         self.testSomeScript([ bytes([0x55]), OP_DUP, OP_DUP, OP_DEPTH, OP_NEGATE, OP_ROLL, OP_2DROP, OP_DROP], shouldItWork)
     def testNegOpPick(self, shouldItWork):
         self.testSomeScript([ bytes([0x55]), OP_DUP, OP_DUP, OP_DEPTH, OP_NEGATE, OP_PICK, OP_2DROP, OP_2DROP], shouldItWork)
-        
+
     def testReadOnlyInput(self, shouldItWork):
         n = self.nodes[0]
         tx = CTransaction()
@@ -314,7 +314,7 @@ class UpgradeActivationTest(BitcoinTestFramework):
             assert not shouldItWork, "Large stack width did not work: %s" % e
 
     def testOpParse(self, shouldItWork):
-        """ Test wide stack operations """
+        """ Test OP_PARSE opcode """
         # Make a tx that uses op parse
         tx = CTransaction()
         scr = CScript([ OP_0, OP_1, OP_1, OP_2, OP_PARSE, OP_DROP])
@@ -359,10 +359,64 @@ class UpgradeActivationTest(BitcoinTestFramework):
             if shouldItWork:
                 print(txs)
                 print(txs.toHex())
-            assert not shouldItWork, "OP_PARSE did not work: %s" % e            
+            assert not shouldItWork, "OP_PARSE did not work: %s" % e
+
+    def testExtendedIntrospection(self, shouldItWork):
+        """ Test new introspection opcodes """
+
+        scripts = [
+            CScript([ OP_0, OP_0, OP_INPUTTYPE, OP_EQUALVERIFY ]),
+            CScript([ OP_0, OP_0, OP_OUTPUTTYPE, OP_EQUALVERIFY]),
+            CScript([ 10000, OP_0, OP_INPUTVALUE, OP_EQUALVERIFY])
+            ]
+
+        for scr in scripts:
+            tx = CTransaction()
+            out = TxOut(nValue=10000)
+            out.setLockingToTemplate(scr,None)
+            tx.vout.append(out)
+
+            h = tx.toHex()
+            frtReturn = self.nodes[0].fundrawtransaction(h)
+            sgnReturn = self.nodes[0].signrawtransaction(frtReturn["hex"])
+            assert len(sgnReturn.get("errors",[])) ==0, print("Error funding transaction: %s" % sgnReturn)
+            # print(sgnReturn)
+            fundedTx = CTransaction().fromHex(sgnReturn["hex"])
+            # print(fundedTx)
+            vrt = self.nodes[0].validaterawtransaction(sgnReturn["hex"])
+            # print(vrt)
+            self.nodes[0].sendrawtransaction(sgnReturn["hex"])
+
+            txs = CTransaction()
+            # spend it
+            for idx in range(0, len(fundedTx.vout)):
+                if fundedTx.vout[idx].nValue == 10000:  # its my output
+                    inp = fundedTx.SpendOutput(idx)
+                    inp.setUnlockingToTemplate(scr, None, None)
+                    txs.vin.append(inp)  # I don't have to sign it because its anyone can spend
+                    break
+
+            txs.vout.append(CTxOut(9000, scr))
+            # print(txs)
+            # print(txs.toHex())
+
+            # vrt = self.nodes[0].validaterawtransaction(txs.toHex())
+            # print(vrt)
+
+            try:
+                spendTxSend = self.nodes[0].sendrawtransaction(txs.toHex())
+                # print(spendTxSend)
+                assert shouldItWork, "extended introspection worked, but it should not have"
+            except JSONRPCException as e:
+                if shouldItWork:
+                    print(txs)
+                    print(txs.toHex())
+                assert not shouldItWork, "Extended introspection did not work: %s" % e
+
 
     def preupgradeTests(self):
         """Add any tests here that should run prior to the upgrade"""
+        self.testExtendedIntrospection(False)
         self.testOpParse(False)
         self.testNegOpRoll(False)
         self.testNegOpPick(False)
@@ -378,6 +432,7 @@ class UpgradeActivationTest(BitcoinTestFramework):
 
     def postupgradeTests(self):
         """Add any tests here that should run after the upgrade"""
+        self.testExtendedIntrospection(True)
         self.testOpParse(True)
         self.testNegOpRoll(True)
         self.testNegOpPick(True)
