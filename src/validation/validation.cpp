@@ -1634,9 +1634,9 @@ CBlockIndex *FindMostWorkChain()
         bool fMissingData = false;
 
         // follow the chain all the way back to where it joins the current active chain.
-        while (pindexTest && !chainActive.Contains(pindexTest))
+        while (pindexTest && !chainActive.Contains(pindexTest) && pindexTest->height() > 0)
         {
-            assert(pindexTest->IsLinked() || pindexTest->height() == 0);
+            assert(pindexTest->IsLinked());
 
             // Pruned nodes may have entries in setBlockIndexCandidates for
             // which block files have been deleted.  Remove those as candidates
@@ -1723,7 +1723,7 @@ bool InvalidateBlock(CValidationState &state, const Consensus::Params &consensus
     // The resulting new best tip may not be in setBlockIndexCandidates anymore, so
     // add it again.
     {
-        READLOCK(cs_mapBlockIndex);
+        WRITELOCK(cs_mapBlockIndex);
         BlockMap::iterator it = mapBlockIndex.begin();
         while (it != mapBlockIndex.end())
         {
