@@ -53,7 +53,9 @@ static std::vector<ScriptImportedState> createForAllInputs(CTransactionRef tx,
 }
 
 
-static void CheckErrorWithFlags(uint32_t flags,
+static void CheckErrorWithFlags(const char *file,
+    int line,
+    uint32_t flags,
     const Stack &original_stack,
     const CScript &script,
     const ScriptImportedState &sis,
@@ -62,11 +64,13 @@ static void CheckErrorWithFlags(uint32_t flags,
     ScriptError err = SCRIPT_ERR_OK;
     Stack stack = original_stack;
     bool r = EvalScript(stack, script, flags, MAX_OPS_PER_SCRIPT, sis, &err);
-    BOOST_CHECK(!r);
-    BOOST_CHECK(err == expected);
+    BOOST_CHECK_MESSAGE(!r, "Failed at: " << file << ":" << line);
+    BOOST_CHECK_MESSAGE(err == expected, "Failed at: " << file << ":" << line);
 }
 
-static void CheckPassWithFlags(uint32_t flags,
+static void CheckPassWithFlags(const char *file,
+    int line,
+    uint32_t flags,
     const Stack &original_stack,
     const CScript &script,
     const ScriptImportedState &sis,
@@ -75,45 +79,67 @@ static void CheckPassWithFlags(uint32_t flags,
     ScriptError err = SCRIPT_ERR_OK;
     Stack stack = original_stack;
     bool r = EvalScript(stack, script, flags, MAX_OPS_PER_SCRIPT, sis, &err);
-    BOOST_CHECK(r);
-    BOOST_CHECK(err == SCRIPT_ERR_OK);
-    BOOST_CHECK(stack == expected);
+    BOOST_CHECK_MESSAGE(r, "Failed at: " << file << ":" << line);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, "Failed at: " << file << ":" << line);
+    BOOST_CHECK_MESSAGE(stack == expected, "Failed at: " << file << ":" << line);
 }
+
 
 BOOST_AUTO_TEST_CASE(opcodes_basic)
 {
-    const uint32_t flags = MANDATORY_SCRIPT_VERIFY_FLAGS | SCRIPT_ALLOW_NATIVE_INTROSPECTION;
+    const uint32_t flags = MANDATORY_SCRIPT_VERIFY_FLAGS | SCRIPT_ALLOW_NATIVE_INTROSPECTION | SCRIPT_FORK1_OPCODES;
     const uint32_t flags_inactive = flags & ~SCRIPT_ALLOW_NATIVE_INTROSPECTION;
 
     CCoinsView dummy;
     CCoinsViewCache coins(&dummy);
     const COutPoint in1(uint256S("be89ae9569526343105994a950775869a910f450d337a6c29d43a37f093b662f"), 5);
     const COutPoint in2(uint256S("08d5fc002b094fced39381b7e9fa15fb8c944164e48262a2c0b8edef9866b348"), 7);
+    const COutPoint in3(uint256S("08d5fc002b094fced39381b7e9fa15fb8c944164e48262a2c0b8edef9866b349"), 9);
     const CAmount val1(2000);
     const CAmount val2(3000);
+    const CAmount val3(4000);
     const CScript coinScriptPubKey1 = CScript() << 2 << OP_ADD << 0 << OP_GREATERTHAN;
     const CScript coinScriptPubKey2 = CScript() << 3 << OP_ADD << 0 << OP_GREATERTHAN;
+    const CScript coinScriptPubKey3 = CScript() << 4 << OP_ADD << 0 << OP_GREATERTHAN;
 
     coins.AddCoin(in1, Coin(CTxOut(val1, coinScriptPubKey1), 1, false), false);
     coins.AddCoin(in2, Coin(CTxOut(val2, coinScriptPubKey2), 1, false), false);
+    coins.AddCoin(in3, Coin(CTxOut(val3, coinScriptPubKey3), 1, false), false);
 
     CMutableTransaction tx;
-    tx.vin.resize(2);
+    tx.vin.resize(3);
     tx.vin[0].prevout = in1;
     tx.vin[0].amount = 2000;
+    tx.vin[0].type = 0;
     tx.vin[0].scriptSig = CScript() << OP_0;
     tx.vin[0].nSequence = 0x010203;
+
     tx.vin[1].prevout = in2;
     tx.vin[1].amount = 3000;
+    tx.vin[1].type = 0;
     tx.vin[1].scriptSig = CScript() << OP_1;
     tx.vin[1].nSequence = 0xbeeff00d;
+
+    // make a read only input
+    tx.vin[2].prevout = in3;
+    tx.vin[2].amount = 0;
+    tx.vin[2].type = 1;
+    tx.vin[2].scriptSig = CScript();
+    tx.vin[2].nSequence = 0;
+
+
     tx.vout.resize(3);
     tx.vout[0].nValue = 1000;
     tx.vout[0].scriptPubKey = CScript() << OP_2;
+    tx.vout[0].type = 0;
+
     tx.vout[1].nValue = 1900;
     tx.vout[1].scriptPubKey = CScript() << OP_3;
+    tx.vout[1].type = 1; // There is no type 1 but the script call should just echo what's in the tx
+
     tx.vout[2].nValue = 2100;
     tx.vout[2].scriptPubKey = CScript() << OP_4;
+    tx.vout[2].type = 2; // There is no type 2 but the script call should just echo what's in the tx
     tx.nVersion = 101;
     tx.nLockTime = 10;
     BaseSignatureChecker bsc;
@@ -124,16 +150,17 @@ BOOST_AUTO_TEST_CASE(opcodes_basic)
     // OP_INPUTINDEX (nullary)
     {
         const valtype expected0(CScriptNum::fromIntUnchecked(0).getvch());
-        CheckPassWithFlags(flags, {}, CScript() << OP_INPUTINDEX, context[0], {expected0});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_INPUTINDEX, context[0], {expected0});
 
         const valtype expected1(CScriptNum::fromIntUnchecked(1).getvch());
-        CheckPassWithFlags(flags, {}, CScript() << OP_INPUTINDEX, context[1], {expected1});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_INPUTINDEX, context[1], {expected1});
 
         // failure (no context)
-        CheckErrorWithFlags(flags, {}, CScript() << OP_INPUTINDEX, {}, SCRIPT_ERR_DATA_REQUIRED);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_INPUTINDEX, {}, SCRIPT_ERR_DATA_REQUIRED);
 
         // failure (not activated)
-        CheckErrorWithFlags(flags_inactive, {}, CScript() << OP_INPUTINDEX, context[0], SCRIPT_ERR_BAD_OPCODE);
+        CheckErrorWithFlags(
+            __FILE__, __LINE__, flags_inactive, {}, CScript() << OP_INPUTINDEX, context[0], SCRIPT_ERR_BAD_OPCODE);
     }
 
     // OP_ACTIVEBYTECODE (nullary)
@@ -145,243 +172,378 @@ BOOST_AUTO_TEST_CASE(opcodes_basic)
         auto const bytecode2b = CScript() << 123123 << OP_DROP << OP_ACTIVEBYTECODE << OP_CODESEPARATOR << OP_1;
 
         const valtype expected0(bytecode0.begin(), bytecode0.end());
-        CheckPassWithFlags(flags, {}, bytecode0, context[0], {expected0, CScriptNum::fromIntUnchecked(9).getvch()});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, bytecode0, context[0],
+            {expected0, CScriptNum::fromIntUnchecked(9).getvch()});
 
         const valtype expected1(bytecode1.begin(), bytecode1.end());
-        CheckPassWithFlags(flags, {}, bytecode1, context[0], {expected1, CScriptNum::fromIntUnchecked(10).getvch()});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, bytecode1, context[0],
+            {expected1, CScriptNum::fromIntUnchecked(10).getvch()});
 
         // check that OP_CODESEPARATOR is respected properly
         valtype const expected2(bytecode2b.begin(), bytecode2b.end());
-        CheckPassWithFlags(flags, {}, bytecode2, context[0],
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, bytecode2, context[0],
             {CScriptNum::fromIntUnchecked(10).getvch(), CScriptNum::fromIntUnchecked(11).getvch(),
                 CScriptNum::fromIntUnchecked(7654321).getvch(), expected2, CScriptNum::fromIntUnchecked(1).getvch()});
 
 
         // failure (no context)
-        CheckErrorWithFlags(flags, {}, bytecode1, {}, SCRIPT_ERR_DATA_REQUIRED);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, bytecode1, {}, SCRIPT_ERR_DATA_REQUIRED);
         // failure (not activated)
-        CheckErrorWithFlags(flags_inactive, {}, bytecode1, context[0], SCRIPT_ERR_BAD_OPCODE);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags_inactive, {}, bytecode1, context[0], SCRIPT_ERR_BAD_OPCODE);
     }
 
     // OP_TXVERSION (nullary)
     {
         const valtype expected(CScriptNum::fromIntUnchecked(tx.nVersion).getvch());
-        CheckPassWithFlags(flags, {}, CScript() << OP_TXVERSION, context[0], {expected});
-        CheckPassWithFlags(flags, {}, CScript() << OP_TXVERSION, context[1], {expected});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_TXVERSION, context[0], {expected});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_TXVERSION, context[1], {expected});
 
         // failure (no context)
-        CheckErrorWithFlags(flags, {}, CScript() << OP_TXVERSION, {}, SCRIPT_ERR_DATA_REQUIRED);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_TXVERSION, {}, SCRIPT_ERR_DATA_REQUIRED);
         // failure (not activated)
-        CheckErrorWithFlags(flags_inactive, {}, CScript() << OP_TXVERSION, context[0], SCRIPT_ERR_BAD_OPCODE);
+        CheckErrorWithFlags(
+            __FILE__, __LINE__, flags_inactive, {}, CScript() << OP_TXVERSION, context[0], SCRIPT_ERR_BAD_OPCODE);
     }
 
     // OP_TXINPUTCOUNT (nullary)
     {
         const valtype expected(CScriptNum::fromIntUnchecked(tx.vin.size()).getvch());
-        CheckPassWithFlags(flags, {}, CScript() << OP_TXINPUTCOUNT, context[0], {expected});
-        CheckPassWithFlags(flags, {}, CScript() << OP_TXINPUTCOUNT, context[1], {expected});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_TXINPUTCOUNT, context[0], {expected});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_TXINPUTCOUNT, context[1], {expected});
 
         // failure (no context)
-        CheckErrorWithFlags(flags, {}, CScript() << OP_TXINPUTCOUNT, {}, SCRIPT_ERR_DATA_REQUIRED);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_TXINPUTCOUNT, {}, SCRIPT_ERR_DATA_REQUIRED);
         // failure (not activated)
-        CheckErrorWithFlags(flags_inactive, {}, CScript() << OP_TXINPUTCOUNT, context[0], SCRIPT_ERR_BAD_OPCODE);
+        CheckErrorWithFlags(
+            __FILE__, __LINE__, flags_inactive, {}, CScript() << OP_TXINPUTCOUNT, context[0], SCRIPT_ERR_BAD_OPCODE);
     }
 
     // OP_TXOUTPUTCOUNT (nullary)
     {
         const valtype expected(CScriptNum::fromIntUnchecked(tx.vout.size()).getvch());
-        CheckPassWithFlags(flags, {}, CScript() << OP_TXOUTPUTCOUNT, context[0], {expected});
-        CheckPassWithFlags(flags, {}, CScript() << OP_TXOUTPUTCOUNT, context[1], {expected});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_TXOUTPUTCOUNT, context[0], {expected});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_TXOUTPUTCOUNT, context[1], {expected});
 
         // failure (no context)
-        CheckErrorWithFlags(flags, {}, CScript() << OP_TXOUTPUTCOUNT, {}, SCRIPT_ERR_DATA_REQUIRED);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_TXOUTPUTCOUNT, {}, SCRIPT_ERR_DATA_REQUIRED);
         // failure (not activated)
-        CheckErrorWithFlags(flags_inactive, {}, CScript() << OP_TXOUTPUTCOUNT, context[0], SCRIPT_ERR_BAD_OPCODE);
+        CheckErrorWithFlags(
+            __FILE__, __LINE__, flags_inactive, {}, CScript() << OP_TXOUTPUTCOUNT, context[0], SCRIPT_ERR_BAD_OPCODE);
     }
 
     // OP_TXLOCKTIME (nullary)
     {
         const valtype expected(CScriptNum::fromIntUnchecked(tx.nLockTime).getvch());
-        CheckPassWithFlags(flags, {}, CScript() << OP_TXLOCKTIME, context[0], {expected});
-        CheckPassWithFlags(flags, {}, CScript() << OP_TXLOCKTIME, context[1], {expected});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_TXLOCKTIME, context[0], {expected});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_TXLOCKTIME, context[1], {expected});
 
         // failure (no context)
-        CheckErrorWithFlags(flags, {}, CScript() << OP_TXLOCKTIME, {}, SCRIPT_ERR_DATA_REQUIRED);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_TXLOCKTIME, {}, SCRIPT_ERR_DATA_REQUIRED);
         // failure (not activated)
-        CheckErrorWithFlags(flags_inactive, {}, CScript() << OP_TXLOCKTIME, context[0], SCRIPT_ERR_BAD_OPCODE);
+        CheckErrorWithFlags(
+            __FILE__, __LINE__, flags_inactive, {}, CScript() << OP_TXLOCKTIME, context[0], SCRIPT_ERR_BAD_OPCODE);
     }
 
 
     // OP_UTXOVALUE (unary)
     {
         const valtype expected0(CScriptNum::fromIntUnchecked(val1).getvch());
-        CheckPassWithFlags(flags, {}, CScript() << OP_0 << OP_UTXOVALUE, context[0], {expected0});
-        CheckPassWithFlags(flags, {}, CScript() << OP_0 << OP_UTXOVALUE, context[1], {expected0});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_UTXOVALUE, context[0], {expected0});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_UTXOVALUE, context[1], {expected0});
 
         const valtype expected1(CScriptNum::fromIntUnchecked(val2).getvch());
-        CheckPassWithFlags(flags, {}, CScript() << OP_1 << OP_UTXOVALUE, context[0], {expected1});
-        CheckPassWithFlags(flags, {}, CScript() << OP_1 << OP_UTXOVALUE, context[1], {expected1});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_1 << OP_UTXOVALUE, context[0], {expected1});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_1 << OP_UTXOVALUE, context[1], {expected1});
+
+        // UTXO value should not be 0 for read-only because its the value in the actual UTXO
+        const valtype expected2(CScriptNum::fromIntUnchecked(val3).getvch());
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_2 << OP_UTXOVALUE, context[0], {expected2});
 
         // failure (missing arg)
-        CheckErrorWithFlags(flags, {}, CScript() << OP_UTXOVALUE, context[0], SCRIPT_ERR_INVALID_STACK_OPERATION);
-        // failure (out of range)
         CheckErrorWithFlags(
-            flags, {}, CScript() << OP_2 << OP_UTXOVALUE, context[1], SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
-        CheckErrorWithFlags(flags, {}, CScript() << -1 << OP_UTXOVALUE, context[1], SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
+            __FILE__, __LINE__, flags, {}, CScript() << OP_UTXOVALUE, context[0], SCRIPT_ERR_INVALID_STACK_OPERATION);
+        // failure (out of range)
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_3 << OP_UTXOVALUE, context[1],
+            SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << -1 << OP_UTXOVALUE, context[1],
+            SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
         // failure (no context)
-        CheckErrorWithFlags(flags, {}, CScript() << OP_0 << OP_UTXOVALUE, {}, SCRIPT_ERR_DATA_REQUIRED);
+        CheckErrorWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_UTXOVALUE, {}, SCRIPT_ERR_DATA_REQUIRED);
         // failure (not activated)
-        CheckErrorWithFlags(flags_inactive, {}, CScript() << OP_0 << OP_UTXOVALUE, context[0], SCRIPT_ERR_BAD_OPCODE);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags_inactive, {}, CScript() << OP_0 << OP_UTXOVALUE, context[0],
+            SCRIPT_ERR_BAD_OPCODE);
     }
+    // OP_INPUTVALUE (unary)
+    {
+        const valtype expected0(CScriptNum::fromIntUnchecked(val1).getvch());
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_INPUTVALUE, context[0], {expected0});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_INPUTVALUE, context[1], {expected0});
+
+        const valtype expected1(CScriptNum::fromIntUnchecked(val2).getvch());
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_1 << OP_INPUTVALUE, context[0], {expected1});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_1 << OP_INPUTVALUE, context[1], {expected1});
+
+        // value should be 0 for read-only because its the value in the input
+        const valtype expected2(CScriptNum::fromIntUnchecked(0).getvch());
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_2 << OP_INPUTVALUE, context[0], {expected2});
+
+        // failure (missing arg)
+        CheckErrorWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_INPUTVALUE, context[0], SCRIPT_ERR_INVALID_STACK_OPERATION);
+        // failure (out of range)
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_3 << OP_INPUTVALUE, context[1],
+            SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << -1 << OP_INPUTVALUE, context[1],
+            SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
+        // failure (no context)
+        CheckErrorWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_INPUTVALUE, {}, SCRIPT_ERR_DATA_REQUIRED);
+        // failure (not activated)
+        CheckErrorWithFlags(__FILE__, __LINE__, flags_inactive, {}, CScript() << OP_0 << OP_INPUTVALUE, context[0],
+            SCRIPT_ERR_BAD_OPCODE);
+    }
+
 
     // OP_UTXOBYTECODE (unary)
     {
         const valtype expected0(coinScriptPubKey1.begin(), coinScriptPubKey1.end());
-        CheckPassWithFlags(flags, {}, CScript() << OP_0 << OP_UTXOBYTECODE, context[0], {expected0});
-        CheckPassWithFlags(flags, {}, CScript() << OP_0 << OP_UTXOBYTECODE, context[1], {expected0});
+        CheckPassWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_UTXOBYTECODE, context[0], {expected0});
+        CheckPassWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_UTXOBYTECODE, context[1], {expected0});
 
         const valtype expected1(coinScriptPubKey2.begin(), coinScriptPubKey2.end());
-        CheckPassWithFlags(flags, {}, CScript() << OP_1 << OP_UTXOBYTECODE, context[0], {expected1});
-        CheckPassWithFlags(flags, {}, CScript() << OP_1 << OP_UTXOBYTECODE, context[1], {expected1});
+        CheckPassWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_1 << OP_UTXOBYTECODE, context[0], {expected1});
+        CheckPassWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_1 << OP_UTXOBYTECODE, context[1], {expected1});
 
         // failure (missing arg)
-        CheckErrorWithFlags(flags, {}, CScript() << OP_UTXOBYTECODE, context[0], SCRIPT_ERR_INVALID_STACK_OPERATION);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_UTXOBYTECODE, context[0],
+            SCRIPT_ERR_INVALID_STACK_OPERATION);
         // failure (out of range)
-        CheckErrorWithFlags(
-            flags, {}, CScript() << OP_2 << OP_UTXOBYTECODE, context[1], SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
-        CheckErrorWithFlags(
-            flags, {}, CScript() << -1 << OP_UTXOBYTECODE, context[1], SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_3 << OP_UTXOBYTECODE, context[1],
+            SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << -1 << OP_UTXOBYTECODE, context[1],
+            SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
         // failure (no context)
-        CheckErrorWithFlags(flags, {}, CScript() << OP_0 << OP_UTXOBYTECODE, {}, SCRIPT_ERR_DATA_REQUIRED);
-        // failure (not activated)
         CheckErrorWithFlags(
-            flags_inactive, {}, CScript() << OP_0 << OP_UTXOBYTECODE, context[0], SCRIPT_ERR_BAD_OPCODE);
+            __FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_UTXOBYTECODE, {}, SCRIPT_ERR_DATA_REQUIRED);
+        // failure (not activated)
+        CheckErrorWithFlags(__FILE__, __LINE__, flags_inactive, {}, CScript() << OP_0 << OP_UTXOBYTECODE, context[0],
+            SCRIPT_ERR_BAD_OPCODE);
     }
 
     // OP_OUTPOINTTXHASH (unary)
     {
         const valtype expected0(in1.hash.begin(), in1.hash.end());
-        CheckPassWithFlags(flags, {}, CScript() << OP_0 << OP_OUTPOINTHASH, context[0], {expected0});
+        CheckPassWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_OUTPOINTHASH, context[0], {expected0});
 
         const valtype expected1(in2.hash.begin(), in2.hash.end());
-        CheckPassWithFlags(flags, {}, CScript() << OP_1 << OP_OUTPOINTHASH, context[1], {expected1});
+        CheckPassWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_1 << OP_OUTPOINTHASH, context[1], {expected1});
 
         // failure (missing arg)
-        CheckErrorWithFlags(flags, {}, CScript() << OP_OUTPOINTHASH, context[0], SCRIPT_ERR_INVALID_STACK_OPERATION);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_OUTPOINTHASH, context[0],
+            SCRIPT_ERR_INVALID_STACK_OPERATION);
         // failure (out of range)
-        CheckErrorWithFlags(
-            flags, {}, CScript() << OP_2 << OP_OUTPOINTHASH, context[1], SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
-        CheckErrorWithFlags(
-            flags, {}, CScript() << -1 << OP_OUTPOINTHASH, context[1], SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_3 << OP_OUTPOINTHASH, context[1],
+            SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << -1 << OP_OUTPOINTHASH, context[1],
+            SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
         // failure (no context)
-        CheckErrorWithFlags(flags, {}, CScript() << OP_0 << OP_OUTPOINTHASH, {}, SCRIPT_ERR_DATA_REQUIRED);
-        // failure (not activated)
         CheckErrorWithFlags(
-            flags_inactive, {}, CScript() << OP_0 << OP_OUTPOINTHASH, context[0], SCRIPT_ERR_BAD_OPCODE);
+            __FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_OUTPOINTHASH, {}, SCRIPT_ERR_DATA_REQUIRED);
+        // failure (not activated)
+        CheckErrorWithFlags(__FILE__, __LINE__, flags_inactive, {}, CScript() << OP_0 << OP_OUTPOINTHASH, context[0],
+            SCRIPT_ERR_BAD_OPCODE);
     }
 
     // OP_INPUTBYTECODE (unary)
     {
         const valtype expected0(tx.vin[0].scriptSig.begin(), tx.vin[0].scriptSig.end());
-        CheckPassWithFlags(flags, {}, CScript() << OP_0 << OP_INPUTBYTECODE, context[0], {expected0});
-        CheckPassWithFlags(flags, {}, CScript() << OP_0 << OP_INPUTBYTECODE, context[1], {expected0});
+        CheckPassWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_INPUTBYTECODE, context[0], {expected0});
+        CheckPassWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_INPUTBYTECODE, context[1], {expected0});
 
         const valtype expected1(tx.vin[1].scriptSig.begin(), tx.vin[1].scriptSig.end());
-        CheckPassWithFlags(flags, {}, CScript() << OP_1 << OP_INPUTBYTECODE, context[0], {expected1});
-        CheckPassWithFlags(flags, {}, CScript() << OP_1 << OP_INPUTBYTECODE, context[1], {expected1});
+        CheckPassWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_1 << OP_INPUTBYTECODE, context[0], {expected1});
+        CheckPassWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_1 << OP_INPUTBYTECODE, context[1], {expected1});
 
         // failure (missing arg)
-        CheckErrorWithFlags(flags, {}, CScript() << OP_INPUTBYTECODE, context[0], SCRIPT_ERR_INVALID_STACK_OPERATION);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_INPUTBYTECODE, context[0],
+            SCRIPT_ERR_INVALID_STACK_OPERATION);
         // failure (out of range)
-        CheckErrorWithFlags(
-            flags, {}, CScript() << OP_2 << OP_INPUTBYTECODE, context[1], SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
-        CheckErrorWithFlags(
-            flags, {}, CScript() << -1 << OP_INPUTBYTECODE, context[1], SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_3 << OP_INPUTBYTECODE, context[1],
+            SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << -1 << OP_INPUTBYTECODE, context[1],
+            SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
         // failure (no context)
-        CheckErrorWithFlags(flags, {}, CScript() << OP_0 << OP_INPUTBYTECODE, {}, SCRIPT_ERR_DATA_REQUIRED);
-        // failure (not activated)
         CheckErrorWithFlags(
-            flags_inactive, {}, CScript() << OP_0 << OP_INPUTBYTECODE, context[0], SCRIPT_ERR_BAD_OPCODE);
+            __FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_INPUTBYTECODE, {}, SCRIPT_ERR_DATA_REQUIRED);
+        // failure (not activated)
+        CheckErrorWithFlags(__FILE__, __LINE__, flags_inactive, {}, CScript() << OP_0 << OP_INPUTBYTECODE, context[0],
+            SCRIPT_ERR_BAD_OPCODE);
     }
 
     // OP_INPUTSEQUENCENUMBER (unary)
     {
         const valtype expected0(CScriptNum::fromIntUnchecked(tx.vin[0].nSequence).getvch());
-        CheckPassWithFlags(flags, {}, CScript() << OP_0 << OP_INPUTSEQUENCENUMBER, context[0], {expected0});
-        CheckPassWithFlags(flags, {}, CScript() << OP_0 << OP_INPUTSEQUENCENUMBER, context[1], {expected0});
+        CheckPassWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_INPUTSEQUENCENUMBER, context[0], {expected0});
+        CheckPassWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_INPUTSEQUENCENUMBER, context[1], {expected0});
 
         const valtype expected1(CScriptNum::fromIntUnchecked(tx.vin[1].nSequence).getvch());
-        CheckPassWithFlags(flags, {}, CScript() << OP_1 << OP_INPUTSEQUENCENUMBER, context[0], {expected1});
-        CheckPassWithFlags(flags, {}, CScript() << OP_1 << OP_INPUTSEQUENCENUMBER, context[1], {expected1});
+        CheckPassWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_1 << OP_INPUTSEQUENCENUMBER, context[0], {expected1});
+        CheckPassWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_1 << OP_INPUTSEQUENCENUMBER, context[1], {expected1});
 
         // failure (missing arg)
-        CheckErrorWithFlags(
-            flags, {}, CScript() << OP_INPUTSEQUENCENUMBER, context[0], SCRIPT_ERR_INVALID_STACK_OPERATION);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_INPUTSEQUENCENUMBER, context[0],
+            SCRIPT_ERR_INVALID_STACK_OPERATION);
         // failure (out of range)
-        CheckErrorWithFlags(
-            flags, {}, CScript() << OP_2 << OP_INPUTSEQUENCENUMBER, context[1], SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
-        CheckErrorWithFlags(
-            flags, {}, CScript() << -1 << OP_INPUTSEQUENCENUMBER, context[1], SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_3 << OP_INPUTSEQUENCENUMBER, context[1],
+            SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << -1 << OP_INPUTSEQUENCENUMBER, context[1],
+            SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
         // failure (no context)
-        CheckErrorWithFlags(flags, {}, CScript() << OP_0 << OP_INPUTSEQUENCENUMBER, {}, SCRIPT_ERR_DATA_REQUIRED);
-        // failure (not activated)
         CheckErrorWithFlags(
-            flags_inactive, {}, CScript() << OP_0 << OP_INPUTSEQUENCENUMBER, context[0], SCRIPT_ERR_BAD_OPCODE);
+            __FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_INPUTSEQUENCENUMBER, {}, SCRIPT_ERR_DATA_REQUIRED);
+        // failure (not activated)
+        CheckErrorWithFlags(__FILE__, __LINE__, flags_inactive, {}, CScript() << OP_0 << OP_INPUTSEQUENCENUMBER,
+            context[0], SCRIPT_ERR_BAD_OPCODE);
     }
 
     // OP_OUTPUTVALUE (unary)
     {
         const valtype expected0(CScriptNum::fromIntUnchecked(tx.vout[0].nValue).getvch());
-        CheckPassWithFlags(flags, {}, CScript() << OP_0 << OP_OUTPUTVALUE, context[0], {expected0});
-        CheckPassWithFlags(flags, {}, CScript() << OP_0 << OP_OUTPUTVALUE, context[1], {expected0});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_OUTPUTVALUE, context[0], {expected0});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_OUTPUTVALUE, context[1], {expected0});
 
         const valtype expected1(CScriptNum::fromIntUnchecked(tx.vout[1].nValue).getvch());
-        CheckPassWithFlags(flags, {}, CScript() << OP_1 << OP_OUTPUTVALUE, context[0], {expected1});
-        CheckPassWithFlags(flags, {}, CScript() << OP_1 << OP_OUTPUTVALUE, context[1], {expected1});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_1 << OP_OUTPUTVALUE, context[0], {expected1});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_1 << OP_OUTPUTVALUE, context[1], {expected1});
 
         const valtype expected2(CScriptNum::fromIntUnchecked(tx.vout[2].nValue).getvch());
-        CheckPassWithFlags(flags, {}, CScript() << OP_2 << OP_OUTPUTVALUE, context[0], {expected2});
-        CheckPassWithFlags(flags, {}, CScript() << OP_2 << OP_OUTPUTVALUE, context[1], {expected2});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_2 << OP_OUTPUTVALUE, context[0], {expected2});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_2 << OP_OUTPUTVALUE, context[1], {expected2});
 
         // failure (missing arg)
-        CheckErrorWithFlags(flags, {}, CScript() << OP_OUTPUTVALUE, context[0], SCRIPT_ERR_INVALID_STACK_OPERATION);
+        CheckErrorWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_OUTPUTVALUE, context[0], SCRIPT_ERR_INVALID_STACK_OPERATION);
         // failure (out of range)
-        CheckErrorWithFlags(
-            flags, {}, CScript() << OP_3 << OP_OUTPUTVALUE, context[1], SCRIPT_ERR_INVALID_TX_OUTPUT_INDEX);
-        CheckErrorWithFlags(
-            flags, {}, CScript() << -1 << OP_OUTPUTVALUE, context[1], SCRIPT_ERR_INVALID_TX_OUTPUT_INDEX);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_3 << OP_OUTPUTVALUE, context[1],
+            SCRIPT_ERR_INVALID_TX_OUTPUT_INDEX);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << -1 << OP_OUTPUTVALUE, context[1],
+            SCRIPT_ERR_INVALID_TX_OUTPUT_INDEX);
         // failure (no context)
-        CheckErrorWithFlags(flags, {}, CScript() << OP_0 << OP_OUTPUTVALUE, {}, SCRIPT_ERR_DATA_REQUIRED);
+        CheckErrorWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_OUTPUTVALUE, {}, SCRIPT_ERR_DATA_REQUIRED);
         // failure (not activated)
-        CheckErrorWithFlags(flags_inactive, {}, CScript() << OP_0 << OP_OUTPUTVALUE, context[0], SCRIPT_ERR_BAD_OPCODE);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags_inactive, {}, CScript() << OP_0 << OP_OUTPUTVALUE, context[0],
+            SCRIPT_ERR_BAD_OPCODE);
     }
 
     // OP_OUTPUTBYTECODE (unary)
     {
         const valtype expected0(tx.vout[0].scriptPubKey.begin(), tx.vout[0].scriptPubKey.end());
-        CheckPassWithFlags(flags, {}, CScript() << OP_0 << OP_OUTPUTBYTECODE, context[0], {expected0});
-        CheckPassWithFlags(flags, {}, CScript() << OP_0 << OP_OUTPUTBYTECODE, context[1], {expected0});
+        CheckPassWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_OUTPUTBYTECODE, context[0], {expected0});
+        CheckPassWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_OUTPUTBYTECODE, context[1], {expected0});
 
         const valtype expected1(tx.vout[1].scriptPubKey.begin(), tx.vout[1].scriptPubKey.end());
-        CheckPassWithFlags(flags, {}, CScript() << OP_1 << OP_OUTPUTBYTECODE, context[0], {expected1});
-        CheckPassWithFlags(flags, {}, CScript() << OP_1 << OP_OUTPUTBYTECODE, context[1], {expected1});
+        CheckPassWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_1 << OP_OUTPUTBYTECODE, context[0], {expected1});
+        CheckPassWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_1 << OP_OUTPUTBYTECODE, context[1], {expected1});
 
         const valtype expected2(tx.vout[2].scriptPubKey.begin(), tx.vout[2].scriptPubKey.end());
-        CheckPassWithFlags(flags, {}, CScript() << OP_2 << OP_OUTPUTBYTECODE, context[0], {expected2});
-        CheckPassWithFlags(flags, {}, CScript() << OP_2 << OP_OUTPUTBYTECODE, context[1], {expected2});
+        CheckPassWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_2 << OP_OUTPUTBYTECODE, context[0], {expected2});
+        CheckPassWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_2 << OP_OUTPUTBYTECODE, context[1], {expected2});
 
         // failure (missing arg)
-        CheckErrorWithFlags(flags, {}, CScript() << OP_OUTPUTBYTECODE, context[0], SCRIPT_ERR_INVALID_STACK_OPERATION);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_OUTPUTBYTECODE, context[0],
+            SCRIPT_ERR_INVALID_STACK_OPERATION);
         // failure (out of range)
-        CheckErrorWithFlags(
-            flags, {}, CScript() << OP_3 << OP_OUTPUTBYTECODE, context[1], SCRIPT_ERR_INVALID_TX_OUTPUT_INDEX);
-        CheckErrorWithFlags(
-            flags, {}, CScript() << -1 << OP_OUTPUTBYTECODE, context[1], SCRIPT_ERR_INVALID_TX_OUTPUT_INDEX);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_3 << OP_OUTPUTBYTECODE, context[1],
+            SCRIPT_ERR_INVALID_TX_OUTPUT_INDEX);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << -1 << OP_OUTPUTBYTECODE, context[1],
+            SCRIPT_ERR_INVALID_TX_OUTPUT_INDEX);
         // failure (no context)
-        CheckErrorWithFlags(flags, {}, CScript() << OP_0 << OP_OUTPUTBYTECODE, {}, SCRIPT_ERR_DATA_REQUIRED);
-        // failure (not activated)
         CheckErrorWithFlags(
-            flags_inactive, {}, CScript() << OP_0 << OP_OUTPUTBYTECODE, context[0], SCRIPT_ERR_BAD_OPCODE);
+            __FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_OUTPUTBYTECODE, {}, SCRIPT_ERR_DATA_REQUIRED);
+        // failure (not activated)
+        CheckErrorWithFlags(__FILE__, __LINE__, flags_inactive, {}, CScript() << OP_0 << OP_OUTPUTBYTECODE, context[0],
+            SCRIPT_ERR_BAD_OPCODE);
+    }
+
+    // OP_OUTPUTTYPE (unary)
+    {
+        const valtype expected0(CScriptNum::fromIntUnchecked(tx.vout[0].type).getvch());
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_OUTPUTTYPE, context[0], {expected0});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_OUTPUTTYPE, context[1], {expected0});
+
+        const valtype expected1(CScriptNum::fromIntUnchecked(tx.vout[1].type).getvch());
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_1 << OP_OUTPUTTYPE, context[0], {expected1});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_1 << OP_OUTPUTTYPE, context[1], {expected1});
+
+        const valtype expected2(CScriptNum::fromIntUnchecked(tx.vout[2].type).getvch());
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_2 << OP_OUTPUTTYPE, context[0], {expected2});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_2 << OP_OUTPUTTYPE, context[1], {expected2});
+
+        // failure (missing arg)
+        CheckErrorWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_OUTPUTTYPE, context[0], SCRIPT_ERR_INVALID_STACK_OPERATION);
+        // failure (out of range)
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_3 << OP_OUTPUTTYPE, context[1],
+            SCRIPT_ERR_INVALID_TX_OUTPUT_INDEX);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << -1 << OP_OUTPUTTYPE, context[1],
+            SCRIPT_ERR_INVALID_TX_OUTPUT_INDEX);
+        // failure (no context)
+        CheckErrorWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_OUTPUTTYPE, {}, SCRIPT_ERR_DATA_REQUIRED);
+        // failure (not activated)
+        CheckErrorWithFlags(__FILE__, __LINE__, flags_inactive, {}, CScript() << OP_0 << OP_OUTPUTTYPE, context[0],
+            SCRIPT_ERR_BAD_OPCODE);
+    }
+    // OP_INPUTTYPE (unary)
+    {
+        valtype expected(CScriptNum::fromIntUnchecked(tx.vin[0].type).getvch());
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_INPUTTYPE, context[0], {expected});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_INPUTTYPE, context[1], {expected});
+
+        expected = CScriptNum::fromIntUnchecked(tx.vin[1].type).getvch();
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_1 << OP_INPUTTYPE, context[0], {expected});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_1 << OP_INPUTTYPE, context[1], {expected});
+
+        expected = CScriptNum::fromIntUnchecked(tx.vin[2].type).getvch();
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_2 << OP_INPUTTYPE, context[0], {expected});
+        CheckPassWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_2 << OP_INPUTTYPE, context[1], {expected});
+
+        // failure (missing arg)
+        CheckErrorWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_INPUTTYPE, context[0], SCRIPT_ERR_INVALID_STACK_OPERATION);
+        // failure (out of range)
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << OP_3 << OP_INPUTTYPE, context[1],
+            SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
+        CheckErrorWithFlags(__FILE__, __LINE__, flags, {}, CScript() << -1 << OP_INPUTTYPE, context[1],
+            SCRIPT_ERR_INVALID_TX_INPUT_INDEX);
+        // failure (no context)
+        CheckErrorWithFlags(
+            __FILE__, __LINE__, flags, {}, CScript() << OP_0 << OP_INPUTTYPE, {}, SCRIPT_ERR_DATA_REQUIRED);
+        // failure (not activated)
+        CheckErrorWithFlags(__FILE__, __LINE__, flags_inactive, {}, CScript() << OP_0 << OP_INPUTTYPE, context[0],
+            SCRIPT_ERR_BAD_OPCODE);
     }
 }
 

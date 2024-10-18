@@ -281,14 +281,17 @@ enum opcodetype
     // (205) Pop the top item from the stack as an output index (Script Number). Push the locking bytecode of the output
     // at that index to the stack.
     OP_OUTPUTBYTECODE = 0xcd,
-    // 206
-    OP_NATIVE_INTROSPECTION_RESERVED1 = 0xce,
-    // 207
-    OP_NATIVE_INTROSPECTION_RESERVED2 = 0xcf,
-    // 208
-    OP_PARSE = 0xd0,
+    // (206) Pop the top item from the stack as an input index (Script Number). Push the type of the input at that
+    // index to the stack.
+    OP_INPUTTYPE = 0xce,
+    // (207) Pop the top item from the stack as an output index (Script Number). Push the type of the output at that
+    // index to the stack.
+    OP_OUTPUTTYPE = 0xcf,
+    // (208) Get the amount specified in the input.  This may be different than the UTXO value! (for exampe, readonly)
+    OP_INPUTVALUE = 0xd0,
 
     // NEXA opcodes
+    OP_PARSE = 0xe6,
     OP_PLACE = 0xe9,
     OP_PUSH_TX_STATE = 0xea,
     OP_SETBMD = 0xeb,
