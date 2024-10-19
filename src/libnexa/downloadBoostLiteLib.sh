@@ -1,7 +1,7 @@
 #!/bin/bash
 # script modified from: https://gist.github.com/enh/b2dc8e2cbbce7fffffde2135271b10fd
 
-version=1.84.0
+version=1.86.0
 echo "Retrieving boost $version..."
 
 set -eu

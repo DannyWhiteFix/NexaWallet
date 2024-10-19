@@ -13,9 +13,8 @@
 #include "util.h"
 #include "utiltime.h"
 
-#include <condition_variable>
-#include <mutex>
-#include <shared_mutex>
+#include "boost/thread/recursive_mutex.hpp"
+#include "boost/thread/shared_mutex.hpp"
 
 /**
  * Template mixin that adds -Wthread-safety locking
