@@ -143,7 +143,6 @@ void static ProcessGetData(CNode *pfrom,
 
         // start processing inventory here
         const T &inv = it->first;
-        it++;
 
         if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK)
         {
@@ -399,11 +398,10 @@ void static ProcessGetData(CNode *pfrom,
         // Track requests for our stuff.
         GetMainSignals().Inventory(inv.hash);
 
-        // Send only one of these message type before breaking. These type of requests use more
-        // resources to process and send, therefore we don't want some a peer to, intentionlally or
-        // unintentionally, dominate our network layer.
-        if (inv.type == MSG_BLOCK || inv.type == MSG_CMPCT_BLOCK)
-            break;
+        // Increment at the end in case we break anywhere in this loop because if we increment before
+        // processing an inv then when we erase further downstream we may end up erasing an inv
+        // we never actually processed.
+        it++;
     }
     // Send the batched transactions if any to send.
     if (!ss.empty())
@@ -474,7 +472,6 @@ void static ProcessExtGetData(CNode *pfrom,
 
         // start processing inventory here
         const T &inv = it->first;
-        it++;
 
         if (inv.type == MSG_TOKENINFO)
         {
@@ -523,6 +520,11 @@ void static ProcessExtGetData(CNode *pfrom,
         // TODO: Track requests for our extended getdata.  Currently we don't need to do
         // this because we don't share EXTINV's with other peers yet.
         // GetMainSignals().Inventory(inv.hash);
+
+        // Increment at the end in case we break anywhere in this loop because if we increment before
+        // processing an inv then when we erase further downstream we may end up erasing an inv
+        // we never actually processed.
+        it++;
     }
 
     // Erase all messages extinv's we processed
