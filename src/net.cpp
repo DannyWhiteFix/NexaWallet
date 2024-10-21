@@ -2317,7 +2317,10 @@ void ThreadOpenConnections()
                     }
                 }
                 if (fMatch)
+                {
+                    MilliSleep(100);
                     continue;
+                }
             }
 
             addrConnect = addr;
