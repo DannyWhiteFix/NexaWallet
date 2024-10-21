@@ -1340,9 +1340,10 @@ bool AppInit2(Config &config)
         fs::remove_all(chainstateDir);
         fs::remove_all(indexesDir);
     }
-
-
-    fReindex = GetBoolArg("-reindex", DEFAULT_REINDEX);
+    else
+    {
+        fReindex = GetBoolArg("-reindex", DEFAULT_REINDEX);
+    }
 
     int64_t requested_block_mode = GetArg("-useblockdb", DEFAULT_BLOCK_DB_MODE);
     if (requested_block_mode >= 0 && requested_block_mode < END_STORAGE_OPTIONS)
@@ -1352,41 +1353,6 @@ bool AppInit2(Config &config)
     else
     {
         BLOCK_DB_MODE = DEFAULT_BLOCK_DB_MODE;
-    }
-
-    // Upgrading to 0.8; hard-link the old blknnnn.dat files into /blocks/
-    if (BLOCK_DB_MODE == SEQUENTIAL_BLOCK_FILES)
-    {
-        fs::path blocksDir = GetDataDir() / "blocks";
-        if (!fs::exists(blocksDir))
-        {
-            fs::create_directories(blocksDir);
-            bool linked = false;
-            for (unsigned int i = 1; i < 10000; i++)
-            {
-                fs::path source = GetDataDir() / strprintf("blk%04u.dat", i);
-                if (!fs::exists(source))
-                    break;
-                fs::path dest = blocksDir / strprintf("blk%05u.dat", i - 1);
-                try
-                {
-                    fs::create_hard_link(source, dest);
-                    LOGA("Hardlinked %s -> %s\n", source.string(), dest.string());
-                    linked = true;
-                }
-                catch (const fs::filesystem_error &e)
-                {
-                    // Note: hardlink creation failing is not a disaster, it just means
-                    // blocks will get re-downloaded from peers.
-                    LOGA("Error hardlinking blk%04u.dat: %s\n", i, e.what());
-                    break;
-                }
-            }
-            if (linked)
-            {
-                fReindex = true;
-            }
-        }
     }
 
     // Return the initial values for the various in memory caches.
@@ -1405,7 +1371,7 @@ bool AppInit2(Config &config)
     bool fLoaded = false;
     while (!fLoaded)
     {
-        bool fReset = fReindex;
+        bool fReset = (fReindex || fSync);
         std::string strLoadError;
 
         nStart = GetTimeMillis();
@@ -1429,17 +1395,17 @@ bool AppInit2(Config &config)
                 uiInterface.InitMessage(_("Opening UTXO database..."));
                 COverrideOptions overridecache;
                 overridecache.block_size = 4096;
-                pcoinsdbview = new CCoinsViewDB(cacheConfig.nCoinDBCache, false, fReindex, true, &overridecache);
+                pcoinsdbview = new CCoinsViewDB(cacheConfig.nCoinDBCache, false, fReset, true, &overridecache);
 
                 pcoinscatcher = new CCoinsViewErrorCatcher(pcoinsdbview, pblocktree);
                 uiInterface.InitMessage(_("Opening Coins Cache database..."));
                 pcoinsTip = new CCoinsViewCache(pcoinscatcher);
 
                 uiInterface.InitMessage(_("Opening Token Description database..."));
-                ptokenDesc = new CTokenDescriptionDB(cacheConfig.nBlockTreeDBCache, false, fReindex);
+                ptokenDesc = new CTokenDescriptionDB(cacheConfig.nBlockTreeDBCache, false, fReset);
 
                 uiInterface.InitMessage(_("Opening Token Mintage database..."));
-                ptokenMint = new CTokenMintageDB(cacheConfig.nBlockTreeDBCache, false, fReindex);
+                ptokenMint = new CTokenMintageDB(cacheConfig.nBlockTreeDBCache, false, fReset);
 
 
                 InitTxAdmission();
