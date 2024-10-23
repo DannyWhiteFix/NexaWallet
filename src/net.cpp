@@ -3663,7 +3663,7 @@ void CMapRelay::Add(const uint256 &hash, std::shared_ptr<CDataStream> pStream)
         // Add the tx id to the expiration deque. Use and expire time not too far in the future
         // since we only need to keep the transaction for a short period of time during tx propagation, and
         // generally tx propagation should only take a few seconds.
-        int64_t nExpireTime = GetTime() + (Params().GetConsensus().nPowTargetSpacing);
+        int64_t nExpireTime = GetTime() + DEFAULT_EXPIRE_TIME;
         vRelayExpiration.emplace_back(std::make_pair(nExpireTime, hash));
     }
 }
@@ -3695,6 +3695,10 @@ void CMapRelay::Expire()
         }
         mapRelay.erase(hash);
         vRelayExpiration.pop_front();
+    }
+    if (mapRelay.empty())
+    {
+        mapRelay.rehash(0);
     }
 
     // As a safeguard, if the data gets out of sync then start over. This should never happen!

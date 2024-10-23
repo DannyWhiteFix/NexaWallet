@@ -1328,13 +1328,21 @@ void RelayTransaction(const CTransactionRef ptx);
 class CMapRelay
 {
 private:
+    struct uint256Hasher
+    {
+        size_t operator()(const uint256 &hash) const { return hash.GetCheapHash(); }
+    };
+
     CCriticalSection cs_mapRelay;
     uint64_t nMapRelayBytes = 0;
-    std::map<uint256, std::shared_ptr<CDataStream> > mapRelay GUARDED_BY(cs_mapRelay);
+
+    std::unordered_map<uint256, std::shared_ptr<CDataStream>, uint256Hasher> mapRelay GUARDED_BY(cs_mapRelay);
     std::deque<std::pair<int64_t, uint256> > vRelayExpiration GUARDED_BY(cs_mapRelay);
 
 public:
     CMapRelay();
+
+    static const uint32_t DEFAULT_EXPIRE_TIME = 30;
 
     /** Add datastream object to the map and remove any expired entries */
     void Add(const uint256 &hash, std::shared_ptr<CDataStream> pStream);

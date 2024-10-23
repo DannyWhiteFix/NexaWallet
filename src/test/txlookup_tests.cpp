@@ -82,19 +82,19 @@ BOOST_AUTO_TEST_CASE(maprelay_lookup)
     BOOST_CHECK(maprelay.Find(tx1.GetId()));
 
     // Move clock ahead to one second before it would be expired and call Expire
-    SetMockTime(nStartTime + Params().GetConsensus().nPowTargetSpacing);
+    SetMockTime(nStartTime + CMapRelay::DEFAULT_EXPIRE_TIME);
     maprelay.Expire();
     BOOST_CHECK(maprelay.Find(tx1.GetId()));
     BOOST_CHECK(maprelay.Find(tx2.GetId()));
 
     // Move the clock ahead one more second, call Expire, and the first entry should have been expired
-    SetMockTime(nStartTime + Params().GetConsensus().nPowTargetSpacing + 1);
+    SetMockTime(nStartTime + CMapRelay::DEFAULT_EXPIRE_TIME + 1);
     maprelay.Expire();
     BOOST_CHECK(!maprelay.Find(tx1.GetId()));
     BOOST_CHECK(maprelay.Find(tx2.GetId()));
 
     // Move the clock ahead an additional second, call Expire, and both entries should have been expired
-    SetMockTime(nStartTime + Params().GetConsensus().nPowTargetSpacing + 2);
+    SetMockTime(nStartTime + CMapRelay::DEFAULT_EXPIRE_TIME + 2);
     maprelay.Expire();
     BOOST_CHECK(!maprelay.Find(tx1.GetId()));
     BOOST_CHECK(!maprelay.Find(tx2.GetId()));

@@ -19,7 +19,9 @@
 #include "sync.h"
 
 #undef foreach
+#include "boost/multi_index/hashed_index.hpp"
 #include "boost/multi_index/ordered_index.hpp"
+#include "boost/multi_index/sequenced_index.hpp"
 #include "boost/multi_index_container.hpp"
 #include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
@@ -269,12 +271,34 @@ struct mempoolentry_txidem
     typedef uint256 result_type;
     result_type operator()(const CTxMemPoolEntry &entry) const { return entry.GetTx().GetIdem(); }
 };
+struct mempoolentry_txidem_hash
+{
+    typedef uint64_t hash_value;
+    hash_value operator()(const uint256 &hash) const { return hash.GetCheapHash(); }
+};
 
 // extracts a TxMemPoolEntry's transaction id
 struct mempoolentry_txid
 {
     typedef uint256 result_type;
     result_type operator()(const CTxMemPoolEntry &entry) const { return entry.GetTx().GetId(); }
+};
+struct mempoolentry_txid_hash
+{
+    typedef uint64_t hash_value;
+    hash_value operator()(const uint256 &hash) const { return hash.GetCheapHash(); }
+};
+
+struct mempoolentry_txshortid
+{
+    typedef uint64_t result_type;
+    result_type operator()(const CTxMemPoolEntry &entry) const { return entry.GetTx().GetId().GetCheapHash(); }
+};
+
+struct mempoolentry_txshortid_hash
+{
+    typedef uint64_t hash_value;
+    hash_value operator()(const uint64_t shortid) const { return shortid; }
 };
 
 class CompareTxMemPoolEntryByEntryTime
@@ -320,6 +344,9 @@ struct entry_time
 {
 };
 struct ancestor_score
+{
+};
+struct txid_tag
 {
 };
 struct txidem_tag
@@ -502,18 +529,20 @@ public:
 
     static const int TXID_CONTAINER_IDX = 0;
     static const int TXIDEM_CONTAINER_IDX = 1;
+    static const int SEQUENCE_CONTAINER_IDX = 2;
 
     typedef boost::multi_index_container<CTxMemPoolEntry,
         boost::multi_index::indexed_by<
-            // sorted by txid
-            boost::multi_index::ordered_unique<mempoolentry_txid>,
-            // sorted by txidem -- 2 tx with same idem but different id necessarily conflict so must not both be in
-            boost::multi_index::ordered_unique<boost::multi_index::tag<txidem_tag>, mempoolentry_txidem>,
-            // sorted by entry time
-            boost::multi_index::ordered_non_unique<boost::multi_index::tag<entry_time>,
-                boost::multi_index::identity<CTxMemPoolEntry>,
-                CompareTxMemPoolEntryByEntryTime>,
-            // sorted by fee rate with ancestors
+            // accessed by txid
+            boost::multi_index::
+                hashed_unique<boost::multi_index::tag<txid_tag>, mempoolentry_txid, mempoolentry_txid_hash>,
+            // accessed by txidem -- two txns with same idem but different id necessarily conflict so both
+            // must not be in here
+            boost::multi_index::
+                hashed_unique<boost::multi_index::tag<txidem_tag>, mempoolentry_txidem, mempoolentry_txidem_hash>,
+            // sequenced by time of entry.
+            boost::multi_index::sequenced<boost::multi_index::tag<entry_time> >,
+            // sorted by the fee rate of all ancestors combined
             boost::multi_index::ordered_non_unique<boost::multi_index::tag<ancestor_score>,
                 boost::multi_index::identity<CTxMemPoolEntry>,
                 CompareTxMemPoolEntryByAncestorFee> > >

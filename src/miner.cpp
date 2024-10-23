@@ -439,7 +439,6 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries &package,
 // where we pass in the inBlock vector of already added transactions. Even so, if we didn't do this shortcutting
 // the current algo is still much better than the older method which needed to update calculations for the
 // entire descendant tree after each package was added to the block.
-
 bool BlockAssembler::addPackageTxs(std::vector<const CTxMemPoolEntry *> *vtxe, bool fAllowDirtyTxns)
 {
     AssertLockHeld(mempool.cs_txmempool);
@@ -449,7 +448,7 @@ bool BlockAssembler::addPackageTxs(std::vector<const CTxMemPoolEntry *> *vtxe, b
     bool fHaveDirty = false;
     for (auto mi = mempool.mapTx.get<ancestor_score>().begin(); mi != mempool.mapTx.get<ancestor_score>().end(); mi++)
     {
-        iter = mempool.mapTx.project<0>(mi);
+        iter = mempool.mapTx.project<CTxMemPool::TXID_CONTAINER_IDX>(mi);
         if (iter->IsDirty())
             fHaveDirty = true;
 

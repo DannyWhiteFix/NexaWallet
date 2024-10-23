@@ -1902,9 +1902,12 @@ int CTxMemPool::Expire(int64_t time, std::vector<COutPoint> &vCoinsToUncache)
     setEntries toremove;
     while (it != mapTx.get<entry_time>().end() && it->GetTime() < time)
     {
-        toremove.insert(mapTx.project<0>(it));
+        toremove.insert(mapTx.project<TXID_CONTAINER_IDX>(it));
         it++;
     }
+    if (toremove.empty())
+        return 0;
+
     setEntries stage;
     for (TxIdIter removeit : toremove)
         _CalculateDescendants(removeit, stage);
@@ -2074,7 +2077,7 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint> *pvNoSpends
             DbgAssert(it != mapTx.get<entry_time>().end(), return);
 
             // Select the entry and any descendants
-            _CalculateDescendants(mapTx.project<0>(it), stage);
+            _CalculateDescendants(mapTx.project<TXID_CONTAINER_IDX>(it), stage);
             nAncestors = it->GetCountWithAncestors();
         }
 
