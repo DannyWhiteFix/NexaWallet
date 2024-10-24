@@ -129,6 +129,8 @@ const char *ScriptErrorString(const ScriptError serror)
         return "Invalid state specifier";
     case SCRIPT_ERR_INITIAL_STATE:
         return "Initialized";
+    case SCRIPT_ERR_INVALID_REGISTER:
+        return "Invalid script register number";
 
     case SCRIPT_ERR_UNKNOWN_ERROR:
     case SCRIPT_ERR_ERROR_COUNT:

@@ -23,6 +23,8 @@ class CScript;
 class CTransaction;
 class uint256;
 
+#define NUM_SCRIPT_REGISTERS 32
+
 /** Signature types */
 enum
 {
@@ -342,6 +344,9 @@ private:
 
 protected:
     ConditionStack vfExec;
+    // note - default constructor is used in an array, all registers get initialised to
+    // have a StackItem() : type(StackElementType::VCH), vch(0) {}
+    std::array<StackItem, NUM_SCRIPT_REGISTERS> arrRegisters;
 
 public:
     /** All the external information that this virtual machine is allowed to access */
@@ -476,7 +481,7 @@ public:
        otherwise, update the current values (under the assumption that the caller will place an item
        of the passed size onto the stack when this function is complete).
        Its possible for itemSize to be negative if the caller intends to replace a stack item with a shorter one
-     */
+    */
     void CheckAndUpdateStackSize(int itemSize);
 
     /* Push an item to the main stack */
@@ -493,11 +498,11 @@ public:
     void PushAltStack(const StackItem &item);
 
     /** just like std::vector reserve, this function helps efficiency by suggesting how big
-      the stack may become, so the underlying data structure can pre-reserve that memory.  */
+        the stack may become, so the underlying data structure can pre-reserve that memory.  */
     void StackReserve(int numItems) { stack.reserve(numItems); }
 
     /** just like std::vector reserve, this function helps efficiency by suggesting how big
-      the stack may become, so the underlying data structure can pre-reserve that memory.  */
+        the stack may become, so the underlying data structure can pre-reserve that memory.  */
     void AltStackReserve(int numItems) { altstack.reserve(numItems); }
 
     // From a consensus perspective, moving data from one stack to the other takes no temporary space.
@@ -539,7 +544,7 @@ public:
     /** A No-op in release mode, this function executes various internal checks on the script machine and asserts
         if there is a problem.
         It incurs a significant performance penalty.
-     */
+    */
     void DbgConsistencyCheck();
 
     /** Reserve capacity in the passed stack, if needed.  Iterators and references MAY be invalidated.  Use this
@@ -559,7 +564,9 @@ public:
         return true;
     }
 
-    // clear all state except for configuration like maximums
+    /** Clear all state except for configuration like maximums, and the imported state (ScriptImportedState).
+
+     */
     void Reset()
     {
         ClearAltStack();
@@ -568,6 +575,9 @@ public:
         stats.clear();
         bigNumModulo = 0x10000000000000000_BN;
         execDepth = 0;
+        for (auto i = 0; i < NUM_SCRIPT_REGISTERS; i++)
+            arrRegisters[i] = StackItem();
+        error = SCRIPT_ERR_INITIAL_STATE;
     }
 
     // Set the main stack to the passed data

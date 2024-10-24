@@ -94,6 +94,7 @@ typedef enum ScriptError_t
     SCRIPT_ERR_STACK_LIMIT_EXCEEDED,
     SCRIPT_ERR_INVALID_STATE_SPECIFIER,
     SCRIPT_ERR_INITIAL_STATE,
+    SCRIPT_ERR_INVALID_REGISTER,
 
     SCRIPT_ERR_STACK_BYTES, // Stack total length limit exceeded
     SCRIPT_ERR_PARSE, // Parsing the bytecode provided to op_parse failed

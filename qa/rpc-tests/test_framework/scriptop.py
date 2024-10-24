@@ -245,6 +245,8 @@ OP_INPUTVALUE = CScriptOp(0xd0)
 
 # Nexa
 OP_PARSE = CScriptOp(0xe6)
+OP_STORE = CScriptOp(0xe7)
+OP_LOAD = CScriptOp(0xe8)
 OP_PLACE = CScriptOp(0xe9)
 OP_PUSH_TX_STATE = CScriptOp(0xea)
 OP_SETBMD = CScriptOp(0xeb)

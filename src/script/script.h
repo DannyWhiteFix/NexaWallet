@@ -292,11 +292,15 @@ enum opcodetype
 
     // NEXA opcodes
     OP_PARSE = 0xe6,
+    OP_STORE = 0xe7,
+    OP_LOAD = 0xe8,
     OP_PLACE = 0xe9,
     OP_PUSH_TX_STATE = 0xea,
     OP_SETBMD = 0xeb,
     OP_BIN2BIGNUM = 0xec,
     OP_EXEC = 0xed,
+    // OP_GROUPDATA = 0xee,
+
     // The first op_code value after all defined opcodes
     FIRST_UNDEFINED_OP_VALUE,
 
