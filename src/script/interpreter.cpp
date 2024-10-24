@@ -500,6 +500,7 @@ bool ScriptMachine::Step()
     const bool negativeOP_ROLL_OP_PICK = (flags & SCRIPT_FORK1_OPCODES) != 0;
     const bool opParseEnabled = (flags & SCRIPT_FORK1_OPCODES) != 0;
     const bool extendedIntrospectionEnabled = (flags & SCRIPT_FORK1_OPCODES) != 0;
+    const bool fscriptRegisters = (flags & SCRIPT_FORK1_OPCODES) != 0;
 
     const size_t maxIntegerSize =
         integers64Bit ? CScriptNum::MAXIMUM_ELEMENT_SIZE_64_BIT : CScriptNum::MAXIMUM_ELEMENT_SIZE_32_BIT;
@@ -1233,6 +1234,62 @@ bool ScriptMachine::Step()
                 }
                 break;
 
+                case OP_STORE:
+                {
+                    if (!fscriptRegisters)
+                    {
+                        return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+                    }
+                    if (stack.size() < 2)
+                    {
+                        return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+                    }
+                    const StackItem &register_value = stackItemAt(-2);
+                    const int64_t register_num = CScriptNum(stacktop(-1), fRequireMinimal, maxIntegerSize).getint64();
+                    // negative register indexes are not possible
+                    if (register_num < 0)
+                    {
+                        return set_error(serror, SCRIPT_ERR_INVALID_REGISTER);
+                    }
+                    // attempting to store to a register higher than NUM_SCRIPT_REGISTERS
+                    if (register_num >= NUM_SCRIPT_REGISTERS) // >= because 0 array is 0 indexed
+                    {
+                        return set_error(serror, SCRIPT_ERR_INVALID_REGISTER);
+                    }
+                    // store the value in the register
+                    arrRegisters[register_num] = register_value;
+                    PopStack(); // pop the register number off the stack
+                    PopStack(); // pop the stored value off the stack
+                }
+                break;
+
+                case OP_LOAD:
+                {
+                    if (!fscriptRegisters)
+                    {
+                        return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+                    }
+                    if (stack.size() < 1)
+                    {
+                        return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+                    }
+                    const int64_t register_num = CScriptNum(stacktop(-1), fRequireMinimal, maxIntegerSize).getint64();
+                    // negative register indexes are not possible
+                    if (register_num < 0)
+                    {
+                        return set_error(serror, SCRIPT_ERR_INVALID_REGISTER);
+                    }
+                    // attempting to store to a register higher than NUM_SCRIPT_REGISTERS
+                    if (register_num >= NUM_SCRIPT_REGISTERS) // >= because 0 array is 0 indexed
+                    {
+                        return set_error(serror, SCRIPT_ERR_INVALID_REGISTER);
+                    }
+                    // load the value in the register
+                    const StackItem &register_value = arrRegisters[register_num];
+                    PopStack(); // pop the register number off the stack
+                    PushStack(register_value); // push the loaded value on to the stack
+                }
+                break;
 
                 //
                 // Bitwise logic

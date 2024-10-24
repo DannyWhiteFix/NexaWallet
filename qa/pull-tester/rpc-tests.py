@@ -279,6 +279,7 @@ testScripts = [ RpcTest(t) for t in [
     'uptime',
     'op_reversebytes',
     'bip69',
+    'op_store_load',
 ] ]
 
 testScriptsExt = [ RpcTest(t) for t in [

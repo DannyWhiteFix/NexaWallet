@@ -3309,4 +3309,83 @@ BOOST_AUTO_TEST_CASE(unlocking_op_parse)
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
 }
 
+static void CheckError(uint32_t flags, const Stack &original_stack, const CScript &script, ScriptError expected)
+{
+    ScriptError err = SCRIPT_ERR_OK;
+    Stack stack{original_stack};
+    // Note that this returns false for CHECKSIG, whereas an empty ScriptImportedState() errors out with missing data
+    BaseSignatureChecker checker;
+    ScriptImportedState sis(&checker);
+    bool r = EvalScript(stack, script, flags, MAX_OPS_PER_SCRIPT, sis, &err);
+    BOOST_CHECK(!r);
+    BOOST_CHECK_EQUAL(err, expected);
+}
+
+static void CheckPass(uint32_t flags, const Stack &original_stack, const CScript &script, const Stack &expected)
+{
+    ScriptError err = SCRIPT_ERR_OK;
+    Stack stack{original_stack};
+    // Note that this returns false for CHECKSIG, whereas an empty ScriptImportedState() errors out with missing data
+    BaseSignatureChecker checker;
+    ScriptImportedState sis(&checker);
+    bool r = EvalScript(stack, script, flags, MAX_OPS_PER_SCRIPT, sis, &err);
+    BOOST_CHECK(r);
+    BOOST_CHECK_EQUAL(err, SCRIPT_ERR_OK);
+    BOOST_CHECK(stack == expected);
+}
+
+BOOST_AUTO_TEST_CASE(script_registers)
+{
+    uint32_t flags = MANDATORY_SCRIPT_VERIFY_FLAGS;
+
+    // for reference in the following scripts
+    // 0x4c024f5a expands to OP_PUSHDATA1 0x02 0x4f5a
+    // which pushes 2 bytes of data (0x4f5a) using OP_PUSHDATA1
+
+    // scripts to test
+    CScript store_neg_script_register = CScript() << 14 << -1 << OP_STORE;
+    CScript store_too_high_script_register = CScript() << 14 << 36 << OP_STORE;
+    CScript load_neg_script_register = CScript() << -1 << OP_LOAD;
+    CScript load_too_high_script_register = CScript() << 36 << OP_LOAD;
+    CScript load_from_register = CScript() << 6 << OP_LOAD;
+    CScript store_to_register = CScript() << 10 << 1 << OP_STORE;
+    CScript store_to_register_multibyte = CScript() << 0x4c024f5a << 1 << OP_STORE;
+    CScript store_and_load_from_register = CScript() << 10 << 1 << OP_STORE << 1 << OP_LOAD;
+    CScript store_and_load_from_register_multibyte = CScript() << 0x4c024f5a << 1 << OP_STORE << 1 << OP_LOAD;
+
+    // without the fork flags, use of the OP_LOAD and OP_STORE opcodes should fail
+    CheckError(flags, {}, store_neg_script_register, SCRIPT_ERR_BAD_OPCODE);
+    CheckError(flags, {}, store_too_high_script_register, SCRIPT_ERR_BAD_OPCODE);
+    CheckError(flags, {}, load_neg_script_register, SCRIPT_ERR_BAD_OPCODE);
+    CheckError(flags, {}, load_too_high_script_register, SCRIPT_ERR_BAD_OPCODE);
+    CheckError(flags, {}, load_from_register, SCRIPT_ERR_BAD_OPCODE);
+    CheckError(flags, {}, store_to_register, SCRIPT_ERR_BAD_OPCODE);
+    CheckError(flags, {}, store_to_register_multibyte, SCRIPT_ERR_BAD_OPCODE);
+    CheckError(flags, {}, store_and_load_from_register, SCRIPT_ERR_BAD_OPCODE);
+    CheckError(flags, {}, store_and_load_from_register_multibyte, SCRIPT_ERR_BAD_OPCODE);
+
+    // enable the OP_LOAD and OP_STORE opcodes
+    flags = flags | SCRIPT_FORK1_OPCODES;
+    // can not store to a negative index register
+    CheckError(flags, {}, store_neg_script_register, SCRIPT_ERR_INVALID_REGISTER);
+    // can not store to a register index higher than the register count
+    CheckError(flags, {}, store_too_high_script_register, SCRIPT_ERR_INVALID_REGISTER);
+    // can not load from a negative index register
+    CheckError(flags, {}, load_neg_script_register, SCRIPT_ERR_INVALID_REGISTER);
+    // can not load from a register index higher than the register count
+    CheckError(flags, {}, load_too_high_script_register, SCRIPT_ERR_INVALID_REGISTER);
+    // loading from a register without first storing a value should fetch the value 0
+    CheckPass(flags, {}, load_from_register, {0});
+    // storing a value to a register should pass and leave the stack empty
+    CheckPass(flags, {}, store_to_register, {});
+    // multiple byte items should also work
+    CheckPass(flags, {}, store_to_register_multibyte, {});
+    // storing the value 10 to a register then loading it from that register should
+    // leave the stack with the value 10 on it
+    CheckPass(flags, {}, store_and_load_from_register, {{10}});
+    // storing the multibyte value to a register then loading it from that register should
+    // leave the stack with the multiple byte value on it
+    CheckPass(flags, {}, store_and_load_from_register_multibyte, {{0x4f, 0x5a}});
+}
+
 BOOST_AUTO_TEST_SUITE_END()
