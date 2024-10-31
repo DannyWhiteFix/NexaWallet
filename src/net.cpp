@@ -1507,20 +1507,11 @@ void ThreadSocketHandler()
                 // Implement the following logic:
                 // * If there is no (complete) message in the receive buffer,
                 //   or there is space left in the buffer, select() for receiving data.
-                // * If the receive buffer is full then only select for receiving and skip
-                //   sending for the time being.
                 // * If there is data to send, select() for sending data.
-                // By always reading in data we will be sure to never deadlock even though
-                // we may occassionaly skip sending under high load.
                 {
-                    if (pnode->vRecvMsg.empty() || pnode->GetTotalRecvSize() <= nMaxReceiveBufferSize)
+                    if (pnode->vRecvMsg.totalbytes() <= nMaxReceiveBufferSize)
                     {
                         FD_SET(hSocket, &fdsetRecv);
-                    }
-                    else
-                    {
-                        FD_SET(hSocket, &fdsetRecv);
-                        continue;
                     }
 
                     if (!pnode->vSendMsg.empty() || !pnode->vLowPrioritySendMsg.empty())
