@@ -654,6 +654,53 @@ build-arm-32:
     rules:
       - if: $CI_PIPELINE_SOURCE != "schedule"
 
+
+######################################################
+######## RISC-V 64
+######################################################
+.cache-riscv-64:
+    extends: .ubuntu_ccache_scripts
+    cache:
+        <<: *global_cache_settings
+        key: riscv_cache-64
+        paths:
+            - ccache/
+            - depends/sources
+            - depends/built
+            - depends/aarch64-linux-gnu
+
+build-riscv-depends-64:
+    stage: build_depends
+    extends: .cache-riscv-64
+    script:
+        - cd depends
+        - make HOST=riscv64-linux-gnu QT=1 -j `nproc` NO_RUST=1
+    artifacts:
+        paths:
+            - depends/riscv64-linux-gnu
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
+
+build-riscv-64:
+    stage: build
+    extends: .cache-riscv-64
+    needs: ["build-riscv-depends-64"]
+    script:
+        - ./autogen.sh
+        - mkdir build; cd build
+        - ../configure --prefix=$PWD/../depends/riscv64-linux-gnu
+        - make -j `nproc`
+        - ccache --show-stats
+    dependencies:
+        - build-riscv-depends-64
+    artifacts:
+        when: on_failure
+        paths:
+            - ./build/config.log
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
+
+
 ######################################################
 ######## Win64
 ######################################################

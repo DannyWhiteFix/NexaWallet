@@ -24,6 +24,8 @@ Common `host-platform-triplets` for cross compilation are:
 - `x86_64-pc-linux-gnu` for x86 Linux (glibc)
 - `i686-linux-musl` for Linux 32 bit (musl)
 - `x86_64-linux-musl` for x86 Linux (musl)
+- `riscv32-linux-gnu` for Linux RISC-V 32 bit
+- `riscv64-linux-gnu` for Linux RISC-V 64 bit
 - `i686-w64-mingw32` for Win32
 - `x86_64-w64-mingw32` for Win64
 - `x86_64-apple-darwin` for MacOSX (Intel)
@@ -54,6 +56,13 @@ For Win32/Win64 cross compilation:
 For linux (including i386, ARM) cross compilation:
 
     sudo apt-get install curl linux-libc-dev:i386 g++-aarch64-linux-gnu g++-aarch64-linux-gnu gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu g++-arm-linux-gnueabihf g++-arm-linux-gnueabihf gcc-arm-linux-gnueabihf binutils-arm-linux-gnueabihf g++-multilib gcc-multilib binutils-gold bsdmainutils
+
+
+For linux RISC-V 64-bit cross compilation (there are no packages for 32-bit):
+
+    sudo apt-get install curl g++-riscv64-linux-gnu binutils-riscv64-linux-gnu
+
+If you want to build a risc-v 32bits set of binaries you need to build a risc-v 32bits tool chain first, eg by following the instructions you can find here https://github.com/yuzibo/riscv32/wiki
 
 Dependency Options:
 The following can be set when running make: make FOO=bar
