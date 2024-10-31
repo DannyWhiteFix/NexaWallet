@@ -623,9 +623,6 @@ public:
     /** Updates node configuration variables based on extversion data in the extversion member variable */
     void ReadConfigFromExtversion();
 
-    /** Get the byte size of all messages in the receive queue */
-    unsigned int GetTotalRecvSize() { return vRecvMsg.totalbytes(); }
-
     unsigned int GetSendMsgSize()
     {
         LOCK(cs_vSend);
