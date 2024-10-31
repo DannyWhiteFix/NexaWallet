@@ -2261,6 +2261,7 @@ bool CWalletTx::InMempool() const
     return false;
 }
 
+bool CWalletTx::IsReadOnlyChain() const { return mempool.IsReadOnlyChain(GetId()); }
 bool CWalletTx::IsTrusted() const
 {
     // Quick answer in most cases
@@ -2313,6 +2314,11 @@ bool CWalletTx::IsTrusted() const
         // If we are doing instant transactions then the tx must be in the txpool. Also, the tx must
         // not be in the orphanpool, but if it's in the txpool then by default we know it is not in the orphanpool.
         if (!InMempool())
+            return false;
+
+        // If we are doing instant transactions then the tx must not be part of a read only chain. Read only
+        // chains can get removed from the mempool so must not be trusted until mined.
+        if (IsReadOnlyChain())
             return false;
 
         // Check if the instant cutoff has been triggered and if so then do not consider this transaction

@@ -156,10 +156,10 @@ class RoTest(BitcoinTestFramework):
         tx.vin.append(scopy(roInp))
         tx.vout.append(out2)
         try:
-            roTx = fundSignSendParse(n, tx, True)
+            roTx = fundSignSendParse(n, tx)
             assert shouldItWork, "Signing this tx should have failed (pre upgrade)"
-            print("COMMITTING: ")
-            print(pprint.pformat(n.decoderawtransaction(roTx.toHex())))
+            # print("COMMITTING: ")
+            # print(pprint.pformat(n.decoderawtransaction(roTx.toHex())))
         except JSONRPCException as e:
             if shouldItWork:
                 raise e
@@ -202,8 +202,8 @@ class RoTest(BitcoinTestFramework):
         try:
             roTx = fundSignSendParse(n, tx)
             assert shouldItWork, "Signing this tx should have failed (pre upgrade)"
-            print("COMMITTING: ")
-            print(pprint.pformat(n.decoderawtransaction(roTx.toHex())))
+            # print("COMMITTING: ")
+            # print(pprint.pformat(n.decoderawtransaction(roTx.toHex())))
         except JSONRPCException as e:
             if shouldItWork:
                 raise e
@@ -216,9 +216,9 @@ class RoTest(BitcoinTestFramework):
         try:
             roTx2 = fundSignSendParse(n, tx)
             assert shouldItWork, "Signing this tx should have failed (pre upgrade)"
-            print(roTx2)
-            print("COMMITTING: ")
-            print(pprint.pformat(n.decoderawtransaction(roTx2.toHex())))
+            # print(roTx2)
+            # print("COMMITTING: ")
+            # print(pprint.pformat(n.decoderawtransaction(roTx2.toHex())))
         except JSONRPCException as e:
             if shouldItWork:
                 raise e
@@ -260,12 +260,16 @@ class RoTest(BitcoinTestFramework):
         if txpoolstats["size"] != 0:
             rawtx = n.getrawtxpool()
             for t in rawtx:
-                print(t)
+                # print(t)
                 txinfo = n.gettransaction(t)
                 decoded = n.decoderawtransaction(txinfo["hex"])
-                print(decoded)
+                # print(decoded)
                 blkhash = n.generate(1)[0]  # Should consume the rest of the tx
                 waitFor(60, lambda: n.gettxpoolinfo()["size"] == 0)
+        self.sync_blocks()
+ 
+        for i in range(0, self.NUM_NODES):
+            waitFor(60, lambda: self.nodes[i].gettxpoolinfo()["size"] == 0)
 
         # Use the same read only input again, after we committed some RO uses, but we haven't spent it yet
         tx = CTransaction()
@@ -279,15 +283,35 @@ class RoTest(BitcoinTestFramework):
                 raise e
             assert not shouldItWork, "Signing this tx should have succeeded (post upgrade)"
 
-        # Spend the input I've been using as read-only
+        # Spend the input I've been using as read-only.
+        # Any transaction chains decending from read only input are not allowed as instant transactions so check
+        # that balances are not effected until the next block is mined.
+        for i in range(0, self.NUM_NODES):
+            waitFor(60, lambda: self.nodes[i].gettxpoolinfo()["size"] == 1)
+
+        DELAY=3
+        StartBalances = []
+        for i in range(0, self.NUM_NODES):
+            self.nodes[i].set("wallet.instant=true");
+            self.nodes[i].set("wallet.instantDelay=3");
+            StartBalances.append(self.nodes[i].getbalance())
+
         tx = CTransaction()
         tx.vin.append(spendOutputOfAmount(10000, preTx, scr))
         assert tx.vin[0] != None
         tx.vout.append(out2)  # This output is worth half of the readonly input
         v = n.validaterawtransaction(tx.toHex())
-        print(v)
+        # print(v)
         n.sendrawtransaction(tx.toHex())
         mempoolTx = tx
+        wait = DELAY + 1 # wait a little extra beyond the instant timeout before checking balances
+        time.sleep(wait)
+        for i in range(0, self.NUM_NODES):
+            waitFor(60, lambda: self.nodes[i].gettxpoolinfo()["size"] == 2)
+
+        # balances should not have changed. Only when the next block is mined should we see a difference.
+        for i in range(0, self.NUM_NODES):
+            assert_equal(StartBalances[i], self.nodes[i].getbalance())
 
         # Use the same read only input again -- it should work because its spend is in the txpool, not committed
         tx = CTransaction()
@@ -300,7 +324,7 @@ class RoTest(BitcoinTestFramework):
         try:
             roTx2 = fundSignSendParse(n, tx)
             assert shouldItWork, "Signing this tx should have failed (pre upgrade)"
-            print(roTx2)
+            # print(roTx2)
         except JSONRPCException as e:
             if shouldItWork:
                 raise e
@@ -319,6 +343,13 @@ class RoTest(BitcoinTestFramework):
             assert False
         except JSONRPCException as e:
             assert True
+
+        # Now mine a block and the wallet balances should update for RO transactions
+        blkhash = self.nodes[1].generate(1)
+        self.sync_blocks()
+        for i in range(0, self.NUM_NODES):
+            waitFor(60, lambda: self.nodes[i].getwalletinfo()["syncblock"] in blkhash)
+            assert_not_equal(StartBalances[i], self.nodes[i].getbalance())
 
     def testGroupReadOnlyInput(self):
         # set up
@@ -356,7 +387,7 @@ class RoTest(BitcoinTestFramework):
         authtxhex = n.gettransaction(authTxIdem)
         authTx = CTransaction(authtxhex)
 
-        print(n.gettxpoolinfo())
+        # print(n.gettxpoolinfo())
         poolTxes = n.getrawtxpool()
         for txidem in poolTxes:
             try:
@@ -364,17 +395,17 @@ class RoTest(BitcoinTestFramework):
                 decoded = n.decoderawtransaction(txhex)
             except JSONRPCException as e:
                 if "No such txpool" in str(e):
-                    print("\n***  " + txidem + " LEFT THE POOL  ***")
+                    # print("\n***  " + txidem + " LEFT THE POOL  ***")
                     continue
                 else: raise
             try:
                 v = n.validaterawtransaction(txhex)
             except JSONRPCException as e:
                 v = str(e)
-                print("\n***  " + txidem + "  ***")
-                print(pprint.pformat(decoded))
+                # print("\n***  " + txidem + "  ***")
+                # print(pprint.pformat(decoded))
                 # print(txhex)
-            print(v)
+            # print(v)
             self.genBlock(n) # Cannot use as readonly until confirmed
 
         # try importing a read-only group utxo and spending tokens
@@ -437,7 +468,7 @@ class RoTest(BitcoinTestFramework):
         n.sendrawtransaction(sgnReturn["hex"])
 
         txp = n.gettxpoolinfo()
-        print(txp)
+        # print(txp)
         assert txp["size"] == 2 # Make sure all the tx that should have succeeded got to the txpool
         self.genBlock(n)  # Make sure these tx can get in a block (WORK)
         txp = n.gettxpoolinfo()
@@ -450,7 +481,7 @@ class RoTest(BitcoinTestFramework):
     def genBlock(self, node):
         blkhash = node.generate(1)[0]
         blkhdr = node.getblock(blkhash)
-        print("Generated: %d:%s with %d tx nonCB: %s" % (blkhdr["height"], blkhash, blkhdr["txcount"], blkhdr["txidem"][1:]))
+        # print("Generated: %d:%s with %d tx nonCB: %s" % (blkhdr["height"], blkhash, blkhdr["txcount"], blkhdr["txidem"][1:]))
         return blkhash
 
     def run_test(self):
@@ -472,18 +503,18 @@ class RoTest(BitcoinTestFramework):
         for i in range(0,10):
             miningNode.sendtoaddress(addr, 1000000)
         waitFor(60, lambda: miningNode.gettxpoolinfo()["size"] == 10)
-        print(miningNode.gettxpoolinfo())
+        # print(miningNode.gettxpoolinfo())
         miningNode.generate(1)
 
         for i in range(0,ITERS):
             sync_blocks(self.nodes)
-            print("\n\n*** Iteration: %d at %s" % (i, [x.getblockcount() for x in self.nodes]))
+            # print("\n\n*** Iteration: %d at %s" % (i, [x.getblockcount() for x in self.nodes]))
             self.testReadOnlyInput(True)
-            print("Test Completed, Syncing")
+            # print("Test Completed, Syncing")
             sync_blocks(self.nodes)
-            print("Synced")
+            # print("Synced")
             blk1 = miningNode.generate(1)[0]
-            print("generated: " + blk1)
+            # print("generated: " + blk1)
             sync_blocks(self.nodes)
             self.testGroupReadOnlyInput()
             bal0 = self.nodes[0].getwalletinfo()["balance"]
@@ -493,7 +524,7 @@ class RoTest(BitcoinTestFramework):
             for i in range(0,10):
                 n.sendtoaddress(a, 1000000)
             blk2 = miningNode.generate(1)[0]
-            print("generated: " + blk2)
+            # print("generated: " + blk2)
 
 
 if __name__ == '__main__':
