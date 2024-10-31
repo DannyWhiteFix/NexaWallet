@@ -126,6 +126,7 @@ private:
     CAmount nModFeesWithAncestors;
     unsigned int nSigOpCountWithAncestors;
     bool fDirty;
+    bool fReadOnlyChain;
 
 public:
     // Naming a tx is useful for tracking during debugging but wastes space.  This code will be left in, commented out
@@ -176,6 +177,8 @@ public:
     void UpdateFeeDelta(int64_t feeDelta);
     // Update the LockPoints after a reorg
     void UpdateLockPoints(const LockPoints &lp);
+    // Update the LockPoints after a reorg
+    void UpdateReadOnlyChain(bool fReadOnly);
     // Update runtime validation resource usage
     void UpdateRuntimeSigOps(uint64_t _runtimeSigOpCount, uint64_t _runtimeSighashBytes);
 
@@ -184,7 +187,10 @@ public:
     uint64_t GetSizeWithAncestors() const { return nSizeWithAncestors; }
     CAmount GetModFeesWithAncestors() const { return nModFeesWithAncestors; }
     unsigned int GetSigOpCountWithAncestors() const { return nSigOpCountWithAncestors; }
+    /** Is this transactions ancestor state up to date */
     bool IsDirty() const { return fDirty; }
+    /** Get and Set methods for determining if this transaction is part of a read only chain */
+    bool IsReadOnlyChain() const { return fReadOnlyChain; }
 };
 
 struct update_ancestor_state
@@ -264,6 +270,16 @@ struct update_lock_points
 private:
     const LockPoints &lp;
 };
+
+struct update_readonly_chain
+{
+    update_readonly_chain(bool _readonly) : fReadOnly(_readonly) {}
+    void operator()(CTxMemPoolEntry &e) const { e.UpdateReadOnlyChain(fReadOnly); }
+
+private:
+    bool fReadOnly;
+};
+
 
 // extracts a TxMemPoolEntry's transaction idem
 struct mempoolentry_txidem
@@ -875,6 +891,17 @@ public:
     }
 
     bool exists(const COutPoint &outpoint) const;
+
+    bool IsReadOnlyChain(const uint256 &hash) const
+    {
+        READLOCK(cs_txmempool);
+        auto it = mapTx.find(hash);
+        if (it != mapTx.end())
+        {
+            return it->IsReadOnlyChain();
+        }
+        return false;
+    }
 
     CTransactionRef get(const uint256 &hash) const;
     CTransactionRef _get(const uint256 &hash) const;

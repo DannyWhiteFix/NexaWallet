@@ -70,6 +70,7 @@ CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef _tx,
     nModFeesWithAncestors = nFee;
     nSigOpCountWithAncestors = sigOpCount;
     fDirty = false;
+    fReadOnlyChain = false;
 }
 
 double CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const
@@ -94,6 +95,7 @@ void CTxMemPoolEntry::UpdateRuntimeSigOps(uint64_t _runtimeSigOpCount, uint64_t 
     runtimeSighashBytes = _runtimeSighashBytes;
 }
 
+void CTxMemPoolEntry::UpdateReadOnlyChain(bool fReadOnly) { fReadOnlyChain = fReadOnly; }
 // vTxIdsToUpdate is the set of transaction Ids from a disconnected block
 // which has been re-added to the mempool.
 // for each entry, look for descendants that are outside hashesToUpdate, and
@@ -689,6 +691,10 @@ bool CTxMemPool::_addUnchecked(const CTxMemPoolEntry &entry, bool fCurrentEstima
                     LOG(MEMPOOL, "   %s:%d", depsIt.ptx->GetIdem().GetHex(), depsIt.n);
                 }
             }
+
+            // We have readonly inputs so this must then be the beginning
+            // of a readonly chain.
+            mapTx.modify(newit, update_readonly_chain(true));
         }
         else
         {
@@ -723,6 +729,11 @@ bool CTxMemPool::_addUnchecked(const CTxMemPoolEntry &entry, bool fCurrentEstima
         if (pit != mapTx.end())
         {
             _UpdateParentChild(pit, newit, true);
+
+            // If any parent is part of a readonly chain then so is this
+            // child transaction.
+            if (pit->IsReadOnlyChain())
+                mapTx.modify(newit, update_readonly_chain(true));
         }
     }
 
@@ -731,8 +742,8 @@ bool CTxMemPool::_addUnchecked(const CTxMemPoolEntry &entry, bool fCurrentEstima
 
     nTransactionsUpdated++;
     totalTxSize += entry.GetTxSize();
-    txAdded += 1; // BU
-    poolSize() = totalTxSize; // BU
+    txAdded += 1;
+    poolSize() = totalTxSize;
     minerPolicyEstimator->processTransaction(entry, fCurrentEstimate);
 
     return true;

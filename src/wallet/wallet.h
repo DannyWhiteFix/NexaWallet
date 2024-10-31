@@ -455,6 +455,7 @@ public:
 
     bool IsFromMe(const isminefilter &filter) const { return (GetDebit(filter) > 0); }
     bool InMempool() const;
+    bool IsReadOnlyChain() const;
     bool IsTrusted() const;
 
     bool WriteToDisk(CWalletDB *pwalletdb);
