@@ -907,3 +907,62 @@ build-debian-nodeps-qt:
             - build/config.log
     rules:
       - if: $CI_PIPELINE_SOURCE != "schedule"
+
+
+######################################################
+######## Ubuntu24 base settings
+######################################################
+.ubuntu24_base:
+    image: bchunlimited/nexa:ubuntu24.04
+
+.ubuntu24_ccache_scripts:
+    extends: .ubuntu24_base
+    before_script:
+        - mkdir -p ccache
+        - export CCACHE_BASEDIR=${PWD}
+        - export CCACHE_DIR=${PWD}/ccache
+        - export CCACHE_COMPILERCHECK=content
+        - ccache --zero-stats || true
+
+######################################################
+######## x86_64 Ubuntu24 + deps as via system lib
+######################################################
+.cache-ubuntu24-nodeps:
+    extends: .ubuntu24_ccache_scripts
+    cache:
+        <<: *global_cache_settings
+        key: ubuntu24_cache-nodeps
+
+build-ubuntu24-nodeps:
+    stage: build
+    extends: .cache-ubuntu24-nodeps
+    needs: []
+    script:
+        - ./autogen.sh
+        - mkdir build; cd build
+        - ../configure --cache-file=config.cache --with-gui=no --enable-glibc-back-compat --enable-reduce-exports
+        - make -j `nproc`
+        - ccache --show-stats
+    artifacts:
+        when: on_failure
+        paths:
+            - ./build/config.log
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
+
+build-ubuntu24-nodeps-qt:
+    stage: build
+    extends: .cache-ubuntu24-nodeps
+    needs: []
+    script:
+        - ./autogen.sh
+        - mkdir build; cd build
+        - ../configure --cache-file=config.cache --with-gui=qt5 --enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-tests
+        - make -j `nproc`
+        - ccache --show-stats
+    artifacts:
+        when: on_failure
+        paths:
+            - build/config.log
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
