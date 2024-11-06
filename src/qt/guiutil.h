@@ -46,7 +46,7 @@ QFont fixedPitchFont();
 std::string DummyAddress(const CChainParams &params, const Config &cfg);
 
 // Set up widgets for address and amounts
-void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent);
+void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent, bool fTokens = false);
 void setupAmountWidget(QLineEdit *widget, QWidget *parent, uint32_t nDecimal);
 
 QString bitcoinURIScheme(const CChainParams &, bool useCashAddr);

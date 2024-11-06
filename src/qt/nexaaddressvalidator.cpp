@@ -58,12 +58,13 @@ static bool ValidCashaddrInput(const QString &prefix, const QString &input)
     return true;
 }
 
-BitcoinAddressEntryValidator::BitcoinAddressEntryValidator(const std::string &_cashaddrprefix, QObject *parent)
+
+AddressEntryValidator::AddressEntryValidator(const std::string &_cashaddrprefix, QObject *parent)
     : QValidator(parent), cashaddrprefix(_cashaddrprefix)
 {
 }
 
-QValidator::State BitcoinAddressEntryValidator::validate(QString &input, int &pos) const
+QValidator::State AddressEntryValidator::validate(QString &input, int &pos) const
 {
     Q_UNUSED(pos);
 
@@ -107,15 +108,25 @@ QValidator::State BitcoinAddressEntryValidator::validate(QString &input, int &po
                                                                                 QValidator::Invalid;
 }
 
-BitcoinAddressCheckValidator::BitcoinAddressCheckValidator(QObject *parent) : QValidator(parent) {}
-QValidator::State BitcoinAddressCheckValidator::validate(QString &input, int &pos) const
+AddressCheckValidator::AddressCheckValidator(QObject *parent, bool _fTokens) : QValidator(parent), fTokens(_fTokens) {}
+QValidator::State AddressCheckValidator::validate(QString &input, int &pos) const
 {
     Q_UNUSED(pos);
-    // Validate the passed Bitcoin address
-    if (IsValidDestinationString(input.toStdString()))
+    if (fTokens)
     {
-        return QValidator::Acceptable;
+        // Check to make sure this is a template address we are sending to
+        CTxDestination dst = DecodeDestination(input.toStdString(), Params());
+        if (!std::get_if<ScriptTemplateDestination>(&dst))
+        {
+            return QValidator::Invalid;
+        }
     }
 
-    return QValidator::Invalid;
+    // Validate the passed address
+    if (!IsValidDestinationString(input.toStdString()))
+    {
+        return QValidator::Invalid;
+    }
+
+    return QValidator::Acceptable;
 }

@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 
     GUIUtilTests test5;
     if (QTest::qExec(&test5) != 0) fInvalid = true;
-    BitcoinAddressValidatorTests test6;
+    AddressValidatorTests test6;
     if (QTest::qExec(&test6) != 0) fInvalid = true;
 #endif
 

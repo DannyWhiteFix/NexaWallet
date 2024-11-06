@@ -75,7 +75,7 @@ TokensViewDialog::TokensViewDialog(const PlatformStyle *_platformStyle, const Co
     p.setColor(QPalette::Inactive, QPalette::HighlightedText, p.color(QPalette::Active, QPalette::HighlightedText));
     setPalette(p);
 
-    GUIUtil::setupAddressWidget(ui->payTo, this);
+    GUIUtil::setupAddressWidget(ui->payTo, this, true);
     GUIUtil::setupAmountWidget(ui->payAmount, this, 0);
 
     // Actions

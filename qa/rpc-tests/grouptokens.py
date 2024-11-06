@@ -585,6 +585,14 @@ class GroupTokensTest (BitcoinTestFramework):
             # print(e.error["message"])
             assert("Not enough funds for fee" in e.error["message"])
 
+        # send to p2pkh address: it should fail
+        p2pkh_address = self.nodes[0].getnewaddress('p2pkh');
+        try:
+            self.nodes[0].token("mint", grp0Id, p2pkh_address, 310, mint1_0, 20, mint2_0, 30)
+        except JSONRPCException as e:
+            print(e.error["message"])
+            assert("destination address must be script template" in e.error["message"])
+
         # test multiple destinations
         self.nodes[0].token("mint", grp0Id, mint0_0, 310, mint1_0, 20, mint2_0, 30)
         self.nodes[0].token("send", grp0Id, mint1_0, 100, mint2_0, 200)

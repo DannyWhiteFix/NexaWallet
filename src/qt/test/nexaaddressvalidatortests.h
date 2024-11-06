@@ -9,7 +9,7 @@
 #include <QObject>
 #include <QTest>
 
-class BitcoinAddressValidatorTests : public QObject {
+class AddressValidatorTests : public QObject {
     Q_OBJECT
 
 private Q_SLOTS:
