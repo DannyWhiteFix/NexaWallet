@@ -8,9 +8,9 @@
 #include "qt/nexaaddressvalidator.h"
 #include <QValidator>
 
-void BitcoinAddressValidatorTests::inputTests() {
+void AddressValidatorTests::inputTests() {
     const std::string prefix = Params(CBaseChainParams::LEGACY_UNIT_TESTS).CashAddrPrefix();
-    BitcoinAddressEntryValidator v(prefix, nullptr);
+    AddressEntryValidator v(prefix, nullptr);
 
     int unused = 0;
     QString in;

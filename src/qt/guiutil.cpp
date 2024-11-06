@@ -19,6 +19,7 @@
 #include "policy/policy.h"
 #include "primitives/transaction.h"
 #include "protocol.h"
+#include "script/destinations.h"
 #include "script/script.h"
 #include "script/standard.h"
 #include "util.h"
@@ -119,11 +120,12 @@ std::string DummyAddress(const CChainParams &params, const Config &cfg)
     static const std::vector<uint8_t> dummydata = {0xeb, 0x15, 0x23, 0x1d, 0xfc, 0xeb, 0x60, 0x92, 0x58, 0x86, 0xb6,
         0x7d, 0x06, 0x52, 0x99, 0x92, 0x59, 0x15, 0xae, 0xb1};
 
-    const CTxDestination dstKey = CKeyID(uint160(dummydata));
+    const CTxDestination dstKey =
+        ScriptTemplateDestination(ScriptTemplateOutput(P2PKT_ID, VchHash160(dummydata), VchType(), NoGroup, 0));
     return MakeAddrInvalid(EncodeDestination(dstKey, params, cfg));
 }
 
-void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
+void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent, bool fTokens)
 {
     parent->setFocusProxy(widget);
 
@@ -133,8 +135,8 @@ void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
     // and this is the only place, where this address is supplied.
     widget->setPlaceholderText(
         QObject::tr("Enter a NEXA address (e.g. %1)").arg(QString::fromStdString(DummyAddress(params, GetConfig()))));
-    widget->setValidator(new BitcoinAddressEntryValidator(params.CashAddrPrefix(), parent));
-    widget->setCheckValidator(new BitcoinAddressCheckValidator(parent));
+    widget->setValidator(new AddressEntryValidator(params.CashAddrPrefix(), parent));
+    widget->setCheckValidator(new AddressCheckValidator(parent, fTokens));
 }
 
 void setupAmountWidget(QLineEdit *widget, QWidget *parent, uint32_t nDecimal)

@@ -87,6 +87,7 @@ public:
  *  * CNoDestination: no destination set
  *  * CKeyID: TX_PUBKEYHASH destination
  *  * CScriptID: TX_SCRIPTHASH destination
+ *  * ScriptTemplateDestination: TX_SCRIPT_TEMPLATE destination
  *  A CTxDestination is the internal data type encoded in an address
  */
 typedef std::variant<CNoDestination, CKeyID, CScriptID, ScriptTemplateDestination> CTxDestination;

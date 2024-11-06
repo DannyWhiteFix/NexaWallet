@@ -13,12 +13,12 @@
  * Address entry widget validator, checks for valid characters and
  * removes some whitespace.
  */
-class BitcoinAddressEntryValidator : public QValidator
+class AddressEntryValidator : public QValidator
 {
     Q_OBJECT
 
 public:
-    explicit BitcoinAddressEntryValidator(const std::string &cashaddrprefix, QObject *parent);
+    explicit AddressEntryValidator(const std::string &cashaddrprefix, QObject *parent);
 
     State validate(QString &input, int &pos) const;
 
@@ -28,14 +28,17 @@ private:
 
 /** Address widget validator, checks for a valid address.
  */
-class BitcoinAddressCheckValidator : public QValidator
+class AddressCheckValidator : public QValidator
 {
     Q_OBJECT
 
 public:
-    explicit BitcoinAddressCheckValidator(QObject *parent);
+    explicit AddressCheckValidator(QObject *parent, bool _fTokens = false);
 
     State validate(QString &input, int &pos) const;
+
+private:
+    bool fTokens; // is this for validating and address to send tokens to.
 };
 
 #endif // NEXA_QT_NEXAADDRESSVALIDATOR_H
