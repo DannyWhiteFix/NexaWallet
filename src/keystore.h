@@ -112,7 +112,6 @@ public:
     virtual ~SpendableP2PKT();
 };
 
-
 typedef std::map<CKeyID, CKey> KeyMap;
 typedef std::map<CKeyID, CPubKey> WatchKeyMap;
 typedef std::map<CScriptID, CScript> ScriptMap;

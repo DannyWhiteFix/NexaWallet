@@ -85,7 +85,7 @@ class UpgradeActivationTest(BitcoinTestFramework):
                 inp.setUnlockingToTemplate(scr, None, None)
                 txs.vin.append(inp)  # I don't have to sign it because its anyone can spend
                 break
-        txs.vout.append(TxOut(TxOut.TYPE_SATOSCRIPT, 9000, CScript()))
+        txs.vout.append(anySpender(9000))
 
         validatedResult = self.nodes[0].validaterawtransaction(txs.toHex())
         if not shouldItWork:
@@ -241,7 +241,7 @@ class UpgradeActivationTest(BitcoinTestFramework):
                 inp.setUnlockingToTemplate(scr, None, None)
                 txs.vin.append(inp)  # I don't have to sign it because its anyone can spend
                 break
-        txs.vout.append(TxOut(TxOut.TYPE_SATOSCRIPT, 9000, CScript()))
+        txs.vout.append(anySpender(9000))
         # print(txs)
         # print("http://debug.nexa.org/tx/%s?idx=0&utxo=%s" % (txs.toHex(), out.toHex()))
 
@@ -256,6 +256,45 @@ class UpgradeActivationTest(BitcoinTestFramework):
             assert shouldItWork, "Large stack worked"
         except JSONRPCException as e:
             assert not shouldItWork, "Large stack did not work: %s" % e
+
+    def testOpReturn(self, shouldItWork):
+        """ Test OP_RETURN in inputs and outputs """
+        tx = CTransaction()
+
+        scrList = [ OP_FROMALTSTACK, OP_EQUALVERIFY ]
+        out = TxOut(nValue=10000)
+        scr = CScript(scrList)
+        pubArgs = [ OP_1, OP_RETURN, OP_2]
+        out.setLockingToTemplate(scr,None, pubArgs)
+        tx.vout.append(out)
+
+        h = tx.toHex()
+        # print("Transaction: " + h)
+
+        # We can create this UTXO before the fork (but can't spend it)
+        frtReturn = self.nodes[0].fundrawtransaction(h)
+        sgnReturn = self.nodes[0].signrawtransaction(frtReturn["hex"])
+        fundedTx = CTransaction().fromHex(sgnReturn["hex"])
+        validatedResult = self.nodes[0].validaterawtransaction(fundedTx.toHex())
+        assert validatedResult["isValid"] == True
+        self.nodes[0].sendrawtransaction(sgnReturn["hex"])
+
+        txs = CTransaction()
+        for idx in range(0, len(fundedTx.vout)):
+            if fundedTx.vout[idx].nValue == 10000:  # its my output
+                inp = fundedTx.SpendOutput(idx)
+                inp.setUnlockingToTemplate(scr, None, [OP_1, OP_RETURN, OP_3])
+                txs.vin.append(inp)  # I don't have to sign it because its anyone can spend
+
+        txs.vout.append(anySpender(9000))
+        # Test that naked "standard-size" OP_RETURNs work
+        txs.vout.append(TxOut(TxOut.TYPE_SATOSCRIPT, 0, CScript([OP_RETURN, b"12345"])))
+
+        validatedResult = self.nodes[0].validaterawtransaction(txs.toHex())
+        # print(validatedResult)
+        assert validatedResult["inputs_flags"]["isValid"] == shouldItWork
+        if not shouldItWork:
+            return
 
 
     def testWideStack(self, shouldItWork, template=True):
@@ -296,7 +335,7 @@ class UpgradeActivationTest(BitcoinTestFramework):
                     txs.vin.append(fundedTx.SpendOutput(idx))  # I don't have to sign it because its anyone can spend
                 break
 
-        txs.vout.append(CTxOut(9000, scr))
+        txs.vout.append(anySpender(9000))
         # print(txs)
         # print(txs.toHex())
 
@@ -332,7 +371,9 @@ class UpgradeActivationTest(BitcoinTestFramework):
         # print(fundedTx)
         vrt = self.nodes[0].validaterawtransaction(sgnReturn["hex"])
         # print(vrt)
+        pSize = self.nodes[0].gettxpoolinfo()["size"]
         self.nodes[0].sendrawtransaction(sgnReturn["hex"])
+        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()["size"] > pSize)
 
         txs = CTransaction()
         # spend it
@@ -343,7 +384,7 @@ class UpgradeActivationTest(BitcoinTestFramework):
                 txs.vin.append(inp)  # I don't have to sign it because its anyone can spend
                 break
 
-        txs.vout.append(CTxOut(9000, scr))
+        txs.vout.append(anySpender(9000))  # Just something so tx is valid
         # print(txs)
         # print(txs.toHex())
 
@@ -352,9 +393,10 @@ class UpgradeActivationTest(BitcoinTestFramework):
 
         try:
             spendTxSend = self.nodes[0].sendrawtransaction(txs.toHex())
-            # print(spendTxSend)
             assert shouldItWork, "OP_PARSE worked"
         except JSONRPCException as e:
+            print(str(e))
+            # should be: -26: 16: mandatory-script-verify-flag-failed (Opcode missing or not understood)
             assert "Opcode missing" in str(e)
             if shouldItWork:
                 print(txs)
@@ -366,7 +408,7 @@ class UpgradeActivationTest(BitcoinTestFramework):
 
         scripts = [
             CScript([ OP_0, OP_0, OP_INPUTTYPE, OP_EQUALVERIFY ]),
-            CScript([ OP_0, OP_0, OP_OUTPUTTYPE, OP_EQUALVERIFY]),
+            CScript([ OP_1, OP_0, OP_OUTPUTTYPE, OP_EQUALVERIFY]),
             CScript([ 10000, OP_0, OP_INPUTVALUE, OP_EQUALVERIFY])
             ]
 
@@ -396,7 +438,7 @@ class UpgradeActivationTest(BitcoinTestFramework):
                     txs.vin.append(inp)  # I don't have to sign it because its anyone can spend
                     break
 
-            txs.vout.append(CTxOut(9000, scr))
+            txs.vout.append(anySpender(9000))
             # print(txs)
             # print(txs.toHex())
 
@@ -413,10 +455,10 @@ class UpgradeActivationTest(BitcoinTestFramework):
                     print(txs.toHex())
                 assert not shouldItWork, "Extended introspection did not work: %s" % e
 
-
     def preupgradeTests(self):
         """Add any tests here that should run prior to the upgrade"""
         self.testExtendedIntrospection(False)
+        self.testOpReturn(False)
         self.testOpParse(False)
         self.testNegOpRoll(False)
         self.testNegOpPick(False)
@@ -428,11 +470,27 @@ class UpgradeActivationTest(BitcoinTestFramework):
 
     def atUpgradeTests(self):
         """Add any tests here that should run when the current block is not upgraded but the next one will be"""
-        pass
+        n = self.nodes[0]
+
+        blockchaininfo = n.getblockchaininfo() 
+        assert_equal(blockchaininfo['forkactive'], False)
+
+        txpool = n.getrawtxpool()
+        ## drop in a tx that will be invalid to ensure it gets washed out of the txpool
+        tx = CTransaction()
+        out = TxOut(0, 10000, CScript([OP_DROP]))
+        tx.vout.append(out)
+        try:
+            willBeInvalidTx = fundSignSendParse(n, tx)
+            assert False, "should not have been accepted into the txpool"
+        except JSONRPCException as e:
+            assert "invalid-nonstandard-legacy-output" in str(e)
+
 
     def postupgradeTests(self):
         """Add any tests here that should run after the upgrade"""
         self.testExtendedIntrospection(True)
+        self.testOpReturn(True)
         self.testOpParse(True)
         self.testNegOpRoll(True)
         self.testNegOpPick(True)
@@ -471,6 +529,7 @@ class UpgradeActivationTest(BitcoinTestFramework):
         assert_equal(miningNode.getblockcount(), startcount+10)
         sync_blocks(self.nodes)
         self.preupgradeTests()
+        sync_blocks(self.nodes)
 
         # set the hardfork activation to just a few blocks ahead
         bestblock = miningNode.getbestblockhash()
@@ -485,28 +544,43 @@ class UpgradeActivationTest(BitcoinTestFramework):
         assert_equal(blockchaininfo['forkenforcednextblock'], False)
         assert_greater_than(activationtime, blockchaininfo['mediantime'])
 
+        # jam in a tx but don't let it go in a block by reducing the max mined blocksize
+        miningNode.set("mining.blockSize=500")
+        tx = CTransaction()
+        out = TxOut(0, 10000, CScript([b'12346', OP_DROP]*200))
+        tx.vout.append(out)
+        willBeInvalidTx1 = fundSignSendParse(n, tx)
+        txpool = miningNode.getrawtxpool()
+        assert willBeInvalidTx1.GetRpcHexIdem() in txpool, "post-upgrade nonstandard should have been accepted prefork"
+        
         # Mine just up to the hard fork activation (activationtime will still be greater than mediantime).
         for i in range(100):
             mocktime = mocktime + 120
             for n in self.nodes: n.setmocktime(mocktime)
-            miningNode.generate(1)
+            blkhash = miningNode.generate(1)[0]
+            blk = miningNode.getblock(blkhash)
             blockchaininfo = miningNode.getblockchaininfo()
             if blockchaininfo['forkenforcednextblock'] == True: break
             # ^ another possibility: if blockchaininfo['mediantime'] >= activationtime: break
             assert_equal(blockchaininfo['forkactive'], False)
-            assert_equal(blockchaininfo['forkenforcednextblock'], False)
+
+            # If we aren't forking the tx shouldn't be kicked
+            txpool = miningNode.getrawtxpool()
+            assert willBeInvalidTx1.GetRpcHexIdem() in txpool, "should not have space for this tx so it should still be in the txpool"
+
             assert_greater_than(activationtime, blockchaininfo['mediantime']) # activationtime > mediantime
 
+        time.sleep(2)
+        txpool = miningNode.getrawtxpool()
+        assert not willBeInvalidTx1.GetRpcHexIdem() in txpool, "Illegal post-upgrade nonstandard should have been kicked out"
+        # set back to default
+        miningNode.set("mining.blockSize=0")
+        
         # Fork should be active after the next block mined (median time will be greater than or equal to blocktime)
         # NOTE: although the fork will be active on the next block, the nextmaxblocksize will not increase
         #       yet.  This is because we can not have an increase in the nextmaxblocksize until we mine our
         #       first block under the new rules.
         self.atUpgradeTests()
-        mocktime = mocktime + 120
-        for n in self.nodes: n.setmocktime(mocktime)
-        miningNode.generate(1)
-        blockchaininfo = miningNode.getblockchaininfo()
-        assert_equal(blockchaininfo['forkactive'], True)
 
         # First block mined under new rules:  At this point the nextmaxblocksize can be calculated
         # and will allow for a larger block after the first fork block is mined.

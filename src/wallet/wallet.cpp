@@ -4626,7 +4626,6 @@ void CWallet::GetScriptForMining(boost::shared_ptr<CReserveScript> &script)
         return;
 
     script = rKey;
-    // script->reserveScript = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
     script->reserveScript = P2pktOutput(pubkey);
 }
 

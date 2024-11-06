@@ -688,6 +688,7 @@ public:
     const Stack &getAltStack() { return altstack; }
     // Get any error that may have occurred
     const ScriptError &getError() { return error; }
+    void clearError() { error = SCRIPT_ERR_INITIAL_STATE; }
     // Return the number of instructions executed since the last Reset()
     unsigned int getOpCount() { return stats.nOpCount; }
     /** Return execution statistics */

@@ -1388,10 +1388,9 @@ UniValue getblockchaininfo(const UniValue &params, bool fHelp)
             "  \"difficulty\": xxxxxx,     (numeric) the current difficulty\n"
             "  \"mediantime\": xxxxxx,     (numeric) median time for the current best block\n"
             "  \"forktime\": xxxxxx,       (numeric)  time when the fork becomes active on the next block\n"
-            "  \"forkactive\": xxxxxx,     (bool) is the fork active, true for all blocks with a median time past >= "
-            "activation time\n"
-            "  \"forkenforcednextblock\": xx,(bool) will the new  fork rules be enforced on the next block mined, true "
-            "only for the first block with MTP >= activation time \n"
+            "  \"forkactive\": xxxxxx,     (bool) is the fork active, true for all blocks following the new rules\n "
+            "  \"forkenforcednextblock\": xx,(bool) will the new fork rules be enforced on the next block mined, true "
+            "only for the first block following the new rules\n"
             "  \"verificationprogress\": xx, (numeric) estimate of verification progress [0..1]\n"
             "  \"initialblockdownload\": xx, (bool) (debug information) estimate of whether this node is in Initial "
             "Block Download mode.\n"
@@ -1464,9 +1463,9 @@ UniValue getblockchaininfo(const UniValue &params, bool fHelp)
     if (forking)
     {
         obj.pushKV("forktime", (int64_t)nMiningForkTime);
-        obj.pushKV("forkactive", IsFork1Enabled(tip)); // true of blocks belong to [x-1,+inf)
+        obj.pushKV("forkactive", IsFork1Activated(tip)); // true of blocks belong to [x-1,+inf)
         // true only if block is x-1
-        obj.pushKV("forkenforcednextblock", (IsFork1Enabled(tip) && !IsFork1Enabled(tip->pprev)));
+        obj.pushKV("forkenforcednextblock", IsFork1Pending(tip));
     }
     else
     {

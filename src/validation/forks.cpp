@@ -4,11 +4,21 @@
 
 #include "forks.h"
 
-bool IsFork1Enabled(const CBlockIndex *pindexTip)
+bool IsFork1Activated(const CBlockIndex *pindexTip)
+{
+    if ((pindexTip == nullptr) || (pindexTip->pprev == nullptr))
+    {
+        return false;
+    }
+    // Fork1 enables the in the block AFTER the activation.  This gives us time to clean out the txpool.
+    return pindexTip->pprev->GetMedianTimePast() >= (int64_t)nMiningForkTime;
+}
+
+bool IsFork1Pending(const CBlockIndex *pindexTip)
 {
     if (pindexTip == nullptr)
     {
         return false;
     }
-    return pindexTip->GetMedianTimePast() >= (int64_t)nMiningForkTime;
+    return !IsFork1Activated(pindexTip) && (pindexTip->GetMedianTimePast() >= (int64_t)nMiningForkTime);
 }
