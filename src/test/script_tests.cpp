@@ -2962,12 +2962,6 @@ void ExpectedScriptTemplateSuccess(CScript &templat, const CScript &args, const 
     auto vfy = VerifyTemplate(
         templat, CScript(), satisfier, flags, MAX_OPS_PER_SCRIPT_TEMPLATE, MAX_OPS_PER_SCRIPT, sis, &err, &tracker);
     BOOST_CHECK(vfy);
-    if (!vfy)
-    {
-        printf("failed should have succeeded");
-        auto vfy2 = VerifyTemplate(
-            templat, CScript(), satisfier, flags, MAX_OPS_PER_SCRIPT_TEMPLATE, MAX_OPS_PER_SCRIPT, sis, &err, &tracker);
-    }
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
 }
 

@@ -706,6 +706,7 @@ class CTxIn(object):
         if constraintArgs != None: scr.append(bytes(constraintArgs))
         scr += satisfierArgs
         self.scriptSig = CScript(scr)
+        return self
 
     def serialize(self, stype):
         r = b""
@@ -724,7 +725,7 @@ class CTxIn(object):
 class TxOut(object):
     TYPE_SATOSCRIPT = 0
     TYPE_TEMPLATE = 1
-    
+
     def __init__(self, typ=0, nValue=0, scriptPubKey=b""):
 
         assert(isinstance(scriptPubKey,bytes))
@@ -779,9 +780,20 @@ class TxOut(object):
         """Return the hex string serialization of this object"""
         return hexlify(self.serialize()).decode("utf-8")
 
-    
     def __repr__(self):
         return "TxOut(type=%x, nValue=%i.%08i scriptPubKey=%s)" % (self.t, self.nValue // COIN, self.nValue % COIN, hexlify(self.scriptPubKey))
+
+def anySpender(amount):
+    """Creates a script template output that anyone can spend with no arguments"""
+    ret = TxOut(TxOut.TYPE_TEMPLATE, amount)
+    ret.setLockingToTemplate(CScript(), None)
+    return ret
+
+def anySpender1(amount):
+    """Creates a script template output that anyone can spend with 1 push (of any value)"""
+    ret = TxOut(TxOut.TYPE_TEMPLATE, amount)
+    ret.setLockingToTemplate(CScript([OP_DROP]), None)
+    return ret
 
 # Legacy script mode tx out
 class CTxOut(TxOut):

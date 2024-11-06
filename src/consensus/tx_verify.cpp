@@ -126,7 +126,7 @@ bool ContextualCheckTransaction(const CTransactionRef tx,
     for (const CTxIn &txin : tx->vin)
     {
         // if fork 1 has not yet been enabled, only fork 0 types are valid
-        if (!IsFork1Enabled(pindexPrev))
+        if (!IsFork1Activated(pindexPrev))
         {
             // check if the txin type is outside the range of valid types for the last fork
             // fork 0 means valid before the first HF
@@ -146,6 +146,52 @@ bool ContextualCheckTransaction(const CTransactionRef tx,
             }
         }
         */
+    }
+
+    if (IsFork1Activated(pindexPrev) || IsFork1Pending(pindexPrev))
+    {
+        for (const CTxOut &txout : tx->vout)
+        {
+            // Only legacy non-template outputs are allowed now.  All real scripts MUST use the script template
+            // system.
+            if (txout.type == CTxOut::SATOSCRIPT)
+            {
+                txnouttype whichType;
+                if (!IsStandard(txout.scriptPubKey, whichType))
+                {
+                    // We allow P2SH on regtest until all tests are converted over
+                    if (!((whichType == TX_SCRIPTHASH) && (params.NetworkIDString() == "regtest")))
+                        return state.DoS(100, false, REJECT_INVALID, "invalid-nonstandard-legacy-output");
+                }
+                // SCRIPT_HASH is already considered nonstandard, so is handled above
+                if (whichType == TX_PUBKEY)
+                {
+                    return state.DoS(100, false, REJECT_INVALID, "invalid-legacy-output");
+                }
+            }
+
+            if (txout.type == CTxOut::TEMPLATE)
+            {
+                CGroupTokenInfo groupInfo;
+                std::vector<uint8_t> templateHash;
+                std::vector<uint8_t> argsHash;
+                ScriptTemplateError err =
+                    GetScriptTemplate(txout.scriptPubKey, &groupInfo, &templateHash, &argsHash, nullptr);
+                if (err != ScriptTemplateError::OK)
+                    return state.DoS(100, false, REJECT_INVALID, "invalid-script-template");
+
+                size_t argsHashSize = argsHash.size();
+                // allow 2 different hash types, or no hashed args
+                if ((argsHashSize != CHash160::OUTPUT_SIZE) && (argsHashSize != CHash256::OUTPUT_SIZE) &&
+                    (argsHashSize != 0))
+                {
+                    return state.DoS(100, false, REJECT_INVALID, "invalid-script-template-argshash");
+                }
+
+                // Note the template hash size is constrained since genesis block in
+                // GetScriptTemplate->ParseWellKnownTemplateHashArg
+            }
+        }
     }
 
     // Commented out until needed again.

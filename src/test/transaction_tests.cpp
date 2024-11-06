@@ -39,7 +39,7 @@ using namespace std;
 // In script_tests.cpp
 extern UniValue read_json(const std::string &jsondata);
 
-BOOST_FIXTURE_TEST_SUITE(transaction_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(transaction_tests, TestChain100Setup)
 
 
 #if 0 // TODO: add hard-coded test vectors based on the new transaction format
@@ -142,6 +142,115 @@ BOOST_AUTO_TEST_CASE(tx_valid)
     enforceMinTxSize.Set(true);
 }
 #endif
+
+
+BOOST_AUTO_TEST_CASE(dynamic_tx_validity_fork1)
+{
+    CMutableTransaction tx;
+    CTransactionRef txref;
+    CKey k;
+    k.MakeNewKey(true);
+    CPubKey pk = k.GetPubKey();
+    CScript simpleConstraint = CScript() << OP_1;
+    CScript dataConstraint = CScript() << OP_RETURN << OP_1;
+    CScript p2shConstraint = p2sh(CScriptID(simpleConstraint));
+    CScript pubkeyConstraint = CScript() << ToByteVector(pk) << OP_CHECKSIG;
+    CScript p2pkhConstraint = p2pkh(CKeyID());
+    CValidationState state;
+
+    auto tip = chainActive.Tip();
+    const CChainParams &cp = Params();
+
+    // Small pre-fork1 test to make sure it doesn't prematurely activate
+    tx.vout.push_back(CTxOut(1, simpleConstraint));
+    txref = MakeTransactionRef(tx);
+    BOOST_CHECK_MESSAGE(ContextualCheckTransaction(txref, state, tip, cp), "fork1 is incorrectly active");
+    BOOST_CHECK(state.IsValid());
+
+    // Fake trigger fork1
+    auto oldForkTime = nMiningForkTime;
+    nMiningForkTime = 0;
+    BOOST_CHECK(IsFork1Activated(tip));
+
+    state.SetNull(); // try the above test again, fork1 activated
+    BOOST_CHECK_MESSAGE(!ContextualCheckTransaction(txref, state, tip, cp), "output script unconstrained by fork1");
+    BOOST_CHECK(!state.IsValid());
+
+    state.SetNull();
+    tx.vout[0] = CTxOut(0, dataConstraint);
+    txref = MakeTransactionRef(tx);
+    BOOST_CHECK_MESSAGE(ContextualCheckTransaction(txref, state, tip, cp), "output script fork1 should allow data");
+    BOOST_CHECK(state.IsValid());
+
+    state.SetNull();
+    tx.vout[0] = CTxOut(1, p2shConstraint);
+    txref = MakeTransactionRef(tx);
+    BOOST_CHECK_MESSAGE(
+        ContextualCheckTransaction(txref, state, tip, cp), "output script fork1 allows p2sh on regtest");
+    BOOST_CHECK(state.IsValid());
+
+    state.SetNull();
+    tx.vout[0] = CTxOut(1, pubkeyConstraint);
+    txref = MakeTransactionRef(tx);
+    BOOST_CHECK_MESSAGE(!ContextualCheckTransaction(txref, state, tip, cp), "output script fork1 not allow pubkey");
+    BOOST_CHECK(!state.IsValid());
+
+    state.SetNull();
+    tx.vout[0] = CTxOut(1, p2pkhConstraint);
+    txref = MakeTransactionRef(tx);
+    BOOST_CHECK_MESSAGE(ContextualCheckTransaction(txref, state, tip, cp), "output script fork1 should allow p2pkh");
+    BOOST_CHECK(state.IsValid());
+
+
+    VchType goodSizes[] = {{20}, {32}};
+    goodSizes[0].resize(20);
+    goodSizes[1].resize(32);
+
+    VchType badSizes[] = {{4}, {8}, {19}, {33}};
+    badSizes[0].resize(4);
+    badSizes[1].resize(8);
+    badSizes[2].resize(19);
+    badSizes[3].resize(33);
+
+    for (const auto &v : badSizes)
+    {
+        state.SetNull();
+        CScript st = CScript(ScriptType::TEMPLATE) << OP_0 << v << goodSizes[0];
+        tx.vout[0] = CTxOut(10, st);
+        txref = MakeTransactionRef(tx);
+        BOOST_CHECK_MESSAGE(
+            !ContextualCheckTransaction(txref, state, tip, cp), "output script bad script template size");
+        BOOST_CHECK(!state.IsValid());
+
+        state.SetNull();
+        st = CScript(ScriptType::TEMPLATE) << OP_0 << goodSizes[0] << v;
+        tx.vout[0] = CTxOut(10, st);
+        txref = MakeTransactionRef(tx);
+        BOOST_CHECK_MESSAGE(!ContextualCheckTransaction(txref, state, tip, cp), "output script bad args hash size");
+        BOOST_CHECK(!state.IsValid());
+    }
+
+    state.SetNull();
+
+    CScript st = CScript(ScriptType::TEMPLATE) << OP_0 << OP_1 << goodSizes[0];
+    tx.vout[0] = CTxOut(10, st);
+    txref = MakeTransactionRef(tx);
+    BOOST_CHECK_MESSAGE(ContextualCheckTransaction(txref, state, tip, cp), "output script good well known");
+    BOOST_CHECK(state.IsValid());
+
+    for (const auto &v : goodSizes)
+    {
+        state.SetNull();
+        st = CScript(ScriptType::TEMPLATE) << OP_0 << v << v;
+        tx.vout[0] = CTxOut(10, st);
+        txref = MakeTransactionRef(tx);
+        BOOST_CHECK_MESSAGE(
+            ContextualCheckTransaction(txref, state, tip, cp), "output script good script template & args size");
+        BOOST_CHECK(state.IsValid());
+    }
+
+    nMiningForkTime = oldForkTime;
+}
 
 // Invalid transactions generated dynamically by this test
 BOOST_AUTO_TEST_CASE(dynamic_tx_validity)
@@ -774,8 +883,11 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
                   << ParseHex("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
     BOOST_CHECK(IsStandardTx(MakeTransactionRef(CTransaction(t)), reason));
 
-    // ...so long as it only contains PUSHDATA's
+    // ...so long as it only contains PUSHDATA's or OP_RETURNs
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << OP_RETURN;
+    BOOST_CHECK(IsStandardTx(MakeTransactionRef(CTransaction(t)), reason));
+
+    t.vout[0].scriptPubKey = CScript() << OP_ADD << OP_RETURN;
     BOOST_CHECK(!IsStandardTx(MakeTransactionRef(CTransaction(t)), reason));
 
     // TX_NULL_DATA w/o PUSHDATA

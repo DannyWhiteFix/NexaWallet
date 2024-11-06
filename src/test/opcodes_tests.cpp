@@ -47,16 +47,6 @@ static void CheckError(uint32_t flags,
     ScriptError err = SCRIPT_ERR_OK;
     stacktype stack{original_stack};
     bool r = EvalScript(stack, script, flags, MAX_OPS_PER_SCRIPT, ScriptImportedState(), &err);
-    if (r)
-    {
-        printf("should have failed\n");
-        ScriptError err2 = SCRIPT_ERR_OK;
-        bool r2 = EvalScript(stack, script, flags, MAX_OPS_PER_SCRIPT, ScriptImportedState(), &err2);
-    }
-    if (err != expected_error)
-    {
-        printf("ERR\n");
-    }
     BOOST_CHECK(!r);
     BOOST_CHECK_EQUAL(err, expected_error);
 }

@@ -548,6 +548,8 @@ bool CScript::IsPushOnly(const_iterator pc) const
         // push-type opcode, however execution of OP_RESERVED fails, so
         // it's not relevant to P2SH/BIP62 as the scriptSig would fail prior to
         // the P2SH special validation code being executed.
+        if (opcode == OP_RETURN) // Anything beyond the op return is not executed
+            return true;
         if (opcode > OP_16)
             return false;
     }

@@ -922,7 +922,7 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
     uint32_t flags = STANDARD_SCRIPT_VERIFY_FLAGS;
 
     CBlockIndex *tip = chainActive.Tip();
-    if (tip && IsFork1Enabled(tip))
+    if (IsFork1Activated(tip) || IsFork1Pending(tip))
     {
         flags = POST_UPGRADE_MANDATORY_SCRIPT_VERIFY_FLAGS;
     }

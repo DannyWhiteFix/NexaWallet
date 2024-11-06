@@ -39,6 +39,8 @@ bool VerifyTemplate(const CScript &templat,
     ScriptError *serror,
     ScriptMachineResourceTracker *tracker)
 {
+    bool fork1 = flags & SCRIPT_FORK1_OPCODES;
+
     set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
 
     if (!satisfier.IsPushOnly())
@@ -70,9 +72,17 @@ bool VerifyTemplate(const CScript &templat,
     // Step 1, evaluate the satisfier to produce a stack
     if (!ssm.Eval(satisfier))
     {
-        if (serror)
-            *serror = ssm.getError();
-        return false;
+        // We allow op_return in satisfier scripts after fork1
+        if (fork1 && (ssm.getError() == SCRIPT_ERR_OP_RETURN))
+        {
+            ssm.clearError();
+        }
+        else
+        {
+            if (serror)
+                *serror = ssm.getError();
+            return false;
+        }
     }
 
     // Step 2, evaluate the constraint script
@@ -87,9 +97,17 @@ bool VerifyTemplate(const CScript &templat,
 
     if (!sm.Eval(constraint))
     {
-        if (serror)
-            *serror = sm.getError();
-        return false;
+         // We allow op_return in constraint scripts after fork1
+        if (fork1 && (sm.getError() == SCRIPT_ERR_OP_RETURN))
+        {
+            sm.clearError();
+        }
+        else
+        {
+            if (serror)
+                *serror = sm.getError();
+            return false;
+        }
     }
 
     // The data the constraint script leaves for the template goes on the altstack.

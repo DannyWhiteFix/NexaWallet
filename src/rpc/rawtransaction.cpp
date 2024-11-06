@@ -1288,7 +1288,7 @@ UniValue signrawtransaction(const UniValue &params, bool fHelp)
 
     auto flags = STANDARD_SCRIPT_VERIFY_FLAGS;
     CBlockIndex *tip = chainActive.Tip();
-    if (tip && IsFork1Enabled(tip))
+    if (IsFork1Activated(tip))
     {
         flags |= POST_UPGRADE_MANDATORY_SCRIPT_VERIFY_FLAGS;
     }

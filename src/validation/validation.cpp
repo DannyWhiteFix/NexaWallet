@@ -47,6 +47,8 @@ extern uint64_t nDiskBlockIndexVersion;
 
 extern CCriticalSection cs_LastBlockFile;
 
+static void ResubmitTransactions(const ConstCBlockRef pblock = nullptr);
+
 class Hasher
 {
 private:
@@ -2152,7 +2154,7 @@ uint32_t GetBlockScriptFlags(const CBlockIndex *pindex, const Consensus::Params 
 {
     uint32_t flags = MANDATORY_SCRIPT_VERIFY_FLAGS;
 
-    if (pindex && IsFork1Enabled(pindex))
+    if (pindex && IsFork1Activated(pindex))
     {
         flags = POST_UPGRADE_MANDATORY_SCRIPT_VERIFY_FLAGS;
     }
@@ -3098,6 +3100,13 @@ void UpdateTip(CBlockIndex *pindexNew)
     nTimeBestReceived.store(GetTime());
     mempool.AddTransactionsUpdated(1);
 
+    if (IsFork1Pending(pindexNew))
+    {
+        // If the fork is locked in to happen in the next block, force all tx to be readmitted into the pool
+        // so that invalid txes are dropped
+        ResubmitTransactions(nullptr);
+    }
+
     cvBlockChange.notify_all();
 
     LOGA("%s: new best=%s  height=%d bits=%d log2_work=%.8g  tx=%lu  date=%s progress=%f  cache=%.1fMiB(%utxo)\n",
@@ -3108,7 +3117,7 @@ void UpdateTip(CBlockIndex *pindexNew)
         pcoinsTip->DynamicMemoryUsage() * (1.0 / (1 << 20)), pcoinsTip->GetCacheSize());
 }
 
-static void ResubmitTransactions(const ConstCBlockRef pblock = nullptr)
+static void ResubmitTransactions(const ConstCBlockRef pblock)
 {
     // To be very safe let's force everything in the mempool to be re-admitted.  This reduces this rare case
     // quickly to a very common operation mode.  If we do not do this, we must guarantee that all tx coming from
@@ -3827,7 +3836,6 @@ bool _ActivateBestChain(CValidationState &state,
         fOneDone = true;
     } while (pindexMostWork->chainWork() > chainActive.Tip()->chainWork());
     CheckBlockIndex(chainparams.GetConsensus());
-
     return result;
 }
 

@@ -221,7 +221,6 @@ ScriptTemplateError GetScriptTemplate(const CScript &script,
     auto err = ParseWellKnownTemplateHashArg(tmp, unused);
     if (err != ScriptTemplateError::OK)
         return err;
-    size_t templateHashSize = templateHash->size();
 
     // args hash is third
     std::vector<unsigned char> vchArgsHash;
@@ -235,7 +234,7 @@ ScriptTemplateError GetScriptTemplate(const CScript &script,
     if (!IsPushOpcode(opcode))
         return ScriptTemplateError::INVALID;
 
-    /*  TODO: move into consensus in next HF
+    /*  TODO: This is in consensus after fork1, see ContextualCheckTransaction.  Enable it here after activation
     size_t argsHashSize = argsHash->size();
     // allow 2 different hash types, or no hashed args
     if ((argsHashSize != CHash160::OUTPUT_SIZE) && (argsHashSize != CHash256::OUTPUT_SIZE) && (argsHashSize != 0))

@@ -163,7 +163,7 @@ uint64_t CalculateNextMaxBlockSize(CBlockIndex *pindexPrev, uint64_t nBlockSize)
     uint64_t nBlockSizeMultiplier = Params().GetConsensus().nBlockSizeMultiplier;
 
     uint64_t nNextMaxBlockSize = 0;
-    if (IsFork1Enabled(pindexPrev))
+    if (IsFork1Activated(pindexPrev))
         nNextMaxBlockSize = Params().GetConsensus().nNextMaxBlockSize;
     else
         nNextMaxBlockSize = DEFAULT_NEXT_MAX_BLOCK_SIZE;
@@ -196,7 +196,7 @@ uint64_t CalculateNextMaxBlockSize(CBlockIndex *pindexPrev, uint64_t nBlockSize)
     LOG(VALIDATION, "Validation: Next maximum block size candidate (bytes): %" PRIu64, nNextMaxBlockSize);
 
     // use the default value if next max size is too small.
-    if (IsFork1Enabled(pindexPrev))
+    if (IsFork1Activated(pindexPrev))
     {
         nNextMaxBlockSize = std::max(nNextMaxBlockSize, Params().GetConsensus().nNextMaxBlockSize);
     }

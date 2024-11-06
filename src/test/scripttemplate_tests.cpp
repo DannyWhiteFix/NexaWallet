@@ -110,6 +110,7 @@ std::vector<unsigned char> vch(const CScript &script) { return ToByteVector(scri
 BOOST_AUTO_TEST_CASE(verifywellknown)
 {
     auto flags = MANDATORY_SCRIPT_VERIFY_FLAGS;
+    auto fork1flags = POST_UPGRADE_MANDATORY_SCRIPT_VERIFY_FLAGS;
     ScriptError error;
     auto nogroup = OP_0;
     bool ret;
@@ -119,6 +120,10 @@ BOOST_AUTO_TEST_CASE(verifywellknown)
         AlwaysGoodSignatureChecker ck(flags);
         ScriptImportedState sis(&ck);
         ScriptMachineResourceTracker tracker;
+
+        // fork 1 context
+        AlwaysGoodSignatureChecker ckf1(fork1flags);
+        ScriptImportedState sisf1(&ckf1);
 
         // we are using AlwaysGoodSignatureChecker so this sig doesnt have to be right, but must pass basic size check
         VchType fakeSig(64);
@@ -136,6 +141,34 @@ BOOST_AUTO_TEST_CASE(verifywellknown)
         BOOST_CHECK(ck.numCheckSigCalls == 1);
         BOOST_CHECK(ck.lastSig == fakeSig);
         BOOST_CHECK(ck.lastPubKey == fakeAddr.pubkey);
+
+        // check input with OP_RETURN extra data
+        CScript satisfierR = CScript() << fakeSig << OP_RETURN << 123 << 456;
+
+        txin = (CScript() << vch(hashedArgs)) + satisfierR;
+        ret = VerifyScript(txin, txout, flags, sis, &error, &tracker);
+        BOOST_CHECK(!ret);
+        ret = VerifyScript(txin, txout, fork1flags, sisf1, &error, &tracker);
+        BOOST_CHECK(ret);
+        // make sure that the expect script ran by checking the number of sigchecks it should have done,
+        // and that the sig and pubkey are correct.
+        BOOST_CHECK(ck.numCheckSigCalls == 1);
+        BOOST_CHECK(ck.lastSig == fakeSig);
+        BOOST_CHECK(ck.lastPubKey == fakeAddr.pubkey);
+
+        // check output with OP_RETURN extra data
+        txout = CScript(ScriptType::TEMPLATE)
+                << nogroup << P2PKT_ID << hash256(hashedArgs) << OP_RETURN << hash256(hashedArgs);
+        ret = VerifyScript(txin, txout, flags, sis, &error, &tracker);
+        BOOST_CHECK(!ret);
+        ret = VerifyScript(txin, txout, fork1flags, sisf1, &error, &tracker);
+        BOOST_CHECK(ret);
+        // make sure that the expect script ran by checking the number of sigchecks it should have done,
+        // and that the sig and pubkey are correct.
+        BOOST_CHECK(ck.numCheckSigCalls == 1);
+        BOOST_CHECK(ck.lastSig == fakeSig);
+        BOOST_CHECK(ck.lastPubKey == fakeAddr.pubkey);
+
 
         txnouttype whichType;
         ret = IsStandard(txout, whichType);
@@ -180,10 +213,15 @@ BOOST_AUTO_TEST_CASE(verifywellknown)
 BOOST_AUTO_TEST_CASE(verifytemplate)
 {
     auto flags = MANDATORY_SCRIPT_VERIFY_FLAGS;
-    AlwaysGoodSignatureChecker ck(flags);
-    ScriptImportedState sis(&ck);
+    auto flagsf1 = POST_UPGRADE_MANDATORY_SCRIPT_VERIFY_FLAGS;
     ScriptError error;
     ScriptMachineResourceTracker tracker;
+
+    AlwaysGoodSignatureChecker ck(flags);
+    ScriptImportedState sis(&ck);
+    // fork 1 context
+    AlwaysGoodSignatureChecker ckf1(flagsf1);
+    ScriptImportedState sisf1(&ckf1);
 
     auto nogroup = OP_0;
     bool ret;
@@ -194,26 +232,60 @@ BOOST_AUTO_TEST_CASE(verifytemplate)
         CScript templat2 = CScript() << OP_FROMALTSTACK << OP_ADD;
         CScript constraint = CScript() << OP_9;
         CScript satisfier = CScript() << OP_10;
+        CScript constraintR = CScript() << OP_9 << OP_RETURN << OP_5;
+        CScript satisfierR = CScript() << OP_10 << OP_RETURN << OP_5;
 
         CScript badSatisfier = CScript() << OP_9;
         CScript badConstraint = CScript() << OP_10;
+        CScript badSatisfierR = CScript() << OP_9 << OP_RETURN << OP_5;
+        CScript badConstraintR = CScript() << OP_10 << OP_RETURN << OP_5;
 
         ret = VerifyTemplate(templat, constraint, satisfier, flags, 100, 0, sis, &error, &tracker);
         BOOST_CHECK(ret == true);
+        // All fail because fork1 not triggered
+        ret = VerifyTemplate(templat, constraintR, satisfier, flags, 100, 0, sis, &error, &tracker);
+        BOOST_CHECK(!ret);
+        ret = VerifyTemplate(templat, constraint, satisfierR, flags, 100, 0, sis, &error, &tracker);
+        BOOST_CHECK(!ret);
+        ret = VerifyTemplate(templat, constraintR, satisfierR, flags, 100, 0, sis, &error, &tracker);
+        BOOST_CHECK(!ret);
+
+        // Pass because fork1 triggered
+        ret = VerifyTemplate(templat, constraintR, satisfier, flagsf1, 100, 0, sisf1, &error, &tracker);
+        BOOST_CHECK(ret == true);
+        ret = VerifyTemplate(templat, constraint, satisfierR, flagsf1, 100, 0, sisf1, &error, &tracker);
+        BOOST_CHECK(ret == true);
+        ret = VerifyTemplate(templat, constraintR, satisfierR, flagsf1, 100, 0, sisf1, &error, &tracker);
+        BOOST_CHECK(ret == true);
+
+        // Bad scripts should fail
         ret = VerifyTemplate(templat, constraint, badSatisfier, flags, 100, 0, sis, &error, &tracker);
         BOOST_CHECK(!ret);
         ret = VerifyTemplate(templat, badConstraint, satisfier, flags, 100, 0, sis, &error, &tracker);
+        BOOST_CHECK(!ret);
+        // Bad scripts with extra data should also fail
+        ret = VerifyTemplate(templat, constraint, badSatisfierR, flagsf1, 100, 0, sisf1, &error, &tracker);
+        BOOST_CHECK(!ret);
+        ret = VerifyTemplate(templat, badConstraintR, satisfier, flagsf1, 100, 0, sisf1, &error, &tracker);
+        BOOST_CHECK(!ret);
+        // If the op_return magically replaces the real push, this will be 10-9 so work true, otherwise 10-10 so false
+        ret = VerifyTemplate(
+            templat, badConstraintR, CScript() << OP_10 << OP_RETURN << OP_9, flagsf1, 100, 0, sisf1, &error, &tracker);
         BOOST_CHECK(!ret);
 
         // Now wrap these scripts into scriptSig and scriptPubKeys
 
         // No args commitment
         CScript tmplVisArgs = (CScript(ScriptType::TEMPLATE) << nogroup << hash256(templat) << OP_0) + constraint;
+        CScript tmplVisArgsR = (CScript(ScriptType::TEMPLATE) << nogroup << hash256(templat) << OP_0) + constraintR;
         // Args commitment
         CScript tmplCmtArgs = CScript(ScriptType::TEMPLATE) << nogroup << hash256(templat) << hash256(constraint);
 
         CScript scriptSigVisArgs = (CScript() << vch(templat)) + satisfier;
         CScript scriptSigCmtArgs = (CScript() << vch(templat) << vch(constraint)) + satisfier;
+
+        CScript scriptSigVisArgsR = (CScript() << vch(templat)) + satisfierR;
+        CScript scriptSigCmtArgsR = (CScript() << vch(templat) << vch(constraint)) + satisfierR;
 
         CScript badScriptSigTemplate = (CScript() << vch(templat2)) + satisfier;
 
@@ -223,6 +295,14 @@ BOOST_AUTO_TEST_CASE(verifytemplate)
         ret = VerifyScript(scriptSigVisArgs, tmplVisArgs, flags, sis, &error, &tracker);
         BOOST_CHECK(ret == true);
         ret = IsStandard(tmplVisArgs, whichtype);
+        BOOST_CHECK(ret == true);
+
+        ret = VerifyScript(scriptSigVisArgsR, tmplVisArgs, flagsf1, sisf1, &error, &tracker);
+        BOOST_CHECK(ret == true);
+
+        ret = VerifyScript(scriptSigVisArgsR, tmplVisArgsR, flagsf1, sisf1, &error, &tracker);
+        BOOST_CHECK(ret == true);
+        ret = IsStandard(tmplVisArgsR, whichtype);
         BOOST_CHECK(ret == true);
 
         ret = VerifyScript(scriptSigCmtArgs, tmplCmtArgs, flags, sis, &error, &tracker);

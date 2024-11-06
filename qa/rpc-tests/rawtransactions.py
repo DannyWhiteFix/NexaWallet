@@ -331,15 +331,15 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[0].setmocktime(mocktime)
         self.nodes[1].setmocktime(mocktime)
         self.nodes[2].setmocktime(mocktime)
-        self.nodes[2].generate(1)
+        self.nodes[2].generate(2)
         self.sync_blocks()
         blockchaininfo = self.nodes[2].getblockchaininfo()
         assert_equal(blockchaininfo['forkactive'], True)
-        assert_equal(blockchaininfo['forkenforcednextblock'], True)
+        assert_equal(blockchaininfo['forkenforcednextblock'], False)
 
         # Check balance - NOTE: after the fork on mainnet and we remove the forking upgrade test we still
         # need to keep this line as it is part of the above test that we will be keeping.
-        assert_equal(self.nodes[0].getbalance(), bal+COINBASE_REWARD+Decimal('2190000.00')) #block reward + tx
+        assert_equal(self.nodes[0].getbalance(), bal+(2*COINBASE_REWARD)+Decimal('2190000.00')) #block reward + tx
 
 
         # after the hardfork is activated try to create one with 17 pubkeys
@@ -574,23 +574,29 @@ class RawTransactionsTest(BitcoinTestFramework):
             self.nodes[0].sendrawtransaction(signedtxn["hex"], False, "STANDARD")
             assert 0 # should have failed because I'm insisting on a standard tx
         except JSONRPCException as e:
-            assert(e.error["code"] == -26)
+            assert e.error["code"] == -26
 
         try:
             self.nodes[0].sendrawtransaction(signedtxn["hex"], False, "standard")
             assert 0 # should have failed, check case insensitivity
         except JSONRPCException as e:
-            assert(e.error["code"] == -26)
+            assert e.error["code"] == -26
 
-        ret = self.nodes[0].sendrawtransaction(signedtxn["hex"], False, "NONstandard")
-        assert(len(ret) == 64)  # should succeed and return a txid
+        try:
+            ret = self.nodes[0].sendrawtransaction(signedtxn["hex"], False, "NONstandard")
+            assert 0 # Non-standard scripts are not allowed after fork1 (use script templates)
+        except JSONRPCException as e:
+            assert e.error["code"] == -26
 
-        # In regtest mode, nonstandard transactions are allowed by default
-        ret2 = self.nodes[0].sendrawtransaction(signedtxn["hex"], False, "default")
-        assert ret == ret2  # I'm sending the same tx so it should work with the same result
+        # In regtest mode, nonstandard transactions are not allowed by default post fork1
+        try:
+            ret2 = self.nodes[0].sendrawtransaction(signedtxn["hex"], False, "default")
+            assert false # ret == ret2  # I'm sending the same tx so it should work with the same result
+        except JSONRPCException as e:
+            assert e.error["code"] == -26
 
         txpool2 = self.nodes[0].gettxpoolinfo()
-        assert txpool["size"] + 1 == txpool2["size"]  # one tx should have been added to the txpool
+        assert txpool["size"] == txpool2["size"]  # one tx should have been added to the txpool
 
         self.nodes[0].generate(1)  # clean it up
         txpool3 = self.nodes[0].gettxpoolinfo()

@@ -108,10 +108,10 @@ class ScriptRegistersTest(BitcoinTestFramework):
         tx_value = int(int(satoshi_round(utxo["amount"]) * COIN) * 0.95)
         tx.vin = [CTxIn(COutPoint().fromIdemAndIdx(utxo['txidem'],utxo['vout']).rpcHex(), utxo["amount"])]
         tx.vout = []
-        redeemScript = CScript([OP_1, OP_STORE, 10, OP_1, OP_LOAD, OP_SUB])
-        tx.vout.append(CTxOut(tx_value-2000, redeemScript))
-        redeemScriptBad = CScript([bitcoinAddress2bin(dest_addr), OP_DUP, OP_1, OP_STORE, OP_HASH160, 36, OP_LOAD, OP_EQUALVERIFY, OP_CHECKSIG])
-        tx.vout.append(CTxOut(2000, redeemScriptBad))
+        redeemScript = CScript([OP_1, OP_STORE, 10, OP_1, OP_LOAD, OP_SUB, OP_VERIFY])
+        tx.vout.append(CTxOut(tx_value-2000).setLockingToTemplate(redeemScript, None))
+        redeemScriptBad = CScript([bitcoinAddress2bin(dest_addr), OP_DUP, OP_1, OP_STORE, OP_HASH160, 36, OP_LOAD, OP_EQUALVERIFY, OP_CHECKSIGVERIFY])
+        tx.vout.append(CTxOut(2000).setLockingToTemplate(redeemScriptBad, None))
         tx_signed_hex = self.nodes[0].signrawtransaction(tx.toHex())["hex"]
         txidem = self.nodes[0].sendrawtransaction(tx_signed_hex)
         self.sync_all()
@@ -135,7 +135,7 @@ class ScriptRegistersTest(BitcoinTestFramework):
         tx.vin = [CTxIn(COutPoint().fromIdemAndIdx(txidem,0).rpcHex(), tx_value, CScript([10]))]
         tx.vout = []
         s = CScript([bitcoinAddress2bin(dest_addr), OP_DUP, OP_HASH160, OP_EQUALVERIFY, OP_CHECKSIG])
-        tx.vout.append(CTxOut(tx_value - 2300, CScript([bitcoinAddress2bin(dest_addr), OP_DROP, OP_TRUE])))
+        tx.vout.append(CTxOut(tx_value - 2300).setLockingToTemplate(CScript([bitcoinAddress2bin(dest_addr), OP_DROP]), None))
         tx_signed_hex = self.nodes[2].signrawtransaction(tx.toHex())["hex"]
 
         try:
@@ -147,10 +147,10 @@ class ScriptRegistersTest(BitcoinTestFramework):
         # Now spend the register-using input into a standard node 1 address
         tx = CTransaction()
         # Create an input that spends the new opcodes
-        tx.vin = [CTxIn(COutPoint().fromIdemAndIdx(txidem,0).rpcHex(), tx_value-2000, CScript([11]))]
+        tx.vin = [CTxIn(COutPoint().fromIdemAndIdx(txidem,0).rpcHex(), tx_value-2000).setUnlockingToTemplate(redeemScript, None, CScript([11]))]
         tx.vout = []
         s = CScript([bitcoinAddress2bin(dest_addr), OP_DUP, OP_HASH160, OP_EQUALVERIFY, OP_CHECKSIG])
-        tx.vout.append(CTxOut(tx_value - 2300, CScript([bitcoinAddress2bin(dest_addr), OP_DROP, OP_TRUE])))
+        tx.vout.append(CTxOut(tx_value - 2300).setLockingToTemplate(CScript([bitcoinAddress2bin(dest_addr), OP_DROP]), None))
         tx_signed_hex = self.nodes[2].signrawtransaction(tx.toHex())["hex"]
         res3 = self.nodes[2].sendrawtransaction(tx_signed_hex)
         print(res3)
@@ -158,13 +158,15 @@ class ScriptRegistersTest(BitcoinTestFramework):
 
         # make another tx that fails to send
         tx = CTransaction()
-        tx.vin = [CTxIn(COutPoint().fromIdemAndIdx(txidem,1).rpcHex(), 2000)]
-        tx.vout = [ CTxOut(1700, CScript([ b'5' * 30, OP_DROP, OP_TRUE])) ]  # need to bulk out the tx
+        tx.vin = [CTxIn(COutPoint().fromIdemAndIdx(txidem,1).rpcHex(), 2000).setUnlockingToTemplate(redeemScriptBad, None, None)]
+        tx.vout = [ CTxOut(1700).setLockingToTemplate(CScript([OP_NOP]), None),
+                    CTxOut(0, CScript([OP_RETURN, b'5' * 30]))
+                   ]  # need to bulk out the tx
         try:
             self.nodes[0].sendrawtransaction(tx.toHex())
             assert(False)
         except JSONRPCException as e:
-            # print(str(e))
+            print(str(e))
             assert "Invalid script register number" in str(e)
 
 
