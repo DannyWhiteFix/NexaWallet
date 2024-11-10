@@ -1328,6 +1328,7 @@ bool AppInit2(Config &config)
 #endif // ENABLE_WALLET
     // ********************************************************* Step 6: load block chain
 
+    bool fReset = false;
     bool fSync = GetBoolArg("-resync", false);
     if (fSync)
     {
@@ -1371,7 +1372,6 @@ bool AppInit2(Config &config)
     bool fLoaded = false;
     while (!fLoaded)
     {
-        bool fReset = (fReindex || fSync);
         std::string strLoadError;
 
         nStart = GetTimeMillis();
@@ -1391,6 +1391,9 @@ bool AppInit2(Config &config)
                 uiInterface.InitMessage(_("Opening Block database..."));
                 InitializeBlockStorage(
                     cacheConfig.nBlockTreeDBCache, cacheConfig.nBlockDBCache, cacheConfig.nBlockUndoDBCache);
+
+                // fReset must be determined after InitializeBlockStorage()
+                fReset = (fReindex || fSync);
 
                 uiInterface.InitMessage(_("Opening UTXO database..."));
                 COverrideOptions overridecache;
@@ -1459,11 +1462,15 @@ bool AppInit2(Config &config)
                 // If the token sync flags are not set and a chain is present then the operator
                 // will be presented with a "reindex on next startup" option if/when they try to
                 // activate the QT token wallet.
-                if (chainActive.Height() == 0 && mapBlockIndex.size() == 1 && !fReindex)
+                if (chainActive.Height() == 0 && mapBlockIndex.size() == 1)
                 {
-                    fSync = true;
                     tokencache.SetSyncFlag(true);
                     tokenmint.SetSyncFlag(true);
+
+                    // If we're not reindexing then this must be an initial sync. Set the flag here
+                    // so we can avoid running through unnecessary code in ThreadImport().
+                    if (!fReindex)
+                        fSync = true;
                 }
 
                 // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
