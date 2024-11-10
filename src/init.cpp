@@ -496,7 +496,7 @@ static void ReconsiderChainOnStartup()
     }
 }
 
-void ThreadImport(std::vector<fs::path> vImportFiles, uint64_t nTxIndexCache, bool fSync)
+void ThreadImport(std::vector<fs::path> vImportFiles, bool fSync)
 {
     const CChainParams &chainparams = Params();
     RenameThread("loadblk");
@@ -707,33 +707,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles, uint64_t nTxIndexCache, bo
     if (fTxIndex)
     {
         uiInterface.InitMessage(_("Starting txindex"));
-
-        // When reindexing we want to wipe the previous txindex database however we don't want to
-        // rely on the fReindex flag since it's possible that by the time we get to this point in the
-        // node startup that the reindex is already completed (in the case of a very small reindex) and
-        // therefore fReindex would already be false and the txindex would not get rebuilt.
-        bool fWipeDatabase = GetBoolArg("-reindex", DEFAULT_REINDEX);
-        TxIndexDB *txindex_db = nullptr;
-        try
-        {
-            txindex_db = new TxIndexDB(nTxIndexCache, false, fWipeDatabase);
-        }
-        catch (...)
-        {
-            // Startup with a database wipe if the txindex is likely corrupted.
-            LOGA("WARNING: txindex was likely corrupted. Database will be wiped and rebuilt...\n");
-            fWipeDatabase = true;
-            txindex_db = new TxIndexDB(nTxIndexCache, false, fWipeDatabase);
-        }
-        if (txindex_db)
-        {
-            g_txindex = std::make_unique<TxIndex>(txindex_db);
-            g_txindex->Start();
-        }
-        else
-        {
-            LOGA("ERROR: txindex failed to start\n");
-        }
+        g_txindex->Start();
     }
 
     // This should be done last in init. If not, then RPC's could be allowed before the wallet
@@ -1410,6 +1384,21 @@ bool AppInit2(Config &config)
                 uiInterface.InitMessage(_("Opening Token Mintage database..."));
                 ptokenMint = new CTokenMintageDB(cacheConfig.nBlockTreeDBCache, false, fReset);
 
+                if (fTxIndex)
+                {
+                    TxIndexDB *txindex_db = nullptr;
+                    try
+                    {
+                        txindex_db = new TxIndexDB(cacheConfig.nTxIndexCache, false, fReset);
+                    }
+                    catch (...)
+                    {
+                        // Startup with a database wipe if the txindex is likely corrupted.
+                        LOGA("WARNING: txindex was likely corrupted. Database will be wiped and rebuilt...\n");
+                        txindex_db = new TxIndexDB(cacheConfig.nTxIndexCache, false, true);
+                    }
+                    g_txindex = std::make_unique<TxIndex>(txindex_db);
+                }
 
                 InitTxAdmission();
 
@@ -1808,7 +1797,7 @@ bool AppInit2(Config &config)
         for (const std::string &strFile : mapMultiArgs["-loadblock"])
             vImportFiles.push_back(strFile);
     }
-    threadGroup.create_thread(boost::bind(&ThreadImport, vImportFiles, cacheConfig.nTxIndexCache, fSync));
+    threadGroup.create_thread(boost::bind(&ThreadImport, vImportFiles, fSync));
 
     uiInterface.InitMessage(_("Waiting for Genesis Block..."));
     CBlockIndex *tip = nullptr;
