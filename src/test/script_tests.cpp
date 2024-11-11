@@ -3241,9 +3241,9 @@ BOOST_AUTO_TEST_CASE(unlocking_op_parse)
     BOOST_CHECK(vfy);
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
 
-    constraint == CScript() << OP_1 << OP_1 << ParseOption::BYTECODE_DATA << OP_PARSE
-                            << ToByteVector(ParseHex("0123456789abcdef")) << OP_EQUALVERIFY << OP_DROP
-                            << OP_DROP; // last 2 drops just let there be args
+    constraint = CScript() << OP_1 << OP_1 << ParseOption::BYTECODE_DATA << OP_PARSE
+                           << ToByteVector(ParseHex("0123456789abcdef")) << OP_EQUALVERIFY << OP_DROP
+                           << OP_DROP; // last 2 drops just let there be args
     args = CScript() << OP_2;
     CScript publicArgs = CScript() << OP_3;
 
