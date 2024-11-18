@@ -49,7 +49,7 @@
 // Revision version MUST be incremented if only backward compatible bug fixes are
 // introduced. A bug fix is defined as an internal change that fixes incorrect behavior.
 #define LIBNEXA_REVISION(revision) 1 * revision
-static const int32_t LIBNEXA_VERSION = LIBNEXA_MAJOR(1) + LIBNEXA_MINOR(2) + LIBNEXA_REVISION(0);
+static const int32_t LIBNEXA_VERSION = LIBNEXA_MAJOR(1) + LIBNEXA_MINOR(2) + LIBNEXA_REVISION(1);
 
 // clang-format on
 
