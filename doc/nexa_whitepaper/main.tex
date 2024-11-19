@@ -1,0 +1,296 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{todonotes}
+
+
+\title{The Nexa Cryptocurrency}
+
+
+%% Add authors here.
+%% First line with author name, email and ORCid when available (only ID, please!)
+%% In cases where a second line is needed for the affiliation,
+%% use the command \nl to separate them. 
+\author{
+    \begin{center}
+        Whitepaper v1.0 \quad https://nexa.org/
+    \end{center}\\
+}
+
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+    Nexa is a fairly launched, sound money, highly parallel and scalable UTXO-family permissionless proof-of-work blockchain that is committed to pushing Satoshi’s technology forward in a dramatic manner.  At genesis, Nexa focuses on Layer 1 functionality with miner-validated native tokens and new features in the block, transaction and contract definitions.  It focuses on scalability with real-world tests of 40k transactions per second and responsiveness with 2 minute block times and doublespend detection.  Nexa is a living project with active development in hardware accelerated verification, blockchain topology, contract features, multi-party transaction protocols, and light client performance.
+
+\end{abstract}
+\section{Introduction}
+The goal of the Nexa blockchain is to be the most useful sound money.  There is no single innovation or technology that drove the creation of Nexa.  This is beneficial to the previously stated goal, since a blockchain needs to be a tremendous amalgam of innovative technology, not a showcase for a single new advance.  Yet, this results in an unconventional whitepaper.  We cannot describe just one innovation, and the places of original innovation within Nexa are often subtle but significant.  Instead, Nexa is more about picking the right set of blockchain innovations, so the sum is greater than the parts.  And key elements of those choices are simply due to looking unconventionally at the benefits of varied innovations.  This means that this paper must cover a large amount of material. 
+
+Note, this paper is published some two years  after launch, and will be periodically updated, giving the benefit of a comprehensive viewpoint on an ongoing, successful cryptocurrency.
+
+To understand how creating the “most useful sound money” defines Nexa blockchain philosophy, we need to understand more about the function of money, and to understand these four principal concepts in detail.  First, let us order them by priority, understanding that Nexa will not deploy a feature to enhance a lower priority concept that has a first order \footnote{1st: direct, 2nd: indirect, 3rd: unintentional, are orders of involvement loosely following disaster theory nomenclature.  An example indirect effect argument is “this feature will consume blockchain space, crowding out other transactions”.  An example unintentional effect argument is “ANY change addressing priorities 2, 3, or 4 could introduce a bug that affects 1.  Therefore no changes can be made to address priorities below the first (soundness)”.  Both of these arguments are endemic within many Satoshi-derived blockchains, although they are often hidden behind other words.} impact on a higher priority concept:
+
+
+\subsection{Soundness}
+A perfect sound money is money with a supply that changes predictably via an algorithm that ultimately reduces new unit creation to 0.  We reject that different time-deterministic unit creation algorithms matter, because any such algorithm cannot anticipate current demand and so will suffer the same volatility.  Therefore, why not use the simplest asymptotic supply increase – 0? 
+
+Traditional sound money such as gold can only approach this ideal, not meet it.  Cryptocurrencies are more capable than gold in this capacity.  So the actual definition of soundness is in flux.  Will there be a time when we no longer consider gold to be sound money? 
+
+
+\subsection{Utility}
+Blockchain technology expands beyond money.  And ultimately money is simply a useful accounting tool to help societies function.  Therefore it may be unintuitive at first but Nexa prioritizes usefulness over money.
+
+
+\subsection{Monetary function}
+What is money really?  To understand how to make the most useful sound money we must understand the function and ideal properties of money.
+
+Most fundamentally money is a record of productivity, transportable across time and space \footnote{Money is Memory https://www.jstor.org/stable/community.28109870}.  It allows people to produce something in one time and place and then exchange that productivity for other people’s productivity at a different time and place, without requiring that the goods involved coexist, or that a 2 entities exchange exactly the goods produced.
+
+To accomplish this money needs the following properties \footnote{Paraphrased from the Federal Reserve Bank of St. Louis Economic Lowdown series and other sources.}:
+
+\begin{enumerate}
+    \item scarcity
+    \item fungibility
+    \item durability
+    \item portability
+    \item verifiability
+    \item acceptability
+\end{enumerate}
+
+
+\subsection{Adaptability}
+The beating heart of the brilliant Satoshi design is the UTXO set. This is the ledger enumerating everyone’s current holdings, extracted from all the immutable blockchain history. New transactions updating this ledger are always added via blockchain consensus. However, the network software itself must be adaptable to cope with future risks and to facilitate innovations that are increasingly demanded by the sophisticated financial landscape of the 21st Century.
+
+These four principal concepts combine to form the best money on the best system. Nexa strives to be and remain the most useful sound money over any other system of exchange in the world.
+
+
+\section{Nexa’s Philosophy Applied}
+\subsection{Nexa As Money}
+\subsubsection{Scarcity: Monetary Base}
+NEX is a fairly launched commodity with no premine, no founder’s coins, no coinbase tax, etc \footnote{https://nexa.org/case-studies-database/nexa-proof-of-fair-launch}.  Its distribution schedule is the same as Bitcoin, as measured by each blockchain’s finest unit (in both chains the respective finest unit is called by the same name “satoshi”, but the reader should be able to determine which is referred to by the context).  However, Bitcoin defines a BTC as 100,000,000 satoshi, whereas Nexa defines a NEX as 100 satoshi.  Therefore, Bitcoin will ultimately produce 21 million BTC, whereas Nexa will produce 21 trillion NEX. In short, “we moved the decimal point”, because people have a hard time with payments of small decimal quantities such as 0.00002345, as compared to a payment of 23.45 units. People are much better at dealing with large numbers.
+
+This puts NEX squarely within the category of a commodity (versus a security) when examined with the Howey test, and as attested to (for Bitcoin) by various government authorities.  This categorization benefits our stated goal of being the “most useful sound money” more than any tweaks to the monetary base, inflation rate, etc could possibly accomplish.
+
+\subsubsection{No Modification of Supply}
+Any modification of supply changes the implied agreement with every individual who holds or is planning to hold or transact in NEX, and therefore undermines soundness.  Monetary supply inflation clearly undermines the fundamental purpose of money as a memory of production (since no production occurred in arbitrary monetary supply inflation), but supply deflation also undermines money.  It values prior production more highly than current production.  For example, reducing the schedule at which NEX is created is effectively a retroactively-created premine benefiting early miners at the expense of later ones.
+It should be noted that if global economic activity increases, a constant supply money must cover greater economic activity with the same quantity of money, resulting in an average increase in the value of the money against those goods (deflation).  In this situation sound money effectively places greater value on production of the same quantity of goods when goods are scarce as compared to when they are plentiful.  Also note that holding a societies’ sound money is therefore a sort of investment in the future productivity of that society, in a manner similar to how stock is an investment in the future productivity of a company.  It also should be noted that with modern information technology providing almost instantaneous and accurate repricing, and low friction, the social necessity for a mono or bi-monetary standard is very likely over.
+ In contrast, central bank fiat currencies put priority 3 above 1.  They attempt to stabilize the value of a quantity of currency by creating or destroying currency in a process called monetary “policy”.  Yet throughout history, the end result of human “management” of monetary value is the total destruction of that value, due to the insidious temptation that exists when one can create liens against other people’s productivity without commensurate effort.   
+For these reasons, Nexa emphatically and unambiguously prioritizes monetary soundness above value stability.
+
+\subsection{Nexa Functionality Applied}
+\subsubsection{Decentralized, Pseudo-anonymous, Permissionless}
+Interference in the ability of any participant to transact undermines the soundness, usefulness, and role of Nexa as money, since it undermines confidence in the network’s ability to function for any other participant.  
+
+Note that a blockchain is fundamentally information – it is simply a ledger.  This means that preventing the modification of that ledger is a curtailment of the fundamental human right to free speech, in addition to the right to freely transact. These fundamental rights are recognized by advanced societies and will ultimately withstand legislative challenges.  There are many other methods for authorities to enforce laws against criminal activity.  These methods have been employed for the majority of human history, and are still employed, since centralized electronic banking is a relatively new innovation and criminals still use physical money. Central Bank digital currencies (as currently envisioned as a permissioned system) pose a direct threat to the human right to privacy and to freely transact, hence CBDCs will remain inferior to pseudo-anonymous decentralized money, such as Nexa.
+
+	Importantly, decentralization is not an end in itself – it is a means to achieve permission-free access in support of useful money (2,3).  An extreme form of decentralization, where every possible participant must participate fully in every aspect of the blockchain protocol (e.g. a fully distributed system where every wallet is also a “full node”,  as espoused by Bitcoin) is both unnecessary and actually is inconvenient enough to undermine the priorities it is meant to protect \footnote{ See Bitcoin}.
+
+\subsubsection{Scalability}
+We reject the “blockchain trilemma” as an artifact of design choices made by the EVM architecture.  To become the most useful (4, 2), Nexa must be usable by the largest possible number of people across the largest number of payment scenarios (e.g. micropayments to huge payments, electronic and in-person).  Nexa must be with people where they are, not require that people change their habits to conform to Nexa’s way of doing things.
+
+	This scaling requirement can be achieved via hardware acceleration of transaction processing, and careful design that optimizes parallelizability.  To incentivize the creation of this hardware, the most time intensive functions of transaction processing are and will be incorporated into the Proof-of-Work function.  In effect, this leverages the coin distribution and transaction validation reward system into also solving key aspects of scalability.
+
+	To achieve great scale, we need very small pieces.  The smallest unit of NEX, is a NEX penny or “satoshi” in honor of the creator of the first blockchain.  The satoshi must have a very small value to allow large numbers of people to make small payments.  This informs the supply of 21 trillion NEX.  But if the satoshi ever becomes too large, the supply schedule must not be changed to create more.  Instead, more decimal places will be added.  This preserves the most important precept: soundness (1) while enabling usefulness.
+
+\subsubsection{Blockchain Data Services (Rostrum)}
+The raw blockchain data is not conveniently presented to applications or wallets (apps), as it is simply a record of transactions.  It is essential to provide a service that synthesizes current and historical blockchain data, allowing queries by any noun (address, script hash, or token identifier).  The Rostrum software is a database that connects with a local or remote full node, synthesizes raw blockchain data and presents it via a JSON-RPC API.
+
+By bundling Rostrum with the full node, we make it very easy for full nodes to provide this data service to apps.  And we allow these wallets and applications to access this data pseudo-anonymously.  Yet the wallet or application does not need to trust Rostrum servers – Rostrum’s responses contain Merkle proofs of existence, and an app can query multiple servers to prevent lies by omission.
+
+Finally, by providing a service we encourage apps to simply deploy it as their back-end data provider.  This helps mitigate the risk of censorship and service shutdown – in either case users may point their app to their own Rostrum service rather than the original one.
+
+\subsubsection{Light Clients}
+To be useful in mobile contexts, yet simultaneously scale to worldwide use, a wallet is needed that is not a full participant in verifying the blockchain.  This is called a light client.  A custodial client (either light client or web site) is discouraged since it undermines 1 (soundness) for that individual (albeit not for the larger community of holders), and returns us to the trust-based model of the legacy fiat system.  A non-custodial light client that trusts a full node undermines 2 (usefulness) for the user, because the full node could censor payments, go offline, etc.  Therefore Nexa focuses on provable technologies such as SPV (Simplified Payment Validation, see the Bitcoin whitepaper) and UTXO (Unspent Transaction Output) commitments, and uses full nodes and ledger information systems (e.g. Rostrum) to retrieve this provable information.
+
+\subsubsection{Layer-1 Versus Layer-2}
+Layer-1 is the main Nexa blockchain. Layer-2 is any sidechain or stateful protocol between users that settles or confirms on Layer-1. 
+Nexa is focused on expanding the layer-1 scalability and functionality of UTXO-based blockchains as far as feasible.  Layer-1 has simplicity advantages over Layer-2, with fundamental useability features like the ability to receive payments while offline, and the ability to go offline for any period of time without risking a user’s balance.
+In contrast to the rest of the cryptocurrency community, we maintain that there is no conflict here.  To be useful to the largest number of people, it makes sense to scale Layer-1 as much as possible, and to adopt any Layer-2 solutions that appear useful, viable and mature, so long as they advance Nexa’s stated goal. Layer-2 solutions must attract organic usage on their own merits, not because Layer-1 is constrained, distorting fees higher and forcing users away. In the case where users are priced away from Layer-1, they may well move to a different cryptocurrency, than be satisfied with Layer-2.
+
+\subsubsection{The Correct, Unambiguous, and Distributed Public Ledger}
+The ability for the general public to read the ledger to prove monetary base quantity and to validate payments is fundamental to sound money (1).  By distributing this ledger throughout society, durability and verifiability is achieved.  However, Nexa prioritizes scalability (wide accessibility) and portability over an extreme focus on distribution, recognizing that it is sufficient to distribute many copies of the ledger across many geographic and political regions.  Further distribution (to say every individual’s phone or laptop) yields little additional benefit.
+
+A ledger must form an unambiguous record of truth.  All statements in it must be valid.  A blockchain’s consensus algorithm should produce this ledger in a succinctly probabilistically verifiable manner.  Such a ledger (an exclusively-correct ledger) supports all four priorities in subtle ways.  For example, a ledger which is simply an ordered record of statements (a “time stamp server”, using “client consensus”) cannot use a statement’s presence in the ledger as proof of the validity of that statement.  In other words, it cannot deploy trustless (for example, SPV) light clients.  This impacts the verifiability and portability of the money.  
+
+Such a ledger also relies on “client consensus” and therefore may suffer from undiscovered (e.g. “silent”) forks \footnote{https://medium.com/@g-andrew-stone/security-of-client-consensus-draft-1ae6966348fb}.  In this scenario, a consensus difference (bug) in one widely deployed client makes all users of this client mark a certain transaction as valid (or invalid) whereas other clients may see the opposite.  All descendents of this transaction are therefore consensus divergent between the two clients, and since transactions may consolidate multiple ledger entries and/or branch out to many other entries, this divergence may “infect” other money as subsequent payments are made.  But since the ledger accepts incorrect statements the blockchain does not fork and no indication of consensus divergence exists.  This situation persists until a failed cross-client payment (and subsequent human debugging) reveals the deviation.  If client software and payments are co-isolated, it would be possible for this situation to persist for some time, and so a significant amount of economic activity to be suddenly discovered to be invalid \footnote{SLP tokens in BCH were plagued by client consensus issues, a factor in their ultimate retirement in favor of native (consensus aware) tokens.}.  Silent forks are a major issue affecting verifiability and so Nexa uses the full consensus achievable with valid-statements-only blockchains.
+
+To state this in another way, a blockchain whose consensus algorithm finishes with a provable and unambiguous ordering of transactions does not actually achieve the consensus that a monetary protocol requires, which is to unambiguously determine the set of valid transactions.
+
+\subsubsection{Other Assets on the Blockchain}
+Supporting representation of other assets on the Nexa blockchain promotes the blockchain from a means of transfer to a means of exchange.  This dramatically benefits usefulness (2) and money (3) priorities.  Nexa has deployed a consensus-aware “native” tokenization system to the point where the native currency NEX can almost be considered simply “first among equals”, as described in the “Group Tokenization” document \footnote{https://docs.google.com/document/d/1X-yrqBJNj6oGPku49krZqTMGNNEWnUJBRFjX7fJXvTs/edit}.  
+
+Specifically, the particular advantages of NEX over another token type are only:
+\begin{enumerate}
+    \item Transaction fees must be paid in NEX. 
+    \item Every UTXO \footnote{A UTXO (unspent transaction output) is the blockchain term for a single entry in the ledger.} must carry a minimum amount of NEX (the dust limit) as an anti-spam measure.
+    \item A UTXO may carry both NEX and exactly one other token type.  That is, a single UTXO cannot carry multiple token types, but it may carry multiple tokens of the same type.
+    \item A NEX-only UTXO is slightly smaller because a token must identify its type using a 32 byte field.
+\end{enumerate}
+
+\subsubsection{Blockchain Enforced Contracts}
+Blockchain Enforced Contracts (commonly named “smart contracts”) are not an end in themselves, but exist to increase the usefulness of NEX as money.  Therefore Nexa contracts differ dramatically from Ethereum Virtual Machine (EVM) contracts.  Blockchains that carry EVM contracts are perhaps more accurately characterized as a massive distributed computer with finance layered on top, whereas Nexa is better described as a financial blockchain with contracting capabilities.
+Nexa’s contracting layer is not Turing complete, resulting in what we call “Transparent Transactions” \footnote{https://nexa.org/case-studies-database/nexas-transparent-transactions
+}.  For example, information about exactly how a transaction (and by extension, all contracts within that transaction) accesses and modifies the ledger is defined outside of all contracts.  One result of this is that it is very easy for software to present exactly how a transaction will change the ledger to end users, solving the “blind signing problem” of EVM systems, reducing the trust required to interact with a service, and therefore increasing usefulness(2).  
+Another effect is that contracts only need to be executed one time, and this execution can occur out-of-band and in parallel with other transactions.  When the time comes for a transaction (that passed the above contract check) to be applied to the ledger, one only needs to make sure that all the accessed ledger entries still exist, and then apply the specified modifications.  No contract code needs to be executed.  This results in a massive increase in scalability.
+Finally, transactions consume specific UTXO state.  This means that, unlike with “accounts model” blockchains, the originator knows exactly how the transaction will execute – the exact CPU and RAM resources required.  “Gas” is unnecessary, and the current negative connotation of “MEV” (miner enhanced value) – that is, miners taking advantage of changing blockchain state to execute the transaction with unanticipated consequences advantageous to the miner and detrimental to the author – does not exist.  Instead, in Nexa “MEV” is a positive concept. It refers to “covenant” style contracts (contracts that persist over multiple transactions) that offer small bounties to any entity (typically the miners) willing to generate the transactions needed to move blockchain state along deterministic pathways defined by the contract.
+
+\subsubsection{Continuous Innovation}
+Without continuous innovation, Nexa may cease to be the *most* useful sound money if another blockchain or technology becomes more useful.  We are committed to adopting innovations as they are conceived to keep Nexa on the forefront of usefulness.  We recognise and accept that this introduces 3rd order risk (the risk of unintentional negative effects) into the other priorities.
+
+\subsubsection{Algorithmic Solutions}
+Nexa prioritizes algorithmic solutions because the transparency and predictability of algorithms (versus, say, decisions made by a group of people) results in transparent and predictable money for those who care to understand them.  Note that predictable does not mean stable.  For example, algorithmic supply results in a prediction of price volatility when measured against other currencies.  In contrast, monetary “policy” attempts to provide (and the relevant policy makers predict) stable value, until policy dramatically and unpredictably fails.  This cycle of artificially stable value ultimately resulting in dramatic inflation has been seen in fiat currencies worldwide throughout the course of human history.  
+
+“Continuous Innovation” therefore does not mean engaging in defacto monetary policy by constantly tweaking various parameters to possibly ameliorate inconveniences, especially within the infrastructure.  This undermines the value of algorithmic solutions.  Instead, Continuous Innovation refers to delivering useful and important features to end users, as will be discussed in a forward looking (“Roadmap”) section below.
+
+\section{Design Thesis Versus Other Cryptocurrencies}
+This section explains the advantages and differences in the Nexa design as compared to specific other cryptocurrency families.  Each section therefore covers Nexa features that potentially have already been described previously in this paper, and in other sections.  In most cases aspects of the Nexa design makes it better in some metrics but worse in others.  This is to be expected when comparing successful designs.  There will never be a market winner between a race car and a bus.
+
+\subsection{Bitcoin (and clones)}
+Bitcoin is focusing on “store of value” use cases and scaling via “layer-2” (L2).  L2 is a technique where participants engage in an extended financial interaction by committing coins into a shared contract and then periodically updating child transactions to reflect transfers between the participants, without actually submitting these child transactions to the blockchain.  This technology comes with numerous caveats and problems (some intrinsic to the design), hampering adoption \footnote{According to bitcoinvisuals.com there was 132 million USD (4732 BTC) capacity in the lightning network, as of Sep 1, 2023.  Lightning has been available on mainnet since Jan 2018.
+}.
+
+ 	 Nexa’s native tokens means that the network is upgraded to a method of exchange, rather than a means of payment.
+
+Additionally, in expanding Layer-1 functionality, Nexa has gained the capability of doing L2-style contracts.  So on the Nexa blockchain, the market may choose the better technology.  Therefore from a purely technical standpoint, Nexa is a better payment network.  Of course, Bitcoin has the first mover advantage and this is significant.
+
+\subsection{Ethereum (and other EVM cryptocurrencies)}
+The EVM is a turing complete (within a resource constraint) massively redundant computing machine that has financial programs running on it.  This creates problems and inefficiencies as compared to a blockchain optimized for finance.  
+The first key problem is referred to as the blind signing problem \footnote{https://nexa.org/case-studies-database/nexas-transparent-transactions}, and this is not theoretical \footnote{https://www.artnews.com/art-news/news/bored-ape-yacht-club-nfts-stolen-2022-13-5-million-1234637674/}.  Blind signing tricks are currently being actively exploited in Ethereum networks.  This problem is unsolvable for Turing complete transaction languages, as it is equivalent to the famous Halting Problem \footnote{https://en.wikipedia.org/wiki/Halting\_problem} in computer science.  In essence, the halting problem states that a computer program (say your wallet) cannot be written that analyzes another arbitrary computer program (a transaction you are about to sign) and determines something about it, classically whether it will ever stop (but in cryptocurrencies, whether it’s going to steal your money).  You have to trust whoever created that transaction.  It’s certainly true that your wallet can look at some programs and prove that they are or are not stealing your money.  And wallets for EVM-based cryptocurrencies will surely get better at this analysis.  But it’s not known whether this analysis will ever get sophisticated enough.  
+Although the current sophistication of attacks are far lower, to help you understand the complexity of the analysis required against a clever attacker, think about this:  The contract calls another contract on the blockchain (it’s not enough to just analyze the transaction provided to you).  That on-chain contract calls one of many other on-chain contracts based on internal state (you must analyze a potentially open-ended number of subcontracts).  After you signed your transaction, the attacker issued a higher fee transaction that modified that contract’s internal state changing which of the many sub-contracts actually got called (you must analyze ALL of them).  It turns out that that high-fee transaction also created an entirely new contract and one of the sub-contracts calls this new sub-sub-contract.  That new contract, that didn’t exist on-chain when you signed the transaction, steals your money.
+The second key problem is determinism.  Essentially, behavior of an EVM transaction is not necessarily fully known when created, because the underlying state of the blockchain may be changed.  This state may result in unanticipated behavior, depending on the executed contract.  In EVM blockchains, agents actively search for and exploit this non-determinism in a set of techniques called Maximal Extractable Value, or “MEV”.  Essentially, the miner can “front-run” trades, “sandwich” transactions, consume the maximum offered fee, or fail (and penalize) the transaction by scheduling transactions to occur just before and after others.  In contrast, in the Nexa blockchain all transactions import specific UTXO state.  If that state is changed, the transaction is invalid (with no penalty).  No MEV attacks are possible.
+The third problem is scalability.  Across all replicas, when a new block arrives, the transactions contained in it must be executed in the same sequential order so that all replicas make the exact same changes to the machine’s state.  It is not possible to determine whether a transaction will actually succeed before that moment, so transactions are often executed multiple times.  In contrast, a Nexa transaction can be executed once upon arrival, and when a block arrives the only check needed is the presence of its inputs.
+It would be possible to execute independent transactions in parallel, but determining independence is equivalent to solving the halting problem in EVM blockchains.  In Nexa, independence is determined by simply comparing UTXO hashes.  However, note that unlike the blind signing problem, there is no assumed active attacker, so it seems possible that algorithms could be developed that analyze and determine the independence of contracts that fit “known” patterns.  You may read EVMs that claim this.  However, such a claim is a band-aid over the fundamental scaling problem and will need constant maintenance.
+
+In contrast, Nexa is a financial-optimized blockchain with contracting capabilities.  Most importantly, the “blind signing” problem does not exist by design.  Contracts simply cannot make arbitrary changes to the blockchain (the ledger).  Instead, all such changes must be indicated in each transaction as a simple list of records (called UTXOs – unspent transaction outputs) that are deleted and created.  Note that existing records cannot be changed; they are immutable.  This allows wallets to present a screen detailing exactly what the effect of the transaction will be if signed.  
+And this same knowledge allows full nodes to determine whether a transaction conflicts with other pending transactions efficiently, without executing the contract.  They conflict if they delete the same record.  This allows independent transactions to be identified and be executed in parallel, resulting in the potential for massive scalability.  And once executed (when the transaction is received), no contracts need to be re-executed (when committed to the block) because contracts can only use the transaction itself and the immutable UTXO records as input.  So either the input UTXO records still exist, and therefore the contract execution must produce the same valid result, or some of the input UTXO records no longer exist (used by another transaction) and the transaction is invalid.
+
+\subsection{BlockDAG Cryptocurrencies}
+The acronym “DAG” \footnote{https://en.wikipedia.org/wiki/Directed\_acyclic\_graph} refers to “directed acyclic graph” and refers to how blocks connect to each other. In its basic design, blockDAG systems must allow multiple blocks to appear “in parallel”.  In other words multiple blocks may be created without an awareness of other blocks, and all become part of the final DAG.  This allows block creation to occur much faster than in blockchains.  Later blocks reference prior ones resulting in a final set of blocks that are considered valid (affect the ledger) and others that do not. 
+However, this parallel block production comes at a price.  The value of a transaction’s inclusion in a block is significantly undermined, and the ratio of meta-data to useful (transactional) data is much higher compared to a blockchain.  In particular, inclusion in a block does not imply that the included transaction is valid (part of the ledger), because a conflicting transaction may have been included in a parallel block.  Since inclusion does not imply validity, “simplified payment verification”-style (SPV) proofs \footnote{Bitcoin: A Peer-to-Peer Electronic Cash System. https://bitcoin.org/bitcoin.pdf. Section 8.} are not possible.  The lack of these proofs undermine the security model of “light clients”, as they must trust full nodes to report blockchain information.  Additionally, the ability to get invalid doublespends of the same transaction included in many parallel blocks adds a “DoS multiplier” to spam attacks.
+These cryptocurrencies either periodically “collapse” the DAG into a blockchain or they essentially achieve consensus only on the order of messages, not the contents of the ledger, relying on “client consensus” \footnote{https://g-andrew-stone.medium.com/security-of-client-consensus-draft-1ae6966348fb} to actually construct the ledger.  If the former, the collapsed blockchain should be compared to Nexa’s blockchain, and careful proofs of the likelihood of promotion of transactions from DAG blocks to the chain are needed to determine what conclusions (if any) a user can come to given the inclusion of a transaction in a DAG block.
+Nexa’s two minute blocks strikes a reasonable compromise between transaction processing latency and block overhead.  As a blockchain, it preserves SPV proofs.  Both of these features allow Nexa to provide phone-based light wallets \footnote{www.wallywallet.org} that access arbitrary untrusted network nodes rather than custom back end servers (which is a censorship and denial-of-service vulnerability).
+At the same time, Nexa’s Tailstorm (partial proof-of-work) \footnote{Bissias et al. Bobtail: Improved Blockchain Security with Low-Variance Mining. https://arxiv.org/pdf/1709.08750} (forthcoming), and Doublespend Proof broadcast (available at genesis) functionality allows users to gain a reasonable estimate of the probability of a transaction’s successful confirmation within a few seconds of issuance.  Finally, Nexa’s scripting language supports Doublespend Forfeits \footnote{Awemany. https://gist.github.com/awemany/619a5722d129dec25abf5de211d971bd}.  This technology allows a payer to place a surety upon a payment that will be forfeit to miners if the payer even attempts (successful or not) a doublespend.
+
+\section{Detailed Feature Description}
+(updated periodically)\\
+See spec.nexa.org for specifications
+ \subsection{Blockchain Functionality}
+ \begin{itemize}
+     \item \textbf{Fundamental tokens and NFTs}\\
+        Basic token operations are efficient (and uniform across all tokens)
+    \item \textbf{Transparent Transaction blockchain state changes}\\
+        Transactions cannot make arbitrary changes to blockchain state.  They may only make specific changes, well-defined within the transaction.  This prevents many types of fraud where the actual executed transaction behaves differently than how it is advertised/marketed (see the “blind signing” problem).
+    \item \textbf{Advanced Bitcoin-style scripting}\\
+        Support for large scripts\\
+        Support for large stack item sizes; limited total stack use
+        Large (arbitrary sized) integer support (\verb|OP_BIN2BIGNUM|)\\
+        Call subroutines (\verb|OP_EXEC|)
+    \item \textbf{Schnorr signatures}\\
+    \item \textbf{Partial transaction signing}\\
+        The ability to sign part of a transaction exists in Bitcoin in a rudimentary form.  Nexa generalized the functionality allowing significant innovation in multi-party transaction construction protocols.  These protocols effectively constitute an open-outcry distributed permissionless anonymous and atomic exchange of tokens and Nexa.
+    \item \textbf{3-party scripting (spender, holder, template)}\\
+    \item \textbf{Small UTXO entries – UTXO stores commitments to scripts and arguments which must be provided only when spent}\\
+    \item \textbf{Transaction Introspection}\\
+        Scripts can access data about the transaction (and the UTXO set) currently being evaluated.
+    \item \textbf{Block ancestor commitments}\\
+		Allows rapid blockchain membership checks.
+    \item \textbf{Blockchain total work commitments}
+        Allows rapid light client determination of the correct chain tip
+ \end{itemize}
+
+\subsection{Wallet Services and Libraries}
+\begin{itemize}
+    \item Fast blockchain synthesis database (Rostrum, electrum.nexa.org)
+    \item SQL blockchain synthesis database (Otoplo Indexer,tokenapi.otoplo.com/)
+    \item Identity and Challenge Transaction authorization
+    \item Trusted delegated payment protocol
+    \item Kotlin/Java P2P or Rostrum multi-wallet library
+    \item Javascript wallet/exchange integration library
+    \item Python wallet library
+\end{itemize}
+
+\subsection{Wallets}
+\begin{itemize}
+    \item Full node wallet with JSON-RPC and the “bitcoind” API (nexad)
+    \item Multiplatform P2P SPV-client Nexa and Asset wallet (Wally Nexa Wallet)
+    \item Multiplatform database wallet (Otoplo)
+\end{itemize}
+
+\subsection{Services}
+\begin{itemize}
+    \item Token aware blockchain explorer (explorer.nexa.org)
+    \item NFT creation and trading (Telegram NexaNiftyBot, niftyart.cash)
+    \item Nexa specifications (spec.nexa.org)
+    \item RPC commands reference (doc.rpc.nexa.org)
+\end{itemize}
+
+\section{Roadmap Features}
+(updated periodically)
+
+\subsection{Core Functionality}
+\begin{itemize}
+    \item Nexa dev tools portal
+    \item Nexa web/app Software Development Kit (SDK)
+    \item Example web app (depends on Nexa web/app SDK)
+    \item Fungible token tool page PoC (e.g. white label ticketing service) (Tokenex?)
+    \item Pool withholding defense
+\end{itemize}
+
+\subsection{Blockchain Functionality}
+\begin{itemize}
+    \item TailStorm (https://people.cs.umass.edu/~gbiss/tailstorm.pdf, or https://arxiv.org/pdf/2306.12206)
+    \item Advanced Bitcoin-style scripting
+    \begin{itemize}
+        \item Deep stack manipulation (negative \verb|OP_ROLL|)
+        \item Registers (indexable memory) (\verb|OP_LOAD|, \verb|OP_STORE|)
+        \item Constrained looping (\verb|OP_LOOP|)
+        \item Merkle proof validation (\verb|OP_MERKLEVERIFY|)
+    \end{itemize}
+    \item Read only UTXOs\\
+        Read-only UTXOs allow surprising functionality that is beyond the scope of this document.  An example is script libraries (when combined with \verb|OP_EXEC|).
+\end{itemize}
+
+\subsection{Network Functionality}
+\begin{itemize}
+    \item Object property commitments\\
+        Communicates blockchain objects (primarily transactions) with a commitment to key properties; peers can automatically filter by these properties.  Since the commitment is part of the INV, lying peers cannot interfere with honest.When combined with deterministic transaction execution, this allows peers to filter transactions by properties before evaluation.
+\end{itemize}
+
+\subsection{Hardware Transaction Verification}
+\begin{itemize}
+    \item Schnorr Signature FPGA
+    \item Schnorr Signature ASIC (depends on signature FPGA)
+    \item Final mining algorithm deployed via Hard-fork \#1
+    \item FPGA miner (depends on Schnorr signature FPGA and final mining algorithm)
+    \item ASIC Miner (depends on FPGA miner) -
+    \item Falcon Signature calculation using FPGA (benchtest)
+    \item FPGA miner (depends on Falcon signature FPGA and any change to mining algorithm)
+    \item ASIC Miner (depends on FPGA miner)
+\end{itemize}
+
+\subsection{Robust Light Clients (phones, tablets, etc)}
+\begin{itemize}
+    \item Advanced transaction filtering and filter commitments\\
+		Allows light clients to rapidly and securely discover transactions relevant to them without relying on a middle layer database
+\end{itemize}
+
+\subsection{Cashdrive}
+\begin{itemize}
+    \item UTXO Commitments deployed via Hard-fork \#2\\
+        UTXOs commitments make storing the entire historical blockchain unnecessary for normal operation.  This dramatically reduces the amount of information that is necessary to keep.  Keeping the entire blockchain is the original bitcoin “scalability” complaint, stated just a few days after Bitcoin was created, and arguably launched the “bitcoin block size war”.  If old L1 data can be “retired” what is the benefit of creating an L2?
+    \item Cashdrive hardware development
+\end{itemize}
+
+\subsection{Utility}
+\begin{itemize}
+    \item Prototype Cross chain atomic swap service
+    \item Prototype token DEX service (depends on some items in core functionality)
+    \item DEX for tokens (depends on prototype token dex service)
+    \item Constant product market maker for DEX order-book liquidity
+    \item NFT marketplace design
+    \item Nexa DEX and bridge
+
+\end{itemize}
+
+\end{document}
