@@ -162,7 +162,7 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_nexa_libnexakotlin_Native_initial
     return true;
 }
 
-extern "C" JNIEXPORT jint JNICALL Java_org_nexa_libnexakotlin_libnexaVersion(JNIEnv *env, jobject ths)
+extern "C" JNIEXPORT jint JNICALL Java_org_nexa_libnexakotlin_Native_libnexaVersion(JNIEnv *env, jobject ths)
 {
     return LIBNEXA_VERSION;
 }
@@ -439,7 +439,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_signH
     jbyteArray nonce)
 {
     ByteArrayAccessor data(env, message);
-    ByteArrayAccessor k(env, message);  // Schnorr private nonce is typically "k" in the literature
+    ByteArrayAccessor k(env, nonce);  // Schnorr private nonce is typically "k" in the literature
     ByteArrayAccessor privkey(env, secret);
     if (privkey.size != 32)
     {
