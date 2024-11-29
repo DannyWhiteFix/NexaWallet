@@ -22,8 +22,8 @@ static void AddTx(const CTransactionRef &tx, const CAmount &nFee)
     bool spendsCoinbase = false;
     unsigned int sigOpCost = 4;
     LockPoints lp;
-    mempool.addUnchecked(CTxMemPoolEntry(tx, nFee, nTime, dPriority, nHeight, mempool.HasNoInputsOf(tx),
-        tx->GetValueOut(), spendsCoinbase, sigOpCost, lp));
+    mempool.addUnchecked(
+        CTxMemPoolEntry(tx, nFee, nTime, dPriority, nHeight, tx->GetValueOut(), spendsCoinbase, sigOpCost, lp));
 }
 
 static void RpcMempool(benchmark::State &state)

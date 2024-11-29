@@ -34,8 +34,8 @@ extern std::atomic<bool> fMempoolTests;
 static CTxMemPool::setEntries emptySetEntries;
 using namespace std;
 CTxMemPoolEntry::CTxMemPoolEntry()
-    : tx(), nFee(), nTime(0), entryPriority(0), entryHeight(0), hadNoDependencies(0), inChainInputValue(0),
-      spendsCoinbase(false), sigOpCount(0), lockPoints()
+    : tx(), nFee(), nTime(0), entryPriority(0), entryHeight(0), inChainInputValue(0), spendsCoinbase(false),
+      sigOpCount(0), lockPoints()
 {
     nModSize = 0;
     nUsageSize = 0;
@@ -49,14 +49,12 @@ CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef _tx,
     int64_t _nTime,
     double _entryPriority,
     unsigned int _entryHeight,
-    bool poolHasNoInputsOf,
     CAmount _inChainInputValue,
     bool _spendsCoinbase,
     unsigned int _sigOps,
     LockPoints lp)
     : tx(_tx), nFee(_nFee), nTime(_nTime), entryPriority(_entryPriority), entryHeight(_entryHeight),
-      hadNoDependencies(poolHasNoInputsOf), inChainInputValue(_inChainInputValue), spendsCoinbase(_spendsCoinbase),
-      sigOpCount(_sigOps), lockPoints(lp)
+      inChainInputValue(_inChainInputValue), spendsCoinbase(_spendsCoinbase), sigOpCount(_sigOps), lockPoints(lp)
 {
     nModSize = tx->CalculateModifiedSize(tx->GetTxSize());
     nUsageSize = RecursiveDynamicUsage(*tx);
@@ -1823,13 +1821,6 @@ void CTxMemPool::_ClearPrioritisation(const uint256 hash)
             return;
     }
     mapDeltas.erase(pos);
-}
-bool CTxMemPool::HasNoInputsOf(const CTransactionRef &tx) const
-{
-    for (unsigned int i = 0; i < tx->vin.size(); i++)
-        if (exists(tx->vin[i].prevout.hash))
-            return false;
-    return true;
 }
 
 CCoinsViewMemPool::CCoinsViewMemPool(CCoinsView *baseIn, const CTxMemPool &mempoolIn)

@@ -361,14 +361,6 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry &entry, boo
     if (!fCurrentEstimate)
         return;
 
-    if (!entry.WasClearAtEntry())
-    {
-        // This transaction depends on other transactions in the mempool to
-        // be included in a block before it will be able to be included, so
-        // we shouldn't include it in our calculations
-        return;
-    }
-
     // Fees are stored and reported as Nexa-per-kb:
     CFeeRate feeRate(entry.GetFee(), entry.GetTxSize());
 
@@ -381,14 +373,6 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry &entry, boo
 
 void CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry &entry)
 {
-    if (!entry.WasClearAtEntry())
-    {
-        // This transaction depended on other transactions in the mempool to
-        // be included in a block before it was able to be included, so
-        // we shouldn't include it in our calculations
-        return;
-    }
-
     // How many blocks did it take for miners to include this transaction?
     // blocksToConfirm is 1-based, so a transaction included in the earliest
     // possible block has confirmation count of 1
