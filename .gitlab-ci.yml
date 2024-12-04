@@ -109,7 +109,7 @@ gitian-binaries:
         - bin/make-base-vm --suite focal --arch amd64 --docker > make-base-vm.log  2>&1
         - export USE_DOCKER=1
         - mkdir result
-        - bin/gbuild -j `nproc` -m 6000 --url nexa=$CI_REPOSITORY_URL --commit nexa=$CI_DEFAULT_BRANCH $CI_PROJECT_DIR/contrib/gitian-descriptors/gitian-linux-x86.yml > gbuild.log  2>&1
+        - bin/gbuild -j `nproc` -m 6000 --url nexa=$CI_REPOSITORY_URL --commit nexa=$CI_DEFAULT_BRANCH $CI_PROJECT_DIR/contrib/gitian-descriptors/gitian-linux-x86.yml 2&>1 | tee gbuild.log
     artifacts:
         when: always
         paths:
@@ -118,6 +118,7 @@ gitian-binaries:
             - ./gitian-builder/var/build.log
             - ./gitian-builder/var/build-script
             - ./gitian-builder/make-base-vm.log
+            - ./gitian-builder/gbuild.log
     tags:
         - scheduled
     rules:
