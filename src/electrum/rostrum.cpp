@@ -15,7 +15,7 @@
 #include <regex>
 #include <sstream>
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 constexpr char ROSTRUM_BIN[] = "rostrum";
 
@@ -129,7 +129,7 @@ namespace electrum
 std::string rostrum_path()
 {
     // look for rostrum in same path as nexad
-    boost::filesystem::path nexad_dir(this_process_path());
+    std::filesystem::path nexad_dir(this_process_path());
     nexad_dir = nexad_dir.remove_filename();
 
     auto default_path = nexad_dir / ROSTRUM_BIN;
@@ -140,7 +140,7 @@ std::string rostrum_path()
         throw std::runtime_error("Path to electrum server executable not found. "
                                  "You can specify full path with -electrum.exec");
     }
-    if (!boost::filesystem::exists(path))
+    if (!std::filesystem::exists(path))
     {
         std::stringstream ss;
         ss << "Cannot find electrum executable at " << path;

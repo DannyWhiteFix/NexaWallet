@@ -21,6 +21,7 @@
 #include <mutex>
 #include <stdint.h>
 #include <string>
+#include <vector>
 
 static const bool DEFAULT_LOGTIMEMICROS = false;
 static const bool DEFAULT_LOGIPS = true;
