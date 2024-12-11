@@ -3,6 +3,7 @@ libnexa/libnexa_common.cpp
 libnexa/libnexa_jvm.cpp
 base58.cpp
 script/interpreter.cpp
+script/op_parse.cpp
 script/script.cpp
 script/scripttemplate.cpp
 script/scriptattributes.cpp
