@@ -45,6 +45,7 @@
 
 #include <boost/scoped_array.hpp>
 
+#include <codecvt>
 #include <fstream>
 
 #include <QAbstractItemView>
@@ -74,8 +75,6 @@
 
 void ForceActivation();
 #endif
-
-static fs::detail::utf8_codecvt_facet utf8;
 
 #if defined(Q_OS_MAC)
 extern double NSAppKitVersionNumber;
@@ -954,8 +953,8 @@ void setClipboard(const QString &str)
     QApplication::clipboard()->setText(str, QClipboard::Selection);
 }
 
-fs::path qstringToBoostPath(const QString &path) { return fs::path(path.toStdString(), utf8); }
-QString boostPathToQString(const fs::path &path) { return QString::fromStdString(path.string(utf8)); }
+fs::path qstringToBoostPath(const QString &path) { return fs::path(path.toStdString()); }
+QString boostPathToQString(const fs::path &path) { return QString::fromStdString(path.string()); }
 QString formatDurationStr(int secs)
 {
     QStringList strList;

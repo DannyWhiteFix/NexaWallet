@@ -4,7 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include "fs.h"
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 namespace fsbridge {
 

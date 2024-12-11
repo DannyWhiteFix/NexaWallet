@@ -21,7 +21,6 @@
 
 #include <stdint.h>
 
-#include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
 CService ip(uint32_t i)
@@ -40,16 +39,16 @@ size_t GetNumberBanEntries()
     return banmap.size();
 }
 
-bool DoesBanlistFileExist() { return boost::filesystem::exists(boost::filesystem::path(GetDataDir() / "banlist.dat")); }
+bool DoesBanlistFileExist() { return std::filesystem::exists(std::filesystem::path(GetDataDir() / "banlist.dat")); }
 bool RemoveBanlistFile()
 {
-    boost::filesystem::path path(GetDataDir() / "banlist.dat");
+    std::filesystem::path path(GetDataDir() / "banlist.dat");
     try
     {
-        if (boost::filesystem::exists(path))
+        if (std::filesystem::exists(path))
         {
             // if the file already exists, remove it
-            boost::filesystem::remove(path);
+            std::filesystem::remove(path);
         }
 
         // if we get here, we either successfully deleted the file, or it didn't exist

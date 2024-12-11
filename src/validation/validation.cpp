@@ -475,7 +475,7 @@ bool LoadBlockIndexDB()
     }
     std::vector<fs::path> vIndexFiles;
     std::copy(fs::directory_iterator(path_index), fs::directory_iterator(), std::back_inserter(vIndexFiles));
-    for (const boost::filesystem::path &path_file : vIndexFiles)
+    for (const std::filesystem::path &path_file : vIndexFiles)
     {
         if (path_file.extension() == ".ldb")
         {
