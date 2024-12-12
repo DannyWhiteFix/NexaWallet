@@ -9,8 +9,6 @@
 #include "script/script.h"
 #include "utilstrencodings.h"
 
-#include <boost/variant/static_visitor.hpp>
-
 #include <algorithm>
 
 namespace
@@ -69,7 +67,7 @@ std::vector<uint8_t> PackAddrData(const T &id, uint8_t type)
 }
 
 // Implements encoding of CTxDestination using cashaddr.
-class CashAddrEncoder : public boost::static_visitor<std::string>
+class CashAddrEncoder : public std::variant<std::string>
 {
 public:
     CashAddrEncoder(const CChainParams &p) : params(p) {}

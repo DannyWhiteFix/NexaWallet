@@ -73,7 +73,7 @@ OP_GROUP
 OP_HASH256 [32-byte-hash-value] OP_EQUAL
 */
 
-class CTxDestinationGroupTokenExtractor : public boost::static_visitor<CGroupTokenID>
+class CTxDestinationGroupTokenExtractor : public std::variant<CGroupTokenID>
 {
 public:
     CGroupTokenID operator()(const CKeyID &id) const { return CGroupTokenID(id); }
@@ -94,7 +94,7 @@ CTxDestination ControllingAddress(const CGroupTokenID &grp, txnouttype addrType)
     return CTxDestination(CKeyID(uint160(data)));
 }
 
-class CGroupScriptVisitor : public boost::static_visitor<bool>
+class CGroupScriptVisitor : public std::variant<bool>
 {
 private:
     CScript *script;
