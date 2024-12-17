@@ -21,6 +21,7 @@
 #include "txdebugger.h"
 #include "unlimited.h"
 #include "utilmoneystr.h"
+#include "utiltranslate.h"
 #include "wallet/grouptokencache.h"
 
 #include <algorithm>

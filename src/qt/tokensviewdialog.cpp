@@ -17,6 +17,7 @@
 #include "qt/tokendisplaydialog.h"
 #include "qt/transactionrecord.h"
 #include "tweak.h"
+#include "utiltranslate.h"
 #include "wallet/grouptokencache.h"
 #include "wallet/grouptokenwallet.h"
 #include "wallet/wallet.h"

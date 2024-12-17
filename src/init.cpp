@@ -53,6 +53,7 @@
 #include "util.h"
 #include "utilmoneystr.h"
 #include "utilstrencodings.h"
+#include "utiltranslate.h"
 #include "validation/validation.h"
 #include "validation/verifydb.h"
 #include "validationinterface.h"

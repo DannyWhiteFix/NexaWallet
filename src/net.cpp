@@ -34,6 +34,7 @@
 #include "ui_interface.h"
 #include "unlimited.h"
 #include "utilstrencodings.h"
+#include "utiltranslate.h"
 
 extern CTweak<bool> ignoreNetTimeouts;
 extern uint64_t nMaxReceiveBufferSize;

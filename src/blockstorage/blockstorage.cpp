@@ -16,6 +16,7 @@
 #include "sequential_files.h"
 #include "ui_interface.h"
 #include "undo.h"
+#include "utiltranslate.h"
 #include "validation/validation.h"
 
 extern bool AbortNode(CValidationState &state, const std::string &strMessage, const std::string &userMessage = "");

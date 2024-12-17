@@ -10,6 +10,7 @@
 #include "blockstorage/blockstorage.h"
 #include "init.h"
 #include "ui_interface.h"
+#include "utiltranslate.h"
 #include "validation.h"
 
 CVerifyDB::CVerifyDB() { uiInterface.ShowProgress(_("Verifying blocks..."), 0); }

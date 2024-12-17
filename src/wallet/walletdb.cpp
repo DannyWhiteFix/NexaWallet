@@ -19,6 +19,7 @@
 #include "sync.h"
 #include "util.h"
 #include "utiltime.h"
+#include "utiltranslate.h"
 #include "wallet/wallet.h"
 
 #include <boost/scoped_ptr.hpp>

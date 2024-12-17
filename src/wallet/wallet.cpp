@@ -32,6 +32,7 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "utilmoneystr.h"
+#include "utiltranslate.h"
 #include "validation/validation.h"
 #include "wallet/grouptokencache.h"
 

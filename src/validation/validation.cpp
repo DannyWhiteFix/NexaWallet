@@ -28,6 +28,7 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "utilstrencodings.h"
+#include "utiltranslate.h"
 #include "validation/forks.h"
 #include "validationinterface.h"
 

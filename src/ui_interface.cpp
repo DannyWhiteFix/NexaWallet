@@ -4,7 +4,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "ui_interface.h"
-#include "util.h"
+
+#include "tinyformat.h"
+#include "utiltranslate.h"
 
 CClientUIInterface uiInterface;
 

@@ -5,8 +5,8 @@
 #ifndef NEXA_COPYRIGHT_H
 #define NEXA_COPYRIGHT_H
 
-#include "util.h"
 #include "utilstrencodings.h"
+#include "utiltranslate.h"
 
 std::string LicenseInfo()
 {

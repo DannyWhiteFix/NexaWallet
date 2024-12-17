@@ -55,6 +55,7 @@
 #include "util.h"
 #include "utilmoneystr.h"
 #include "utilstrencodings.h"
+#include "utiltranslate.h"
 #include "validation/validation.h"
 #include "validationinterface.h"
 #include "versionbits.h"

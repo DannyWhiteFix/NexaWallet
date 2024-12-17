@@ -17,6 +17,7 @@
 #include "sync.h"
 #include "util.h"
 #include "utiltime.h"
+#include "utiltranslate.h"
 #include "validation/validation.h"
 
 #include "wallet.h"
