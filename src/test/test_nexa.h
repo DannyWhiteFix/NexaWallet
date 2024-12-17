@@ -17,6 +17,8 @@
 
 #include <thread>
 
+#include <boost/thread.hpp>
+
 extern FastRandomContext insecure_rand_ctx;
 
 static inline void SetConnected(CNode &dummyNode)

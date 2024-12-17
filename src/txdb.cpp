@@ -11,6 +11,7 @@
 #include "pow.h"
 #include "ui_interface.h"
 #include "uint256.h"
+#include "utiltranslate.h"
 #include "validation/validation.h"
 
 #include <stdint.h>

@@ -19,6 +19,8 @@
 
 #include <thread>
 
+#include <boost/thread.hpp>
+
 static const bool DEFAULT_PV_TESTMODE = false;
 
 /**

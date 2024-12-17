@@ -32,47 +32,6 @@
 #define Stringify(x) #x
 #define StringifyIntLiteral(x) Stringify(x)
 
-#ifndef LIGHT
-#include <boost/signals2/signal.hpp>
-#include <boost/thread.hpp>
-
-/** Signals for translation. */
-class CTranslationInterface
-{
-public:
-    /** Translate a message to the native language of the user. */
-    boost::signals2::signal<std::string(const char *psz)> Translate;
-};
-extern CTranslationInterface translationInterface;
-
-/**
- * Translation function: Call Translate signal on UI interface, which returns a boost::optional result.
- * If no translation slot is registered, nothing is returned, and simply return the input.
- */
-inline std::string _(const char *psz)
-{
-    boost::optional<std::string> rv = translationInterface.Translate(psz);
-    return rv ? (*rv) : psz;
-}
-
-#else
-
-class CTranslationInterface
-{
-public:
-    std::string Translate(const char *psz);
-};
-extern CTranslationInterface translationInterface;
-
-inline std::string _(const char *psz)
-{
-    std::string rv = translationInterface.Translate(psz);
-    if (rv.empty())
-        return std::string(psz);
-    return rv;
-}
-#endif
-
 // Preface any Shared Library API definition with this macro.  This will ensure that the function is available for
 // external linkage.
 // For example:
@@ -322,13 +281,6 @@ void TraceThreads(const std::string &name, Callable func)
         func();
         LOGA("%s thread exit\n", name);
     }
-#ifndef LIGHT
-    catch (const boost::thread_interrupted &)
-    {
-        LOGA("%s thread interrupt\n", name);
-        throw;
-    }
-#endif
     catch (const std::exception &e)
     {
         PrintExceptionContinue(&e, name.c_str());

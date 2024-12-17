@@ -19,6 +19,7 @@
 #include "sync.h"
 #include "utilstrencodings.h"
 #include "utiltime.h"
+#include "utiltranslate.h"
 
 #include <condition_variable>
 #include <fstream>

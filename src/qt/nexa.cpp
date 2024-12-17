@@ -33,6 +33,7 @@
 #include "threadgroup.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "utiltranslate.h"
 
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"

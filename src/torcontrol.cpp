@@ -747,7 +747,7 @@ void TorController::reconnect_cb(evutil_socket_t fd, short what, void *arg)
 
 /****** Thread ********/
 struct event_base *base;
-boost::thread torControlThread;
+std::thread torControlThread;
 
 static void TorControlThread()
 {
@@ -771,7 +771,7 @@ void StartTorControl()
         return;
     }
 
-    torControlThread = boost::thread(boost::bind(&TraceThread<void (*)()>, "torcontrol", &TorControlThread));
+    torControlThread = std::thread(std::bind(&TraceThread<void (*)()>, "torcontrol", &TorControlThread));
 }
 
 void InterruptTorControl()

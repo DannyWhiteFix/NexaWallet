@@ -8,6 +8,7 @@
 #include "bandb.h"
 #include "connmgr.h"
 #include "ui_interface.h"
+#include "utiltranslate.h"
 
 CDoSManager::CDoSManager() : setBannedIsDirty(false), nBanThreshold(DEFAULT_BANSCORE_THRESHOLD) {}
 /**

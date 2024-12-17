@@ -6,8 +6,9 @@
 
 #include "noui.h"
 
+#include "logging.h"
 #include "ui_interface.h"
-#include "util.h"
+#include "utiltranslate.h"
 
 #include <cstdio>
 #include <stdint.h>

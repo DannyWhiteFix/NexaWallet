@@ -15,6 +15,7 @@
 
 #include "boost/thread/recursive_mutex.hpp"
 #include "boost/thread/shared_mutex.hpp"
+#include <boost/thread.hpp>
 
 /**
  * Template mixin that adds -Wthread-safety locking
