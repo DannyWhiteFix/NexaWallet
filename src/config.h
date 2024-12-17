@@ -6,15 +6,18 @@
 #ifndef NEXA_CONFIG2_H
 #define NEXA_CONFIG2_H
 
-#include <boost/noncopyable.hpp>
-
 #include <cstdint>
 
 class CChainParams;
 
-class Config : public boost::noncopyable
+class Config
 {
 public:
+    Config() = default;
+    ~Config() = default;
+    Config(const Config &) = delete;
+    Config &operator=(const Config &) = delete;
+
     virtual const CChainParams &GetChainParams() const = 0;
     virtual void SetCashAddrEncoding(bool) = 0;
     virtual bool UseCashAddrEncoding() const = 0;
