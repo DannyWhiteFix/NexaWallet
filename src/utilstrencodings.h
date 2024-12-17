@@ -184,4 +184,15 @@ bool ConvertBits(O &out, I it, I end)
  */
 std::string concatenateVector(std::vector<std::string> &strings, std::string separator);
 
+[[nodiscard]] inline std::string TrimString(const std::string &str, const std::string &pattern = " \f\n\r\t\v")
+{
+    std::string::size_type front = str.find_first_not_of(pattern);
+    if (front == std::string::npos)
+    {
+        return std::string();
+    }
+    std::string::size_type end = str.find_last_not_of(pattern);
+    return str.substr(front, end - front + 1);
+}
+
 #endif // NEXA_UTILSTRENCODINGS_H

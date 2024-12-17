@@ -16,7 +16,6 @@
 #include "uint256.h"
 #include "utilstrencodings.h"
 
-#include <boost/algorithm/string.hpp>
 #include <string>
 #include <vector>
 
@@ -739,7 +738,7 @@ SigHashType &SigHashType::from(const std::string &flagStr)
     std::string s;
     while (getline(ss, s, '|'))
     {
-        boost::trim(s);
+        TrimString(s);
         if (s == "ALL_IN")
         {
             inp = SigHashType::Input::ALL;

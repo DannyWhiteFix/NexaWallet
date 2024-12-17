@@ -17,7 +17,7 @@
 #include "utilstrencodings.h"
 #include <stdio.h>
 
-#include <boost/algorithm/string.hpp> // boost::trim
+#include <boost/algorithm/string.hpp>
 
 /** WWW-Authenticate to present with 401 Unauthorized response */
 static const char *WWW_AUTH_HEADER_DATA = "Basic realm=\"jsonrpc\"";
@@ -139,7 +139,7 @@ static bool RPCAuthorized(const std::string &strAuth)
     if (strAuth.substr(0, 6) != "Basic ")
         return false;
     std::string strUserPass64 = strAuth.substr(6);
-    boost::trim(strUserPass64);
+    TrimString(strUserPass64);
     std::string strUserPass = DecodeBase64(strUserPass64);
 
     // Check if authorized under single-user field
