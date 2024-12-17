@@ -1040,6 +1040,7 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
                     // We still want to keep orphantx coins in the event the orphantx is finally accepted into the
                     // mempool or shows up in a block that is mined.  Therefore if pfMissingInputs returns true then
                     // any coins in vCoinsToUncache will NOT be uncached.
+
                     bool fSpent = false;
                     bool fMissingOrSpent = false;
                     if (txin.IsReadOnly())
@@ -1060,16 +1061,12 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
                     }
                     else
                     {
-                        if (!view.HaveCoinInCache(txin.prevout, fSpent))
+                        vCoinsToUncache.push_back(txin.prevout);
+                        if (!view.HaveCoin(txin.prevout))
                         {
-                            vCoinsToUncache.push_back(txin.prevout);
-                            if (!view.GetCoinFromDB(txin.prevout))
-                            {
-                                state.missingInput = inIdx;
-                                fMissingOrSpent = true;
-                                LOG(MEMPOOL, "normal input-does-not-exist: %d:%s\n", inIdx,
-                                    txin.prevout.hash.ToString());
-                            }
+                            state.missingInput = inIdx;
+                            fMissingOrSpent = true;
+                            LOG(MEMPOOL, "normal input-does-not-exist: %d:%s\n", inIdx, txin.prevout.hash.ToString());
                         }
                     }
                     if (fSpent || fMissingOrSpent)
