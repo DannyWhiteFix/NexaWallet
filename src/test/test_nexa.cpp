@@ -179,12 +179,10 @@ CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction &tx, CT
 
 CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CTransaction &txn, CTxMemPool *pool)
 {
-    bool hasNoDependencies = pool ? pool->HasNoInputsOf(MakeTransactionRef(txn)) : hadNoDependencies;
-    // Hack to assume either its completely dependent on other mempool txs or not at all
-    CAmount inChainValue = hasNoDependencies ? txn.GetValueOut() : 0;
+    CAmount inChainValue = txn.GetValueOut();
 
-    CTxMemPoolEntry ret(MakeTransactionRef(txn), nFee, nTime, dPriority, nHeight, hasNoDependencies, inChainValue,
-        spendsCoinbase, sigOpCount, lp);
+    CTxMemPoolEntry ret(
+        MakeTransactionRef(txn), nFee, nTime, dPriority, nHeight, inChainValue, spendsCoinbase, sigOpCount, lp);
     // ret.dbgName = dbgName;
     // dbgName = ""; // Reset to no name every time we pull a new entry from this object
     return ret;

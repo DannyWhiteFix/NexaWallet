@@ -111,7 +111,6 @@ private:
     int64_t nTime; //! Local time when entering the mempool
     double entryPriority; //! Priority when entering the mempool
     unsigned int entryHeight; //! Chain height when entering the mempool
-    bool hadNoDependencies; //! Not dependent on any other txs when it entered the mempool
     CAmount inChainInputValue; //! Sum of all txin values that are already in blockchain
     bool spendsCoinbase; //! keep track of transactions that spend a coinbase
     unsigned int sigOpCount; //! Legacy sig ops plus P2SH sig op count
@@ -139,7 +138,6 @@ public:
         int64_t _nTime,
         double _entryPriority,
         unsigned int _entryHeight,
-        bool poolHasNoInputsOf,
         CAmount _inChainInputValue,
         bool spendsCoinbase,
         unsigned int nSigOps,
@@ -160,7 +158,6 @@ public:
     size_t GetTxSize() const { return this->tx->GetTxSize(); }
     int64_t GetTime() const { return nTime; }
     unsigned int GetHeight() const { return entryHeight; }
-    bool WasClearAtEntry() const { return hadNoDependencies; }
     unsigned int GetSigOpCount() const { return sigOpCount; }
     uint64_t GetRuntimeSigOpCount() const { return runtimeSigOpCount; }
     uint64_t GetRuntimeSighashBytes() const { return runtimeSighashBytes; }
@@ -876,7 +873,7 @@ public:
     bool exists(const uint256 &hash) const
     {
         READLOCK(cs_txmempool);
-        return (mapTx.count(hash) != 0);
+        return _exists(hash);
     }
     bool _exists(const uint256 &hash) const { return (mapTx.count(hash) != 0); }
 
