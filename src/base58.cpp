@@ -11,8 +11,6 @@
 #include "uint256.h"
 
 #include <assert.h>
-#include <boost/variant/apply_visitor.hpp>
-#include <boost/variant/static_visitor.hpp>
 #include <stdint.h>
 #include <string.h>
 #include <string>
@@ -208,7 +206,7 @@ int CBase58Data::CompareTo(const CBase58Data &b58) const
 
 namespace
 {
-class DestinationEncoder : public boost::static_visitor<std::string>
+class DestinationEncoder : public std::variant<std::string>
 {
 private:
     const CChainParams &m_params;

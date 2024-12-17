@@ -373,7 +373,7 @@ bool ExtractDestinations(const CScript &scriptPubKey,
 
 namespace
 {
-class CScriptVisitor : public boost::static_visitor<bool>
+class CScriptVisitor : public std::variant<bool>
 {
 private:
     CScript *script;
