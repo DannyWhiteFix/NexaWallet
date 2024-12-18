@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include "grouptokens.h"
+
 #include "base58.h"
 #include "cashaddrenc.h"
 #ifndef LIGHT // limit dependencies
@@ -13,14 +14,12 @@
 #include "primitives/transaction.h"
 #include "pubkey.h"
 #include "random.h"
-#include "rpc/protocol.h"
-#include "rpc/server.h"
 #include "script/script.h"
 #include "script/scripttemplate.h"
 #include "script/standard.h"
 #include "streams.h"
-#include "unlimited.h"
 #include "utilmoneystr.h"
+
 #include <algorithm>
 
 bool IsAnyTxOutputGrouped(const CTransaction &tx)

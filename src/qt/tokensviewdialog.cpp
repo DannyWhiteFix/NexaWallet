@@ -23,6 +23,7 @@
 #include "wallet/wallet.h"
 
 #include <algorithm>
+#include <cmath>
 
 #include <QClipboard>
 #include <QDesktopServices>
@@ -335,14 +336,14 @@ void TokensViewDialog::refresh()
         uint64_t nTokensPending = pending[grpID];
         {
             // balance
-            double nDisplayTokens = (double)(nTokens) / pow(10, nDecimal);
+            double nDisplayTokens = (double)(nTokens) / std::pow(10, nDecimal);
             QString strDisplayTokens = QString::number(nDisplayTokens, 'f', nDecimal);
             QTableWidgetItem *item4 = new QTableWidgetItem(strDisplayTokens.toStdString().c_str());
             item4->setTextAlignment(Qt::AlignCenter);
             ui->tokenTable->setItem(row, 3, item4);
 
             // pending
-            double nDisplayPendingTokens = (double)(nTokensPending) / pow(10, nDecimal);
+            double nDisplayPendingTokens = (double)(nTokensPending) / std::pow(10, nDecimal);
             QString strDisplayPendingTokens = QString::number(nDisplayPendingTokens, 'f', nDecimal);
             QTableWidgetItem *item5 = new QTableWidgetItem(strDisplayPendingTokens.toStdString().c_str());
             item5->setTextAlignment(Qt::AlignCenter);
@@ -476,7 +477,7 @@ void TokensViewDialog::on_tokenTable_itemDoubleClicked()
 
             if (nDecimal)
             {
-                double nDisplayTokens = (double)(tokenmint.GetTokenMint(grpID).first) / pow(10, nDecimal);
+                double nDisplayTokens = (double)(tokenmint.GetTokenMint(grpID).first) / std::pow(10, nDecimal);
                 QString strDisplayMintage = QString::number(nDisplayTokens, 'f', nDecimal);
                 infoString.append("<b> " + tr("Total Mintage:") + "</b>  " + strDisplayMintage + "<br>");
             }
@@ -570,7 +571,7 @@ void TokensViewDialog::on_tokenTable_itemDoubleClicked()
 
             if (nDecimal)
             {
-                double nDisplayTokens = (double)(tokenmint.GetTokenMint(grpID).first) / pow(10, nDecimal);
+                double nDisplayTokens = (double)(tokenmint.GetTokenMint(grpID).first) / std::pow(10, nDecimal);
                 QString strDisplayMintage = QString::number(nDisplayTokens, 'f', nDecimal);
                 infoString.append("<b> " + tr("Total Mintage:") + "</b>  " + strDisplayMintage + "<br>");
             }
@@ -659,14 +660,14 @@ void TokensViewDialog::on_sendButton_clicked()
     double dAmountToSend = strAmountToSend.toDouble();
     uint32_t nDecimal = GetDecimal(grpID);
     if (nDecimal > 0)
-        dAmountToSend *= pow(10, nDecimal);
+        dAmountToSend *= std::pow(10, nDecimal);
     CAmount nAmountToSend = (uint64_t)(dAmountToSend);
 
     // Get text value from the table and adjust for the decimal before sending.
     std::string strTokensAvailable = selectedItems[3]->text().toStdString();
     double dAmountAvailable = strTokensAvailable.empty() ? (double)0 : selectedItems[3]->text().toDouble();
     if (nDecimal > 0)
-        dAmountAvailable *= pow(10, nDecimal);
+        dAmountAvailable *= std::pow(10, nDecimal);
     CAmount nAmountAvailable = (uint64_t)(dAmountAvailable);
     if (nAmountToSend <= 0)
     {
@@ -675,7 +676,7 @@ void TokensViewDialog::on_sendButton_clicked()
     }
     if (nAmountToSend > nAmountAvailable)
     {
-        double dAmountRequired = (double)((nAmountToSend - nAmountAvailable) / pow(10, nDecimal));
+        double dAmountRequired = (double)((nAmountToSend - nAmountAvailable) / std::pow(10, nDecimal));
         QString strNeedMore = QString::number(dAmountRequired, 'f', nDecimal);
 
         InitWarning(
