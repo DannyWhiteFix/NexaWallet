@@ -738,7 +738,7 @@ SigHashType &SigHashType::from(const std::string &flagStr)
     std::string s;
     while (getline(ss, s, '|'))
     {
-        TrimString(s);
+        s = TrimString(s);
         if (s == "ALL_IN")
         {
             inp = SigHashType::Input::ALL;
