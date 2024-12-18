@@ -140,7 +140,7 @@ static bool RPCAuthorized(const std::string &strAuth)
     if (strAuth.substr(0, 6) != "Basic ")
         return false;
     std::string strUserPass64 = strAuth.substr(6);
-    TrimString(strUserPass64);
+    strUserPass64 = TrimString(strUserPass64);
     std::string strUserPass = DecodeBase64(strUserPass64);
 
     // Check if authorized under single-user field
