@@ -1191,6 +1191,46 @@ class GroupTokensTest (BitcoinTestFramework):
         sync_wallet(10, self.nodes[0])
         self.checkTokenInfo(self.nodes[0], sub3, "TICK", "NameGoesHere", "https://www.nexa.org", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63", 3500, 3500, "5", [sub0Addr1, sub0Addr2, sub0Addr3])
 
+        ###### Test that balance and decimals show up correctly when sending coins to another peer
+        logging.info("testing for correct balance and decimals")
+        t = self.nodes[0].token("new", "ZZZ", "zzz", "https://www.nexa.org", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63", "2")
+        grp = t["groupIdentifier"]
+        self.checkTokenInfo(self.nodes[0], grp, "ZZZ", "zzz", "https://www.nexa.org", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63", 0, 0, "2")
+        addr = self.nodes[0].getnewaddress()
+        self.nodes[0].token("mint", grp, addr, 1000)
+        self.checkTokenInfo(self.nodes[0], grp, "ZZZ", "zzz", "https://www.nexa.org", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63", 1000, 0, "2")
+        self.nodes[0].generate(1);
+        self.checkTokenInfo(self.nodes[0], grp, "ZZZ", "zzz", "https://www.nexa.org", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63", 1000, 1000, "2")
+
+        # send some coins to another peer and check balances and decimals and that the
+        # token info can be accessed even though the token was created on a different peer.
+        addrNode2 = self.nodes[2].getnewaddress()
+        self.nodes[0].token("send", grp, addrNode2, 25)
+        self.nodes[0].generate(1);
+        self.sync_blocks();
+        self.checkTokenInfo(self.nodes[0], grp, "ZZZ", "zzz", "https://www.nexa.org", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63", 975, 1000, "2")
+        balance = self.nodes[0].token("balance", grp)
+        assert_equal(balance['balance_satoshis'], 975)
+        assert_equal(balance['decimals'], "2")
+        self.checkTokenInfo(self.nodes[2], grp, "ZZZ", "zzz", "https://www.nexa.org", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63", 25, 1000, "2")
+        balance = self.nodes[2].token("balance", grp)
+        assert_equal(balance['balance_satoshis'], 25)
+        assert_equal(balance['decimals'], "2")
+
+        # create a mint authority on node 2 and then check balance again
+        n2addr = self.nodes[2].getnewaddress()
+        self.nodes[0].token("authority", "create", grp, n2addr, "MINT", "NOCHILD")
+        self.sync_all()
+        self.checkTokenInfo(self.nodes[2], grp, "ZZZ", "zzz", "https://www.nexa.org", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63", 25, 1000, "2")
+        balance = self.nodes[2].token("balance", grp)
+        assert_equal(balance['balance_satoshis'], 25)
+        assert_equal(balance['decimals'], "2")
+        self.nodes[0].generate(1);
+        self.sync_blocks();
+        self.checkTokenInfo(self.nodes[2], grp, "ZZZ", "zzz", "https://www.nexa.org", "1296fdd732e34fa750256095bb68dcd78091c49ab9382a35dce89ea15e055a63", 25, 1000, "2")
+        balance = self.nodes[2].token("balance", grp)
+        assert_equal(balance['balance_satoshis'], 25)
+        assert_equal(balance['decimals'], "2")
 
         logging.info("test complete")
 
