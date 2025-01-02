@@ -1098,11 +1098,15 @@ bool AppInit2(Config &config)
     // cost to you of processing a transaction.
     ::minRelayTxFee = CFeeRate((CAmount)minRelayFee.Value());
 
-    bool fStandard = !GetBoolArg("-acceptnonstdtxn", !Params().RequireStandard());
-    // If we specified an override but that override was not accepted then its an error
-    if (fStandard != Params().RequireStandard())
+    // check args to see if user wants to accept non standard txs
+    bool fAcceptNonStandard = GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard());
+    // attempt to change if the chain requires standard based on what the user configured
+    bool acceptedStandardChange = chainparams.SetRequireStandard(fAcceptNonStandard);
+    if (acceptedStandardChange == false)
+    {
         return InitError(
             strprintf("acceptnonstdtxn is not currently supported for %s chain", chainparams.NetworkIDString()));
+    }
 
     nBytesPerSigOp = GetArg("-bytespersigop", nBytesPerSigOp);
 

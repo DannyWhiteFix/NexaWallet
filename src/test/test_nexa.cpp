@@ -61,6 +61,16 @@ BasicTestingSetup::BasicTestingSetup(const std::string &chainName)
     fCheckBlockIndex = true;
     SelectParams(chainName);
     noui_connect();
+
+    // check args to see if user wants to accept non standard txs
+    bool fAcceptNonStandard = GetBoolArg("-acceptnonstdtxn", !ModifiableParams().RequireStandard());
+    // attempt to change if the chain requires standard based on what the user configured
+    bool acceptedStandardChange = ModifiableParams().SetRequireStandard(fAcceptNonStandard);
+    if (acceptedStandardChange == false)
+    {
+        printf("acceptnonstdtxn is not currently supported for %s chain", ModifiableParams().NetworkIDString().c_str());
+        assert(false);
+    }
 }
 
 BasicTestingSetup::~BasicTestingSetup() { ECC_Stop(); }
