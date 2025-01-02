@@ -32,6 +32,7 @@ extern void dbgPrintBlock(CBlock &blk);
 extern void dbgPrintMempool(CTxMemPool &pool);
 extern CTweak<bool> xvalTweak;
 extern CTweak<bool> enforceMinTxSize;
+extern CTweak<bool> fastBlockTemplate;
 
 static uint64_t CalculateMedian_OldCode(std::vector<uint64_t> &vData)
 {
@@ -1100,7 +1101,76 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     chainActive.Tip()->header.height--;
     SetMockTime(0);
 #endif
+
+    // Test that the block template creation will not be affected by a chain
+    // of transactions that are sometimes final and then non-final.  What should happen
+    // is that if fast block template is turned on then it would silently fail which will
+    // trigger the regular block template creation and so the end result is we still end up with
+    // a valid template without any of the non-final parts of the chain of transactions.
     mempool.clear();
+    fastBlockTemplate.Set(true);
+    nextMaxBlockSize.Set(1000000);
+    miningBlockSize.Set(nextMaxBlockSize.Value());
+
+    unsigned int iterations = 30;
+    FastRandomContext insecure_rand;
+    for (unsigned int j = 0; j <= iterations; j++)
+    {
+        tx.vin.resize(1);
+        tx.vin[0].scriptSig = CScript();
+        tx.vin[0].scriptSig << OP_1;
+        tx.vin[0].prevout = txFirst[5]->OutpointAt(0);
+        tx.vin[0].amount = txFirst[5]->vout[0].nValue;
+        tx.vin[0].nSequence = 0;
+        tx.vout.resize(1);
+        tx.vout[0].nValue = txFirst[5]->vout[0].nValue;
+
+        CAmount nFee = 100000;
+        unsigned int maxChainLength = 127;
+        for (unsigned int i = 0; i <= maxChainLength; ++i)
+        {
+            tx.vout[0].nValue -= nFee;
+
+            // make part of each chain non-final using a variety of deterministic
+            // and random tests.
+            if ((j == 0) && ((i >= 20 && i <= 23) || (i >= 44 && i <= 53)))
+            {
+                tx.nLockTime = chainActive.Tip()->height() + 1; // non-final
+            }
+            else if ((j == 1) && (i == 0))
+            {
+                tx.nLockTime = chainActive.Tip()->height() + 1; // non-final
+            }
+            else if ((j == 2) && (i == 0 || i > 30))
+            {
+                tx.nLockTime = chainActive.Tip()->height() + 1; // non-final
+            }
+            else if (j == 3 && i == maxChainLength)
+            {
+                tx.nLockTime = chainActive.Tip()->height() + 1; // non-final
+            }
+            else if (j >= 4 && (j <= (iterations - 1)) && InsecureRandBool())
+            {
+                tx.nLockTime = chainActive.Tip()->height() + 1; // non-final
+            }
+            else
+            {
+                tx.nLockTime = chainActive.Tip()->height();
+            }
+
+            hash = tx.GetIdem();
+            bool spendsCoinbase = (i == 0) ? true : false; // only first tx spends coinbase
+            mempool.addUnchecked(entry.Fee(nFee).Time(GetTime()).SpendsCoinbase(spendsCoinbase).FromTx(tx));
+            tx.vin[0].prevout = COutPoint(hash, 0);
+            tx.vin[0].amount = tx.vout[0].nValue;
+            tx.vin[0].nSequence = 0;
+        }
+        BOOST_CHECK(pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey));
+        // printf("mempool size: %ld chain height %ld\n", mempool.size(), chainActive.Tip()->height());
+        // printf("iteration: %d block size: %ld\n\n", j, pblocktemplate->block->vtx.size());
+        mempool.clear();
+    }
+    fastBlockTemplate.Set(false);
 
     // Test package selection
     TestPackageSelection(chainparams, scriptPubKey, txFirst);

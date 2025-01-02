@@ -47,6 +47,7 @@ static const float MAX_BLOCKSIZE_RATIO = 0.95;
 extern CTweak<unsigned int> xvalTweak;
 extern CTweak<uint32_t> dataCarrierSize;
 extern CTweak<uint64_t> miningPrioritySize;
+extern CTweak<bool> fastBlockTemplate;
 
 /** Hold current block templates size and transaction counts */
 extern CCriticalSection csCurrentCandidate;
@@ -87,6 +88,7 @@ BlockAssembler::BlockAssembler(const CChainParams &_chainparams) : chainparams(_
 void BlockAssembler::resetBlock(const CScript &scriptPubKeyIn, int64_t coinbaseSize)
 {
     inBlock.clear();
+    nonFinalChains.clear();
 
     nBlockSize = reserveBlockSize(scriptPubKeyIn, coinbaseSize);
     nBlockSigOps = 0;
@@ -97,10 +99,6 @@ void BlockAssembler::resetBlock(const CScript &scriptPubKeyIn, int64_t coinbaseS
 
     lastFewTxs = 0;
     blockFinished = false;
-
-    nBlockMaxSize = 0;
-    nBlockMinSize = 0;
-    maxSigOpsAllowed = 0;
 }
 
 uint64_t BlockAssembler::reserveBlockSize(const CScript &scriptPubKeyIn, int64_t coinbaseSize)
@@ -228,34 +226,86 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
             (STANDARD_LOCKTIME_VERIFY_FLAGS & LOCKTIME_MEDIAN_TIME_PAST) ? nMedianTimePast : pblock->GetBlockTime();
 
         std::vector<const CTxMemPoolEntry *> vtxe;
-
-        addPriorityTxs(&vtxe);
-
-        // Mine by package (CPFP)
-        // We make two passes through addPackageTxs(). The first pass is for
-        // transactions and chains that are not dirty, which will likely be the bulk
-        // of the block. Then a second quick pass is made to see if any dirty transactions
-        // would be able to fill the rest of the block.
-        int64_t nStartPackage = GetStopwatchMicros();
-        if (!addPackageTxs(&vtxe, false))
+        bool fCreateFastTemplate = fastBlockTemplate.Value();
+        if (fCreateFastTemplate)
         {
-            // Make another pass to add the dirty chains.
-            addPackageTxs(&vtxe, true);
+            // Check if all txpool transactions will fit into a block and also doesn't exceed the sigops limit
+            if (((nBlockSize + mempool._GetTotalTxSize()) <= nBlockMaxSize) &&
+                (mempool._GetTotalSigOps() <= maxSigOpsAllowed))
+            {
+                // Dump all contents of txpool into the block
+                for (auto iter = mempool.mapTx.begin(); iter != mempool.mapTx.end(); iter++)
+                {
+                    // Although in theory we do not allow non final txns into the txpool during txadmission,
+                    // in practice, it is possible that one might get in during block validation, so we
+                    // have to make this additional check to be sure we don't add a non-final to the block template.
+                    if (IsFinalTx(iter->GetSharedTx(), nHeight, nLockTimeCutoff))
+                    {
+                        AddToBlock(&vtxe, iter);
+                    }
+                    else
+                    {
+                        // Check for theoretical DOS attack.
+                        //
+                        // Check if there are descendents and if so then break from the fast template
+                        // creation, clear the block and start and start a slow template creation by
+                        // resetting the flag to false.  This would cover a very rare and theoretical
+                        // attack where someone created a chain where one txn was non-final, but the following
+                        // ones were final, and then injected this chain into the txpool during a block validation
+                        // (It's only during block validation where non-final txns can enter the txpool).
+                        auto setChildren = mempool.GetMemPoolChildren(iter);
+                        if (!setChildren.empty())
+                        {
+                            fCreateFastTemplate = false;
+                            resetBlock(scriptPubKeyIn, coinbaseSize);
+                            vtxe.clear();
+                            break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                fCreateFastTemplate = false;
+            }
         }
-        nTotalPackage += GetStopwatchMicros() - nStartPackage;
+
+        // If fast templates are not on or if the fast template failed for some reason then fall
+        // through to the slower method.
+        if (!fCreateFastTemplate)
+        {
+            addPriorityTxs(&vtxe);
+
+            // Mine by package (CPFP)
+            // We make two passes through addPackageTxs(). The first pass is for
+            // transactions and chains that are not dirty, which will likely be the bulk
+            // of the block. Then a second quick pass is made to see if any dirty transactions
+            // would be able to fill the rest of the block.
+            int64_t nStartPackage = GetStopwatchMicros();
+            if (!addPackageTxs(&vtxe, false))
+            {
+                // Make another pass to add the dirty chains.
+                addPackageTxs(&vtxe, true);
+            }
+            nTotalPackage += GetStopwatchMicros() - nStartPackage;
+        }
 
         {
             LOCK(csCurrentCandidate);
             nLastBlockTx = nBlockTx;
             nLastBlockSize = nBlockSize;
         }
+
         LOGA("CreateNewBlock: total size %llu txs: %llu of %llu fees: %lld sigops %u\n", nBlockSize, nBlockTx,
             mempool._size(), nFees, nBlockSigOps);
-
 
         // sort transactions
         std::sort(vtxe.begin(), vtxe.end(), NumericallyLessTxHashComparator());
 
+        // Load the block template
+        pblocktemplate->block->vtx.reserve(vtxe.size());
+        pblocktemplate->vTxFees.reserve(vtxe.size());
+        pblocktemplate->vTxSigOps.reserve(vtxe.size());
         for (auto &txe : vtxe)
         {
             pblocktemplate->block->vtx.push_back(txe->GetSharedTx());
@@ -379,6 +429,24 @@ bool BlockAssembler::TestForBlock(CTxMemPool::TxIdIter iter)
     return true;
 }
 
+void BlockAssembler::RemoveFromBlock(std::vector<const CTxMemPoolEntry *> *vtxe, CTxMemPool::TxIdIter iter)
+{
+    if (!inBlock.count(iter))
+        return;
+
+    auto it = std::find(vtxe->begin(), vtxe->end(), &(*iter));
+    if (it != vtxe->end())
+        vtxe->erase(it);
+    else
+        return;
+
+    nBlockSize -= iter->GetTxSize();
+    --nBlockTx;
+    nBlockSigOps -= iter->GetSigOpCount();
+    nFees -= iter->GetFee();
+    inBlock.erase(iter);
+}
+
 void BlockAssembler::AddToBlock(std::vector<const CTxMemPoolEntry *> *vtxe, CTxMemPool::TxIdIter iter)
 {
     vtxe->push_back(&(*iter));
@@ -453,7 +521,7 @@ bool BlockAssembler::addPackageTxs(std::vector<const CTxMemPoolEntry *> *vtxe, b
             fHaveDirty = true;
 
         // Skip txns we know are in the block and also skip if it's dirty but we're not allowing dirty txns.
-        if (inBlock.count(iter) || (!fAllowDirtyTxns && iter->IsDirty()))
+        if (inBlock.count(iter) || nonFinalChains.count(iter) || (!fAllowDirtyTxns && iter->IsDirty()))
         {
             continue;
         }
@@ -530,6 +598,25 @@ bool BlockAssembler::addPackageTxs(std::vector<const CTxMemPoolEntry *> *vtxe, b
         // Test if all tx's are Final
         if (!TestPackageFinality(ancestors))
         {
+            // If package is not final we have to remove any descendents we may
+            // have added to the block that are final, otherwise we'll end up
+            // mining a partial chain and fail the block validation.
+            {
+                CTxMemPool::setEntries setAllRemoves;
+                for (auto it : ancestors)
+                {
+                    mempool._CalculateDescendants(it, setAllRemoves);
+                }
+                // add to global set all removes
+                nonFinalChains.insert(setAllRemoves.begin(), setAllRemoves.end());
+                // nonFinalChains.insert(ancestors.begin(), ancestors.end());
+
+                for (auto iter2 : nonFinalChains)
+                {
+                    RemoveFromBlock(vtxe, iter2);
+                }
+            }
+
             continue;
         }
 

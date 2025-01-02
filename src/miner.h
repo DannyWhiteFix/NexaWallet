@@ -31,6 +31,9 @@ static const uint64_t TXCOUNT_VARINT_PADDING = 5;
 static const uint64_t HEIGHT_VARINT_PADDING = 5;
 static const uint64_t FEEPOOL_VARINT_PADDING = 5;
 
+// Are we using the optimized getblocktemplate
+static const bool DEFAULT_FASTBLOCKTEMPLATE = false;
+
 namespace Consensus
 {
 struct Params;
@@ -96,6 +99,7 @@ private:
     unsigned int nBlockSigOps = 0;
     CAmount nFees = 0;
     CTxMemPool::setEntries inBlock;
+    CTxMemPool::setEntries nonFinalChains;
 
     // Chain context for the block
     int nHeight = 0;
@@ -118,6 +122,7 @@ private:
     void resetBlock(const CScript &scriptPubKeyIn, int64_t coinbaseSize = -1);
     /** Add a tx to the block */
     void AddToBlock(std::vector<const CTxMemPoolEntry *> *vtxe, CTxMemPool::TxIdIter iter);
+    void RemoveFromBlock(std::vector<const CTxMemPoolEntry *> *vtxe, CTxMemPool::TxIdIter iter);
 
     // Methods for how to add transactions to a block.
     /** Add transactions based on tx "priority" */
