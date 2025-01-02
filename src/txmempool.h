@@ -522,8 +522,9 @@ private:
     unsigned int nTransactionsUpdated;
     CBlockPolicyEstimator *minerPolicyEstimator;
 
-    uint64_t totalTxSize; //! sum of all mempool tx' byte sizes
+    uint64_t totalTxSize; //! sum of all txpool serialized transaction byte sizes
     uint64_t cachedInnerUsage; //! sum of dynamic memory usage of all the map elements (NOT the maps themselves)
+    uint64_t totalSigOps;
 
     std::mutex cs_txPerSec;
     double nTxPerSec GUARDED_BY(cs_txPerSec); //! txns per second accepted into the mempool
@@ -867,8 +868,10 @@ public:
     uint64_t GetTotalTxSize()
     {
         READLOCK(cs_txmempool);
-        return totalTxSize;
+        return _GetTotalTxSize();
     }
+    uint64_t _GetTotalTxSize() { return totalTxSize; }
+    uint64_t _GetTotalSigOps() { return totalSigOps; }
 
     bool exists(const uint256 &hash) const
     {
