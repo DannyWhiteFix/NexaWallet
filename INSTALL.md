@@ -47,7 +47,7 @@ Allowing other computers and phones to ask your machine for Nexa blockchain info
 
 Drag Nexa to your applications folder, and then run Nexa.
 
-<!-- This is accepted as a comment too 
+<!-- This is accepted as a comment too
 # Installing Ubuntu binaries from Bitcoin Unlimited Official BU repositories)
 
 If you're running an Ubuntu system you can install Bitcoin Unlimited from the official BU repository.)
@@ -63,52 +63,6 @@ sudo apt-get install nexad nexa-qt (# on headlesse server just install nexad))
 
 Once installed you can run `nexad` or `nexa-qt`
 -->
-
-
-# Building Nexa from source
-
-See doc/build-*.md for detailed instructions on building the Nexa software for your specific architecture. Includes both info on building 
-- `nexad`, the intended-for-services, no-graphical-interface, implementation of Nexa and 
-- `nexa-qt`, the GUI.
-
-Once you have finished the process you can find the relevant binary files (`nexad`, `nexa-qt` and `nexa-cli`) in `/src/`.
-
-
-## Dependencies
-
-Make sure you have installed the [Dependencies](doc/Dependencies.md).
-
-If you're compiling from source on a Ubuntu like system, you can get all the required dependencies with the commands below
-
-```sh
-sudo apt-get install git build-essential libtool autotools-dev automake pkg-config libssl-dev libevent-dev bsdmainutils libboost-all-dev
-
-## optional: only needed if you want nexa-qt
-sudo apt-get install qttools5-dev-tools qttools5-dev libprotobuf-dev protobuf-compiler libqrencode-dev
-
-## Fetching the code and compile it
-
-git clone https://gitlab.com/nexa/nexa.git nexa
-cd nexa
-git checkout release 	# or git checkout origin/dev
-./autogen.sh
-
-# if you want a plain nexad binary without GUI and without wallet support, use this configure line:
-./configure --disable-wallet --without-gui
-
-# otherwise if you need nexa-qt just issue
-./configure
-
-make -j`nproc`
-sudo make install #(will place them in /usr/local/bin, this step is to be considered optional.)
-```
-
-## Miscellaneous
-
-
-- `strip(1)` your binaries, nexad will get a lot smaller, from 73MB to 4.3MB)
-- execute `nexad` using the `-daemon` option, bash will fork nexa process without cluttering the stdout
-
 
 
 # Quick Startup and Initial Node operation
@@ -231,5 +185,3 @@ electrum=0
 
  - [Issue Tracker](https://gitlab.com/nexa/nexa/issues)
  - [Reddit /r/nexa](https://www.reddit.com/r/nexa)
-
-
