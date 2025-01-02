@@ -67,6 +67,7 @@ public:
     bool DefaultConsistencyChecks() const { return fDefaultConsistencyChecks; }
     /** Policy: Filter transactions that do not match well-defined patterns */
     bool RequireStandard() const;
+    bool SetRequireStandard(bool fAcceptNonStandard);
 
 protected:
     CBaseChainParams() {}
