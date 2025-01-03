@@ -147,7 +147,7 @@ static void TestDecrypt(const CCrypter& crypt, const std::vector<unsigned char>&
             *it = 0;
     }
 
-    if (SSLeay() < 0x300000D0L) // breaking change in 3.0.13, skip this
+    if (SSLeay() < 0x30000020L) // breaking change in 3.0.2, skip this
     {
         BOOST_CHECK_MESSAGE(vchDecrypted1 == vchDecrypted2, HexStr(vchDecrypted1.begin(), vchDecrypted1.end()) + " != " + HexStr(vchDecrypted2.begin(), vchDecrypted2.end()));
     }
