@@ -182,6 +182,44 @@ public:
             return copy;
         }
         difference_type friend operator-(const_iterator a, const_iterator b) { return (&(*a) - &(*b)); }
+        // Overload + and - for the common integer types so we do not get silent conversions from
+        // signed to unsigned values, causing the arithmetic to fail badly.
+        const_iterator operator+(long unsigned int n) { return const_iterator(ptr + n); }
+        const_iterator &operator+=(long unsigned int n)
+        {
+            ptr += n;
+            return *this;
+        }
+        const_iterator operator-(long unsigned int n) { return const_iterator(ptr - n); }
+        const_iterator &operator-=(long unsigned int n)
+        {
+            ptr -= n;
+            return *this;
+        }
+        const_iterator operator+(int64_t n) { return const_iterator(ptr + n); }
+        const_iterator &operator+=(int64_t n)
+        {
+            ptr += n;
+            return *this;
+        }
+        const_iterator operator-(int64_t n) { return const_iterator(ptr - n); }
+        const_iterator &operator-=(int64_t n)
+        {
+            ptr -= n;
+            return *this;
+        }
+        const_iterator operator+(int n) { return const_iterator(ptr + n); }
+        const_iterator &operator+=(int n)
+        {
+            ptr += n;
+            return *this;
+        }
+        const_iterator operator-(int n) { return const_iterator(ptr - n); }
+        const_iterator &operator-=(int n)
+        {
+            ptr -= n;
+            return *this;
+        }
         const_iterator operator+(size_type n) { return const_iterator(ptr + n); }
         const_iterator &operator+=(size_type n)
         {

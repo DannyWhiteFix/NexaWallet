@@ -86,12 +86,14 @@ bool BigNumScriptOp(BigNum &bn,
         break;
     case OP_MUL:
         bn = bn1 * bn2;
+        // gmp_printf("%Zd * %Zd = %Zd\n", bn1.n, bn2.n, bn.n);
         break;
     default:
         assert(!"invalid opcode");
         break;
     }
     bn = bn.tdiv(bmd);
+    // gmp_printf("bn: %Zd bmd: %Zd \n", bn.n, bmd.n);
     return true;
 }
 

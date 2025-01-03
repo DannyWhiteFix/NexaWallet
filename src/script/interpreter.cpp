@@ -73,6 +73,19 @@ bool CastToBool(const valtype &vch)
     return false;
 }
 
+bool CastToBool(const StackItem &si)
+{
+    if (si.isBigNum()) // A bignum is true if not zero
+    {
+        return !(si.num() == (long int)0);
+    }
+    else
+    {
+        return CastToBool(si.data());
+    }
+    return false;
+}
+
 /**
  * Script is a stack machine (like Forth) that evaluates a predicate
  * returning a bool indicating valid or not.  There are no loops.
@@ -454,10 +467,10 @@ int ScriptMachine::setPos(size_t offset)
 {
     if (!script)
         return -1;
-    if (pbegin + offset > pend)
+    if (pbegin + ((long unsigned int)offset) > pend)
         pc = pend;
     else
-        pc = pbegin + offset;
+        pc = pbegin + ((long unsigned int)offset);
     return (pc - pbegin);
 }
 
@@ -501,6 +514,7 @@ bool ScriptMachine::Step()
     const bool opParseEnabled = (flags & SCRIPT_FORK1_OPCODES) != 0;
     const bool extendedIntrospectionEnabled = (flags & SCRIPT_FORK1_OPCODES) != 0;
     const bool fscriptRegisters = (flags & SCRIPT_FORK1_OPCODES) != 0;
+    const bool enableJump = (flags & SCRIPT_FORK1_OPCODES) != 0;
 
     const size_t maxIntegerSize =
         integers64Bit ? CScriptNum::MAXIMUM_ELEMENT_SIZE_64_BIT : CScriptNum::MAXIMUM_ELEMENT_SIZE_32_BIT;
@@ -838,6 +852,31 @@ bool ScriptMachine::Step()
                     {
                         PushStack(outStack[i]);
                     }
+                }
+                break;
+                case OP_JUMP:
+                {
+                    if (!enableJump)
+                    {
+                        return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+                    }
+                    if (stack.size() < 1)
+                    {
+                        return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+                    }
+                    const StackItem &si = stackItemAt(-1);
+                    int64_t offset = si.asInt64(false);
+                    if (offset != 0) // any form of false does not jump.
+                    {
+                        // + 1 the offset because the pc got advanced by 1 byte for OP_IFJUMP already
+                        auto temp = pc - (1 + offset);
+                        if (temp < pbegin)
+                            return set_error(serror, SCRIPT_ERR_INVALID_JUMP);
+                        if (temp > pend)
+                            return set_error(serror, SCRIPT_ERR_INVALID_JUMP);
+                        pc = temp;
+                    }
+                    PopStack(); // Pop the arg from the stack last so we can use the arg by reference
                 }
                 break;
                 case OP_IF:
@@ -1700,6 +1739,11 @@ bool ScriptMachine::Step()
 
                     if (vchSig.size() != 0)
                     {
+                        // Checking for > or = here because I'm about to do another one so that will make it >
+                        if (stats.consensusSigCheckCount >= maxConsensusSigOps)
+                        {
+                            return set_error(serror, SCRIPT_ERR_SIGCHECKS_LIMIT_EXCEEDED);
+                        }
                         stats.consensusSigCheckCount += 1; // 2020-05-15 sigchecks consensus rule
                     }
 
@@ -1922,6 +1966,12 @@ bool ScriptMachine::Step()
                     {
                         // serror is set
                         return false;
+                    }
+
+                    // Checking for > or = here because I'm about to do another one so that will make it >
+                    if (stats.consensusSigCheckCount >= maxConsensusSigOps)
+                    {
+                        return set_error(serror, SCRIPT_ERR_SIGCHECKS_LIMIT_EXCEEDED);
                     }
 
                     bool fSuccess = false;

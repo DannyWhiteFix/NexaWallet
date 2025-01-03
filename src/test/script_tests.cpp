@@ -13,6 +13,7 @@
 #include "script/script_error.h"
 #include "script/sighashtype.h"
 #include "script/sign.h"
+#include "script/stackitem.h"
 #include "test/scriptflags.h"
 #include "test/test_nexa.h"
 #include "test/testutil.h"
@@ -123,7 +124,14 @@ static ScriptErrorDesc script_errors[] = {
     {SCRIPT_ERR_NUMBER_BAD_ENCODING, "NUMBER_BAD_ENCODING"},
     {SCRIPT_ERR_INVALID_BITFIELD_SIZE, "BITFIELD_SIZE"},
     {SCRIPT_ERR_INVALID_BIT_RANGE, "BIT_RANGE"},
-    {SCRIPT_ERR_BAD_OPERATION_ON_TYPE, "SCRIPT_ERR_BAD_OPERATION_ON_TYPE"}
+    {SCRIPT_ERR_BAD_OPERATION_ON_TYPE, "SCRIPT_ERR_BAD_OPERATION_ON_TYPE"},
+    {SCRIPT_ERR_STACK_LIMIT_EXCEEDED, "SCRIPT_ERR_STACK_LIMIT_EXCEEDED"},
+    {SCRIPT_ERR_INVALID_STATE_SPECIFIER, "SCRIPT_ERR_INVALID_STATE_SPECIFIER"},
+    {SCRIPT_ERR_INITIAL_STATE, "SCRIPT_ERR_INITIAL_STATE"},
+    {SCRIPT_ERR_INVALID_REGISTER, "SCRIPT_ERR_INVALID_REGISTER"},
+    {SCRIPT_ERR_STACK_BYTES, "SCRIPT_ERR_STACK_BYTES"},
+    {SCRIPT_ERR_PARSE, "SCRIPT_ERR_PARSE"},
+    {SCRIPT_ERR_INVALID_JUMP, "SCRIPT_ERR_INVALID_JUMP"}
 };
 // clang-format on
 
@@ -3302,6 +3310,141 @@ BOOST_AUTO_TEST_CASE(unlocking_op_parse)
     BOOST_CHECK(vfy);
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
 }
+
+
+BOOST_AUTO_TEST_CASE(script_jump)
+{
+    const KeyData keys;
+    auto trk = ScriptMachineResourceTracker();
+    auto tops = MAX_OPS_PER_SCRIPT_TEMPLATE;
+    auto sops = MAX_OPS_PER_SCRIPT;
+    ScriptError err;
+
+    CScript satisfy;
+    satisfy << OP_NOP;
+    CScript empty;
+
+    // Build a crediting and spending transaction against a dummy constraint
+    CScript constraint;
+    constraint << OP_NOP;
+    CScript args = CScript() << OP_2 << OP_3;
+    CMutableTransaction txFrom = BuildTemplateCreditingTransaction(constraint, args, empty, 1);
+    CMutableTransaction txTo = BuildTemplateSpendingTransaction(constraint, args, empty, txFrom);
+
+    auto sis = ScriptImportedStateSig(&txTo, 0, txFrom.vout[0].nValue, flags);
+    sis.spentCoins.push_back(txFrom.vout[0]);
+
+    // But then actually try it against other scripts by calling VerifyTemplate directly with other constraint scripts
+
+    // REQ1.2: Infinite loop with bignum calc
+    CScript st = CScript() << ParseHex("2ffcfffffeffffffffffffffffffffffffffffffffffffffffffffffffffffff00")
+                           << OP_SETBMD << OP_3 << OP_BIN2BIGNUM << OP_5 << OP_BIN2BIGNUM << OP_MUL << OP_DUP << OP_3
+                           << OP_JUMP;
+    auto vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(!vfy);
+    BOOST_CHECK(err == SCRIPT_ERR_OP_COUNT);
+
+    // REQ1.2: Infinite loop
+    st = CScript() << OP_1 << OP_JUMP;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(!vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OP_COUNT, ScriptErrorString(err));
+
+    // REQ1.2: Check that infinite loop of sigchecks aborts with SCRIPT_ERR_SIGCHECKS_LIMIT_EXCEEDED
+    StackItem message(ParseHex("FFFF"));
+    StackItem vchHash(VchStack, 32);
+    CSHA256().Write(message.data().data(), message.size()).Finalize(vchHash.mdata().data());
+    uint256 messageHash(vchHash.data());
+    StackItem validsig;
+    keys.key0.SignSchnorr(messageHash, validsig.mdata());
+
+    st = CScript() << validsig.data() << message.data() << ToByteVector(keys.pubkey0) << OP_CHECKDATASIG << OP_DROP;
+    st << st.size() + 3 << OP_JUMP; // jump back to the beginning
+    printf("%s\n", ScriptToAsmStr(st).c_str());
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(!vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_SIGCHECKS_LIMIT_EXCEEDED, ScriptErrorString(err));
+
+
+    // REQ1.1: Out of bounds
+    // top
+    st = CScript() << OP_5 << OP_JUMP;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(!vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_INVALID_JUMP, ScriptErrorString(err));
+    // bottom
+    st = CScript() << OP_5 << OP_NEGATE << OP_JUMP;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(!vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_INVALID_JUMP, ScriptErrorString(err));
+
+    // REQ1.0: jump to end to cleanly terminate
+    // This script will be illegal if the OP_DROP is executed because stack is empty
+    st = CScript() << OP_2 << OP_NEGATE << OP_JUMP << OP_DROP;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(vfy);
+
+    // REQ1.0: jump to end to cleanly terminate, but script should run normal end checks
+    // in this case I'm checking clean stack (since it jumps over OP_DROP, 5 is left on the stack)
+    st = CScript() << OP_5 << OP_2 << OP_NEGATE << OP_JUMP << OP_DROP;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(!vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_CLEANSTACK, ScriptErrorString(err));
+
+    // REQ1.3: invalid arg type (vch which is too large to be a scriptnum)
+    st = CScript() << ParseHex("112233445566778899") << OP_JUMP;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(!vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_NUMBER_OVERFLOW, ScriptErrorString(err));
+    // REQ1.3: valid non-minimal scriptnum
+    // This is a tricky script, why does it ever complete?
+    // first time through the pushed value parses to 1 so it jumps back 1 BYTE.
+    // This means it evaluates the last byte of the pushed constant (0) as an instruction (push OP_FALSE).
+    // The next time it hits OP_JUMP, the top stack is false so it drops thru and completes.
+    st = CScript() << ParseHex("010000000000") << OP_JUMP;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(vfy);
+    st = CScript() << ParseHex("0100000000") << OP_JUMP;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(vfy);
+    st = CScript() << ParseHex("02000000") << OP_JUMP << OP_DROP;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(vfy);
+
+    // no jump
+    st = CScript() << OP_1 << OP_0 << OP_JUMP << OP_DROP;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(vfy);
+    // no jump
+    st = CScript() << OP_1 << OP_FALSE << OP_JUMP << OP_DROP;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(vfy);
+    // no jump
+    st = CScript() << OP_1 << OP_0 << OP_BIN2BIGNUM << OP_JUMP << OP_DROP;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(vfy);
+
+    // bignum jump (skips the 2 OP_DROPs which will fail since nothing on stack
+    st = CScript() << OP_3 << OP_NEGATE << OP_BIN2BIGNUM << OP_JUMP << OP_DROP << OP_DROP;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(vfy);
+    // only skips 1 op drop so should fail
+    st = CScript() << OP_2 << OP_NEGATE << OP_BIN2BIGNUM << OP_JUMP << OP_DROP << OP_DROP;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(!vfy);
+
+    // incorrect if context, jump hops over the endif
+    st = CScript() << OP_1 << OP_IF << OP_2 << OP_NEGATE << OP_JUMP << OP_ENDIF;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(!vfy);
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_UNBALANCED_CONDITIONAL, ScriptErrorString(err));
+
+    // you can "long jump" but you have to artifically balance the conditional
+    st = CScript() << OP_1 << OP_IF << OP_2 << OP_NEGATE << OP_JUMP << OP_ENDIF << OP_ENDIF;
+    vfy = VerifyTemplate(st, empty, empty, flags, tops, sops, sis, &err, &trk);
+    BOOST_CHECK(vfy);
+}
+
 
 static void CheckError(uint32_t flags, const Stack &original_stack, const CScript &script, ScriptError expected)
 {

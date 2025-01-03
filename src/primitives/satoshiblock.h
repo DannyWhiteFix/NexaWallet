@@ -138,7 +138,7 @@ public:
         if ((int)sig.size() - 1 < numlen)
             throw std::runtime_error("Invalid block height");
         std::vector<unsigned char> heightScript(numlen);
-        copy(sig.begin() + 1, sig.begin() + 1 + numlen, heightScript.begin());
+        copy(sig.begin() + 1U, sig.begin() + 1U + numlen, heightScript.begin());
         CScriptNum coinbaseHeight(heightScript, false, numlen);
         return coinbaseHeight.getint64();
     }

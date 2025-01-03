@@ -225,7 +225,7 @@ is therefore 1 byte longer (for the sign). */
     */
     uint64_t asUint64() const
     {
-        uint64_t ret;
+        uint64_t ret = 0;
         size_t space = mpz_sizeinbase(n, 2);
         if (space > sizeof(uint64_t) * 8)
             throw OutOfBounds("Number out of range");

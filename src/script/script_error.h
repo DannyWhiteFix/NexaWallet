@@ -99,6 +99,8 @@ typedef enum ScriptError_t
     SCRIPT_ERR_STACK_BYTES, // Stack total length limit exceeded
     SCRIPT_ERR_PARSE, // Parsing the bytecode provided to op_parse failed
 
+    SCRIPT_ERR_INVALID_JUMP,
+
     SCRIPT_ERR_ERROR_COUNT
 } ScriptError;
 

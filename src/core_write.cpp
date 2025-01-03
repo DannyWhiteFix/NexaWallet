@@ -54,7 +54,8 @@ string FormatScript(const CScript &script)
             if (data.size() > 0)
             {
                 const vector<unsigned char> &vch = data.data();
-                ret += strprintf("0x%x 0x%x ", HexStr(it2, it - vch.size()), HexStr(it - vch.size(), it));
+                ret += strprintf(
+                    "0x%x 0x%x ", HexStr(it2, it - (int64_t)vch.size()), HexStr(it - (int64_t)vch.size(), it));
             }
             else
             {
