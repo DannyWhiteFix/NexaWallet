@@ -452,12 +452,15 @@ void CGrapheneBlock::FillTxMapFromPools(std::map<uint64_t, CTransactionRef> &map
 {
     {
         LOCK(cs_commitQ);
-        for (auto &kv : *txCommitQ)
+        auto iter = txCommitQ->begin();
+        while (iter != txCommitQ->end())
         {
-            uint64_t cheapHash = GetShortID(shorttxidk0, shorttxidk1, kv.first, version);
-            auto shTx = kv.second.entry.GetSharedTx();
+            uint64_t cheapHash = GetShortID(shorttxidk0, shorttxidk1, iter->hash, version);
+            auto shTx = iter->entry.GetSharedTx();
             if (shTx != nullptr)
                 mapTxFromPools.insert(std::make_pair(cheapHash, shTx));
+
+            iter++;
         }
     }
 

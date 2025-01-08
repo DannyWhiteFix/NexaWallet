@@ -1063,7 +1063,7 @@ void CRequestManager::SendTxnRequests(OdMap &mapTxns)
     // is simlilar to batched block requests, however, we don't make the distinction of whether we're in the process
     // of syncing the chain, as we do with block requests.
     std::map<CNodeRef, std::vector<CInv>, CompareIteratorByNodeRef> mapBatchTxnRequests;
-    std::map<CNodeRef, std::vector<CInv2>, CompareIteratorByNodeRef> mapBatchTxnRequestsInv2;
+    std::map<CNodeRef, std::vector<CExtInv>, CompareIteratorByNodeRef> mapBatchTxnRequestsInv2;
 
     // Modify retry interval. If we're doing IBD or if Traffic Shaping is ON we want to have a longer interval because
     // those blocks and txns can take much longer to download.
@@ -1164,13 +1164,15 @@ void CRequestManager::SendTxnRequests(OdMap &mapTxns)
 
                             if (next.noderef.get()->fPeerWantsINV2)
                             {
-                                mapBatchTxnRequestsInv2[next.noderef].emplace_back(CInv2(item.obj.type, item.obj.hash));
+                                uint64_t cheaphash = item.obj.hash.GetCheapHash();
+                                mapBatchTxnRequestsInv2[next.noderef].emplace_back(CExtInv(MSG_EXT_TX, cheaphash));
 
                                 // If we have 1000 requests for this peer then send them right away.
                                 if (mapBatchTxnRequestsInv2[next.noderef].size() >= 1000)
                                 {
-                                    next.noderef.get()->PushMessageWithCookie(NetMsgType::GETDATA,
+                                    next.noderef.get()->PushMessageWithCookie(NetMsgType::EXTGETDATA,
                                         (++requestCookie << 16), mapBatchTxnRequestsInv2[next.noderef]);
+
                                     LOG(REQ, "Sent batched request with %d transactions to node %s\n",
                                         mapBatchTxnRequestsInv2[next.noderef].size(), next.noderef.get()->GetLogName());
 
@@ -1230,8 +1232,7 @@ void CRequestManager::SendTxnRequests(OdMap &mapTxns)
             {
                 return;
             }
-
-            iter.first.get()->PushMessageWithCookie(NetMsgType::GETDATA, getCookie(), iter.second);
+            iter.first.get()->PushMessageWithCookie(NetMsgType::EXTGETDATA, getCookie(), iter.second);
             LOG(REQ, "Sent batched request with %d transactions to node %s\n", iter.second.size(),
                 iter.first.get()->GetLogName());
         }

@@ -1442,9 +1442,11 @@ void BuildSeededBloomFilter(CBloomFilter &filterMemPool,
     // Also add all the transaction hashes currently in the txCommitQ
     {
         LOCK(cs_commitQ);
-        for (auto &it : *txCommitQ)
+        auto iter = txCommitQ->begin();
+        while (iter != txCommitQ->end())
         {
-            setHighScoreMemPoolHashes.insert(it.first);
+            setHighScoreMemPoolHashes.insert(iter->hash);
+            iter++;
         }
     }
 

@@ -70,20 +70,34 @@ std::deque<CSyncWithWallets> vPostBlockProcessing GUARDED_BY(cs_walletprocessing
 
 void ThreadCommitToMempool();
 
-CTransactionRef CommitQGet(uint256 hash)
+CTransactionRef CommitQGet(const uint256 hash)
 {
     // search by transaction id
     LOCK(cs_commitQ);
-    std::map<uint256, CTxCommitData>::iterator it = txCommitQ->find(hash);
+    auto it = txCommitQ->find(hash);
     if (it == txCommitQ->end())
         return nullptr;
-    return it->second.entry.GetSharedTx();
+    return it->entry.GetSharedTx();
+}
+
+std::vector<CTransactionRef> CommitQGet(const uint64_t cheaphash)
+{
+    std::vector<CTransactionRef> vTx;
+
+    LOCK(cs_commitQ);
+    auto values = txCommitQ->get<txid_shortid>().equal_range(cheaphash);
+    while (values.first != values.second)
+    {
+        vTx.push_back(values.first->entry.GetSharedTx());
+        values.first++;
+    }
+    return vTx;
 }
 
 void InitTxAdmission()
 {
     if (txCommitQ == nullptr)
-        txCommitQ = new std::map<uint256, CTxCommitData>();
+        txCommitQ = new CIndexedCommitQ();
 }
 
 void StartTxAdmissionThreads()
@@ -437,7 +451,7 @@ void _CommitTxToMempool()
     // To do so, before the transactions are finally commited to the mempool the txCommitQ pointer is copied
     // to txCommitQFinal so that the lock on txCommitQ can be released and processing can continue.
     // However, the incomingConflicts detector is not reset until all the transactions are committed to the mempool.
-    std::map<uint256, CTxCommitData> *txCommitQFinal = nullptr;
+    CIndexedCommitQ *txCommitQFinal = nullptr;
 
     {
         std::vector<CTransactionRef> vWhatChanged;
@@ -450,15 +464,17 @@ void _CommitTxToMempool()
             LOCK(cs_commitQ);
             avgCommitBatchSize = (avgCommitBatchSize * 24 + txCommitQ->size()) / 25;
             txCommitQFinal = txCommitQ;
-            txCommitQ = new std::map<uint256, CTxCommitData>();
+            txCommitQ = new CIndexedCommitQ();
         }
 
         // These transactions have already been validated so store them directly into the mempool.
-        for (auto &it : *txCommitQFinal)
+        // And store them in the order they were received.
+        auto it = txCommitQFinal->get<entry_time>().begin();
+        while (it != txCommitQFinal->get<entry_time>().end())
         {
-            const CTxCommitData &data = it.second;
-            mempool._addUnchecked(data.entry, !IsInitialBlockDownload());
-            vWhatChanged.push_back(data.entry.GetSharedTx());
+            mempool._addUnchecked(it->entry, !IsInitialBlockDownload());
+            vWhatChanged.push_back(it->entry.GetSharedTx());
+            it++;
         }
 
         LOCK(orphanpool.cs_processorphans);
@@ -468,10 +484,11 @@ void _CommitTxToMempool()
 #ifdef ENABLE_WALLET
     // ... and finally do the commit Q.  This way new transactions that enter the mempool
     // and which depend on those in any recent block will be added with a later timestamp.
-    for (auto &it : *txCommitQFinal)
+    auto it = txCommitQFinal->get<entry_time>().begin();
+    while (it != txCommitQFinal->get<entry_time>().end())
     {
-        const CTxCommitData &data = it.second;
-        SyncWithWallets(data.entry.GetSharedTx(), nullptr, -1);
+        SyncWithWallets(it->entry.GetSharedTx(), nullptr, -1);
+        it++;
     }
 #endif
     txCommitQFinal->clear();
@@ -1385,7 +1402,7 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
             eData.hash = id;
 
             LOCK(cs_commitQ);
-            (*txCommitQ).emplace(eData.hash, eData);
+            (*txCommitQ).insert(eData);
         }
     }
     uint64_t interval = (GetStopwatch() - start) / 1000;

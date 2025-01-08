@@ -343,12 +343,12 @@ void static ProcessGetData(CNode *pfrom,
         else if (inv.IsKnownType())
         {
             std::shared_ptr<CDataStream> pStream = nullptr;
+            std::vector<std::shared_ptr<CDataStream> > vStream;
             CTransactionRef ptx = nullptr;
-            CDataStream txStream(SER_NETWORK, PROTOCOL_VERSION);
 
             // Check for stream from relay memory first since this is the most efficient data to send.
-            pStream = maprelay.Find(inv.hash);
-            if (!pStream)
+            vStream = maprelay.Find(inv.hash);
+            if (vStream.empty())
             {
                 ptx = CommitQGet(inv.hash);
                 if (!ptx)
@@ -357,41 +357,51 @@ void static ProcessGetData(CNode *pfrom,
                 }
             }
 
-            // If we found a txn or a stream then push it
-            if (pStream || ptx)
+            if (vStream.empty() && !ptx)
             {
-                if (pfrom->txConcat)
-                {
-                    if (pStream)
-                        ss << *pStream;
-                    else
-                        ss << *ptx;
-
-                    // Send the concatenated txns if we're over the limit. We don't want to batch
-                    // too many and end up delaying the send.
-                    if (ss.size() > MAX_TXN_BATCH_SIZE)
-                    {
-                        // TODO, what if this is the last one
-                        pfrom->PushMessageWithCookie(NetMsgType::TX, msgCookie + replyCookieCount, ss);
-                        replyCookieCount++;
-                        ss.clear();
-                    }
-                }
-                else
-                {
-                    // Or if this is not a peer that supports
-                    // concatenation then send the transaction right away.
-                    if (pStream)
-                        pfrom->PushMessageWithCookie(NetMsgType::TX, msgCookie + replyCookieCount, *pStream);
-                    else
-                        pfrom->PushMessageWithCookie(NetMsgType::TX, msgCookie + replyCookieCount, ptx);
-                    replyCookieCount++;
-                }
-                pfrom->txsSent += 1;
+                vNotFound.push_back(inv);
             }
             else
             {
-                vNotFound.push_back(inv);
+                // If we found a txn or a stream then push it
+                while (!vStream.empty() || ptx)
+                {
+                    if (!vStream.empty())
+                    {
+                        pStream = vStream.back();
+                        vStream.pop_back();
+                    }
+
+                    if (pfrom->txConcat)
+                    {
+                        if (pStream)
+                            ss << *pStream;
+                        else
+                            ss << *ptx;
+
+                        // Send the concatenated txns if we're over the limit. We don't want to batch
+                        // too many and end up delaying the send.
+                        if (ss.size() > MAX_TXN_BATCH_SIZE)
+                        {
+                            // TODO, what if this is the last one
+                            pfrom->PushMessageWithCookie(NetMsgType::TX, msgCookie + replyCookieCount, ss);
+                            replyCookieCount++;
+                            ss.clear();
+                        }
+                    }
+                    else
+                    {
+                        // Or if this is not a peer that supports
+                        // concatenation then send the transaction right away.
+                        if (pStream)
+                            pfrom->PushMessageWithCookie(NetMsgType::TX, msgCookie + replyCookieCount, *pStream);
+                        else
+                            pfrom->PushMessageWithCookie(NetMsgType::TX, msgCookie + replyCookieCount, ptx);
+                        replyCookieCount++;
+                    }
+                    pfrom->txsSent += 1;
+                    ptx = nullptr;
+                }
             }
         }
 
@@ -512,6 +522,102 @@ void static ProcessExtGetData(CNode *pfrom,
             }
             replyCookieCount++;
         }
+        else if (inv.type == MSG_EXT_TX)
+        {
+            std::shared_ptr<CDataStream> pStream = nullptr;
+            CTransactionRef ptx = nullptr;
+            std::vector<CTransactionRef> vTx;
+            std::vector<std::shared_ptr<CDataStream> > vStream;
+
+            // Check for stream from relay memory first since this is the most efficient data to send.
+            CDataStream ss1(0, 0);
+            for (auto c : inv.hash)
+                ss1 << c;
+            uint64_t cheaphash = ser_readdata64(ss1);
+            vStream = maprelay.Find(cheaphash);
+#ifdef DEBUG
+            // This -debug test code allows us to fall through to check the different types of searches
+            // for transactions. If we didn't do this we very rarely, if ever, check the commit queue
+            // or the txpool for transactions since we almost always get them from the relay map.
+            static std::atomic<uint32_t> count{0};
+            count++;
+            if (count >= 10)
+            {
+                vStream.clear();
+            }
+#endif
+            if (vStream.empty())
+            {
+                vTx = CommitQGet(cheaphash);
+#ifdef DEBUG
+                if (count >= 15)
+                {
+                    count = 0;
+                    vTx.clear();
+                }
+#endif
+                if (vTx.empty())
+                {
+                    vTx = mempool.get(cheaphash);
+                }
+            }
+
+            if (vStream.empty() && vTx.empty())
+            {
+                vNotFound.push_back(inv);
+            }
+            else
+            {
+                // If we found a txn or a stream then push it
+                while (!vStream.empty() || !vTx.empty())
+                {
+                    if (!vStream.empty())
+                    {
+                        pStream = vStream.back();
+                        vStream.pop_back();
+                    }
+                    else if (!vTx.empty())
+                    {
+                        ptx = vTx.back();
+                        vTx.pop_back();
+                    }
+
+                    if (pfrom->txConcat)
+                    {
+                        if (pStream)
+                        {
+                            ss << *pStream;
+                        }
+                        else
+                        {
+                            ss << *ptx;
+                        }
+                        // Send the concatenated txns if we're over the limit. We don't want to batch
+                        // too many and end up delaying the send.
+                        if (ss.size() > MAX_TXN_BATCH_SIZE)
+                        {
+                            // TODO, what if this is the last one
+                            pfrom->PushMessageWithCookie(NetMsgType::TX, msgCookie + replyCookieCount, ss);
+                            replyCookieCount++;
+                            ss.clear();
+                        }
+                    }
+                    else
+                    {
+                        // Or if this is not a peer that supports
+                        // concatenation then send the transaction right away.
+                        if (pStream)
+                            pfrom->PushMessageWithCookie(NetMsgType::TX, msgCookie + replyCookieCount, *pStream);
+                        else
+                            pfrom->PushMessageWithCookie(NetMsgType::TX, msgCookie + replyCookieCount, ptx);
+                        replyCookieCount++;
+                    }
+
+                    pfrom->txsSent += 1;
+                    pStream = nullptr;
+                }
+            }
+        }
         else
         {
             vNotFound.push_back(inv);
@@ -525,6 +631,14 @@ void static ProcessExtGetData(CNode *pfrom,
         // processing an inv then when we erase further downstream we may end up erasing an inv
         // we never actually processed.
         it++;
+    }
+
+    // Send the batched transactions if any to send.
+    if (!ss.empty())
+    {
+        uint32_t lastMsgCookie = msgCookie | 0xFFFF;
+        pfrom->PushMessageWithCookie(NetMsgType::TX, lastMsgCookie, ss);
+        replyCookieCount++;
     }
 
     // Erase all messages extinv's we processed

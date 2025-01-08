@@ -3636,68 +3636,53 @@ void RelayTransaction(const CTransactionRef ptx)
 }
 
 CMapRelay::CMapRelay() {}
-void CMapRelay::Add(const uint256 &hash, std::shared_ptr<CDataStream> pStream)
+void CMapRelay::Add(const uint256 &hash, std::shared_ptr<CDataStream> pStream) { Add(hash.GetCheapHash(), pStream); }
+void CMapRelay::Add(const uint64_t hash, std::shared_ptr<CDataStream> pStream)
 {
-    LOCK(cs_mapRelay);
-
     // Save original serialized message so that when we service getdata requests we don't have
     // to re-serialize the transaction multiple times.
     //
     // Relay transaction should only be called once, after the transaction is accepted to the txpool,
     // therefore we don't have to check the mapRelay for the existence of a prior entry before serializing
     // the transaction.  In other words, we don't need to worry about doing this step twice.
-    auto ret = mapRelay.insert(std::pair<uint256, std::shared_ptr<CDataStream> >(hash, pStream));
-    if (ret.second == true)
-    {
-        nMapRelayBytes += (32 + (*pStream).size());
+    int64_t nExpireTime = GetTime() + DEFAULT_EXPIRE_TIME;
+    CTxMapRelayData data = {hash, pStream, nExpireTime};
+    uint64_t nSizeOfEntry = 8 + (*pStream).size() + 8;
 
-        // Add the tx id to the expiration deque. Use and expire time not too far in the future
-        // since we only need to keep the transaction for a short period of time during tx propagation, and
-        // generally tx propagation should only take a few seconds.
-        int64_t nExpireTime = GetTime() + DEFAULT_EXPIRE_TIME;
-        vRelayExpiration.emplace_back(std::make_pair(nExpireTime, hash));
+    {
+        LOCK(cs_mapRelay);
+        mapRelay.insert(data);
+        nMapRelayBytes += nSizeOfEntry;
     }
 }
-
-std::shared_ptr<CDataStream> CMapRelay::Find(const uint256 &hash)
+std::vector<std::shared_ptr<CDataStream> > CMapRelay::Find(const uint256 &hash) { return Find(hash.GetCheapHash()); }
+std::vector<std::shared_ptr<CDataStream> > CMapRelay::Find(const uint64_t hash)
 {
-    LOCK(cs_mapRelay);
-    auto mi = mapRelay.find(hash);
-    if (mi == mapRelay.end())
-        return nullptr;
+    std::vector<std::shared_ptr<CDataStream> > vStream;
 
-    return mi->second;
+    LOCK(cs_mapRelay);
+    auto values = mapRelay.equal_range(hash);
+    while (values.first != values.second)
+    {
+        vStream.push_back(values.first->pStream);
+        values.first++;
+    }
+
+    return vStream;
 }
 
 void CMapRelay::Expire()
 {
-    LOCK(cs_mapRelay);
-
-    // Expire and/or Trim messages
     uint64_t nMaxMapRelay = maxTxPool.Value() * ONE_MEGABYTE / 10;
-    while (
-        !vRelayExpiration.empty() && ((vRelayExpiration.front().first < GetTime()) || (nMapRelayBytes > nMaxMapRelay)))
-    {
-        const uint256 &hash = vRelayExpiration.front().second;
-        auto mi = mapRelay.find(hash);
-        if (mi != mapRelay.end())
-        {
-            nMapRelayBytes -= (32 + (*mi->second).size());
-        }
-        mapRelay.erase(hash);
-        vRelayExpiration.pop_front();
-    }
-    if (mapRelay.empty())
-    {
-        mapRelay.rehash(0);
-    }
 
-    // As a safeguard, if the data gets out of sync then start over. This should never happen!
-    if (vRelayExpiration.size() != mapRelay.size())
+    // Expire and/or Trim messages if the pool is too large or if the expire time has passed.
+    LOCK(cs_mapRelay);
+    while (!mapRelay.empty() &&
+           ((mapRelay.get<entry_time>().begin()->nExpireTime < GetTime()) || (nMapRelayBytes > nMaxMapRelay)))
     {
-        DbgAssert(vRelayExpiration.size() == mapRelay.size(), );
-        vRelayExpiration.clear();
-        mapRelay.clear();
-        nMapRelayBytes = 0;
+        uint64_t nSizeOfEntry = 8 + (*mapRelay.get<entry_time>().begin()->pStream).size() + 8;
+        nMapRelayBytes -= nSizeOfEntry;
+
+        mapRelay.get<entry_time>().erase(mapRelay.get<entry_time>().begin());
     }
 }

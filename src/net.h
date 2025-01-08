@@ -38,6 +38,10 @@
 #include <queue>
 #include <stdint.h>
 
+#include "boost/multi_index/hashed_index.hpp"
+#include "boost/multi_index/sequenced_index.hpp"
+#include "boost/multi_index_container.hpp"
+
 #ifndef WIN32
 #include <arpa/inet.h>
 #endif
@@ -1321,16 +1325,45 @@ void RelayTransaction(const CTransactionRef ptx);
 class CMapRelay
 {
 private:
-    struct uint256Hasher
-    {
-        size_t operator()(const uint256 &hash) const { return hash.GetCheapHash(); }
-    };
-
     CCriticalSection cs_mapRelay;
     uint64_t nMapRelayBytes = 0;
 
-    std::unordered_map<uint256, std::shared_ptr<CDataStream>, uint256Hasher> mapRelay GUARDED_BY(cs_mapRelay);
-    std::deque<std::pair<int64_t, uint256> > vRelayExpiration GUARDED_BY(cs_mapRelay);
+    struct CTxMapRelayData
+    {
+        uint64_t cheaphash;
+        std::shared_ptr<CDataStream> pStream;
+        int64_t nExpireTime;
+    };
+    struct maprelay_txshortid
+    {
+        typedef uint64_t result_type;
+        result_type operator()(const CTxMapRelayData &data) const { return data.cheaphash; }
+    };
+    struct maprelay_txshortid_hash
+    {
+        typedef uint64_t hash_value;
+        hash_value operator()(const uint64_t shortid) const { return shortid; }
+    };
+    struct txid_shortid
+    {
+    };
+    struct entry_time
+    {
+    };
+    typedef boost::multi_index_container<CTxMapRelayData,
+        boost::multi_index::indexed_by<
+            // indexed by the cheaphash of the transaction id. Although we can get hash collisions at the 64bit
+            // level we still make this index unique. The reason is, if we try to add a second entry that collides
+            // we want to return an error and then delete the prior entry so that the logic that searches for
+            // transactions from a getdata request, falls through and searchs the entire mempool where hash
+            // collisions are allowed.
+            boost::multi_index::
+                hashed_non_unique<boost::multi_index::tag<txid_shortid>, maprelay_txshortid, maprelay_txshortid_hash>,
+            // sequenced by time of entry.
+            boost::multi_index::sequenced<boost::multi_index::tag<entry_time> > > >
+        indexed_maprelay;
+
+    indexed_maprelay mapRelay GUARDED_BY(cs_mapRelay);
 
 public:
     CMapRelay();
@@ -1339,9 +1372,11 @@ public:
 
     /** Add datastream object to the map and remove any expired entries */
     void Add(const uint256 &hash, std::shared_ptr<CDataStream> pStream);
+    void Add(const uint64_t hash, std::shared_ptr<CDataStream> pStream);
 
     /** Find a datastream in maprelay and return the datastream and true if found */
-    std::shared_ptr<CDataStream> Find(const uint256 &hash);
+    std::vector<std::shared_ptr<CDataStream> > Find(const uint256 &hash);
+    std::vector<std::shared_ptr<CDataStream> > Find(const uint64_t hash);
 
     /** Expire and Trim messages from mapRelay */
     void Expire();

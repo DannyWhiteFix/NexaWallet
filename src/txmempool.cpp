@@ -906,16 +906,19 @@ void CTxMemPool::ResubmitCommitQ()
 {
     AssertWriteLockHeld(cs_txmempool);
 
-    // Clear txCommitQ
+    // resubmit trannsactions in the order theey were received
     {
         LOCK(cs_commitQ);
-        for (auto &kv : *txCommitQ)
+        auto it = txCommitQ->get<entry_time>().begin();
+        while (it != txCommitQ->get<entry_time>().end())
         {
             CTxInputData txd;
-            txd.tx = kv.second.entry.GetSharedTx();
+            txd.tx = it->entry.GetSharedTx();
             txd.nodeName = "rollback";
             txd.msgCookie = 0;
             EnqueueTxForAdmission(txd);
+
+            it++;
         }
         txCommitQ->clear();
     }
@@ -1667,6 +1670,13 @@ CTxMemPool::TxIdIter CTxMemPool::_getIdIter(const uint256 &hash) const
 }
 
 
+CTransactionRef CTxMemPool::get(const uint256 &hash) const
+{
+    READLOCK(cs_txmempool);
+    return _get(hash);
+}
+
+
 CTransactionRef CTxMemPool::_get(const uint256 &hash) const
 {
     AssertLockHeld(cs_txmempool);
@@ -1674,6 +1684,21 @@ CTransactionRef CTxMemPool::_get(const uint256 &hash) const
     if (i == mapTx.end())
         return nullptr;
     return i->GetSharedTx();
+}
+
+std::vector<CTransactionRef> CTxMemPool::get(const uint64_t cheaphash) const
+{
+    std::vector<CTransactionRef> vTx;
+
+    READLOCK(cs_txmempool);
+    auto values = mapTx.get<txid_shortid>().equal_range(cheaphash);
+    while (values.first != values.second)
+    {
+        vTx.push_back(values.first->GetSharedTx());
+        values.first++;
+    }
+
+    return vTx;
 }
 
 CTxMemPool::TxIdIter CTxMemPool::_getIdIter(const COutPoint &outpoint) const
@@ -1716,13 +1741,6 @@ CTxOut CTxMemPool::_get(const COutPoint &outpoint) const
     if (idx >= i->GetTx().vout.size())
         return CTxOut();
     return i->GetTx().vout[idx];
-}
-
-
-CTransactionRef CTxMemPool::get(const uint256 &hash) const
-{
-    READLOCK(cs_txmempool);
-    return _get(hash);
 }
 
 static TxMempoolInfo GetInfo(CTxMemPool::indexed_transaction_set::const_iterator it)

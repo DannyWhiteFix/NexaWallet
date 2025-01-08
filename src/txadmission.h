@@ -127,10 +127,42 @@ extern std::queue<CTxInputData> txDeferQ;
 extern CWaitableCriticalSection cs_CommitQCondVar;
 extern CConditionVariable cvCommitQ;
 extern CCriticalSection cs_commitQ;
-extern std::map<uint256, CTxCommitData> *txCommitQ;
+
+struct commitdata_txid
+{
+    typedef uint256 result_type;
+    result_type operator()(const CTxCommitData &ctx) const { return ctx.hash; }
+};
+struct commitdata_txid_hash
+{
+    typedef uint64_t hash_value;
+    hash_value operator()(const uint256 &hash) const { return hash.GetCheapHash(); }
+};
+struct commitdata_txshortid
+{
+    typedef uint64_t result_type;
+    result_type operator()(const CTxCommitData &ctx) const { return ctx.hash.GetCheapHash(); }
+};
+struct commitdata_txshortid_hash
+{
+    typedef uint64_t hash_value;
+    hash_value operator()(const uint64_t shortid) const { return shortid; }
+};
+typedef boost::multi_index_container<CTxCommitData,
+    boost::multi_index::indexed_by<
+        // accessed by txid
+        boost::multi_index::hashed_unique<boost::multi_index::tag<txid_tag>, commitdata_txid, commitdata_txid_hash>,
+        // accessed by short hash of the txid therefore it could be non unique due to a 64 bit hash collision.
+        boost::multi_index::
+            hashed_non_unique<boost::multi_index::tag<txid_shortid>, commitdata_txshortid, commitdata_txshortid_hash>,
+        // sequenced by time of entry.
+        boost::multi_index::sequenced<boost::multi_index::tag<entry_time> > > >
+    CIndexedCommitQ;
+extern CIndexedCommitQ *txCommitQ;
 
 // returns a transaction ref, if the transaction id exists in the commitQ
-CTransactionRef CommitQGet(uint256 hash);
+CTransactionRef CommitQGet(const uint256 hash);
+std::vector<CTransactionRef> CommitQGet(const uint64_t cheaphash);
 
 /** Initialize the transaction mempool admission state */
 void InitTxAdmission();

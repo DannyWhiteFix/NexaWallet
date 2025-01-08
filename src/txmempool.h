@@ -365,6 +365,9 @@ struct txid_tag
 struct txidem_tag
 {
 };
+struct txid_shortid
+{
+};
 
 class CBlockPolicyEstimator;
 
@@ -559,7 +562,11 @@ public:
             // sorted by the fee rate of all ancestors combined
             boost::multi_index::ordered_non_unique<boost::multi_index::tag<ancestor_score>,
                 boost::multi_index::identity<CTxMemPoolEntry>,
-                CompareTxMemPoolEntryByAncestorFee> > >
+                CompareTxMemPoolEntryByAncestorFee>,
+            // accessed by short hash of the txid therefore it could be non unique due to a 64 bit hash collision.
+            boost::multi_index::hashed_non_unique<boost::multi_index::tag<txid_shortid>,
+                mempoolentry_txshortid,
+                mempoolentry_txshortid_hash> > >
         indexed_transaction_set;
 
     mutable CSharedCriticalSection cs_txmempool;
@@ -905,6 +912,7 @@ public:
 
     CTransactionRef get(const uint256 &hash) const;
     CTransactionRef _get(const uint256 &hash) const;
+    std::vector<CTransactionRef> get(const uint64_t cheaphash) const;
 
     // Since this returns an entry, caller must lock, so only _ version is available
     // Checks both Id and Idem
