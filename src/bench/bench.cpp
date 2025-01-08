@@ -16,6 +16,7 @@ using namespace benchmark;
 
 void benchmark::ConsolePrinter::header()
 {
+    std::cout << "Min, max, and median are reported in seconds." << std::endl;
     std::cout << "# Benchmark, evals, iterations, total, min, max, median" << std::endl;
 }
 

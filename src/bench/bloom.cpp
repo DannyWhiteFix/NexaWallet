@@ -190,8 +190,8 @@ static void Nothing(benchmark::State &state)
 }
 
 
-BENCHMARK(Nothing, 1);
-BENCHMARK(FastFilterCheckSet, 2);
-BENCHMARK(FastFilterCheckSet2, 1);
-BENCHMARK(FastFilterContains, 1);
-BENCHMARK(FastFilterContains2, 1);
+BENCHMARK(Nothing, 100);
+BENCHMARK(FastFilterCheckSet, 200);
+BENCHMARK(FastFilterCheckSet2, 100);
+BENCHMARK(FastFilterContains, 100);
+BENCHMARK(FastFilterContains2, 100);

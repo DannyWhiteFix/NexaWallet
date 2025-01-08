@@ -127,11 +127,11 @@ enum opcodetype
 
     // control
     OP_NOP = 0x61,
-    OP_VER = 0x62,
+    OP_INVALID_CONTROL1 = 0x62,
     OP_IF = 0x63,
     OP_NOTIF = 0x64,
-    OP_VERIF = 0x65,
-    OP_VERNOTIF = 0x66,
+    OP_JUMP = 0x65,
+    OP_INVALID_CONTROL2 = 0x66,
     OP_ELSE = 0x67,
     OP_ENDIF = 0x68,
     OP_VERIFY = 0x69,
@@ -755,7 +755,7 @@ public:
     {
         StackItem data;
         const_iterator pc = pcRet;
-        opcodeRet = OP_VER; // initialize this to something broken
+        opcodeRet = OP_INVALIDOPCODE; // initialize this to something broken
         opcodetype opcode = opcodeRet;
         bool ret = GetOp2(pc, opcode, &data);
         vchRet = data.data(); // will throw if not a vch
@@ -830,7 +830,7 @@ public:
                     return false;
                 }
                 nSize = ReadLE16(&pc[0]);
-                pc += 2;
+                pc += 2U;
             }
             else if (opcode == OP_PUSHDATA4)
             {
@@ -839,7 +839,7 @@ public:
                     return false;
                 }
                 nSize = ReadLE32(&pc[0]);
-                pc += 4;
+                pc += 4U;
             }
             if (end() - pc < 0 || uint32_t(end() - pc) < nSize)
             {
