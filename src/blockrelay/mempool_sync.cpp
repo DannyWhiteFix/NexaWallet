@@ -372,9 +372,11 @@ void GetMempoolTxHashes(std::vector<uint256> &mempoolTxHashes)
 {
     {
         LOCK(cs_commitQ);
-        for (auto &kv : *txCommitQ)
+        auto iter = txCommitQ->begin();
+        while (iter != txCommitQ->end())
         {
-            mempoolTxHashes.push_back(kv.first);
+            mempoolTxHashes.push_back(iter->hash);
+            iter++;
         }
     }
 

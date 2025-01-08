@@ -91,7 +91,7 @@ TestingSetup::TestingSetup(const std::string &chainName) : BasicTestingSetup(cha
     pblocktree = new CBlockTreeDB(1 << 20, "", true);
     pcoinsdbview = new CCoinsViewDB(1 << 23, true);
     pcoinsTip = new CCoinsViewCache(pcoinsdbview);
-    txCommitQ = new std::map<uint256, CTxCommitData>();
+    txCommitQ = new CIndexedCommitQ();
     ptokenDesc = new CTokenDescriptionDB(1 << 20, false, false);
     ptokenMint = new CTokenMintageDB(1 << 20, false, false);
 
