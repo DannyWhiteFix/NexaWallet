@@ -87,12 +87,6 @@ void CTxMemPoolEntry::UpdateFeeDelta(int64_t newFeeDelta)
 }
 
 void CTxMemPoolEntry::UpdateLockPoints(const LockPoints &lp) { lockPoints = lp; }
-void CTxMemPoolEntry::UpdateRuntimeSigOps(uint64_t _runtimeSigOpCount, uint64_t _runtimeSighashBytes)
-{
-    runtimeSigOpCount = _runtimeSigOpCount;
-    runtimeSighashBytes = _runtimeSighashBytes;
-}
-
 void CTxMemPoolEntry::UpdateReadOnlyChain(bool fReadOnly) { fReadOnlyChain = fReadOnly; }
 // vTxIdsToUpdate is the set of transaction Ids from a disconnected block
 // which has been re-added to the mempool.

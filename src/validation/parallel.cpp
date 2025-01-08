@@ -61,7 +61,6 @@ bool CScriptCheck::operator()()
     }
     if (resourceTracker)
     {
-        resourceTracker->Update(sis.tx->GetId(), checker.GetNumSigops(), checker.GetBytesHashed());
         resourceTracker->UpdateConsensusSigChecks(smRes.consensusSigCheckCount);
     }
     // input standardness rule

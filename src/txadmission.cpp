@@ -1258,8 +1258,6 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
         // Create a commit data entry
         CTxMemPoolEntry entry(
             tx, nFees, GetTime(), dPriority, chainActive.Height(), inChainInputValue, fSpendsCoinbase, nSigOps, lp);
-        // Record the actual number of sigops executed for statistical purposes only
-        entry.UpdateRuntimeSigOps(resourceTracker.GetSigOps(), resourceTracker.GetSighashBytes());
 
         nSize = entry.GetTxSize();
         if (fRelayPriority && (nModifiedFees < ::minRelayTxFee.GetFee(nSize)) &&
@@ -1408,10 +1406,9 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
     uint64_t interval = (GetStopwatch() - start) / 1000;
     // typically too much logging, but useful when optimizing tx validation
     LOG(BENCH,
-        "ValidateTransaction, time: %d, tx: %s, len: %d, sigops: %llu (legacy: %u), sighash: %llu, Vin: "
+        "ValidateTransaction, time: %d, tx: %s, len: %d, sigops: %u, Vin: "
         "%llu, Vout: %llu\n",
-        interval, tx->GetId().ToString(), nSize, resourceTracker.GetSigOps(), (unsigned int)nSigOps,
-        resourceTracker.GetSighashBytes(), tx->vin.size(), tx->vout.size());
+        interval, tx->GetId().ToString(), nSize, (unsigned int)nSigOps, tx->vin.size(), tx->vout.size());
     nTxValidationTime << interval;
 
     // Update txn per second. We must do it here although technically the txn isn't in the mempool yet but

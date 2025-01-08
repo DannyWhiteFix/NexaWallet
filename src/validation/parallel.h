@@ -31,10 +31,8 @@ class ValidationResourceTracker
 {
 private:
     mutable CCriticalSection cs_resource_tracker;
-    uint64_t nSigops = 0;
-    uint64_t nSighashBytes = 0;
 
-    /** 2020-05-15 sigchecks consensus rule -- counts the number of sigops/potential sigops */
+    /** counts the number of sigops/potential sigops from the script machine resource tracker */
     uint64_t consensusSigChecks = 0;
 
 public:
@@ -44,17 +42,8 @@ public:
     ValidationResourceTracker(const ValidationResourceTracker &c)
     {
         LOCK(cs_resource_tracker);
-        nSigops = c.nSigops;
-        nSighashBytes = c.nSighashBytes;
         consensusSigChecks = c.consensusSigChecks;
         sighashtype = c.sighashtype;
-    }
-    void Update(const uint256 &txid, uint64_t nSigopsIn, uint64_t nSighashBytesIn)
-    {
-        LOCK(cs_resource_tracker);
-        nSigops += nSigopsIn;
-        nSighashBytes += nSighashBytesIn;
-        return;
     }
 
     /** Update 2020-05-15 sigchecks consensus rule sigop count
@@ -72,17 +61,6 @@ public:
     {
         LOCK(cs_resource_tracker);
         return consensusSigChecks;
-    }
-
-    uint64_t GetSigOps() const
-    {
-        LOCK(cs_resource_tracker);
-        return nSigops;
-    }
-    uint64_t GetSighashBytes() const
-    {
-        LOCK(cs_resource_tracker);
-        return nSighashBytes;
     }
 };
 

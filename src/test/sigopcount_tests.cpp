@@ -36,10 +36,8 @@ void CheckScriptSigOps(const CScript &script, uint32_t accurate_sigops, uint32_t
     const uint32_t nodatasigflags = testScriptFlags & ~SCRIPT_ENABLE_CHECKDATASIG;
     const uint32_t datasigflags = testScriptFlags | SCRIPT_ENABLE_CHECKDATASIG;
 
-    BOOST_CHECK_EQUAL(script.GetSigOpCount(nodatasigflags, false), inaccurate_sigops);
-    BOOST_CHECK_EQUAL(script.GetSigOpCount(datasigflags, false), inaccurate_sigops + datasigops);
-    BOOST_CHECK_EQUAL(script.GetSigOpCount(nodatasigflags, true), accurate_sigops);
-    BOOST_CHECK_EQUAL(script.GetSigOpCount(datasigflags, true), accurate_sigops + datasigops);
+    BOOST_CHECK_EQUAL(script.GetSigOpCount(nodatasigflags), accurate_sigops);
+    BOOST_CHECK_EQUAL(script.GetSigOpCount(datasigflags), accurate_sigops + datasigops);
 
     const CScript p2sh = GetScriptForDestination(CScriptID(script));
     const CScript scriptSig = CScript() << OP_0 << Serialize(script);
