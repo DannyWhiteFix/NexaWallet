@@ -113,9 +113,7 @@ private:
     unsigned int entryHeight; //! Chain height when entering the mempool
     CAmount inChainInputValue; //! Sum of all txin values that are already in blockchain
     bool spendsCoinbase; //! keep track of transactions that spend a coinbase
-    unsigned int sigOpCount; //! Legacy sig ops plus P2SH sig op count
-    uint64_t runtimeSigOpCount; //! Runtime signature operation count
-    uint64_t runtimeSighashBytes; //! Runtime bytes hashed for signature operations
+    unsigned int sigOpCount; //! Sig ops as calculated by the script machine
     int64_t feeDelta; //! Used for determining the priority of the transaction for mining in a block
     LockPoints lockPoints; //! Track the height and time at which tx was final
 
@@ -159,8 +157,6 @@ public:
     int64_t GetTime() const { return nTime; }
     unsigned int GetHeight() const { return entryHeight; }
     unsigned int GetSigOpCount() const { return sigOpCount; }
-    uint64_t GetRuntimeSigOpCount() const { return runtimeSigOpCount; }
-    uint64_t GetRuntimeSighashBytes() const { return runtimeSighashBytes; }
     int64_t GetModifiedFee() const { return nFee + feeDelta; }
     int64_t GetFeeDelta() const { return feeDelta; }
     size_t DynamicMemoryUsage() const { return nUsageSize; }
@@ -176,8 +172,6 @@ public:
     void UpdateLockPoints(const LockPoints &lp);
     // Update the LockPoints after a reorg
     void UpdateReadOnlyChain(bool fReadOnly);
-    // Update runtime validation resource usage
-    void UpdateRuntimeSigOps(uint64_t _runtimeSigOpCount, uint64_t _runtimeSighashBytes);
 
     bool GetSpendsCoinbase() const { return spendsCoinbase; }
     uint64_t GetCountWithAncestors() const { return nCountWithAncestors; }

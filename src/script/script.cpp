@@ -469,7 +469,7 @@ bool CScriptNum::MinimallyEncode(std::vector<uint8_t> &data)
 
 std::string CScript::GetHex() const { return HexStr(begin(), end()); }
 
-unsigned int CScript::GetSigOpCount(const uint32_t flags, bool fAccurate) const
+unsigned int CScript::GetSigOpCount(const uint32_t flags) const
 {
     unsigned int n = 0;
     const_iterator pc = begin();
@@ -485,7 +485,7 @@ unsigned int CScript::GetSigOpCount(const uint32_t flags, bool fAccurate) const
             n++;
         else if (opcode == OP_CHECKMULTISIG || opcode == OP_CHECKMULTISIGVERIFY)
         {
-            if (fAccurate && lastOpcode >= OP_1 && lastOpcode <= OP_16)
+            if (lastOpcode >= OP_1 && lastOpcode <= OP_16)
                 n += DecodeOP_N(lastOpcode);
             else
                 n += MAX_PUBKEYS_PER_MULTISIG;
@@ -498,7 +498,7 @@ unsigned int CScript::GetSigOpCount(const uint32_t flags, bool fAccurate) const
 unsigned int CScript::GetSigOpCount(const uint32_t flags, const CScript &scriptSig) const
 {
     if ((flags & SCRIPT_VERIFY_P2SH) == 0 || !IsPayToScriptHash())
-        return GetSigOpCount(flags, true);
+        return GetSigOpCount(flags);
 
     // This is a pay-to-script-hash scriptPubKey;
     // get the last item that the scriptSig
@@ -516,7 +516,7 @@ unsigned int CScript::GetSigOpCount(const uint32_t flags, const CScript &scriptS
 
     /// ... and return its opcount:
     CScript subscript(data);
-    return subscript.GetSigOpCount(flags, true);
+    return subscript.GetSigOpCount(flags);
 }
 
 bool CScript::IsPayToScriptHash(vector<unsigned char> *hashBytes) const
