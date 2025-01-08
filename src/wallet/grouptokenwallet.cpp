@@ -178,23 +178,32 @@ void GetAllGroupDescriptions(const CWallet *wallet,
             if (coin.isNull() || coin.txOnly())
                 continue;
             CGroupTokenInfo tg(coin.GetScriptPubKey());
-            if ((tg.associatedGroup != NoGroup) && tg.isAuthority())
+            if (grpID != NoGroup && tg.associatedGroup != grpID)
             {
-                if (grpID != NoGroup && tg.associatedGroup != grpID)
-                {
-                    continue;
-                }
+                continue;
+            }
+
+            if (tg.associatedGroup != NoGroup)
+            {
                 // do not get descriptions for tokens not being tracked
                 if (fWhitelist && !wallet->mapTokenTrackers.count(tg.associatedGroup))
                 {
                     continue;
                 }
-                vCoins.push_back(coin);
+
+                if (tg.isAuthority())
+                {
+                    vCoins.push_back(coin);
+                }
+                else
+                {
+                    desc[tg.associatedGroup] = tokencache.GetTokenDesc(tg.associatedGroup);
+                }
             }
         }
     }
 
-    // parse through the transaction to find any op_returns, strip out the labels, and associated them with the groupIDs
+    // parse through the coins to find any op_returns, strip out the labels, and associated them with the groupIDs
     for (COutput &coin : vCoins)
     {
         // Get transaction
@@ -854,7 +863,6 @@ std::vector<std::vector<unsigned char> > ParseGroupDescParams(const UniValue &pa
     std::string tickerStr = params[curparam].get_str();
     std::vector<unsigned char> decimals(1);
     decimals[0] = 0;
-
     if (tickerStr.size() > 8)
     {
         std::string strError = strprintf("Ticker %s has too many characters (8 max)", tickerStr);
@@ -981,8 +989,7 @@ extern UniValue token(const UniValue &params, bool fHelp)
             "'info' returns a list of all tokens with their groupId and associated token-name, token-ticker "
             "descUrl, descHash, decimals, genesis_address, the number of mint/melt/renew/rescript/subgroup "
             "authorities, and also the finest balance (in satoshis) and finest mintage numbers (in satoshis) for "
-            "all tokens created in this wallet, or if a group id is specific, it will return the info just for that "
-            "group regardless of whether it was created in this wallet\n"
+            "all tokens in this wallet, or if a group id is specific, it will return the info just for that group\n"
             "'new' creates a new token type. args: [address] [token-ticker token-name [descUrl descHash decimals]]\n"
             "'mint' creates new tokens. args: groupId address quantity\n"
             "'melt' removes tokens from circulation. args: groupId quantity\n"
@@ -1717,7 +1724,7 @@ extern UniValue token(const UniValue &params, bool fHelp)
             // If a group id was specified and no desc found then do a direct lookup
             // since this group id is not in this wallet, otherwise, get all token balances
             // from the wallet.
-            if (desc.empty())
+            if (grpID != NoGroup && desc.empty())
             {
                 desc[grpID] = tokencache.GetTokenDesc(grpID);
             }
