@@ -301,6 +301,21 @@ class GroupTokensTest (BitcoinTestFramework):
             assert("No coins available" in e.error["message"])
 
         # Create a group, allow wallet to pick an authority address
+        t = self.nodes[0].token("new", "", "", "", "", "2")
+        self.checkGroupNew(self.nodes[0].decoderawtransaction(self.nodes[0].gettransaction(t["transaction"])["hex"]))
+        grpId = t["groupIdentifier"]
+        self.checkTokenInfo(self.nodes[0], grpId, "", "", "", "", 0, 0, "2")
+
+        t = self.nodes[0].token("new", "", "", "http://something.org", "0000000000000000000000000000000000000000000000000000000000000000", "2")
+        self.checkGroupNew(self.nodes[0].decoderawtransaction(self.nodes[0].gettransaction(t["transaction"])["hex"]))
+        grpId = t["groupIdentifier"]
+        self.checkTokenInfo(self.nodes[0], grpId, "", "", "http://something.org", "0000000000000000000000000000000000000000000000000000000000000000", 0, 0, "2")
+
+        t = self.nodes[0].token("new", "AAA", "ahahah", "", "", "3")
+        self.checkGroupNew(self.nodes[0].decoderawtransaction(self.nodes[0].gettransaction(t["transaction"])["hex"]))
+        grpId = t["groupIdentifier"]
+        self.checkTokenInfo(self.nodes[0], grpId, "AAA", "ahahah", "", "", 0, 0, "3")
+
         t = self.nodes[0].token("new")
         self.checkGroupNew(self.nodes[0].decoderawtransaction(self.nodes[0].gettransaction(t["transaction"])["hex"]))
         grpId = t["groupIdentifier"]
