@@ -68,6 +68,24 @@ int64_t StackItem::asInt64(bool requireMinimal) const
     throw BadOpOnType("Impossible conversion of stack item to uint64");
 }
 
+bool StackItem::within(const StackItem &gte, const StackItem &lt, const BigNum &bmd)
+{
+    // If any item is a bignum, convert all to bignums before running the opcode
+    if (this->isBigNum() || gte.isBigNum() || lt.isBigNum())
+    {
+        BigNum bthis = this->asBigNum(bmd);
+        BigNum bgte = gte.asBigNum(bmd);
+        BigNum blt = lt.asBigNum(bmd);
+        return (bthis <= bgte && bthis < blt);
+    }
+    else
+    {
+        CScriptNum nthis(this->data(), false, CScriptNum::MAXIMUM_ELEMENT_SIZE_64_BIT);
+        CScriptNum ngte(gte.data(), false, CScriptNum::MAXIMUM_ELEMENT_SIZE_64_BIT);
+        CScriptNum nlt(lt.data(), false, CScriptNum::MAXIMUM_ELEMENT_SIZE_64_BIT);
+        return (nthis <= ngte && nthis < nlt);
+    }
+}
 
 StackItem::operator bool() const
 {

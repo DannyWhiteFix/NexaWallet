@@ -92,7 +92,7 @@ bool BigNumScriptOp(BigNum &bn,
         assert(!"invalid opcode");
         break;
     }
-    bn = bn.tdiv(bmd);
+    bn.thisTdiv(bmd);
     // gmp_printf("bn: %Zd bmd: %Zd \n", bn.n, bmd.n);
     return true;
 }

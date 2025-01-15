@@ -68,6 +68,22 @@ public:
         return *this;
     }
 
+    void abs() { mpz_abs(n, n); }
+
+    void negate() { mpz_neg(n, n); }
+
+    BigNum &operator++()
+    {
+        mpz_add_ui(n, n, 1);
+        return *this;
+    }
+
+    BigNum &operator--()
+    {
+        mpz_sub_ui(n, n, 1);
+        return *this;
+    }
+
     BigNum checkLimits() const { return *this; }
     /** Modulo where the remainder gets the sign of the dividend */
     BigNum tdiv(const BigNum &d) const
@@ -76,6 +92,9 @@ public:
         mpz_tdiv_r(ret.n, n, d.n);
         return ret;
     }
+
+    /** Modulo where the remainder gets the sign of the dividend */
+    void thisTdiv(const BigNum &d) { mpz_tdiv_r(n, n, d.n); }
 
     BigNum operator+(const BigNum &p) const
     {
@@ -112,10 +131,39 @@ public:
         return ret.checkLimits();
     }
 
+    /** Modulo (result always non-negative) */
     BigNum operator%(const BigNum &p) const
     {
         BigNum ret;
         mpz_mod(ret.n, n, p.n);
+        return ret.checkLimits();
+    }
+
+    /** bitwise and */
+    BigNum operator&(const BigNum &p) const
+    {
+        BigNum ret;
+        if (mpz_sgn(n) < 0 || mpz_sgn(p.n) < 0)
+            throw OutOfBounds("bitwise and with negative number");
+        mpz_and(ret.n, n, p.n);
+        return ret.checkLimits();
+    }
+    /** bitwise or */
+    BigNum operator|(const BigNum &p) const
+    {
+        BigNum ret;
+        if (mpz_sgn(n) < 0 || mpz_sgn(p.n) < 0)
+            throw OutOfBounds("bitwise or with negative number");
+        mpz_ior(ret.n, n, p.n);
+        return ret.checkLimits();
+    }
+    /** bitwise xor */
+    BigNum operator^(const BigNum &p) const
+    {
+        BigNum ret;
+        if (mpz_sgn(n) < 0 || mpz_sgn(p.n) < 0)
+            throw OutOfBounds("bitwise xor with negative number");
+        mpz_xor(ret.n, n, p.n);
         return ret.checkLimits();
     }
 

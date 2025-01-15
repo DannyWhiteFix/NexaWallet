@@ -223,6 +223,10 @@ public:
         return 0;
     }
 
+    /** Returns true if this stack item is greater than or equal gte and less than lt.
+        This function implements OP_WITHIN */
+    bool within(const StackItem &gte, const StackItem &lt, const BigNum &bmd);
+
     void clear(void)
     {
         type = StackElementType::VCH;
