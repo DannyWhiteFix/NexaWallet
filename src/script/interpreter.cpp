@@ -515,6 +515,7 @@ bool ScriptMachine::Step()
     const bool extendedIntrospectionEnabled = (flags & SCRIPT_FORK1_OPCODES) != 0;
     const bool fscriptRegisters = (flags & SCRIPT_FORK1_OPCODES) != 0;
     const bool enableJump = (flags & SCRIPT_FORK1_OPCODES) != 0;
+    const bool enableExtBignum = (flags & SCRIPT_FORK1_OPCODES) != 0;
 
     const size_t maxIntegerSize =
         integers64Bit ? CScriptNum::MAXIMUM_ELEMENT_SIZE_64_BIT : CScriptNum::MAXIMUM_ELEMENT_SIZE_32_BIT;
@@ -890,8 +891,7 @@ bool ScriptMachine::Step()
                         {
                             return set_error(serror, SCRIPT_ERR_UNBALANCED_CONDITIONAL);
                         }
-                        const valtype &vch = stacktop(-1);
-                        fValue = CastToBool(vch);
+                        fValue = enableExtBignum ? CastToBool(stackItemAt(-1)) : CastToBool(stacktop(-1));
                         if (opcode == OP_NOTIF)
                         {
                             fValue = !fValue;
@@ -930,7 +930,7 @@ bool ScriptMachine::Step()
                     {
                         return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
                     }
-                    bool fValue = CastToBool(stacktop(-1));
+                    bool fValue = enableExtBignum ? CastToBool(stackItemAt(-1)) : CastToBool(stacktop(-1));
                     if (fValue)
                     {
                         PopStack();
@@ -1070,10 +1070,21 @@ bool ScriptMachine::Step()
                     {
                         return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
                     }
-                    valtype vch = stacktop(-1);
-                    if (CastToBool(vch))
+                    if (enableExtBignum)
                     {
-                        PushStack(vch);
+                        const StackItem &arg = stackItemAt(-1);
+                        if (CastToBool(arg))
+                        {
+                            PushStack(arg);
+                        }
+                    }
+                    else
+                    {
+                        valtype vch = stacktop(-1);
+                        if (CastToBool(vch))
+                        {
+                            PushStack(vch);
+                        }
                     }
                 }
                 break;
@@ -1342,42 +1353,79 @@ bool ScriptMachine::Step()
                     {
                         return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
                     }
-                    valtype &vch1 = mstacktop(-2);
-                    const valtype &vch2 = stacktop(-1);
 
-                    // Inputs must be the same size
-                    if (vch1.size() != vch2.size())
+                    bool done = false;
+
+                    if (enableExtBignum)
                     {
-                        return set_error(serror, SCRIPT_ERR_INVALID_OPERAND_SIZE);
+                        const auto &arg1 = stackItemAt(-2);
+                        const auto &arg2 = stackItemAt(-1);
+                        if (arg1.isBigNum() || arg2.isBigNum())
+                        {
+                            BigNum b1 = arg1.asBigNum(bigNumModulo);
+                            BigNum b2 = arg2.asBigNum(bigNumModulo);
+                            BigNum result;
+                            switch (opcode)
+                            {
+                            case OP_AND:
+                                result = b1 & b2;
+                                break;
+                            case OP_OR:
+                                result = b1 | b2;
+                                break;
+                            case OP_XOR:
+                                result = b1 ^ b2;
+                                break;
+                            default:
+                                break;
+                            }
+                            result.thisTdiv(bigNumModulo);
+                            PopStack();
+                            PopStack();
+                            PushStack(StackItem(result));
+                            done = true;
+                        }
                     }
 
-                    // To avoid allocating, we modify vch1 in place.
-                    switch (opcode)
+                    if (!done)
                     {
-                    case OP_AND:
-                        for (size_t i = 0; i < vch1.size(); ++i)
-                        {
-                            vch1[i] &= vch2[i];
-                        }
-                        break;
-                    case OP_OR:
-                        for (size_t i = 0; i < vch1.size(); ++i)
-                        {
-                            vch1[i] |= vch2[i];
-                        }
-                        break;
-                    case OP_XOR:
-                        for (size_t i = 0; i < vch1.size(); ++i)
-                        {
-                            vch1[i] ^= vch2[i];
-                        }
-                        break;
-                    default:
-                        break;
-                    }
+                        valtype &vch1 = mstacktop(-2);
+                        const valtype &vch2 = stacktop(-1);
 
-                    // And pop vch2.
-                    PopStack();
+                        // Inputs must be the same size
+                        if (vch1.size() != vch2.size())
+                        {
+                            return set_error(serror, SCRIPT_ERR_INVALID_OPERAND_SIZE);
+                        }
+
+                        // To avoid allocating, we modify vch1 in place.
+                        switch (opcode)
+                        {
+                        case OP_AND:
+                            for (size_t i = 0; i < vch1.size(); ++i)
+                            {
+                                vch1[i] &= vch2[i];
+                            }
+                            break;
+                        case OP_OR:
+                            for (size_t i = 0; i < vch1.size(); ++i)
+                            {
+                                vch1[i] |= vch2[i];
+                            }
+                            break;
+                        case OP_XOR:
+                            for (size_t i = 0; i < vch1.size(); ++i)
+                            {
+                                vch1[i] ^= vch2[i];
+                            }
+                            break;
+                        default:
+                            break;
+                        }
+
+                        // And pop vch2.
+                        PopStack();
+                    }
                 }
                 break;
 
@@ -1456,50 +1504,89 @@ bool ScriptMachine::Step()
                     {
                         return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
                     }
-                    CScriptNum bn(stacktop(-1), fRequireMinimal, maxIntegerSize);
-                    switch (opcode)
+                    auto &arg = stackItemAt(-1);
+                    if (!enableExtBignum || arg.isVch())
                     {
-                    case OP_1ADD:
-                    {
-                        auto res = bn.safeAdd(1);
-                        if (!res)
+                        CScriptNum bn(stacktop(-1), fRequireMinimal, maxIntegerSize);
+                        switch (opcode)
                         {
-                            return set_error(serror, SCRIPT_ERR_INVALID_NUMBER_RANGE);
+                        case OP_1ADD:
+                        {
+                            auto res = bn.safeAdd(1);
+                            if (!res)
+                            {
+                                return set_error(serror, SCRIPT_ERR_INVALID_NUMBER_RANGE);
+                            }
+                            bn = *res;
+                            break;
                         }
-                        bn = *res;
-                        break;
-                    }
-                    case OP_1SUB:
-                    {
-                        auto res = bn.safeSub(1);
-                        if (!res)
+                        case OP_1SUB:
                         {
-                            return set_error(serror, SCRIPT_ERR_INVALID_NUMBER_RANGE);
+                            auto res = bn.safeSub(1);
+                            if (!res)
+                            {
+                                return set_error(serror, SCRIPT_ERR_INVALID_NUMBER_RANGE);
+                            }
+                            bn = *res;
+                            break;
                         }
-                        bn = *res;
-                        break;
-                    }
-                    case OP_NEGATE:
-                        bn = -bn;
-                        break;
-                    case OP_ABS:
-                        if (bn < snZero)
-                        {
+                        case OP_NEGATE:
                             bn = -bn;
+                            break;
+                        case OP_ABS:
+                            if (bn < snZero)
+                            {
+                                bn = -bn;
+                            }
+                            break;
+                        case OP_NOT:
+                            bn = CScriptNum::fromIntUnchecked(bn == snZero);
+                            break;
+                        case OP_0NOTEQUAL:
+                            bn = CScriptNum::fromIntUnchecked(bn != snZero);
+                            break;
+                        default:
+                            assert(!"invalid opcode");
+                            break;
                         }
-                        break;
-                    case OP_NOT:
-                        bn = CScriptNum::fromIntUnchecked(bn == snZero);
-                        break;
-                    case OP_0NOTEQUAL:
-                        bn = CScriptNum::fromIntUnchecked(bn != snZero);
-                        break;
-                    default:
-                        assert(!"invalid opcode");
-                        break;
+                        PopStack(); // popping and pushing properly tracks the total stack size
+                        PushStack(bn.getvch());
                     }
-                    PopStack();
-                    PushStack(bn.getvch());
+                    else
+                    {
+                        BigNum bn = arg.num();
+                        PopStack(); // popping and pushing properly tracks the total stack size
+                        switch (opcode)
+                        {
+                        case OP_1ADD:
+                            ++bn;
+                            bn.thisTdiv(bigNumModulo);
+                            PushStack(bn);
+                            break;
+                        case OP_1SUB:
+                            --bn;
+                            bn.thisTdiv(bigNumModulo);
+                            PushStack(bn);
+                            break;
+                        case OP_NEGATE:
+                            bn.negate();
+                            PushStack(bn);
+                            break;
+                        case OP_ABS:
+                            bn.abs();
+                            PushStack(bn);
+                            break;
+                        case OP_NOT:
+                            PushStack((bn == 0L) ? vchTrue : vchFalse);
+                            break;
+                        case OP_0NOTEQUAL:
+                            PushStack((bn == 0L) ? vchFalse : vchTrue);
+                            break;
+                        default:
+                            assert(!"invalid opcode");
+                            break;
+                        }
+                    }
                 }
                 break;
 
@@ -1659,10 +1746,21 @@ bool ScriptMachine::Step()
                     {
                         return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
                     }
-                    CScriptNum bn1(stacktop(-3), fRequireMinimal, maxIntegerSize);
-                    CScriptNum bn2(stacktop(-2), fRequireMinimal, maxIntegerSize);
-                    CScriptNum bn3(stacktop(-1), fRequireMinimal, maxIntegerSize);
-                    bool fValue = (bn2 <= bn1 && bn1 < bn3);
+                    bool fValue = false;
+                    if (!enableExtBignum)
+                    {
+                        CScriptNum bn1(stacktop(-3), fRequireMinimal, maxIntegerSize);
+                        CScriptNum bn2(stacktop(-2), fRequireMinimal, maxIntegerSize);
+                        CScriptNum bn3(stacktop(-1), fRequireMinimal, maxIntegerSize);
+                        fValue = (bn2 <= bn1 && bn1 < bn3);
+                    }
+                    else
+                    {
+                        StackItem bn1 = stackItemAt(-3);
+                        StackItem bn2 = stackItemAt(-2);
+                        StackItem bn3 = stackItemAt(-1);
+                        fValue = bn1.within(bn2, bn3, bigNumModulo);
+                    }
                     PopStack();
                     PopStack();
                     PopStack();
