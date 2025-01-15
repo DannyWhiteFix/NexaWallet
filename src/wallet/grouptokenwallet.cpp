@@ -878,18 +878,19 @@ std::vector<std::vector<unsigned char> > ParseGroupDescParams(const UniValue &pa
 
     std::string name = params[curparam].get_str();
     ret.push_back(std::vector<unsigned char>(name.begin(), name.end()));
+
     curparam++;
-    // we will accept just ticker and name
     if (curparam >= params.size())
     {
+        // We only had ticker and name to add so just append the last empty items and return.
         ret.push_back(std::vector<unsigned char>());
         ret.push_back(std::vector<unsigned char>());
         ret.push_back(decimals);
         return ret;
     }
 
+    // We could do a complete URL validity check here but for now just check for :
     std::string url = params[curparam].get_str();
-    // we could do a complete URL validity check here but for now just check for :
     if (url.size() > 0 && url.find(":") == std::string::npos)
     {
         std::string strError = strprintf("Parameter \"%s\" is not a URL, missing colon", url);
@@ -922,9 +923,14 @@ std::vector<std::vector<unsigned char> > ParseGroupDescParams(const UniValue &pa
         throw JSONRPCError(RPC_INVALID_PARAMS, strError);
     }
 
+    // Generally we don't want to show the hash if it's null, unless the url is defined and the creator
+    // accidentally entered a null hash for some reason (perhaps for testing).
     uint256 docHash;
     docHash.SetHex(hexDocHash);
-    ret.push_back(std::vector<unsigned char>(docHash.begin(), docHash.end()));
+    if (!docHash.IsNull() || !url.empty())
+        ret.push_back(std::vector<unsigned char>(docHash.begin(), docHash.end()));
+    else
+        ret.push_back(std::vector<unsigned char>());
 
     curparam++;
     if (curparam < params.size())

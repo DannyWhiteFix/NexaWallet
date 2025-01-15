@@ -61,6 +61,11 @@ bool GetTokenDescription(const CScript &script, std::vector<std::string> &_vDesc
                 _vDesc.push_back(std::to_string(amt));
             }
         }
+        else
+        {
+            _vDesc.push_back(std::string(""));
+        }
+
         count++;
     }
 
