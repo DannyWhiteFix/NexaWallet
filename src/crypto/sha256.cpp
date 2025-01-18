@@ -10,14 +10,15 @@
 #include <string.h>
 #include <atomic>
 
-#if defined(__x86_64__) || defined(__amd64__)
-#if defined(USE_ASM)
+#if defined(USE_ASM) && (defined(__x86_64__) || defined(__amd64__) || defined(__i386__))
 #include "compat/cpuid_compat.h"
+#endif
+
+#if defined(USE_ASM) && (defined(__x86_64__) || defined(__amd64__))
 namespace sha256_sse4
 {
 void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks);
 }
-#endif
 #endif
 
 namespace sha256d64_sse41
