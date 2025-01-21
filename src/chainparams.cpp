@@ -9,7 +9,6 @@
 #include "chainparamsseeds.h"
 #include "consensus/merkle.h"
 #include "policy/policy.h"
-#include "unlimited.h"
 #include "versionbits.h" // bip135 added
 
 #include "tinyformat.h"

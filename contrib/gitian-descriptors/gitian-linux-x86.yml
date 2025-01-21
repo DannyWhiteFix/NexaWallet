@@ -35,9 +35,13 @@ files: []
 script: |
   set -e -o pipefail
 
+  if [ "${ONLY_LIBNEXA_ARG}" != "--enable-only-libnexa" ]; then
+    JAVA_LIBNEXA="--enable-javalibnexa"
+  fi
+
   WRAP_DIR=$HOME/wrapped
   HOSTS="x86_64-linux-gnu"
-  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests --disable-tests --enable-shared --enable-javalibnexa"
+  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests --disable-tests --enable-shared ${JAVA_LIBNEXA} ${ONLY_LIBNEXA_ARG}"
   FAKETIME_HOST_PROGS=""
   FAKETIME_PROGS="date ar ranlib nm strip"
   HOST_CFLAGS="-O2 -g"
@@ -88,12 +92,16 @@ script: |
 
   cd nexa
   BASEPREFIX=`pwd`/depends
+  DEPENDS_LIBNEXA="ONLY_LIBNEXA=0"
+  if [ "${ONLY_LIBNEXA_ARG}" = "--enable-only-libnexa" ]; then
+    DEPENDS_LIBNEXA="ONLY_LIBNEXA=1 NO_RUST=1"
+  fi
   # Build dependencies for each host
   for i in $HOSTS; do
     if [ "${i}" = "x86_64-linux-gnu" ]; then
-      make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}"
+      make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}" ${DEPENDS_LIBNEXA}
     else
-      make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}" NO_RUST=1
+      make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}" NO_RUST=1 ${DEPENDS_LIBNEXA}
     fi
   done
 
@@ -105,7 +113,7 @@ script: |
 
   # Create the release tarball using (arbitrarily) the first host
   ./autogen.sh
-  CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/
+  CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure ${ONLY_LIBNEXA_ARG} --prefix=/
   make dist
   SOURCEDIST=`echo nexa-*.tar.gz`
   DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`
@@ -130,7 +138,10 @@ script: |
     if [ "$i" = "x86_64-linux-gnu" ]; then
         # Scope of rostrum support is for servers running linux.
         # We'll support x86_64 only for now.
-        make ${MAKEOPTS} rostrum
+        # But do not build it if we are only building libnexa
+        if [ "${ONLY_LIBNEXA_ARG}" != "--enable-only-libnexa" ]; then
+          make ${MAKEOPTS} rostrum
+        fi
     fi
     export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
     make ${MAKEOPTS}
@@ -143,9 +154,10 @@ script: |
         cp src/rostrum ${INSTALLPATH}/bin/rostrum
     fi
     # BU save the executables with debug symbols
-    cp -f src/nexad ${OUTDIR}/nexad-${i}.debug
-    if [ -f src/qt/nexa-qt ]
-    then
+    if [ -f src/nexad ]; then
+      cp -f src/nexad ${OUTDIR}/nexad-${i}.debug
+    fi
+    if [ -f src/qt/nexa-qt ]; then
       cp -f src/qt/nexa-qt ${OUTDIR}/nexa-qt-${i}.debug
     fi
 

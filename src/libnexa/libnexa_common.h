@@ -38,6 +38,7 @@
 #include "utilstrencodings.h"
 #include "wallet/grouptokencache.h"
 
+
 enum class LIBNEXA_ERROR : uint32_t
 {
     SUCCESS_NO_ERROR = 0, // success

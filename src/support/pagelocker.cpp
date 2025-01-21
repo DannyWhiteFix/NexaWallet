@@ -3,11 +3,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "support/pagelocker.h"
-
 #if defined(HAVE_CONFIG_H)
 #include "nexa-config.h"
 #endif
+
+#include "support/pagelocker.h"
 
 #ifdef WIN32
 #ifdef _WIN32_WINNT
@@ -30,10 +30,10 @@
 #endif
 
 LockedPageManager* LockedPageManager::_instance = nullptr;
-#ifdef WIN32
-boost::once_flag LockedPageManager::init_flag = BOOST_ONCE_INIT;
-#else
+#ifdef BUILD_ONLY_LIBNEXA
 std::once_flag LockedPageManager::init_flag;
+#else
+boost::once_flag LockedPageManager::init_flag = BOOST_ONCE_INIT;
 #endif
 
 /** Determine system page size in bytes */

@@ -1,4 +1,14 @@
-packages:=boost openssl libevent zeromq libgmp
+packages:= libgmp
+
+openssl_packages:=openssl
+
+boost_packages:=boost
+
+boost_header_packages:=boost_headers
+
+libevent_packages:=libevent
+
+zeromq_packages:=zeromq
 
 qt_native_packages = native_protobuf
 qt_packages = qrencode protobuf
@@ -13,9 +23,9 @@ wallet_packages=bdb
 rust_packages=rust
 upnp_packages=miniupnpc
 
-darwin_native_packages = native_biplist native_ds_store native_mac_alias
+$(host_arch)_$(host_os)_native_boost_packages += native_b2
 
-$(host_arch)_$(host_os)_native_packages += native_b2
+darwin_native_packages = native_biplist native_ds_store native_mac_alias
 
 ifneq ($(build_os),darwin)
 darwin_native_packages += native_cctools native_clang native_libtapi native_cdrkit native_libdmg-hfsplus

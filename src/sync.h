@@ -13,9 +13,38 @@
 #include "util.h"
 #include "utiltime.h"
 
+#ifdef BUILD_ONLY_LIBNEXA
+#include <mutex>
+#include <shared_mutex>
+
+#define nexa_mutex std::mutex
+#define nexa_recursive_mutex std::recursive_mutex
+#define nexa_shared_mutex std::shared_mutex
+#define nexa_condition_variable std::condition_variable
+#define nexa_condition_variable_any std::condition_variable_any
+#define nexa_defer_lock std::defer_lock
+#define nexa_shared_lock std::shared_lock
+#define nexa_unique_lock std::unique_lock
+#define nexa_cv_status_timeout std::cv_status::timeout
+#define nexa_time std::chrono
+
+#else // not BUILD_ONLY_LIBNEXA
 #include "boost/thread/recursive_mutex.hpp"
 #include "boost/thread/shared_mutex.hpp"
 #include <boost/thread.hpp>
+
+#define nexa_mutex boost::mutex
+#define nexa_recursive_mutex boost::recursive_mutex
+#define nexa_shared_mutex boost::shared_mutex
+#define nexa_condition_variable boost::condition_variable
+#define nexa_condition_variable_any boost::condition_variable_any
+#define nexa_defer_lock boost::defer_lock
+#define nexa_shared_lock boost::shared_lock
+#define nexa_unique_lock boost::unique_lock
+#define nexa_cv_status_timeout boost::cv_status::timeout
+#define nexa_time boost::chrono
+
+#endif
 
 /**
  * Template mixin that adds -Wthread-safety locking
@@ -35,10 +64,10 @@ public:
  * TODO: We should move away from using the recursive lock by default.
  */
 #ifndef DEBUG_LOCKORDER
-typedef AnnotatedMixin<boost::recursive_mutex> CCriticalSection;
+typedef AnnotatedMixin<nexa_recursive_mutex> CCriticalSection;
 #define CRITSEC(x) CCriticalSection x
 #else // BU we need to remove the critical section from the lockorder map when destructed
-class CCriticalSection : public AnnotatedMixin<boost::recursive_mutex>
+class CCriticalSection : public AnnotatedMixin<nexa_recursive_mutex>
 {
 public:
     const char *name;
@@ -52,7 +81,7 @@ public:
 #endif
 
 #ifndef DEBUG_LOCKORDER
-typedef AnnotatedMixin<boost::shared_mutex> CSharedCriticalSection;
+typedef AnnotatedMixin<nexa_shared_mutex> CSharedCriticalSection;
 /** Define a named, shared critical section that is named in debug builds.
     Named critical sections are useful in conjunction with a lock analyzer to discover bottlenecks. */
 #define SCRITSEC(x) CSharedCriticalSection x
@@ -65,19 +94,19 @@ typedef AnnotatedMixin<boost::shared_mutex> CSharedCriticalSection;
 
     A SharedCriticalSection is NOT recursive.
 */
-class CSharedCriticalSection : public AnnotatedMixin<boost::shared_mutex>
+class CSharedCriticalSection : public AnnotatedMixin<nexa_shared_mutex>
 {
 public:
     const char *name;
     CSharedCriticalSection();
     CSharedCriticalSection(const char *name);
     ~CSharedCriticalSection();
-    void lock_shared() { boost::shared_mutex::lock_shared(); }
-    void unlock_shared() { boost::shared_mutex::unlock_shared(); }
-    bool try_lock_shared() { return boost::shared_mutex::try_lock_shared(); }
-    void lock() { boost::shared_mutex::lock(); }
-    void unlock() { boost::shared_mutex::unlock(); }
-    bool try_lock() { return boost::shared_mutex::try_lock(); }
+    void lock_shared() { nexa_shared_mutex::lock_shared(); }
+    void unlock_shared() { nexa_shared_mutex::unlock_shared(); }
+    bool try_lock_shared() { return nexa_shared_mutex::try_lock_shared(); }
+    void lock() { nexa_shared_mutex::lock(); }
+    void unlock() { nexa_shared_mutex::unlock(); }
+    bool try_lock() { return nexa_shared_mutex::try_lock(); }
 };
 #define SCRITSEC(zzname) CSharedCriticalSection zzname(#zzname)
 #endif
@@ -166,13 +195,13 @@ public:
 
 
 /** Wrapped boost mutex: supports waiting but not recursive locking */
-typedef AnnotatedMixin<boost::mutex> CWaitableCriticalSection;
+typedef AnnotatedMixin<nexa_mutex> CWaitableCriticalSection;
 
 /** Just a typedef for boost::condition_variable, can be wrapped later if desired */
-typedef boost::condition_variable CConditionVariable;
+typedef nexa_condition_variable CConditionVariable;
 
 /** Just a typedef for boost::condition_variable_any, can be wrapped later if desired -- c++11 version missing on win */
-typedef boost::condition_variable_any CCond;
+typedef nexa_condition_variable_any CCond;
 
 #ifdef DEBUG_LOCKORDER
 void EnterCritical(const char *pszName,
@@ -235,7 +264,7 @@ template <typename Mutex>
 class SCOPED_LOCKABLE CMutexLock
 {
 private:
-    boost::unique_lock<Mutex> lock;
+    nexa_unique_lock<Mutex> lock;
 // Checking elapsed lock time is very inefficient compared to the lock/unlock operation so we must be able to
 // turn the feature on and off at compile time.
 #ifdef DEBUG_LOCKTIME
@@ -300,7 +329,7 @@ public:
         unsigned int nLine,
         LockType type,
         bool fTry = false) EXCLUSIVE_LOCK_FUNCTION(mutexIn)
-        : lock(mutexIn, boost::defer_lock)
+        : lock(mutexIn, nexa_defer_lock)
     {
         assert(pszName != nullptr);
         // we no longer allow naming critical sections cs, please name it something more meaningful
@@ -324,7 +353,7 @@ public:
         assert(pszName != nullptr);
         // we no longer allow naming critical sections cs, please name it something more meaningful
         assert(std::string(pszName) != "cs");
-        lock = boost::unique_lock<Mutex>(*pmutexIn, boost::defer_lock);
+        lock = nexa_unique_lock<Mutex>(*pmutexIn, nexa_defer_lock);
         if (fTry)
             TryEnter(pszName, pszFile, nLine, type);
         else
@@ -354,7 +383,7 @@ template <typename Mutex>
 class SCOPED_LOCKABLE CMutexReadLock
 {
 private:
-    boost::shared_lock<Mutex> lock;
+    nexa_shared_lock<Mutex> lock;
 // Checking elapsed lock time is very inefficient compared to the lock/unlock operation so we must be able to
 // turn the feature on and off at compile time.
 #ifdef DEBUG_LOCKTIME
@@ -420,7 +449,7 @@ public:
         unsigned int nLine,
         LockType type,
         bool fTry = false) SHARED_LOCK_FUNCTION(mutexIn)
-        : lock(mutexIn, boost::defer_lock)
+        : lock(mutexIn, nexa_defer_lock)
     {
         assert(pszName != nullptr);
         // we no longer allow naming critical sections cs, please name it something more meaningful
@@ -444,7 +473,7 @@ public:
         assert(pszName != nullptr);
         // we no longer allow naming critical sections cs, please name it something more meaningful
         assert(std::string(pszName) != "cs");
-        lock = boost::shared_lock<Mutex>(*pmutexIn, boost::defer_lock);
+        lock = nexa_shared_lock<Mutex>(*pmutexIn, nexa_defer_lock);
         if (fTry)
             TryEnter(pszName, pszFile, nLine, type);
         else
@@ -515,15 +544,15 @@ typedef CMutexLock<CCriticalSection> CCriticalBlock;
 class CSemaphore
 {
 private:
-    boost::condition_variable condition;
-    boost::mutex mutex;
+    nexa_condition_variable condition;
+    nexa_mutex mutex;
     int value;
 
 public:
     CSemaphore(int init) : value(init) {}
     void wait()
     {
-        boost::unique_lock<boost::mutex> lock(mutex);
+        nexa_unique_lock<nexa_mutex> lock(mutex);
         while (value < 1)
         {
             condition.wait(lock);
@@ -533,7 +562,7 @@ public:
 
     bool try_wait()
     {
-        boost::unique_lock<boost::mutex> lock(mutex);
+        nexa_unique_lock<nexa_mutex> lock(mutex);
         if (value < 1)
             return false;
         value--;
@@ -543,7 +572,7 @@ public:
     void post()
     {
         {
-            boost::unique_lock<boost::mutex> lock(mutex);
+            nexa_unique_lock<nexa_mutex> lock(mutex);
             value++;
         }
         condition.notify_one();

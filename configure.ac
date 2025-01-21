@@ -193,9 +193,15 @@ AC_ARG_ENABLE([gprof],
 
 AC_ARG_ENABLE([javalibnexa],
   [AS_HELP_STRING([--enable-javalibnexa],
-  [enable java bindings for libnexa (default is no)])],
+  [enable java bindings for libnexa (default is no). incompatible with --enable-only-libnexa])],
   [use_javalibnexa=yes],
   [use_javalibnexa=no])
+
+AC_ARG_ENABLE([only-libnexa],
+  [AS_HELP_STRING([--enable-only-libnexa],
+  [compile only libnexa (default is no). incompatible with --enable-javalibnexa])],
+  [build_only_libnexa=$enableval],
+  [build_only_libnexa=no])
 
 AC_ARG_ENABLE([mutrace],
   [AS_HELP_STRING([--enable-mutrace],
@@ -217,6 +223,10 @@ AC_ARG_ENABLE([asm],
 
 if test "x$use_asm" = xyes; then
   AC_DEFINE(USE_ASM, 1, [Define this symbol to build in assembly routines])
+fi
+
+if test "x$build_only_libnexa$use_javalibnexa" = xyesyes; then
+  AC_MSG_ERROR("--enable-javalibnexa and --enable-only-libnexa are incompatible")
 fi
 
 AC_ARG_WITH([system-univalue],
@@ -710,6 +720,22 @@ else
   AC_SEARCH_LIBS([clock_gettime],[rt])
 fi
 
+if test x$build_only_libnexa != xno; then
+  if x$TARGET_OS != xlinux; then
+    AC_MSG_ERROR(building only libnexa is only supported on linux for now.)
+  fi
+  build_bitcoin_utils=no
+  build_nexa_libs=yes
+  build_bitcoind=no
+  bitcoin_enable_qt=no
+  use_tests=no
+  use_bench=no
+  enable_wallet=no
+  use_upnp=no
+  use_zmq=no
+  use_boost=no
+fi
+
 if test x$TARGET_OS != xwindows; then
   # All windows code is PIC, forcing it on just adds useless compile warnings
   AX_CHECK_COMPILE_FLAG([-fPIC],[PIC_FLAGS="-fPIC"])
@@ -866,7 +892,7 @@ BITCOIN_QT_INIT
 dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
 BITCOIN_QT_CONFIGURE([$use_pkgconfig])
 
-if test x$build_bitcoin_utils$build_bitcoind$bitcoin_enable_qt$use_tests = xnononono; then
+if test x$build_bitcoin_utils$build_bitcoind$bitcoin_enable_qt$use_tests$build_only_libnexa = xnonononoyes; then
     use_boost=no
 else
     use_boost=yes
@@ -938,8 +964,10 @@ if test x$use_pkgconfig = xyes; then
   m4_ifdef(
     [PKG_CHECK_MODULES],
     [
-      PKG_CHECK_MODULES([SSL], [libssl],, [AC_MSG_ERROR(openssl  not found.)])
-      PKG_CHECK_MODULES([CRYPTO], [libcrypto],,[AC_MSG_ERROR(libcrypto  not found.)])
+      if test x$build_only_libnexa = xno; then
+        PKG_CHECK_MODULES([SSL], [libssl],, [AC_MSG_ERROR(openssl  not found.)])
+        PKG_CHECK_MODULES([CRYPTO], [libcrypto],,[AC_MSG_ERROR(libcrypto  not found.)])
+      fi
       BITCOIN_QT_CHECK([PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [BITCOIN_QT_FAIL(libprotobuf not found)])])
       if test x$use_qr != xno; then
         BITCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
@@ -963,11 +991,13 @@ if test x$use_pkgconfig = xyes; then
     ]
   )
 else
-  AC_CHECK_HEADER([openssl/crypto.h],,AC_MSG_ERROR(libcrypto headers missing))
-  AC_CHECK_LIB([crypto],      [main],CRYPTO_LIBS=-lcrypto, AC_MSG_ERROR(libcrypto missing))
+  if test x$build_only_libnexa = xno; then
+    AC_CHECK_HEADER([openssl/crypto.h],,AC_MSG_ERROR(libcrypto headers missing))
+    AC_CHECK_LIB([crypto],      [main],CRYPTO_LIBS=-lcrypto, AC_MSG_ERROR(libcrypto missing))
 
-  AC_CHECK_HEADER([openssl/ssl.h],, AC_MSG_ERROR(libssl headers missing),)
-  AC_CHECK_LIB([ssl],         [main],SSL_LIBS=-lssl, AC_MSG_ERROR(libssl missing))
+    AC_CHECK_HEADER([openssl/ssl.h],, AC_MSG_ERROR(libssl headers missing),)
+    AC_CHECK_LIB([ssl],         [main],SSL_LIBS=-lssl, AC_MSG_ERROR(libssl missing))
+  fi
 
   if test x$build_bitcoin_utils$build_bitcoind$bitcoin_enable_qt$use_tests != xnononono; then
     AC_CHECK_HEADER([event2/event.h],, AC_MSG_ERROR(libevent headers missing),)
@@ -1046,6 +1076,13 @@ AC_MSG_RESULT($build_bitcoin_utils)
 AC_MSG_CHECKING([whether to build libraries])
 AM_CONDITIONAL([BUILD_NEXA_LIBS], [test x$build_nexa_libs = xyes])
 AC_MSG_RESULT($build_nexa_libs)
+
+AC_MSG_CHECKING([whether to build only libraries])
+AM_CONDITIONAL([BUILD_ONLY_LIBNEXA], [test x$build_only_libnexa = xyes])
+if test x$build_only_libnexa = xyes; then
+  AC_DEFINE_UNQUOTED([BUILD_ONLY_LIBNEXA],[1],[Define to 1 to enable only libnexa compilation])
+  AC_MSG_RESULT(yes)
+fi
 
 AC_LANG_POP
 

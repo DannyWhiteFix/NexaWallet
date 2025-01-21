@@ -302,6 +302,52 @@ build-ubuntu-tests-nodeps-nowallet-qt:
     rules:
       - if: $CI_PIPELINE_SOURCE != "schedule"
 
+######################################################
+######## Linux 64 bit, only libnexa from source deps
+######################################################
+.cache-ubuntu-only-libnexa:
+    extends: .ubuntu_ccache_scripts
+    cache:
+        <<: *global_cache_settings
+        key: ubuntu_cache-only-libnexa
+        paths:
+            - ccache/
+            - depends/sources
+            - depends/built
+            - depends/x86_64-linux-gnu
+
+build-ubuntu-deps-only-libnexa:
+    stage: build_depends
+    extends: .cache-ubuntu-only-libnexa
+    needs: []
+    script:
+        - cd depends
+        - make HOST=x86_64-linux-gnu -j `nproc` ONLY_LIBNEXA=1
+    artifacts:
+        paths:
+            - depends/x86_64-linux-gnu
+    rules:
+      - if: ($CI_PIPELINE_SOURCE != "schedule" || $EXTENDED_TESTS == "True")
+
+build-ubuntu-only-libnexa:
+    stage: build
+    extends: .cache-ubuntu-only-libnexa
+    needs: [build-ubuntu-deps-only-libnexa]
+    script:
+        - ./autogen.sh
+        - mkdir build; cd build
+        - ../configure --enable-shared --enable-debug --enable-only-libnexa --enable-glibc-back-compat --enable-reduce-exports --cache-file=config.cache --prefix=$PWD/../depends/x86_64-linux-gnu CPPFLAGS=-DDEBUG_LOCKORDER
+        - make -j `nproc`
+        - ccache --show-stats
+    dependencies:
+        - build-ubuntu-deps-only-libnexa
+    artifacts:
+        when: always
+        paths:
+            - ./build/src/.libs/libnexa.*
+    rules:
+      - if: ($CI_PIPELINE_SOURCE != "schedule" || $EXTENDED_TESTS == "True")
+
 
 ######################################################
 ######## Linux 64 bit, source deps

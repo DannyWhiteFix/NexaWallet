@@ -695,6 +695,7 @@ libnexa_cli_a_SOURCES = \
 nodist_libnexa_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
+if !BUILD_ONLY_LIBNEXA
 # nexad binary #
 nexad_SOURCES = nexad.cpp
 nexad_CPPFLAGS = $(AM_CPPFLAGS) $(NEXA_INCLUDES)
@@ -805,7 +806,7 @@ nexa_miner_LDADD = \
   $(LIBSECP256K1)
 
 nexa_miner_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
-#
+endif # not BUILD_ONLY_LIBNEXA
 
 # nexa library #
 if BUILD_NEXA_LIBS

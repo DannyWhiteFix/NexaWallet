@@ -102,9 +102,15 @@ $(OSX_APP)/Contents/Resources/Base.lproj/InfoPlist.strings:
 	$(MKDIR_P) $(@D)
 	echo '{	CFBundleDisplayName = "$(PACKAGE_NAME)"; CFBundleName = "$(PACKAGE_NAME)"; }' > $@
 
+if BUILD_ONLY_LIBNEXA
+OSX_APP_BUILT=$(OSX_APP)/Contents/PkgInfo $(OSX_APP)/Contents/Resources/empty.lproj \
+  $(OSX_APP)/Contents/Resources/nexa.icns $(OSX_APP)/Contents/Info.plist \
+  $(OSX_APP)/Contents/Resources/Base.lproj/InfoPlist.strings
+else
 OSX_APP_BUILT=$(OSX_APP)/Contents/PkgInfo $(OSX_APP)/Contents/Resources/empty.lproj \
   $(OSX_APP)/Contents/Resources/nexa.icns $(OSX_APP)/Contents/Info.plist \
   $(OSX_APP)/Contents/MacOS/Nexa-Qt $(OSX_APP)/Contents/Resources/Base.lproj/InfoPlist.strings
+endif
 
 osx_volname:
 	echo $(OSX_VOLNAME) >$@
@@ -144,8 +150,13 @@ $(APP_DIST_DIR)/.background/$(OSX_BACKGROUND_IMAGE): $(OSX_BACKGROUND_IMAGE_DPIF
 $(APP_DIST_DIR)/.DS_Store: $(OSX_DSSTORE_GEN)
 	$(PYTHON) $< "$@" "$(OSX_VOLNAME)"
 
+if BUILD_ONLY_LIBNEXA
+$(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Nexa-Qt: $(OSX_APP_BUILT) $(OSX_PACKAGING)
+	INSTALL_NAME_TOOL=$(INSTALL_NAME_TOOL)  OTOOL=$(OTOOL) STRIP=$(STRIP)
+else
 $(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Nexa-Qt: $(OSX_APP_BUILT) $(OSX_PACKAGING)
 	INSTALL_NAME_TOOL=$(INSTALL_NAME_TOOL)  OTOOL=$(OTOOL) STRIP=$(STRIP) $(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) -translations-dir=$(QT_TRANSLATION_DIR) -add-qt-tr $(OSX_QT_TRANSLATIONS) -verbose 2
+endif
 
 deploydir: $(APP_DIST_EXTRAS)
 endif
@@ -154,6 +165,7 @@ if TARGET_DARWIN
 appbundle: $(OSX_APP_BUILT)
 deploy: $(OSX_DMG)
 endif
+
 if TARGET_WINDOWS
 deploy: $(BITCOIN_WIN_INSTALLER)
 endif
