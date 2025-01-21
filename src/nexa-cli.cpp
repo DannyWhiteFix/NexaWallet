@@ -18,7 +18,6 @@
 #include "utilstrencodings.h"
 #include "utiltranslate.h"
 
-
 #include <stdio.h>
 
 #include <event2/buffer.h>

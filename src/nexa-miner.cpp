@@ -42,6 +42,8 @@
 #include <functional>
 #include <random>
 
+#include <boost/thread.hpp>
+
 #ifdef DEBUG_LOCKORDER
 std::atomic<bool> lockdataDestructed{false};
 LockData lockdata;

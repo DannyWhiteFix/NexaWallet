@@ -42,7 +42,7 @@ script: |
 
   WRAP_DIR=$HOME/wrapped
   HOSTS="arm-linux-gnueabihf aarch64-linux-gnu"
-  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests --disable-tests"
+  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests --disable-tests ${ONLY_LIBNEXA_ARG}"
   FAKETIME_HOST_PROGS=""
   FAKETIME_PROGS="date ar ranlib nm strip"
   HOST_CFLAGS="-O2 -g"
@@ -93,12 +93,16 @@ script: |
 
   cd nexa
   BASEPREFIX=`pwd`/depends
+  DEPENDS_LIBNEXA="ONLY_LIBNEXA=0"
+  if [ "${ONLY_LIBNEXA_ARG}" = "--enable-only-libnexa" ]; then
+    DEPENDS_LIBNEXA="ONLY_LIBNEXA=1"
+  fi
   # Build dependencies for each host
   for i in $HOSTS; do
     if [ "${i}" = "x86_64-linux-gnu" ]; then
-      make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}"
+      make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}" ${DEPENDS_LIBNEXA}
     else
-      make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}" NO_RUST=1
+      make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}" NO_RUST=1 ${DEPENDS_LIBNEXA}
     fi
   done
 
@@ -110,7 +114,7 @@ script: |
 
   # Create the release tarball using (arbitrarily) the first host
   ./autogen.sh
-  CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/
+  CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure ${ONLY_LIBNEXA_ARG} --prefix=/
   make dist
   SOURCEDIST=`echo nexa-*.tar.gz`
   DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`
@@ -137,9 +141,10 @@ script: |
     make ${MAKEOPTS} -C src check-symbols
     make install DESTDIR=${INSTALLPATH}
     # Nexa saves the executables with debug symbols
-    cp -f src/nexad ${OUTDIR}/nexad-${i}.debug
-    if [ -f src/qt/nexa-qt ]
-    then
+    if [ -f src/nexad ]; then
+      cp -f src/nexad ${OUTDIR}/nexad-${i}.debug
+    fi
+    if [ -f src/qt/nexa-qt ]; then
       cp -f src/qt/nexa-qt ${OUTDIR}/nexa-qt-${i}.debug
     fi
 

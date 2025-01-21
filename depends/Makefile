@@ -36,6 +36,11 @@ NO_QT ?=
 NO_WALLET ?=
 NO_UPNP ?=
 NO_RUST ?=
+NO_BOOST ?=
+NO_LIBEVENT ?=
+NO_ZEROMQ ?=
+NO_OPENSSL ?=
+ONLY_LIBNEXA ?=
 FALLBACK_DOWNLOAD_PATH ?= https://www.bitcoinunlimited.info/depends-sources
 
 BUILD = $(shell ./config.guess)
@@ -56,6 +61,17 @@ ifneq ($(DEBUG),)
 release_type=debug
 else
 release_type=release
+endif
+
+ifeq ($(ONLY_LIBNEXA),1)
+NO_QT = 1
+NO_WALLET = 1
+NO_UPNP = 1
+NO_RUST = 1
+NO_BOOST = 1
+NO_LIBEVENT = 1
+NO_ZEROMQ = 1
+NO_OPENSSL = 1
 endif
 
 base_build_dir=$(WORK_PATH)/build
@@ -99,14 +115,33 @@ include builders/$(build_os).mk
 include builders/default.mk
 include packages/packages.mk
 
+boost_headers_packages = $(boost_header_packages)
+
 qt_packages_$(NO_QT) = $(qt_packages) $(qt_$(host_os)_packages) $(qt_$(host_arch)_$(host_os)_packages)
+
+boost_packages_$(NO_BOOST) = $(boost_packages)
+libevent_packages_$(NO_LIBEVENT) = $(libevent_packages)
+openssl_packages_$(NO_OPENSSL) = $(openssl_packages)
+zeromq_packages_$(NO_ZEROMQ) = $(zeromq_packages)
 
 wallet_packages_$(NO_WALLET) = $(wallet_packages)
 upnp_packages_$(NO_UPNP) = $(upnp_packages)
 rust_packages_$(NO_RUST) = $(rust_packages)
 
-packages += $($(host_arch)_$(host_os)_packages) $($(host_os)_packages) $(qt_packages_) $(wallet_packages_) $(upnp_packages_) $(rust_packages_)
+packages += $($(host_arch)_$(host_os)_packages) $($(host_os)_packages) $(boost_packages_) \
+	$(libevent_packages_) $(openssl_packages_) $(zeromq_packages_) $(qt_packages_) \
+	$(wallet_packages_) $(upnp_packages_) $(rust_packages_)
+
+# this line is macos specific, it adds the darwin_native_packages to the build
 native_packages += $($(host_arch)_$(host_os)_native_packages) $($(host_os)_native_packages)
+
+ifeq ($(boost_packages_),)
+packages += $(boost_headers_packages)
+endif
+
+ifneq ($(boost_packages_),)
+native_packages += $($(host_arch)_$(host_os)_native_boost_packages) $($(host_os)_native_boost_packages)
+endif
 
 ifneq ($(qt_packages_),)
 native_packages += $(qt_native_packages)

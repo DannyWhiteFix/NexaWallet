@@ -38,9 +38,13 @@ files:
 script: |
   set -e -o pipefail
 
+  if [ "${ONLY_LIBNEXA_ARG}" != "--enable-only-libnexa" ]; then
+    JAVA_LIBNEXA="--enable-javalibnexa"
+  fi
+
   WRAP_DIR=$HOME/wrapped
   HOSTS="arm64-apple-darwin"
-  CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-tests --enable-shared --enable-javalibnexa GENISOIMAGE=$WRAP_DIR/genisoimage"
+  CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-tests --enable-shared ${JAVA_LIBNEXA} ${ONLY_LIBNEXA_ARG} GENISOIMAGE=$WRAP_DIR/genisoimage"
   FAKETIME_HOST_PROGS=""
   FAKETIME_PROGS="ar ranlib date dmg genisoimage"
 
@@ -84,15 +88,18 @@ script: |
   export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
   mkdir -p ${BASEPREFIX}/SDKs
   tar -C ${BASEPREFIX}/SDKs -xf ${BUILD_DIR}/MacOSX11.3.sdk.tar.xz
-
+  DEPENDS_LIBNEXA="ONLY_LIBNEXA=0"
+  if [ "${ONLY_LIBNEXA_ARG}" = "--enable-only-libnexa" ]; then
+    DEPENDS_LIBNEXA="ONLY_LIBNEXA=1"
+  fi
   # Build dependencies for each host
   for i in $HOSTS; do
-    make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}" NO_RUST=1
+    make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}" NO_RUST=1 ${DEPENDS_LIBNEXA}
   done
 
   # Create the release tarball using (arbitrarily) the first host
   ./autogen.sh
-  ./configure --prefix=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`
+  ./configure ${ONLY_LIBNEXA_ARG} --prefix=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`
   make dist
   SOURCEDIST=`echo nexa-*.tar.gz`
   DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`

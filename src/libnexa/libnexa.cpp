@@ -852,7 +852,6 @@ SLAPI int capdHash(const unsigned char *message, unsigned int msgLen, unsigned c
     return (int)sz;
 }
 
-
 SLAPI int verifyMessage(const unsigned char *message,
     unsigned int msgLen,
     const unsigned char *addr,

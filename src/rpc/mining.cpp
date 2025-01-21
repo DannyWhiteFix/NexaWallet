@@ -680,20 +680,20 @@ UniValue mkblocktemplate(const UniValue &params,
         }
 
         // Release the wallet and main lock while waiting
-        auto checktxtime = boost::chrono::system_clock::now();
+        auto checktxtime = nexa_time::system_clock::now();
         LEAVE_CRITICAL_SECTION(cs_main);
         {
-            checktxtime += boost::chrono::minutes(1);
+            checktxtime += nexa_time::minutes(1);
 
-            boost::unique_lock<boost::mutex> lock(csBestBlock);
+            nexa_unique_lock<nexa_mutex> lock(csBestBlock);
             while (chainActive.Tip()->GetBlockHash() == hashWatchedChain && IsRPCRunning())
             {
-                if (cvBlockChange.wait_until(lock, checktxtime) == boost::cv_status::timeout)
+                if (cvBlockChange.wait_until(lock, checktxtime) == nexa_cv_status_timeout)
                 {
                     // Timeout: Check transactions for update
                     if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLastLP)
                         break;
-                    checktxtime += boost::chrono::seconds(10);
+                    checktxtime += nexa_time::seconds(10);
                 }
             }
         }

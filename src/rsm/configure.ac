@@ -42,7 +42,7 @@ AC_ARG_ENABLE([debug],
 AC_ARG_ENABLE(tests,
     AS_HELP_STRING([--disable-tests],[do not compile tests (default is to compile)]),
     [use_tests=$enableval],
-    [use_tests=yes])
+    [use_tests=no])
 
 AC_ARG_ENABLE(experimental,
     AS_HELP_STRING([--enable-experimental],[compile experimental branch and tests (default is not to compile)]),
