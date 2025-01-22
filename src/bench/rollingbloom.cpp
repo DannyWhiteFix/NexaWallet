@@ -11,6 +11,25 @@
 
 #include <mutex>
 
+// Set up stuff that should not be timed
+class SHA256
+{
+public:
+    int amt = 100000;
+    std::vector<uint256> data;
+
+    SHA256()
+    {
+        data.reserve(amt);
+        for (int i = 0; i < amt; i++)
+        {
+            uint256 num = GetRandHash();
+            data.push_back(num);
+        }
+    }
+};
+SHA256 random_sha;
+
 // Add a lock guard since the bloom filter needs one
 // and gives a more fair comparison with the fast filter version.  However
 // the lock guard is so efficient it doesn't noticeably affect the tests results
@@ -25,26 +44,20 @@ static void RollingBloomFilter(benchmark::State &state)
     uint64_t match = 0;
     while (state.KeepRunning())
     {
-        count++;
-        data[0] = count;
-        data[1] = count >> 8;
-        data[2] = count >> 16;
-        data[3] = count >> 24;
-        uint256 tmp = Hash(data.begin(), data.end());
-
+        for (int i = 0; i < 1000; i++)
         {
-            std::lock_guard<std::mutex> lock(cs_roll);
-            filter.insert(tmp);
-        }
+            count++;
+            const uint256 &tmp = random_sha.data[i];
 
+            {
+                std::lock_guard<std::mutex> lock(cs_roll);
+                filter.insert(tmp);
+            }
 
-        data[0] = count >> 24;
-        data[1] = count >> 16;
-        data[2] = count >> 8;
-        data[3] = count;
-        {
-            std::lock_guard<std::mutex> lock(cs_roll);
-            match += filter.contains(tmp);
+            {
+                std::lock_guard<std::mutex> lock(cs_roll);
+                match += filter.contains(tmp);
+            }
         }
     }
 }
@@ -59,19 +72,13 @@ static void RollingFastFilter(benchmark::State &state)
     uint64_t match = 0;
     while (state.KeepRunning())
     {
-        count++;
-        data[0] = count;
-        data[1] = count >> 8;
-        data[2] = count >> 16;
-        data[3] = count >> 24;
-        uint256 tmp = Hash(data.begin(), data.end());
-        filter.insert(tmp);
-
-        data[0] = count >> 24;
-        data[1] = count >> 16;
-        data[2] = count >> 8;
-        data[3] = count;
-        match += filter.contains(tmp);
+        for (int i = 0; i < 1000; i++)
+        {
+            count++;
+            const uint256 &tmp = random_sha.data[i];
+            filter.insert(tmp);
+            match += filter.contains(tmp);
+        }
     }
 }
 
@@ -85,22 +92,16 @@ static void RollingFastFilter_Legacy(benchmark::State &state)
     uint64_t match = 0;
     while (state.KeepRunning())
     {
-        count++;
-        data[0] = count;
-        data[1] = count >> 8;
-        data[2] = count >> 16;
-        data[3] = count >> 24;
-        uint256 tmp = Hash(data.begin(), data.end());
-        filter.insert(tmp);
-
-        data[0] = count >> 24;
-        data[1] = count >> 16;
-        data[2] = count >> 8;
-        data[3] = count;
-        match += filter.contains(tmp);
+        for (int i = 0; i < 1000; i++)
+        {
+            count++;
+            const uint256 &tmp = random_sha.data[i];
+            filter.insert(tmp);
+            match += filter.contains(tmp);
+        }
     }
 }
 
-BENCHMARK(RollingBloomFilter, 1500 * 1000);
-BENCHMARK(RollingFastFilter, 1500 * 1000);
-BENCHMARK(RollingFastFilter_Legacy, 1500 * 1000);
+BENCHMARK(RollingBloomFilter, 1);
+BENCHMARK(RollingFastFilter, 1);
+BENCHMARK(RollingFastFilter_Legacy, 1);

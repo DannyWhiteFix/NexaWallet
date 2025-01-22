@@ -29,9 +29,6 @@ private:
     //! Used in EraseOrphansByTime() to track when the last time was we checked the cache for anything to delete
     std::atomic<int64_t> nLastOrphanCheck;
 
-    //! txn hashes that are in the previous block
-    std::vector<uint256> vPreviousBlock GUARDED_BY(cs_orphanpool);
-
 public:
     //! Current in memory footprint of all txns in the orphan pool.
     uint64_t nBytesOrphanPool GUARDED_BY(cs_orphanpool);
