@@ -218,7 +218,7 @@ static void TestBitwiseOpcodes(const valtype &a,
     const valtype &expected_and,
     const valtype &expected_or)
 {
-    valtype expected_xor(expected_and.size());
+    valtype expected_xor(VchStack, expected_and.size());
     for (size_t i = 0; i < a.size(); i++)
     {
         // A ^ B = (A | B) & ~(A & B)
@@ -227,10 +227,10 @@ static void TestBitwiseOpcodes(const valtype &a,
 
     RunTestForAllBitwiseOpcodesSizes(a, b, expected_and, expected_or, expected_xor);
 
-    valtype nota(a.size());
-    valtype notb(b.size());
-    valtype nand(expected_and.size());
-    valtype nor(expected_or.size());
+    valtype nota(VchStack, a.size());
+    valtype notb(VchStack, b.size());
+    valtype nand(VchStack, expected_and.size());
+    valtype nor(VchStack, expected_or.size());
     for (size_t i = 0; i < a.size(); i++)
     {
         nota[i] = ~a[i];

@@ -429,6 +429,9 @@ public:
     */
     const StackItem &altstackItemAt(int i);
 
+    // Implement the OP_MERKLEROOT instruction
+    bool opMerkleRoot();
+
     // How many OP_EXECs have been called recursively
     unsigned int execDepth = 0;
 

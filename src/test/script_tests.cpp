@@ -3512,7 +3512,7 @@ BOOST_AUTO_TEST_CASE(script_registers)
     // can not load from a register index higher than the register count
     CheckError(flags, {}, load_too_high_script_register, SCRIPT_ERR_INVALID_REGISTER);
     // loading from a register without first storing a value should fetch the value 0
-    CheckPass(flags, {}, load_from_register, {0});
+    CheckPass(flags, {}, load_from_register, {{}});
     // storing a value to a register should pass and leave the stack empty
     CheckPass(flags, {}, store_to_register, {});
     // multiple byte items should also work

@@ -516,6 +516,7 @@ bool ScriptMachine::Step()
     const bool fscriptRegisters = (flags & SCRIPT_FORK1_OPCODES) != 0;
     const bool enableJump = (flags & SCRIPT_FORK1_OPCODES) != 0;
     const bool enableExtBignum = (flags & SCRIPT_FORK1_OPCODES) != 0;
+    const bool opMerkleRootEnabled = (flags & SCRIPT_FORK1_OPCODES) != 0;
 
     const size_t maxIntegerSize =
         integers64Bit ? CScriptNum::MAXIMUM_ELEMENT_SIZE_64_BIT : CScriptNum::MAXIMUM_ELEMENT_SIZE_32_BIT;
@@ -2737,6 +2738,17 @@ bool ScriptMachine::Step()
                     {
                         return set_error(serror, invalidNumberRangeError);
                     }
+                }
+                break;
+
+                case OP_MERKLEROOT:
+                {
+                    if (!opMerkleRootEnabled)
+                    {
+                        return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+                    }
+                    if (!opMerkleRoot())
+                        return false;
                 }
                 break;
 

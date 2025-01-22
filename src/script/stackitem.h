@@ -31,6 +31,12 @@ class VchStackType
 };
 extern VchStackType VchStack;
 
+// An empty type that lets the StackItem constructor be specialized for vch construction
+class IntStackType
+{
+};
+extern IntStackType IntStack;
+
 class BadOpOnType : std::exception
 {
 public:
@@ -82,8 +88,16 @@ public:
 
 
     StackItem(const VchType &buf) : type(StackElementType::VCH), vch(buf) {}
-    // As std::vector, passing in a number allocates a vch of that length
-    StackItem(unsigned int i) : type(StackElementType::VCH), vch(i) {}
+    /* As std::vector, passing in a number allocates a vch of that length
+       This is removed since its ambiguous with a stack item whose value is that number.
+       It is explicitly deleted so that ints are not cast to BigNums to work
+       Use StackItem(VchStackType, unsigned int i) to allocate an item of a length.
+       Use StackItem(IntStackType, uint64_t i) to create a StackItem with a ScriptNum in it.
+    */
+    StackItem(unsigned int i) = delete;
+
+    StackItem(IntStackType, uint64_t i);
+
     StackItem(VchStackType, unsigned int i) : type(StackElementType::VCH), vch(i) {}
     // As std::vector, passing in a number allocates a vch of that length
     StackItem(VchStackType, unsigned int count, const unsigned char value)
