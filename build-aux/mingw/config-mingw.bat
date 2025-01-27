@@ -188,9 +188,10 @@ REM Set PATH with toolchain, but not msys, as this causes compile issues for 64-
 set "PATH=%TOOLCHAIN_BIN%;%BASE_PATH%"
 
 REM Boost
+REM For more info on how to build boost with mingw goto: https://gist.github.com/sim642/29caef3cc8afaa273ce6
 echo Building Boost...
 cd "%PATH_DEPS%\boost_1_68_0"
-call bootstrap.bat gcc
+call bootstrap.bat mingw
 REM Check to see if bootstrap.bat failed
 if %errorlevel% neq 0 (
 	echo ERROR: Bootstrapping Boost failed!
