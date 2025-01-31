@@ -62,8 +62,7 @@ bench_bench_nexa_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
   $(BOOST_LIBS) \
-  $(BOOST_UNIT_TEST_FRAMEWORK_LIB) \
-  $(LIBRSM)
+  $(BOOST_UNIT_TEST_FRAMEWORK_LIB)
 
 if ENABLE_ZMQ
 bench_bench_nexa_LDADD += $(LIBNEXA_ZMQ) $(ZMQ_LIBS)

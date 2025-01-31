@@ -8,10 +8,11 @@
 #define NEXA_SYNC_H
 
 #include "deadlock-detection/threaddeadlock.h"
-#include "rsm/include/recursive_shared_mutex.h"
 #include "threadsafety.h"
 #include "util.h"
 #include "utiltime.h"
+
+#include <condition_variable>
 
 #ifdef BUILD_ONLY_LIBNEXA
 #include <mutex>
@@ -111,37 +112,6 @@ public:
 #define SCRITSEC(zzname) CSharedCriticalSection zzname(#zzname)
 #endif
 
-#ifndef DEBUG_LOCKORDER
-typedef recursive_shared_mutex CRecursiveSharedCriticalSection;
-/** Define a named, shared critical section that is named in debug builds.
-    Named critical sections are useful in conjunction with a lock analyzer to discover bottlenecks. */
-#define RSCRITSEC(x) CRecursiveSharedCriticalSection x
-#else
-
-/** A shared critical section allows multiple entities to recursively take the critical section in a "shared" mode,
-    but only one entity to recursively take the critical section exclusively.
-
-    A RecursiveSharedCriticalSection IS recursive.
-*/
-class CRecursiveSharedCriticalSection : public recursive_shared_mutex
-{
-public:
-    const char *name;
-    CRecursiveSharedCriticalSection();
-    CRecursiveSharedCriticalSection(const char *n);
-    ~CRecursiveSharedCriticalSection();
-    // shared lock functions
-    void lock_shared() SHARED_LOCK_FUNCTION() { recursive_shared_mutex::lock_shared(); }
-    bool try_lock_shared() SHARED_TRYLOCK_FUNCTION(true) { return recursive_shared_mutex::try_lock_shared(); }
-    void unlock_shared() UNLOCK_FUNCTION() { recursive_shared_mutex::unlock_shared(); }
-    // exclusive lock functions
-    void lock() EXCLUSIVE_LOCK_FUNCTION() { recursive_shared_mutex::lock(); }
-    bool try_lock() EXCLUSIVE_TRYLOCK_FUNCTION(true) { return recursive_shared_mutex::try_lock(); }
-    void unlock() UNLOCK_FUNCTION() { recursive_shared_mutex::unlock(); }
-};
-#define RSCRITSEC(zzname) CRecursiveSharedCriticalSection zzname(#zzname)
-#endif
-
 // This object can be locked or shared locked some time during its lifetime.
 // Subsequent locks or shared lock calls will be ignored.
 // When it is deleted, the lock is released.
@@ -219,10 +189,6 @@ void AssertLockNotHeldInternal(const char *pszName, const char *pszFile, unsigne
 /** Asserts in debug builds if a shared critical section is not exclusively held. */
 void AssertWriteLockHeldInternal(const char *pszName, const char *pszFile, unsigned int nLine, void *cs)
     ASSERT_EXCLUSIVE_LOCK(cs);
-void AssertRecursiveWriteLockHeldinternal(const char *pszName,
-    const char *pszFile,
-    unsigned int nLine,
-    CRecursiveSharedCriticalSection *cs);
 #else
 void static inline EnterCritical(const char *pszName,
     const char *pszFile,
@@ -239,12 +205,6 @@ void static inline AssertLockHeldInternal(const char *pszName, const char *pszFi
 void static inline AssertLockNotHeldInternal(const char *pszName, const char *pszFile, unsigned int nLine, void *cs) {}
 void static inline AssertWriteLockHeldInternal(const char *pszName, const char *pszFile, unsigned int nLine, void *cs)
     ASSERT_EXCLUSIVE_LOCK(cs)
-{
-}
-void static inline AssertRecursiveWriteLockHeldinternal(const char *pszName,
-    const char *pszFile,
-    unsigned int nLine,
-    CRecursiveSharedCriticalSection *cs)
 {
 }
 #endif
@@ -498,19 +458,6 @@ public:
 
     operator bool() { return lock.owns_lock(); }
 };
-
-typedef CMutexReadLock<CRecursiveSharedCriticalSection> CRecursiveReadBlock;
-typedef CMutexLock<CRecursiveSharedCriticalSection> CRecursiveWriteBlock;
-
-#define RECURSIVEREADLOCK(cs) \
-    CRecursiveReadBlock UNIQUIFY(recursivereadblock)(cs, #cs, __FILE__, __LINE__, LockType::RECURSIVE_SHARED_MUTEX)
-#define RECURSIVEWRITELOCK(cs) \
-    CRecursiveWriteBlock UNIQUIFY(writeblock)(cs, #cs, __FILE__, __LINE__, LockType::RECURSIVE_SHARED_MUTEX)
-#define RECURSIVEREADLOCK2(cs1, cs2)                                                                           \
-    CReadBlock UNIQUIFY(recursivereadblock1)(cs1, #cs1, __FILE__, __LINE__, LockType::RECURSIVE_SHARED_MUTEX), \
-        UNIQUIFY(recursivereadblock2)(cs2, #cs2, __FILE__, __LINE__, LockType::RECURSIVE_SHARED_MUTEX)
-#define TRY_RECURSIVE_READ_LOCK(cs, name) \
-    CRecursiveReadBlock name(cs, #cs, __FILE__, __LINE__, LockType::RECURSIVE_SHARED_MUTEX, true)
 
 typedef CMutexReadLock<CSharedCriticalSection> CReadBlock;
 typedef CMutexLock<CSharedCriticalSection> CWriteBlock;

@@ -18,7 +18,6 @@ enum LockType
 {
     RECURSIVE_MUTEX, /// CCriticalSection
     SHARED_MUTEX, /// CSharedCriticalSection
-    RECURSIVE_SHARED_MUTEX, /// CRecursiveSharedCriticalSection
 };
 
 /// @enum OwnershipType

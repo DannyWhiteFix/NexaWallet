@@ -34,16 +34,6 @@ BOOST_AUTO_TEST_CASE(TEST_1_SM)
     BOOST_CHECK_THROW(WRITELOCK(shared_mutex), std::logic_error);
 }
 
-// shared lock a RSM
-// then try to exclusive lock the RSM while holding shared lock, no promotion,
-// should self deadlock
-BOOST_AUTO_TEST_CASE(TEST_1_RSM)
-{
-    CRecursiveSharedCriticalSection rsm;
-    RECURSIVEREADLOCK(rsm);
-    BOOST_CHECK_THROW(RECURSIVEWRITELOCK(rsm), std::logic_error);
-}
-
 // exclusive lock a shared mutex
 // then try to shared lock the same shared mutex while holding the exclusive
 // lock, should self deadlock

@@ -97,21 +97,12 @@ void AssertWriteLockHeldInternal(const char *pszName,
     CSharedCriticalSection *cs)
 {
 }
-void AssertRecursiveWriteLockHeldInternal(const char *pszName,
-    const char *pszFile,
-    unsigned int nLine,
-    CRecursiveSharedCriticalSection *cs)
-{
-}
 CCriticalSection::CCriticalSection() : name(nullptr) {}
 CCriticalSection::CCriticalSection(const char *n) : name(n) {}
 CCriticalSection::~CCriticalSection() {}
 CSharedCriticalSection::CSharedCriticalSection() : name(nullptr) {}
 CSharedCriticalSection::CSharedCriticalSection(const char *n) : name(n) {}
 CSharedCriticalSection::~CSharedCriticalSection() {}
-CRecursiveSharedCriticalSection::CRecursiveSharedCriticalSection() : name(nullptr) {}
-CRecursiveSharedCriticalSection::CRecursiveSharedCriticalSection(const char *n) : name(n) {}
-CRecursiveSharedCriticalSection::~CRecursiveSharedCriticalSection() {}
 #endif // DEBUG_LOCKORDER
 
 #ifdef DEBUG_PAUSE

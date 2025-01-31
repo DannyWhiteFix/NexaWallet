@@ -41,8 +41,6 @@ EXCLUDE = [
     'qa/rpc-tests/test_framework/bignum.py',
     # python init:
     '*__init__.py',
-    # rsm:
-    'src/rsm/*',
 ]
 EXCLUDE_COMPILED = re.compile('|'.join([fnmatch.translate(m) for m in EXCLUDE]))
 
