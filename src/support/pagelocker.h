@@ -16,7 +16,6 @@
 #include <assert.h>
 #include <map>
 
-
 #ifdef BUILD_ONLY_LIBNEXA
 #include <mutex>
 #else
@@ -83,7 +82,6 @@ public:
     void UnlockRange(void* p, size_t size)
     {
 // #ifdef WIN32  // remove when mingw win32 pthread link problems fixed
-
 #ifdef BUILD_ONLY_LIBNEXA
         std::lock_guard<std::mutex> lock(mutex);
 #else
@@ -111,7 +109,6 @@ public:
     // Get number of locked pages for diagnostics
     int GetLockedPageCount()
     {
-
 #ifdef BUILD_ONLY_LIBNEXA
         std::lock_guard<std::mutex> lock(mutex);
 #else
@@ -122,7 +119,6 @@ public:
 
 private:
     Locker locker;
-
 #ifdef BUILD_ONLY_LIBNEXA
     std::mutex mutex;
 #else
@@ -168,7 +164,7 @@ class LockedPageManager : public LockedPageManagerBase<MemoryPageLocker>
 public:
     static LockedPageManager& Instance()
     {
-#ifdef BUILD_ONLY_LIBNEXA
+#if defined(BUILD_ONLY_LIBNEXA) || defined(ANDROID) || defined(__APPLE__)
         std::call_once(LockedPageManager::init_flag, LockedPageManager::CreateInstance);
 #else
         boost::call_once(LockedPageManager::CreateInstance, LockedPageManager::init_flag);
@@ -191,7 +187,7 @@ private:
     }
 
     static LockedPageManager* _instance;
-#ifdef BUILD_ONLY_LIBNEXA
+#if defined(BUILD_ONLY_LIBNEXA) || defined(ANDROID) || defined(__APPLE__)
     static std::once_flag init_flag;
 #else
     static boost::once_flag init_flag;
