@@ -204,10 +204,10 @@ void treeExpansionTest()
 
 BOOST_AUTO_TEST_CASE(treeExpansion)
 {
-    treeExpansionTest<CSHA256, 32>();
-    treeExpansionTest<CHash256, 32>();
-    treeExpansionTest<CRIPEMD160, 20>();
-    treeExpansionTest<CHash160, 20>();
+    treeExpansionTest<CSHA256, 32>(); // REQ3
+    treeExpansionTest<CRIPEMD160, 20>(); // REQ4
+    treeExpansionTest<CHash160, 20>(); // REQ5
+    treeExpansionTest<CHash256, 32>(); // REQ6
 }
 
 
@@ -720,7 +720,7 @@ BOOST_AUTO_TEST_CASE(merkleProofScripts)
         CheckPass(flags, Stack(), s, expected);
     }
 
-    if (true) // everything
+    if (true) // every output REQ7,REQ8,REQ9,REQ10
     {
         s = CScript() << proof << one << 1
                       << merkleRootOption(MerkleRootAlg::SHA256,
@@ -735,6 +735,7 @@ BOOST_AUTO_TEST_CASE(merkleProofScripts)
     }
 
     // Try asking for different combinations of results
+    // Test combinations of REQ8,REQ9,REQ10
     std::vector<std::pair<uint64_t, Stack> > tv = {
         {merkleRootOption(MerkleRootAlg::SHA256, MerkleRootFlags::RETURN_INDEX), {{IntStack, 0}, calced}},
         {merkleRootOption(MerkleRootAlg::SHA256, MerkleRootFlags::RETURN_DEPTH), {{IntStack, 2}, calced}},
@@ -780,18 +781,18 @@ BOOST_AUTO_TEST_CASE(merkleProofNegative)
     std::vector<std::pair<VchType, ScriptError_t> > tv = {
         // pops an empty stack
         {VchType() << MULTIPROOF_POP, SCRIPT_ERR_INVALID_PARAMETER},
-        // proves 1 element
+        // proves 1 element, two provided (REQ11)
         {VchType() << MULTIPROOF_RIGHT_SIBLING << two << MULTIPROOF_RIGHT_SIBLING << three,
             SCRIPT_ERR_INVALID_PARAMETER},
-        // proves 3 elements
+        // proves 3 elements, two provided (REQ11)
         {VchType() << MULTIPROOF_PUSH << MULTIPROOF_POP << MULTIPROOF_PUSH, SCRIPT_ERR_INVALID_PARAMETER},
-        // Leaves something on the stack
+        // Leaves something on the stack (REQ12)
         {VchType() << MULTIPROOF_PUSH << MULTIPROOF_RIGHT_SIBLING << two, SCRIPT_ERR_INVALID_PARAMETER},
         // data is too small
         {VchType() << MULTIPROOF_LEFT_SIBLING << one << MULTIPROOF_PUSH << MULTIPROOF_RIGHT_SIBLING << VchType(1)
                    << MULTIPROOF_POP,
             SCRIPT_ERR_INVALID_PARAMETER},
-        // garbage command
+        // garbage command (REQ13)
         {VchType() << 35 << one << MULTIPROOF_PUSH << MULTIPROOF_RIGHT_SIBLING << four << MULTIPROOF_POP,
             SCRIPT_ERR_INVALID_PARAMETER},
         {VchType() << MULTIPROOF_LEFT_SIBLING << one << 27 << MULTIPROOF_RIGHT_SIBLING << four << MULTIPROOF_POP,
@@ -849,7 +850,7 @@ BOOST_AUTO_TEST_CASE(merkleOpcodeNegative)
         {CScript() << goodProof << one << four << 2 << merkleRootOption((MerkleRootAlg)235, MerkleRootFlags::MR_NONE)
                    << OP_MERKLEROOT,
             SCRIPT_ERR_INVALID_BIT_RANGE},
-        // bad option
+        // REQ14: bad option
         {CScript() << goodProof << one << four << 2
                    << merkleRootOption(MerkleRootAlg::SHA256, (MerkleRootFlags)(1 << 22)) << OP_MERKLEROOT,
             SCRIPT_ERR_INVALID_BIT_RANGE},
@@ -857,9 +858,9 @@ BOOST_AUTO_TEST_CASE(merkleOpcodeNegative)
         {CScript() << goodProof << one << four << 4 << mrOpt << OP_MERKLEROOT, SCRIPT_ERR_INVALID_STACK_OPERATION},
         {CScript() << OP_MERKLEROOT, SCRIPT_ERR_INVALID_STACK_OPERATION},
         {CScript() << goodProof << mrOpt << OP_MERKLEROOT, SCRIPT_ERR_INVALID_STACK_OPERATION},
-        // you can't prove 0 elements (push some junk on the stack to have enough pushes to avoid invalid stack op
+        // REQ2: you can't prove 0 elements (push some junk on the stack to have enough to avoid invalid stack op)
         {CScript() << 1 << 1 << 1 << goodProof << 0 << mrOpt << OP_MERKLEROOT, SCRIPT_ERR_INVALID_PARAMETER},
-        // Proving too many elements
+        // REQ1: Proving too many elements
         {CScript() << goodProof << one << 257 << mrOpt << OP_MERKLEROOT, SCRIPT_ERR_INVALID_PARAMETER},
     };
 

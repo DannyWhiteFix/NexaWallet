@@ -8,8 +8,8 @@ proof elementsArray N option OP_MERKLEROOT -> [N adjacency] [N depth] [N index] 
 
 *Parameters:*
 - *proof*: A bytearray merkle proof as defined in the "Merkle Proof Definition" below
-- *elementsArray*: N bytearrays individually pushed onto the stack, where each push corresponds to either the raw element or the element hash depending on the selected options. Must be <= 256.
-- *N*: Integer number of elements to be proven.  Must be > 0
+- *elementsArray*: N bytearrays individually pushed onto the stack, where each push corresponds to either the raw element or the element hash depending on the selected options. Must be <= 256. (REQ1)
+- *N*: Integer number of elements to be proven.  Must be > 0 (REQ 2)
 - option: Merkle root algorithm selection (defined below)
 
 The proof size is not explicitly limited since it is limited by the machine stack.  The number of elements proven is limited to <= 256 to control the size of the proof stack.
@@ -26,20 +26,28 @@ The option field is a 64 bit unsigned integer with the following format:
 
 - The hash algorithm is one of the following numbers:
 ```
-SHA256 = 0,
-RIPEMD160 = 1,
-HASH160 = 2, // sha256 then RIPEMD160
-HASH256 = 3, // Double sha256
+SHA256 = 0,     // REQ3
+RIPEMD160 = 1,  // REQ4
+HASH160 = 2,    // REQ5: sha256 then RIPEMD160
+HASH256 = 3,    // REQ6: Double sha256
 ```
 
 - the least significant byte defines the inner node hash algorithm.
 - the next byte defines the leaf element hash algorithm.
 
-- *HASH_ELEMENTS* = (1 << 16): Raw elements are provided so the algorithm should hash them to produce the tree leaves.
-- *RETURN_INDEX* = (1 << 17): Element indexes should be returned on the stack.
-- *RETURN_DEPTH* = (1 << 17): Element depths should be returned on the stack
-- *RETURN_ADJACENCY* = (1 << 19): Element adjacency flags should be returned on the stack. 
+- *HASH_ELEMENTS* = (1 << 16): (REQ7) Raw elements are provided so the algorithm should hash them to produce the tree leaves.
+- *RETURN_INDEX* = (1 << 17): (REQ8) Element indexes should be returned on the stack.
+- *RETURN_DEPTH* = (1 << 17): (REQ9) Element depths should be returned on the stack
+- *RETURN_ADJACENCY* = (1 << 19): (REQ10) Element adjacency flags should be returned on the stack. 
 
+### Errors
+
+If the proof does not consume exactly the provided number of elements, the script fails (REQ11).
+If the proof operation does not culminate in an empty proof stack, the script fails (REQ12).
+These two restrictions are important for security when a spender is challenged to provide a proof of existence of an element.  If a proof could skip elements or somehow not incorporate them into the final hash, it could appear to prove an element but not actually use it in the proof.
+
+If the proof contains invalid commands, the script fails (REQ13).
+All undefined option bits MUST be 0, or the script fails (REQ14).
 
 
 ## External Verifiable Databases
