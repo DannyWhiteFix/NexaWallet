@@ -112,7 +112,6 @@ set(libsrc
              ../random.h
              ../randomenv.cpp
              ../randomenv.h
-             ../rsm/include/recursive_shared_mutex.h
              ../validation/headervalidation.cpp
              )
 
@@ -158,7 +157,6 @@ set( Boost_LIBRARIES )
 
 include_directories( .
   ..
-  ../rsm/include
   ../script
   ../config
   ../secp256k1/include

@@ -18,7 +18,7 @@ srcFilePath := $(addprefix $(srcDir)/, $(srcFilenames))
 srcObjs := $(addprefix ${BUILD_DIR}/,$(addsuffix .o,$(basename $(notdir ${srcFilePath}))))
 # $(warning ${srcObjs})
 
-cIncludes := -I${srcDir}/libnexa -I${srcDir} -I${srcDir}/rsm/include -I${srcDir}/script -I${srcDir}/config  -I${srcDir}/validation -I${srcDir}/secp256k1/include -I${srcDir}/secp256k1 -I${srcDir}/secp256k1/src -I${srcDir}/libnexa/boost
+cIncludes := -I${srcDir}/libnexa -I${srcDir} -I${srcDir}/script -I${srcDir}/config  -I${srcDir}/validation -I${srcDir}/secp256k1/include -I${srcDir}/secp256k1 -I${srcDir}/secp256k1/src -I${srcDir}/libnexa/boost
 cxxflags := ${CXXFLAGS} -c -DHAVE_CONFIG_H -DBOOST_SYSTEM_NO_DEPRECATED -D${PLATFORM} -DLIGHT -fPIC -Wno-tautological-constant-compare -std=gnu++17 ${cIncludes}
 cflags := ${CFLAGS} -c -DHAVE_CONFIG_H -DBOOST_SYSTEM_NO_DEPRECATED -D${PLATFORM} -DLIGHT -fPIC -Wno-tautological-constant-compare -DHAVE_CONFIG_H -DVERIFY ${cIncludes}
 

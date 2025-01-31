@@ -99,31 +99,6 @@ void push_lock(void *c, const CLockLocation &locklocation, LockType locktype, Ow
             }
         }
     }
-    else if (locktype == LockType::RECURSIVE_SHARED_MUTEX)
-    {
-        // we cannot lock exclusive if we already hold shared, check for this scenario
-        if (ownership == OwnershipType::EXCLUSIVE)
-        {
-            auto it = lockdata.locksheldbythread.find(tid);
-            if (it != lockdata.locksheldbythread.end() && !it->second.empty())
-            {
-                for (auto &lockStackLock : it->second)
-                {
-                    // if we have a lock and it isnt exclusive and we are attempting to get exclusive
-                    // then we will deadlock ourself
-                    if (lockStackLock.first == c && lockStackLock.second.GetExclusive() == OwnershipType::SHARED)
-                    {
-                        self_deadlock_detected(now, lockStackLock);
-                    }
-                }
-            }
-        }
-        else
-        {
-            // intentionally left blank
-            // a single thread taking an exclusive lock then shared lock wont deadlock, only shared then exclusive
-        }
-    }
     else if (locktype == LockType::RECURSIVE_MUTEX)
     {
         // this lock can not deadlock itself

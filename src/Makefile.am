@@ -2,7 +2,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-DIST_SUBDIRS = rsm secp256k1 univalue
+DIST_SUBDIRS = secp256k1 univalue
 
 AM_LDFLAGS = $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS)
 AM_LIBTOOLFLAGS = --preserve-dup-deps
@@ -41,7 +41,6 @@ NEXA_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) 
 
 NEXA_INCLUDES += -I$(srcdir)/secp256k1/include
 NEXA_INCLUDES += -I$(srcdir)/univalue/include
-NEXA_INCLUDES += -I$(srcdir)/rsm/include
 
 LIBNEXA_SERVER=libnexa_server.a
 LIBNEXA_COMMON=libnexa_common.a
@@ -52,7 +51,6 @@ LIBNEXA_CRYPTO=crypto/libnexa_crypto.a
 LIBNEXA_CRYPTO_SSE41=crypto/libnexa_crypto_sse41.a
 LIBNEXA_CRYPTO_AVX2=crypto/libnexa_crypto_avx2.a
 LIBNEXAQT=qt/libnexaqt.a
-LIBRSM=rsm/librsm.la
 LIBSECP256K1=secp256k1/libsecp256k1.la
 LIBUNIVALUE=univalue/libunivalue.la
 
@@ -67,9 +65,6 @@ endif # BUILD_NEXA_LIBS
 if ENABLE_WALLET
 LIBNEXA_WALLET=libnexa_wallet.a
 endif
-
-$(LIBRSM): $(wildcard rsm/lib/*) $(wildcard rsm/include/*)
-	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*) $(wildcard secp256k1/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
@@ -720,7 +715,6 @@ nexad_LDADD = \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
-  $(LIBRSM) \
   $(LIBSECP256K1)
 
 
@@ -743,8 +737,7 @@ nexa_cli_LDADD = \
   $(LIBNEXA_CRYPTO) \
   $(LIBNEXA_CRYPTO_SSE41) \
   $(LIBNEXA_CRYPTO_AVX2) \
-  $(LIBNEXA_FALCON) \
-  $(LIBRSM)
+  $(LIBNEXA_FALCON)
 
 nexa_cli_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
@@ -767,8 +760,7 @@ nexa_tx_LDADD = \
   $(LIBNEXA_CRYPTO_SSE41) \
   $(LIBNEXA_CRYPTO_AVX2) \
   $(LIBNEXA_FALCON) \
-  $(LIBSECP256K1) \
-  $(LIBRSM)
+  $(LIBSECP256K1)
 
 nexa_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 #
@@ -802,7 +794,6 @@ nexa_miner_LDADD = \
   $(LIBNEXA_CRYPTO_SSE41) \
   $(LIBNEXA_CRYPTO_AVX2) \
   $(LIBNEXA_FALCON) \
-  $(LIBRSM) \
   $(LIBSECP256K1)
 
 nexa_miner_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
@@ -852,7 +843,6 @@ CLEANFILES += obj/build.h
 EXTRA_DIST = leveldb $(CTAES_DIST)
 
 clean-local:
-	-$(MAKE) -C rsm clean
 	-$(MAKE) -C secp256k1 clean
 	-$(MAKE) -C univalue clean
 	-rm -f leveldb/*/*.gcda leveldb/*/*.gcno leveldb/helpers/memenv/*.gcda leveldb/helpers/memenv/*.gcno

@@ -283,10 +283,6 @@ void AssertWriteLockHeldInternal(const char *pszName,
     const char *pszFile,
     unsigned int nLine,
     CSharedCriticalSection *cs);
-void AssertRecursiveWriteLockHeldInternal(const char *pszName,
-    const char *pszFile,
-    unsigned int nLine,
-    CRecursiveSharedCriticalSection *cs);
 #endif // DEBUG_LOCKORDER
 
 #ifdef DEBUG_PAUSE
