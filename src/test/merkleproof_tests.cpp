@@ -80,9 +80,53 @@ VchType hash160(VchType a, VchType b)
     CHash160 sha;
     sha.Write(&a[0], a.size());
     sha.Write(&b[0], b.size());
-    VchType result(32);
+    VchType result(20);
     sha.Finalize((unsigned char *)&result[0]);
     return result;
+}
+VchType ripemd160(VchType a, VchType b)
+{
+    CRIPEMD160 sha;
+    sha.Write(&a[0], a.size());
+    sha.Write(&b[0], b.size());
+    VchType result(20);
+    sha.Finalize((unsigned char *)&result[0]);
+    return result;
+}
+
+
+VchType halg(MerkleRootAlg alg, VchType a, VchType b)
+{
+    switch (alg)
+    {
+    case MerkleRootAlg::SHA256:
+        return sha256(a, b);
+    case MerkleRootAlg::RIPEMD160:
+        return ripemd160(a, b);
+    case MerkleRootAlg::HASH160:
+        return hash160(a, b);
+    case MerkleRootAlg::HASH256:
+        return hash256(a, b);
+    default:
+        assert(0); // This code didn't implement one of the algs
+    }
+}
+VchType halg(MerkleRootAlg alg, VchType a)
+{
+    VchType nothing;
+    switch (alg)
+    {
+    case MerkleRootAlg::SHA256:
+        return sha256(a, nothing);
+    case MerkleRootAlg::RIPEMD160:
+        return ripemd160(a, nothing);
+    case MerkleRootAlg::HASH160:
+        return hash160(a, nothing);
+    case MerkleRootAlg::HASH256:
+        return hash256(a, nothing);
+    default:
+        assert(0); // This code didn't implement one of the algs
+    }
 }
 
 
@@ -650,6 +694,12 @@ BOOST_AUTO_TEST_CASE(merkleproof)
     }
 }
 
+static uint64_t algSize(MerkleRootAlg alg)
+{
+    if ((alg == MerkleRootAlg::RIPEMD160) || (alg == MerkleRootAlg::HASH160))
+        return 20;
+    return 32;
+}
 
 // Merkle proof script tests
 
@@ -676,6 +726,15 @@ static void CheckPass(uint32_t flags, const Stack &original_stack, const CScript
     BOOST_CHECK(r);
     BOOST_CHECK_EQUAL(err, SCRIPT_ERR_OK);
     BOOST_CHECK(stack == expected);
+    if (stack != expected) // Debug code; convenient place to set breakpoints
+    {
+        ScriptError err2 = SCRIPT_ERR_OK;
+        Stack stack2{original_stack};
+        BaseSignatureChecker checker2;
+        ScriptImportedState sis2(&checker2);
+        bool r2 = EvalScript(stack2, script, flags, MAX_OPS_PER_SCRIPT, sis2, &err2);
+        tfm::printf("err result %d %d", r2, err2);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(merkleProofScripts)
@@ -734,26 +793,56 @@ BOOST_AUTO_TEST_CASE(merkleProofScripts)
         CheckPass(flags, Stack(), s, expected);
     }
 
-    // Try asking for different combinations of results
-    // Test combinations of REQ8,REQ9,REQ10
-    std::vector<std::pair<uint64_t, Stack> > tv = {
-        {merkleRootOption(MerkleRootAlg::SHA256, MerkleRootFlags::RETURN_INDEX), {{IntStack, 0}, calced}},
-        {merkleRootOption(MerkleRootAlg::SHA256, MerkleRootFlags::RETURN_DEPTH), {{IntStack, 2}, calced}},
-        {merkleRootOption(MerkleRootAlg::SHA256, MerkleRootFlags::RETURN_ADJACENCY), {{IntStack, 1}, calced}},
-
-        {merkleRootOption(MerkleRootAlg::SHA256, MerkleRootFlags::RETURN_ADJACENCY | MerkleRootFlags::RETURN_INDEX),
-            {{IntStack, 1}, {IntStack, 0}, calced}},
-        {merkleRootOption(MerkleRootAlg::SHA256, MerkleRootFlags::RETURN_ADJACENCY | MerkleRootFlags::RETURN_DEPTH),
-            {{IntStack, 2}, {IntStack, 1}, calced}},
-
-        {merkleRootOption(MerkleRootAlg::SHA256, MerkleRootFlags::RETURN_DEPTH | MerkleRootFlags::RETURN_INDEX),
-            {{IntStack, 2}, {IntStack, 0}, calced}},
-    };
-
-    for (const auto &[option, expected] : tv)
+    std::vector<MerkleRootAlg> algs = {
+        MerkleRootAlg::SHA256, MerkleRootAlg::RIPEMD160, MerkleRootAlg::HASH160, MerkleRootAlg::HASH256};
+    for (auto nodeAlg : algs)
     {
-        s = CScript() << proof << one << 1 << option << OP_MERKLEROOT;
-        CheckPass(flags, Stack(), s, expected);
+        for (auto leafAlg : algs)
+        {
+            // hash two and three with their respective element and node algs to make sure their sizes are correct
+            // WRT the leaf vs inner node hashes they represent.
+            VchType proof2 = VchType() << MULTIPROOF_RIGHT_SIBLING << halg(leafAlg, two) << MULTIPROOF_RIGHT_SIBLING
+                                       << halg(nodeAlg, three);
+            VchType halgCalced =
+                halg(nodeAlg, halg(nodeAlg, halg(leafAlg, one), halg(leafAlg, two)), halg(nodeAlg, three));
+            // Try asking for different combinations of results
+            // Test combinations of REQ8,REQ9,REQ10
+            std::vector<std::pair<uint64_t, Stack> > tv = {
+                {merkleRootOption(nodeAlg, leafAlg, MerkleRootFlags::HASH_ELEMENTS | MerkleRootFlags::RETURN_INDEX),
+                    {{IntStack, 0}, halgCalced}},
+                {merkleRootOption(nodeAlg, leafAlg, MerkleRootFlags::HASH_ELEMENTS | MerkleRootFlags::RETURN_DEPTH),
+                    {{IntStack, 2}, halgCalced}},
+                {merkleRootOption(nodeAlg, leafAlg, MerkleRootFlags::HASH_ELEMENTS | MerkleRootFlags::RETURN_ADJACENCY),
+                    {{IntStack, 1}, halgCalced}},
+
+                {merkleRootOption(nodeAlg, leafAlg,
+                     MerkleRootFlags::HASH_ELEMENTS | MerkleRootFlags::RETURN_ADJACENCY |
+                         MerkleRootFlags::RETURN_INDEX),
+                    {{IntStack, 1}, {IntStack, 0}, halgCalced}},
+                {merkleRootOption(nodeAlg, leafAlg,
+                     MerkleRootFlags::HASH_ELEMENTS | MerkleRootFlags::RETURN_ADJACENCY |
+                         MerkleRootFlags::RETURN_DEPTH),
+                    {{IntStack, 2}, {IntStack, 1}, halgCalced}},
+
+                {merkleRootOption(nodeAlg, leafAlg,
+                     MerkleRootFlags::HASH_ELEMENTS | MerkleRootFlags::RETURN_DEPTH | MerkleRootFlags::RETURN_INDEX),
+                    {{IntStack, 2}, {IntStack, 0}, halgCalced}},
+            };
+
+            for (const auto &[option, expected] : tv)
+            {
+                s = CScript() << proof2 << one << 1 << option << OP_MERKLEROOT;
+                // Leaf and node hash algorithm must be the same size (REQ15)
+                if (algSize(nodeAlg) != algSize(leafAlg))
+                {
+                    CheckError(flags, Stack(), s, SCRIPT_ERR_INVALID_PARAMETER);
+                }
+                else
+                {
+                    CheckPass(flags, Stack(), s, expected);
+                }
+            }
+        }
     }
 }
 
@@ -970,7 +1059,7 @@ BOOST_AUTO_TEST_CASE(merkleProofLimits)
 
     VchType proof;
 
-    // Proves all elements in a tree of 256 elements that looks like this:
+    // REQ1: Proves all elements in a tree of 256 elements that looks like this:
     /*  R
        / \
        0 /\
@@ -995,13 +1084,14 @@ BOOST_AUTO_TEST_CASE(merkleProofLimits)
     BaseSignatureChecker checker;
     ScriptImportedState sis(&checker);
     Stack stk;
+    // REQ1: Exactly 256 elements must succeed
     bool r = EvalScript(stk, s, flags, MAX_OPS_PER_SCRIPT, sis, &err);
     BOOST_CHECK(r);
     BOOST_CHECK_EQUAL(err, SCRIPT_ERR_OK);
     BOOST_CHECK(HexStr(stk[0].asVch()) == "045c564fd25cbe1586ae23cc9721ef7847657a3c173328494a709f01b0eefb23");
     // tfm::printf("root %s\n", HexStr(stk[0].asVch()));
 
-    // Let's add 1 more leaf (breaks it)
+    // REQ1: Let's add 1 more leaf for 257 total (must FAIL)
     s = pushpop;
     s = s << MULTIPROOF_PUSH << MULTIPROOF_POP;
 
@@ -1011,7 +1101,8 @@ BOOST_AUTO_TEST_CASE(merkleProofLimits)
     r = EvalScript(stk, s, flags, MAX_OPS_PER_SCRIPT, sis, &err);
     BOOST_CHECK(!r);
 
-    // Proves all elements in a fully balanced tree with 256 leaves
+    // REQ1: Proves all elements in a fully balanced tree with 256 leaves. MUST SUCCEED
+    // (different tree structure than the one above)
     proof = buildProofSubTree(8);
     err = SCRIPT_ERR_OK;
     stk = Stack();
@@ -1025,7 +1116,7 @@ BOOST_AUTO_TEST_CASE(merkleProofLimits)
     // tfm::printf("root %s\n", HexStr(stk[0].asVch()));
     BOOST_CHECK("1520280e8ea9485728aea1efc33585271b70707980a652e6bcb8f7872efe1e7c" == HexStr(stk[0]));
 
-    // Fully balanced tree, that's too big
+    // REQ1: Fully balanced tree, that's too big. MUST FAIL
     proof = buildProofSubTree(9);
     err = SCRIPT_ERR_OK;
     stk = Stack();

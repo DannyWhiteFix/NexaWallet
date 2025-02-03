@@ -35,7 +35,7 @@ HASH256 = 3,    // REQ6: Double sha256
 - the least significant byte defines the inner node hash algorithm.
 - the next byte defines the leaf element hash algorithm.
 
-- *HASH_ELEMENTS* = (1 << 16): (REQ7) Raw elements are provided so the algorithm should hash them to produce the tree leaves.
+- *HASH_ELEMENTS* = (1 << 16): (REQ7) Raw elements are provided in the elements array, so the algorithm should hash them to produce the tree leaves.
 - *RETURN_INDEX* = (1 << 17): (REQ8) Element indexes should be returned on the stack.
 - *RETURN_DEPTH* = (1 << 17): (REQ9) Element depths should be returned on the stack
 - *RETURN_ADJACENCY* = (1 << 19): (REQ10) Element adjacency flags should be returned on the stack. 
@@ -48,6 +48,7 @@ These two restrictions are important for security when a spender is challenged t
 
 If the proof contains invalid commands, the script fails (REQ13).
 All undefined option bits MUST be 0, or the script fails (REQ14).
+If the size of the selected leaf and node hash algorithms differ, the script fails (REQ15).
 
 
 ## External Verifiable Databases
@@ -137,10 +138,17 @@ MULTIPROOF_PUSH = 5,             // Push the current node onto the stack, and lo
 
 The proof is going to be of the form \<command\>\[data\]...
 
+**Note About The Block's Merkle Tree***
+
+Due to Nexa's inheritance of the Bitcoin source code, Nexa handles "empty" subtrees without an explicit empty element.  Instead block define merkle trees with all elements at the same level, and with empty subtrees on the "right" side.  And if a subtree is empty, the parent's hash is the hash of the non-empty child duplicated (this is called "mutated" in the full node code).
+
+This opcode can be used to verify "mutated" proofs of trees.  In that case, the proof must never use xxx_IS_EMPTY instructions.  Instead, it should use MULTIPROOF_RIGHT_SIBLING with the current node hash as the sibling.  Note that proofs could also use MULTIPROOF_LEFT_SIBLING with the current node hash -- that is, it is possible to prove different positions for transactions, and multiple correct proofs exist.
+
+Note that having the contract prove that a transaction exists in a block via a merkle proof is not recommended (you would also need to prove the block exists in the blockchain).  Think about leveraging consensus by importing a UTXO into a transaction as "read-only" instead (of course, this approach requires that the output be unspent).
+
 
 #### Calculating Proofs
-To form a merkle proof of one or multiple elements, first sort the elements in index order, where the "index" refers to the position in the tree that the element was in when the merkle root was created.
-
+To form a merkle proof of one or multiple elements, first sort the elements in index order, where the "index" refers to the position in the tree that the element was in when the merkle root was created.  Next apply the leaf hash to all elements.  The raw elements NEVER appear in a proof!
 
 In the case of SIBLING LEFT and RIGHT, the sibling hash is always also added to the proof as data.
 
@@ -208,17 +216,17 @@ return "current node" as the merkle root.
 
 Unbalanced binary trees are trees whose leaves occur at different depths.
 
-In that situation, the calculated element indexes will be the position of the element **at its depth**.
-Let us examine this unbalanced tree, where elements are named alphabetically and inner nodes are named reverse alphabetically:
+In that situation, the calculated element indexes will be the position of the element **at its own depth and reading from left to right**.
+Let us examine this unbalanced tree, where elements are named alphabetically and inner nodes are named reverse alphabetically. Each element is annotated with its depth and index like this "-(depth, index)":
 ```
-    z
-   / \
-   y  c
-  / \ 
- a   b
+    z-(0,0)
+   /       \
+  y-(1,0)   c-(1,1)
+ /       \ 
+a-(2,0)   b-(2,1)
 ```
 
-In this tree the returned index of both b and c is 1, because they are both element 1 at their own level (a, b) and (y,c).
+In this tree the returned index of both b and c is 1, because they are both element 1 at their own level, respectively (a, b) and (y,c).
 
 
 ### Verifiable Database Operations

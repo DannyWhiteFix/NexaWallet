@@ -147,6 +147,7 @@ public:
         std::vector<uint64_t> *returnDepth = nullptr,
         std::vector<uint8_t> *returnAdjacent = nullptr);
 
+protected:
     void indexInit(uint64_t numElements,
         std::vector<uint64_t> *ei,
         std::vector<uint64_t> *eid,
@@ -156,20 +157,14 @@ public:
         {
             ei->resize(numElements);
             eid->resize(numElements);
-            for (uint64_t i = 0; i < numElements; i++)
-            {
-                (*ei)[i] = 0;
-                (*eid)[i] = 0;
-            }
+            std::fill(ei->begin(), ei->end(), 0);
+            std::fill(eid->begin(), eid->end(), 0);
         }
         if (returnAdjacent != nullptr)
         {
             returnAdjacent->resize(numElements);
-            for (uint64_t i = 0; i < numElements; i++)
-            {
-                // Assume adjacency on both sides (and then remove the bit when an intermediary element is seen)
-                (*returnAdjacent)[i] = 3;
-            }
+            // Assume adjacency on both sides (and then remove the bit when an intermediary element is seen)
+            std::fill(returnAdjacent->begin(), returnAdjacent->end(), 3);
         }
     }
 

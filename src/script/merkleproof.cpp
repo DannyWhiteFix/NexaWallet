@@ -199,10 +199,14 @@ bool ScriptMachine::opMerkleRoot()
     uint64_t nodeAlgSize = 32;
     MerkleRootAlg nodeAlg = (MerkleRootAlg)(opt & (uint64_t)MerkleRootFlags::ALG_BITS);
     MerkleRootAlg leafAlg = (MerkleRootAlg)((opt >> 8) & (uint64_t)MerkleRootFlags::ALG_BITS);
-    if (leafAlg == MerkleRootAlg::RIPEMD160)
+    if ((leafAlg == MerkleRootAlg::RIPEMD160) || (leafAlg == MerkleRootAlg::HASH160))
         leafAlgSize = 20;
-    if (nodeAlg == MerkleRootAlg::RIPEMD160)
+    if ((nodeAlg == MerkleRootAlg::RIPEMD160) || (nodeAlg == MerkleRootAlg::HASH160))
         nodeAlgSize = 20;
+
+    // Incompatible algorithms
+    if (nodeAlgSize != leafAlgSize)
+        return set_error(&error, SCRIPT_ERR_INVALID_PARAMETER);
 
     PopStack();
     PopStack();
