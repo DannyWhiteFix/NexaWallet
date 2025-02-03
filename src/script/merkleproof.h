@@ -168,8 +168,35 @@ protected:
         }
     }
 
-    // Helper function to build the index of an element.
-    // This updates the depth-th bit in the ei vector if it has not already been set.
+    /*
+        Helper function to build the index of an element.
+        This updates the depth-th bit (for example 4th if depth was 4) counted upwards in the ei vector if it has
+        not already been set.
+        This diagram may help in understanding the code:
+    depth or
+    bit I am
+    setting                      R
+    2                b000                 b100
+    1            b000     b010        b100     b110
+    0         b000 b001 b010 b011  b100 b101 b110 b111
+    decimal:    0    1   2    3      4   5     6    7
+
+    The situation gets tricky when the proof does a PUSH and then starts working on the subtree of a new element.  For
+    example, let's assume were were proving element 4 above, and just PUSHed to begin proving element 7.  At this point,
+    we do not want to update index of element 4 at levels 0 and 1, because we are in the wrong subtree.  We are in the
+    b110 subtree, not the b100 subtree.  But we DO need to update element 4 (and 7) at level 2, once we've POPped
+    element 4 back off of the stack.
+
+    We could do this by tracking pushes and pops, but the way this routine handles that is it tracks the bits it has
+    already assigned for an element, and it never changes bits its already assigned.  It does this by tracking the depth
+    upwards that it has gotten to (for each element).  Since we want to report the final depth of each element to the
+    caller anyway, this is not wasteful.
+
+    However, this means that if the tree is not balanced (leaf elements are located at different depths), then
+    the "index" will counted at that element's depth, not the depth of the entire tree.  With unbalanced trees, a
+    merkle proof may not contain the deepest element, so the information needed to index relative to the entire tree
+    is unavailable.
+    */
     void updateIndex(std::vector<uint64_t> *ei,
         std::vector<uint64_t> *eid,
         std::vector<uint8_t> *ra,
