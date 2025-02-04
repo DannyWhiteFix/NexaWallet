@@ -2,7 +2,7 @@
 token [info, new, mint, melt, balance, send, authority, tracker, subgroup, mintage] 
 
 Token functions.
-'info' returns a list of all tokens with their groupId and associated token-name, token-ticker descUrl, descHash, the number of mint/melt/renew/rescript/subgroup authorities, and also the finest balance (in satoshis) and finest mintage numbers (in satoshis) for this token, but only for tokens created in this wallet
+'info' returns a list of all tokens with their groupId and associated token-name, token-ticker descUrl, descHash, decimals, genesis_address, the number of mint/melt/renew/rescript/subgroup authorities, and also the finest balance (in satoshis) and finest mintage numbers (in satoshis) for all tokens created in this wallet, or if a group id is specific, it will return the info just for that group regardless of whether it was created in this wallet
 'new' creates a new token type. args: [address] [token-ticker token-name [descUrl descHash decimals]]
 'mint' creates new tokens. args: groupId address quantity
 'melt' removes tokens from circulation. args: groupId quantity
@@ -44,6 +44,7 @@ Examples:
 
 Get token info
 > nexa-cli token info
+> nexa-cli token info nexa:nqtsq5g59472zwd85c2esgslh6wh025r0x43ttlv2xy98jd0
 
 Create a new token
 > nexa-cli token new APPL apple
@@ -72,7 +73,7 @@ Make new authority
 > nexa-cli token authority count nexa:tpyte9hwr6ew0agt67a0y2fnnccc0d8r62lwryq44rfhzmv7ngqqqza82qdu0
 
 Make subgroups
- > nexa-cli token subgroup nexa:tpyte9hwr6ew0agt67a0y2fnnccc0d8r62lwryq44rfhzmv7ngqqqza82qdum 1
+ > nexa-cli token subgroup nexa:tpyte9hwr6ew0agt67a0y2fnnccc0d8r62lwryq44rfhzmv7ngqqqza82qdum data1
 
 Add token tracker
  > nexa-cli token tracker add nexa:tpyte9hwr6ew0agt67a0y2fnnccc0d8r62lwryq44rfhzmv7ngqqqza82qdum
