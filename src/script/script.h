@@ -291,15 +291,24 @@ enum opcodetype
     OP_INPUTVALUE = 0xd0,
 
     // NEXA opcodes
+    // (231) Parse the provided bytecode, extracting some specific information
     OP_PARSE = 0xe6,
+    // (232) Copy data from the stack top into a register
     OP_STORE = 0xe7,
+    // (232) Push data in a register onto the stack
     OP_LOAD = 0xe8,
+    // (233) Put some data somewhere in the stack
     OP_PLACE = 0xe9,
+    // (234) Get some data about the current transaction
     OP_PUSH_TX_STATE = 0xea,
+    // (235) Set the bignum modulo
     OP_SETBMD = 0xeb,
+    // (236) Convert the following little endian sign magnitude number into a bignum (a fundamental type)
     OP_BIN2BIGNUM = 0xec,
+    // (237) Execute some data as a scriptlet
     OP_EXEC = 0xed,
-    // OP_GROUPDATA = 0xee,
+    // (238) Calculate the merkle root of the provided elements and proof
+    OP_MERKLEROOT = 0xee,
 
     // The first op_code value after all defined opcodes
     FIRST_UNDEFINED_OP_VALUE,

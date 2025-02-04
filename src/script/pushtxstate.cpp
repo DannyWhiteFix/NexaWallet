@@ -159,7 +159,7 @@ ScriptError EvalPushTxState(const VchType &specifier, ScriptMachine &sm)
         case PushTxStateSpecifier::GROUP_COVENANT_HASH:
             if ((nogrp) || (gb->covenant.size() == 0))
             {
-                sm.PushStack(OP_FALSE);
+                sm.PushStack(StackItem()); // an empty stack item is OP_FALSE
             }
             else
             {
@@ -168,7 +168,7 @@ ScriptError EvalPushTxState(const VchType &specifier, ScriptMachine &sm)
             }
             break;
         case PushTxStateSpecifier::GROUP_AUTHORITY_FLAGS:
-            sm.PushStack(nogrp ? zero.vchStackItem() : StackItem((uint64_t)gb->ctrlPerms));
+            sm.PushStack(nogrp ? zero.vchStackItem() : StackItem(IntStack, (uint64_t)gb->ctrlPerms));
             break;
         }
     }

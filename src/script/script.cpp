@@ -329,6 +329,8 @@ const char *GetOpName(opcodetype opcode)
         return "OP_EXEC";
     case OP_PARSE:
         return "OP_PARSE";
+    case OP_MERKLEROOT:
+        return "OP_MERKLEROOT";
 
     case OP_INVALIDOPCODE:
         return "OP_INVALIDOPCODE";

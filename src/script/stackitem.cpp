@@ -11,6 +11,14 @@
 
 
 VchStackType VchStack;
+IntStackType IntStack;
+
+StackItem::StackItem(IntStackType, uint64_t i) : type(StackElementType::VCH)
+{
+    const auto sn = CScriptNum::fromIntUnchecked(i);
+    vch = sn.getvch();
+}
+
 
 /** Return true if the passed size in bytes is within the allowed sizes for a single stack item */
 bool withinStackWidth(unsigned int size, uint64_t scriptFlags)
