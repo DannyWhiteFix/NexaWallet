@@ -1128,6 +1128,46 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_capdH
     return ret;
 }
 
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_capdSetPowTargetHarderThanPriority(JNIEnv *env,
+    jobject ths,
+    jbyteArray jmessage,
+    jdouble priority)
+{
+    ByteArrayAccessor message(env, jmessage);
+    CDataStream dataStrm((char *)message.data, (char *)message.data + message.size, SER_NETWORK, PROTOCOL_VERSION);
+    CapdMsg msg;
+    try
+    {
+        dataStrm >> msg;
+    }
+    catch (const std::exception &)
+    {
+        // p("libnexa capd deserialize error");
+        return jbyteArray();
+    }
+    msg.SetPowTargetHarderThanPriority(priority);
+    // reserialise the message
+    CDataStream serializer(SER_NETWORK, PROTOCOL_VERSION);
+    try
+    {
+        serializer << bloom;
+    }
+    catch (const std::exception &)
+    {
+        // p("libnexa capd serialize error");
+        return jbyteArray();
+    }
+    jbyteArray ret = env->NewByteArray(serializer.size());
+    jbyte *retData = env->GetByteArrayElements(ret, 0);
+    if (!retData)
+    {
+        return ret; // failed
+    }
+    memcpy(retData, serializer.data(), serializer.size());
+    env->ReleaseByteArrayElements(ret, retData, 0);
+    return ret;
+}
+
 extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_cryptAES256CBC(JNIEnv *env,
     jobject ths,
     jbyteArray message,

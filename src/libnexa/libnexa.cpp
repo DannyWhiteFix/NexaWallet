@@ -821,6 +821,45 @@ SLAPI int capdCheck(const unsigned char *message, unsigned int msgLen)
     return msg.DoesPowMeetTarget();
 }
 
+SLAPI int capdSetPowTargetHarderThanPriority(const unsigned char *message,
+    const unsigned int msgLen,
+    const double priority,
+    unsigned char *result,
+    const unsigned int resultLen)
+{
+    CDataStream dataStrm((char *)message, (char *)message + msgLen, SER_NETWORK, PROTOCOL_VERSION);
+    CapdMsg msg;
+    try
+    {
+        dataStrm >> msg;
+    }
+    catch (const std::exception &)
+    {
+        p("libnexa capd deserialize error");
+        return -1;
+    }
+    msg.SetPowTargetHarderThanPriority(priority);
+    CDataStream returnStream(SER_NETWORK, PROTOCOL_VERSION);
+    try
+    {
+        returnStream << msg;
+    }
+    catch (const std::exception &)
+    {
+        p("libnexa capd serialize error");
+        return -2;
+    }
+    const size_t retSize = returnStream.size();
+    if (retSize > resultLen)
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
+        return -3;
+    }
+    std::memcpy(result, returnStream.data(), retSize);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
+    return (int)retSize;
+}
+
 SLAPI int capdHash(const unsigned char *message, unsigned int msgLen, unsigned char *result, unsigned int resultLen)
 {
     CDataStream dataStrm((char *)message, (char *)message + msgLen, SER_NETWORK, PROTOCOL_VERSION);
