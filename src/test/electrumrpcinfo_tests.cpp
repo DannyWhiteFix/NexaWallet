@@ -22,8 +22,10 @@ public:
     int ActiveTipHeight() const override { return height; }
     bool IsInitialBlockDownload() const override { return ibd; }
     bool IsRunning() const override { return isrunning; }
-    std::map<std::string, int64_t> FetchRostrumInfo() const override { return info; }
+    std::map<std::string, int64_t> FetchRostrumInfo(const std::string &) const override { return info; }
 };
+
+const std::string NETWORK = "nexa";
 
 BOOST_FIXTURE_TEST_SUITE(electrumrpcinfo_tests, BasicTestingSetup)
 
@@ -34,28 +36,28 @@ BOOST_AUTO_TEST_CASE(info_status)
     UniValue status;
 
     rpc.isrunning = false;
-    status = rpc.GetElectrumInfo();
+    status = rpc.GetElectrumInfo(NETWORK);
     BOOST_CHECK_EQUAL("stopped", status["status"].get_str());
 
     rpc.isrunning = true;
     rpc.ibd = true;
-    status = rpc.GetElectrumInfo();
+    status = rpc.GetElectrumInfo(NETWORK);
     BOOST_CHECK_EQUAL("waiting for initial block download", status["status"].get_str());
 
     rpc.isrunning = true;
     rpc.ibd = false;
     rpc.info = {};
-    status = rpc.GetElectrumInfo();
+    status = rpc.GetElectrumInfo(NETWORK);
     BOOST_CHECK_EQUAL("initializing", status["status"].get_str());
 
     rpc.height = 100;
     rpc.info = {{INDEX_HEIGHT_KEY, 99}};
-    status = rpc.GetElectrumInfo();
+    status = rpc.GetElectrumInfo(NETWORK);
     BOOST_CHECK_EQUAL("indexing", status["status"].get_str());
 
     rpc.height = 100;
     rpc.info = {{INDEX_HEIGHT_KEY, 100}};
-    status = rpc.GetElectrumInfo();
+    status = rpc.GetElectrumInfo(NETWORK);
     BOOST_CHECK_EQUAL("ok", status["status"].get_str());
 }
 
@@ -64,11 +66,11 @@ BOOST_AUTO_TEST_CASE(info_progress)
     ElectrumRPCInfoMOC rpc;
     rpc.height = 100;
     rpc.info = {{INDEX_HEIGHT_KEY, 99}};
-    UniValue status = rpc.GetElectrumInfo();
+    UniValue status = rpc.GetElectrumInfo(NETWORK);
     BOOST_CHECK_EQUAL(99., status["index_progress"].get_real());
 
     rpc.info = {{}};
-    status = rpc.GetElectrumInfo();
+    status = rpc.GetElectrumInfo(NETWORK);
     BOOST_CHECK_EQUAL(0., status["index_progress"].get_real());
 }
 
@@ -77,11 +79,11 @@ BOOST_AUTO_TEST_CASE(info_indexheight)
     ElectrumRPCInfoMOC rpc;
 
     rpc.info = {{}};
-    UniValue status = rpc.GetElectrumInfo();
+    UniValue status = rpc.GetElectrumInfo(NETWORK);
     BOOST_CHECK_EQUAL(-1, status["index_height"].get_int());
 
     rpc.info = {{INDEX_HEIGHT_KEY, 100}};
-    status = rpc.GetElectrumInfo();
+    status = rpc.GetElectrumInfo(NETWORK);
     BOOST_CHECK_EQUAL(100, status["index_height"].get_int());
 }
 
@@ -90,7 +92,7 @@ BOOST_AUTO_TEST_CASE(info_can_handle_longint)
     ElectrumRPCInfoMOC rpc;
 
     rpc.info = {{INDEX_HEIGHT_KEY, std::numeric_limits<int64_t>::max()}};
-    UniValue status = rpc.GetElectrumInfo();
+    UniValue status = rpc.GetElectrumInfo(NETWORK);
     BOOST_CHECK_EQUAL(std::numeric_limits<int64_t>::max(), status["index_height"].get_int64());
 }
 

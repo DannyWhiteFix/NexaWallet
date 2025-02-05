@@ -21,12 +21,12 @@ static int64_t get_index_height(const std::map<std::string, int64_t> &info)
     return height_it->second;
 }
 
-UniValue ElectrumRPCInfo::GetElectrumInfo() const
+UniValue ElectrumRPCInfo::GetElectrumInfo(const std::string &network) const
 {
     std::map<std::string, int64_t> rostruminfo;
     try
     {
-        rostruminfo = FetchRostrumInfo();
+        rostruminfo = FetchRostrumInfo(network);
     }
     catch (const std::runtime_error &e)
     {
@@ -72,7 +72,10 @@ void ElectrumRPCInfo::ThrowHelp()
 int ElectrumRPCInfo::ActiveTipHeight() const { return chainActive.Height(); }
 bool ElectrumRPCInfo::IsInitialBlockDownload() const { return ::IsInitialBlockDownload(); }
 bool ElectrumRPCInfo::IsRunning() const { return ElectrumServer::Instance().IsRunning(); }
-std::map<std::string, int64_t> ElectrumRPCInfo::FetchRostrumInfo() const { return fetch_rostrum_info(); }
+std::map<std::string, int64_t> ElectrumRPCInfo::FetchRostrumInfo(const std::string &network) const
+{
+    return fetch_rostrum_info(network);
+}
 std::string ElectrumRPCInfo::GetStatus(int64_t index_height) const
 {
     if (!this->IsRunning())

@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "chainparams.h"
 #include "electrum/electrumrpcinfo.h"
 #include "rpc/server.h"
 #include <univalue.h>
@@ -12,7 +13,9 @@ UniValue getelectruminfo(const UniValue &params, bool fHelp)
     {
         electrum::ElectrumRPCInfo::ThrowHelp();
     }
-    return electrum::ElectrumRPCInfo().GetElectrumInfo();
+
+    const std::string network = Params().NetworkIDString();
+    return electrum::ElectrumRPCInfo().GetElectrumInfo(network);
 }
 
 static const CRPCCommand commands[] = {

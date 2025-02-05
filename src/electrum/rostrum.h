@@ -19,7 +19,7 @@ namespace electrum {
 std::string rostrum_path();
 std::vector<std::string> rostrum_args(int rpcport, int p2pport, const std::string& network);
 
-std::map<std::string, int64_t> fetch_rostrum_info();
+std::map<std::string, int64_t> fetch_rostrum_info(const std::string& network);
 
 void set_extversion_flags(CExtversionMessage&, const std::string& network);
 
