@@ -30,6 +30,7 @@
 #endif
 
 LockedPageManager* LockedPageManager::_instance = nullptr;
+
 #ifdef BUILD_ONLY_LIBNEXA
 std::once_flag LockedPageManager::init_flag;
 #else

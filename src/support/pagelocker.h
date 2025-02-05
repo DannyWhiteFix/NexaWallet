@@ -16,6 +16,7 @@
 #include <assert.h>
 #include <map>
 
+
 #ifdef BUILD_ONLY_LIBNEXA
 #include <mutex>
 #else
@@ -54,6 +55,7 @@ public:
     // For all pages in affected range, increase lock count
     void LockRange(void* p, size_t size)
     {
+
 #ifdef BUILD_ONLY_LIBNEXA
         std::lock_guard<std::mutex> lock(mutex);
 #else
@@ -81,6 +83,7 @@ public:
     void UnlockRange(void* p, size_t size)
     {
 // #ifdef WIN32  // remove when mingw win32 pthread link problems fixed
+
 #ifdef BUILD_ONLY_LIBNEXA
         std::lock_guard<std::mutex> lock(mutex);
 #else
@@ -108,6 +111,7 @@ public:
     // Get number of locked pages for diagnostics
     int GetLockedPageCount()
     {
+
 #ifdef BUILD_ONLY_LIBNEXA
         std::lock_guard<std::mutex> lock(mutex);
 #else
@@ -118,6 +122,7 @@ public:
 
 private:
     Locker locker;
+
 #ifdef BUILD_ONLY_LIBNEXA
     std::mutex mutex;
 #else
