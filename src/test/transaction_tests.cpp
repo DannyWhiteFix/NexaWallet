@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(dynamic_tx_validity_fork1)
 
     // Fake trigger fork1
     auto oldForkTime = nMiningForkTime;
-    nMiningForkTime = 0;
+    nMiningForkTime = 1;
     BOOST_CHECK(IsFork1Activated(tip));
 
     state.SetNull(); // try the above test again, fork1 activated

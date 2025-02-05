@@ -169,7 +169,7 @@ std::string ForkTimeValidator(const uint64_t &value, uint64_t *item, bool valida
     }
     else // If it was just turned "on" then set to the default activation time.
     {
-        if (*item == 1)
+        if (*item == 0)
         {
             *item = Params().GetConsensus().nextForkActivationTime;
         }
@@ -397,8 +397,8 @@ void UnlimitedSetup(void)
     blockVersion = GetArg("-blockversion", blockVersion);
     LoadTweaks(); // The above options are deprecated so the same parameter defined as a tweak will override them
 
-    // If the user configures it to 1, assume this means default
-    if (miningForkTime.Value() == 1)
+    // If the user configures it to 0 then use default settings.
+    if (miningForkTime.Value() == 0)
         miningForkTime = Params().GetConsensus().nextForkActivationTime;
 
     //  Init network shapers
