@@ -19,7 +19,20 @@
 
 constexpr char ROSTRUM_BIN[] = "rostrum";
 
-static std::string monitoring_port() { return GetArg("-electrum.monitoring.port", "3224"); }
+static std::string monitoring_port(const std::string &network)
+{
+    std::map<std::string, std::string> portmap = {{"nexa", "3224"}, {"testnet", "13224"}, {"regtest", "23224"}};
+
+    auto defaultPort = portmap.find(network);
+    if (defaultPort == end(portmap))
+    {
+        std::stringstream ss;
+        ss << "Electrum server does not support '" << network << "' network.";
+        throw std::invalid_argument(ss.str());
+    }
+
+    return GetArg("-electrum.monitoring.port", defaultPort->second);
+}
 static std::string monitoring_host() { return GetArg("-electrum.monitoring.host", "127.0.0.1"); }
 static std::string rpc_host() { return GetArg("-electrum.host", "0.0.0.0"); }
 static std::string rpc_port(const std::string &network)
@@ -195,7 +208,7 @@ std::vector<std::string> rostrum_args(int rpcport, int p2pport, const std::strin
         throw std::invalid_argument(ss.str());
     }
     args.push_back("--network=" + netmapping.at(network));
-    args.push_back("--monitoring-addr=" + monitoring_host() + ":" + monitoring_port());
+    args.push_back("--monitoring-addr=" + monitoring_host() + ":" + monitoring_port(network));
 
     if (!GetArg("-rpcpassword", "").empty())
     {
@@ -220,14 +233,14 @@ std::vector<std::string> rostrum_args(int rpcport, int p2pport, const std::strin
     return args;
 }
 
-std::map<std::string, int64_t> fetch_rostrum_info()
+std::map<std::string, int64_t> fetch_rostrum_info(const std::string &network)
 {
     if (!GetBoolArg("-electrum", true))
     {
         throw std::runtime_error("Electrum server is disabled");
     }
 
-    std::stringstream infostream = http_get(monitoring_host(), std::stoi(monitoring_port()), "/");
+    std::stringstream infostream = http_get(monitoring_host(), std::stoi(monitoring_port(network)), "/");
 
     const std::regex keyval("^([a-z_{}=\"\\+]+)\\s(\\d+)\\s*$");
     std::map<std::string, int64_t> info;

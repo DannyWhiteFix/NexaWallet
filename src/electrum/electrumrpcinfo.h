@@ -16,7 +16,7 @@ public:
     ElectrumRPCInfo() = default;
     virtual ~ElectrumRPCInfo() = default;
 
-    UniValue GetElectrumInfo() const;
+    UniValue GetElectrumInfo(const std::string &network) const;
     static void ThrowHelp();
 
 protected:
@@ -24,7 +24,7 @@ protected:
     virtual int ActiveTipHeight() const;
     virtual bool IsInitialBlockDownload() const;
     virtual bool IsRunning() const;
-    virtual std::map<std::string, int64_t> FetchRostrumInfo() const;
+    virtual std::map<std::string, int64_t> FetchRostrumInfo(const std::string &network) const;
 
 private:
     std::string GetStatus(int64_t index_height) const;
