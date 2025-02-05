@@ -18,7 +18,17 @@
 #include <assert.h>
 
 
-uint64_t nMiningForkTime = NEXT_FORK_ACTIVATION_TIME;
+/** Next protocol upgrade will be activated once MTP >= 12:00:00 PM, March 31st 2025, GMT
+ */
+const uint64_t NEXT_FORK_ACTIVATION_TIME = 1743422400;
+
+// Must be zero on startup. Do not set this to any other value.
+// To change consensus forktime you can either set the global value
+// NEXT_FORK_ACTIVATION_TIME or you can modify an individual forktime
+// by modifying consensus.nextForkActivationTime found in each
+// chainparam setting in the sections below. NOTE: individual
+// settings made will override the global setting.
+uint64_t nMiningForkTime = 0;
 
 SatoshiBlock CreateGenesisBlock(CScript prefix,
     const std::string &comment,
@@ -442,6 +452,8 @@ public:
         // Two days (in seconds)
         consensus.nASERTHalfLife = 2 * 24 * 60 * 60;
 
+        consensus.nextForkActivationTime = 1739361600; // Feb 12, 2025 at 12:00:00 GMT
+
         std::vector<unsigned char> nonce;
         std::vector<unsigned char> hardCodedNonce;
         nonce = hardCodedNonce = ParseHex("132a25");
@@ -547,6 +559,8 @@ public:
         // difficulty is cut in half. Doubled if blocks are ahead of schedule.
         // Two days (in seconds)
         consensus.nASERTHalfLife = 2 * 24 * 60 * 60;
+
+        consensus.nextForkActivationTime = NEXT_FORK_ACTIVATION_TIME;
 
         std::vector<unsigned char> nonce; // TODO make this difficulty higher and hard code solution
         std::vector<unsigned char> hardCodedNonce;
