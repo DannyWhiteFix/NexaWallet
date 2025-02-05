@@ -354,12 +354,18 @@ public:
 #endif
 };
 
-inline BigNum operator"" _BN(const char *str)
+// turning the formatter off here for a weird formatter issue.
+// operator""_BN   -> formatter complains
+// operator"" _BN  -> compiler complains
+
+/* clang-format off */
+inline BigNum operator""_BN(const char *str)
 {
     if (str[1] == 'x')
         return BigNum(str + 2, 16);
     return BigNum(str, 10);
 }
+/* clang-format on */
 
 extern BigNum bigNumUpperLimit; // if (!(x < upperLimit)) throw NUMBER_OUT_OF_RANGE;
 extern BigNum bigNumLowerLimit; // if (!(x > lowerLimit)) throw NUMBER_OUT_OF_RANGE;
