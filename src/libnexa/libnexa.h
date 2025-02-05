@@ -267,6 +267,12 @@ SLAPI int capdSolve(const unsigned char *message, unsigned int msgLen, unsigned 
 SLAPI int capdCheck(const unsigned char *message, unsigned int msgLen);
 SLAPI int capdHash(const unsigned char *message, unsigned int msgLen, unsigned char *result, unsigned int resultLen);
 
+SLAPI int capdSetPowTargetHarderThanPriority(const unsigned char *message,
+                                            const unsigned int msgLen,
+                                            const double priority,
+                                            unsigned char* result,
+                                            const unsigned int resultLen);
+
 // encrypt must be 1 (encrypt) or 0 (decrypt).
 // len must be a multiple of 16
 // secret must be 32 bytes, iv must be 16 or more bytes
