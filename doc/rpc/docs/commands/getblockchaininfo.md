@@ -11,8 +11,8 @@ Result:
   "difficulty": xxxxxx,     (numeric) the current difficulty
   "mediantime": xxxxxx,     (numeric) median time for the current best block
   "forktime": xxxxxx,       (numeric)  time when the fork becomes active on the next block
-  "forkactive": xxxxxx,     (bool) is the fork active, true for all blocks with a median tiume past >= activation time
-  "forkenforcednextblock": xx,(bool) will the new  fork rules be enforced on the next block mined, true only for the first block with MTP >= activation time 
+  "forkactive": xxxxxx,     (bool) is the fork active, true for all blocks following the new rules
+   "forkenforcednextblock": xx,(bool) will the new fork rules be enforced on the next block mined, true only for the first block following the new rules
   "verificationprogress": xx, (numeric) estimate of verification progress [0..1]
   "initialblockdownload": xx, (bool) (debug information) estimate of whether this node is in Initial Block Download mode.
   "chainwork": "xxxx"     (string) total amount of work in active chain, in hexadecimal
