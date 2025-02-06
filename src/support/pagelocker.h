@@ -54,7 +54,6 @@ public:
     // For all pages in affected range, increase lock count
     void LockRange(void* p, size_t size)
     {
-
 #ifdef BUILD_ONLY_LIBNEXA
         std::lock_guard<std::mutex> lock(mutex);
 #else
@@ -164,7 +163,7 @@ class LockedPageManager : public LockedPageManagerBase<MemoryPageLocker>
 public:
     static LockedPageManager& Instance()
     {
-#if defined(BUILD_ONLY_LIBNEXA) || defined(ANDROID) || defined(__APPLE__)
+#ifdef BUILD_ONLY_LIBNEXA
         std::call_once(LockedPageManager::init_flag, LockedPageManager::CreateInstance);
 #else
         boost::call_once(LockedPageManager::CreateInstance, LockedPageManager::init_flag);
@@ -187,7 +186,7 @@ private:
     }
 
     static LockedPageManager* _instance;
-#if defined(BUILD_ONLY_LIBNEXA) || defined(ANDROID) || defined(__APPLE__)
+#ifdef BUILD_ONLY_LIBNEXA
     static std::once_flag init_flag;
 #else
     static boost::once_flag init_flag;

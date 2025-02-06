@@ -13,7 +13,7 @@
 #include "utiltime.h"
 
 #include <condition_variable>
-#if defined(BUILD_ONLY_LIBNEXA) || defined(ANDROID) || defined(__APPLE__)
+#ifdef BUILD_ONLY_LIBNEXA
 #include <mutex>
 #include <shared_mutex>
 
