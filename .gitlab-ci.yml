@@ -522,7 +522,7 @@ test-ubuntu-benchmarks:
 
 test-ubuntu-qa-rostrum:
     stage: qa_tests
-    image: python:3.11
+    image: python:latest
     needs: ["build-ubuntu", "build-ubuntu-rostrum"]
     variables:
         PIP_CACHE_DIR: $CI_PROJECT_DIR/cache-pip
@@ -539,9 +539,9 @@ test-ubuntu-qa-rostrum:
 
         - export NODE_PATH=`pwd`/build/src/nexad
         - export ROSTRUM_PATH=`pwd`/build/src/rostrum
-        - wget https://gitlab.com/bitcoinunlimited/rostrum/-/archive/v10.1.0/rostrum-v10.1.0.tar.gz -O rostrum-master.tar.gz
+        - wget https://gitlab.com/bitcoinunlimited/rostrum/-/archive/v11.0.0/rostrum-v11.0.0.tar.gz -O rostrum-master.tar.gz
         - tar -zxf rostrum-master.tar.gz
-        - ./rostrum-v10.1.0/test/functional/test_runner.py --no-ipv6-rpc-listen --gitlab
+        - ./rostrum-v11.0.0/test/functional/test_runner.py --no-ipv6-rpc-listen --gitlab
     dependencies:
         - build-ubuntu
         - build-ubuntu-rostrum
