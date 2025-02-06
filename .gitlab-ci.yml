@@ -522,7 +522,7 @@ test-ubuntu-benchmarks:
 
 test-ubuntu-qa-rostrum:
     stage: qa_tests
-    image: python:3.11
+    image: python:latest
     needs: ["build-ubuntu", "build-ubuntu-rostrum"]
     variables:
         PIP_CACHE_DIR: $CI_PROJECT_DIR/cache-pip
