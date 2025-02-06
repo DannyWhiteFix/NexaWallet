@@ -12,8 +12,8 @@ GIT_REPO = "https://gitlab.com/BitcoinUnlimited/{}.git".format(PROJECT_NAME)
 #
 # It is also possible to set GIT_BRANCH to None to run the latest `master`
 # of Rostrum. When set to None the EXPECT_HEAD hash check is disabled)
-GIT_BRANCH = "v10.1.0"
-EXPECT_HEAD = "89d9e9d8e444bc480d71d1ea29b329295bc88fc0"
+GIT_BRANCH = "v11.0.0"
+EXPECT_HEAD = "6c15e431a93e57f597508410f3159f8136c7a797"
 
 ROOT_DIR = os.path.realpath(
         os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
