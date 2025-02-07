@@ -1150,7 +1150,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_capdS
     CDataStream serializer(SER_NETWORK, PROTOCOL_VERSION);
     try
     {
-        serializer << bloom;
+        serializer << msg;
     }
     catch (const std::exception &)
     {

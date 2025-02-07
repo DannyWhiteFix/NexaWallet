@@ -327,10 +327,18 @@ public:
     BigNum &deserializeTouches(unsigned char *buf, int bufsize) { return *this; }
     BigNum &deserialize(const std::vector<unsigned char> &c) { return *this; }
     BigNum tdiv(const BigNum &d) const { return BigNum(); }
+    /** Modulo where the remainder gets the sign of the dividend */
+    void thisTdiv(const BigNum &d) {}
     size_t magSize() const { return 0; }
     std::string str(int base = 10) const { return std::string(); }
     unsigned long int asUint64() const { return 0; }
     int64_t asInt64() const { return 0; }
+
+    void abs() {}
+    void negate() {}
+    BigNum &operator++() { return *this; }
+    BigNum &operator--() { return *this; }
+
     bool operator==(const BigNum &p) const { return false; }
     bool operator!=(const BigNum &p) const { return false; }
     bool operator<(const BigNum &p) const { return false; }
@@ -345,6 +353,9 @@ public:
     BigNum operator*(const BigNum &p) const { return BigNum(); }
     BigNum operator/(const BigNum &p) const { return BigNum(); }
     BigNum operator%(const BigNum &p) const { return BigNum(); }
+    BigNum operator&(const BigNum &p) const { return BigNum(); }
+    BigNum operator|(const BigNum &p) const { return BigNum(); }
+    BigNum operator^(const BigNum &p) const { return BigNum(); }
     // BigNum operator<<(const unsigned long int amt) const { return BigNum(); }
     BigNum operator<<(const uint64_t amt) const { return BigNum(); }
     BigNum operator>>(const unsigned long int amt) const { return BigNum(); }

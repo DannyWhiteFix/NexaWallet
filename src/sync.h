@@ -13,7 +13,6 @@
 #include "utiltime.h"
 
 #include <condition_variable>
-
 #ifdef BUILD_ONLY_LIBNEXA
 #include <mutex>
 #include <shared_mutex>

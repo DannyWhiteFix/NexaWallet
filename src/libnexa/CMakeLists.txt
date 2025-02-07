@@ -33,7 +33,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 # Gradle automatically packages shared libraries with your APK.
 
 
-add_definitions(-DLIGHT -DANDROID -Wno-tautological-constant-compare -DBOOST_SYSTEM_NO_DEPRECATED)
+add_definitions(-DLIGHT -DBUILD_ONLY_LIBNEXA -DANDROID -Wno-tautological-constant-compare -DBOOST_SYSTEM_NO_DEPRECATED)
 
 set(libsrc
              # Provides a relative path to your source file(s).
@@ -52,6 +52,7 @@ set(libsrc
              ../script/scriptattributes.cpp
              ../script/stackitem.cpp
              ../script/pushtxstate.cpp
+             ../script/merkleproof.cpp
              ../script/bignum.cpp
              ../primitives/transaction.cpp
              ../primitives/block.cpp
