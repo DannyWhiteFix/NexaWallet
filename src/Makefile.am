@@ -211,6 +211,7 @@ BITCOIN_CORE_H = \
   respend/respenddetector.h \
   script/bignum.h \
   script/destinations.h \
+  script/merkleproof.h \
   script/pushtxstate.h \
   script/sigcache.h \
   script/sign.h \
