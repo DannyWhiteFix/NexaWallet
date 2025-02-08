@@ -23,6 +23,8 @@ packages:
 - "ca-certificates"
 - "python"
 - "openjdk-17-jdk-headless"
+- "llvm"
+- "libclang-dev"
 - "python3-git" # building Rostrum
 - "clang" # for rocksdb in Rostrum
 - "cmake" # for rocksdb in Rostrum
