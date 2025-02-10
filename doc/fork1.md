@@ -63,4 +63,4 @@ By constraining arbitrary scripts in the outputs, we minimize the size of the UT
 TX_PUBKEYHASH remains available so legacy libraries can be used with Nexa with minimal work.
 
   * TX_NULL_DATA (OP_RETURN) is fully supported and is the expected way to include data (that is not meant for the UTXO) in a transaction
-  
+
