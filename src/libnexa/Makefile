@@ -35,7 +35,7 @@ ${BUILD_DIR}/libnexalight.a: ${srcObjs}
 # BUT when you ls the file it is NOT truncated.  This is the last file to be built.  There appears to be a bug in make waiting before launching dependent tasks
 # .o file is touched right away, so it exists, triggering this rule to run.  But it has not been fully written
 ${BUILD_DIR}/libnexalight.so: ${srcObjs}
-	flock -s /tmp/compiled.lock -c 'echo sqlite file is ready'
+	[ "$$(uname)" = "Darwin" ] && (sleep 3 && echo 'sleeping on macOS') || flock /tmp/compiled.lock -c 'echo sqlite file is ready'
 	${CXX} -shared -o $@ $^
 
 ${BUILD_DIR}/%.o: %.cpp
@@ -69,4 +69,4 @@ ${BUILD_DIR}/%.o: ../secp256k1/src/%.c
 	${CC} ${cflags} -o $@ $<
 
 ${BUILD_DIR}/%.o: sqlite/%.c
-	flock -x /tmp/compiled.lock -c '${CC} ${cflags} -o $@ $< && sync'
+	[ "$$(uname)" = "Darwin" ] && (${CC} ${cflags} -o $@ $<) || flock -x /tmp/compiled.lock -c '${CC} ${cflags} -o $@ $< && sync'
