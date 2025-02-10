@@ -66,6 +66,11 @@ They are not complete guides, but include notes on the necessary libraries, comp
  - [Issue Tracker](https://gitlab.com/BitcoinUnlimited/BitcoinUnlimited/issues)
  - [The Nexa Forum](https://forum.bitcoinunlimited.info/forum)
 
+# Nexa Specification
+
+The comprehensive specification of the Nexa protocol could be found at either of the following:
+- [Specification Gitlab](https://gitlab.com/nexa/specfication)
+- [Specification Website](https://spec.nexa.org)
 
 # License
 
