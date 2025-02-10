@@ -7,15 +7,30 @@ Fork 1 has a 2 phase activation.  When the MTP (median time past) of a block is 
 
 This 2 phase activation allows us to cleanly apply the new rule set to pending transactions, by giving advance warning of a "locked in" upgrade.
 
-# New script functionality/opcodes
+# Hard fork Feature Summary
 
+*New Opcodes*
+
+* OP_INPUTTYPE, OP_OUTPUTTYPE, OP_INPUTVALUE
+* OP_JUMP
+* OP_MERKLEROOT
+* OP_PARSE
+* Negative indexes for OP_ROLL and OP_PICK
 * OP_STORE / OP_LOAD
 
-  see (Script Registers)[script_registers.md]
+*Functionality*
 
-* OP_PARSE
+* Minimum block size is raised to 2MB
+* Script machine limits expanded
+* Expanded handling of bignums in additional opcodes
+* Read-only inputs
+* Limited legacy output scripts
+* Limited template script args hash
+* Data in inputs and outputs via OP_RETURN
 
-  see (OP_PARSE)[op_parse.md]
+
+
+# New script functionality/opcodes
 
 * Introspection (OP_INPUTTYPE, OP_OUTPUTTYPE, OP_INPUTVALUE)
 
@@ -25,16 +40,37 @@ This 2 phase activation allows us to cleanly apply the new rule set to pending t
 | OP_OUTPUTTYPE   | 107    | 0x6b | N                   | T                      | Puts the Nth output's type field onto the main stack |
 | OP_INPUTVALUE   | 107    | 0x6b | N                   | T                      | Puts the Nth inputs's amount field onto the main stack.  This is 0 for read-only inputs. |
 
+* OP_JUMP
+
+  see (Nexa Spec:OP_JUMP)[https://spec.nexa.org/op-codes/op_jump/]
+
+* OP_MERKLEROOT
+  see (Nexa Spec:OP_MERKLEROOT)[https://spec.nexa.org/op-codes/op_merkleroot/]
+
+* OP_PARSE
+
+  see (Nexa Spec:OP_PARSE)[https://spec.nexa.org/script/op-codes/op_parse/]
+
+* Negative indexes for OP_ROLL and OP_PICK
+
+  see (Nexa Spec:OP_ROLL OP_PICK)[https://spec.nexa.org/script/negative_op_roll_op_pick/]
+
+* OP_STORE / OP_LOAD
+
+  see (Nexa Spec:OP_STORE)[https://spec.nexa.org/script/op-codes/op_store/]
+  and (Nexa Spec:OP_LOAD)[https://spec.nexa.org/script/op-codes/op_load/]
+
+
 # New transaction functionality
 
 * Read-only inputs
 
-  see (read only inputs)[read-only-inputs.md].
+  see (Nexa Spec:Read-only transaction inputs in NEXA)[https://spec.nexa.org/script/read-only-inputs/].
 
 * Data in inputs and outputs
 
   Append an OP_RETURN and arbitrary additional data to unlocking or locking scripts to associate that data with an input or an output.  Anything after the OP_RETURN
-  is not executed in the script.  It is recommended that you use serialize the additional data using script serialization so analysis programs can parse it without knowing its contents.  This extra data is accessible via transaction introspection, although it is recommended that the normal push operations be used to provide data to scripts.
+  is not executed in the script.  It is recommended that you serialize the additional data using script serialization so analysis programs can parse it without knowing its contents.  This extra data is accessible via transaction introspection, although it is recommended that the normal push operations be used to provide data to scripts.
 
 # Constraints
 
