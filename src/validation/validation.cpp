@@ -573,6 +573,7 @@ bool LoadBlockIndexDB()
             {
                 if (pindex->pprev)
                 {
+                    pindex->nNextMaxBlockSize = CalculateNextMaxBlockSize(pindex->pprev, pindex->header.size);
                     if (pindex->pprev->nChainTx)
                     {
                         pindex->nChainTx = pindex->pprev->nChainTx + pindex->txCount();
