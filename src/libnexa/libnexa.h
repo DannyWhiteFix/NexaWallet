@@ -65,8 +65,8 @@ SLAPI void get_libnexa_error_string(char *buf, uint64_t buflen);
 /** Returns 0 if invalid, -sizeNeeded if you did not give a large enough buffer, or the length of the result if it
     worked.
  */
-SLAPI int encode64(const unsigned char* data, int size, char* result, int resultMaxLen);
-SLAPI int decode64(const char* data, unsigned char* result, int resultMaxLen);
+SLAPI int encode64(const unsigned char *data, int size, char *result, int resultMaxLen);
+SLAPI int decode64(const char *data, unsigned char *result, int resultMaxLen);
 
 /** Convert binary data to a hex string.  The provided result buffer must be 2*length+1 bytes.
  */
@@ -80,7 +80,7 @@ SLAPI int hd44DeriveChildKey(const unsigned char *secretSeed,
     unsigned int account,
     bool change,
     unsigned int index,
-    unsigned char* secret,
+    unsigned char *secret,
     char *keypath);
 
 /** Given a private key, return its corresponding public key */
@@ -177,14 +177,14 @@ SLAPI int SignDataSchnorr(const unsigned char *data, int datalen,
 */
 
 /* Sign a hash (presumably the hash of some data) using a Schnorr signature.  Result must be at least 64 bytes. */
-SLAPI int signHashSchnorr(const unsigned char *hash,
-    const unsigned char *keyData,
-    unsigned char *result);
+SLAPI int signHashSchnorr(const unsigned char *hash, const unsigned char *keyData, unsigned char *result);
 
 /* Sign a hash (presumably the hash of some data) using a Schnorr signature, with the provided 32 byte private nonce
    (often specified as 'k' in the Schnorr sig description.  Result must be at least 64 bytes. */
-SLAPI int signHashSchnorrWithNonce(const unsigned char *hash, const unsigned char *keyData, const unsigned char *nonce,
-                                   unsigned char *result);
+SLAPI int signHashSchnorrWithNonce(const unsigned char *hash,
+    const unsigned char *keyData,
+    const unsigned char *nonce,
+    unsigned char *result);
 
 // takes in the op_return script bytes of the token genesis
 // returns an ascii encoded json object that is the token genesis description in out
@@ -211,45 +211,61 @@ SLAPI int getGroupTokenInfoFromScriptPubkey(const uint8_t *scriptIn,
     int64_t *grpAmount);
 
 // Returns <= 0 if error, size of result if good.
-SLAPI int signMessage(const unsigned char* message, unsigned int msgLen,
-                      const unsigned char* secret, unsigned int secretLen,
-                      unsigned char *result, unsigned int resultLen);
+SLAPI int signMessage(const unsigned char *message,
+    unsigned int msgLen,
+    const unsigned char *secret,
+    unsigned int secretLen,
+    unsigned char *result,
+    unsigned int resultLen);
 
 // returns 0 if error, -size if recovered pubkey does not match addr (with pubkey in result), +size if match
-SLAPI int verifyMessage(const unsigned char* message, unsigned int msgLen,
-                         const unsigned char* addr, unsigned int addrLen,
-                         const unsigned char* sig, unsigned int sigLen,
-                         unsigned char *result, unsigned int resultLen);
+SLAPI int verifyMessage(const unsigned char *message,
+    unsigned int msgLen,
+    const unsigned char *addr,
+    unsigned int addrLen,
+    const unsigned char *sig,
+    unsigned int sigLen,
+    unsigned char *result,
+    unsigned int resultLen);
 
 SLAPI bool verifyBlockHeader(int chainSelector, const unsigned char *serializedHeader, int serLen);
 
-SLAPI int encodeCashAddr(int chainSelector, int typ, const unsigned char *data, int len, char *result, int resultMaxLen);
+SLAPI int encodeCashAddr(int chainSelector,
+    int typ,
+    const unsigned char *data,
+    int len,
+    char *result,
+    int resultMaxLen);
 
 SLAPI int decodeCashAddr(int chainSelector, const char *addrstr, unsigned char *result, int resultMaxLen);
 
-SLAPI int decodeCashAddrContent(int chainSelector, const char* addrstr, unsigned char *result, int resultMaxLen, unsigned char *type);
+SLAPI int decodeCashAddrContent(int chainSelector,
+    const char *addrstr,
+    unsigned char *result,
+    int resultMaxLen,
+    unsigned char *type);
 
 SLAPI int serializeScript(const uint8_t *script, const unsigned int lenScript, uint8_t *result, int resultMaxLen);
 
 SLAPI int pubkeyToScriptTemplate(const unsigned char *pubkey, int lenPubkey, unsigned char *result, int resultMaxLen);
 
-SLAPI int groupIdFromAddr(int chainSelector,  const char *addrstr, unsigned char *result, int resultMaxLen);
+SLAPI int groupIdFromAddr(int chainSelector, const char *addrstr, unsigned char *result, int resultMaxLen);
 
 SLAPI int groupIdToAddr(int chainSelector, const unsigned char *data, int len, char *result, int resultMaxLen);
 
 SLAPI int decodeWifPrivateKey(int chainSelector, const char *secretWIF, unsigned char *result, int resultMaxLen);
 
 /** Calculates the sha256 of data, and places it in result.  Result must be 32 bytes */
-SLAPI void sha256(const unsigned char* data, unsigned int len, unsigned char* result);
+SLAPI void sha256(const unsigned char *data, unsigned int len, unsigned char *result);
 
 /** Calculates the double sha256 of data and places it in result. Result must be 32 bytes */
-SLAPI void hash256(const unsigned char* data, unsigned int len, unsigned char* result);
+SLAPI void hash256(const unsigned char *data, unsigned int len, unsigned char *result);
 
 /** Calculates the RIPEMD160 of the SHA256 of data and places it in result. Result must be 20 bytes */
-SLAPI void hash160(const unsigned char* data, unsigned int len, unsigned char* result);
+SLAPI void hash160(const unsigned char *data, unsigned int len, unsigned char *result);
 
 /** Get work from nbits */
-SLAPI void getWorkFromDifficultyBits(unsigned long int nBits, unsigned char* result);
+SLAPI void getWorkFromDifficultyBits(unsigned long int nBits, unsigned char *result);
 
 SLAPI unsigned int getDifficultyBitsFromWork(unsigned char *work256Bits);
 
@@ -257,33 +273,54 @@ SLAPI unsigned int getDifficultyBitsFromWork(unsigned char *work256Bits);
 The size of the result array must be allocated to be at least 32 bytes bigger than maxSize to account for the
 serialization overhead.
 */
-SLAPI int createBloomFilter(const unsigned char* data, unsigned int len, double falsePosRate, int capacity, int maxSize, int flags, int tweak, unsigned char* result);
+SLAPI int createBloomFilter(const unsigned char *data,
+    unsigned int len,
+    double falsePosRate,
+    int capacity,
+    int maxSize,
+    int flags,
+    int tweak,
+    unsigned char *result);
 
-SLAPI int extractFromMerkleBlock(int numTxes, const unsigned char *merkleProofPath, int mppLen,
-                                 const unsigned char *hashIn, int numHashes,
-                                 unsigned char *result, int resultLen);
+SLAPI int extractFromMerkleBlock(int numTxes,
+    const unsigned char *merkleProofPath,
+    int mppLen,
+    const unsigned char *hashIn,
+    int numHashes,
+    unsigned char *result,
+    int resultLen);
 
 SLAPI int capdSolve(const unsigned char *message, unsigned int msgLen, unsigned char *result, unsigned int resultLen);
 SLAPI int capdCheck(const unsigned char *message, unsigned int msgLen);
 SLAPI int capdHash(const unsigned char *message, unsigned int msgLen, unsigned char *result, unsigned int resultLen);
 
 SLAPI int capdSetPowTargetHarderThanPriority(const unsigned char *message,
-                                            const unsigned int msgLen,
-                                            const double priority,
-                                            unsigned char* result,
-                                            const unsigned int resultLen);
+    const unsigned int msgLen,
+    const double priority,
+    unsigned char *result,
+    const unsigned int resultLen);
 
 // encrypt must be 1 (encrypt) or 0 (decrypt).
 // len must be a multiple of 16
 // secret must be 32 bytes, iv must be 16 or more bytes
 // result buffer length must be len (or more) bytes
-SLAPI int cryptAES256CBC(unsigned int encrypt, const unsigned char *data, unsigned int len, const unsigned char *secret, const unsigned char *iv, unsigned char *result);
+SLAPI int cryptAES256CBC(unsigned int encrypt,
+    const unsigned char *data,
+    unsigned int len,
+    const unsigned char *secret,
+    const unsigned char *iv,
+    unsigned char *result);
 
-SLAPI bool verifyDataSchnorr(const unsigned char *message, unsigned int msgLen, const unsigned char *pubkey,
-                             int lenPubkey, const unsigned char *sig);
+SLAPI bool verifyDataSchnorr(const unsigned char *message,
+    unsigned int msgLen,
+    const unsigned char *pubkey,
+    int lenPubkey,
+    const unsigned char *sig);
 
-SLAPI bool verifyHashSchnorr(const unsigned char *hash,const unsigned char *pubkey,int lenPubkey,
-                             const unsigned char *sig);
+SLAPI bool verifyHashSchnorr(const unsigned char *hash,
+    const unsigned char *pubkey,
+    int lenPubkey,
+    const unsigned char *sig);
 
 /** Return random bytes from cryptographically acceptable random sources */
 SLAPI int RandomBytes(unsigned char *buf, int num);

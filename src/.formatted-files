@@ -541,3 +541,9 @@ consensus/grouptokens.cpp
 consensus/adaptive_blocksize.h
 consensus/adaptive_blocksize.cpp
 libnexa/libnexa.cpp
+libnexa/libnexa.h
+libnexa/libnexa_common.cpp
+libnexa/libnexa_common.h
+libnexa/libnexa_jvm.cpp
+libnexa/libnexa_script_machine.cpp
+libnexa/libnexa_script_machine.h

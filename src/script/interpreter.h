@@ -346,9 +346,9 @@ protected:
     ConditionStack vfExec;
     // note - default constructor is used in an array, all registers get initialised to
     // have a StackItem() : type(StackElementType::VCH), vch(0) {}
+public:
     std::array<StackItem, NUM_SCRIPT_REGISTERS> arrRegisters;
 
-public:
     /** All the external information that this virtual machine is allowed to access */
     const ScriptImportedState &sis;
 
