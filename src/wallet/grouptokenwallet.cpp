@@ -337,17 +337,35 @@ CScript GetScriptForDestination(const CTxDestination &dest, const CGroupTokenID 
     return script;
 }
 
+static const std::string MAX_SATOSHI = "9223372036854775807";
+
 static CAmount AmountFromIntegralValue(const UniValue &value)
 {
     if (!value.isNum() && !value.isStr())
+    {
         throw std::runtime_error("Amount is not a number or string");
+    }
+    const std::string val_str = value.getValStr();
+    // check for very large number, anything with 19+ digits is too big
+    if (val_str.size() > 19)
+    {
+        throw std::runtime_error(
+            "Number of satoshis to mint is too large. Maximum accepted value is 9223372036854775807");
+    }
+    // check for a number that might be too large and run a strcmp, anything with 17 digits or less
+    // is always small enough to be a valid number
+    else if (val_str.size() == 18 && std::strcmp(val_str.c_str(), MAX_SATOSHI.c_str()) > 0)
+    {
+        throw std::runtime_error(
+            "Number of satoshis to mint is too large. Maximum accepted value is 9223372036854775807");
+    }
 
     int64_t val = 0;
     float float_val = 0;
     try
     {
-        val = atoi64(value.getValStr());
-        float_val = atof(value.getValStr().c_str());
+        val = atoi64(val_str);
+        float_val = atof(val_str.c_str());
     }
     catch (...)
     {
@@ -355,8 +373,9 @@ static CAmount AmountFromIntegralValue(const UniValue &value)
     }
 
     if (val != float_val)
+    {
         throw std::runtime_error("Can not use decimals when sending tokens. Amount must be in satoshis.");
-
+    }
     CAmount amount = val;
     return amount;
 }
