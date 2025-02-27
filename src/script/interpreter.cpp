@@ -797,9 +797,9 @@ bool ScriptMachine::Step()
 
                 case OP_EXEC:
                 {
-                    if (execDepth >= MAX_EXEC_DEPTH)
+                    if (stats.nOpExecDepth >= maxOpExecDepth)
                         return set_error(serror, SCRIPT_ERR_EXEC_DEPTH_EXCEEDED);
-                    if (stats.nOpExec >= MAX_OP_EXEC)
+                    if (stats.nOpExec >= maxOpExec)
                         return set_error(serror, SCRIPT_ERR_EXEC_COUNT_EXCEEDED);
 
                     if (stack.size() < 2)
@@ -820,7 +820,7 @@ bool ScriptMachine::Step()
 
                     ScriptMachine sm(
                         flags, sis, maxOps - stats.nOpCount, maxConsensusSigOps - stats.consensusSigCheckCount);
-                    sm.execDepth = execDepth + 1;
+                    sm.stats.nOpExecDepth = stats.nOpExecDepth + 1;
                     sm.StackReserve(paramQty);
                     for (int i = 0; i < paramQty; i++)
                     {
@@ -2759,7 +2759,10 @@ bool ScriptMachine::Step()
             }
 
             // Size limits
-            if (stack.size() + altstack.size() > maxStackItems)
+            uint64_t numStackItems = stack.size() + altstack.size();
+            if (stats.maxStackItems < numStackItems)
+                stats.maxStackItems = numStackItems;
+            if (numStackItems > maxStackItems)
                 return set_error(serror, SCRIPT_ERR_STACK_SIZE);
         }
     }

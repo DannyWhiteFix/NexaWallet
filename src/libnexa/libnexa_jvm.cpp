@@ -1735,5 +1735,96 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_nexa_libnexakotlin_ScriptMachine_
     return true;
 }
 
+extern "C" JNIEXPORT void JNICALL Java_org_nexa_libnexakotlin_ScriptMachine_resetResourceUse(JNIEnv *env,
+    jobject ths,
+    jlong smid)
+{
+    ScriptMachineData *smd = (ScriptMachineData *)smid;
+    if ((!smd) || (!smd->sm))
+    {
+        triggerJavaIllegalStateException(env, "internal error: no script machine");
+        return;
+    }
+    smd->sm->ResetResourceUseStats();
+}
+
+
+extern "C" JNIEXPORT void JNICALL Java_org_nexa_libnexakotlin_ScriptMachine_setResourceLimits(JNIEnv *env,
+    jobject ths,
+    jlong smid,
+    jlong maxScriptSize,
+    jlong maxOps,
+    jlong maxSignatureChecks,
+    jlong maxStackUse,
+    jlong maxStackItems,
+    jlong maxOpExec,
+    jlong maxOpExecDepth)
+{
+    ScriptMachineData *smd = (ScriptMachineData *)smid;
+    if ((!smd) || (!smd->sm))
+    {
+        triggerJavaIllegalStateException(env, "internal error: no script machine");
+        return;
+    }
+
+    if (maxScriptSize >= 0)
+        smd->sm->maxScriptSize = maxScriptSize;
+    if (maxOps >= 0)
+        smd->sm->maxOps = maxOps;
+    if (maxSignatureChecks >= 0)
+        smd->sm->maxConsensusSigOps = maxSignatureChecks;
+    if (maxStackUse >= 0)
+        smd->sm->maxStackUse = maxStackUse;
+    if (maxStackItems >= 0)
+        smd->sm->maxStackItems = maxStackItems;
+    if (maxOpExec >= 0)
+        smd->sm->maxOpExec = maxOpExec;
+    if (maxOpExecDepth >= 0)
+        smd->sm->maxOpExecDepth = maxOpExecDepth;
+}
+
+
+extern "C" JNIEXPORT void JNICALL Java_org_nexa_libnexakotlin_ScriptMachineResources_get(JNIEnv *env,
+    jobject ths,
+    jlong smid)
+{
+    ScriptMachineData *smd = (ScriptMachineData *)smid;
+    if ((!smd) || (!smd->sm))
+    {
+        triggerJavaIllegalStateException(env, "internal error: no script machine");
+        return;
+    }
+    jclass clss = env->GetObjectClass(ths);
+    if (clss == nullptr)
+    {
+        triggerJavaIllegalStateException(env, "Cannot access MachineResources object class");
+        return;
+    }
+
+    jfieldID sigsField = env->GetFieldID(clss, "sigsChecked", "J");
+    jfieldID ieField = env->GetFieldID(clss, "instructionsExecuted", "J");
+    jfieldID msbField = env->GetFieldID(clss, "maxStackBytes", "J");
+    jfieldID msiField = env->GetFieldID(clss, "maxStackItems", "J");
+    jfieldID oeField = env->GetFieldID(clss, "opExecsExecuted", "J");
+    jfieldID oerField = env->GetFieldID(clss, "opExecRecursionDepth", "J");
+
+    if (sigsField == nullptr || ieField == nullptr || oeField == nullptr || msbField == nullptr || msiField == nullptr)
+    {
+        env->DeleteLocalRef(clss);
+        triggerJavaIllegalStateException(env, "A MachineResources field name has changed");
+        return;
+    }
+
+    const auto &stats = smd->sm->getStats();
+    env->SetLongField(ths, sigsField, stats.consensusSigCheckCount);
+    env->SetLongField(ths, ieField, stats.nOpCount);
+    env->SetLongField(ths, msbField, stats.maxStackBytes);
+    env->SetLongField(ths, msiField, stats.maxStackItems);
+    env->SetLongField(ths, oeField, stats.nOpExec);
+    env->SetLongField(ths, oerField, stats.nOpExecDepth);
+
+    env->DeleteLocalRef(clss);
+}
+
 #endif // ifndef ANDROID
 #endif // defined(JAVA)
