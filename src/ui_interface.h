@@ -102,6 +102,12 @@ public:
     /** New header has been accepted */
     boost::signals2::signal<void(bool initialSync, const CBlockIndex *pIndex, bool fHeader)> NotifyHeaderTip;
 
+    /** New block has been accepted */
+    boost::signals2::signal<void(bool initialSync, const CBlockIndex *pIndex)> NotifyBlockTipDag;
+
+    /** New header has been accepted */
+    boost::signals2::signal<void(bool initialSync, const CBlockIndex *pIndex)> NotifyHeaderTipDag;
+
     /** Banlist did change. */
     boost::signals2::signal<void(void)> BannedListChanged;
 };

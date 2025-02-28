@@ -215,6 +215,8 @@ qt/askpassphrasedialog.cpp
 qt/askpassphrasedialog.h
 qt/bantablemodel.cpp
 qt/bantablemodel.h
+qt/dagwidget.cpp
+qt/dagwidget.h
 qt/nexaaddressvalidator.cpp
 qt/nexaaddressvalidator.h
 qt/nexaamountfield.cpp
