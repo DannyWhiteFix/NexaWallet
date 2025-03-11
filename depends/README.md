@@ -34,6 +34,11 @@ Common `host-platform-triplets` for cross compilation are:
 - `aarch64-linux-gnu` for Linux ARM 64 bit (glibc)
 - `arm-linux-musleabihf` for Linux ARM 32 bit (musl)
 - `aarch64-linux-musl` for Linux ARM 64 bit (musl)
+- `aarch64-linux-android` for Android ARM 64 bit
+- `armv7a-linux-androideabi` for Android ARM 32 bit
+- `i686-linux-android` for Android x86 32 bit
+- `x86_64-linux-android` for Android x86 64 bit
+- `riscv64-linux-android` for Android RISC-V 64 bit
 
 No other options are needed, the paths are automatically configured.
 
@@ -56,6 +61,14 @@ For Win32/Win64 cross compilation:
 For linux (including i386, ARM) cross compilation:
 
     sudo apt-get install curl linux-libc-dev:i386 g++-aarch64-linux-gnu g++-aarch64-linux-gnu gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu g++-arm-linux-gnueabihf g++-arm-linux-gnueabihf gcc-arm-linux-gnueabihf binutils-arm-linux-gnueabihf g++-multilib gcc-multilib binutils-gold bsdmainutils
+
+For Android cross compilation (all architectures, requires ubuntu24+):  
+Please note steps 1 and 2 must be installed sequentially in that order or it fails
+
+    1. sudo apt-get install android-sdk
+    2. sudo apt-get install google-android-cmdline-tools-13.0-installer
+    2. sudo sdkmanager "cmake;3.22.1" "ndk;27.2.12479018" "platforms;android-34" "build-tools;34.0.0" "tools" "platform-tools" "cmdline-tools;latest"
+    3. yes | sudo sdkmanager --licenses
 
 
 For linux RISC-V 64-bit cross compilation (there are no packages for 32-bit):
@@ -92,4 +105,3 @@ Additional targets:
 
 - [description.md](description.md): General description of the depends system
 - [packages.md](packages.md): Steps for adding packages
-
