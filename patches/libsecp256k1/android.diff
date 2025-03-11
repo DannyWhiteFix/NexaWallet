@@ -26,7 +26,7 @@ index e0147500f..a47891cac 100644
  
  /* Macro for restrict, when available and not in a VERIFY build. */
 +#ifdef __ANDROID__
-+#  define SECP256K1_RESTRICT restrict
++#  define SECP256K1_RESTRICT __restrict
 +#else
  #if defined(SECP256K1_BUILD) && defined(VERIFY)
  # define SECP256K1_RESTRICT

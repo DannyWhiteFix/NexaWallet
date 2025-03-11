@@ -11,6 +11,26 @@ ifeq ($(HOST),i686-pc-linux-gnu)
   $(package)_cflags+=-m32
 endif
 
+ifeq ($(HOST),aarch64-linux-android)
+  XTRA_CFG:=--disable-assembly
+endif
+
+ifeq ($(HOST),armv7a-linux-androideabi)
+  XTRA_CFG:=--disable-assembly
+endif
+
+ifeq ($(HOST),i686-linux-android)
+  XTRA_CFG:=--disable-assembly
+endif
+
+ifeq ($(HOST),x86_64-linux-android)
+  XTRA_CFG:=--disable-assembly
+endif
+
+ifeq ($(HOST),riscv64-linux-android)
+  XTRA_CFG:=--disable-assembly
+endif
+
 ifeq ($(HOST),x86_64-w64-mingw32)
   # this fix "cannot determine suffix" configure error
   XTRA_CFG_ENV:=CC_FOR_BUILD=gcc
@@ -36,4 +56,3 @@ endef
 define $(package)_stage_cmds
   $(MAKE) install
 endef
-

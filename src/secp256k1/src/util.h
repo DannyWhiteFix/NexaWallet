@@ -128,7 +128,7 @@ static SECP256K1_INLINE void *manual_alloc(void** prealloc_ptr, size_t alloc_siz
 
 /* Macro for restrict, when available and not in a VERIFY build. */
 #ifdef __ANDROID__
-#  define SECP256K1_RESTRICT restrict
+#  define SECP256K1_RESTRICT __restrict
 #else
 #if defined(SECP256K1_BUILD) && defined(VERIFY)
 # define SECP256K1_RESTRICT

@@ -961,6 +961,8 @@ build-debian-nodeps-qt:
 ######################################################
 .ubuntu24_base:
     image: bchunlimited/nexa:ubuntu24.04
+    variables:
+        NDK_VERSION: 27.2.12479018
 
 .ubuntu24_ccache_scripts:
     extends: .ubuntu24_base
@@ -1011,5 +1013,240 @@ build-ubuntu24-nodeps-qt:
         when: on_failure
         paths:
             - build/config.log
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
+
+######################################################
+######## aarch64 for android on Ubuntu24
+######################################################
+.cache-android-aarch64:
+    extends: .ubuntu24_ccache_scripts
+    cache:
+        <<: *global_cache_settings
+        key: android_aarch64
+
+build-android-aarch64-depends:
+    stage: build_depends
+    extends: .cache-android-aarch64
+    script:
+        - export AR=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
+        - export RANLIB=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib
+        - export CC=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android35-clang
+        - export CXX=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android35-clang++
+        - cd depends
+        - make HOST=aarch64-linux-android -j `nproc` NO_QT=1 NO_WALLET=1 NO_RUST=1 ONLY_LIBNEXA=1
+        - ccache --show-stats
+    artifacts:
+        paths:
+            - depends/aarch64-linux-android
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
+
+build-android-aarch64:
+    stage: build
+    extends: .cache-android-aarch64
+    needs: ["build-android-aarch64-depends"]
+    script:
+        - export AR=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
+        - export RANLIB=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib
+        - export CC=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android35-clang
+        - export CXX=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android35-clang++
+        - ./autogen.sh
+        - mkdir build; cd build
+        - ../configure --prefix=$PWD/../depends/aarch64-linux-android --enable-only-libnexa --host=aarch64-linux-android
+        - make -j `nproc`
+        - ccache --show-stats
+    artifacts:
+        when: on_failure
+        paths:
+            - ./build/config.log
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
+
+######################################################
+######## armv7a for android on Ubuntu24
+######################################################
+.cache-android-armv7a:
+    extends: .ubuntu24_ccache_scripts
+    cache:
+        <<: *global_cache_settings
+        key: android_armv7a
+
+build-android-armv7a-depends:
+    stage: build_depends
+    extends: .cache-android-armv7a
+    script:
+        - export AR=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
+        - export RANLIB=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib
+        - export CC=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi35-clang
+        - export CXX=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi35-clang++
+        - cd depends
+        - make HOST=armv7a-linux-androideabi -j `nproc` NO_QT=1 NO_WALLET=1 NO_RUST=1 ONLY_LIBNEXA=1
+        - ccache --show-stats
+    artifacts:
+        paths:
+            - depends/armv7a-linux-androideabi
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
+
+build-android-armv7a:
+    stage: build
+    extends: .cache-android-armv7a
+    needs: ["build-android-armv7a-depends"]
+    script:
+        - export AR=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
+        - export RANLIB=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib
+        - export CC=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi35-clang
+        - export CXX=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi35-clang++
+        - ./autogen.sh
+        - mkdir build; cd build
+        - ../configure --prefix=$PWD/../depends/armv7a-linux-androideabi --enable-only-libnexa --host=armv7a-linux-androideabi
+        - make -j `nproc`
+        - ccache --show-stats
+    artifacts:
+        when: on_failure
+        paths:
+            - ./build/config.log
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
+
+######################################################
+######## i686 for android on Ubuntu24
+######################################################
+.cache-android-i686:
+    extends: .ubuntu24_ccache_scripts
+    cache:
+        <<: *global_cache_settings
+        key: android_i686
+
+build-android-i686-depends:
+    stage: build_depends
+    extends: .cache-android-i686
+    script:
+        - export AR=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
+        - export RANLIB=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib
+        - export CC=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/i686-linux-android35-clang
+        - export CXX=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/i686-linux-android35-clang++
+        - cd depends
+        - make HOST=i686-linux-android -j `nproc` NO_QT=1 NO_WALLET=1 NO_RUST=1 ONLY_LIBNEXA=1
+        - ccache --show-stats
+    artifacts:
+        paths:
+            - depends/i686-linux-android
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
+
+build-android-i686:
+    stage: build
+    extends: .cache-android-i686
+    needs: ["build-android-i686-depends"]
+    script:
+        - export AR=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
+        - export RANLIB=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib
+        - export CC=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/i686-linux-android35-clang
+        - export CXX=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/i686-linux-android35-clang++
+        - ./autogen.sh
+        - mkdir build; cd build
+        - ../configure --prefix=$PWD/../depends/i686-linux-android --enable-only-libnexa --host=i686-linux-android
+        - make -j `nproc`
+        - ccache --show-stats
+    artifacts:
+        when: on_failure
+        paths:
+            - ./build/config.log
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
+
+######################################################
+######## x86_64 for android on Ubuntu24
+######################################################
+.cache-android-x86_64:
+    extends: .ubuntu24_ccache_scripts
+    cache:
+        <<: *global_cache_settings
+        key: android_x86_64
+
+build-android-x86_64-depends:
+    stage: build_depends
+    extends: .cache-android-x86_64
+    script:
+        - export AR=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
+        - export RANLIB=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib
+        - export CC=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android35-clang
+        - export CXX=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android35-clang++
+        - cd depends
+        - make HOST=x86_64-linux-android -j `nproc` NO_QT=1 NO_WALLET=1 NO_RUST=1 ONLY_LIBNEXA=1
+        - ccache --show-stats
+    artifacts:
+        paths:
+            - depends/x86_64-linux-android
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
+
+build-android-x86_64:
+    stage: build
+    extends: .cache-android-x86_64
+    needs: ["build-android-x86_64-depends"]
+    script:
+        - export AR=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
+        - export RANLIB=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib
+        - export CC=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android35-clang
+        - export CXX=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android35-clang++
+        - ./autogen.sh
+        - mkdir build; cd build
+        - ../configure --prefix=$PWD/../depends/x86_64-linux-android --enable-only-libnexa --host=x86_64-linux-android
+        - make -j `nproc`
+        - ccache --show-stats
+    artifacts:
+        when: on_failure
+        paths:
+            - ./build/config.log
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
+
+######################################################
+######## riscv64 for android on Ubuntu24
+######################################################
+.cache-android-riscv64:
+    extends: .ubuntu24_ccache_scripts
+    cache:
+        <<: *global_cache_settings
+        key: android_riscv64
+
+build-android-riscv64-depends:
+    stage: build_depends
+    extends: .cache-android-riscv64
+    script:
+        - export AR=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
+        - export RANLIB=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib
+        - export CC=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/riscv64-linux-android35-clang
+        - export CXX=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/riscv64-linux-android35-clang++
+        - cd depends
+        - make HOST=riscv64-linux-android -j `nproc` NO_QT=1 NO_WALLET=1 NO_RUST=1 ONLY_LIBNEXA=1
+        - ccache --show-stats
+    artifacts:
+        paths:
+            - depends/riscv64-linux-android
+    rules:
+      - if: $CI_PIPELINE_SOURCE != "schedule"
+
+build-android-riscv64:
+    stage: build
+    extends: .cache-android-riscv64
+    needs: ["build-android-riscv64-depends"]
+    script:
+        - export AR=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
+        - export RANLIB=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib
+        - export CC=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/riscv64-linux-android35-clang
+        - export CXX=/usr/lib/android-sdk/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin/riscv64-linux-android35-clang++
+        - ./autogen.sh
+        - mkdir build; cd build
+        - ../configure --prefix=$PWD/../depends/riscv64-linux-android --enable-only-libnexa --host=riscv64-linux-android
+        - make -j `nproc`
+        - ccache --show-stats
+    artifacts:
+        when: on_failure
+        paths:
+            - ./build/config.log
     rules:
       - if: $CI_PIPELINE_SOURCE != "schedule"

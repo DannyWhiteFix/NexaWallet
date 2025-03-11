@@ -159,3 +159,5 @@ src/.vs/
 # Rostrum
 rostrum
 src/rostrum
+
+android-build-*
