@@ -305,6 +305,11 @@ BOOST_AUTO_TEST_CASE(capd_pool_test_vectors)
     BOOST_CHECK(mp.GetRelayPowTarget() == ArithToUint256(MIN_FORWARD_MSG_DIFFICULTY));
     BOOST_CHECK(mp.GetLocalPowTarget() == ArithToUint256(MIN_LOCAL_MSG_DIFFICULTY));
 
+    mp.remove(msg1.GetHash());
+    tmp = mp.find(msg1.GetHash());
+    BOOST_CHECK(tmp == nullmsgref); // remove should have worked
+    BOOST_CHECK(mp.Size() == 0);
+
     // Add a lot of messages and validate msgpool characteristics
 
     uint256 oldDiff = mp.GetRelayPowTarget();

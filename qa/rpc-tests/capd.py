@@ -406,6 +406,28 @@ class MyTest (BitcoinTestFramework):
         c0 = sorted([ hashToHex(x) for x in hdlr.msgs.keys()] + [hashToHex(x) for x in msgHashes])
         assert_equal(c0, sorted(l0))
 
+        # check remove single message from specific node
+        assert_equal(len(l0), len(l1))
+        delMsgHash = l0[0]
+
+        self.nodes[0].capd("remove", delMsgHash)
+        l0 = self.nodes[0].capd("list")
+        l1 = self.nodes[1].capd("list")
+        assert_equal(len(l0), len(l1) - 1)
+
+        delMsg = self.nodes[1].capd("get", delMsgHash)
+        try:
+            delMsg = self.nodes[0].capd("get", delMsgHash)
+            assert False, "message should have been removed"
+        except JSONRPCException as e:
+            assert True
+
+        # remove a message that not exist should not affect anything
+        self.nodes[0].capd("remove", delMsgHash)
+        l0 = self.nodes[0].capd("list")
+        l1 = self.nodes[1].capd("list")
+        assert_equal(len(l0), len(l1) - 1)
+
         self.nodes[0].capd("clear")
         self.nodes[1].capd("clear")
         assert self.nodes[0].capd("info")["count"] == 0

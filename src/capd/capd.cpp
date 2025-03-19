@@ -43,6 +43,17 @@ void CapdMsgPool::clear()
     size = 0;
 }
 
+void CapdMsgPool::remove(const uint256 &hash)
+{
+    WRITELOCK(csMsgPool);
+    MsgIter i = msgs.find(hash);
+    if (i != msgs.end())
+    {
+        size -= (*i)->RamSize();
+        msgs.erase(i);
+    }
+}
+
 uint256 CapdMsgPool::_GetRelayPowTarget()
 {
     static const uint256 minFwdDiffTgt = ArithToUint256(MIN_FORWARD_MSG_DIFFICULTY);

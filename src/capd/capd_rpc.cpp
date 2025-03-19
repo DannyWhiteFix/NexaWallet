@@ -37,8 +37,9 @@ UniValue capdrpc(const UniValue &params, bool fHelp)
 {
     if (fHelp)
         throw std::runtime_error("capd\n"
-                                 "\nCAPD RPC calls, including info, get, list, and clear.\n"
+                                 "\nCAPD RPC calls, including info, send, get, list, remove and clear.\n"
                                  "capd clear: removes all messages from the pool.\n"
+                                 "capd remove <message hash>: removes a particular message from the pool.\n"
                                  "capd get <message hash>: returns a particular message.\n"
                                  "capd info: returns information about the message pool.\n"
                                  "capd list: returns the hash of every message in the pool.\n"
@@ -160,6 +161,16 @@ UniValue capdrpc(const UniValue &params, bool fHelp)
                 return true;
             });
         return ret;
+    }
+    if (cmd == "remove")
+    {
+        if (params.size() != 2)
+        {
+            throw std::runtime_error("Incorrect number of parameters, missing hash");
+        }
+        uint256 hash(uint256S(params[1].get_str()));
+        msgpool.remove(hash);
+        return UniValue();
     }
     if (cmd == "clear")
     {

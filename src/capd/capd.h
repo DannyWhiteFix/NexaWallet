@@ -589,6 +589,9 @@ public:
     /** Delete every message in the message pool */
     void clear();
 
+    /** Remove message by id or hash from the message pool */
+    void remove(const uint256 &hash);
+
     /** Return the current size of the message pool */
     uint64_t Size()
     {
