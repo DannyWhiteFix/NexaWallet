@@ -1593,7 +1593,6 @@ extern "C" JNIEXPORT jstring Java_org_nexa_libnexakotlin_ScriptMachine_getRegist
     }
     const StackItem &item = smd->sm->arrRegisters[regNum];
     std::string ret = stackItem2String(item);
-    printf("register return is %s\n", ret.c_str());
     return env->NewStringUTF(ret.c_str());
 }
 

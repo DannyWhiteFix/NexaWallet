@@ -156,6 +156,27 @@ ScriptError_t ParseScriptError(const std::string &name)
 
 BOOST_FIXTURE_TEST_SUITE(script_tests, BasicTestingSetup)
 
+BOOST_AUTO_TEST_CASE(scriptUtils)
+{
+    // Some bignum to/from string test vectors
+    BigNum b("-12345");
+    BOOST_CHECK_EQUAL(b.str().c_str(), "-12345");
+    BigNum b1("12345");
+    BOOST_CHECK_EQUAL(b1.str().c_str(), "12345");
+    BigNum b2("1234567890123456789012345678901234567890");
+    BOOST_CHECK_EQUAL(b2.str().c_str(), "1234567890123456789012345678901234567890");
+    BigNum b3("123456789abcdef", 16);
+    BOOST_CHECK_EQUAL(b3.str(16).c_str(), "123456789abcdef");
+    BOOST_CHECK_EQUAL(b3.str(10).c_str(), "81985529216486895");
+    BigNum b4("-123456789abcdef", 16);
+    BOOST_CHECK_EQUAL(b4.str(16).c_str(), "-123456789abcdef");
+    BOOST_CHECK_EQUAL(b4.str(10).c_str(), "-81985529216486895");
+
+    BigNum b5("1 0101 0101 0101", 2);
+    BOOST_CHECK_EQUAL(b5.str(10).c_str(), "5461");
+    BOOST_CHECK_EQUAL(b5.str(2).c_str(), "1010101010101");
+}
+
 BOOST_AUTO_TEST_CASE(minimalpush)
 {
     // Ensure that CheckMinimalPush always return true for non "pushing" opcodes
