@@ -65,6 +65,7 @@ public:
     }
 };
 
+/*
 // credit: https://stackoverflow.com/questions/41820039/jstringjni-to-stdstringc-with-utf8-characters
 std::string toString(JNIEnv *env, jstring jStr)
 {
@@ -83,6 +84,23 @@ std::string toString(JNIEnv *env, jstring jStr)
 
     env->DeleteLocalRef(stringJbytes);
     env->DeleteLocalRef(stringClass);
+    return ret;
+}
+*/
+
+// stackoverflow.com/questions/5859673/should-you-call-releasestringutfchars-if-getstringutfchars-returned-a-copy
+//  https:
+//  this solution is likely more efficient than calling out to the java method above
+std::string toString(JNIEnv *env, jstring jStr)
+{
+    if (!jStr)
+        return "";
+
+    const char *utf_string;
+    jboolean isCopy;
+    utf_string = env->GetStringUTFChars(jStr, &isCopy);
+    std::string ret = utf_string; // take a copy
+    env->ReleaseStringUTFChars(jStr, utf_string);
     return ret;
 }
 
@@ -439,7 +457,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_signH
     jbyteArray nonce)
 {
     ByteArrayAccessor data(env, message);
-    ByteArrayAccessor k(env, nonce);  // Schnorr private nonce is typically "k" in the literature
+    ByteArrayAccessor k(env, nonce); // Schnorr private nonce is typically "k" in the literature
     ByteArrayAccessor privkey(env, secret);
     if (privkey.size != 32)
     {
@@ -471,7 +489,6 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_signH
     }
     return makeJByteArray(env, result, resultLen);
 }
-
 
 
 // libnexa-inconsistency: no parseGroupDescription equivalent
@@ -1128,7 +1145,8 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_capdH
     return ret;
 }
 
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_capdSetPowTargetHarderThanPriority(JNIEnv *env,
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_capdSetPowTargetHarderThanPriority(
+    JNIEnv *env,
     jobject ths,
     jbyteArray jmessage,
     jdouble priority)
@@ -1391,6 +1409,18 @@ extern "C" JNIEXPORT jstring Java_org_nexa_libnexakotlin_ScriptMachine_getError(
     return env->NewStringUTF(ret.c_str());
 }
 
+extern "C" JNIEXPORT void Java_org_nexa_libnexakotlin_ScriptMachine_clearError(JNIEnv *env, jobject ths, jlong smid)
+{
+    ScriptMachineData *smd = (ScriptMachineData *)smid;
+    if ((!smd) || (!smd->sm))
+    {
+        triggerJavaIllegalStateException(env, "internal error: no script machine");
+        return;
+    }
+    smd->sm->clearError();
+}
+
+
 // Step-by-step interface: get current position in this script, in bytes offset from the script start
 extern "C" JNIEXPORT jint Java_org_nexa_libnexakotlin_ScriptMachine_getPos(JNIEnv *env, jobject ths, jlong smId)
 
@@ -1426,7 +1456,22 @@ extern "C" JNIEXPORT jint Java_org_nexa_libnexakotlin_ScriptMachine_setPos(JNIEn
 }
 
 
-// Step-by-step interface: get current position in this script, in bytes offset from the script start
+// Clone this script machine, returning another ID.
+// Note that you must now delete them both!
+extern "C" JNIEXPORT jlong Java_org_nexa_libnexakotlin_ScriptMachine_clone(JNIEnv *env, jobject ths, jlong smId)
+
+{
+    ScriptMachineData *smd = (ScriptMachineData *)smId;
+    if ((!smd) || (!smd->sm))
+    {
+        triggerJavaIllegalStateException(env, "internal error: no script machine");
+        return 0;
+    }
+    return (jlong)SmClone((void *)smId);
+}
+
+
+// Get the bignum modulo as a hex string
 extern "C" JNIEXPORT jstring Java_org_nexa_libnexakotlin_ScriptMachine_getBMD(JNIEnv *env, jobject ths, jlong smId)
 
 {
@@ -1438,6 +1483,25 @@ extern "C" JNIEXPORT jstring Java_org_nexa_libnexakotlin_ScriptMachine_getBMD(JN
     }
     return env->NewStringUTF(smd->sm->bigNumModulo.str(16).c_str());
 }
+
+// Set the bugnum modulo from a hex string.  Returns the BMD *after being set*, so you can verify that it worked
+extern "C" JNIEXPORT jstring Java_org_nexa_libnexakotlin_ScriptMachine_setBMD(JNIEnv *env,
+    jobject ths,
+    jlong smId,
+    jstring jbmdHex)
+
+{
+    ScriptMachineData *smd = (ScriptMachineData *)smId;
+    if ((!smd) || (!smd->sm))
+    {
+        triggerJavaIllegalStateException(env, "internal error: no script machine");
+        return nullptr;
+    }
+    std::string bmdHex = toString(env, jbmdHex);
+    smd->sm->bigNumModulo = BigNum(bmdHex, 16);
+    return env->NewStringUTF(smd->sm->bigNumModulo.str(16).c_str());
+}
+
 
 // Step-by-step interface: get current position in this script, in bytes offset from the script start
 extern "C" JNIEXPORT bool Java_org_nexa_libnexakotlin_ScriptMachine_modify(JNIEnv *env,
@@ -1455,6 +1519,184 @@ extern "C" JNIEXPORT bool Java_org_nexa_libnexakotlin_ScriptMachine_modify(JNIEn
     }
     ByteArrayAccessor d(env, data);
     return smd->sm->ModifyScript(offset, d.data, d.size);
+}
+
+
+std::string stackItem2String(const StackItem &item)
+{
+    std::string ret;
+    ret.reserve(256);
+    // return TYPE SIZE string(hex or false) DECIMAL
+    if (item.type == StackElementType::VCH)
+    {
+        size_t sz = item.size();
+        // special case for false stack item because insanity of interpreter
+        if (sz == 0)
+            return std::string(ret + "BYTES 0 false 0");
+        ret += "BYTES " + std::to_string(sz) + " " + item.hex() + "h";
+        try
+        {
+            int64_t t = item.asInt64(false); // TODO report minimal encoding
+            ret += " " + std::to_string(t);
+        }
+        catch (script_error &e)
+        {
+            ret += " NaN";
+        }
+        catch (BadOpOnType &e)
+        {
+            ret += " NaN";
+        }
+    }
+    else if (item.type == StackElementType::BIGNUM)
+    {
+        const BigNum &num = item.num();
+        size_t sz = num.magSize();
+        ret += "BIGNUM ";
+        ret += std::to_string(sz);
+        ret += " ";
+        ret += item.hex();
+        ret += "h ";
+        ret += num.str();
+    }
+    else
+    {
+        ret += "UNKNOWN"; // this sw needs to be updated for the newly added type
+    }
+    return ret;
+}
+
+/** This makes sense to give as text because we don't want the higher layers to have to parse the BigNum format
+    and certainly don't want to expose the internal bignum representation
+*/
+extern "C" JNIEXPORT jstring Java_org_nexa_libnexakotlin_ScriptMachine_getRegisterText(JNIEnv *env,
+    jobject ths,
+    jlong smid,
+    jint regNum)
+{
+    ScriptMachineData *smd = (ScriptMachineData *)smid;
+    if ((!smd) || (!smd->sm))
+    {
+        triggerJavaIllegalStateException(env, "internal error: no script machine");
+        return nullptr;
+    }
+
+    if (regNum >= NUM_SCRIPT_REGISTERS)
+    {
+        triggerJavaIllegalStateException(env, "register number is too large");
+        return nullptr;
+    }
+    if (regNum < 0)
+    {
+        triggerJavaIllegalStateException(env, "register number is negative");
+        return nullptr;
+    }
+    const StackItem &item = smd->sm->arrRegisters[regNum];
+    std::string ret = stackItem2String(item);
+    return env->NewStringUTF(ret.c_str());
+}
+
+extern "C" JNIEXPORT jstring Java_org_nexa_libnexakotlin_ScriptMachine_setRegisterText(JNIEnv *env,
+    jobject ths,
+    jlong smid,
+    int regNum,
+    jstring jtype,
+    jstring jhex)
+{
+    ScriptMachineData *smd = (ScriptMachineData *)smid;
+    if ((!smd) || (!smd->sm))
+    {
+        triggerJavaIllegalStateException(env, "internal error: no script machine");
+        return nullptr;
+    }
+
+    if (regNum >= NUM_SCRIPT_REGISTERS)
+    {
+        triggerJavaIllegalStateException(env, "register number is too large");
+        return nullptr;
+    }
+    if (regNum < 0)
+    {
+        triggerJavaIllegalStateException(env, "register number is negative");
+        return nullptr;
+    }
+
+    std::string type = toString(env, jtype);
+
+    int t = 0;
+
+    // I only want to string compare once
+    if (type == "BYTES")
+        t = 1;
+    else if (type == "BIGNUM")
+        t = 2;
+    else if (type == "BIGNUM(DEC)")
+        t = 3;
+    else if (type == "INTEGER(DEC)")
+        t = 4;
+    else
+    {
+        triggerJavaIllegalStateException(env, "unknown data type");
+        return nullptr;
+    }
+
+    StackItem item;
+    if ((t == 1) || (t == 2))
+    {
+        std::string hex = toString(env, jhex);
+        if (!IsHex(hex))
+        {
+            triggerJavaIllegalStateException(env, "value is not hex");
+            return nullptr;
+        }
+
+        if (t == 1) // bytes
+        {
+            auto data = ParseHex(hex);
+            item = StackItem(data);
+        }
+        else // bignum
+        {
+            if (hex.size() == 0)
+            {
+                item = StackItem(BigNum());
+            }
+            else
+            {
+                std::string sign = hex.substr(hex.length() - 2);
+                bool neg = false;
+                if (sign == "80")
+                    neg = true;
+                else if (sign != "00")
+                {
+                    triggerJavaIllegalStateException(
+                        env, "bignum hex must end in the number's sign: 00 for +, 80 for negative");
+                    return nullptr;
+                }
+                std::string mag = hex.substr(0, hex.length() - 2);
+                BigNum bn = BigNum(mag, 16);
+                if (neg)
+                    bn.negate();
+                item = StackItem(bn);
+            }
+        }
+    }
+    if (t == 3)
+    {
+        std::string dec = toString(env, jhex);
+        BigNum bn = BigNum(dec, 10);
+        item = StackItem(bn);
+    }
+    if (t == 4)
+    {
+        std::string dec = toString(env, jhex);
+        CScriptNum sn = CScriptNum::fromIntUnchecked(std::stoll(dec));
+        item = sn.vchStackItem();
+    }
+
+    smd->sm->arrRegisters[regNum] = item;
+    std::string ret = stackItem2String(item);
+    return env->NewStringUTF(ret.c_str());
 }
 
 
@@ -1479,40 +1721,7 @@ extern "C" JNIEXPORT jstring Java_org_nexa_libnexakotlin_ScriptMachine_getStackI
         return env->NewStringUTF("");
     index = stk.size() - index - 1;
     const StackItem &item = stk[index];
-    std::string ret;
-    // return TYPE SIZE string(hex or false) DECIMAL
-    if (item.type == StackElementType::VCH)
-    {
-        size_t sz = item.size();
-        // special case for false stack item because insanity of interpreter
-        if (sz == 0)
-            return env->NewStringUTF((ret + "BYTES 0 false 0").c_str());
-        ret += "BYTES " + std::to_string(sz) + " " + item.hex() + "h";
-        try
-        {
-            int64_t t = item.asInt64(false); // TODO report minimal encoding
-            ret += " " + std::to_string(t);
-        }
-        catch (script_error &e)
-        {
-            ret += " NaN";
-        }
-        catch (BadOpOnType &e)
-        {
-            ret += " NaN";
-        }
-    }
-    else if (item.type == StackElementType::BIGNUM)
-    {
-        const BigNum &num = item.num();
-        size_t sz = num.magSize();
-        ret += "BIGNUM " + std::to_string(sz) + " " + item.hex() + "h " + num.str();
-    }
-    else
-    {
-        ret += "UNKNW"; // this sw needs to be updated for the newly added type
-    }
-
+    std::string ret = stackItem2String(item);
     return env->NewStringUTF(ret.c_str());
 }
 
@@ -1525,5 +1734,96 @@ extern "C" JNIEXPORT jboolean JNICALL Java_org_nexa_libnexakotlin_ScriptMachine_
     return true;
 }
 
+extern "C" JNIEXPORT void JNICALL Java_org_nexa_libnexakotlin_ScriptMachine_resetResourceUse(JNIEnv *env,
+    jobject ths,
+    jlong smid)
+{
+    ScriptMachineData *smd = (ScriptMachineData *)smid;
+    if ((!smd) || (!smd->sm))
+    {
+        triggerJavaIllegalStateException(env, "internal error: no script machine");
+        return;
+    }
+    smd->sm->ResetResourceUseStats();
+}
+
+
+extern "C" JNIEXPORT void JNICALL Java_org_nexa_libnexakotlin_ScriptMachine_setResourceLimits(JNIEnv *env,
+    jobject ths,
+    jlong smid,
+    jlong maxScriptSize,
+    jlong maxOps,
+    jlong maxSignatureChecks,
+    jlong maxStackUse,
+    jlong maxStackItems,
+    jlong maxOpExec,
+    jlong maxOpExecDepth)
+{
+    ScriptMachineData *smd = (ScriptMachineData *)smid;
+    if ((!smd) || (!smd->sm))
+    {
+        triggerJavaIllegalStateException(env, "internal error: no script machine");
+        return;
+    }
+
+    if (maxScriptSize >= 0)
+        smd->sm->maxScriptSize = maxScriptSize;
+    if (maxOps >= 0)
+        smd->sm->maxOps = maxOps;
+    if (maxSignatureChecks >= 0)
+        smd->sm->maxConsensusSigOps = maxSignatureChecks;
+    if (maxStackUse >= 0)
+        smd->sm->maxStackUse = maxStackUse;
+    if (maxStackItems >= 0)
+        smd->sm->maxStackItems = maxStackItems;
+    if (maxOpExec >= 0)
+        smd->sm->maxOpExec = maxOpExec;
+    if (maxOpExecDepth >= 0)
+        smd->sm->maxOpExecDepth = maxOpExecDepth;
+}
+
+
+extern "C" JNIEXPORT void JNICALL Java_org_nexa_libnexakotlin_ScriptMachineResources_get(JNIEnv *env,
+    jobject ths,
+    jlong smid)
+{
+    ScriptMachineData *smd = (ScriptMachineData *)smid;
+    if ((!smd) || (!smd->sm))
+    {
+        triggerJavaIllegalStateException(env, "internal error: no script machine");
+        return;
+    }
+    jclass clss = env->GetObjectClass(ths);
+    if (clss == nullptr)
+    {
+        triggerJavaIllegalStateException(env, "Cannot access MachineResources object class");
+        return;
+    }
+
+    jfieldID sigsField = env->GetFieldID(clss, "sigsChecked", "J");
+    jfieldID ieField = env->GetFieldID(clss, "instructionsExecuted", "J");
+    jfieldID msbField = env->GetFieldID(clss, "maxStackBytes", "J");
+    jfieldID msiField = env->GetFieldID(clss, "maxStackItems", "J");
+    jfieldID oeField = env->GetFieldID(clss, "opExecsExecuted", "J");
+    jfieldID oerField = env->GetFieldID(clss, "opExecRecursionDepth", "J");
+
+    if (sigsField == nullptr || ieField == nullptr || oeField == nullptr || msbField == nullptr || msiField == nullptr)
+    {
+        env->DeleteLocalRef(clss);
+        triggerJavaIllegalStateException(env, "A MachineResources field name has changed");
+        return;
+    }
+
+    const auto &stats = smd->sm->getStats();
+    env->SetLongField(ths, sigsField, stats.consensusSigCheckCount);
+    env->SetLongField(ths, ieField, stats.nOpCount);
+    env->SetLongField(ths, msbField, stats.maxStackBytes);
+    env->SetLongField(ths, msiField, stats.maxStackItems);
+    env->SetLongField(ths, oeField, stats.nOpExec);
+    env->SetLongField(ths, oerField, stats.nOpExecDepth);
+
+    env->DeleteLocalRef(clss);
+}
+
 #endif // ifndef ANDROID
-#endif  // defined(JAVA)
+#endif // defined(JAVA)

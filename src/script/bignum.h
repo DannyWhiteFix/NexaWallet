@@ -180,9 +180,14 @@ public:
     BigNum operator>>(const BigNum &amt) const { return *this >> amt.asUint64(); }
     std::string str(int base = 10) const
     {
-        std::string ret;
-        ret.resize(mpz_sizeinbase(n, base));
+        // +1 for a possible - sign.  The std::string adds space for the null terminator.
+        int sz = mpz_sizeinbase(n, base) + 1;
+        std::string ret(sz, 0);
         mpz_get_str(&ret[0], base, n);
+        // if the last byte was not used I need to lop it off or there will be a /0 in the middle of the string
+        // truncating it if the string is ever treated as a c-string
+        if (ret[sz - 1] == 0)
+            ret.resize(sz - 1);
         return ret;
     }
 

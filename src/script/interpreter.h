@@ -207,9 +207,14 @@ public:
     unsigned int nOpCount = 0;
     /** Number of op_execs executed */
     unsigned int nOpExec = 0;
+    /** Deepest op_exec recursion */
+    unsigned int nOpExecDepth = 0;
 
     /** Maximum number of bytes used in both stacks */
     unsigned int maxStackBytes = 0;
+
+    /** Maximum number of items in both stacks */
+    unsigned int maxStackItems = 0;
 
     ScriptMachineResourceTracker() {}
     /** Combine the results of this tracker and another tracker.
@@ -233,6 +238,9 @@ public:
         consensusSigCheckCount = 0;
         nOpCount = 0;
         nOpExec = 0;
+        nOpExecDepth = 0;
+        maxStackBytes = 0;
+        maxStackItems = 0;
     }
 };
 
@@ -251,17 +259,6 @@ protected:
     CScript::const_iterator pbegin;
     CScript::const_iterator pend;
     CScript::const_iterator pbegincodehash;
-
-    /** Maximum number of instructions to be executed -- script will abort with error if this number is exceeded */
-    unsigned int maxOps;
-    /** Maximum number of 2020-05-15 sigchecks allowed -- script will abort with error if this number is exceeded */
-    unsigned int maxConsensusSigOps;
-
-    /** Maximum combined size of both stacks allowed -- script will abort with error if this number is exceeded */
-    unsigned int maxStackUse = 0;
-
-    /** Maximum combined number of elements in both stacks -- script will abort with error if this number is exceeded */
-    unsigned int maxStackItems = 0;
 
     /** Tracks current values of script execution metrics */
     ScriptMachineResourceTracker stats;
@@ -346,9 +343,9 @@ protected:
     ConditionStack vfExec;
     // note - default constructor is used in an array, all registers get initialised to
     // have a StackItem() : type(StackElementType::VCH), vch(0) {}
+public:
     std::array<StackItem, NUM_SCRIPT_REGISTERS> arrRegisters;
 
-public:
     /** All the external information that this virtual machine is allowed to access */
     const ScriptImportedState &sis;
 
@@ -357,6 +354,18 @@ public:
 
     /** The maximum script size executable in the virtual machine */
     uint64_t maxScriptSize = MAX_SCRIPT_SIZE;
+    /** Maximum number of instructions to be executed -- script will abort with error if this number is exceeded */
+    unsigned int maxOps;
+    /** Maximum number of 2020-05-15 sigchecks allowed -- script will abort with error if this number is exceeded */
+    unsigned int maxConsensusSigOps;
+    /** Maximum combined size of both stacks allowed -- script will abort with error if this number is exceeded */
+    unsigned int maxStackUse = 0;
+    /** Maximum combined number of elements in both stacks -- script will abort with error if this number is exceeded */
+    unsigned int maxStackItems = 0;
+    /** The maximum number of allowed op_exec calls */
+    uint64_t maxOpExec = MAX_OP_EXEC;
+    /** The maximum op_exec recursion depth */
+    uint64_t maxOpExecDepth = MAX_EXEC_DEPTH;
 
     ScriptMachine(const ScriptMachine &from)
         : pc(from.pc), pbegin(from.pbegin), pend(from.pend), pbegincodehash(from.pbegincodehash), sis(from.sis)
@@ -380,7 +389,7 @@ public:
 
     ScriptMachine(unsigned int _flags, const ScriptImportedState &_sis, unsigned int _maxOps, unsigned int _maxSigOps)
         : flags(_flags), script(nullptr), pc(CScript().end()), pbegin(CScript().end()), pend(CScript().end()),
-          pbegincodehash(CScript().end()), maxOps(_maxOps), maxConsensusSigOps(_maxSigOps), sis(_sis)
+          pbegincodehash(CScript().end()), sis(_sis), maxOps(_maxOps), maxConsensusSigOps(_maxSigOps)
     {
         if (flags & SCRIPT_ENFORCE_STACK_TOTAL)
         {
@@ -432,9 +441,6 @@ public:
     // Implement the OP_MERKLEROOT instruction
     bool opMerkleRoot();
 
-    // How many OP_EXECs have been called recursively
-    unsigned int execDepth = 0;
-
     // Execute the passed script starting at the current machine state (stack and altstack are not cleared).
     bool Eval(const CScript &_script);
 
@@ -462,6 +468,9 @@ public:
     // Returns info about the next instruction to be run:
     // first bool is true if the instruction will be executed (false if this is passing across a not-taken branch)
     std::tuple<bool, opcodetype, StackItem, ScriptError> Peek();
+
+    /** zero all resource use statistics */
+    void ResetResourceUseStats() { stats.clear(); }
 
     // Remove all items from the altstack
     void ClearAltStack()
@@ -577,7 +586,6 @@ public:
         vfExec.clear();
         stats.clear();
         bigNumModulo = 0x10000000000000000_BN;
-        execDepth = 0;
         for (auto i = 0; i < NUM_SCRIPT_REGISTERS; i++)
             arrRegisters[i] = StackItem();
         error = SCRIPT_ERR_INITIAL_STATE;

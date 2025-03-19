@@ -96,7 +96,11 @@ SLAPI void SmSetStackItem(void *smId,
 
 // Get a stack item, 0 = stack, 1 = altstack,  pass a buffer at least 520 bytes in size
 // returns length of the item or -1 if no item.  0 is the stack top
-SLAPI int SmGetStackItem(void *smId, unsigned int stack, unsigned int index, StackElementType *t, unsigned char *result);
+SLAPI int SmGetStackItem(void *smId,
+    unsigned int stack,
+    unsigned int index,
+    StackElementType *t,
+    unsigned char *result);
 
 // Returns the last error generated during script evaluation (if any)
 SLAPI unsigned int SmGetError(void *smId);

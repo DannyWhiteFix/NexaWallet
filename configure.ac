@@ -193,13 +193,13 @@ AC_ARG_ENABLE([gprof],
 
 AC_ARG_ENABLE([javalibnexa],
   [AS_HELP_STRING([--enable-javalibnexa],
-  [enable java bindings for libnexa (default is no). incompatible with --enable-only-libnexa])],
+  [enable java bindings for libnexa (default is no).])],
   [use_javalibnexa=yes],
   [use_javalibnexa=no])
 
 AC_ARG_ENABLE([only-libnexa],
   [AS_HELP_STRING([--enable-only-libnexa],
-  [compile only libnexa (default is no). incompatible with --enable-javalibnexa])],
+  [compile only libnexa (default is no).])],
   [build_only_libnexa=$enableval],
   [build_only_libnexa=no])
 
@@ -223,10 +223,6 @@ AC_ARG_ENABLE([asm],
 
 if test "x$use_asm" = xyes; then
   AC_DEFINE(USE_ASM, 1, [Define this symbol to build in assembly routines])
-fi
-
-if test "x$build_only_libnexa$use_javalibnexa" = xyesyes; then
-  AC_MSG_ERROR("--enable-javalibnexa and --enable-only-libnexa are incompatible")
 fi
 
 AC_ARG_WITH([system-univalue],
