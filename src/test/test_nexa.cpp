@@ -76,6 +76,8 @@ BasicTestingSetup::BasicTestingSetup(const std::string &chainName)
 BasicTestingSetup::~BasicTestingSetup() { ECC_Stop(); }
 TestingSetup::TestingSetup(const std::string &chainName) : BasicTestingSetup(chainName)
 {
+    nMiningForkTime = Params().GetConsensus().nextForkActivationTime;
+
     insecure_rand_seed = GetRandHash();
     insecure_rand_ctx = FastRandomContext(insecure_rand_seed);
 
@@ -134,8 +136,6 @@ TestingSetup::~TestingSetup()
 
 TestChain100Setup::TestChain100Setup() : TestingSetup(CBaseChainParams::REGTEST)
 {
-    nMiningForkTime = Params().GetConsensus().nextForkActivationTime;
-
     // Generate a 100-block chain:
     coinbaseKey.MakeNewKey(true);
     CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
