@@ -36,6 +36,7 @@ class PlaceHolder():
 class SchnorrSigTest (BitcoinTestFramework):
 
     def setup_chain(self, bitcoinConfDict=None, wallets=None):
+        libnexa.loadLibNexaOrExit(self.options.srcdir)
         # initialize_chain(self.options.tmpdir, bitcoinConfDict, wallets)
         # I cannot used cached because I am using mocktime
         initialize_chain_clean(self.options.tmpdir, 4, bitcoinConfDict, wallets)
@@ -336,7 +337,6 @@ class SchnorrSigTest (BitcoinTestFramework):
 if __name__ == '__main__':
     binpath = findBitcoind()
     try:
-        libnexa.init(binpath + os.sep + ".libs" + os.sep + "libbitcoincash.so")
         SchnorrSigTest().main()
     except OSError as e:
         p = platform.platform()
@@ -357,6 +357,5 @@ def Test():
         flags.append("--tmpdir=/ramdisk/test/t")
     binpath = findBitcoind()
     flags.append("--srcdir=%s" % binpath)
-    libnexa.init(binpath + os.sep + ".libs" + os.sep + "libnexa.so")
 
     t.main(flags, bitcoinConf, None)

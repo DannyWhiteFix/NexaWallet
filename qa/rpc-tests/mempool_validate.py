@@ -321,7 +321,5 @@ def Test():
     binpath = findBitcoind()
     flags.append("--srcdir=%s" % binpath)
 
-    # load the libnexa.so from our build directory
-    libnexa.init(binpath + os.sep + ".libs" + os.sep + "libnexa.so")
     # start the test
     t.main(flags, bitcoinConf, None)
