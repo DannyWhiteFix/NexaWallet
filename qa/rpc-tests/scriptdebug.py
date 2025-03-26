@@ -182,6 +182,7 @@ class DebugSession:
 class ScriptDebugTest (BitcoinTestFramework):
 
     def setup_chain(self, bitcoinConfDict=None, wallets=None):
+        libnexa.loadLibNexaOrExit(self.options.srcdir)
         pass
 
     def setup_network(self, split=False):
@@ -246,7 +247,7 @@ class ScriptDebugTest (BitcoinTestFramework):
         assert(result[0] == libnexa.ScriptError.SCRIPT_ERR_OK)
 
     def multisigTest(self):
-        
+
         prevTx = ""
         spendTx =""
 
@@ -281,7 +282,6 @@ if __name__ == '__main__':
         env = os.path.abspath(env)
     path = os.path.dirname(env)
     try:
-        libnexa.init(path + os.sep + ".libs" + os.sep + "libnexa.so")
         MyTest().main()
     except OSError as e:
         print("Issue loading shared library.  This is expected during cross compilation since the native python will not load the .so: %s" % str(e))
@@ -295,11 +295,10 @@ def Test():
         "debug": ["net", "blk", "thin", "mempool", "req", "bench", "evict"],
     }
     t.drop_to_pdb = True
-    
+
     flags = [] # ["--nocleanup", "--noshutdown"]
     if os.path.isdir("/ramdisk/test"):
         flags.append("--tmppfx=/ramdisk/test")
     binpath = findBitcoind()
     flags.append("--srcdir=%s" % binpath)
-    libnexa.init(binpath + os.sep + ".libs" + os.sep + "libnexa.so")
     t.main(flags, bitcoinConf, None)
