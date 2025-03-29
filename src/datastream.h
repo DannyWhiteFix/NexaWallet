@@ -46,6 +46,11 @@ public:
         Init(nTypeIn, nVersionIn);
     }
 
+    CDataStream(const uint8_t *pbegin, const uint8_t *pend, int nTypeIn, int nVersionIn) : vch(pbegin, pend)
+    {
+        Init(nTypeIn, nVersionIn);
+    }
+
     CDataStream(const char *pbegin, const char *pend, int nTypeIn, int nVersionIn) : vch(pbegin, pend)
     {
         Init(nTypeIn, nVersionIn);
