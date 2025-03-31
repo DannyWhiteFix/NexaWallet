@@ -15,14 +15,9 @@ bool fRunOnceShortWindow GUARDED_BY(cs_median) = true;
 static CBlockIndex *pindexTip_ShortWindow GUARDED_BY(cs_median) = nullptr;
 static CBlockIndex *pindexTip_LongWindow GUARDED_BY(cs_median) = nullptr;
 
-static bool IsSorted(std::vector<uint64_t> &vData)
-{
 #ifdef DEBUG
-    return std::is_sorted(vData.begin(), vData.end());
-#else
-    return true;
+static bool IsSorted(std::vector<uint64_t> &vData) { return std::is_sorted(vData.begin(), vData.end()); }
 #endif
-}
 
 uint64_t CalculateMedian(std::vector<uint64_t> &vData)
 {
@@ -31,10 +26,11 @@ uint64_t CalculateMedian(std::vector<uint64_t> &vData)
     if (!(vData.size() % 2) || vData.empty())
         throw std::runtime_error("Data size does not contain an odd number of elements");
 
+#ifdef DEBUG
     // Assert that data must already be sorted before we try to add another element. This takes
     // so only run this in debug mode.
     DbgAssert(IsSorted(vData), );
-
+#endif
     std::vector<uint64_t>::iterator it = vData.begin();
     std::advance(it, (vData.size() - 1) / 2);
     return *it;
@@ -47,15 +43,19 @@ void InsertInSortedOrder(uint64_t nBlockSize, std::vector<uint64_t> &vData)
 
     LOCK(cs_median);
 
+#ifdef DEBUG
     // Assert that data must already be sorted before we try to add another element. This takes
     // time so only run this in debug mode.
     DbgAssert(IsSorted(vData), );
+#endif
 
     auto it = std::lower_bound(vData.begin(), vData.end(), nBlockSize);
     vData.insert(it, nBlockSize);
 
+#ifdef DEBUG
     // Make sure the data is still sorted (Only run in debug mode).
     DbgAssert(IsSorted(vData), );
+#endif
 }
 
 bool CalculateMedianSize(CBlockIndex *pindexNew,
@@ -82,13 +82,15 @@ bool CalculateMedianSize(CBlockIndex *pindexNew,
         if (pindexNew->pprev)
         {
             CBlockIndex *pindex = pindexNew->pprev;
+            vSizes.resize(nWindow + 1);
             for (uint64_t i = 1; i <= nWindow; i++)
             {
-                vSizes.insert(vSizes.begin(), pindex->GetBlockSize());
+                vSizes[i] = pindex->GetBlockSize(); // Where we insert does not matter because we will sort below
                 vSizes_Unsorted.push_front(pindex->GetBlockSize());
 
                 if (!pindex->pprev)
                 {
+                    vSizes.resize(i + 1);
                     break;
                 }
                 pindex = pindex->pprev;
