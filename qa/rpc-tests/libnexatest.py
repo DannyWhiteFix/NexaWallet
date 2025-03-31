@@ -175,13 +175,13 @@ class MyTest (BitcoinTestFramework):
 
         # Sanity check id and idem for an empty transaction
         tx = CTransaction()
-        ret = libnexa.txid(tx)
+        ret = libnexa.GetTxid(tx)
         assert ret.hex() == 'c8e6c337c4fce20c6fc5861225591e1104c559c038fcf6f7429837f664209c7e'
-        ret = libnexa.txidem(tx)
+        ret = libnexa.GetTxidem(tx)
         assert ret.hex() == 'df297c043efd84657387d675de57f8c8d69ac2290644aff12ac5ad66555a0980'
 
         try:
-            ret = libnexa.txid(bytes([0,1,2,3]))  # bad tx decode
+            ret = libnexa.GetTxid(bytes([0,1,2,3]))  # bad tx decode
             assert False
         except AssertionError:
             pass
@@ -220,7 +220,7 @@ class MyTest (BitcoinTestFramework):
 
         txhex = hexlify(tx.serialize()).decode("utf-8")
         txidem = self.nodes[0].enqueuerawtransaction(txhex)
-        assert txidem == hexlify(libnexa.txidem(txhex)[::-1]).decode("utf-8")
+        assert txidem == hexlify(libnexa.GetTxidem(txhex)[::-1]).decode("utf-8")
 
         # Now spend the created output to an anyone can spend address
         tx2 = CTransaction()

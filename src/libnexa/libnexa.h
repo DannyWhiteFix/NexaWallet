@@ -167,14 +167,14 @@ SLAPI int SignTxSchnorr(const unsigned char *txData,
     unsigned int resultLen);
 
 /** TODO convenience function that hashes the provided data.
-    Sign data via the Schnorr signature algorithm.
-    All buffer arguments should be in binary-serialized data.
-    The returned signature will not have a sighashtype byte.
-
-SLAPI int SignDataSchnorr(const unsigned char *data, int datalen,
-    const unsigned char *keyData,
-    unsigned char *result);
-*/
+ *    Sign data via the Schnorr signature algorithm.
+ *    All buffer arguments should be in binary-serialized data.
+ *    The returned signature will not have a sighashtype byte.
+ *
+ * SLAPI int SignDataSchnorr(const unsigned char *data, int datalen,
+ *    const unsigned char *keyData,
+ *    unsigned char *result);
+ */
 
 /* Sign a hash (presumably the hash of some data) using a Schnorr signature.  Result must be at least 64 bytes. */
 SLAPI int signHashSchnorr(const unsigned char *hash, const unsigned char *keyData, unsigned char *result);

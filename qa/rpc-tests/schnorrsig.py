@@ -85,7 +85,7 @@ class SchnorrSigTest (BitcoinTestFramework):
 
         sig = schnorr.sign(privkey, msghash)
         assert sig == bytes.fromhex("2c56731ac2f7a7e7f11518fc7722a166b02438924ca9d8b4d111347b81d0717571846de67ad3d913a8fdf9d8f3f73161a4c48ae81cb183b214765feb86e255ce")
-        sig2 = libnexa.signHashSchnorr(privkey, msghash)
+        sig2 = libnexa.SignHashSchnorr(privkey, msghash)
         assert sig2 == sig
 
         logging.info("random Schnorr signature comparison")
@@ -100,7 +100,7 @@ class SchnorrSigTest (BitcoinTestFramework):
             hsh = libnexa.hash256(msg)
 
             sigpy = schnorr.sign(privkey, hsh)
-            siglibnexa = libnexa.signHashSchnorr(privkey, hsh)
+            siglibnexa = libnexa.SignHashSchnorr(privkey, hsh)
             assert sigpy == siglibnexa
 
     def negativeTests(self):
