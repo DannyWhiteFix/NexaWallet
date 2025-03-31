@@ -576,6 +576,7 @@ SLAPI int parseGroupDescription(const uint8_t *in, const uint64_t inlen, uint8_t
     {
         result = result + "\"" + descriptionTitles[i] + "\":\"" + _vDesc[i] + "\",";
     }
+    result.pop_back(); // remove final trailing ","
     result = result + "}";
     const size_t result_size = result.size() + 1; // +1 for \0
     if (result_size > std::numeric_limits<int>::max())
