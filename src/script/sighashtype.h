@@ -64,6 +64,12 @@ public:
     /** Grab sighashtype out of a signature */
     explicit SigHashType(const std::vector<unsigned char> &sig) { fromSig(sig); }
 
+    explicit SigHashType(const uint8_t *begin, const uint8_t *end)
+    {
+        std::vector<uint8_t> sig(begin, end);
+        fromSig(sig);
+    }
+
     /** Extract a sighashtype from a Schnorr signature passed as a byte vector, and set this object to that type
         @return this object  */
     SigHashType &fromSig(const std::vector<unsigned char> &sig);
@@ -71,6 +77,12 @@ public:
     /** Extract a sighashtype from some offset in a raw array and set this object to that type
         @return this object  */
     SigHashType &fromBytes(const std::vector<unsigned char> &byteArray, int start = 0);
+
+    SigHashType &fromBytes(const uint8_t *begin, const uint8_t *end)
+    {
+        std::vector<uint8_t> sig(begin, end);
+        return fromBytes(sig, 0);
+    }
 
     /** Anyone can pay signs only the current input, so other entities can add addtl inputs to complete the partial tx
      */
