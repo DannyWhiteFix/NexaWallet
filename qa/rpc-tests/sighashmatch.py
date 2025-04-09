@@ -65,8 +65,8 @@ class SigHashMatchTest(BitcoinTestFramework):
         utxo = unspents.pop()
         amt = utxo["amount"]
         addr = utxo["address"]
-        outp = { "dummy" : amt - 1000}  # give some fee
-        hextx = createrawtransaction([utxo], outp, p2pkh)
+        outp = { "any" : amt - 1000}  # give some fee
+        hextx = createrawtransaction([utxo], outp)
         txn = CTransaction().deserialize(hextx)
 
         # create signature manually using txn.SignatureHash() calculation

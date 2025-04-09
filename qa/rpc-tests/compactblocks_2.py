@@ -196,9 +196,9 @@ class CompactBlocksTest(BitcoinTestFramework):
         total_value = block.vtx[0].vout[0].nValue
         out_value = decimal.Decimal(total_value) / (COIN*100)
         tx = CTransaction()
-        tx.vin.append(block.vtx[0].SpendOutput(0, CScript([OP_TRUE])))
+        tx.vin.append(block.vtx[0].SpendOutput(0, spendAnyoneCanSpend()))
         for i in range(64):
-            tx.vout.append(TxOut(0,out_value, CScript([OP_TRUE])))
+            tx.vout.append(anySpender(out_value))
         tx.rehash()
 
         block2 = self.build_block_on_tip()
@@ -417,9 +417,9 @@ class CompactBlocksTest(BitcoinTestFramework):
         for i in range(num_transactions):
             tx = CTransaction()
             tx.vin.append(utxo)
-            tx.vout.append(CTxOut(utxo.amount - 1000, CScript([OP_TRUE])))
+            tx.vout.append(anySpender(utxo.amount - 1000))
             padding = 1 << 8 * 100
-            tx.vout.append(CTxOut(0, CScript([padding, OP_RETURN])))
+            tx.vout.append(CTxOut(0, CScript([OP_RETURN, padding])))
             tx.rehash()
             utxo = tx.SpendOutput(0)
             block.vtx.append(tx)

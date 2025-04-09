@@ -10,6 +10,7 @@ and repurposes the dummy element to indicate which signatures are being checked.
 on the other side of the upgrade.
 - check banning of peers for some fully-invalid transactions.
 """
+import pdb
 
 from test_framework.blocktools import (
     create_block,
@@ -28,6 +29,7 @@ from test_framework.nodemessages import (
     FromHex,
     ToHex,
     msg_tx,
+    anySpender
 )
 from test_framework.mininode import (
     P2PDataStore,
@@ -41,7 +43,9 @@ from test_framework.script import (
     OP_1,
     OP_CHECKMULTISIG,
     OP_TRUE,
-    SIGHASH_ALL
+    OP_VERIFY,
+    SIGHASH_ALL,
+    spendAnyoneCanSpend
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, p2p_port, waitFor, uint256ToRpcHex
@@ -109,7 +113,7 @@ class SchnorrMultisigTest(BitcoinTestFramework):
         block_time = (parent.nTime + 1) if nTime is None else nTime
 
         block = create_block(
-            parent.gethash(), block_height, work, create_coinbase(block_height, scriptPubKey = CScript([OP_TRUE])), getAncHash(block_height, self.nodes[0]), block_time)
+            parent.gethash(), block_height, work, create_coinbase(block_height), getAncHash(block_height, self.nodes[0]), block_time)
         block.vtx.extend(transactions)
         make_conform_to_ctor(block)
         block.update_fields()
@@ -166,19 +170,18 @@ class SchnorrMultisigTest(BitcoinTestFramework):
         def create_fund_and_spend_tx(dummy=OP_0, sigtype='ecdsa'):
             spendfrom = spendable_outputs.pop()
 
-            script = CScript([OP_1, public_key, OP_1, OP_CHECKMULTISIG])
+            script = CScript([OP_1, public_key, OP_1, OP_CHECKMULTISIG, OP_VERIFY])
 
             value = spendfrom.vout[0].nValue
 
             # Fund transaction
-            txfund = create_transaction(spendfrom, 0, b'', value, script)
+            txfund = create_transaction(spendfrom, 0, spendAnyoneCanSpend(), value, script)
             txfund.rehash()
             fundings.append(txfund)
 
             # Spend transaction
             txspend = CTransaction()
-            txspend.vout.append(
-                CTxOut(value-1000, CScript([OP_TRUE])))
+            txspend.vout.append(anySpender(value-1000))
             txspend.vin.append(
                 CTxIn(txfund.OutpointAt(0), txfund.vout[0].nValue , b''))
 
@@ -190,9 +193,8 @@ class SchnorrMultisigTest(BitcoinTestFramework):
                 txsig = schnorr.sign(privkeybytes, sighash) + hashbyte
             elif sigtype == 'ecdsa':
                 txsig = private_key.sign(sighash) + hashbyte
-            txspend.vin[0].scriptSig = CScript([dummy, txsig])
+            txspend.vin[0].setUnlockingToTemplate(script, None, CScript([dummy, txsig]))
             txspend.rehash()
-
             return txspend
 
         # This is invalid.
@@ -209,6 +211,7 @@ class SchnorrMultisigTest(BitcoinTestFramework):
 
         tip = self.build_block(tip, fundings)
         self.p2p.send_blocks_and_test([tip], node)
+        waitFor(10, lambda: node.getbestblockhash() == tip.hash)
 
         logging.info(
             "Submitting a Schnorr-multisig via net, and mining it in a block")
@@ -234,7 +237,7 @@ def Test():
     t = SchnorrMultisigTest()
     t.drop_to_pdb = True
     bitcoinConf = {
-        "debug": ["dbase", "selectcoins"], # ["net", "blk", "thin", "mempool", "req", "bench", "evict"],
+        "debug": ["dbase", "selectcoins"], # [ "net", "blk", "thin", "mempool", "req", "bench", "evict"],
         "logtimemicros":1,
         "checkmempool":0,
         # "par":1  # Reduce the # of threads in bitcoind for easier debugging

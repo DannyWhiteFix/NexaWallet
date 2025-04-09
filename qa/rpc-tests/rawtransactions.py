@@ -567,12 +567,12 @@ class RawTransactionsTest(BitcoinTestFramework):
         amt = utxo["amount"]
         addr = self.nodes[0].getaddressforms(self.nodes[0].getnewaddress("p2pkh"))["legacy"]
         outp = {addr: amt-decimal.Decimal(100)}  # give some fee
-        txn = createrawtransaction([utxo], outp, createWastefulOutput)  # create a nonstandard tx
+        txn = createrawtransaction([utxo], outp, lambda x: CScript([OP_NOP]))  # create a nonstandard tx
         signedtxn = self.nodes[0].signrawtransaction(txn)
         txpool = self.nodes[0].gettxpoolinfo()
         try:
             self.nodes[0].sendrawtransaction(signedtxn["hex"], False, "STANDARD")
-            assert 0 # should have failed because I'm insisting on a standard tx
+            assert 0 # should have failed because non-standard scripts are not allowed after fork1
         except JSONRPCException as e:
             assert e.error["code"] == -26
 
@@ -615,7 +615,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         amt = utxo["amount"]
         addr = self.nodes[0].getaddressforms(self.nodes[0].getnewaddress())["legacy"]
         outp = {addr: amt-decimal.Decimal(100)}  # give some fee
-        txn = createrawtransaction([utxo], outp, createWastefulOutput)  # create a nonstandard tx
+        txn = createrawtransaction([utxo], outp, lambda x: CScript([OP_NOP]))  # create a nonstandard tx
         signedtxn = self.nodes[0].signrawtransaction(txn)
         txpool = self.nodes[0].gettxpoolinfo()
         try:
@@ -643,15 +643,12 @@ class RawTransactionsTest(BitcoinTestFramework):
         txpool4 = self.nodes[0].gettxpoolinfo()
         assert txpool["size"] == txpool4["size"]  # all of these failures should have added nothing to txpool
 
-        ret = self.nodes[0].sendrawtransaction(signedtxn["hex"], False, "nonstandard")
-        assert(len(ret) == 64)  # should succeed and return a txid
-        txpool2 = self.nodes[0].gettxpoolinfo()
-        assert txpool["size"] + 1 == txpool2["size"]  # one tx should have been added to the txpool
-
-        self.nodes[0].generate(1)  # clean it up
-        txpool3 = self.nodes[0].gettxpoolinfo()
-        assert txpool3["size"] == 0  # Check that the nonstandard tx in the txpool got mined
-
+        try:
+            ret = self.nodes[0].sendrawtransaction(signedtxn["hex"], False, "nonstandard")
+            assert 0 # after fork 1 no nonstandard tx
+        except JSONRPCException as e:
+            pass
+        
         # finally, let's make sure that a standard tx works with the standard flag set
         utxo = wallet.pop()
         amt = utxo["amount"]

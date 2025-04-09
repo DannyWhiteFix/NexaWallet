@@ -161,16 +161,18 @@ BOOST_AUTO_TEST_CASE(dynamic_tx_validity_fork1)
     auto tip = chainActive.Tip();
     const CChainParams &cp = Params();
 
-    // Small pre-fork1 test to make sure it doesn't prematurely activate
+    // Fork1 is active, leaving this commented out to show how to write a test for fork2
     tx.vout.push_back(CTxOut(1, simpleConstraint));
     txref = MakeTransactionRef(tx);
-    BOOST_CHECK_MESSAGE(ContextualCheckTransaction(txref, state, tip, cp), "fork1 is incorrectly active");
-    BOOST_CHECK(state.IsValid());
+
+    // Small pre-fork1 test to make sure it doesn't prematurely activate
+    // BOOST_CHECK_MESSAGE(ContextualCheckTransaction(txref, state, tip, cp), "fork1 is incorrectly active");
+    // BOOST_CHECK(state.IsValid());
 
     // Fake trigger fork1
-    auto oldForkTime = nMiningForkTime;
-    nMiningForkTime = 1;
-    BOOST_CHECK(IsFork1Activated(tip));
+    // auto oldForkTime = nMiningForkTime;
+    // nMiningForkTime = 1;
+    // BOOST_CHECK(IsFork1Activated(tip));
 
     state.SetNull(); // try the above test again, fork1 activated
     BOOST_CHECK_MESSAGE(!ContextualCheckTransaction(txref, state, tip, cp), "output script unconstrained by fork1");
@@ -249,7 +251,7 @@ BOOST_AUTO_TEST_CASE(dynamic_tx_validity_fork1)
         BOOST_CHECK(state.IsValid());
     }
 
-    nMiningForkTime = oldForkTime;
+    // nMiningForkTime = oldForkTime;
 }
 
 // Invalid transactions generated dynamically by this test

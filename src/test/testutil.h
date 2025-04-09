@@ -47,15 +47,9 @@ CTransaction tx1x1(const COutPoint &utxo,
     const CScript &txo,
     CAmount amt,
     const CKey &key,
-    const CScript &prevOutScript,
-    bool p2pkh = true);
+    const CScript &prevOutScript);
 
-CTransaction tx1x1(const CTransaction &prevtx,
-    int prevout,
-    const CScript &txo,
-    CAmount amt,
-    const CKey &key,
-    bool p2pkh = true);
+CTransaction tx1x1(const CTransaction &prevtx, int prevout, const CScript &txo, CAmount amt, const CKey &key);
 
 CTransaction tx1x1_p2sh_of_p2pkh(const CTransaction &prevtx,
     int prevout,

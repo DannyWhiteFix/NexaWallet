@@ -12,6 +12,7 @@
 #include "pubkey.h"
 #include "random.h"
 #include "script/interpreter.h"
+#include "script/sighashtype.h"
 #include "txdb.h"
 #include "txmempool.h"
 
@@ -92,6 +93,12 @@ struct TestChain100Setup : public TestingSetup
 public:
     std::vector<CTransaction> coinbaseTxns; // For convenience, coinbase transactions
     CKey coinbaseKey; // private/public key needed to spend coinbase transactions
+    CScript coinbaseLockingScript;
+
+    CScript SignCoinbaseSpend(const CTransaction &txTo,
+        unsigned int nIn,
+        const SigHashType &sigHashType,
+        CAmount amount);
 };
 
 class CTxMemPoolEntry;

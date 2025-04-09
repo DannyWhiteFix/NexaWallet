@@ -138,13 +138,27 @@ TestChain100Setup::TestChain100Setup() : TestingSetup(CBaseChainParams::REGTEST)
 {
     // Generate a 100-block chain:
     coinbaseKey.MakeNewKey(true);
-    CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
+    coinbaseLockingScript = p2pkh(coinbaseKey.GetPubKey().GetID());
     for (int i = 0; i < Params().GetConsensus().coinbaseMaturity; i++)
     {
         std::vector<CMutableTransaction> noTxns;
-        CBlock b = CreateAndProcessBlock(noTxns, scriptPubKey);
+        CBlock b = CreateAndProcessBlock(noTxns, coinbaseLockingScript);
         coinbaseTxns.push_back(*b.vtx[0]);
     }
+}
+
+CScript TestChain100Setup::SignCoinbaseSpend(const CTransaction &tx,
+    unsigned int nIn,
+    const SigHashType &sigHashType,
+    CAmount amount)
+{
+    std::vector<unsigned char> vchSig1;
+    uint256 hash1 = SignatureHash(coinbaseLockingScript, tx, nIn, defaultSigHashType, amount, 0);
+    BOOST_CHECK(hash1 != SIGNATURE_HASH_ERROR);
+    BOOST_CHECK(coinbaseKey.SignSchnorr(hash1, vchSig1));
+    defaultSigHashType.appendToSig(vchSig1);
+    CScript ret = CScript() << vchSig1 << ToByteVector(coinbaseKey.GetPubKey());
+    return ret;
 }
 
 //
@@ -158,7 +172,7 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
     std::unique_ptr<CBlockTemplate> pblocktemplate(new CBlockTemplate());
 
     CPubKey pubkey;
-    pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(P2pktOutput(pubkey));
+    pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
     CBlockRef pblock = pblocktemplate->block;
 
     // Replace mempool-selected txns with just coinbase plus passed-in txns:

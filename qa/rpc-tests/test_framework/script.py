@@ -18,6 +18,7 @@ from sys import stdout
 from binascii import hexlify
 from .constants import (SIGHASH_ALL, SIGHASH_NONE, SIGHASH_ANYONECANPAY)
 from .scriptop import *
+from .util import *
 
 import struct
 from .bignum import bn2vch
@@ -25,6 +26,24 @@ from .bignum import bn2vch
 MAX_SCRIPT_SIZE = 10000
 MAX_SCRIPT_ELEMENT_SIZE = 520
 MAX_SCRIPT_OPCODES = 201
+
+# Also use nodemessages.anySpender to create a TxOut directly
+def anyoneCanSpend():
+    """
+    This returns an anyoneCanSpend template output CScript.  Its basically
+    [OP_0, hash160([]), OP_0] (no group, hash of no script, no args)
+    Use nodemessages.py: anySpender(amount) to return an anyone-can-spend TxOut.
+    """
+    templateScript=CScript([])
+    hashTemplate = hash160(templateScript)
+    return CScript([OP_0, hashTemplate, OP_0])
+
+def spendAnyoneCanSpend():
+    """
+    Give the input script that spends the above anyone can spend.
+    This returns a CScript that pushes an empty CScript.
+    """
+    return CScript([CScript([])])
 
 class CScriptInvalidError(Exception):
     """Base class for CScript exceptions"""

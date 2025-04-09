@@ -110,8 +110,7 @@ CTransaction tx1x1(const COutPoint &utxo,
     const CScript &txo,
     CAmount amt,
     const CKey &key,
-    const CScript &prevOutScript,
-    bool p2pkh)
+    const CScript &prevOutScript)
 {
     CMutableTransaction tx;
     tx.vin.resize(1);
@@ -131,20 +130,11 @@ CTransaction tx1x1(const COutPoint &utxo,
     }
     defaultSigHashType.appendToSig(vchSig);
     tx.vin[0].scriptSig << vchSig;
-    if (p2pkh)
-    {
-        tx.vin[0].scriptSig << ToByteVector(key.GetPubKey());
-    }
-
+    tx.vin[0].scriptSig << ToByteVector(key.GetPubKey());
     return tx;
 }
 
-CTransaction tx1x1(const CTransaction &prevtx,
-    int prevout,
-    const CScript &txo,
-    CAmount amt,
-    const CKey &key,
-    bool p2pkh)
+CTransaction tx1x1(const CTransaction &prevtx, int prevout, const CScript &txo, CAmount amt, const CKey &key)
 {
     CMutableTransaction tx;
     tx.vin.resize(1);
@@ -165,11 +155,7 @@ CTransaction tx1x1(const CTransaction &prevtx,
     }
     defaultSigHashType.appendToSig(vchSig);
     tx.vin[0].scriptSig << vchSig;
-    if (p2pkh)
-    {
-        tx.vin[0].scriptSig << ToByteVector(key.GetPubKey());
-    }
-
+    tx.vin[0].scriptSig << ToByteVector(key.GetPubKey());
     return tx;
 }
 

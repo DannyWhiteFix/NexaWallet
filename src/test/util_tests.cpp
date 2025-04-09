@@ -804,8 +804,8 @@ BOOST_AUTO_TEST_CASE(util_wildmatch)
     BOOST_CHECK(wildmatch("*123", "abcdef123"));
 
     // length limit check
-    BOOST_CHECK(!wildmatch(std::string("*", 10000), ""));
-    BOOST_CHECK(!wildmatch("*", std::string("x", 10000)));
+    BOOST_CHECK(!wildmatch(std::string(2000, '*'), ""));
+    BOOST_CHECK(!wildmatch("*", std::string(2000, 'x')));
 }
 
 BOOST_AUTO_TEST_CASE(splitbycommaandremovespaces)
