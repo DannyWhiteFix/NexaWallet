@@ -48,7 +48,7 @@ class MyTest (BitcoinTestFramework):
         node = self.node
         rnode = self.rnode  # node can relay to node 1
         self.invGetdata(tx)
-        txrpcIdem = util.uint256ToRpcHex(tx.GetIdem())
+        txrpcIdem = uint256ToRpcHex(tx.GetIdem())
         waitFor(10, lambda: len(self.pynodeCnxn.last_reject) > 0)
         rej = self.pynodeCnxn.last_reject.pop()
         assert p2pErr in rej.reason
@@ -66,7 +66,7 @@ class MyTest (BitcoinTestFramework):
         testTx = fundSignSendSpend(node, tx, relay=False)
 
         self.invGetdata(testTx)
-        txrpcIdem = util.uint256ToRpcHex(testTx.GetIdem())
+        txrpcIdem = uint256ToRpcHex(testTx.GetIdem())
         waitFor(10, lambda: len(self.pynodeCnxn.last_reject) > 0)
         rej = self.pynodeCnxn.last_reject.pop()
         assert p2pErr in rej.reason
@@ -117,7 +117,7 @@ class MyTest (BitcoinTestFramework):
         # print(result)
         tx1 = CTransaction(result)
         self.invGetdata(tx1)
-        tx1rpcIdem = util.uint256ToRpcHex(tx1.GetIdem())
+        tx1rpcIdem = uint256ToRpcHex(tx1.GetIdem())
         waitFor(10, lambda: tx1rpcIdem in self.node.getrawtxpool() )
 
 

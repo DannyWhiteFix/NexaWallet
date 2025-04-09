@@ -9,6 +9,8 @@ This tests the MINIMALDATA consensus rule.
 - check non-banning for peers who send invalid txns that would have been valid
 on the other side of the upgrade.
 """
+import pdb
+
 from test_framework.mininode import (
         NodeConn, NetworkThread, P2PDataStore
 )
@@ -28,13 +30,18 @@ from test_framework.nodemessages import (
     CTxIn,
     CTxOut,
     FromHex,
-    ToHex
+    ToHex,
+    anySpender
 )
 
 from test_framework.script import (
     CScript,
     OP_ADD,
     OP_TRUE,
+    OP_EQUALVERIFY,
+    OP_1,
+    OP_2,
+    spendAnyoneCanSpend
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_raises_rpc_error, p2p_port, waitFor, standardFlags
@@ -98,7 +105,7 @@ class MinimaldataTest(BitcoinTestFramework):
         ancHash = self.block_hashes.get(ancHeight, None)
         if ancHash is None: ancHash = getAncHash(block_height, self.nodes[0])
         block = create_block(
-            parent.gethash(), block_height, parent.chainWork + 2,create_coinbase(block_height, scriptPubKey = CScript([OP_TRUE])), ancHash, block_time)
+            parent.gethash(), block_height, parent.chainWork + 2,create_coinbase(block_height), ancHash, block_time)
         block.vtx.extend(transactions)
         make_conform_to_ctor(block)
         block.update_fields()
@@ -126,7 +133,7 @@ class MinimaldataTest(BitcoinTestFramework):
 
         tip = self.getbestblock(node)
 
-        logging.info("Create some blocks with OP_1 coinbase for spending.")
+        logging.info("Create some blocks with coinbase for spending.")
         blocks = []
         for _ in range(10):
             tip = self.build_block(tip)
@@ -145,26 +152,21 @@ class MinimaldataTest(BitcoinTestFramework):
         def create_fund_and_spend_tx():
             spendfrom = spendable_outputs.pop()
 
-            script = CScript([OP_ADD])
+            script = CScript([OP_ADD, OP_2, OP_EQUALVERIFY])
 
             value = spendfrom.vout[0].nValue
 
             # Fund transaction
-            txfund = create_transaction(spendfrom, 0, b'', value, script)
-            pad_tx(txfund)
+            txfund = create_transaction(spendfrom, 0, spendAnyoneCanSpend(), value, script)
+            # pad_tx(txfund)
             txfund.rehash()
             fundings.append(txfund)
 
             # Spend transaction
             txspend = CTransaction()
-            txspend.vout.append(
-                CTxOut(value-1000, CScript([OP_TRUE])))
-            txspend.vin.append(
-                CTxIn(txfund.OutpointAt(0), txfund.vout[0].nValue , b''))
+            txspend.vout.append(anySpender(value-1000))
 
-            # Sign the transaction
-            txspend.vin[0].scriptSig = CScript(
-                b'\x01\x01\x51')  # PUSH1(0x01) OP_1
+            txspend.vin.append(txfund.SpendTemplate(0, script, None, CScript(b'\x01\x01\x51')  ))  # PUSH1(0x01) OP_1  (PUSH1 is not minimaldata)
             pad_tx(txspend)
             txspend.rehash()
 

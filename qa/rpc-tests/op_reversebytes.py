@@ -8,7 +8,7 @@ Derived from both abc-schnorrmultisig-activation.py (see https://reviews.bitcoin
 abc-schnorrmultisig.py
 """
 
-import time
+import time, pdb
 
 from test_framework.blocktools import (
     create_block,
@@ -28,6 +28,7 @@ from test_framework.nodemessages import (
     CTxOut,
     FromHex,
     ToHex,
+    anySpender
 )
 from test_framework.mininode import (
     P2PDataStore,
@@ -37,11 +38,12 @@ from test_framework.mininode import (
 from test_framework import schnorr
 from test_framework.script import (
     CScript,
-    OP_EQUAL,
+    OP_EQUALVERIFY,
     OP_REVERSEBYTES,
     OP_RETURN,
     OP_TRUE,
-    SIGHASH_ALL
+    SIGHASH_ALL,
+    spendAnyoneCanSpend
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, p2p_port, waitFor, standardFlags
@@ -97,7 +99,7 @@ class OpReversebytesActivationTest(BitcoinTestFramework):
         # the script in create_coinbase differs for BU and ABC
         # you need to let coinbase script be CScript([OP_TRUE])
         block = create_block(
-            parent.hashNum, block_height, parent.chainWork+2, create_coinbase(block_height, scriptPubKey = CScript([OP_TRUE])), getAncHash(block_height, self.nodes[0]), block_time)
+            parent.hashNum, block_height, parent.chainWork+2, create_coinbase(block_height), getAncHash(block_height, self.nodes[0]), block_time)
         block.vtx.extend(transactions)
         block.txCount = len(block.vtx)
         block.nonce = bytearray(12)
@@ -168,23 +170,23 @@ class OpReversebytesActivationTest(BitcoinTestFramework):
         rev_data = bytes(reversed(data))
 
         # Lockscript: provide a bytestring that reverses to X
-        script = CScript([OP_REVERSEBYTES, rev_data, OP_EQUAL])
+        script = CScript([OP_REVERSEBYTES, rev_data, OP_EQUALVERIFY])
 
         # Fund transaction: REVERSEBYTES <reversed(x)> EQUAL
-        tx_reversebytes_fund = create_tx_with_script(spend_from, 0, b'', value, script)
+        tx_reversebytes_fund = create_tx_with_script(spend_from, 0, spendAnyoneCanSpend(), value, script)
         tx_reversebytes_fund.rehash()
-
-        # Spend transaction: <x>
-        tx_reversebytes_spend = CTransaction()
-        tx_reversebytes_spend.vout.append(CTxOut(value - 1000, CScript([b'x' * 100, OP_RETURN])))
-        tx_reversebytes_spend.vin.append(tx_reversebytes_fund.SpendOutput(0, b''))
-        tx_reversebytes_spend.vin[0].scriptSig = CScript([data])
-        tx_reversebytes_spend.rehash()
 
         # Mine funding transaction into block. Pre-upgrade output scripts can have
         # OP_REVERSEBYTES and still be fully valid, but they cannot spend it.
         tip = self.build_block(tip, [tx_reversebytes_fund])
         self.p2p.send_blocks_and_test([tip], node)
+
+        # Spend transaction: <x>
+        tx_reversebytes_spend = CTransaction()
+        #tx_reversebytes_spend.vout.append(CTxOut(value - 1000, CScript([OP_RETURN, b'x' * 100])))
+        tx_reversebytes_spend.vout.append(anySpender(value - 1000, 100))
+        tx_reversebytes_spend.vin.append(tx_reversebytes_fund.SpendTemplate(0, script, None, CScript([data])))
+        tx_reversebytes_spend.rehash()
 
         logging.info(
             "Submitting a new OP_REVERSEBYTES tx via net, and mining it in a block")

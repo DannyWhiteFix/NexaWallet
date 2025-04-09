@@ -117,9 +117,9 @@ CScript gp2pkh_variant(const CGroupTokenID &group, const QuickAddress &dest, CAm
 
 
 // create a group pay to public key hash script
-CScript p2pkh(const QuickAddress &dest)
+CScript p2pkt(const QuickAddress &dest)
 {
-    CScript templat = CScript() << OP_CHECKSIG;
+    CScript templat = CScript() << OP_FROMALTSTACK << OP_CHECKSIGVERIFY;
     CScript tArgs = CScript() << ToByteVector(dest.pubkey);
     CScript script = CScript(ScriptType::TEMPLATE) << OP_0 << Hash160(templat) << Hash160(tArgs);
     return script;
@@ -505,7 +505,7 @@ BOOST_AUTO_TEST_CASE(grouptoken_covenantfunctions)
     CGroupTokenID cgrp2(2, GroupTokenIdFlags::COVENANT);
     CGroupTokenID cfgrp1(3, GroupTokenIdFlags::HOLDS_NEX | GroupTokenIdFlags::COVENANT);
 
-    COutPoint bch1 = AddUtxo(p2pkh(u1), 10000, coins);
+    COutPoint bch1 = AddUtxo(p2pkt(u1), 10000, coins);
     COutPoint gutxo100 = AddUtxo(gp2pkh(cgrp1, u1, 100), 1000, coins);
     COutPoint gutxo200v = AddUtxo(gp2pkh_variant(cgrp1, u2, 200), 1000, coins);
 
@@ -527,7 +527,7 @@ BOOST_AUTO_TEST_CASE(grouptoken_covenantfunctions)
     CTransaction t;
     CValidationState state;
 
-    // These tests use a p2pkh script as the covenant.  This does not make much sense, but that is not relevant within
+    // These tests use a p2pkt script as the covenant.  This does not make much sense, but that is not relevant within
     // the context of these tests.
     // A real covenant will be anyone-can-spend (so long as they fulfill other script constraints).  With templates, we
     // will be able to constrain the covenant to a particular FORM, allowing the holder to fill-in-the-blanks
@@ -682,7 +682,7 @@ BOOST_AUTO_TEST_CASE(grouptoken_fencefunctions)
     CGroupTokenID fgrp1(1, GroupTokenIdFlags::HOLDS_NEX);
     CGroupTokenID fgrp2(2, GroupTokenIdFlags::HOLDS_NEX);
 
-    COutPoint bch1 = AddUtxo(p2pkh(u1), 10000, coins);
+    COutPoint bch1 = AddUtxo(p2pkt(u1), 10000, coins);
     COutPoint fencedBch = AddUtxo(gp2pkh(fgrp1, u1, 0), 20000, coins);
     COutPoint fencedBch2 = AddUtxo(gp2pkh(fgrp1, u1, 0), 20, coins);
 
@@ -718,22 +718,22 @@ BOOST_AUTO_TEST_CASE(grouptoken_fencefunctions)
     BOOST_CHECK(!ok);
 
     // NEX moved out of the group (from the melt authority itself)
-    t = tx1x1(fenceMelt, p2pkh(u1), 1000);
+    t = tx1x1(fenceMelt, p2pkt(u1), 1000);
     ok = CheckGroupTokens(t, state, coins);
     BOOST_CHECK(ok);
 
     // NEX moved out of the group (from the melt authority and combined with another), plus some fees
-    t = tx2x1(fenceMelt, bch1, p2pkh(u1), 10010);
+    t = tx2x1(fenceMelt, bch1, p2pkt(u1), 10010);
     ok = CheckGroupTokens(t, state, coins);
     BOOST_CHECK(ok);
 
     // NEX moved out of the group (from the melt authority and combined with another), plus some fees
-    t = tx2x1(fenceMelt, fencedBch, p2pkh(u1), 20010);
+    t = tx2x1(fenceMelt, fencedBch, p2pkt(u1), 20010);
     ok = CheckGroupTokens(t, state, coins);
     BOOST_CHECK(ok);
 
     // only some NEX moved out of the group (from the melt authority and combined with another), plus some fees
-    t = tx2x2(fenceMelt, fencedBch, p2pkh(u1), 10010, gp2pkh(fgrp1, u1, 0), 10900);
+    t = tx2x2(fenceMelt, fencedBch, p2pkt(u1), 10010, gp2pkh(fgrp1, u1, 0), 10900);
     ok = CheckGroupTokens(t, state, coins);
     BOOST_CHECK(ok);
 
@@ -748,20 +748,20 @@ BOOST_AUTO_TEST_CASE(grouptoken_fencefunctions)
     BOOST_CHECK(!ok);
 
     // correct NEX and fenced NEX move (atomic swap of unfenced and fenced NEX)
-    t = tx2x2(bch1, fencedBch, gp2pkh(fgrp1, u1, 0), 20000, p2pkh(u2), 10000);
+    t = tx2x2(bch1, fencedBch, gp2pkh(fgrp1, u1, 0), 20000, p2pkt(u2), 10000);
     ok = CheckGroupTokens(t, state, coins);
     BOOST_CHECK(ok);
     // incorrect NEX and fenced NEX move (bad group quantity)
-    t = tx2x2(bch1, fencedBch, gp2pkh(fgrp1, u1, 1), 20000, p2pkh(u2), 10000);
+    t = tx2x2(bch1, fencedBch, gp2pkh(fgrp1, u1, 1), 20000, p2pkt(u2), 10000);
     ok = CheckGroupTokens(t, state, coins);
     BOOST_CHECK(!ok);
 
     // incorrect NEX and fenced NEX move (quantities cause melt)
-    t = tx2x2(bch1, fencedBch, gp2pkh(fgrp1, u1, 0), 19999, p2pkh(u2), 10001);
+    t = tx2x2(bch1, fencedBch, gp2pkh(fgrp1, u1, 0), 19999, p2pkt(u2), 10001);
     ok = CheckGroupTokens(t, state, coins);
     BOOST_CHECK(!ok);
     // incorrect NEX and fenced NEX move (quantities cause mint)
-    t = tx2x2(bch1, fencedBch, gp2pkh(fgrp1, u1, 0), 20001, p2pkh(u2), 9999);
+    t = tx2x2(bch1, fencedBch, gp2pkh(fgrp1, u1, 0), 20001, p2pkt(u2), 9999);
     ok = CheckGroupTokens(t, state, coins);
     BOOST_CHECK(!ok);
 
@@ -992,8 +992,8 @@ void basicFunctionsTest(uint32_t scriptFlags)
             AddUtxo(gp2pkh(grp1, u1, toAmount(GroupAuthorityFlags::AUTHORITY | GroupAuthorityFlags::MELT)), 1, coins);
         COutPoint meltctrl2 =
             AddUtxo(gp2pkh(grp2, u1, toAmount(GroupAuthorityFlags::AUTHORITY | GroupAuthorityFlags::MELT)), 1, coins);
-        COutPoint putxo = AddUtxo(p2pkh(u1), 1, coins);
-        COutPoint putxo2 = AddUtxo(p2pkh(u1), 2, coins);
+        COutPoint putxo = AddUtxo(p2pkt(u1), 1, coins);
+        COutPoint putxo2 = AddUtxo(p2pkt(u1), 2, coins);
 
         {
             // check token creation tx
@@ -1159,11 +1159,11 @@ void basicFunctionsTest(uint32_t scriptFlags)
             BOOST_CHECK(ok);
 
             // mint to 1 utxos, 2 outputs
-            t = tx1x2(mintctrl1, p2pkh(u1), 1, gp2pkh(grp1, u1, 100000), 1);
+            t = tx1x2(mintctrl1, p2pkt(u1), 1, gp2pkh(grp1, u1, 100000), 1);
             ok = CheckGroupTokens(t, state, coins);
             BOOST_CHECK(ok);
             // mint to 1 utxos, 2 outputs
-            t = tx1x2(mintctrl1, gp2pkh(grp1, u1, 100000), 1, p2pkh(u1), 1);
+            t = tx1x2(mintctrl1, gp2pkh(grp1, u1, 100000), 1, p2pkt(u1), 1);
             ok = CheckGroupTokens(t, state, coins);
             BOOST_CHECK(ok);
 
@@ -1284,22 +1284,22 @@ void basicFunctionsTest(uint32_t scriptFlags)
         BOOST_CHECK(!ok);
 
         // check melt but no authority
-        t = tx1x1(gutxo, p2pkh(u2), 1);
+        t = tx1x1(gutxo, p2pkt(u2), 1);
         ok = CheckGroupTokens(t, state, coins);
         BOOST_CHECK(!ok);
 
         // check melt with authority
-        t = tx2x1(gutxo, meltctrl1, p2pkh(u1), 1);
+        t = tx2x1(gutxo, meltctrl1, p2pkt(u1), 1);
         ok = CheckGroupTokens(t, state, coins);
         BOOST_CHECK(ok);
 
         // check melt with wrong authority
-        t = tx2x1(gutxo, mintctrl1, p2pkh(u1), 1);
+        t = tx2x1(gutxo, mintctrl1, p2pkt(u1), 1);
         ok = CheckGroupTokens(t, state, coins);
         BOOST_CHECK(!ok);
 
         // check melt with wrong group authority
-        t = tx2x1(gutxo, meltctrl2, p2pkh(u1), 1);
+        t = tx2x1(gutxo, meltctrl2, p2pkt(u1), 1);
         ok = CheckGroupTokens(t, state, coins);
         BOOST_CHECK(!ok);
 
@@ -1311,18 +1311,18 @@ void basicFunctionsTest(uint32_t scriptFlags)
         // Test multiple input/output transactions
 
         // send 1 coin and melt 100 tokens (with 1 satoshi) into output
-        t = tx3x1(putxo, gutxo, meltctrl1, p2pkh(u2), 1);
+        t = tx3x1(putxo, gutxo, meltctrl1, p2pkt(u2), 1);
         ok = CheckGroupTokens(t, state, coins);
         BOOST_CHECK(ok);
 
         // this sends 2 satoshi into the fee so it works and melts tokens
-        t = tx2x1(gutxo, meltctrl1, p2pkh(u2), 1);
+        t = tx2x1(gutxo, meltctrl1, p2pkt(u2), 1);
         ok = CheckGroupTokens(t, state, coins);
         BOOST_CHECK(ok);
 
         // send 1 coins and melt tokens, but incorrect amount
         // this will work because CheckGroupTokens does not enforce wallet balances
-        t = tx3x1(putxo, meltctrl1, gutxo, p2pkh(u2), 300);
+        t = tx3x1(putxo, meltctrl1, gutxo, p2pkt(u2), 300);
         ok = CheckGroupTokens(t, state, coins);
         BOOST_CHECK(ok);
 
@@ -1353,18 +1353,18 @@ void basicFunctionsTest(uint32_t scriptFlags)
         BOOST_CHECK(!ok);
 
         // group transaction with 50 sat fee
-        COutPoint p100utxo = AddUtxo(p2pkh(u1), 100, coins);
+        COutPoint p100utxo = AddUtxo(p2pkt(u1), 100, coins);
 
-        t = tx2x2(p100utxo, gutxo, p2pkh(u1), 50, gp2pkh(grp1, u2, 100), 1);
+        t = tx2x2(p100utxo, gutxo, p2pkt(u1), 50, gp2pkh(grp1, u2, 100), 1);
         ok = CheckGroupTokens(t, state, coins);
         BOOST_CHECK(ok);
 
         // group transaction with group imbalance
-        t = tx2x2(p100utxo, gutxo, p2pkh(u1), 50, gp2pkh(grp1, u2, 101), 1);
+        t = tx2x2(p100utxo, gutxo, p2pkt(u1), 50, gp2pkh(grp1, u2, 101), 1);
         ok = CheckGroupTokens(t, state, coins);
         BOOST_CHECK(!ok);
         // group transaction with group imbalance
-        t = tx2x2(p100utxo, gutxo, p2pkh(u1), 50, gp2pkh(grp1, u2, 99), 1);
+        t = tx2x2(p100utxo, gutxo, p2pkt(u1), 50, gp2pkh(grp1, u2, 99), 1);
         ok = CheckGroupTokens(t, state, coins);
         BOOST_CHECK(!ok);
 
@@ -1447,8 +1447,6 @@ BOOST_FIXTURE_TEST_CASE(grouptoken_blockchain, TestChain100Setup)
 {
     // fPrintToConsole = true;
     // Logging::LogToggleCategory(ALL, true);
-    CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-
     std::vector<CMutableTransaction> txns;
 
     QuickAddress p2pkGrp(coinbaseKey);
@@ -1466,7 +1464,7 @@ BOOST_FIXTURE_TEST_CASE(grouptoken_blockchain, TestChain100Setup)
 
 
     // just regress making a block
-    bool ret = tryBlock(txns, p2pkh(grp1), blk1, state);
+    bool ret = tryBlock(txns, p2pkt(grp1), blk1, state);
     BOOST_CHECK(ret);
     if (!ret)
         return; // no subsequent test will work
@@ -1479,7 +1477,7 @@ BOOST_FIXTURE_TEST_CASE(grouptoken_blockchain, TestChain100Setup)
         std::vector<unsigned char> fakeGrp(21);
         CScript script = breakable_ScriptTemplateOutput(cp2pkHash, ArgsHash(a1), VchType(), fakeGrp, 1);
         txns[0] = tx1x1(COutPoint(hash, 0), script, blk1->vtx[0]->vout[0].nValue);
-        ret = tryBlock(txns, p2pkh(a2), badblk, state);
+        ret = tryBlock(txns, p2pkt(a2), badblk, state);
         BOOST_CHECK(!ret);
     }
 
@@ -1493,13 +1491,14 @@ BOOST_FIXTURE_TEST_CASE(grouptoken_blockchain, TestChain100Setup)
         auto hasCoin = pcoinsTip->HaveCoin(outpt);
         Coin c;
         auto getCoin = pcoinsTip->GetCoin(outpt, c);
-        printf("%d %d", hasCoin, getCoin);
+        BOOST_CHECK(hasCoin);
+        BOOST_CHECK(getCoin);
     }
     CGroupTokenID gid =
         findGroupId(outpt, CScript(), GroupTokenIdFlags::NONE, GroupAuthorityFlags::ACTIVE_FLAG_BITS, nonce);
     txns[0] = tx1x1(outpt, gp2pkh(gid, grp0AllAuth, nonce), coinbaseTxns[spendCb].vout[0].nValue, coinbaseKey,
-        coinbaseTxns[spendCb].vout[0].scriptPubKey, false);
-    ret = tryBlock(txns, p2pkh(a2), tipblk, state);
+        coinbaseTxns[spendCb].vout[0].scriptPubKey);
+    ret = tryBlock(txns, p2pkt(a2), tipblk, state);
     if (!ret)
         printf("state: %d:%s, %s\n", state.GetRejectCode(), state.GetRejectReason().c_str(),
             state.GetDebugMessage().c_str());
@@ -1510,7 +1509,7 @@ BOOST_FIXTURE_TEST_CASE(grouptoken_blockchain, TestChain100Setup)
     txns[0] = tx({InputData(coinbaseTxns[1], 0, coinbaseKey), InputData(*tipblk->vtx[1], 0, grp0AllAuth.secret)},
         {OutputData(gp2pkh(gid, grp0AllAuth, authorityFlags(GroupAuthorityFlags::ACTIVE_FLAG_BITS, nonce)), 10000),
             OutputData(gp2pkh(gid, a1, 1000), coinbaseTxns[1].vout[0].nValue - 10000)});
-    ret = tryBlock(txns, p2pkh(a2), tipblk, state);
+    ret = tryBlock(txns, p2pkt(a2), tipblk, state);
     CAmount grpInpAmt = coinbaseTxns[1].vout[0].nValue - 10000;
     CAmount grpInpTokAmt = 1000;
     CTransaction grpTx = txns[0];
@@ -1522,7 +1521,7 @@ BOOST_FIXTURE_TEST_CASE(grouptoken_blockchain, TestChain100Setup)
     // Mint tokens without auth
     txns[0] = tx({InputData(coinbaseTxns[2], 0, coinbaseKey)},
         {OutputData(gp2pkh(gid, a1, 1000), coinbaseTxns[2].vout[0].nValue - 10000)});
-    ret = tryBlock(txns, p2pkh(a2), badblk, state);
+    ret = tryBlock(txns, p2pkt(a2), badblk, state);
     BOOST_CHECK(!ret);
 
     // Useful printouts:
@@ -1540,29 +1539,29 @@ BOOST_FIXTURE_TEST_CASE(grouptoken_blockchain, TestChain100Setup)
         GroupAuthorityFlags::ACTIVE_FLAG_BITS, nonce);
     txns[0] = tx({InputData(coinbaseTxns[3], 0, coinbaseKey)},
         {OutputData(gp2pkh(gid1, grp1AllAuth, authorityFlags(GroupAuthorityFlags::ACTIVE_FLAG_BITS, nonce)), 1),
-            OutputData(p2pkh(a2), coinbaseTxns[3].vout[0].nValue - 1)});
-    ret = tryBlock(txns, p2pkh(a2), tipblk, state);
+            OutputData(p2pkt(a2), coinbaseTxns[3].vout[0].nValue - 1)});
+    ret = tryBlock(txns, p2pkt(a2), tipblk, state);
     BOOST_CHECK(ret);
 
     // Should fail: pay from group to non-groups
-    txns[0] = tx({grpInp}, {OutputData(p2pkh(a2), grpInpAmt - 10000)});
+    txns[0] = tx({grpInp}, {OutputData(p2pkt(a2), grpInpAmt - 10000)});
     ret = tryMempool(txns[0], state);
     BOOST_CHECK(!ret);
-    ret = tryBlock(txns, p2pkh(a2), badblk, state);
+    ret = tryBlock(txns, p2pkt(a2), badblk, state);
     BOOST_CHECK(!ret);
 
     // now try the same but to the correct group, wrong group qty
     txns[0] = tx({grpInp}, {OutputData(gp2pkh(gid, a2, grpInpTokAmt - 1), grpInpAmt - 10000)});
     ret = tryMempool(txns[0], state);
     BOOST_CHECK(!ret);
-    ret = tryBlock(txns, p2pkh(a2), badblk, state);
+    ret = tryBlock(txns, p2pkt(a2), badblk, state);
     BOOST_CHECK(!ret);
 
     // now try the same but to the correct group, wrong group qty
     txns[0] = tx({grpInp}, {OutputData(gp2pkh(gid, a2, grpInpTokAmt + 1), grpInpAmt - 10000)});
     ret = tryMempool(txns[0], state);
     BOOST_CHECK(!ret);
-    ret = tryBlock(txns, p2pkh(a2), badblk, state);
+    ret = tryBlock(txns, p2pkt(a2), badblk, state);
     BOOST_CHECK(!ret);
 
     // now try the same but to the correct group, wrong group qty
@@ -1572,14 +1571,14 @@ BOOST_FIXTURE_TEST_CASE(grouptoken_blockchain, TestChain100Setup)
                            });
     ret = tryMempool(txns[0], state);
     BOOST_CHECK(!ret);
-    ret = tryBlock(txns, p2pkh(a2), badblk, state);
+    ret = tryBlock(txns, p2pkt(a2), badblk, state);
     BOOST_CHECK(!ret);
 
     // now try the same but to the wrong group, correct qty
     txns[0] = tx({grpInp}, {OutputData(gp2pkh(gid1, a2, grpInpTokAmt), grpInpAmt - 10000)});
     ret = tryMempool(txns[0], state);
     BOOST_CHECK(!ret);
-    ret = tryBlock(txns, p2pkh(a2), badblk, state);
+    ret = tryBlock(txns, p2pkt(a2), badblk, state);
     BOOST_CHECK(!ret);
 
 
@@ -1592,7 +1591,7 @@ BOOST_FIXTURE_TEST_CASE(grouptoken_blockchain, TestChain100Setup)
     BOOST_CHECK(ret);
 
     InputDataCopy toks(txns[0], 0, a2.secret);
-    ret = tryBlock(txns, p2pkh(a2), tipblk, state);
+    ret = tryBlock(txns, p2pkt(a2), tipblk, state);
     BOOST_CHECK(ret);
 
 
@@ -1601,7 +1600,7 @@ BOOST_FIXTURE_TEST_CASE(grouptoken_blockchain, TestChain100Setup)
 
     // Melt (and lose the authority)
     txns[0] = tx({grpAuth, toks}, {OutputData(gp2pkh(gid, a1, 1), 2)});
-    ret = tryBlock(txns, p2pkh(a2), tipblk, state);
+    ret = tryBlock(txns, p2pkt(a2), tipblk, state);
     BOOST_CHECK(ret);
 
 

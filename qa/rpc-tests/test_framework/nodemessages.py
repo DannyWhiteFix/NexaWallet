@@ -12,12 +12,12 @@ from codecs import encode
 from threading import RLock
 from io import BytesIO
 import copy
-from test_framework.schnorr import sign
-from test_framework.siphash import siphash256
-import test_framework.util as util
-from test_framework.constants import *
-from test_framework.scriptop import *
-from test_framework.script import CScript
+from .schnorr import sign
+from .siphash import siphash256
+from .constants import *
+from .scriptop import *
+from .script import CScript, anyoneCanSpend, spendAnyoneCanSpend
+from .util import *
 
 MY_VERSION = 80003 # past bip-152 for compactblocks
 
@@ -41,15 +41,6 @@ COIN = 100  # 1 coin in satoshis
 # lock should be acquired in the thread running the test logic to synchronize
 # access to any data shared with the NodeConnCB or NodeConn.
 mininode_lock = RLock()
-
-# Helper function
-
-# These functions were moved to util, but keep them in this namespace for backwards compatibility
-sha256 = util.sha256
-hash256 = util.hash256
-hash160 = util.hash160
-ser_uint256 = util.ser_uint256
-deser_uint256 = util.deser_uint256
 
 def wait_until(predicate, attempts=float('inf'), timeout=float('inf')):
     attempt = 0
@@ -650,7 +641,7 @@ class COutPoint(object):
         return r
 
     def rpcHex(self):
-        return util.uint256ToRpcHex(self.hash)
+        return uint256ToRpcHex(self.hash)
 
     def __repr__(self):
         return "COutPoint(hash=%064x)" % (self.hash)
@@ -721,6 +712,16 @@ class CTxIn(object):
     def __repr__(self):
         return "CTxIn(prevout=%s amount=%d scriptSig=%s nSequence=%i)" % (repr(self.prevout), self.amount, hexlify(self.scriptSig), self.nSequence)
 
+def TemplateTxOut(nValue=0, outputScript=anyoneCanSpend()):
+    """Construct a TxOut from the template locking output (script)"""
+    return TxOut(TxOut.TYPE_TEMPLATE, nValue, outputScript)
+
+def PayToTemplate(nValue=0, templateScript=CScript([]), constraintArgs=None, publicArgs=None, group=None, groupQty=None):
+    """Construct a TxOut from a template script and arguments"""
+    ret = TxOut(TxOut.TYPE_TEMPLATE, nValue)
+    ret.setLockingToTemplate(templateScript, constraintArgs, publicArgs, group, groupQty)
+    return ret
+
 # General transaction output
 class TxOut(object):
     TYPE_SATOSCRIPT = 0
@@ -783,11 +784,16 @@ class TxOut(object):
     def __repr__(self):
         return "TxOut(type=%x, nValue=%i.%08i scriptPubKey=%s)" % (self.t, self.nValue // COIN, self.nValue % COIN, hexlify(self.scriptPubKey))
 
-def anySpender(amount):
+def anySpender(amount, padding=None):
     """Creates a script template output that anyone can spend with no arguments"""
     ret = TxOut(TxOut.TYPE_TEMPLATE, amount)
     ret.setLockingToTemplate(CScript(), None)
+    if not padding is None:
+        if isinstance(padding, int):
+            padding = bytes.fromhex("a5") * padding
+        ret.scriptPubKey += CScript([OP_RETURN, padding])
     return ret
+
 
 def anySpender1(amount):
     """Creates a script template output that anyone can spend with 1 push (of any value)"""
@@ -807,7 +813,7 @@ class CTransaction(object):
         self.idem = None
         if isinstance(tx, dict): # handle result from RPC call
             self.fromHex(tx["hex"])
-            assert util.uint256ToRpcHex(self.GetId()) == tx["txid"], "Deserialized id does not match what was received from RPC"
+            assert uint256ToRpcHex(self.GetId()) == tx["txid"], "Deserialized id does not match what was received from RPC"
         elif isinstance(tx, str):
             self.fromHex(tx)
         elif tx is None:
@@ -866,7 +872,7 @@ class CTransaction(object):
         return deser_uint256(self.GetId())
     def GetRpcHexId(self):
         """Returns the Id in the same format it would be returned via a RPC call"""
-        return util.uint256ToRpcHex(self.GetId())
+        return uint256ToRpcHex(self.GetId())
 
     def GetIdem(self):
         """Returns the Idem as bytes"""
@@ -874,7 +880,7 @@ class CTransaction(object):
         return self.idem
     def GetRpcHexIdem(self):
         """Returns the Idem in the same format it would be returned via a RPC call"""
-        return util.uint256ToRpcHex(self.GetIdem())
+        return uint256ToRpcHex(self.GetIdem())
 
     def calcIdem(self):
         self.idem = hash256(self.serialize(SER_IDEM))
@@ -889,7 +895,7 @@ class CTransaction(object):
             sigs.append(INVALID_OPCODE)  # Separator
         sigs = b"".join(sigs)
         sigsHash = hash256(sigs)
-        # print("sigsHash: " + util.uint256ToRpcHex(sigsHash) + "  len: " + str(len(sigs)) + " bytes: " + sigs.hex())
+        # print("sigsHash: " + uint256ToRpcHex(sigsHash) + "  len: " + str(len(sigs)) + " bytes: " + sigs.hex())
         self.id = hash256(idemHash + sigsHash)
         return self.id
 
@@ -915,9 +921,15 @@ class CTransaction(object):
         assert idx < len(self.vout)
         return COutPoint().fromIdemAndIdx(self.GetIdem(), idx)
 
-    def SpendOutput(self, idx, satisfierScript=None):
+    def SpendOutput(self, idx, satisfierScript=spendAnyoneCanSpend()):
         assert idx < len(self.vout)
         return CTxIn(COutPoint().fromIdemAndIdx(self.GetIdem(), idx), self.vout[idx].nValue, satisfierScript)
+
+    def SpendTemplate(self, idx, templateScript=spendAnyoneCanSpend(), constraintArgs=None, satisfierArgs=None):
+        assert idx < len(self.vout)
+        ret = CTxIn(COutPoint().fromIdemAndIdx(self.GetIdem(), idx), self.vout[idx].nValue, None)
+        ret.setUnlockingToTemplate(templateScript, constraintArgs, satisfierArgs)
+        return ret
 
 
     def __repr__(self):
@@ -1607,7 +1619,7 @@ class CBlock(CBlockHeader):
         if debug:
             print("merkle root hashes:")
             for x in hashes:
-                print(util.uint256ToRpcHex(x))
+                print(uint256ToRpcHex(x))
         while len(hashes) > 1:
             newhashes = []
             for i in range(0, len(hashes), 2):

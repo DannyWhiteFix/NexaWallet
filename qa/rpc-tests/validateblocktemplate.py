@@ -24,14 +24,14 @@ from test_framework.blocktools import *
 # or a list to create multiple outputs
 
 
-def create_broken_transaction(prevtx, n, sig, value, out=PADDED_ANY_SPEND):
+def create_broken_transaction(prevtx, n, sig, value, out=anyoneCanSpend()):
     if not type(value) is list:
         value = [value]
     tx = CTransaction()
     amt = 1000 if len(prevtx.vout) <= n else prevtx.vout[n].nValue  # make up a fake amt if n is bad
     tx.vin.append(CTxIn(COutPoint().fromIdemAndIdx(prevtx.GetIdem(), n), amt, sig, 0xffffffff))
     for v in value:
-        tx.vout.append(CTxOut(v, out))
+        tx.vout.append(TxOut(TxOut.TYPE_TEMPLATE, v, out))
     tx.calcId()
     return tx
 
@@ -160,7 +160,7 @@ class ValidateblocktemplateTest(BitcoinTestFramework):
         prev_block = block
         # out_value is less than 50BTC because regtest halvings happen every 150 blocks, and is in Satoshis
         out_value = block.vtx[0].vout[0].nValue
-        tx1 = create_transaction(prev_block.vtx[0], 0, b'\x61'*50 + b'\x51', [int(out_value / 2), int(out_value / 2)])
+        tx1 = create_transaction(prev_block.vtx[0], 0, spendAnyoneCanSpend(), [int(out_value / 2), int(out_value / 2)])
         height = self.nodes[0].getblockcount()
         nextheight = height + 1
         tip = int(self.nodes[0].getblockhash(height), 16)
@@ -228,7 +228,7 @@ class ValidateblocktemplateTest(BitcoinTestFramework):
                         JSONRPCException, "invalid block: bad-txns-vout-toolarge")
 
         logging.info("bad tx offset")
-        tx_bad = create_broken_transaction(prev_block.vtx[0], 1, op1, [int(out_value / 4)])
+        tx_bad = create_broken_transaction(prev_block.vtx[0], 1, anyoneCanSpend(), [int(out_value / 4)])
         block = create_block(tip, nextheight, work, coinbase, ancHash, next_time, [tx_bad])
         block.rehash()
         hexblk = ToHex(block)
@@ -236,7 +236,7 @@ class ValidateblocktemplateTest(BitcoinTestFramework):
                         JSONRPCException, "invalid block: bad-txns-inputs-missingorspent")
 
         logging.info("bad tx offset largest number")
-        tx_bad = create_broken_transaction(prev_block.vtx[0], 0xffffffff, op1, [int(out_value / 4)])
+        tx_bad = create_broken_transaction(prev_block.vtx[0], 0xffffffff, anyoneCanSpend(), [int(out_value / 4)])
         block = create_block(tip, nextheight, work, coinbase, ancHash, next_time, [tx_bad])
         block.rehash()
         hexblk = ToHex(block)
@@ -245,15 +245,15 @@ class ValidateblocktemplateTest(BitcoinTestFramework):
 
 
         logging.info("double tx")
-        tx2 = create_transaction(prev_block.vtx[0], 0, op1, [int(out_value / 4)])
+        tx2 = create_transaction(prev_block.vtx[0], 0, anyoneCanSpend(), [int(out_value / 4)])
         block = create_block(tip, nextheight, work, coinbase, ancHash, next_time, [tx2, tx2])
         block.rehash()
         hexblk = ToHex(block)
         expectException(lambda: self.nodes[0].validateblocktemplate(hexblk),
                         JSONRPCException, "repeated-txn")
 
-        tx3 = create_transaction(prev_block.vtx[0], 0, op1, [int(out_value / 9), int(out_value / 10)])
-        tx4 = create_transaction(prev_block.vtx[0], 0, op1, [int(out_value / 8), int(out_value / 7)])
+        tx3 = create_transaction(prev_block.vtx[0], 0, anyoneCanSpend(), [int(out_value / 9), int(out_value / 10)])
+        tx4 = create_transaction(prev_block.vtx[0], 0, anyoneCanSpend(), [int(out_value / 8), int(out_value / 7)])
         logging.info("double spend")
         block = create_block(tip, nextheight, work, coinbase, ancHash, next_time, [tx3, tx4])
         block.rehash()
@@ -271,7 +271,7 @@ class ValidateblocktemplateTest(BitcoinTestFramework):
         expectException(lambda: self.nodes[0].validateblocktemplate(hexblk),
                         JSONRPCException, "invalid block: bad-txn-order")
 
-        tx_good = create_transaction(prev_block.vtx[0], 0, b'\x51', [int(out_value / 50)] * 50, out=b"")
+        tx_good = create_transaction(prev_block.vtx[0], 0, spendAnyoneCanSpend(), [int(out_value / 50)] * 50)
         logging.info("good tx")
         block = create_block(tip, nextheight, work, coinbase, ancHash, next_time, [tx_good])
         block.rehash()
@@ -299,7 +299,7 @@ class ValidateblocktemplateTest(BitcoinTestFramework):
         txl = []
         for i in range(0, 50):
             ov = block.vtx[1].vout[i].nValue
-            txl.append(create_transaction(block.vtx[1], i, op1, [int(ov / 50)] * 50))
+            txl.append(create_transaction(block.vtx[1], i, spendAnyoneCanSpend(), [int(ov / 50)] * 50))
         block = create_block(tip, nextheight, work, coinbase, ancHash, next_time, txl)
         block.rehash()
         block.solve()
