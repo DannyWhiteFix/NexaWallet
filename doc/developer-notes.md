@@ -80,7 +80,7 @@ class Class
 ### The fully-automatic way:
 
 Add the following to your $HOME/.gitconfig or .git/config in the Bitcoin directory:
-  
+
 ```
 [filter "bitcoin-clang-format"]
     clean = "contrib/devtools/clang-format.py format-stdout-if-wanted clang-format-3.8 %f"
@@ -274,8 +274,6 @@ and its cs_KeyStore lock for example).
 
 - StartNode : Starts other threads.
 
-- ThreadBitnodesAddressSeed : Runs initial bitnodes seeding when no peers.dat exists.
-
 - ThreadDNSAddressSeed : Loads addresses of peers from the DNS.
 
 - ThreadMapPort : Universal plug-and-play startup/shutdown
@@ -346,9 +344,9 @@ pay attention to for reviewers of Bitcoin Unlimited code.
   - *Rationale*: Makes sure that they pass thorough testing, and that the tester will keep passing
      on the master branch. Otherwise all new pull requests will start failing the tests, resulting in
      confusion and mayhem
- 
+
   - *Explanation*: If the test suite is to be updated for a change, this has to
-    be done first 
+    be done first
 
 ## Wallet
 

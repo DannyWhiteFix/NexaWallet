@@ -121,7 +121,6 @@ BITCOIN_CORE_H = \
   blockstorage/dbabstract.h \
   blockstorage/sequential_files.h \
   blockstorage/blockcache.h \
-  bitnodes.h \
   bloom.h \
   capd/capd.h \
   cashaddr.h \
@@ -283,7 +282,6 @@ libnexa_server_a_SOURCES = \
   addrman.cpp \
   bandb.cpp \
   banentry.cpp \
-  bitnodes.cpp \
   blockrelay/blockrelay_common.cpp \
   blockrelay/compactblock.cpp \
   blockrelay/graphene.cpp \
