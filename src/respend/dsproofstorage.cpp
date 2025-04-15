@@ -13,7 +13,7 @@
 
 static constexpr int64_t SECONDS_TO_KEEP_ORPHANS = 90;
 
-extern boost::asio::io_service stat_io_service;
+extern boost::asio::io_context stat_io_service;
 
 DoubleSpendProofStorage::DoubleSpendProofStorage() : m_recentRejects(120000, 0.000001), m_timer(stat_io_service)
 {

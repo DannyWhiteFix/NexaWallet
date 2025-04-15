@@ -17,8 +17,6 @@ nexa-cli.cpp
 nexad.cpp
 nexa-miner.cpp
 nexa-tx.cpp
-bitnodes.cpp
-bitnodes.h
 blockrelay/graphene.h
 blockrelay/graphene.cpp
 blockrelay/graphene_set.h

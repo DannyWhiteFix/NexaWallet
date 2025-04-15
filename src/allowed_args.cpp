@@ -320,8 +320,6 @@ static void addConnectionOptions(AllowedArgs &allowedArgs)
         .addArg("bindallorfail", optionalBool,
             strprintf(_("Bind all ports (P2P as well RPC) or fail to start. This is "
                         "used for RPC testing, but might find other uses.")))
-        .addArg("bitnodes", optionalBool,
-            _("Query for peer addresses via Bitnodes API, if low on addresses (default: 1 unless -connect)"))
         .addArg("connect=<ip>", optionalStr, _("Connect only to the specified node(s)"))
         .addArg("discover", optionalBool,
             _("Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)"))
@@ -331,8 +329,6 @@ static void addConnectionOptions(AllowedArgs &allowedArgs)
         .addArg("dnsseed", optionalBool,
             _("Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)"))
         .addArg("externalip=<ip>", requiredStr, _("Specify your own public address"))
-        .addArg("forcebitnodes", optionalBool,
-            strprintf(_("Always query for peer addresses via Bitnodes API (default: %u)"), DEFAULT_FORCEBITNODES))
         .addArg("forcednsseed", optionalBool,
             strprintf(_("Always query for peer addresses via DNS lookup (default: %u)"), DEFAULT_FORCEDNSSEED))
         .addArg("listen", optionalBool, _("Accept connections from outside (default: 1 if no -proxy or -connect)"))

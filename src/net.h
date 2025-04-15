@@ -110,10 +110,6 @@ static const bool DEFAULT_USE_EXTVERSION = true;
 /** Internal constant that indicates we have no common graphene versions. */
 const uint64_t GRAPHENE_NO_VERSION_SUPPORTED = 0xfffffff;
 
-// BITCOINUNLIMITED START
-static const bool DEFAULT_FORCEBITNODES = false;
-// BITCOINUNLIMITED END
-
 static const bool DEFAULT_FORCEDNSSEED = false;
 static const size_t DEFAULT_MAXRECEIVEBUFFER = 10 * 1000;
 static const size_t DEFAULT_MAXSENDBUFFER = 10 * 1000;

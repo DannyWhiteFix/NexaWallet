@@ -49,7 +49,7 @@ typedef std::string CStatKey;
 typedef std::map<CStatKey, CStatBase *> CStatMap;
 
 extern CStatMap statistics;
-extern boost::asio::io_service stat_io_service;
+extern boost::asio::io_context stat_io_service;
 extern std::chrono::milliseconds statMinInterval;
 
 template <typename NUM>
@@ -577,7 +577,7 @@ protected:
         // to account for drift we keep checking back against the start time.
         std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
         auto next = std::chrono::milliseconds((timerCount + 1) * statMinInterval) + timerStartSteady - now;
-        timer.expires_from_now(next);
+        timer.expires_at(now + next);
         timer.async_wait(boost::bind(&CStatHistory::timeout, this, boost::asio::placeholders::error));
     }
 };
