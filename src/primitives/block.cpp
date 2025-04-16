@@ -14,6 +14,7 @@
 #include "streams.h"
 #include "tinyformat.h"
 #include "utilstrencodings.h"
+#include "validation/tailstorm.h"
 
 uint256 CBlockHeader::GetMiningHeaderCommitment() const
 {
@@ -42,6 +43,11 @@ uint256 GetMiningHash(const uint256 &headerCommitment, const std::vector<unsigne
     return r;
 }
 
+uint64_t CBlockHeader::numSubblocks() const
+    {
+        auto subblks = parseMinerData(minerData);
+        return subblks.size();
+    }
 
 uint256 CBlockHeader::GetHash() const
 {

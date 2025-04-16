@@ -103,7 +103,8 @@ bool TestBlockValidity(CValidationState &state,
     const ConstCBlockRef pblock,
     CBlockIndex *pindexPrev,
     bool fCheckPOW = true,
-    bool fCheckMerkleRoot = true);
+    bool fCheckMerkleRoot = true,
+    bool fSummaryBlock = false);
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params &consensusParams);
 
@@ -131,7 +132,8 @@ bool CheckBlock(const Consensus::Params &consensusParams,
     ConstCBlockRef pblock,
     CValidationState &state,
     bool fCheckPOW = true,
-    bool fCheckMerkleRoot = true);
+    bool fCheckMerkleRoot = true,
+    bool fSummaryBlock = false);
 
 /** Mark a block as having its data received and checked (up to BLOCK_VALID_TRANSACTIONS). */
 bool ReceivedBlockTransactions(ConstCBlockRef pblock,

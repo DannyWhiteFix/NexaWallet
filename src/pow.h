@@ -8,7 +8,6 @@
 #define NEXA_POW_H
 
 #include "consensus/params.h"
-
 #include <stdint.h>
 
 class CBlockHeader;

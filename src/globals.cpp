@@ -389,6 +389,24 @@ CTweak<bool> doubleSpendProofs("net.doubleSpendProofs",
     "Process and forward double spend proofs (default: true)",
     true);
 
+std::string TailstormChanged(const bool &value, CTweak<bool> *item, bool validate)
+{
+    if (validate == false)
+    {
+        if (item->Value())
+        {
+            ModifiableParams().GetModifiableConsensus().tailstormSubblocks = 20;
+        }
+        else
+        {
+            ModifiableParams().GetModifiableConsensus().tailstormSubblocks = 0;
+        }
+    }
+    return std::string(); // we accept the change
+}
+CTweak<bool> tailstormEnabled("mining.tailstorm", "Enable tailstorm block mining", false, &TailstormChanged);
+
+
 CTweak<uint64_t> coinbaseReserve("mining.coinbaseReserve",
     strprintf("How much space to reserve for the coinbase transaction, in bytes (default: %d)",
         DEFAULT_COINBASE_RESERVE_SIZE),

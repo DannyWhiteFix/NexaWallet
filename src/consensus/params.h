@@ -139,6 +139,8 @@ struct Params
     uint256 powLimit;
     bool fPowAllowMinDifficultyBlocks;
     bool fPowNoRetargeting;
+    /** Number of tailstorm subblocks needed to make up a block */
+    uint64_t tailstormSubblocks = 0;
     int64_t nPowTargetSpacing;
     // The half life for the ASERT DAA. For every (nASERTHalfLife) seconds behind schedule the blockchain gets,
     // difficulty is cut in half. Doubled if blocks are ahead of schedule.

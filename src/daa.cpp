@@ -131,6 +131,12 @@ uint32_t GetNextASERTWorkRequired(const CBlockIndex *pindexPrev,
     arith_uint256 nextTarget = CalculateASERT(
         refBlockTarget, params.nPowTargetSpacing, nTimeDiff, nHeightDiff, powLimit, params.nASERTHalfLife);
 
+    // make the target N times easier to produce N subblocks per block
+    if (params.tailstormSubblocks != 0)
+    {
+        nextTarget *= params.tailstormSubblocks;
+    }
+
     // CalculateASERT() already clamps to powLimit.
     return nextTarget.GetCompact();
 }

@@ -31,6 +31,7 @@
 #include "utilstrencodings.h"
 #include "utiltranslate.h"
 #include "validation/forks.h"
+#include "validation/tailstorm.h"
 #include "validationinterface.h"
 
 #ifdef ENABLE_WALLET
@@ -244,7 +245,7 @@ bool ContextualCheckBlockHeader(const CChainParams &chainparams,
                 "bad-fork-prior-to-checkpoint");
         }
     }
-
+    
     // Check timestamp against prev
     if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
         return state.Invalid(error("%s: block's timestamp is too early", __func__), REJECT_INVALID, "time-too-old");
@@ -1548,7 +1549,8 @@ bool TestBlockValidity(CValidationState &state,
     const ConstCBlockRef pblock,
     CBlockIndex *pindexPrev,
     bool fCheckPOW,
-    bool fCheckMerkleRoot)
+    bool fCheckMerkleRoot,
+    bool fSummaryBlock)
 {
     AssertLockHeld(cs_main);
     assert(pindexPrev && pindexPrev == chainActive.Tip());
@@ -1563,8 +1565,9 @@ bool TestBlockValidity(CValidationState &state,
     // NOTE: CheckBlockHeader is called by CheckBlock
     if (!ContextualCheckBlockHeader(chainparams, *pblock, state, pindexPrev))
         return false;
-    if (!CheckBlock(chainparams.GetConsensus(), pblock, state, fCheckPOW, fCheckMerkleRoot))
+    if (!CheckBlock(chainparams.GetConsensus(), pblock, state, fCheckPOW, fCheckMerkleRoot, fSummaryBlock))
         return false;
+        
     if (!ContextualCheckBlock(pblock, state, pindexPrev))
         return false;
 
@@ -1911,6 +1914,12 @@ bool ContextualCheckBlock(ConstCBlockRef pblock, CValidationState &state, CBlock
             REJECT_INVALID, "bad-cb-height");
     }
 
+    // Check all transactions in referenced subblocks are consistent with this block
+    if (pblock->minerData.size() > 0)
+    {
+        // tailstorm TODO
+    }
+
     return true;
 }
 
@@ -1918,7 +1927,8 @@ bool CheckBlock(const Consensus::Params &consensusParams,
     const ConstCBlockRef pblock,
     CValidationState &state,
     bool fCheckPOW,
-    bool fCheckMerkleRoot)
+    bool fCheckMerkleRoot,
+    bool fSummaryBlock)
 {
     // These are checks that are independent of context.
     if (pblock->fChecked)
@@ -1931,6 +1941,11 @@ bool CheckBlock(const Consensus::Params &consensusParams,
     {
         return false;
     }
+    if (fSummaryBlock && !CheckSummaryBlockHeader(consensusParams, pblock, state, fCheckPOW))
+    {
+        return false;
+    }
+
     // Check the merkle root.  If this check fails we must return false, rather than an invalid
     // state, otherwise we could end up invalidating the chain which would open up a possible DOS attack
     // since it's relatively trivial to malleate a block's vtx[] and get the merkleroot check to fail.

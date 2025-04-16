@@ -94,7 +94,6 @@ public:
         READWRITE(hashAncestor);
         READWRITE(hashMerkleRoot);
         READWRITE(hashTxFilter);
-
         READWRITE(nTime);
         READWRITE(VARINT(height));
         READWRITE(chainWork);
@@ -106,6 +105,9 @@ public:
         READWRITE(minerData);
         READWRITE(nonce);
     }
+
+    /** How many subblocks does this block reference */
+    uint64_t numSubblocks() const;
 
     bool operator==(const CBlockHeader &b)
     {
