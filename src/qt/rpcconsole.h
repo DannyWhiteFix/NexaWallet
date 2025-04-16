@@ -128,6 +128,10 @@ public Q_SLOTS:
     void unbanSelectedNode();
     /** set which tab has the focus (is visible) */
     void setTabFocus(enum TabTypes tabType);
+    /** set the scaling larger for the block viewer */
+    void scaleUp();
+    /** set the scaling smaller for the block viewer */
+    void scaleDown();
 
 Q_SIGNALS:
     // For RPC command executor
@@ -163,6 +167,9 @@ private:
     QMenu *banTableContextMenu;
     int consoleFontSize;
     QCompleter *autoCompleter;
+
+    // for the block viewer button signals/slots
+    int nScaled;
 };
 
 #endif // NEXA_QT_RPCCONSOLE_H

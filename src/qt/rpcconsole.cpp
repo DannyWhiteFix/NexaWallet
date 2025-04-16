@@ -266,7 +266,7 @@ void RPCExecutor::request(const QString &command)
 
 RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent)
     : QWidget(parent), ui(new Ui::RPCConsole), clientModel(0), historyPtr(0), cachedNodeid(-1),
-      platformStyle(_platformStyle), peersTableContextMenu(0), banTableContextMenu(0), consoleFontSize(0)
+      platformStyle(_platformStyle), peersTableContextMenu(0), banTableContextMenu(0), consoleFontSize(0), nScaled(0)
 {
     ui->setupUi(this);
     GUIUtil::restoreWindowGeometry("nRPCConsoleWindow", this->size(), this);
@@ -289,6 +289,17 @@ RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent)
     connect(ui->fontBiggerButton, SIGNAL(clicked()), this, SLOT(fontBigger()));
     connect(ui->fontSmallerButton, SIGNAL(clicked()), this, SLOT(fontSmaller()));
     connect(ui->btnClearTrafficGraph, SIGNAL(clicked()), ui->trafficGraph, SLOT(clear()));
+
+    // Setup communication with the block viewer buttons.
+    connect(ui->plusButton, SIGNAL(clicked()), this, SLOT(scaleUp()));
+    connect(ui->plusButton, SIGNAL(clicked()), ui->DagViewer, SLOT(ScaleUp()));
+    connect(ui->minusButton, SIGNAL(clicked()), this, SLOT(scaleDown()));
+    connect(ui->minusButton, SIGNAL(clicked()), ui->DagViewer, SLOT(ScaleDown()));
+    connect(ui->pauseContinueButton, SIGNAL(clicked()), ui->DagViewer, SLOT(ShowPauseContinueButtons()));
+
+    // Pass the button pointer to the DagViewer so we can send signals back for changing the button text
+    ui->DagViewer->SetPauseContinueButton(ui->pauseContinueButton);
+
 
 // set library version labels
 #ifdef ENABLE_WALLET
@@ -1061,7 +1072,12 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
     ui->detailWidget->show();
 }
 
-void RPCConsole::resizeEvent(QResizeEvent *event) { QWidget::resizeEvent(event); }
+void RPCConsole::resizeEvent(QResizeEvent *event)
+{
+    ui->DagViewer->resizeGraphicsView(this);
+    QWidget::resizeEvent(event);
+}
+
 void RPCConsole::showEvent(QShowEvent *event)
 {
     // restore column state
@@ -1178,3 +1194,31 @@ void RPCConsole::showOrHideBanTableIfRequired()
 }
 
 void RPCConsole::setTabFocus(enum TabTypes tabType) { ui->tabWidget->setCurrentIndex(tabType); }
+
+void RPCConsole::scaleUp()
+{
+    if (nScaled <= 1)
+    {
+        ui->minusButton->setEnabled(true);
+        nScaled++;
+    }
+
+    if (nScaled > 1)
+    {
+        ui->plusButton->setEnabled(false);
+    }
+}
+
+void RPCConsole::scaleDown()
+{
+    if (nScaled >= -5)
+    {
+        nScaled--;
+        ui->plusButton->setEnabled(true);
+    }
+
+    if (nScaled < -5)
+    {
+        ui->minusButton->setEnabled(false);
+    }
+}

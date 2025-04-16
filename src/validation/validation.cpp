@@ -428,6 +428,9 @@ CBlockIndex *AddToBlockIndex(const CChainParams &chainparams, const CBlockHeader
     // Update the ui if the best header has changed.
     NotifyHeaderTip();
 
+    // Update the block viewer
+    uiInterface.NotifyHeaderTipDag(IsInitialBlockDownload(), pindexNew);
+
     return pindexNew;
 }
 
@@ -3585,6 +3588,10 @@ bool ActivateBestChainStep(CValidationState &state,
                     nLastUpdate.store(GetTime());
                 }
 
+                // Update the block viewer (only do this once)
+                uiInterface.NotifyBlockTipDag(IsInitialBlockDownload(), pindexNewTip);
+
+
                 PruneBlockIndexCandidates();
                 if (!pindexOldTip || chainActive.Tip()->chainWork() > pindexOldTip->chainWork())
                 {
@@ -3606,7 +3613,9 @@ bool ActivateBestChainStep(CValidationState &state,
 
         // Notify the UI with the new block tip information.
         if (pindexMostWork->height() >= nHeight && pindexNewTip != nullptr && pindexLastNotify != pindexNewTip)
+        {
             uiInterface.NotifyBlockTip(IsInitialBlockDownload(), pindexNewTip, false);
+        }
 
         if (fContinue)
         {

@@ -5,7 +5,7 @@
 bin_PROGRAMS += qt/nexa-qt
 EXTRA_LIBRARIES += qt/libnexaqt.a
 
-# nexa qt core #
+# nexa qt #
 QT_TS = \
   qt/locale/bitcoin_af.ts \
   qt/locale/bitcoin_af_ZA.ts \
@@ -95,6 +95,7 @@ QT_FORMS_UI = \
   qt/forms/unlimited.ui \
   qt/forms/addressbookpage.ui \
   qt/forms/askpassphrasedialog.ui \
+  qt/forms/blockdescdialog.ui \
   qt/forms/coincontroldialog.ui \
   qt/forms/editaddressdialog.ui \
   qt/forms/edittokendialog.ui \
@@ -124,6 +125,7 @@ QT_MOC_CPP = \
   qt/moc_coincontroldialog.cpp \
   qt/moc_coincontroltreewidget.cpp \
   qt/moc_csvmodelwriter.cpp \
+  qt/moc_dagwidget.cpp \
   qt/moc_editaddressdialog.cpp \
   qt/moc_edittokendialog.cpp \
   qt/moc_guiutil.cpp \
@@ -201,6 +203,7 @@ NEXA_QT_H = \
   qt/coincontroldialog.h \
   qt/coincontroltreewidget.h \
   qt/csvmodelwriter.h \
+  qt/dagwidget.h \
   qt/editaddressdialog.h \
   qt/edittokendialog.h \
   qt/guiconstants.h \
@@ -314,6 +317,7 @@ NEXA_QT_CPP = \
   qt/bantablemodel.cpp \
   qt/clientmodel.cpp \
   qt/csvmodelwriter.cpp \
+  qt/dagwidget.cpp \
   qt/guiutil.cpp \
   qt/intro.cpp \
   qt/modaloverlay.cpp \

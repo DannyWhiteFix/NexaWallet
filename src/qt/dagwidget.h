@@ -1,0 +1,240 @@
+// Copyright (c) 2015-2024 The Bitcoin Unlimited developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#ifndef DAGWIDGET_H
+#define DAGWIDGET_H
+
+#include "sync.h"
+#include "ui_blockdescdialog.h"
+#include "uint256.h"
+
+#include <memory>
+
+#include <QDialog>
+#include <QGraphicsView>
+#include <QPainterPath>
+#include <QPushButton>
+#include <QTimer>
+
+class DagWidget;
+
+namespace Ui
+{
+class BlockDescDialog;
+}
+
+/** Dialog showing block details. */
+class BlockDescDialog : public QDialog
+{
+    Q_OBJECT
+
+    friend DagWidget;
+
+public:
+    explicit BlockDescDialog(QString *desc, QWidget *parent = nullptr, DagWidget *dagwidget = nullptr);
+    ~BlockDescDialog();
+
+private:
+    Ui::BlockDescDialog *ui;
+    DagWidget *_dagwidget = nullptr;
+
+private Q_SLOTS:
+    void hideEvent(QHideEvent *event);
+};
+
+class DagWidget : public QWidget
+{
+    Q_OBJECT
+
+    friend BlockDescDialog;
+
+public:
+    explicit DagWidget(QWidget *parent = nullptr);
+    ~DagWidget();
+
+    void resizeGraphicsView(QWidget *console);
+
+    enum
+    {
+        STORM_BLOCK = 0,
+        SUMMARY = 1,
+        LEGACY_BLOCK = 2
+    };
+
+    struct Link
+    {
+        uint256 prevBlock;
+        bool fHardLink = false;
+    };
+
+    struct ItemInfo
+    {
+        uint256 blockhash;
+        uint32_t nBlockHeight = 0;
+        uint32_t nBlockNum = 0;
+        uint32_t nFork = 0;
+        qreal x = 0;
+        qreal y = 0;
+        qreal itemWidth = 0;
+        qreal itemHeight = 0;
+        std::vector<Link> vBlockPointsTo;
+        bool fIsChainTip = true;
+        bool fHasDoubleSpend = false;
+        uint8_t blockType = 0;
+        bool fHaveBlock = false;
+
+        QGraphicsPathItem *item = nullptr;
+        QGraphicsPathItem *itemText = nullptr;
+        QGraphicsProxyWidget *itemText1 = nullptr;
+        QGraphicsProxyWidget *itemText2 = nullptr;
+        QGraphicsLineItem *litem = nullptr;
+    };
+
+    // Add a new block item to the viewer
+    void AddItem(uint256 hash,
+        uint256 prevhash,
+        uint32_t nHeight,
+        std::vector<Link> &_vpointsto,
+        bool fDoubleSpend,
+        uint32_t nFork,
+        uint8_t blockType,
+        bool fHeader);
+
+private:
+    QWidget *_parent; // pointer to the layout
+    BlockDescDialog *uiBlockDesc = nullptr; // block description message box
+
+    CCriticalSection cs_info;
+
+    // Graphics view pointers
+    QGraphicsScene *scene GUARDED_BY(cs_info);
+    QGraphicsView *view GUARDED_BY(cs_info);
+
+    // Data structures for holding graphic items and related data
+    std::map<uint256, std::shared_ptr<ItemInfo> > mapInfo GUARDED_BY(cs_info);
+    std::map<uint32_t, std::vector<std::shared_ptr<ItemInfo> > > mapDag GUARDED_BY(cs_info);
+
+    // The last block item which was clicked on.
+    std::shared_ptr<ItemInfo> pSelected GUARDED_BY(cs_info) = nullptr;
+    // The current highlighted block item;
+    QGraphicsPathItem *itemHighlight GUARDED_BY(cs_info) = nullptr;
+
+    // Track the x-coord where we should center the view on
+    qreal xCenter GUARDED_BY(cs_info) = 0;
+    const qreal xOffset = 130; // pixel offset from the end of the view
+
+    // Is the viewer activated and ready to show blocks.
+    bool fStartBlockViewer GUARDED_BY(cs_info) = false;
+
+    // The sequential block number
+    uint32_t nStormBlockNum GUARDED_BY(cs_info) = 0;
+
+    // Did we pause tracking new blocks
+    bool fPause GUARDED_BY(cs_info) = false;
+
+    // pens and brushes
+    QPen borderPen;
+    QPen thickBorderPen;
+    QPen dashedLinePen;
+    QPen widgetBorderPen;
+
+    QBrush greenBrush;
+    QBrush greyBrush;
+    QBrush redBrush;
+    QBrush blueBrush;
+    QBrush goldBrush;
+    QBrush violetBrush;
+    QBrush whiteBrush;
+    QBrush blackBrush;
+    QBrush steelBlueBrush;
+    QBrush charcoalBrush;
+
+    // block dimensions
+    const qreal width = 28;
+    const qreal height = 24;
+    const qreal summaryHeight = 100;
+    const qreal summaryWidth = 60;
+    const qreal legacyHeight = 60;
+    const qreal legacyWidth = 60;
+    const qreal distance = 28;
+    const qreal radius = 5;
+
+    /** The view width (in pixels) of the graphics scene. */
+    const qreal DEFAULT_WIDTH_OF_VIEW = 100 * 1000;
+    /** The maximum number of blocks we keep in the graphics scene (make it a little bigger than the view can hold) */
+    const size_t DEFAULT_MAX_BLOCKS = (DEFAULT_WIDTH_OF_VIEW * 1.05) / (size_t)(width + distance);
+    /** The number of Storm blocks than make up one Summary block */
+    const uint32_t DEFAULT_NUM_STORM_BLOCKS_PER_SUMMARY = 120;
+    /** Are QLabels enabled */
+    const bool fQLabelsEnabled = false;
+
+    QTimer *pollTimer;
+    QTimer *pollTimer2;
+
+    QPushButton *buttonPauseContinue = nullptr;
+
+    // For adding text to block rectangles
+    void AddText(uint256 hash, QPen pen, qreal x, qreal y, uint8_t blockType);
+
+    void SubscribeToCoreSignals();
+    void UnsubscribeFromCoreSignals();
+
+    uint32_t GetNextStormBlockNum()
+    {
+        LOCK(cs_info);
+        nStormBlockNum++;
+        if (nStormBlockNum > DEFAULT_NUM_STORM_BLOCKS_PER_SUMMARY)
+            nStormBlockNum = 1;
+        return nStormBlockNum;
+    }
+
+    // Structures and functions for running simulations
+    struct SimInfo
+    {
+        uint256 blockhash;
+        uint32_t nBlockHeight = 0;
+        std::vector<Link> vBlockPointsTo;
+        bool fHaveBlock = false;
+        bool fDoubleSpend = false;
+        uint32_t nFork = 0;
+        uint8_t blockType = LEGACY_BLOCK;
+    };
+    std::vector<SimInfo> vSimulation5;
+
+    // Simulation maps based on block height and map of blocks with links
+    std::map<uint32_t, std::map<uint256, std::vector<Link> > > mapSimulation1;
+    std::map<uint32_t, std::map<uint256, std::vector<Link> > > mapSimulation2;
+
+    // Remove the currently item highlighting from the scene.
+    void RemoveHighlight();
+
+    // Set pause or continue and notify the buttons so they change shown text
+    void ShowPauseButton();
+    void ShowContinueButton();
+
+public:
+    void SetPauseContinueButton(QPushButton *button) { buttonPauseContinue = button; }
+
+private:
+    // Create the data for the simulations
+    uint8_t nRunSimulation = 0;
+    void SetupSimulation1();
+    void SetupSimulation2();
+    void SetupSimulation5();
+
+private Q_SLOTS:
+    void dagSimulation();
+    void mousePressEvent(QMouseEvent *event);
+    void hideEvent(QHideEvent *event);
+    void sliderPress();
+
+public Q_SLOTS:
+    void ShowPauseContinueButtons();
+
+    // Scale up and down the block view
+    void ScaleUp();
+    void ScaleDown();
+};
+
+#endif // DAGWIDGET_H
