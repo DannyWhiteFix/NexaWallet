@@ -192,6 +192,8 @@ bool MineIt(CBlockHeader &blockHeader, unsigned long int tries, const Consensus:
 
     while (tries > 0)
     {
+        if ((tries & ((1 << 12) - 1)) == 0)
+            printf("nonce: %s\n", GetHex(blockHeader.nonce).c_str());
         uint256 mhash = ::GetMiningHash(headerCommitment, blockHeader.nonce);
         if (CheckPow(mhash, blockHeader.nBits, cparams))
         {
@@ -349,7 +351,14 @@ public:
         cashaddrPrefix = "nexareg";
 
         consensus.nSubsidyHalvingInterval = 150;
-        consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        // tailstorm: was 0x1e0fffff; make it 16x harder so there is room for subblocks to be easier
+        uint32_t tgtBits = 0x1e03ffff;
+        bool fNegative;
+        bool fOverflow;
+        arith_uint256 tmp;
+        tmp.SetCompact(tgtBits, &fNegative, &fOverflow);
+        // tailstorm:  make the easiest pow 16 times easier than the starting
+        consensus.powLimit = ArithToUint256(tmp << 4);
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
@@ -378,13 +387,16 @@ public:
         consensus.nNextMaxBlockSize = DEFAULT_NEXT_MAX_BLOCK_SIZE_FORK1_REGTEST;
 
         std::vector<unsigned char> nonce;
-        nonce.resize(1);
-        nonce[0] = 5;
-        genesis = CreateGenesisBlock("This is regtest", CScript() << OP_1, 1626275623, nonce, 0x207fffff, 0 * COIN);
+        nonce.resize(4);
+        nonce[0] = 0x6d;
+        nonce[1] = 0x0f;
+        nonce[2] = 0x0d;
+        nonce[3] = 0x0;
+        genesis = CreateGenesisBlock("This is regtest", CScript() << OP_1, 1744987388, nonce, tgtBits, 0 * COIN);
 #if 0 // recalculate GB if needed (note that this code will not work with the java nexa shared library because it
       // must start before the random numbers (initialized in ECC_Start are hooked up).
         ECC_Start();
-        bool worked = MineIt(genesis, 255, consensus);
+        bool worked = MineIt(genesis, 2550000000, consensus);
         ECC_Stop();
         consensus.hashGenesisBlock = genesis.GetHash();
         if (genesis.nonce[0] != nonce[0])
@@ -395,7 +407,7 @@ public:
 #else
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(
-            consensus.hashGenesisBlock == uint256S("d71ee431e307d12dfef31a6b21e071f1d5652c0eb6155c04e3222612c9d0b371"));
+            consensus.hashGenesisBlock == uint256S("b7a7d37600394dd5b8cbf3fb2d1f3b9b9bd81423492230711c2d9d064091eea7"));
 #endif
 
         vFixedSeeds.clear(); //! Regtest mode doesn't have any fixed seeds.

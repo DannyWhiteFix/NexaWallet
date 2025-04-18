@@ -139,8 +139,14 @@ struct Params
     uint256 powLimit;
     bool fPowAllowMinDifficultyBlocks;
     bool fPowNoRetargeting;
-    /** Number of tailstorm subblocks needed to make up a block */
+    /** Number of tailstorm subblocks needed to make up a block.
+        TODO tailstorm:  If we do not make this a chain constant, we could adjust the # of subblocks without a
+        subsequent hard fork.  We would do this by ensuring that the subblock work sums to the needed work
+        rather than checking that N subblocks exist.
+     */
     uint64_t tailstormSubblocks = 0;
+    /** Enforce subblock correctness this deep from the chain tip */
+    uint64_t tailstormEnforceCorrectSubblocks = 5;
     int64_t nPowTargetSpacing;
     // The half life for the ASERT DAA. For every (nASERTHalfLife) seconds behind schedule the blockchain gets,
     // difficulty is cut in half. Doubled if blocks are ahead of schedule.

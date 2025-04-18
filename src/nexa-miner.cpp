@@ -215,6 +215,11 @@ static bool CpuMineBlockHasherNextChain(int &ntries,
 
     nonce[3] = extra & 255;
 
+    bool fNegative;
+    bool fOverflow;
+    arith_uint256 target;
+    target.SetCompact(nBits, &fNegative, &fOverflow);
+    arith_uint256 finalHash;
     while (!found)
     {
         // Search
@@ -226,12 +231,12 @@ static bool CpuMineBlockHasherNextChain(int &ntries,
             nonce[2] = (count >> 16) & 255;
 
             uint256 miningHash = GetMiningHash(headerCommitment, nonce);
-            if (CheckProofOfWork(miningHash, nBits, conp))
+            if (CheckProofOfWork(miningHash, target, conp, &finalHash))
             {
                 // Found a solution
                 found = true;
-                printf("%s: proof-of-work found  \n  mining puzzle solution: %s  \ntarget: %s\n", now().c_str(),
-                    miningHash.GetHex().c_str(), hashTarget.GetHex().c_str());
+                printf("%s: proof-of-work found  \n  mining puzzle solution: %s  \n                  target: %s\n",
+                    now().c_str(), finalHash.GetHex().c_str(), hashTarget.GetHex().c_str());
                 break;
             }
             if (ntries-- < 1)
@@ -348,8 +353,13 @@ static UniValue CpuMineBlock(unsigned int searchDuration, bool &found, const Ran
     const CChainParams &cparams = Params();
     auto conp = cparams.GetConsensus();
 
-    printf("%s: Mining: id: %x headerCommitment: %s bits: %x difficulty: %3.4f\n", now().c_str(),
-        (unsigned int)id.get_int64(), headerCommitment.ToString().c_str(), nBits, difficulty);
+    bool fNegative;
+    bool fOverflow;
+    arith_uint256 target;
+    target.SetCompact(nBits, &fNegative, &fOverflow);
+
+    printf("%s: Mining: id: %x headerCommitment: %s bits: %x difficulty: %3.8f target: %s\n", now().c_str(),
+        (unsigned int)id.get_int64(), headerCommitment.ToString().c_str(), nBits, difficulty, target.GetHex().c_str());
 
     int64_t start = GetTimeMillis();
     std::vector<unsigned char> nonce;

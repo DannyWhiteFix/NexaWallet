@@ -18,12 +18,24 @@ static uint256 sha256(uint256 data)
     return ret;
 }
 
-bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params &params)
+bool CheckProofOfWork(const uint256 &hash, unsigned int nBits, const Consensus::Params &params)
 {
     bool fNegative;
     bool fOverflow;
-    arith_uint256 bnTarget;
+    arith_uint256 target;
+    target.SetCompact(nBits, &fNegative, &fOverflow);
 
+    // Check range
+    if (fNegative || target == 0 || fOverflow || target > UintToArith256(params.powLimit))
+        return false;
+    return CheckProofOfWork(hash, target, params, nullptr);
+}
+
+bool CheckProofOfWork(uint256 hash,
+    const arith_uint256 &bnTarget,
+    const Consensus::Params &params,
+    arith_uint256 *hashout)
+{
     if (params.powAlgorithm == 1)
     {
         // This algorithm uses the hash as a priv key to sign sha256(hash) using deterministic k.
@@ -45,12 +57,9 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params 
         sha.Finalize(hash.begin());
     }
 
-    bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
-
-    // Check range
-    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(params.powLimit))
-        return false;
-
+    auto tmp = UintToArith256(hash);
+    if (hashout != nullptr)
+        *hashout = tmp;
     // Check proof of work matches claimed amount
     if (UintToArith256(hash) > bnTarget)
         return false;

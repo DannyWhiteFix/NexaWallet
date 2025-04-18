@@ -23,6 +23,7 @@
 #include "init.h"
 #include "requestManager.h"
 #include "sync.h"
+#include "tailstorm.h"
 #include "timedata.h"
 #include "txadmission.h"
 #include "txorphanpool.h"
@@ -31,7 +32,6 @@
 #include "utilstrencodings.h"
 #include "utiltranslate.h"
 #include "validation/forks.h"
-#include "validation/tailstorm.h"
 #include "validationinterface.h"
 
 #ifdef ENABLE_WALLET
@@ -148,6 +148,24 @@ static int64_t nTimePostConnect = 0;
 // Protected by cs_main
 static ThresholdConditionCache warningcache[Consensus::MAX_VERSION_BITS_DEPLOYMENTS];
 
+/** Is this subblock a summary block (does it meet the total PoW required)? */
+bool IsSummaryBlock(ConstCBlockRef blk, CBlockIndex *prev)
+{
+    const Consensus::Params &consensusParams = Params().GetConsensus();
+    // TODO tailstorm: This allows full work, non-tailstorm blocks, so should be removed if we choose to
+    // disallow hybrid (but its useful in regtest)
+    if (true)
+    {
+        uint32_t expectedNbits = GetNextSummaryBlockWorkRequired(prev, &(*blk), consensusParams);
+        // This is a full work block
+        if (blk->nBits == expectedNbits)
+            return true;
+    }
+
+    // TODO tailstorm variable # of subblocks
+    return (blk->NumSubblocks() >= consensusParams.tailstormSubblocks);
+}
+
 
 bool ContextualCheckBlockHeader(const CChainParams &chainparams,
     const CBlockHeader &block,
@@ -209,8 +227,8 @@ bool ContextualCheckBlockHeader(const CChainParams &chainparams,
                 block.nBits, expectedNbits),
             REJECT_INVALID, "bad-diffbits");
     }
-    auto expectedChainWork =
-        ArithToUint256((pindexPrev ? pindexPrev->chainWork() : 0) + GetWorkForDifficultyBits(expectedNbits));
+    auto expectedChainWork = ArithToUint256((pindexPrev ? pindexPrev->chainWork() : 0) +
+                                            ((block.NumSubblocks() + 1) * GetWorkForDifficultyBits(expectedNbits)));
     if (block.chainWork != expectedChainWork)
     {
         return state.DoS(100,
@@ -245,7 +263,7 @@ bool ContextualCheckBlockHeader(const CChainParams &chainparams,
                 "bad-fork-prior-to-checkpoint");
         }
     }
-    
+
     // Check timestamp against prev
     if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
         return state.Invalid(error("%s: block's timestamp is too early", __func__), REJECT_INVALID, "time-too-old");
@@ -1567,7 +1585,7 @@ bool TestBlockValidity(CValidationState &state,
         return false;
     if (!CheckBlock(chainparams.GetConsensus(), pblock, state, fCheckPOW, fCheckMerkleRoot, fSummaryBlock))
         return false;
-        
+
     if (!ContextualCheckBlock(pblock, state, pindexPrev))
         return false;
 
@@ -2167,40 +2185,46 @@ bool AcceptBlock(ConstCBlockRef pblock,
             return false;
         }
     }
-
-    int nHeight = pindex->height();
-    // Write block to history file
-    try
+    if (!IsSummaryBlock(pblock, pindex->pprev))
     {
-        unsigned int nBlockSize = ::GetSerializeSize(*pblock, SER_DISK, CLIENT_VERSION);
-        CDiskBlockPos blockPos;
-        if (dbp != nullptr)
+        AcceptSubblock(pblock);
+    }
+    else
+    {
+        int nHeight = pindex->height();
+        // Write block to history file
+        try
         {
-            blockPos = *dbp;
-        }
-        if (!FindBlockPos(state, blockPos, nBlockSize + 8, nHeight, pblock->GetBlockTime(), dbp != nullptr))
-        {
-            return error("AcceptBlock(): FindBlockPos failed");
-        }
-        if (dbp == nullptr)
-        {
-            if (!WriteBlockToDisk(pblock, blockPos, chainparams.MessageStart(), &nHeight))
+            unsigned int nBlockSize = ::GetSerializeSize(*pblock, SER_DISK, CLIENT_VERSION);
+            CDiskBlockPos blockPos;
+            if (dbp != nullptr)
             {
-                AbortNode(state, "Failed to write block");
+                blockPos = *dbp;
+            }
+            if (!FindBlockPos(state, blockPos, nBlockSize + 8, nHeight, pblock->GetBlockTime(), dbp != nullptr))
+            {
+                return error("AcceptBlock(): FindBlockPos failed");
+            }
+            if (dbp == nullptr)
+            {
+                if (!WriteBlockToDisk(pblock, blockPos, chainparams.MessageStart(), &nHeight))
+                {
+                    AbortNode(state, "Failed to write block");
+                }
+            }
+            if (!ReceivedBlockTransactions(pblock, state, pindex, blockPos))
+            {
+                return error("AcceptBlock(): ReceivedBlockTransactions failed");
             }
         }
-        if (!ReceivedBlockTransactions(pblock, state, pindex, blockPos))
+        catch (const std::runtime_error &e)
         {
-            return error("AcceptBlock(): ReceivedBlockTransactions failed");
+            return AbortNode(state, std::string("System error: ") + e.what());
         }
-    }
-    catch (const std::runtime_error &e)
-    {
-        return AbortNode(state, std::string("System error: ") + e.what());
-    }
-    if (fCheckForPruning)
-    {
-        FlushStateToDisk(state, FLUSH_STATE_NONE); // we just allocated more disk space for block files
+        if (fCheckForPruning)
+        {
+            FlushStateToDisk(state, FLUSH_STATE_NONE); // we just allocated more disk space for block files
+        }
     }
     return true;
 }

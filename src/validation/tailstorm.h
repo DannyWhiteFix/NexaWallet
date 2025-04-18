@@ -16,15 +16,24 @@
     If this block references enough subblocks to make a summary block, then it IS the summary block, and its
     transaction list needs to be the full transaction list rather than additional tx on top of referenced subblocks.
  */
-std::vector<std::pair<uint256, std::vector<uint8_t> > > parseMinerData(const std::vector<unsigned char>& data);
+std::vector<std::pair<uint256, std::vector<uint8_t> > > ParseMinerData(const std::vector<unsigned char>& data);
 
-/** Do any additional (context-free) checks on this block header so make sure it is a valid summary block.
+/** Context-independent summary block validity checks.
+    Do any additional (context-free) checks on this block header so make sure it is a valid summary block.
     It is expected that this block has already been check to have a valid header.
 
     Since this is a context-free check, the transactions in this block are NOT checked to be consistent with
     its referenced subblocks' transactions.
 */
-bool CheckSummaryBlockHeader(const Consensus::Params &consensusParams,
-    const ConstCBlockRef pblock,
-    CValidationState &state,
-    bool fCheckPOW);
+// in headervalidation.cpp
+//bool CheckSummaryBlockHeader(const Consensus::Params &consensusParams,
+//    const ConstCBlockRef pblock,
+//    CValidationState &state,
+//    bool fCheckPOW);
+
+/** Is this subblock a summary block (does it meet the total PoW required)? */
+bool IsSummaryBlock(ConstCBlockRef blk, CBlockIndex* prev);
+
+
+/** Store this valid subblock for use in the DAG */
+void AcceptSubblock(ConstCBlockRef pblock);

@@ -88,7 +88,8 @@ static const CBlockIndex *GetASERTAnchorBlock(const CBlockIndex *const pindex, c
 uint32_t GetNextASERTWorkRequired(const CBlockIndex *pindexPrev,
     const CBlockHeader *pblock,
     const Consensus::Params &params,
-    const CBlockIndex *pindexAnchorBlock) noexcept
+    const CBlockIndex *pindexAnchorBlock,
+    bool summaryBlock) noexcept
 {
     // This cannot handle the genesis block and early blocks in general.
     assert(pindexPrev != nullptr);
@@ -132,9 +133,11 @@ uint32_t GetNextASERTWorkRequired(const CBlockIndex *pindexPrev,
         refBlockTarget, params.nPowTargetSpacing, nTimeDiff, nHeightDiff, powLimit, params.nASERTHalfLife);
 
     // make the target N times easier to produce N subblocks per block
-    if (params.tailstormSubblocks != 0)
+    if (!summaryBlock && (params.tailstormSubblocks != 0))
     {
         nextTarget *= params.tailstormSubblocks;
+        if (nextTarget > powLimit)
+            nextTarget = powLimit; // We can't get any easier than this
     }
 
     // CalculateASERT() already clamps to powLimit.
@@ -157,7 +160,7 @@ arith_uint256 CalculateASERT(const arith_uint256 &refTarget,
     // We need some leading zero bits in powLimit in order to have room to handle
     // overflows easily. 32 leading zero bits is more than enough.
     // (broken if starting from genesis block with more difficult POW, so using 20 leading 0 bits)
-    assert((powLimit >> 236) == 0);
+    assert((powLimit >> 238) == 0);
 
     // Height diff should NOT be negative.
     assert(nHeightDiff >= 0);
@@ -249,8 +252,29 @@ uint32_t GetNextWorkRequired(const CBlockIndex *pindexPrev, const CBlockHeader *
     }
 
     const CBlockIndex *panchorBlock = GetASERTAnchorBlock(pindexPrev, params);
-    return GetNextASERTWorkRequired(pindexPrev, pblock, params, panchorBlock);
+    return GetNextASERTWorkRequired(pindexPrev, pblock, params, panchorBlock, false);
 }
+
+uint32_t GetNextSummaryBlockWorkRequired(const CBlockIndex *pindexPrev,
+    const CBlockHeader *pblock,
+    const Consensus::Params &params)
+{
+    // Genesis block
+    if (pindexPrev == nullptr)
+    {
+        return UintToArith256(params.powLimit).GetCompact();
+    }
+
+    // Special rule for regtest: we never retarget.
+    if (params.fPowNoRetargeting)
+    {
+        return pindexPrev->tgtBits();
+    }
+
+    const CBlockIndex *panchorBlock = GetASERTAnchorBlock(pindexPrev, params);
+    return GetNextASERTWorkRequired(pindexPrev, pblock, params, panchorBlock, true);
+}
+
 
 bool MineBlock(CBlockHeader &blockHeader, unsigned long int tries, const Consensus::Params &cparams)
 {

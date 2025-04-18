@@ -44,7 +44,11 @@ public:
 
     /** Hash of the parent block */
     uint256 hashPrevBlock;
-    /** difficulty target specified in a compact format (see detailed docs for exact format) */
+    /** Difficulty target specified in a compact format (see detailed docs for exact format).
+        This field refers to the PoW puzzle difficulty of this (sub)block only.  The actual
+        work in this block is this work times the number of subblocks.
+        (all subblocks must have the same difficulty as the referencing block).
+     */
     uint32_t nBits;
     /** Hash of a specific ancestor block (see detailed docs for exact ancestor) */
     uint256 hashAncestor;
@@ -61,7 +65,7 @@ public:
     // At 2 minute blocks this overflows in (2**32-1)/(30*24*265) = 16343 years (but its serialized as a varint
     // and hashed as a uint64_t anyway)
     uint32_t height;
-    /** Cumulative work in the chain */
+    /** Cumulative work in the chain, including this block and all referenced subblocks */
     uint256 chainWork;
     /** Block size in bytes -- mutable because it is calculated from the other fields */
     mutable uint64_t size;
@@ -106,8 +110,9 @@ public:
         READWRITE(nonce);
     }
 
-    /** How many subblocks does this block reference */
-    uint64_t numSubblocks() const;
+    /** How many subblocks does this block reference.  This does NOT include this block itself,
+     so all PoW calculations should add 1 to this number. */
+    uint64_t NumSubblocks() const;
 
     bool operator==(const CBlockHeader &b)
     {
@@ -141,6 +146,9 @@ public:
 
     /** Hash for identification, not mining */
     uint256 GetHash() const;
+
+    /** Get an identifier for this subblock (for use in minerData) */
+    uint256 SubblockId() const;
 
     /* The block header is formed by the sha256 of the sha256 of the mini-header and the sha256 of the extended header.
        This allows extra-light (mini-headers only) clients to only keep the mini-header the extended header
@@ -295,6 +303,17 @@ struct CBlockLocator
     void SetNull() { vHave.clear(); }
     bool IsNull() const { return vHave.empty(); }
 };
+
+/** Gets the subblock information (mining header commitments) out of the block header's minerdata field.
+    This is stored as an array of pairs.  Each pair is the subblocks mining header commitment and the nonce.
+    This is all and the minimum that we need to prove the PoW of that subblock, since it must match the target
+    specified by this block's nBits fields (all subblocks have to have the same PoW target).
+
+    If this block references enough subblocks to make a summary block, then it IS the summary block, and its
+    transaction list needs to be the full transaction list rather than additional tx on top of referenced subblocks.
+ */
+std::vector<std::pair<uint256, std::vector<uint8_t> > > ParseMinerData(const std::vector<unsigned char> &data);
+
 
 typedef std::shared_ptr<CBlock> CBlockRef;
 typedef std::shared_ptr<const CBlock> ConstCBlockRef;
