@@ -226,6 +226,17 @@ template void base_uint<256>::SetHex(const char *);
 template void base_uint<256>::SetHex(const std::string &);
 template unsigned int base_uint<256>::bits() const;
 
+arith_uint256 FromCompact(uint32_t nCompact)
+{
+    arith_uint256 bnTarget;
+    bool fNegative;
+    bool fOverflow;
+    bnTarget.SetCompact(nCompact, &fNegative, &fOverflow);
+    if (fNegative || fOverflow)
+        return arith_uint256(0);
+    return bnTarget;
+}
+
 // This implementation directly uses shifts instead of going
 // through an intermediate MPI representation.
 arith_uint256 &arith_uint256::SetCompact(uint32_t nCompact, bool *pfNegative, bool *pfOverflow)

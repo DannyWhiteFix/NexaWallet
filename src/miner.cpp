@@ -58,6 +58,8 @@ extern bool fPrintPriority;
 
 using namespace std;
 
+std::vector<uint8_t> assembleSubBlocks(uint64_t heightPrevBlock, uint256 hashPrevBlock, int maxSubblocks);
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // BitcoinMiner
@@ -83,6 +85,7 @@ int64_t UpdateTime(CBlockHeader *pblock, const Consensus::Params &consensusParam
 
     return nNewTime - nOldTime;
 }
+
 
 BlockAssembler::BlockAssembler(const CChainParams &_chainparams) : chainparams(_chainparams) {}
 void BlockAssembler::resetBlock(const CScript &scriptPubKeyIn, int64_t coinbaseSize)
@@ -288,17 +291,42 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
             pblocktemplate->vTxSigOps.push_back(txe->GetSigOpCount());
         }
 
-        // Create coinbase transaction.
-        pblock->vtx[0] =
-            coinbaseTx(scriptPubKeyIn, nHeight, nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus()));
-        pblocktemplate->vTxFees[0] = -nFees;
 
+        const auto &conparams = chainparams.GetConsensus();
         // Fill in header
         pblock->hashPrevBlock = pindexPrev->GetBlockHash();
+        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock.get(), conparams);
+        // Add in partial work subblocks
+        if (conparams.tailstormSubblocks != 0)
+        {
+            pblock->minerData =
+                assembleSubBlocks(pindexPrev->height(), pblock->hashPrevBlock, conparams.tailstormSubblocks);
+        }
+
+        // Create coinbase transaction.
+        // tailstorm TODO make sure the payout matches what the subblocks should get
+        pblock->vtx[0] = coinbaseTx(scriptPubKeyIn, nHeight, nFees + GetBlockSubsidy(nHeight, conparams));
+        pblocktemplate->vTxFees[0] = -nFees;
+
         pblock->hashAncestor = pindexPrev->GetChildsConsensusAncestor()->GetBlockHash();
         UpdateTime(pblock.get(), chainparams.GetConsensus(), pindexPrev);
-        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock.get(), chainparams.GetConsensus());
-        pblock->chainWork = ArithToUint256(pindexPrev->chainWork() + GetWorkForDifficultyBits(pblock->nBits));
+
+        auto work = GetWorkForDifficultyBits(pblock->nBits);
+        work *= pblock->NumSubblocks() + 1;
+        pblock->chainWork = ArithToUint256(pindexPrev->chainWork() + work);
+        if (pblock->NumSubblocks() + 1 == conparams.tailstormSubblocks)
+        {
+            /*
+            auto target = FromCompact(pblock->nBits);
+            target = target * (pblock->NumSubblocks() + 1);
+            //auto tmp = GetWorkForDifficultyBits((pblock->NumSubblocks() + 1) * FromCompact(pblock->nBits));
+            auto fullblockTgt = GetNextSummaryBlockTarget(pindexPrev, pblock.get(), conparams);
+            if (target != fullblockTgt)
+            {
+                throw std::runtime_error(strprintf("%s: work creation is broken", __func__));
+            }
+            */
+        }
         pblock->feePoolAmt = 0; // to be used later
         pblocktemplate->vTxSigOps[0] = 0;
     }

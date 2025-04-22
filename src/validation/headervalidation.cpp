@@ -36,7 +36,7 @@ bool CheckBlockHeader(const Consensus::Params &consensusParams,
             error("CheckBlockHeader(): block timestamp too far in the future"), REJECT_INVALID, "time-too-new");
 #endif
 
-    if (block.minerData.size() != 0)
+    if ((consensusParams.tailstormSubblocks == 0) && (block.minerData.size() != 0))
     {
         return state.DoS(100, error("%s: premature miner data use", __func__), REJECT_INVALID, "bad-miner-data");
     }

@@ -167,7 +167,7 @@ void static ProcessGetData(CNode *pfrom,
                         READLOCK(cs_mapBlockIndex);
                         fSend = mi->IsValid(BLOCK_VALID_SCRIPTS) && (pindexBestHeader != NULL) &&
                                 (pindexBestHeader.load()->GetBlockTime() - mi->GetBlockTime() < nOneMonth) &&
-                                (GetBlockProofEquivalentTime(
+                                (GetBlockWorkEquivalentTime(
                                      *pindexBestHeader, *mi, *pindexBestHeader, consensusParams) < nOneMonth);
                     }
                     if (!fSend)

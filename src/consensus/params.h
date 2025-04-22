@@ -140,6 +140,8 @@ struct Params
     bool fPowAllowMinDifficultyBlocks;
     bool fPowNoRetargeting;
     /** Number of tailstorm subblocks needed to make up a block.
+        This *includes* the current block so the actual number of subblocks a summary block needs to reference is
+        this amount - 1.
         TODO tailstorm:  If we do not make this a chain constant, we could adjust the # of subblocks without a
         subsequent hard fork.  We would do this by ensuring that the subblock work sums to the needed work
         rather than checking that N subblocks exist.

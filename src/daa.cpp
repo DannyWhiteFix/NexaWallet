@@ -89,7 +89,7 @@ uint32_t GetNextASERTWorkRequired(const CBlockIndex *pindexPrev,
     const CBlockHeader *pblock,
     const Consensus::Params &params,
     const CBlockIndex *pindexAnchorBlock,
-    bool summaryBlock) noexcept
+    bool tailstorm) noexcept
 {
     // This cannot handle the genesis block and early blocks in general.
     assert(pindexPrev != nullptr);
@@ -132,9 +132,10 @@ uint32_t GetNextASERTWorkRequired(const CBlockIndex *pindexPrev,
     arith_uint256 nextTarget = CalculateASERT(
         refBlockTarget, params.nPowTargetSpacing, nTimeDiff, nHeightDiff, powLimit, params.nASERTHalfLife);
 
-    // make the target N times easier to produce N subblocks per block
-    if (!summaryBlock && (params.tailstormSubblocks != 0))
+    // make the target N times easier to produce N subblocks per block (if we are doing tailstorm)
+    if (tailstorm && (params.tailstormSubblocks != 0))
     {
+        // Make the target easier by the number of PoW puzzles we are solving
         nextTarget *= params.tailstormSubblocks;
         if (nextTarget > powLimit)
             nextTarget = powLimit; // We can't get any easier than this
@@ -252,29 +253,34 @@ uint32_t GetNextWorkRequired(const CBlockIndex *pindexPrev, const CBlockHeader *
     }
 
     const CBlockIndex *panchorBlock = GetASERTAnchorBlock(pindexPrev, params);
-    return GetNextASERTWorkRequired(pindexPrev, pblock, params, panchorBlock, false);
+    return GetNextASERTWorkRequired(pindexPrev, pblock, params, panchorBlock, true);
 }
 
-uint32_t GetNextSummaryBlockWorkRequired(const CBlockIndex *pindexPrev,
+
+arith_uint256 GetNextNonTailstormBlockTarget(const CBlockIndex *pindexPrev,
     const CBlockHeader *pblock,
     const Consensus::Params &params)
 {
     // Genesis block
     if (pindexPrev == nullptr)
     {
-        return UintToArith256(params.powLimit).GetCompact();
+        return UintToArith256(params.powLimit);
     }
 
     // Special rule for regtest: we never retarget.
     if (params.fPowNoRetargeting)
     {
-        return pindexPrev->tgtBits();
+        arith_uint256 tmp;
+        tmp.SetCompact(pindexPrev->tgtBits());
+        return tmp;
     }
 
+    arith_uint256 tmp;
     const CBlockIndex *panchorBlock = GetASERTAnchorBlock(pindexPrev, params);
-    return GetNextASERTWorkRequired(pindexPrev, pblock, params, panchorBlock, true);
+    uint32_t bits = GetNextASERTWorkRequired(pindexPrev, pblock, params, panchorBlock, false);
+    tmp.SetCompact(bits);
+    return tmp;
 }
-
 
 bool MineBlock(CBlockHeader &blockHeader, unsigned long int tries, const Consensus::Params &cparams)
 {

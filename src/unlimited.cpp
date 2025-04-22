@@ -65,6 +65,7 @@ extern void AlertNotify(const std::string &strMessage);
 
 using namespace std;
 
+extern bool forceTemplateRecalc;
 extern CTxMemPool mempool; // from main.cpp
 static atomic<bool> fIsChainNearlySyncd{false};
 
@@ -1058,9 +1059,16 @@ UniValue setlog(const UniValue &params, bool fHelp)
 static int64_t lastMiningCandidateId = 0;
 
 /** Oustanding candidates are removed 30 sec after a new block has been found*/
-static void RmOldMiningCandidates()
+static void RmOldMiningCandidates(bool clear = false)
 {
     LOCK(csMiningCandidates);
+
+    // TODO tailstorm: remove all old mining candidates so newly found subblocks can be
+    if (clear)
+    {
+        miningCandidatesMap.clear();
+        return;
+    }
 
     // Clean out mining candidates that are the same height as a discovered block.
     for (auto it = miningCandidatesMap.cbegin(); it != miningCandidatesMap.cend();)
@@ -1362,7 +1370,12 @@ UniValue submitminingsolution(const UniValue &params, bool fHelp)
     }
 
     UniValue uvsub = SubmitBlock(block); // returns string on failure
-    RmOldMiningCandidates();
+    // It worked so we need new solutions
+    if (uvsub.size() == 0)
+    {
+        RmOldMiningCandidates(true);
+        forceTemplateRecalc = true;
+    }
     return uvsub;
 }
 

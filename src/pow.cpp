@@ -66,3 +66,4 @@ bool CheckProofOfWork(uint256 hash,
 
     return true;
 }
+

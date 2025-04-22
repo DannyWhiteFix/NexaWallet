@@ -403,7 +403,7 @@ std::string TailstormChanged(const bool &value, CTweak<bool> *item, bool validat
         }
         if (item->Value())
         {
-            ModifiableParams().GetModifiableConsensus().tailstormSubblocks = 2;
+            ModifiableParams().GetModifiableConsensus().tailstormSubblocks = 4;
         }
         else
         {

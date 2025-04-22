@@ -25,6 +25,8 @@ struct Params;
 
 /** Get the work equivalent for the supplied nBits of difficulty */
 arith_uint256 GetWorkForDifficultyBits(uint32_t nBits);
+/** Get the work equivalent for the supplied difficulty target */
+arith_uint256 GetWorkForTarget(arith_uint256 bnTarget);
 
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
@@ -113,6 +115,13 @@ public:
     /** How many subblocks does this block reference.  This does NOT include this block itself,
      so all PoW calculations should add 1 to this number. */
     uint64_t NumSubblocks() const;
+
+    /** Is this block a summary block?
+        This returns true if there are enough subblocks to make or exceed the required PoW to be a summary
+        (aka blockchain, tailstorm DAG collapse) block
+     */
+    // IsSummaryBlock(ConstCBlockRef blk, CBlockIndex *prev) in validation.h
+    // bool IsSummaryBlock(const Consensus::Params& params) const;
 
     bool operator==(const CBlockHeader &b)
     {

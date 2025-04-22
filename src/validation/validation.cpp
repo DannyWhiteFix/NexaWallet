@@ -149,23 +149,27 @@ static int64_t nTimePostConnect = 0;
 static ThresholdConditionCache warningcache[Consensus::MAX_VERSION_BITS_DEPLOYMENTS];
 
 /** Is this subblock a summary block (does it meet the total PoW required)? */
-bool IsSummaryBlock(ConstCBlockRef blk, CBlockIndex *prev)
+bool IsSummaryBlock(const CBlock &blk, CBlockIndex *prev, const Consensus::Params &consensusParams)
 {
-    const Consensus::Params &consensusParams = Params().GetConsensus();
     // TODO tailstorm: This allows full work, non-tailstorm blocks, so should be removed if we choose to
     // disallow hybrid (but its useful in regtest)
-    if (true)
+    if (blk.minerData.size() == 0)
     {
-        uint32_t expectedNbits = GetNextSummaryBlockWorkRequired(prev, &(*blk), consensusParams);
+        arith_uint256 tgt = GetNextNonTailstormBlockTarget(prev, &blk, consensusParams);
+        uint32_t expectedNbits = tgt.GetCompact();
         // This is a full work block
-        if (blk->nBits == expectedNbits)
+        if (blk.nBits == expectedNbits)
             return true;
     }
 
     // TODO tailstorm variable # of subblocks
-    return (blk->NumSubblocks() >= consensusParams.tailstormSubblocks);
+    return (blk.NumSubblocks() >= consensusParams.tailstormSubblocks - 1);
 }
-
+bool IsSummaryBlock(ConstCBlockRef blk, CBlockIndex *prev)
+{
+    const Consensus::Params &consensusParams = Params().GetConsensus();
+    return IsSummaryBlock(*blk, prev, consensusParams);
+}
 
 bool ContextualCheckBlockHeader(const CChainParams &chainparams,
     const CBlockHeader &block,
@@ -227,6 +231,9 @@ bool ContextualCheckBlockHeader(const CChainParams &chainparams,
                 block.nBits, expectedNbits),
             REJECT_INVALID, "bad-diffbits");
     }
+    // auto fullblockWork = GetNextSummaryBlockWorkRequired(pindexPrev, pblock.get(), conparams);
+    // auto expectedChainWork = ArithToUint256((pindexPrev ? pindexPrev->chainWork() : 0) +
+    // GetWorkForDifficultyBits(fullblockWork));
     auto expectedChainWork = ArithToUint256((pindexPrev ? pindexPrev->chainWork() : 0) +
                                             ((block.NumSubblocks() + 1) * GetWorkForDifficultyBits(expectedNbits)));
     if (block.chainWork != expectedChainWork)
@@ -296,7 +303,8 @@ bool AcceptBlockHeader(const CBlockHeader &block,
     // Check for duplicate
     uint256 hash = block.GetHash();
     CBlockIndex *pindex = nullptr;
-    if (hash != chainparams.GetConsensus().hashGenesisBlock)
+    const auto &conparams = chainparams.GetConsensus();
+    if (hash != conparams.hashGenesisBlock)
     {
         pindex = LookupBlockIndex(hash);
         if (pindex)
@@ -314,7 +322,7 @@ bool AcceptBlockHeader(const CBlockHeader &block,
             return true;
         }
 
-        if (!CheckBlockHeader(chainparams.GetConsensus(), block, state))
+        if (!CheckBlockHeader(conparams, block, state))
             return false;
 
         // Get prev block index
@@ -342,6 +350,7 @@ bool AcceptBlockHeader(const CBlockHeader &block,
             }
         }
     }
+
     if (pindex == nullptr)
     {
         LOCK(cs_main);
@@ -351,7 +360,7 @@ bool AcceptBlockHeader(const CBlockHeader &block,
     if (ppindex)
         *ppindex = pindex;
 
-    return true;
+    return (pindex != nullptr);
 }
 
 //////////////////////////////////////////////////////////////////
@@ -384,6 +393,7 @@ void PruneBlockIndexCandidates()
 CBlockIndex *AddToBlockIndex(const CChainParams &chainparams, const CBlockHeader &block)
 {
     AssertLockHeld(cs_main);
+    const auto &conparams = chainparams.GetConsensus();
     WRITELOCK(cs_mapBlockIndex);
 
     // Check for duplicate
@@ -410,30 +420,51 @@ CBlockIndex *AddToBlockIndex(const CChainParams &chainparams, const CBlockHeader
         if (pindexNew->pprev && pindexNew->pprev->nStatus & BLOCK_FAILED_MASK)
             pindexNew->nStatus |= BLOCK_FAILED_CHILD;
     }
+    bool summaryBlock = IsSummaryBlock(block, pindexNew->pprev, conparams);
     pindexNew->nNextMaxBlockSize = CalculateNextMaxBlockSize(pindexNew->pprev, block.size);
-    pindexNew->nChainTx = (pindexNew->pprev ? pindexNew->pprev->nChainTx : 0) + block.txCount;
-
-    // Update the global atomic value
-    SetLargestNextMaxBlockSize(pindexNew->nNextMaxBlockSize);
-
-    auto expectedWork =
-        ArithToUint256((pindexNew->pprev ? pindexNew->pprev->chainWork() : 0) + GetBlockProof(*pindexNew));
-    if (pindexNew->GetBlockHeader().chainWork != expectedWork)
+    if (summaryBlock)
     {
-        pindexNew->nStatus |= BLOCK_FAILED_VALID; // block doesn't match checkpoints so invalid
-        delete pindexNew;
-        return nullptr; // Do not insert a block that does not meet work -- its a memory DOS attack.
+        if (block.minerData.size() == 0)
+        {
+            // this is a non-tailstorm block
+            auto work = GetBlockWork(*pindexNew);
+            auto expectedWork = ArithToUint256((pindexNew->pprev ? pindexNew->pprev->chainWork() : 0) + work);
+            if (pindexNew->header.chainWork != expectedWork)
+            {
+                pindexNew->nStatus |= BLOCK_FAILED_VALID; // block doesn't match checkpoints so invalid
+                delete pindexNew;
+                return nullptr; // Do not insert a block that does not meet work -- its a memory DOS attack.
+            }
+        }
+        else
+        {
+            pindexNew->nChainTx = (pindexNew->pprev ? pindexNew->pprev->nChainTx : 0) + block.txCount;
+            // Update the global atomic value
+            SetLargestNextMaxBlockSize(pindexNew->nNextMaxBlockSize);
+
+            auto work = GetWorkForDifficultyBits(block.nBits);
+            if (conparams.tailstormSubblocks > 0)
+                work *= conparams.tailstormSubblocks;
+            auto expectedWork = ArithToUint256((pindexNew->pprev ? pindexNew->pprev->chainWork() : 0) + work);
+            if (pindexNew->header.chainWork != expectedWork)
+            {
+                pindexNew->nStatus |= BLOCK_FAILED_VALID; // block doesn't match checkpoints so invalid
+                delete pindexNew;
+                return nullptr; // Do not insert a block that does not meet work -- its a memory DOS attack.
+            }
+        }
     }
     else
     {
-        // We do not create any blocks whose parents are TREE/HEADER invalid, so correct work in this block implies
-        // the TREE validity level.
-        //
-        // Don't use raisevalidity, because it refuses to raise if BLOCK_FAILED_CHILD is set.
-        pindexNew->nStatus = (pindexNew->nStatus & ~BLOCK_VALID_MASK) | BLOCK_VALID_TREE;
+        // tailstorm TODO Maybe check subblock nBits is what we need?
     }
 
+    // We do not create any blocks whose parents are TREE/HEADER invalid, so correct work in this block implies
+    // the TREE validity level.
+    // Don't use raisevalidity, because it refuses to raise if BLOCK_FAILED_CHILD is set.
+    pindexNew->nStatus = (pindexNew->nStatus & ~BLOCK_VALID_MASK) | BLOCK_VALID_TREE;
     assert((pindexNew->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TREE);
+
 
     // Insert the record in the map
     BlockMap::iterator mi = mapBlockIndex.insert(std::make_pair(hash, pindexNew)).first;
@@ -461,16 +492,19 @@ CBlockIndex *AddToBlockIndex(const CChainParams &chainparams, const CBlockHeader
 
     // Lastly, set the best header if this is a valid header on a valid chain and if the chain work
     // is higher than the previous best header.
-    CBlockIndex *pBestHeader = pindexBestHeader.load();
-    if ((!(pindexNew->nStatus & BLOCK_FAILED_MASK)) &&
-        (pBestHeader == nullptr || pBestHeader->chainWork() < pindexNew->chainWork()))
+    if (summaryBlock)
     {
-        pindexBestHeader.store(pindexNew);
-    }
-    if (!fReindex)
-    {
-        nTotalChainTx.store(pindexBestHeader.load()->nChainTx);
-        pblocktree->WriteBestBlockHeaderChainTx(nTotalChainTx.load());
+        CBlockIndex *pBestHeader = pindexBestHeader.load();
+        if ((!(pindexNew->nStatus & BLOCK_FAILED_MASK)) &&
+            (pBestHeader == nullptr || pBestHeader->chainWork() < pindexNew->chainWork()))
+        {
+            pindexBestHeader.store(pindexNew);
+        }
+        if (!fReindex)
+        {
+            nTotalChainTx.store(pindexBestHeader.load()->nChainTx);
+            pblocktree->WriteBestBlockHeaderChainTx(nTotalChainTx.load());
+        }
     }
 
     // Update the ui if the best header has changed.
@@ -2131,6 +2165,9 @@ bool AcceptBlock(ConstCBlockRef pblock,
     {
         return false;
     }
+    // AcceptBlockHeader should return false if pindex isn't created or found, but just in case
+    if (pindex == nullptr)
+        return false;
 
     LOG(PARALLEL, "Check Block %s with chain work %s block height %d\n", pindex->phashBlock->ToString(),
         pindex->chainWork().ToString(), pindex->height());
@@ -3517,7 +3554,7 @@ static void CheckForkWarningConditionsOnNewFork(CBlockIndex *pindexNewForkTip)
     // the 7-block condition and from this always have the most-likely-to-cause-warning fork
     if (pfork &&
         (!pindexBestForkTip || (pindexBestForkTip && pindexNewForkTip->height() > pindexBestForkTip->height())) &&
-        pindexNewForkTip->chainWork() - pfork->chainWork() > (GetBlockProof(*pfork) * 7) &&
+        pindexNewForkTip->chainWork() - pfork->chainWork() > (GetBlockWork(*pfork) * 7) &&
         chainActive.Height() - pindexNewForkTip->height() < 72)
     {
         pindexBestForkTip = pindexNewForkTip;

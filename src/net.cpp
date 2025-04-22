@@ -658,19 +658,25 @@ void CNode::LookAhead()
     {
         /* padding of 8 bytes for each of four VARINTs found in the header */
         static const uint32_t padding = 4 * 8;
-        /* The expected size of a serialized block header plus padding for various VARINTs plus nonce padding */
+        /* The expected size of a serialized block header plus padding for various VARINTs*/
         static const uint32_t SERIALIZED_HEADER_SIZE =
-            ::GetSerializeSize(CBlockHeader(), SER_NETWORK, PROTOCOL_VERSION) + padding + CBlockHeader::MAX_NONCE_SIZE;
+            ::GetSerializeSize(CBlockHeader(), SER_NETWORK, PROTOCOL_VERSION) + padding;
         if (msg.nDataPos >= SERIALIZED_HEADER_SIZE)
         {
-            CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-            ss.append(msg.vRecv, SERIALIZED_HEADER_SIZE);
+            try
+            {
+                CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                ss.append(msg.vRecv, SERIALIZED_HEADER_SIZE);
 
-            CBlockHeader header;
-            ss >> header;
-            requester.Downloading(header.GetHash(), this, msg.hdr.nMessageSize);
+                CBlockHeader header;
+                ss >> header;
+                requester.Downloading(header.GetHash(), this, msg.hdr.nMessageSize);
 
-            fDownloading.store(true);
+                fDownloading.store(true);
+            }
+            catch (std::ios_base::failure &e)
+            {
+            }
         }
     }
 }

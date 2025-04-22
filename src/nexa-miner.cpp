@@ -62,6 +62,7 @@ CCriticalSection cs_blockhash;
 uint256 bestBlockHash;
 
 std::string minerName;
+const int NO_CNXN_DELAY_MS = 2000;
 
 int CpuMiner(int threadNum);
 
@@ -522,7 +523,7 @@ static bool FoundNewBlock()
     catch (const CConnectionFailed &c)
     {
         printf("%s: Warning: %s\n", now().c_str(), c.what());
-        MilliSleep(1000);
+        MilliSleep(NO_CNXN_DELAY_MS);
     }
 
     return false;
@@ -622,7 +623,7 @@ static bool CheckForNewMiningCandidate()
     catch (const CConnectionFailed &c)
     {
         printf("%s: Warning: %s\n", now().c_str(), c.what());
-        MilliSleep(1000);
+        MilliSleep(NO_CNXN_DELAY_MS);
     }
 
     // Set the nBits to zero so that the miner threads will pause mining.
@@ -776,7 +777,7 @@ int CpuMiner(int threadNum)
                 catch (const CConnectionFailed &c)
                 {
                     printf("%s: Warning: %s\n", now().c_str(), c.what());
-                    MilliSleep(1000);
+                    MilliSleep(NO_CNXN_DELAY_MS);
                 }
             } while (true);
         }
