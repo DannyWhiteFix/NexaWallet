@@ -5,15 +5,15 @@ import os
 import sys
 import shutil
 PROJECT_NAME = "rostrum"
-GIT_REPO = "https://gitlab.com/BitcoinUnlimited/{}.git".format(PROJECT_NAME)
+GIT_REPO = "https://gitlab.com/nexa/{}.git".format(PROJECT_NAME)
 # When changing this variable, also remember to update
 # job `test-ubuntu-qa-rostrum` in .gitlab.yml so that the correct
 # integration tests are run.
 #
 # It is also possible to set GIT_BRANCH to None to run the latest `master`
 # of Rostrum. When set to None the EXPECT_HEAD hash check is disabled)
-GIT_BRANCH = "v11.0.0"
-EXPECT_HEAD = "6c15e431a93e57f597508410f3159f8136c7a797"
+GIT_BRANCH = "v12.0.0"
+EXPECT_HEAD = "ab73eb02e3fc1eb89f3a0df40a2e58806c915109"
 
 ROOT_DIR = os.path.realpath(
         os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
