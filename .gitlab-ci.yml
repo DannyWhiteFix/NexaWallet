@@ -367,6 +367,9 @@ build-ubuntu-deps:
     stage: build_depends
     extends: .cache-ubuntu
     needs: []
+    variables:
+        CXX: g++-10
+        CC: gcc-10
     script:
         - cd depends
         - make HOST=x86_64-linux-gnu -j `nproc`
@@ -380,6 +383,9 @@ build-ubuntu:
     stage: build
     extends: .cache-ubuntu
     needs: [build-ubuntu-deps]
+    variables:
+        CXX: g++-10
+        CC: gcc-10
     script:
         - ./autogen.sh
         - mkdir build; cd build
@@ -420,7 +426,10 @@ build-ubuntu-rostrum:
     needs: [build-ubuntu-deps]
 
     variables:
-      CARGO_HOME: ${CI_PROJECT_DIR}/cargohome
+        CARGO_HOME: ${CI_PROJECT_DIR}/cargohome
+        # needed due to gcc 9.x bug,see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=95189
+        CXX: g++-10
+        CC: gcc-10
 
     before_script:
       - mkdir -p cargohome
@@ -432,8 +441,8 @@ build-ubuntu-rostrum:
         # Prepare make file
         - ./autogen.sh > /dev/null
         - cd build
-        - ../configure --cache-file=config.cache
-            --prefix=$PWD/../depends/x86_64-linux-gnu > /dev/null
+        # remove cache file to see if it catch new CXX and CC env
+        - ../configure --prefix=$PWD/../depends/x86_64-linux-gnu > /dev/null
 
         - make rostrum
 
@@ -568,8 +577,8 @@ test-ubuntu-qa-rostrum:
 .ubuntu-clang-env:
     extends: .cache-ubuntu-clang
     variables:
-        CC: clang-12
-        CXX: clang++-12
+        CC: clang
+        CXX: clang++
 
 build-ubuntu-clang:
     stage: build
@@ -578,7 +587,7 @@ build-ubuntu-clang:
     script:
         - ./autogen.sh
         - mkdir build; cd build
-        - ../configure --cache-file=config.cache --enable-zmq --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER
+        - ../configure --enable-zmq --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER
         - make -j `nproc`
         - ccache --show-stats
     artifacts:
