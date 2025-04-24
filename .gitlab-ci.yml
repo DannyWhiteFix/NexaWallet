@@ -155,12 +155,6 @@ check-formatting:
     extends: .ubuntu_cache-linting
     needs: []
     script:
-        - apt-get install -y wget gpg-agent
-        - wget https://apt.llvm.org/llvm.sh
-        - chmod +x llvm.sh
-        - ./llvm.sh 15
-        - apt-get update
-        - apt-get install -y clang-format-15
         - ./autogen.sh
         - ./configure --enable-glibc-back-compat --enable-reduce-exports
         - make check-formatting
@@ -367,6 +361,9 @@ build-ubuntu-deps:
     stage: build_depends
     extends: .cache-ubuntu
     needs: []
+    variables:
+        CXX: g++-10
+        CC: gcc-10
     script:
         - cd depends
         - make HOST=x86_64-linux-gnu -j `nproc`
@@ -380,6 +377,9 @@ build-ubuntu:
     stage: build
     extends: .cache-ubuntu
     needs: [build-ubuntu-deps]
+    variables:
+        CXX: g++-10
+        CC: gcc-10
     script:
         - ./autogen.sh
         - mkdir build; cd build
@@ -420,7 +420,10 @@ build-ubuntu-rostrum:
     needs: [build-ubuntu-deps]
 
     variables:
-      CARGO_HOME: ${CI_PROJECT_DIR}/cargohome
+        CARGO_HOME: ${CI_PROJECT_DIR}/cargohome
+        # needed due to gcc 9.x bug,see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=95189
+        CXX: g++-10
+        CC: gcc-10
 
     before_script:
       - mkdir -p cargohome
@@ -432,8 +435,8 @@ build-ubuntu-rostrum:
         # Prepare make file
         - ./autogen.sh > /dev/null
         - cd build
-        - ../configure --cache-file=config.cache
-            --prefix=$PWD/../depends/x86_64-linux-gnu > /dev/null
+        # remove cache file to see if it catch new CXX and CC env
+        - ../configure --prefix=$PWD/../depends/x86_64-linux-gnu > /dev/null
 
         - make rostrum
 
@@ -539,9 +542,9 @@ test-ubuntu-qa-rostrum:
 
         - export NODE_PATH=`pwd`/build/src/nexad
         - export ROSTRUM_PATH=`pwd`/build/src/rostrum
-        - wget https://gitlab.com/bitcoinunlimited/rostrum/-/archive/v11.0.0/rostrum-v11.0.0.tar.gz -O rostrum-master.tar.gz
+        - wget https://gitlab.com/nexa/rostrum/-/archive/v12.0.0/rostrum-v12.0.0.tar.gz -O rostrum-master.tar.gz
         - tar -zxf rostrum-master.tar.gz
-        - ./rostrum-v11.0.0/test/functional/test_runner.py --no-ipv6-rpc-listen --gitlab
+        - ./rostrum-v12.0.0/test/functional/test_runner.py --no-ipv6-rpc-listen --gitlab
     dependencies:
         - build-ubuntu
         - build-ubuntu-rostrum
@@ -568,8 +571,8 @@ test-ubuntu-qa-rostrum:
 .ubuntu-clang-env:
     extends: .cache-ubuntu-clang
     variables:
-        CC: clang-12
-        CXX: clang++-12
+        CC: clang
+        CXX: clang++
 
 build-ubuntu-clang:
     stage: build
@@ -578,7 +581,7 @@ build-ubuntu-clang:
     script:
         - ./autogen.sh
         - mkdir build; cd build
-        - ../configure --cache-file=config.cache --enable-zmq --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER
+        - ../configure --enable-zmq --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER
         - make -j `nproc`
         - ccache --show-stats
     artifacts:
