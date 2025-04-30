@@ -623,11 +623,13 @@ public:
         checkpoints[290000] = uint256S("0xc0f85055e25de9283ed3ebf29f8f06d4fc900f370c478de9f49f089841bc7395");
         // block 373813,  oct 1 2023
         checkpoints[373813] = uint256S("0xfdce97737c792e958030efc545aded1f25996a1eb42d25dfb8363246d5cc04ce");
+        // block 766084,  March 31 2025
+        checkpoints[766084] = uint256S("0xf8ca73d729b2d30616b2513db99eb15f59056232f633a595a2b90f00cd1c37d3");
 
         // clang-format on
 
         // * UNIX timestamp of last checkpoint block
-        checkpointData.nTimeLastCheckpoint = 1696153168;
+        checkpointData.nTimeLastCheckpoint = 1743423742;
 
         nBlockFileSize = 0x8000000ULL; // 128MiB
         nUndoFileSize = 0x800000ULL; // 8MiB
