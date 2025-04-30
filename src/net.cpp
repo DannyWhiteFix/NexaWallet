@@ -3140,6 +3140,21 @@ bool CAddrDB::Write(const CAddrMan &addr)
 
 bool CAddrDB::Read(CAddrMan &addr)
 {
+    // Check if peers file is too old, and if so, replace with an empty peers file.
+    // This is in the event where users don't run their node for more than the horizon days
+    // and then can't connect to any peers because they are all considered bad peers.
+    if (fs::exists(pathAddr))
+    {
+        auto fileTime = fs::last_write_time(pathAddr);
+        const auto toNow = fs::file_time_type::clock::now() - fileTime;
+        uint64_t elapsed = std::chrono::duration_cast<std::chrono::seconds>(toNow).count();
+        if (elapsed >= ADDRMAN_HORIZON_DAYS * 24 * 3600)
+        {
+            addr.Clear();
+            Write(addr);
+        }
+    }
+
     // open input file, and associate with CAutoFile
     FILE *file = fopen(pathAddr.string().c_str(), "rb");
     CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
