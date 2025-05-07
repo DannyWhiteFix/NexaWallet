@@ -57,7 +57,14 @@ See also: [dependencies.md](dependencies.md).
 To build executables for Windows 64-bit, install the following dependencies:
 
 ```bash
-sudo apt-get install g++-mingw-w64-x86-64 mingw-w64-x86-64-dev
+sudo apt-get install python3 nsis g++-mingw-w64-x86-64 mingw-w64-x86-64-dev wine64 wine-binfmt automake autoconf libtool pkg-config
+```
+
+Then you need to confiure the compiler to use the POSIX threading model
+
+```bash
+sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
+sudo update-alternatives --set x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix
 ```
 
 Then build using:
@@ -67,30 +74,20 @@ cd depends
 make HOST=x86_64-w64-mingw32
 cd ..
 ./autogen.sh # not required when building from tarball
-CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
-make
-```
-
-## Building for 32-bit Windows
-
-To build executables for Windows 32-bit, install the following dependencies:
-
-```bash
-sudo apt-get install g++-mingw-w64-i686 mingw-w64-i686-dev 
-```
-
-Then build using:
-
-```bash
-cd depends
-make HOST=i686-w64-mingw32
-cd ..
-./autogen.sh # not required when building from tarball
-CONFIG_SITE=$PWD/depends/i686-w64-mingw32/share/config.site ./configure --prefix=/
-make
+mkdir build && cd build
+../configure --prefix=$PWD/../depends/x86_64-w64-mingw32/
+make -j`nproc`
 ```
 
 For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.
+
+Two caveats:
+
+- the configure step needs to be execute using `--prefix` flag rather than using the `CONFIG_SITE` variable, otherwise  the univalue subsytem will be configured to be compiled for the build system (linux) rather than the  host system (windows)
+
+- if you have installed `libqt5dbus5` package on your linux machine you need to pass `--with-qtdbus=no` to the `configure` script. This is due to the fact that the qt dbus library is searched for also in the system path rather then just in the `depends` folder.
+
+Both the above issues will be fixed in the near feature.
 
 ## Installation
 
