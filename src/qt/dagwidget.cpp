@@ -503,46 +503,88 @@ void DagWidget::AddItem(uint256 hash,
         // Once we get two items then pick a random side of chain to place the first dag item
         if (fIsNewBlockToDisplay)
         {
-            if (vDag.size() == 2)
+            // find the max y and min y values
+            qreal max_y = 0;
+            qreal min_y = 0;
+            bool yZero = false;
+            for (auto it : vDag)
             {
-                if (vDag.size() % 2 == 0)
-                {
-                    y += offset;
-                }
-                else
-                {
-                    y -= offset;
-                }
-            }
-            if (vDag.size() >= 3) // cycle from one side to the other
-            {
-                // find the max y and min y values
-                qreal max_y = 0;
-                qreal min_y = 0;
-                for (auto it : vDag)
-                {
-                    if (it->y > max_y)
-                        max_y = it->y;
-                    if (it->y < min_y)
-                        min_y = it->y;
-                }
+                if (it->y > max_y)
+                    max_y = it->y;
+                if (it->y < min_y)
+                    min_y = it->y;
 
-                if (abs(min_y) < abs(max_y))
-                    y = min_y - offset;
-                if (abs(min_y) > abs(max_y))
-                    y = max_y + offset;
-                if (abs(min_y) == abs(max_y))
+                // Check if x-axis, y=0 (baseline) slot is already filled with an item
+                if (it->y == 0 && it->item)
+                    yZero = true;
+            }
+
+            // Find the max y and min y for the prev block that the new block points to.
+            qreal max_prev_y = 0;
+            qreal min_prev_y = 0;
+            for (Link link : info->vBlockPointsTo)
+            {
+                if (!link.fHardLink)
+                    continue;
+
+                // get the max y for blocks we're pointing to.
+                qreal prev_y = mapInfo[link.prevBlock]->y;
+                if (prev_y > max_prev_y)
+                    max_prev_y = prev_y;
+                if (prev_y < min_prev_y)
+                    min_prev_y = prev_y;
+            }
+
+            // If the previous blocks y value was zero then cycle from one side to the other
+            if (max_prev_y == 0 && min_prev_y == 0)
+            {
+                if (vDag.size() == 2)
                 {
                     if (vDag.size() % 2 == 0)
                     {
-                        y = max_y + offset;
+                        y += offset;
                     }
                     else
                     {
+                        y -= offset;
+                    }
+                }
+                if (vDag.size() >= 3)
+                {
+                    if (abs(min_y) < abs(max_y))
                         y = min_y - offset;
+                    if (abs(min_y) > abs(max_y))
+                        y = max_y + offset;
+                    if (abs(min_y) == abs(max_y))
+                    {
+                        if (vDag.size() % 2 == 0)
+                        {
+                            y = max_y + offset;
+                        }
+                        else
+                        {
+                            y = min_y - offset;
+                        }
                     }
                 }
             }
+            // Otherwise we want to keep the new blocks y-axis position on the same side of the x-axis.
+            // This wasy we don't need to cross over any lines when the new blocks connecting line is drawn.
+            else
+            {
+                if (max_prev_y > 0)
+                {
+                    y = max_y + offset;
+                }
+                else
+                {
+                    y = min_y - offset;
+                }
+
+                if (!yZero && max_y == 0 && min_y == 0)
+                    y = 0;
+            }
+
             info->y = y;
         }
         else
