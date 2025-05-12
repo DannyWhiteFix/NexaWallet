@@ -64,8 +64,7 @@ public:
     }
 
     bool IsNull() const { return (nBits == 0); }
-    uint256 GetHash() const;
-
+    uint256 GetHash() const { return SerializeHash(*this); };
     int64_t GetBlockTime() const { return (int64_t)nTime; }
 };
 
