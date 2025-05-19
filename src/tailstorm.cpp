@@ -12,17 +12,6 @@
 
 extern bool forceTemplateRecalc;
 
-/** Wrapping a CBlock because I think there might be more data to store,
-    but if not this class could be removed
-*/
-class SubblockMapItem
-{
-public:
-    ConstCBlockRef subblock;
-    SubblockMapItem() {}
-    SubblockMapItem(const ConstCBlockRef& sb):subblock(sb) {}
-};
-
 /**
    Subblocks are not stored persistently.  They are just stored here in RAM.
 
@@ -106,7 +95,8 @@ void AcceptSubblock(ConstCBlockRef pblock)
     mapSubblocks[pblock->SubblockId()] = SubblockMapItem(pblock);
 }
 
-std::vector<uint8_t> assembleSubBlocks(uint64_t heightPrevBlock, uint256 hashPrevBlock, int maxSubblocks)
+std::vector<uint8_t> assembleSubBlocks(uint64_t heightPrevBlock, uint256 hashPrevBlock, int maxSubblocks,
+    int tailstormEnforceCorrectSubblocks)
 {
     int subblocks = 0;
     uint8_t minerDataVersion = 1;
@@ -116,7 +106,10 @@ std::vector<uint8_t> assembleSubBlocks(uint64_t heightPrevBlock, uint256 hashPre
     {
 
         auto& subblock = it->second.subblock;
-        if (subblock->height < heightPrevBlock)  // its old
+        // TODO keep these around for validation and INV purposes
+        // until they exceed
+        // heightPrevBlock is the height of the subblock ancestor, so any sibling subblock should be heightPrevBlock+1
+        if (subblock->height <= heightPrevBlock - tailstormEnforceCorrectSubblocks)  // its so old we should forget about it
         {
             it = mapSubblocks.erase(it);
         }

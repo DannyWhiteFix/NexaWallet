@@ -180,6 +180,34 @@ Setting mining.tailstorm=1 sets tailstormSubblocks to 4, clearing it sets tailst
 You can turn tailstorm blocks on and off over the course of the same test.
 
 
+### Run example
+
+To test things you'll want to run multiple full nodes.  In this example, we located full nodes in the directory /w/ts#.
+
+After you run your full nodes, start mining on some of them:
+```
+./nexa-miner -datadir=/w/ts1 -cpus=6
+```
+
+
+Use gettailstorminfo to see what is happening:
+
+```
+./nexa-cli -datadir=/w/ts1 gettailstorminfo
+{
+  "size": 8,
+  "tip": "e95edf4a71095cbabcb8c236bcbeee3facbd7e90d1c60521c13e9cea7dc31b6f",
+  "tipSubblocks": 2,
+  "committedSubblocks": 6,
+  "competingSubblocks": 0
+}
+```
+
+size is the number of subblocks.
+tipSubblocks is the subblocks off the tip.
+committedSubblocks are subblocks older than the tip (kept for validation and relay).
+competingSubblocks are subblocks off a different tip (or incompatible with the txpool).
+
 
 ### Can We Reduce The Difficulty?
 

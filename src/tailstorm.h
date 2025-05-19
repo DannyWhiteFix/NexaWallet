@@ -3,6 +3,7 @@
 #include "uint256.h"
 #include "primitives/block.h"
 #include "consensus/validation.h"
+#include "sync.h"
 
 #include <cstdint>
 #include <vector>
@@ -29,3 +30,20 @@ bool CheckSummaryBlockHeader(const Consensus::Params &consensusParams,
     const ConstCBlockRef pblock,
     CValidationState &state,
     bool fCheckPOW);
+
+/** Wrapping a CBlock because I think there might be more data to store,
+    but if not this class could be removed
+*/
+class SubblockMapItem
+{
+public:
+    ConstCBlockRef subblock;
+    SubblockMapItem() {}
+    SubblockMapItem(const ConstCBlockRef& sb):subblock(sb) {}
+};
+
+
+/** Do not access these directly as part of the tailstorm API.
+ */
+extern CCriticalSection cs_mapSubblocks;
+extern std::map<uint256, SubblockMapItem> mapSubblocks GUARDED_BY(cs_mapSubblocks);

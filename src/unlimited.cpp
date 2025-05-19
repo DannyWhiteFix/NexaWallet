@@ -33,6 +33,7 @@
 #include "rpc/server.h"
 #include "script/standard.h"
 #include "stat.h"
+#include "tailstorm.h"
 #include "timedata.h"
 #include "tinyformat.h"
 #include "tweak.h"
@@ -68,6 +69,8 @@ using namespace std;
 extern bool forceTemplateRecalc;
 extern CTxMemPool mempool; // from main.cpp
 static atomic<bool> fIsChainNearlySyncd{false};
+extern CTweak<bool> tailstormEnabled;
+extern UniValue gettailstorminfo(const UniValue &params, bool fHelp);
 
 // We always start with true so that when ActivateBestChain is called during the startup (init.cpp)
 // and we havn't finished initial sync then we don't accidentally trigger the auto-dbcache
@@ -418,6 +421,15 @@ void UnlimitedSetup(void)
     miningOrphanBlocks.init("mining/orphans");
     miningNumMiners.init("mining/miners", STAT_OP_AVE | STAT_KEEP | STAT_KEEP_COUNT);
     std::vector<std::string> msgTypes = getAllNetMessageTypes();
+
+    if (tailstormEnabled.Value() == true)
+    {
+        ModifiableParams().GetModifiableConsensus().tailstormSubblocks = 4;
+    }
+    else
+    {
+        ModifiableParams().GetModifiableConsensus().tailstormSubblocks = 0;
+    }
 
     for (std::vector<std::string>::const_iterator i = msgTypes.begin(); i != msgTypes.end(); ++i)
     {
@@ -1418,6 +1430,73 @@ UniValue crash(const UniValue &params, bool fHelp)
 }
 #endif
 
+UniValue tailstormInfoToJSON()
+{
+    UniValue ret(UniValue::VOBJ);
+    LOCK(cs_mapSubblocks);
+    ret.pushKV("size", (int64_t)mapSubblocks.size());
+    //ret.pushKV("bytes", (int64_t)mempool.GetTotalTxSize());
+    //ret.pushKV("usage", (int64_t)mempool.DynamicMemoryUsage(false));
+
+    CBlockIndex *tip = chainActive.Tip();
+    if (tip != nullptr)
+    {
+        ret.pushKV("tip", tip->GetBlockHash().GetHex());
+        int64_t subsOnTip = 0;
+        int64_t staleSubs = 0;
+        int64_t competingSubs = 0;
+        for (const auto& it : mapSubblocks)
+        {
+            auto& subblock = it.second.subblock;
+            if (subblock->height <= tip->height())  // its old
+            {
+                staleSubs++;
+            }
+            else
+            {
+                // Its on this fork
+                if (tip->GetBlockHash() == subblock->hashPrevBlock)
+                {
+                    subsOnTip++;
+                }
+                else
+                {
+                    competingSubs++;
+                }
+            }
+        }
+    ret.pushKV("tipSubblocks", subsOnTip);
+    ret.pushKV("committedSubblocks", staleSubs);
+    ret.pushKV("competingSubblocks", competingSubs);
+    }
+
+    return ret;
+}
+
+
+UniValue gettailstorminfo(const UniValue &params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw std::runtime_error("gettailstorminfo\n"
+                            "\nReturns details on the active state of the Tailstorm subblock pool.\n"
+                            "\nResult:\n"
+                            "{\n"
+                            "  \"size\": x,               (numeric) Current subblock count\n"
+                            //"  \"bytes\": x,              (numeric) Sum of all tx sizes\n"
+                            //"  \"usage\": x,              (numeric) Total memory usage for the transaction pool\n"
+                            "  \"tip\": x,          (numeric) Current summary block tip\n"
+                            "  \"subblocks\": x        (numeric) Number of known subblocks below this tip\n"
+                            "  \"committedSubblocks\": x   (numeric) Number of subblocks above this tip \n"
+                            "  \"competingSubblocks\": x  (numeric) Number of subblocks on a fork \n"
+                            "  \"peak_tps\": xxxxx            (numeric) Peak Transactions per second accepted\n"
+                            "}\n"
+                            "\nExamples:\n" +
+                            HelpExampleCli("gettailstorminfo", "") + HelpExampleRpc("gettailstorminfo", ""));
+
+    return tailstormInfoToJSON();
+}
+
+
 /* clang-format off */
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         okSafeMode
@@ -1438,6 +1517,7 @@ static const CRPCCommand commands[] =
     { "mining",             "validateblocktemplate",  &validateblocktemplate,  true  },
     { "mining",             "getminingcandidate",     &getminingcandidate,     true  },
     { "mining",             "submitminingsolution",   &submitminingsolution,   true  },
+    { "mining",             "gettailstorminfo",       &gettailstorminfo,       true  },
 
     /* Utility functions */
     { "util",               "getstatlist",            &getstatlist,            true  },

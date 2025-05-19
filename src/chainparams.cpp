@@ -357,8 +357,8 @@ public:
         bool fOverflow;
         arith_uint256 tmp;
         tmp.SetCompact(tgtBits, &fNegative, &fOverflow);
-        // tailstorm:  make the easiest pow 16 times easier than the starting
-        consensus.powLimit = ArithToUint256(tmp << 4);
+        // tailstorm:  make the easiest pow 8 times easier than the starting
+        consensus.powLimit = ArithToUint256(tmp * 8);
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
@@ -393,7 +393,7 @@ public:
         nonce[2] = 0x0d;
         nonce[3] = 0x0;
         genesis = CreateGenesisBlock("This is regtest", CScript() << OP_1, 1744987388, nonce, tgtBits, 0 * COIN);
-#if 0 // recalculate GB if needed (note that this code will not work with the java nexa shared library because it
+#if 1 // recalculate GB if needed (note that this code will not work with the java nexa shared library because it
       // must start before the random numbers (initialized in ECC_Start are hooked up).
         ECC_Start();
         bool worked = MineIt(genesis, 2550000000, consensus);
@@ -405,6 +405,8 @@ public:
             printf("regtest soln %d hex:%s\n", worked, HexStr(genesis.nonce).c_str());
         }
 #else
+        // uint32_t tgtBits = 0x1e00ffff;
+        genesis = CreateGenesisBlock("This is regtest", CScript() << OP_1, 1744987388, nonce, tgtBits, 0 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(
             consensus.hashGenesisBlock == uint256S("b7a7d37600394dd5b8cbf3fb2d1f3b9b9bd81423492230711c2d9d064091eea7"));

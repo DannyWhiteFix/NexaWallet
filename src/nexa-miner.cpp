@@ -316,6 +316,7 @@ static UniValue CpuMineBlock(unsigned int searchDuration, bool &found, const Ran
     }
     if (!nBits)
     {
+        printf("Error block target nBits is 0\n");
         MilliSleep(1000);
         return ret;
     }

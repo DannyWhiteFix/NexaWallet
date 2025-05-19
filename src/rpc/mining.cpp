@@ -726,7 +726,8 @@ UniValue mkblocktemplate(const UniValue &params,
         (consensusParams.fPowAllowMinDifficultyBlocks && std::abs(GetTime() - nStart) > 30) || // 3 above
         // 4 above
         (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && std::abs(GetTime() - nStart) > 5) ||
-        prevCoinbaseSize != coinbaseSize || prevCoinbaseScript != coinbaseScript) // 5 & 6 above
+        prevCoinbaseSize != coinbaseSize || prevCoinbaseScript != coinbaseScript || // 5 & 6 above
+        pblocktemplate->block->nBits == 0) // its not a good template
     {
         forceTemplateRecalc = false;
         // Clear pindexPrev so future calls make a new block, despite any failures from here on

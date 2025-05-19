@@ -58,7 +58,8 @@ extern bool fPrintPriority;
 
 using namespace std;
 
-std::vector<uint8_t> assembleSubBlocks(uint64_t heightPrevBlock, uint256 hashPrevBlock, int maxSubblocks);
+extern std::vector<uint8_t> assembleSubBlocks(uint64_t heightPrevBlock, uint256 hashPrevBlock, int maxSubblocks,
+                                       int tailstormEnforceCorrectSubblocks);
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -300,7 +301,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
         if (conparams.tailstormSubblocks != 0)
         {
             pblock->minerData =
-                assembleSubBlocks(pindexPrev->height(), pblock->hashPrevBlock, conparams.tailstormSubblocks);
+                assembleSubBlocks(pindexPrev->height(), pblock->hashPrevBlock, conparams.tailstormSubblocks, conparams.tailstormEnforceCorrectSubblocks);
         }
 
         // Create coinbase transaction.
