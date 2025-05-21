@@ -15,8 +15,6 @@
 #include "tinyformat.h"
 #include "utilstrencodings.h"
 
-uint256 SatoshiBlockHeader::GetHash() const { return SerializeHash(*this); }
-
 uint256 CBlockHeader::GetMiningHeaderCommitment() const
 {
     CSHA256Writer miniHeader;
