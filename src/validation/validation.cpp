@@ -189,7 +189,12 @@ bool ContextualCheckBlockHeader(const CChainParams &chainparams,
     // Ensure that the blocksize is within limits according to the adaptive block size algorithm.
     if (pindexPrev && block.size > pindexPrev->GetNextMaxBlockSize())
     {
-        return state.DoS(100, error("%s: announced block size too large", __func__), REJECT_INVALID, "bad-blk-size");
+        return state.DoS(100,
+            error("%s: announced block size too large. Candidate blk size: %llu, Max size: %llu, Block hash: %s, "
+                  "Ancestor hash: %s",
+                __func__, block.size, pindexPrev->GetNextMaxBlockSize(), block.GetHash().ToString(),
+                ancestor->GetBlockHash().ToString()),
+            REJECT_INVALID, "bad-blk-size");
     }
 
     // Check proof of work
