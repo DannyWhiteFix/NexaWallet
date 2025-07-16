@@ -493,9 +493,10 @@ private:
     nexa_condition_variable condition;
     nexa_mutex mutex;
     int value;
+    int size;
 
 public:
-    CSemaphore(int init) : value(init) {}
+    CSemaphore(int init) : value(init), size(init) {}
     void wait()
     {
         nexa_unique_lock<nexa_mutex> lock(mutex);
@@ -522,6 +523,16 @@ public:
             value++;
         }
         condition.notify_one();
+    }
+
+    void resize(int newSize)
+    {
+        nexa_unique_lock<nexa_mutex> lock(mutex);
+        if (newSize >= 0)
+        {
+            value += (newSize - size);
+            size = newSize;
+        }
     }
 };
 
