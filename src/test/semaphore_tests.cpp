@@ -52,6 +52,10 @@ BOOST_AUTO_TEST_CASE(semaphore_test1)
         BOOST_CHECK(grant5a == false);
     }
 
+    // Resize twice more which should not do anything.
+    sem->resize(4);
+    sem->resize(4);
+
     // Release 3 grants and try again. Still you should not get one
     grant7.Release();
     grant6.Release();

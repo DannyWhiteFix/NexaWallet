@@ -2124,6 +2124,9 @@ void ThreadOpenConnections()
     int64_t nNextFeeler = PoissonNextSend(nStart, FEELER_INTERVAL);
     while (shutdown_threads.load() == false)
     {
+        // Every loop through resize the semaphore if needed.
+        semOutbound->resize(nMaxOutConnections);
+
         ProcessOneShot();
 
         // This sleep time is very important to making stable
