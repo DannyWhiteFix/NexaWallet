@@ -612,7 +612,7 @@ bool CRequestManager::RequestBlock(CNode *pfrom, CInv &obj)
                 std::vector<uint256> vOrphanHashes;
                 {
                     READLOCK(orphanpool.cs_orphanpool);
-                    for (auto &mi : orphanpool.mapOrphanTransactions)
+                    for (auto &mi : orphanpool.mapOrphans)
                         vOrphanHashes.emplace_back(mi.first);
                 }
                 BuildSeededBloomFilter(filterMemPool, vOrphanHashes, hash, pfrom);

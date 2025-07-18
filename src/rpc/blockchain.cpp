@@ -1713,8 +1713,8 @@ UniValue gettxpoolinfo(const UniValue &params, bool fHelp)
 UniValue orphanpoolInfoToJSON()
 {
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("size", (int64_t)orphanpool.GetOrphanPoolSize());
-    ret.pushKV("bytes", (int64_t)orphanpool.GetOrphanPoolBytes());
+    ret.pushKV("size", (int64_t)orphanpool.GetPoolSize());
+    ret.pushKV("bytes", (int64_t)orphanpool.GetPoolBytes());
 
     return ret;
 }

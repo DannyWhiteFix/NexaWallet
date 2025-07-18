@@ -1634,8 +1634,9 @@ extern UniValue getstructuresizes(const UniValue &params, bool fHelp)
     }
     {
         READLOCK(orphanpool.cs_orphanpool);
-        ret.pushKV("mapOrphanTransactions", (int64_t)orphanpool.mapOrphanTransactions.size());
-        ret.pushKV("mapOrphanTransactionsByPrev", (int64_t)orphanpool.mapOrphanTransactionsByPrev.size());
+        ret.pushKV("mapOrphans", (int64_t)orphanpool.mapOrphans.size());
+        ret.pushKV("mapOrphansByPrev", (int64_t)orphanpool.mapOrphansByPrev.size());
+        ret.pushKV("mapNonFinals", (int64_t)orphanpool.mapNonFinals.size());
     }
     // CAddrMan
 

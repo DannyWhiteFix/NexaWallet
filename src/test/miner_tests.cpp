@@ -642,7 +642,6 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
                    "WAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY too long.";
     BOOST_CHECK(pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey));
 
-    int baseheight = 0;
     std::vector<CTransactionRef> txFirst;
 
     // We can't make transactions until we have inputs
@@ -661,8 +660,6 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         txCoinbase.vout[1].scriptPubKey = CScript() << OP_RETURN << (tip->height() + 1) << OP_0;
         txCoinbase.vout[0].scriptPubKey = CScript();
         pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
-        if (txFirst.size() == 0)
-            baseheight = chainActive.Height();
         if (txFirst.size() < 10)
             txFirst.push_back(pblock->vtx[0]);
 
@@ -991,189 +988,6 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         delete del->phashBlock;
         delete del;
     }
-
-    // non-final txs in mempool
-    SetMockTime(chainActive.Tip()->GetMedianTimePast() + 1);
-    int flags = LOCKTIME_VERIFY_SEQUENCE | LOCKTIME_MEDIAN_TIME_PAST;
-    // height map
-    std::vector<int> prevheights;
-
-    // relative height locked
-    tx.nVersion = 0;
-    tx.vin.resize(1);
-    prevheights.resize(1);
-    tx.vin[0] = txFirst[0]->SpendOutput(0); // only 1 transaction
-    tx.vin[0].scriptSig = CScript() << OP_1;
-    tx.vin[0].nSequence = chainActive.Tip()->height() + 1; // txFirst[0] is the 2nd block
-    prevheights[0] = baseheight + 1;
-    tx.vout.resize(1);
-    tx.vout[0].nValue = 4900000000LL;
-    tx.vout[0].scriptPubKey = CScript() << OP_1;
-    tx.nLockTime = 0;
-    mempool.addUnchecked(entry.Fee(100000000L).Time(GetTime()).SpendsCoinbase(true).FromTx(tx));
-    BOOST_CHECK(CheckFinalTx(MakeTransactionRef(tx), flags)); // Locktime passes
-    BOOST_CHECK(!TestSequenceLocks(tx, flags)); // Sequence locks fail
-    // Sequence locks pass on 2nd block
-    BOOST_CHECK(
-        SequenceLocks(MakeTransactionRef(tx), flags, &prevheights, CreateBlockIndex(chainActive.Tip()->height() + 2)));
-
-    // relative time locked
-    tx.vin[0] = txFirst[1]->SpendOutput(0);
-    // txFirst[1] is the 3rd block
-    tx.vin[0].nSequence = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG |
-                          (((chainActive.Tip()->GetMedianTimePast() + 1 - chainActive[1]->GetMedianTimePast()) >>
-                               CTxIn::SEQUENCE_LOCKTIME_GRANULARITY) +
-                              1);
-    prevheights[0] = baseheight + 2;
-    mempool.addUnchecked(entry.Time(GetTime()).FromTx(tx));
-    BOOST_CHECK(CheckFinalTx(MakeTransactionRef(tx), flags)); // Locktime passes
-    BOOST_CHECK(!TestSequenceLocks(tx, flags)); // Sequence locks fail
-
-    for (int i = 0; i < CBlockIndex::nMedianTimeSpan; i++)
-        // Trick the MedianTimePast
-        chainActive.Tip()->GetAncestor(chainActive.Tip()->height() - i)->header.nTime += 512;
-    // Sequence locks pass 512 seconds later
-    BOOST_CHECK(
-        SequenceLocks(MakeTransactionRef(tx), flags, &prevheights, CreateBlockIndex(chainActive.Tip()->height() + 1)));
-    for (int i = 0; i < CBlockIndex::nMedianTimeSpan; i++)
-        chainActive.Tip()->GetAncestor(chainActive.Tip()->height() - i)->header.nTime -= 512; // undo tricked MTP
-
-    // absolute height locked
-    tx.vin[0] = txFirst[2]->SpendOutput(0);
-    tx.vin[0].nSequence = CTxIn::SEQUENCE_FINAL - 1;
-    prevheights[0] = baseheight + 3;
-    tx.nLockTime = chainActive.Tip()->height() + 1;
-    mempool.addUnchecked(entry.Time(GetTime()).FromTx(tx));
-    BOOST_CHECK(!CheckFinalTx(MakeTransactionRef(tx), flags)); // Locktime fails
-    BOOST_CHECK(TestSequenceLocks(tx, flags)); // Sequence locks pass
-    // Locktime passes on 2nd block
-    BOOST_CHECK(
-        IsFinalTx(MakeTransactionRef(tx), chainActive.Tip()->height() + 2, chainActive.Tip()->GetMedianTimePast()));
-
-    // absolute time locked
-    tx.vin[0] = txFirst[3]->SpendOutput(0);
-    tx.vin[0].nSequence = CTxIn::SEQUENCE_FINAL - 1;
-    tx.nLockTime = chainActive.Tip()->GetMedianTimePast();
-    prevheights.resize(1);
-    prevheights[0] = baseheight + 4;
-    CAmount priorAmt = tx.vout[0].nValue;
-    hash = tx.GetIdem();
-    mempool.addUnchecked(entry.Time(GetTime()).FromTx(tx));
-    BOOST_CHECK(!CheckFinalTx(MakeTransactionRef(tx), flags)); // Locktime fails
-    BOOST_CHECK(TestSequenceLocks(tx, flags)); // Sequence locks pass
-    // Locktime passes 1 second later
-    BOOST_CHECK(
-        IsFinalTx(MakeTransactionRef(tx), chainActive.Tip()->height() + 2, chainActive.Tip()->GetMedianTimePast() + 1));
-
-    // mempool-dependent transactions (not added)
-    tx.vin[0].prevout = COutPoint(hash, 0);
-    tx.vin[0].amount = priorAmt;
-    prevheights[0] = chainActive.Tip()->height() + 1;
-    tx.nLockTime = 0;
-    tx.vin[0].nSequence = 0;
-    BOOST_CHECK(CheckFinalTx(MakeTransactionRef(tx), flags)); // Locktime passes
-    BOOST_CHECK(TestSequenceLocks(tx, flags)); // Sequence locks pass
-    tx.vin[0].nSequence = 1;
-    BOOST_CHECK(!TestSequenceLocks(tx, flags)); // Sequence locks fail
-    tx.vin[0].nSequence = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG;
-    BOOST_CHECK(TestSequenceLocks(tx, flags)); // Sequence locks pass
-    tx.vin[0].nSequence = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | 1;
-    BOOST_CHECK(!TestSequenceLocks(tx, flags)); // Sequence locks fail
-
-#if 0 // TODO: removed because BIP68 is enabled on block 0
-    BOOST_CHECK(pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey));
-
-    // None of the of the absolute height/time locked tx should have made
-    // it into the template because we still check IsFinalTx in CreateNewBlock,
-    // but relative locked txs will if inconsistently added to mempool.
-    // For now these will still generate a valid template until BIP68 soft fork
-    BOOST_CHECK_EQUAL(pblocktemplate->block->vtx.size(), 3UL);
-    // However if we advance height by 1 and time by 512, all of them should be mined
-    for (int i = 0; i < CBlockIndex::nMedianTimeSpan; i++)
-        // Trick the MedianTimePast
-        chainActive.Tip()->GetAncestor(chainActive.Tip()->height() - i)->header.nTime += 512;
-    chainActive.Tip()->header.height++;
-    SetMockTime(chainActive.Tip()->GetMedianTimePast() + 1);
-
-    BOOST_CHECK(pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey));
-    BOOST_CHECK_EQUAL(pblocktemplate->block->vtx.size(), 5UL);
-
-    chainActive.Tip()->header.height--;
-    SetMockTime(0);
-#endif
-
-    // Test that the block template creation will not be affected by a chain
-    // of transactions that are sometimes final and then non-final.  What should happen
-    // is that if fast block template is turned on then it would silently fail which will
-    // trigger the regular block template creation and so the end result is we still end up with
-    // a valid template without any of the non-final parts of the chain of transactions.
-    mempool.clear();
-    fastBlockTemplate.Set(true);
-    nextMaxBlockSize.Set(1000000);
-    miningBlockSize.Set(nextMaxBlockSize.Value());
-
-    unsigned int iterations = 30;
-    FastRandomContext insecure_rand;
-    for (unsigned int j = 0; j <= iterations; j++)
-    {
-        tx.vin.resize(1);
-        tx.vin[0].scriptSig = CScript();
-        tx.vin[0].scriptSig << OP_1;
-        tx.vin[0].prevout = txFirst[5]->OutpointAt(0);
-        tx.vin[0].amount = txFirst[5]->vout[0].nValue;
-        tx.vin[0].nSequence = 0;
-        tx.vout.resize(1);
-        tx.vout[0].nValue = txFirst[5]->vout[0].nValue;
-
-        CAmount nFee = 100000;
-        unsigned int maxChainLength = 127;
-        for (unsigned int i = 0; i <= maxChainLength; ++i)
-        {
-            tx.vout[0].nValue -= nFee;
-
-            // make part of each chain non-final using a variety of deterministic
-            // and random tests.
-            if ((j == 0) && ((i >= 20 && i <= 23) || (i >= 44 && i <= 53)))
-            {
-                tx.nLockTime = chainActive.Tip()->height() + 1; // non-final
-            }
-            else if ((j == 1) && (i == 0))
-            {
-                tx.nLockTime = chainActive.Tip()->height() + 1; // non-final
-            }
-            else if ((j == 2) && (i == 0 || i > 30))
-            {
-                tx.nLockTime = chainActive.Tip()->height() + 1; // non-final
-            }
-            else if (j == 3 && i == maxChainLength)
-            {
-                tx.nLockTime = chainActive.Tip()->height() + 1; // non-final
-            }
-            else if (j >= 4 && (j <= (iterations - 1)) && InsecureRandBool())
-            {
-                tx.nLockTime = chainActive.Tip()->height() + 1; // non-final
-            }
-            else
-            {
-                tx.nLockTime = chainActive.Tip()->height();
-            }
-
-            hash = tx.GetIdem();
-            bool spendsCoinbase = (i == 0) ? true : false; // only first tx spends coinbase
-            mempool.addUnchecked(entry.Fee(nFee).Time(GetTime()).SpendsCoinbase(spendsCoinbase).FromTx(tx));
-            tx.vin[0].prevout = COutPoint(hash, 0);
-            tx.vin[0].amount = tx.vout[0].nValue;
-            tx.vin[0].nSequence = 0;
-        }
-        BOOST_CHECK(pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey));
-        // printf("mempool size: %ld chain height %ld\n", mempool.size(), chainActive.Tip()->height());
-        // printf("iteration: %d block size: %ld\n\n", j, pblocktemplate->block->vtx.size());
-        mempool.clear();
-    }
-    fastBlockTemplate.Set(false);
-
-    // Test package selection
-    TestPackageSelection(chainparams, scriptPubKey, txFirst);
 
     // Do a performance test of package selection. This will typically be commented out unless one wants
     // to run the testing.

@@ -253,7 +253,7 @@ bool CompactBlock::process(CNode *pfrom, std::shared_ptr<CBlockThinRelay> pblock
     {
         {
             READLOCK(orphanpool.cs_orphanpool);
-            for (auto &mi : orphanpool.mapOrphanTransactions)
+            for (auto &mi : orphanpool.mapOrphans)
             {
                 uint64_t cheapHash = GetShortID(mi.first);
                 mapPartialTxHash[cheapHash] = mi.first;
@@ -624,9 +624,8 @@ static bool ReconstructBlock(CNode *pfrom,
                 else
                 {
                     READLOCK(orphanpool.cs_orphanpool);
-                    std::map<uint256, CTxOrphanPool::COrphanTx>::iterator iter2 =
-                        orphanpool.mapOrphanTransactions.find(hash);
-                    if (iter2 != orphanpool.mapOrphanTransactions.end())
+                    std::map<uint256, CTxOrphanPool::COrphanTx>::iterator iter2 = orphanpool.mapOrphans.find(hash);
+                    if (iter2 != orphanpool.mapOrphans.end())
                     {
                         inOrphanCache = true;
                         ptx = iter2->second.ptx;

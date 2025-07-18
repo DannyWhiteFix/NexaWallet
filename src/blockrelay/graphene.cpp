@@ -466,7 +466,7 @@ void CGrapheneBlock::FillTxMapFromPools(std::map<uint64_t, CTransactionRef> &map
 
     {
         READLOCK(orphanpool.cs_orphanpool);
-        for (auto &kv : orphanpool.mapOrphanTransactions)
+        for (auto &kv : orphanpool.mapOrphans)
         {
             uint64_t cheapHash = GetShortID(shorttxidk0, shorttxidk1, kv.first, version);
             auto shTx = kv.second.ptx;
@@ -748,7 +748,7 @@ static bool ReconstructBlock(CNode *pfrom,
     std::set<uint256> toVerify;
     {
         READLOCK(orphanpool.cs_orphanpool);
-        for (auto &kv : orphanpool.mapOrphanTransactions)
+        for (auto &kv : orphanpool.mapOrphans)
         {
             toVerify.insert(kv.first);
         }
@@ -1605,7 +1605,7 @@ CMemPoolInfo GetGrapheneMempoolInfo()
         LOCK(cs_commitQ);
         nCommitQ = txCommitQ->size();
     }
-    return CMemPoolInfo(mempool.size() + orphanpool.GetOrphanPoolSize() + nCommitQ);
+    return CMemPoolInfo(mempool.size() + orphanpool.GetPoolSize() + nCommitQ);
 }
 
 void RequestFailureRecovery(CNode *pfrom,
@@ -1644,7 +1644,7 @@ void RequestFailoverBlock(CNode *pfrom, std::shared_ptr<CBlockThinRelay> pblock)
         std::vector<uint256> vOrphanHashes;
         {
             READLOCK(orphanpool.cs_orphanpool);
-            for (auto &mi : orphanpool.mapOrphanTransactions)
+            for (auto &mi : orphanpool.mapOrphans)
                 vOrphanHashes.emplace_back(mi.first);
         }
         BuildSeededBloomFilter(filterMemPool, vOrphanHashes, inv.hash, pfrom);

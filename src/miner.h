@@ -149,8 +149,6 @@ private:
     // helper functions for addPackageTxs()
     /** Test whether a package, if added to the block, would make the block exceed the sigops limits */
     bool TestPackageSigOps(uint64_t packageSize, unsigned int packageSigOps);
-    /** Test if a set of transactions are all final */
-    bool TestPackageFinality(const CTxMemPool::setEntries &package);
     /** Sort the package in an order that is valid to appear in a block */
     void SortForBlock(const CTxMemPool::setEntries &package, std::vector<CTxMemPool::TxIdIter> &sortedEntries);
 };

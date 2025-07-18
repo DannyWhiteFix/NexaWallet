@@ -329,9 +329,9 @@ CTransaction RandomOrphan()
 {
     std::map<uint256, CTxOrphanPool::COrphanTx>::iterator it;
     READLOCK(orphanpool.cs_orphanpool);
-    it = orphanpool.mapOrphanTransactions.lower_bound(InsecureRand256());
-    if (it == orphanpool.mapOrphanTransactions.end())
-        it = orphanpool.mapOrphanTransactions.begin();
+    it = orphanpool.mapOrphans.lower_bound(InsecureRand256());
+    if (it == orphanpool.mapOrphans.end())
+        it = orphanpool.mapOrphans.begin();
     return *it->second.ptx;
 }
 
@@ -342,7 +342,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     CBasicKeyStore keystore;
     keystore.AddKey(key);
 
-    // Test LimitOrphanTxSize() function: limit by orphan pool bytes
+    // Test LimitPoolSize() function: limit by orphan pool bytes
     // add 50 orphan transactions:
     uint64_t txSz = 0;
     for (int i = 0; i < 50; i++)
@@ -368,14 +368,14 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
 
     {
         WRITELOCK(orphanpool.cs_orphanpool);
-        orphanpool.LimitOrphanTxSize(50, txSz + 1);
-        BOOST_CHECK_EQUAL(orphanpool.mapOrphanTransactions.size(), 50UL);
-        orphanpool.LimitOrphanTxSize(50, txSz - (avgTxRamSize * 10));
-        BOOST_CHECK(orphanpool.mapOrphanTransactions.size() <= 49);
-        orphanpool.LimitOrphanTxSize(50, 7 * avgTxRamSize);
-        BOOST_CHECK(orphanpool.mapOrphanTransactions.size() <= 8);
-        orphanpool.LimitOrphanTxSize(50, 0);
-        BOOST_CHECK(orphanpool.mapOrphanTransactions.empty());
+        orphanpool.LimitPoolSize(50, txSz + 1);
+        BOOST_CHECK_EQUAL(orphanpool.mapOrphans.size(), 50UL);
+        orphanpool.LimitPoolSize(50, txSz - (avgTxRamSize * 10));
+        BOOST_CHECK(orphanpool.mapOrphans.size() <= 49);
+        orphanpool.LimitPoolSize(50, 7 * avgTxRamSize);
+        BOOST_CHECK(orphanpool.mapOrphans.size() <= 8);
+        orphanpool.LimitPoolSize(50, 0);
+        BOOST_CHECK(orphanpool.mapOrphans.empty());
     }
 
     // 50 orphan transactions:
@@ -441,16 +441,16 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         BOOST_CHECK(orphanpool.AddOrphanTx(MakeTransactionRef(_tx), i));
     }
 
-    // Test LimitOrphanTxSize() function: limit by number of txns
+    // Test LimitPoolSize() function: limit by number of txns
     {
         WRITELOCK(orphanpool.cs_orphanpool);
-        orphanpool.LimitOrphanTxSize(40, 10000000);
-        BOOST_CHECK_EQUAL(orphanpool.mapOrphanTransactions.size(), 40UL);
-        orphanpool.LimitOrphanTxSize(10, 10000000);
-        BOOST_CHECK_EQUAL(orphanpool.mapOrphanTransactions.size(), 10UL);
-        orphanpool.LimitOrphanTxSize(0, 10000000);
-        BOOST_CHECK(orphanpool.mapOrphanTransactions.empty());
-        BOOST_CHECK(orphanpool.mapOrphanTransactionsByPrev.empty());
+        orphanpool.LimitPoolSize(40, 10000000);
+        BOOST_CHECK_EQUAL(orphanpool.mapOrphans.size(), 40UL);
+        orphanpool.LimitPoolSize(10, 10000000);
+        BOOST_CHECK_EQUAL(orphanpool.mapOrphans.size(), 10UL);
+        orphanpool.LimitPoolSize(0, 10000000);
+        BOOST_CHECK(orphanpool.mapOrphans.empty());
+        BOOST_CHECK(orphanpool.mapOrphansByPrev.empty());
     }
 
     // Test EraseOrphansByTime():
@@ -477,13 +477,13 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
 
         {
             READLOCK(orphanpool.cs_orphanpool);
-            BOOST_CHECK(orphanpool.mapOrphanTransactions.size() == 50);
+            BOOST_CHECK(orphanpool.mapOrphans.size() == 50);
         }
         std::vector<CTransactionRef> vWorkQueue;
         ProcessOrphans(vWorkQueue);
         {
             READLOCK(orphanpool.cs_orphanpool);
-            BOOST_CHECK(orphanpool.mapOrphanTransactions.size() == 50);
+            BOOST_CHECK(orphanpool.mapOrphans.size() == 50);
         }
 
         // Advance the clock 1 minute
@@ -491,7 +491,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         ProcessOrphans(vWorkQueue);
         {
             READLOCK(orphanpool.cs_orphanpool);
-            BOOST_CHECK(orphanpool.mapOrphanTransactions.size() == 50);
+            BOOST_CHECK(orphanpool.mapOrphans.size() == 50);
         }
 
         // Advance the clock 10 minutes
@@ -499,7 +499,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         ProcessOrphans(vWorkQueue);
         {
             READLOCK(orphanpool.cs_orphanpool);
-            BOOST_CHECK(orphanpool.mapOrphanTransactions.size() == 50);
+            BOOST_CHECK(orphanpool.mapOrphans.size() == 50);
         }
 
         // Advance the clock 1 hour
@@ -507,7 +507,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         ProcessOrphans(vWorkQueue);
         {
             READLOCK(orphanpool.cs_orphanpool);
-            BOOST_CHECK(orphanpool.mapOrphanTransactions.size() == 50);
+            BOOST_CHECK(orphanpool.mapOrphans.size() == 50);
         }
 
         // Advance the clock DEFAULT_ORPHANPOOL_EXPIRY hours
@@ -515,7 +515,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         ProcessOrphans(vWorkQueue);
         {
             READLOCK(orphanpool.cs_orphanpool);
-            BOOST_CHECK(orphanpool.mapOrphanTransactions.size() == 50);
+            BOOST_CHECK(orphanpool.mapOrphans.size() == 50);
         }
 
         /** Test the boundary where orphans should get purged. **/
@@ -524,7 +524,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         ProcessOrphans(vWorkQueue);
         {
             READLOCK(orphanpool.cs_orphanpool);
-            BOOST_CHECK(orphanpool.mapOrphanTransactions.size() == 50);
+            BOOST_CHECK(orphanpool.mapOrphans.size() == 50);
         }
 
         // Advance the clock DEFAULT_ORPHANPOOL_EXPIRY hours plus 5 minutes
@@ -532,7 +532,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         ProcessOrphans(vWorkQueue);
         {
             READLOCK(orphanpool.cs_orphanpool);
-            BOOST_CHECK(orphanpool.mapOrphanTransactions.size() == 0);
+            BOOST_CHECK(orphanpool.mapOrphans.size() == 0);
         }
 
         SetMockTime(0);

@@ -30,8 +30,8 @@ private:
     std::atomic<int64_t> nLastOrphanCheck;
 
 public:
-    //! Current in memory footprint of all txns in the orphan pool.
-    uint64_t nBytesOrphanPool GUARDED_BY(cs_orphanpool);
+    //! Current in memory footprint of all txns in the overall pool of orphans and non-finals
+    uint64_t nPoolBytes GUARDED_BY(cs_orphanpool);
 
     struct COrphanTx
     {
@@ -41,74 +41,79 @@ public:
         uint64_t nOrphanTxSize;
     };
 
-    std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_orphanpool);
-    std::map<uint256, std::set<uint256> > mapOrphanTransactionsByPrev GUARDED_BY(cs_orphanpool);
+    // Used for storing and tracking orphans
+    std::map<uint256, COrphanTx> mapOrphans GUARDED_BY(cs_orphanpool);
+    std::map<uint256, std::set<uint256> > mapOrphansByPrev GUARDED_BY(cs_orphanpool);
+
+    // Used for storing and tracking non-final txns
+    std::map<uint256, COrphanTx> mapNonFinals GUARDED_BY(cs_orphanpool);
 
     // Used for syncronizing post block processing of the orphan pool
     CCriticalSection cs_blockprocessing;
     std::deque<ConstCBlockRef> vPostBlockProcessing GUARDED_BY(cs_blockprocessing);
 
     CCriticalSection cs_processorphans;
-    std::deque<std::vector<CTransactionRef>> vProcessOrphans GUARDED_BY(cs_processorphans);
+    std::deque<std::vector<CTransactionRef> > vProcessOrphans GUARDED_BY(cs_processorphans);
 
     CTxOrphanPool();
 
     //! Do we already have this orphan in the orphan pool
     bool AlreadyHaveOrphan(const uint256 &txid);
 
-    //! Add a transaction to the orphan pool
+    //! Add a transaction to the orphan pool - these can be true orphans or non-final txns.
     bool AddOrphanTx(const CTransactionRef ptx, NodeId peer);
+    bool AddNonFinalTx(const CTransactionRef ptx, NodeId peer);
 
-    //! Erase an ophan tx from the orphan pool
+    //! Erase an orphan or non-final tx from the orphan pool
     //! @return true if an orphan matching the hash was found in the orphanpool and successfully erased.
     bool EraseOrphanTx(const uint256 &hash);
+    bool EraseNonFinalTx(const uint256 &hash);
 
-    //! Expire old orphans from the orphan pool
-    void EraseOrphansByTime();
+    //! Expire old orphans and non-finals from the pool
+    void EraseByTime();
 
-    //! Limit the orphan pool size by either number of transactions or the max orphan pool size allowed.
-    unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans, uint64_t nMaxBytes);
+    //! Limit the pool size by either number of transactions (items) or max bytes allowed.
+    unsigned int LimitPoolSize(unsigned int nMaxItems, uint64_t nMaxBytes);
 
     //! Return all the transaction hashes for transactions currently in the orphan pool.
     void QueryIds(std::vector<uint256> &vHashes);
 
-    //! Set the last orphan check time (used primarily in testing)
-    // FIXME SetLastOrphanCheck seems to be used only in unit tests
-    // DoS_tests.cpp and txvalidationcache_tests.cpp
+    //! Set the last orphan check time (used in testing only)
     void _SetLastOrphanCheck(int64_t nTime)
     {
         AssertLockHeld(cs_orphanpool);
         nLastOrphanCheck = nTime;
     }
-    //! Orphan pool current number of transactions
-    uint64_t GetOrphanPoolSize()
+    //! Current number of transactions in the pool
+    uint64_t GetPoolSize()
     {
         READLOCK(cs_orphanpool);
-        return mapOrphanTransactions.size();
+        return mapOrphans.size() + mapNonFinals.size();
     }
 
-    //! Orphan pool bytes used
-    uint64_t GetOrphanPoolBytes()
+    //! Pool bytes used
+    uint64_t GetPoolBytes()
     {
         READLOCK(cs_orphanpool);
-        return nBytesOrphanPool;
+        return nPoolBytes;
     }
 
-    //! Remove all orphans from the pool that are in this group of transactions
+    //! Remove all orphans and non-finals from the pool that are in this group of transactions
     void RemoveForBlock(const std::vector<CTransactionRef> &vtx);
 
-    //! Clear the orphan pool
+    //! Clear the pool
     void clear()
     {
         WRITELOCK(cs_orphanpool);
-        mapOrphanTransactions.clear();
-        mapOrphanTransactionsByPrev.clear();
-        nBytesOrphanPool = 0;
+        mapOrphans.clear();
+        mapOrphansByPrev.clear();
+        mapNonFinals.clear();
+        nPoolBytes = 0;
     }
 
 private:
     //! Return all the orphan pool data structures so they can be saved to disk
-    std::vector<CTxOrphanPool::COrphanTx> AllTxOrphanPoolInfo() const;
+    std::vector<CTxOrphanPool::COrphanTx> AllTxPoolInfo() const;
 
 public:
     //! Load the orphan pool from disk

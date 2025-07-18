@@ -293,8 +293,8 @@ bool CRequestMempoolSyncTx::HandleMessage(CDataStream &vRecv, uint32_t msgCookie
                 READLOCK(orphanpool.cs_orphanpool);
 
                 std::map<uint256, CTxOrphanPool::COrphanTx>::iterator iter =
-                    orphanpool.mapOrphanTransactions.find(hash);
-                if (iter != orphanpool.mapOrphanTransactions.end())
+                    orphanpool.mapOrphans.find(hash);
+                if (iter != orphanpool.mapOrphans.end())
                 {
                     vTx.push_back(iter->second.ptx);
                 }
@@ -382,7 +382,7 @@ void GetMempoolTxHashes(std::vector<uint256> &mempoolTxHashes)
 
     {
         READLOCK(orphanpool.cs_orphanpool);
-        for (auto &kv : orphanpool.mapOrphanTransactions)
+        for (auto &kv : orphanpool.mapOrphans)
         {
             mempoolTxHashes.push_back(kv.first);
         }
@@ -407,7 +407,7 @@ CMempoolSyncInfo GetMempoolSyncInfo()
         nCommitQ = txCommitQ->size();
     }
 
-    uint64_t nTxInMempool = mempool.size() + orphanpool.GetOrphanPoolSize() + nCommitQ;
+    uint64_t nTxInMempool = mempool.size() + orphanpool.GetPoolSize() + nCommitQ;
     uint64_t nMempoolMaxTxBytes = maxTxPool.Value() * ONE_MEGABYTE;
     uint64_t nSatoshiPerK = minRelayTxFee.GetFeePerK();
 
