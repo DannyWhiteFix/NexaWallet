@@ -97,8 +97,8 @@ QT_TRANSLATE_NOOP("nexa", ""
 "WARNING: check your network connection, %d blocks received in the last %d "
 "hours (%d expected)"),
 QT_TRANSLATE_NOOP("nexa", ""
-"Wallet is not password protected. Your funds may be at risk! Goto \"Settings"
-"\" and then select \"Encrypt Wallet\" to create a password."),
+"Wallet is not password protected. Your funds may be at risk! Goto "
+"\"Settings\" and then select \"Encrypt Wallet\" to create a password."),
 QT_TRANSLATE_NOOP("nexa", ""
 "Warning: Could not open deployment configuration CSV file '%s' for reading"),
 QT_TRANSLATE_NOOP("nexa", ""
@@ -135,8 +135,8 @@ QT_TRANSLATE_NOOP("nexa", ""
 "\n"
 "\n"
 "When you click \"OK\" Nexa will shutdown to complete the process."),
-QT_TRANSLATE_NOOP("nexa", "%s "),
 QT_TRANSLATE_NOOP("nexa", "%s corrupt, salvage failed"),
+QT_TRANSLATE_NOOP("nexa", "%s"),
 QT_TRANSLATE_NOOP("nexa", "-maxtxpool must be at least %d MB"),
 QT_TRANSLATE_NOOP("nexa", "-xthinbloomfiltersize must be at least %d Bytes"),
 QT_TRANSLATE_NOOP("nexa", "Activating best chain..."),
@@ -158,6 +158,7 @@ QT_TRANSLATE_NOOP("nexa", "Error loading %s: Wallet corrupted"),
 QT_TRANSLATE_NOOP("nexa", "Error loading %s: Wallet requires newer version of %s"),
 QT_TRANSLATE_NOOP("nexa", "Error loading %s: You can't disable HD on a already existing HD wallet"),
 QT_TRANSLATE_NOOP("nexa", "Error opening block database"),
+QT_TRANSLATE_NOOP("nexa", "Error upgrading block database"),
 QT_TRANSLATE_NOOP("nexa", "Error"),
 QT_TRANSLATE_NOOP("nexa", "Error: A fatal internal error occurred, see debug.log for details"),
 QT_TRANSLATE_NOOP("nexa", "Error: Disk space is low!"),
@@ -207,7 +208,9 @@ QT_TRANSLATE_NOOP("nexa", "Turn off auto consolidate and try sending again."),
 QT_TRANSLATE_NOOP("nexa", "Unable to bind to %s on this computer (bind returned error %s)"),
 QT_TRANSLATE_NOOP("nexa", "Unable to bind to %s on this computer. %s is probably already running."),
 QT_TRANSLATE_NOOP("nexa", "Unable to start RPC services. See debug log for details."),
+QT_TRANSLATE_NOOP("nexa", "Unknown block index version found"),
 QT_TRANSLATE_NOOP("nexa", "Unknown network specified in -onlynet: '%s'"),
+QT_TRANSLATE_NOOP("nexa", "Upgrading Block Index..."),
 QT_TRANSLATE_NOOP("nexa", "Upgrading block database...This could take a while."),
 QT_TRANSLATE_NOOP("nexa", "Upgrading txindex database "),
 QT_TRANSLATE_NOOP("nexa", "Upgrading txindex database..."),
@@ -218,5 +221,6 @@ QT_TRANSLATE_NOOP("nexa", "Waiting for Genesis Block..."),
 QT_TRANSLATE_NOOP("nexa", "Wallet %s resides outside data directory %s"),
 QT_TRANSLATE_NOOP("nexa", "Wallet needed to be rewritten: restart %s to complete"),
 QT_TRANSLATE_NOOP("nexa", "Warning"),
+QT_TRANSLATE_NOOP("nexa", "You will need to run a -reindex on the next startup."),
 QT_TRANSLATE_NOOP("nexa", "Zapping all transactions from wallet..."),
 };

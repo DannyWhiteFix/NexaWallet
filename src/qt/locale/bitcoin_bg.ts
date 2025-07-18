@@ -721,6 +721,19 @@
     </message>
 </context>
 <context>
+    <name>BlockDescDialog</name>
+    <message>
+        <location filename="../forms/blockdescdialog.ui" line="+17"/>
+        <source>Block details</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This pane shows a detailed description of the token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="+14"/>
@@ -1002,6 +1015,38 @@
     </message>
 </context>
 <context>
+    <name>DagWidget</name>
+    <message>
+        <location filename="../dagwidget.cpp" line="+176"/>
+        <source>Block: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <source>Previous block: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Height: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <source>Number: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <location line="+4"/>
+        <source>Type: </source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="+14"/>
@@ -1154,18 +1199,12 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <location filename="../utilitydialog.cpp" line="+39"/>
+        <location filename="../utilitydialog.cpp" line="+40"/>
         <source>version</source>
         <translation>версия</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <location line="+2"/>
-        <source>(%1-bit)</source>
-        <translation>(%1-битов)</translation>
-    </message>
-    <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>About %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1947,7 +1986,7 @@
         <translation>Сума</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="+135"/>
+        <location filename="../guiutil.cpp" line="+136"/>
         <source>Enter a NEXA address (e.g. %1)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2068,7 +2107,7 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <location filename="../forms/debugwindow.ui" line="+239"/>
+        <location filename="../forms/debugwindow.ui" line="+242"/>
         <location line="+16"/>
         <location line="+16"/>
         <location line="+16"/>
@@ -2077,7 +2116,7 @@
         <location line="+29"/>
         <location line="+16"/>
         <location line="+16"/>
-        <location line="+17"/>
+        <location line="+16"/>
         <location line="+16"/>
         <location line="+29"/>
         <location line="+16"/>
@@ -2089,7 +2128,7 @@
         <location line="+19"/>
         <location line="+16"/>
         <location line="+16"/>
-        <location line="+1753"/>
+        <location line="+1879"/>
         <location line="+23"/>
         <location line="+23"/>
         <location line="+23"/>
@@ -2110,7 +2149,7 @@
         <translation>Несъществуващ</translation>
     </message>
     <message>
-        <location line="-2715"/>
+        <location line="-2840"/>
         <source>Client version</source>
         <translation>Версия на клиента</translation>
     </message>
@@ -2120,17 +2159,17 @@
         <translation>Данни</translation>
     </message>
     <message>
-        <location line="-10"/>
+        <location line="-13"/>
         <source>Debug window</source>
         <translation>Прозорец с грешки</translation>
     </message>
     <message>
-        <location line="+620"/>
+        <location line="+622"/>
         <source>General</source>
         <translation>Основни</translation>
     </message>
     <message>
-        <location line="-587"/>
+        <location line="-586"/>
         <source>Using BerkeleyDB version</source>
         <translation>Използване на база данни BerkeleyDB </translation>
     </message>
@@ -2140,12 +2179,12 @@
         <translation>Време за стартиране</translation>
     </message>
     <message>
-        <location line="+474"/>
+        <location line="+473"/>
         <source>Network</source>
         <translation>Мрежа</translation>
     </message>
     <message>
-        <location line="-467"/>
+        <location line="-466"/>
         <source>Name</source>
         <translation>Име</translation>
     </message>
@@ -2240,7 +2279,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+94"/>
+        <location line="+93"/>
         <source>Transaction Pools</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2261,18 +2300,18 @@
     </message>
     <message>
         <location line="+259"/>
-        <location line="+1694"/>
+        <location line="+1820"/>
         <source>Received</source>
         <translation>Получени</translation>
     </message>
     <message>
-        <location line="-1614"/>
-        <location line="+1591"/>
+        <location line="-1740"/>
+        <location line="+1717"/>
         <source>Sent</source>
         <translation>Изпратени</translation>
     </message>
     <message>
-        <location line="-1550"/>
+        <location line="-1676"/>
         <source>&amp;Transaction Rate</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2282,13 +2321,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+14"/>
         <location line="+536"/>
         <source>Peak</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-463"/>
+        <location line="-469"/>
         <location line="+257"/>
         <location line="+279"/>
         <location line="+257"/>
@@ -2312,18 +2351,53 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-769"/>
+        <location line="-763"/>
         <location line="+536"/>
         <source>Average</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-265"/>
+        <location line="-271"/>
         <source>Smoothed Rate (60s)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+539"/>
+        <source>Block Viewer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+46"/>
+        <source>Increase Size</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Decrease Size</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>-</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>Pause block tracking</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>||</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>&amp;Peers</source>
         <translation>&amp;Пиъри</translation>
     </message>
@@ -2334,8 +2408,8 @@
     </message>
     <message>
         <location line="+57"/>
-        <location filename="../rpcconsole.cpp" line="+311"/>
-        <location line="+856"/>
+        <location filename="../rpcconsole.cpp" line="+322"/>
+        <location line="+861"/>
         <source>Select a peer to view detailed information.</source>
         <translation>Избери пиър за детайлна информация.</translation>
     </message>
@@ -2370,8 +2444,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-2698"/>
-        <location line="+2390"/>
+        <location line="-2823"/>
+        <location line="+2515"/>
         <source>User Agent</source>
         <translation>Клиент на потребителя</translation>
     </message>
@@ -2421,12 +2495,12 @@
         <translation>Време за отговор</translation>
     </message>
     <message>
-        <location line="-2475"/>
+        <location line="-2600"/>
         <source>&amp;Open</source>
         <translation>&amp;Отвори</translation>
     </message>
     <message>
-        <location line="+431"/>
+        <location line="+430"/>
         <source>&amp;Console</source>
         <translation>&amp;Конзола</translation>
     </message>
@@ -2446,7 +2520,7 @@
         <translation>Общо:</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="-530"/>
+        <location filename="../rpcconsole.cpp" line="-535"/>
         <source>In:</source>
         <translation>Входящи:</translation>
     </message>
@@ -2456,12 +2530,12 @@
         <translation>Изходящи</translation>
     </message>
     <message>
-        <location filename="../forms/debugwindow.ui" line="-704"/>
+        <location filename="../forms/debugwindow.ui" line="-703"/>
         <source>Debug log file</source>
         <translation>Лог файл,съдържащ грешките</translation>
     </message>
     <message>
-        <location line="+541"/>
+        <location line="+540"/>
         <source>Clear console</source>
         <translation>Изчисти конзолата</translation>
     </message>
@@ -4045,7 +4119,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+397"/>
+        <location filename="../tokensviewdialog.cpp" line="+85"/>
+        <source>Copy token id</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+364"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -4069,11 +4148,11 @@
     </message>
     <message>
         <location line="+22"/>
-        <location line="+5"/>
-        <location line="+5"/>
+        <location line="+4"/>
+        <location line="+6"/>
         <location line="+84"/>
-        <location line="+5"/>
-        <location line="+5"/>
+        <location line="+4"/>
+        <location line="+6"/>
         <source>Total Mintage:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4251,12 +4330,12 @@
         <location line="-142"/>
         <location line="+21"/>
         <location line="+35"/>
-        <location line="+108"/>
+        <location line="+110"/>
         <source>To</source>
         <translation>За</translation>
     </message>
     <message numerus="yes">
-        <location line="-217"/>
+        <location line="-219"/>
         <source>Open for %n more block(s)</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -4300,29 +4379,29 @@
     <message>
         <location line="-110"/>
         <location line="+28"/>
-        <location line="+107"/>
+        <location line="+109"/>
         <source>label</source>
         <translation>име</translation>
     </message>
     <message>
-        <location line="-116"/>
+        <location line="-118"/>
         <location line="+57"/>
-        <location line="+48"/>
-        <location line="+71"/>
+        <location line="+50"/>
+        <location line="+76"/>
         <source>Public label:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-149"/>
+        <location line="-156"/>
         <location line="+41"/>
-        <location line="+63"/>
-        <location line="+47"/>
+        <location line="+65"/>
+        <location line="+52"/>
         <location line="+256"/>
         <source>Credit</source>
         <translation>Кредит</translation>
     </message>
     <message numerus="yes">
-        <location line="-404"/>
+        <location line="-411"/>
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -4335,8 +4414,8 @@
         <translation>не е приет</translation>
     </message>
     <message>
-        <location line="+102"/>
-        <location line="+31"/>
+        <location line="+104"/>
+        <location line="+36"/>
         <location line="+261"/>
         <source>Debit</source>
         <translation>Дебит</translation>
@@ -4490,7 +4569,7 @@
         <translation>false</translation>
     </message>
     <message>
-        <location line="-533"/>
+        <location line="-540"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, все още не е изпратено</translation>
     </message>
@@ -5091,7 +5170,12 @@
         <translation>Грешка в пускането на базата данни с блокове</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+7"/>
+        <source>Error upgrading block database</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5277,7 +5361,17 @@
     </message>
     <message>
         <location line="+1"/>
+        <source>Unknown block index version found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Upgrading Block Index...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5311,12 +5405,12 @@
         <translation>Проверка на портфейла...</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Zapping all transactions from wallet...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-72"/>
+        <location line="-76"/>
         <source>Copyright (C) 2015-%i The Bitcoin Unlimited Developers</source>
         <translation>Всички права запазени (C) 2015-%i Доставчиците на Биткойн ядрото</translation>
     </message>
@@ -5338,7 +5432,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+40"/>
         <source>Information</source>
         <translation>Информация</translation>
     </message>
@@ -5358,12 +5452,12 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Сумите на транзакциите трябва да са положителни</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+20"/>
         <source>Warning</source>
         <translation>Предупреждение</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-44"/>
         <source>Loading addresses...</source>
         <translation>Зареждане на адреси...</translation>
     </message>
@@ -5388,7 +5482,7 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Преразглеждане на последовтелността от блокове...</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-43"/>
         <source>Done loading</source>
         <translation>Зареждането е завършено</translation>
     </message>
@@ -5600,12 +5694,12 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
     </message>
     <message>
         <location line="+6"/>
-        <source>%s </source>
+        <source>%s corrupt, salvage failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>%s corrupt, salvage failed</source>
+        <source>%s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5694,7 +5788,7 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Error</source>
         <translation>Грешка</translation>
     </message>
@@ -5709,7 +5803,7 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+23"/>
         <source>Waiting for Genesis Block...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5721,6 +5815,11 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
     <message>
         <location line="+1"/>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>You will need to run a -reindex on the next startup.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

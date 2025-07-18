@@ -643,7 +643,7 @@ bool LoadBlockIndexDB()
         {
             // Trigger a -reindex since we don't recognize any versions.
             bool fRet = uiInterface.ThreadSafeMessageBox(_("Unknown block index version found") + ".\n\n" +
-                                                             _("You will need to run a -reindex on next the startup."),
+                                                             _("You will need to run a -reindex on the next startup."),
                 "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
             if (fRet)
             {

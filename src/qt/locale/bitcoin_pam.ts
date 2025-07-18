@@ -716,6 +716,19 @@
     </message>
 </context>
 <context>
+    <name>BlockDescDialog</name>
+    <message>
+        <location filename="../forms/blockdescdialog.ui" line="+17"/>
+        <source>Block details</source>
+        <translation>I-block ang mga detalye</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This pane shows a detailed description of the token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ang pane na ito ay nagpapakita ng detalyadong paglalarawan ng token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+</context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="+14"/>
@@ -997,6 +1010,38 @@
     </message>
 </context>
 <context>
+    <name>DagWidget</name>
+    <message>
+        <location filename="../dagwidget.cpp" line="+176"/>
+        <source>Block: </source>
+        <translation>I-block: </translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <source>Previous block: </source>
+        <translation>Nakaraang block: </translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Height: </source>
+        <translation>Taas: </translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <source>Number: </source>
+        <translation>Numero: </translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <location line="+4"/>
+        <source>Type: </source>
+        <translation>Klase: </translation>
+    </message>
+</context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="+14"/>
@@ -1149,18 +1194,12 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <location filename="../utilitydialog.cpp" line="+39"/>
+        <location filename="../utilitydialog.cpp" line="+40"/>
         <source>version</source>
         <translation>bersion</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <location line="+2"/>
-        <source>(%1-bit)</source>
-        <translation>(%1-bit)</translation>
-    </message>
-    <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>About %1</source>
         <translation>Tungkul sa %1</translation>
     </message>
@@ -1942,7 +1981,7 @@
         <translation>Alaga</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="+135"/>
+        <location filename="../guiutil.cpp" line="+136"/>
         <source>Enter a NEXA address (e.g. %1)</source>
         <translation>Maglagay ng NEXA address (hal. %1)</translation>
     </message>
@@ -2063,7 +2102,7 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <location filename="../forms/debugwindow.ui" line="+239"/>
+        <location filename="../forms/debugwindow.ui" line="+242"/>
         <location line="+16"/>
         <location line="+16"/>
         <location line="+16"/>
@@ -2072,7 +2111,7 @@
         <location line="+29"/>
         <location line="+16"/>
         <location line="+16"/>
-        <location line="+17"/>
+        <location line="+16"/>
         <location line="+16"/>
         <location line="+29"/>
         <location line="+16"/>
@@ -2084,7 +2123,7 @@
         <location line="+19"/>
         <location line="+16"/>
         <location line="+16"/>
-        <location line="+1753"/>
+        <location line="+1879"/>
         <location line="+23"/>
         <location line="+23"/>
         <location line="+23"/>
@@ -2105,7 +2144,7 @@
         <translation>N/A</translation>
     </message>
     <message>
-        <location line="-2715"/>
+        <location line="-2840"/>
         <source>Client version</source>
         <translation>Bersion ning Cliente</translation>
     </message>
@@ -2115,33 +2154,33 @@
         <translation>&amp;Impormasion</translation>
     </message>
     <message>
-        <location line="-10"/>
+        <location line="-13"/>
         <source>Debug window</source>
         <translation>I-Debug ing awang</translation>
     </message>
     <message>
-        <location line="+50"/>
+        <location line="+53"/>
         <source>Startup time</source>
         <translation>Oras ning umpisa</translation>
     </message>
     <message>
-        <location line="+474"/>
+        <location line="+473"/>
         <source>Network</source>
         <translation>Network</translation>
     </message>
     <message>
-        <location line="-460"/>
+        <location line="-459"/>
         <source>Number of connections</source>
         <translation>Bilang dareng koneksion</translation>
     </message>
     <message>
         <location line="-41"/>
-        <location line="+2390"/>
+        <location line="+2515"/>
         <source>User Agent</source>
         <translation>Ahente ng Gumagamit</translation>
     </message>
     <message>
-        <location line="-2380"/>
+        <location line="-2505"/>
         <source>Using BerkeleyDB version</source>
         <translation>Gamit ang bersyon ng BerkeleyDB</translation>
     </message>
@@ -2231,7 +2270,7 @@
         <translation>Block Propagation</translation>
     </message>
     <message>
-        <location line="+94"/>
+        <location line="+93"/>
         <source>Transaction Pools</source>
         <translation>Mga Pool ng Transaksyon</translation>
     </message>
@@ -2242,18 +2281,18 @@
     </message>
     <message>
         <location line="+476"/>
-        <location line="+1694"/>
+        <location line="+1820"/>
         <source>Received</source>
         <translation>Natanggap</translation>
     </message>
     <message>
-        <location line="-1614"/>
-        <location line="+1591"/>
+        <location line="-1740"/>
+        <location line="+1717"/>
         <source>Sent</source>
         <translation>Ipinadala</translation>
     </message>
     <message>
-        <location line="-1550"/>
+        <location line="-1676"/>
         <source>&amp;Transaction Rate</source>
         <translation>&amp;Rate ng Transaksyon</translation>
     </message>
@@ -2263,13 +2302,13 @@
         <translation>Agad na Rate (1s)</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+14"/>
         <location line="+536"/>
         <source>Peak</source>
         <translation>Tuktok</translation>
     </message>
     <message>
-        <location line="-463"/>
+        <location line="-469"/>
         <location line="+257"/>
         <location line="+279"/>
         <location line="+257"/>
@@ -2293,18 +2332,53 @@
         <translation>Ipinakita</translation>
     </message>
     <message>
-        <location line="-769"/>
+        <location line="-763"/>
         <location line="+536"/>
         <source>Average</source>
         <translation>Katamtaman</translation>
     </message>
     <message>
-        <location line="-265"/>
+        <location line="-271"/>
         <source>Smoothed Rate (60s)</source>
         <translation>Smoothed Rate (60s)</translation>
     </message>
     <message>
         <location line="+539"/>
+        <source>Block Viewer</source>
+        <translation>I-block tagamasid</translation>
+    </message>
+    <message>
+        <location line="+46"/>
+        <source>Increase Size</source>
+        <translation>Dagdagan ang Laki</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>+</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Decrease Size</source>
+        <translation>Bawasan ang Sukat</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>-</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>Pause block tracking</source>
+        <translation>I-pause ang pagsubaybay sa block</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>||</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>&amp;Peers</source>
         <translation>&amp;Mga kapantay</translation>
     </message>
@@ -2315,8 +2389,8 @@
     </message>
     <message>
         <location line="+57"/>
-        <location filename="../rpcconsole.cpp" line="+311"/>
-        <location line="+856"/>
+        <location filename="../rpcconsole.cpp" line="+322"/>
+        <location line="+861"/>
         <source>Select a peer to view detailed information.</source>
         <translation>Pumili ng peer para tingnan ang detalyadong impormasyon.</translation>
     </message>
@@ -2396,7 +2470,7 @@
         <translation>Time Offset</translation>
     </message>
     <message>
-        <location line="-2650"/>
+        <location line="-2775"/>
         <source>Current number of blocks</source>
         <translation>Kasalungsungan bilang dareng blocks</translation>
     </message>
@@ -2406,7 +2480,7 @@
         <translation>&amp;Ibuklat</translation>
     </message>
     <message>
-        <location line="+423"/>
+        <location line="+422"/>
         <source>General</source>
         <translation>Heneral</translation>
     </message>
@@ -2441,17 +2515,17 @@
         <translation>Kabuuan:</translation>
     </message>
     <message>
-        <location line="-704"/>
+        <location line="-703"/>
         <source>Debug log file</source>
         <translation>Debug log file</translation>
     </message>
     <message>
-        <location line="+541"/>
+        <location line="+540"/>
         <source>Clear console</source>
         <translation>I-Clear ing console</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="-736"/>
+        <location filename="../rpcconsole.cpp" line="-741"/>
         <source>&amp;Disconnect Node</source>
         <translation>&amp;Idiskonekta ang Node</translation>
     </message>
@@ -4040,7 +4114,12 @@
         <translation>Kung nilagyan ng check, ang item na ito ay isang subgroup.</translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+397"/>
+        <location filename="../tokensviewdialog.cpp" line="+85"/>
+        <source>Copy token id</source>
+        <translation>Kopyahin ang token id</translation>
+    </message>
+    <message>
+        <location line="+364"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -4064,11 +4143,11 @@
     </message>
     <message>
         <location line="+22"/>
-        <location line="+5"/>
-        <location line="+5"/>
+        <location line="+4"/>
+        <location line="+6"/>
         <location line="+84"/>
-        <location line="+5"/>
-        <location line="+5"/>
+        <location line="+4"/>
+        <location line="+6"/>
         <source>Total Mintage:</source>
         <translation>Kabuuang Paggawa:</translation>
     </message>
@@ -4241,12 +4320,12 @@
         <location line="-142"/>
         <location line="+21"/>
         <location line="+35"/>
-        <location line="+108"/>
+        <location line="+110"/>
         <source>To</source>
         <translation>Para kang</translation>
     </message>
     <message numerus="yes">
-        <location line="-217"/>
+        <location line="-219"/>
         <source>Open for %n more block(s)</source>
         <translation>
             <numerusform>Buksan para sa %n pang bloke</numerusform>
@@ -4295,29 +4374,29 @@
     <message>
         <location line="-110"/>
         <location line="+28"/>
-        <location line="+107"/>
+        <location line="+109"/>
         <source>label</source>
         <translation>label</translation>
     </message>
     <message>
-        <location line="-116"/>
+        <location line="-118"/>
         <location line="+57"/>
-        <location line="+48"/>
-        <location line="+71"/>
+        <location line="+50"/>
+        <location line="+76"/>
         <source>Public label:</source>
         <translation>Pampublikong Label:</translation>
     </message>
     <message>
-        <location line="-149"/>
+        <location line="-156"/>
         <location line="+41"/>
-        <location line="+63"/>
-        <location line="+47"/>
+        <location line="+65"/>
+        <location line="+52"/>
         <location line="+256"/>
         <source>Credit</source>
         <translation>Credit</translation>
     </message>
     <message numerus="yes">
-        <location line="-404"/>
+        <location line="-411"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>mature sa %n pang bloke</numerusform>
@@ -4330,8 +4409,8 @@
         <translation>ali metanggap</translation>
     </message>
     <message>
-        <location line="+102"/>
-        <location line="+31"/>
+        <location line="+104"/>
+        <location line="+36"/>
         <location line="+261"/>
         <source>Debit</source>
         <translation>Debit</translation>
@@ -4485,7 +4564,7 @@
         <translation>e tutu</translation>
     </message>
     <message>
-        <location line="-533"/>
+        <location line="-540"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, eya matagumpeng mibalita</translation>
     </message>
@@ -5096,7 +5175,7 @@
         <translation>Kamalian king pamag buklat king block database</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Error: Disk space is low!</source>
         <translation>Kamalian: Mababa ne ing espasyu king disk!</translation>
     </message>
@@ -5106,27 +5185,27 @@
         <translation>Memali ya ing pamakiramdam kareng gang nanung port. Gamita me ini -listen=0 nung buri me ini.</translation>
     </message>
     <message>
-        <location line="-19"/>
+        <location line="-20"/>
         <source>Cannot resolve -whitebind address: &apos;%s&apos;</source>
         <translation>Eya me-resolve ing -whitebind address: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+23"/>
         <source>Information</source>
         <translation>&amp;Impormasion</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+54"/>
         <source>Warning</source>
         <translation>Kapabaluan</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-44"/>
         <source>Loading addresses...</source>
         <translation>Lo-load da ne ing address...</translation>
     </message>
     <message>
-        <location line="-112"/>
+        <location line="-113"/>
         <source>Rescans are not possible in pruned mode. You will need to use -resync which will download the whole blockchain again.</source>
         <translation>Ang mga muling pag-scan ay hindi posible sa pruned mode. Kakailanganin mong gumamit ng -resync na magda-download muli ng buong blockchain.</translation>
     </message>
@@ -5145,7 +5224,7 @@ Pakilunsad muli ang Nexa gamit ang &quot;-usehd=0&quot;.</translation>
         <translation>Kailangan mong buuin muli ang database gamit ang -resync para bumalik sa unpruned mode. Ida-download muli nito ang buong blockchain.</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+45"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>Ali katanggap-tanggap a -proxy addresss: &apos;%s&apos;</translation>
     </message>
@@ -5220,12 +5299,12 @@ Pakilunsad muli ang Nexa gamit ang &quot;-usehd=0&quot;.</translation>
         <translation>Hindi masimulan ang mga serbisyo ng RPC. Tingnan ang debug log para sa mga detalye.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>E kilalang network ing mepili king -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-66"/>
+        <location line="-68"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Eya me-resolve ing -bind address: &apos;%s&apos;</translation>
     </message>
@@ -5235,7 +5314,7 @@ Pakilunsad muli ang Nexa gamit ang &quot;-usehd=0&quot;.</translation>
         <translation>Eya me-resolve ing -externalip address: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+36"/>
         <source>Loading block index...</source>
         <translation>Lo-load dane ing block index...</translation>
     </message>
@@ -5245,7 +5324,7 @@ Pakilunsad muli ang Nexa gamit ang &quot;-usehd=0&quot;.</translation>
         <translation>Lo-load dane ing wallet...</translation>
     </message>
     <message>
-        <location line="-38"/>
+        <location line="-39"/>
         <source>Cannot downgrade wallet</source>
         <translation>Ali ya magsilbing i-downgrade ing wallet</translation>
     </message>
@@ -5463,13 +5542,13 @@ Kapag na-click mo ang &quot;OK&quot; ang Nexa ay magsasara upang makumpleto ang 
     </message>
     <message>
         <location line="+6"/>
-        <source>%s </source>
-        <translation>%s </translation>
+        <source>%s corrupt, salvage failed</source>
+        <translation>%s corrupt, nabigo ang pagsagip</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s corrupt, nabigo ang pagsagip</translation>
+        <source>%s</source>
+        <translation></translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5532,7 +5611,12 @@ Kapag na-click mo ang &quot;OK&quot; ang Nexa ay magsasara upang makumpleto ang 
         <translation>Error sa paglo-load ng %s: Hindi mo maaaring i-disable ang HD sa isang umiiral nang HD wallet</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
+        <source>Error upgrading block database</source>
+        <translation>Error sa pag-upgrade ng block database</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Error: Isang malalang internal na error ang naganap, tingnan ang debug.log para sa mga detalye</translation>
     </message>
@@ -5667,7 +5751,17 @@ Kapag na-click mo ang &quot;OK&quot; ang Nexa ay magsasara upang makumpleto ang 
         <translation>I-scan deng pasibayu...</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+15"/>
+        <source>Unknown block index version found</source>
+        <translation>Natagpuan ang hindi kilalang bersyon ng block index</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Upgrading Block Index...</source>
+        <translation>Ina-upgrade ang Block Index...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Upgrading block database...This could take a while.</source>
         <translation>Ina-upgrade ang block database...Maaaring magtagal ito.</translation>
     </message>
@@ -5713,16 +5807,21 @@ Kapag na-click mo ang &quot;OK&quot; ang Nexa ay magsasara upang makumpleto ang 
     </message>
     <message>
         <location line="+2"/>
+        <source>You will need to run a -reindex on the next startup.</source>
+        <translation>Kakailanganin mong magpatakbo ng -reindex sa susunod na startup.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Zapping all transactions from wallet...</source>
         <translation>I-zapping ang lahat ng transaksyon mula sa wallet...</translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-72"/>
         <source>Done loading</source>
         <translation>Yari ne ing pamag-load</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Error</source>
         <translation>Mali</translation>
     </message>

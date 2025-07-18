@@ -721,6 +721,19 @@
     </message>
 </context>
 <context>
+    <name>BlockDescDialog</name>
+    <message>
+        <location filename="../forms/blockdescdialog.ui" line="+17"/>
+        <source>Block details</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This pane shows a detailed description of the token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <location filename="../coincontroldialog.cpp" line="+45"/>
@@ -1002,6 +1015,38 @@
     </message>
 </context>
 <context>
+    <name>DagWidget</name>
+    <message>
+        <location filename="../dagwidget.cpp" line="+176"/>
+        <source>Block: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <source>Previous block: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Height: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <source>Number: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <location line="+4"/>
+        <source>Type: </source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="+14"/>
@@ -1154,18 +1199,12 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <location filename="../utilitydialog.cpp" line="+39"/>
+        <location filename="../utilitydialog.cpp" line="+40"/>
         <source>version</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+5"/>
-        <location line="+2"/>
-        <source>(%1-bit)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>About %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1947,7 +1986,7 @@
         <translation>Cantidad</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="+135"/>
+        <location filename="../guiutil.cpp" line="+136"/>
         <source>Enter a NEXA address (e.g. %1)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2068,7 +2107,7 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <location filename="../forms/debugwindow.ui" line="+239"/>
+        <location filename="../forms/debugwindow.ui" line="+242"/>
         <location line="+16"/>
         <location line="+16"/>
         <location line="+16"/>
@@ -2077,7 +2116,7 @@
         <location line="+29"/>
         <location line="+16"/>
         <location line="+16"/>
-        <location line="+17"/>
+        <location line="+16"/>
         <location line="+16"/>
         <location line="+29"/>
         <location line="+16"/>
@@ -2089,7 +2128,7 @@
         <location line="+19"/>
         <location line="+16"/>
         <location line="+16"/>
-        <location line="+1753"/>
+        <location line="+1879"/>
         <location line="+23"/>
         <location line="+23"/>
         <location line="+23"/>
@@ -2110,7 +2149,7 @@
         <translation>N/D</translation>
     </message>
     <message>
-        <location line="-2715"/>
+        <location line="-2840"/>
         <source>Client version</source>
         <translation>Versión del cliente</translation>
     </message>
@@ -2120,17 +2159,17 @@
         <translation>&amp;Información</translation>
     </message>
     <message>
-        <location line="-10"/>
+        <location line="-13"/>
         <source>Debug window</source>
         <translation>Ventana de depuración</translation>
     </message>
     <message>
-        <location line="+620"/>
+        <location line="+622"/>
         <source>General</source>
         <translation>General</translation>
     </message>
     <message>
-        <location line="-587"/>
+        <location line="-586"/>
         <source>Using BerkeleyDB version</source>
         <translation>Utilizando la versión de BerkeleyDB</translation>
     </message>
@@ -2145,12 +2184,12 @@
         <translation>Hora de inicio</translation>
     </message>
     <message>
-        <location line="+474"/>
+        <location line="+473"/>
         <source>Network</source>
         <translation>Red</translation>
     </message>
     <message>
-        <location line="-467"/>
+        <location line="-466"/>
         <source>Name</source>
         <translation>Nombre</translation>
     </message>
@@ -2160,24 +2199,24 @@
         <translation>Número de conexiones</translation>
     </message>
     <message>
-        <location line="+415"/>
+        <location line="+414"/>
         <source>Block chain</source>
         <translation>Cadena de bloques</translation>
     </message>
     <message>
-        <location line="-408"/>
+        <location line="-407"/>
         <source>Current number of blocks</source>
         <translation>Número actual de bloques</translation>
     </message>
     <message>
-        <location line="+884"/>
-        <location line="+1694"/>
+        <location line="+883"/>
+        <location line="+1820"/>
         <source>Received</source>
         <translation>Recibido</translation>
     </message>
     <message>
-        <location line="-1614"/>
-        <location line="+1591"/>
+        <location line="-1740"/>
+        <location line="+1717"/>
         <source>Sent</source>
         <translation>Enviado</translation>
     </message>
@@ -2193,8 +2232,8 @@
     </message>
     <message>
         <location line="+57"/>
-        <location filename="../rpcconsole.cpp" line="+311"/>
-        <location line="+856"/>
+        <location filename="../rpcconsole.cpp" line="+322"/>
+        <location line="+861"/>
         <source>Select a peer to view detailed information.</source>
         <translation>Seleccionar un par para ver su información detallada.</translation>
     </message>
@@ -2229,13 +2268,13 @@
         <translation>Bloques Sincronizados</translation>
     </message>
     <message>
-        <location line="-2488"/>
-        <location line="+2390"/>
+        <location line="-2613"/>
+        <location line="+2515"/>
         <source>User Agent</source>
         <translation>User Agent</translation>
     </message>
     <message>
-        <location line="-2335"/>
+        <location line="-2460"/>
         <source>Last block time (time since)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2310,7 +2349,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+94"/>
+        <location line="+93"/>
         <source>Transaction Pools</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2335,13 +2374,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+14"/>
         <location line="+536"/>
         <source>Peak</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-463"/>
+        <location line="-469"/>
         <location line="+257"/>
         <location line="+279"/>
         <location line="+257"/>
@@ -2365,18 +2404,53 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-769"/>
+        <location line="-763"/>
         <location line="+536"/>
         <source>Average</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-265"/>
+        <location line="-271"/>
         <source>Smoothed Rate (60s)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+769"/>
+        <location line="+539"/>
+        <source>Block Viewer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+46"/>
+        <source>Increase Size</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Decrease Size</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>-</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>Pause block tracking</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>||</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+236"/>
         <source>Services</source>
         <translation>Servicios</translation>
     </message>
@@ -2421,12 +2495,12 @@
         <translation>Desplazamiento de tiempo</translation>
     </message>
     <message>
-        <location line="-2524"/>
+        <location line="-2649"/>
         <source>&amp;Open</source>
         <translation>&amp;Abrir</translation>
     </message>
     <message>
-        <location line="+431"/>
+        <location line="+430"/>
         <source>&amp;Console</source>
         <translation>&amp;Consola</translation>
     </message>
@@ -2446,7 +2520,7 @@
         <translation>Total:</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="-530"/>
+        <location filename="../rpcconsole.cpp" line="-535"/>
         <source>In:</source>
         <translation>Entrante:</translation>
     </message>
@@ -2456,12 +2530,12 @@
         <translation>Saliente:</translation>
     </message>
     <message>
-        <location filename="../forms/debugwindow.ui" line="-704"/>
+        <location filename="../forms/debugwindow.ui" line="-703"/>
         <source>Debug log file</source>
         <translation>Archivo de registro de depuración</translation>
     </message>
     <message>
-        <location line="+541"/>
+        <location line="+540"/>
         <source>Clear console</source>
         <translation>Borrar consola</translation>
     </message>
@@ -4045,7 +4119,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+397"/>
+        <location filename="../tokensviewdialog.cpp" line="+85"/>
+        <source>Copy token id</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+364"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -4069,11 +4148,11 @@
     </message>
     <message>
         <location line="+22"/>
-        <location line="+5"/>
-        <location line="+5"/>
+        <location line="+4"/>
+        <location line="+6"/>
         <location line="+84"/>
-        <location line="+5"/>
-        <location line="+5"/>
+        <location line="+4"/>
+        <location line="+6"/>
         <source>Total Mintage:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4261,12 +4340,12 @@
         <location line="-20"/>
         <location line="+21"/>
         <location line="+35"/>
-        <location line="+108"/>
+        <location line="+110"/>
         <source>To</source>
         <translation>Para</translation>
     </message>
     <message numerus="yes">
-        <location line="-217"/>
+        <location line="-219"/>
         <source>Open for %n more block(s)</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -4310,29 +4389,29 @@
     <message>
         <location line="-110"/>
         <location line="+28"/>
-        <location line="+107"/>
+        <location line="+109"/>
         <source>label</source>
         <translation>etiqueta</translation>
     </message>
     <message>
-        <location line="-116"/>
+        <location line="-118"/>
         <location line="+57"/>
-        <location line="+48"/>
-        <location line="+71"/>
+        <location line="+50"/>
+        <location line="+76"/>
         <source>Public label:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-149"/>
+        <location line="-156"/>
         <location line="+41"/>
-        <location line="+63"/>
-        <location line="+47"/>
+        <location line="+65"/>
+        <location line="+52"/>
         <location line="+256"/>
         <source>Credit</source>
         <translation>Credito</translation>
     </message>
     <message numerus="yes">
-        <location line="-404"/>
+        <location line="-411"/>
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -4345,8 +4424,8 @@
         <translation>no aceptada</translation>
     </message>
     <message>
-        <location line="+102"/>
-        <location line="+31"/>
+        <location line="+104"/>
+        <location line="+36"/>
         <location line="+261"/>
         <source>Debit</source>
         <translation>Enviado</translation>
@@ -5091,7 +5170,7 @@
         <translation>Poda:  la ultima sincronizacion de la cartera sobrepasa los datos podados. Necesitas reindexar con -reindex (o descargar la cadena de bloques de nuevo en el caso de un nodo podado)</translation>
     </message>
     <message>
-        <location line="+104"/>
+        <location line="+105"/>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Un error interno fatal ocurrió, ver debug.log para detalles</translation>
     </message>
@@ -5101,7 +5180,7 @@
         <translation>Poda blockstore ...</translation>
     </message>
     <message>
-        <location line="-181"/>
+        <location line="-182"/>
         <source>Nexa</source>
         <translation>Nexa</translation>
     </message>
@@ -5156,9 +5235,14 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+6"/>
         <source>%s corrupt, salvage failed</source>
         <translation>%s corrupto. Fracasó la recuperacion</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>%s</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+11"/>
@@ -5204,6 +5288,11 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
         <location line="+1"/>
         <source>Error opening block database</source>
         <translation>Error al abrir base de datos de bloques.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error upgrading block database</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+3"/>
@@ -5276,7 +5365,17 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
         <translation>No se ha podido conectar con %s en este equipo. %s es posible que este todavia en ejecución.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+2"/>
+        <source>Unknown block index version found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Upgrading Block Index...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>El comentario del Agente de Usuario (%s) contiene caracteres inseguros.</translation>
     </message>
@@ -5306,12 +5405,12 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
         <translation>Es necesario reescribir el monedero: reiniciar %s para completar</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Zapping all transactions from wallet...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-180"/>
+        <location line="-184"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Error: la escucha para conexiones entrantes falló (la escucha regresó el error %s)</translation>
     </message>
@@ -5321,7 +5420,7 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
         <translation>Monto de transacción muy pequeña luego de la deducción por comisión</translation>
     </message>
     <message>
-        <location line="+94"/>
+        <location line="+95"/>
         <source>Information</source>
         <translation>Información</translation>
     </message>
@@ -5386,17 +5485,17 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
         <translation>No es posible conectar con %s en este sistema (bind ha dado el error %s)</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+15"/>
         <source>Warning</source>
         <translation>Aviso</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-44"/>
         <source>Loading addresses...</source>
         <translation>Cargando direcciones...</translation>
     </message>
     <message>
-        <location line="-71"/>
+        <location line="-72"/>
         <source>Warning: Unknown block versions being mined! It&apos;s possible unknown rules are in effect</source>
         <translation>Advertencia: Se están minando versiones de bloques desconocidas! Es posible que normas desconocidas estén activas</translation>
     </message>
@@ -5406,17 +5505,17 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
         <translation>Aviso: fichero de monedero corrupto, datos recuperados! Original %s guardado como %s en %s; si su balance de transacciones es incorrecto, debe restaurar desde una copia de seguridad.</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+64"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>Dirección -proxy inválida: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+38"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>La red especificada en -onlynet &apos;%s&apos; es desconocida</translation>
     </message>
     <message>
-        <location line="-30"/>
+        <location line="-31"/>
         <source>Loading block index...</source>
         <translation>Cargando el índice de bloques...</translation>
     </message>
@@ -5426,7 +5525,7 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
         <translation>Cargando monedero...</translation>
     </message>
     <message>
-        <location line="-38"/>
+        <location line="-39"/>
         <source>Cannot downgrade wallet</source>
         <translation>No se puede cambiar a una versión mas antigua el monedero</translation>
     </message>
@@ -5569,12 +5668,7 @@ Do you want to reindex on the next restart?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+9"/>
-        <source>%s </source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+2"/>
+        <location line="+11"/>
         <source>-maxtxpool must be at least %d MB</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5624,7 +5718,7 @@ Do you want to reindex on the next restart?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+21"/>
         <source>Insufficient funds or funds not confirmed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5699,7 +5793,7 @@ Do you want to reindex on the next restart?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+4"/>
         <source>Upgrading block database...This could take a while.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5714,12 +5808,17 @@ Do you want to reindex on the next restart?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-60"/>
+        <location line="+8"/>
+        <source>You will need to run a -reindex on the next startup.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-71"/>
         <source>Done loading</source>
         <translation>Se terminó de cargar</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>

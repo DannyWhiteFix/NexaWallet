@@ -71,7 +71,7 @@
     <message>
         <location line="+6"/>
         <source>C&amp;hoose</source>
-        <translation>Kies</translation>
+        <translation>&amp;Kies</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -91,7 +91,7 @@
     <message>
         <location line="+5"/>
         <source>These are your Nexa addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Hierdie is die adresse waar u Nexas sal ontvang. Ons beveel aan dat u &apos;n nuwe adres kies vir elke transaksie</translation>
+        <translation>Hierdie is die adresse waar u Nexas sal ontvang. Ons beveel aan dat u &apos;n nuwe adres kies vir elke transaksie.</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -262,7 +262,7 @@
     <message>
         <location line="-55"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>Weens &apos;n interne fout het kodifikasie het nie geslaag nie.  U beursie is nie gekodifiseer nie</translation>
+        <translation>Weens &apos;n interne fout het kodifikasie het nie geslaag nie.  U beursie is nie gekodifiseer nie.</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -351,7 +351,7 @@
     <message>
         <location line="+10"/>
         <source>&amp;Token History</source>
-        <translation>Tekengeskiedenis</translation>
+        <translation>&amp;Tekengeskiedenis</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -391,7 +391,7 @@
     <message>
         <location line="+2"/>
         <source>&amp;Options...</source>
-        <translation>&amp;Opsies</translation>
+        <translation>&amp;Opsies...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -416,12 +416,12 @@
     <message>
         <location line="+3"/>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Kodifiseer Beursie</translation>
+        <translation>&amp;Kodifiseer Beursie...</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Rugsteun-kopie van Beursie</translation>
+        <translation>&amp;Rugsteun-kopie van Beursie...</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -436,7 +436,7 @@
     <message>
         <location line="+2"/>
         <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Verander Wagwoord</translation>
+        <translation>&amp;Verander Wagwoord...</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -466,12 +466,12 @@
     <message>
         <location line="+3"/>
         <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Ontvanger adresse</translation>
+        <translation>&amp;Ontvanger adresse...</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Open &amp;URI...</source>
-        <translation>Oop &amp; URI...</translation>
+        <translation>Oop &amp;URI...</translation>
     </message>
     <message>
         <location line="+633"/>
@@ -580,7 +580,7 @@
         <location line="+9"/>
         <source>Processed %n block(s) of transaction history.</source>
         <translation>
-            <numerusform>Verwerk %n blokke van transaksiegeskiedenis.</numerusform>
+            <numerusform>Verwerk %n blok(ke) van transaksiegeskiedenis.</numerusform>
             <numerusform></numerusform>
         </translation>
     </message>
@@ -713,6 +713,19 @@
         <location line="+118"/>
         <source>Open a %1: URI or payment request</source>
         <translation>Skep &apos;n %1: URI of betalingsversoek</translation>
+    </message>
+</context>
+<context>
+    <name>BlockDescDialog</name>
+    <message>
+        <location filename="../forms/blockdescdialog.ui" line="+17"/>
+        <source>Block details</source>
+        <translation>Blok besonderhede</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This pane shows a detailed description of the token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Hierdie paneel wys &apos;n gedetailleerde beskrywing van die teken&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
 </context>
 <context>
@@ -997,6 +1010,38 @@
     </message>
 </context>
 <context>
+    <name>DagWidget</name>
+    <message>
+        <location filename="../dagwidget.cpp" line="+176"/>
+        <source>Block: </source>
+        <translation>Blok:</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <source>Previous block: </source>
+        <translation>Vorige blok:</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Height: </source>
+        <translation>Hoogte:</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <source>Number: </source>
+        <translation>Nommer:</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <location line="+4"/>
+        <source>Type: </source>
+        <translation>Tipe: </translation>
+    </message>
+</context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="+14"/>
@@ -1149,18 +1194,12 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <location filename="../utilitydialog.cpp" line="+39"/>
+        <location filename="../utilitydialog.cpp" line="+40"/>
         <source>version</source>
         <translation>weergawe</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <location line="+2"/>
-        <source>(%1-bit)</source>
-        <translation>(%1-bis)</translation>
-    </message>
-    <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>About %1</source>
         <translation>Oor %1</translation>
     </message>
@@ -1395,7 +1434,7 @@
     <message>
         <location line="+25"/>
         <source>Number of script &amp;verification threads</source>
-        <translation>Aantal skrip- en verifikasiedrade</translation>
+        <translation>Aantal skrip- en &amp;verifikasiedrade</translation>
     </message>
     <message>
         <location line="+31"/>
@@ -1430,7 +1469,7 @@
     <message>
         <location line="+3"/>
         <source>Enable coin &amp;control features</source>
-        <translation>Aktiveer muntbeheerkenmerke</translation>
+        <translation>Aktiveer &amp;muntbeheerkenmerke</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -1606,7 +1645,7 @@
     <message>
         <location line="+8"/>
         <source>User Interface &amp;language:</source>
-        <translation>Gebruikerskoppelvlak en taal:</translation>
+        <translation>&amp;Gebruikerskoppelvlak en taal:</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -1937,7 +1976,7 @@
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../guiutil.cpp" line="+135"/>
+        <location filename="../guiutil.cpp" line="+136"/>
         <source>Enter a NEXA address (e.g. %1)</source>
         <translation>Voer &apos;n NEXA-adres in (bv. %1)</translation>
     </message>
@@ -2068,7 +2107,7 @@
         <translation>Ontfout venster</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+13"/>
         <source>&amp;Information</source>
         <translation>&amp;Inligting</translation>
     </message>
@@ -2079,12 +2118,12 @@
     </message>
     <message>
         <location line="+7"/>
-        <location line="+2390"/>
+        <location line="+2515"/>
         <source>User Agent</source>
         <translation>Gebruikersagent</translation>
     </message>
     <message>
-        <location line="-2380"/>
+        <location line="-2505"/>
         <source>Using BerkeleyDB version</source>
         <translation>Gebruik BerkeleyDB weergawe</translation>
     </message>
@@ -2203,7 +2242,7 @@
         <location line="+29"/>
         <location line="+16"/>
         <location line="+16"/>
-        <location line="+17"/>
+        <location line="+16"/>
         <location line="+16"/>
         <location line="+29"/>
         <location line="+16"/>
@@ -2215,7 +2254,7 @@
         <location line="+19"/>
         <location line="+16"/>
         <location line="+16"/>
-        <location line="+1753"/>
+        <location line="+1879"/>
         <location line="+23"/>
         <location line="+23"/>
         <location line="+23"/>
@@ -2236,12 +2275,12 @@
         <translation>NVT</translation>
     </message>
     <message>
-        <location line="-2407"/>
+        <location line="-2532"/>
         <source>Block Propagation</source>
         <translation>Blokvoortplanting</translation>
     </message>
     <message>
-        <location line="+94"/>
+        <location line="+93"/>
         <source>Transaction Pools</source>
         <translation>Transaksiepoele</translation>
     </message>
@@ -2297,18 +2336,18 @@
     </message>
     <message>
         <location line="+64"/>
-        <location line="+1694"/>
+        <location line="+1820"/>
         <source>Received</source>
         <translation>Ontvang</translation>
     </message>
     <message>
-        <location line="-1614"/>
-        <location line="+1591"/>
+        <location line="-1740"/>
+        <location line="+1717"/>
         <source>Sent</source>
         <translation>Gestuur</translation>
     </message>
     <message>
-        <location line="-1550"/>
+        <location line="-1676"/>
         <source>&amp;Transaction Rate</source>
         <translation>&amp;Transaksiekoers</translation>
     </message>
@@ -2318,13 +2357,13 @@
         <translation>Oombliklike koers (1s)</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+14"/>
         <location line="+536"/>
         <source>Peak</source>
         <translation>Piek</translation>
     </message>
     <message>
-        <location line="-463"/>
+        <location line="-469"/>
         <location line="+257"/>
         <location line="+279"/>
         <location line="+257"/>
@@ -2348,18 +2387,53 @@
         <translation>Vertoon</translation>
     </message>
     <message>
-        <location line="-769"/>
+        <location line="-763"/>
         <location line="+536"/>
         <source>Average</source>
         <translation>Gemiddeld</translation>
     </message>
     <message>
-        <location line="-265"/>
+        <location line="-271"/>
         <source>Smoothed Rate (60s)</source>
         <translation>Gladde koers (60s)</translation>
     </message>
     <message>
         <location line="+539"/>
+        <source>Block Viewer</source>
+        <translation>Blokkyker</translation>
+    </message>
+    <message>
+        <location line="+46"/>
+        <source>Increase Size</source>
+        <translation>Verhoog Grootte</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>+</source>
+        <translation>+</translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Decrease Size</source>
+        <translation>Verminder Grootte</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>-</source>
+        <translation>-</translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>Pause block tracking</source>
+        <translation>Onderbreek bloknasporing</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>||</source>
+        <translation>||</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>&amp;Peers</source>
         <translation>&amp;Eweknieë</translation>
     </message>
@@ -2370,8 +2444,8 @@
     </message>
     <message>
         <location line="+57"/>
-        <location filename="../rpcconsole.cpp" line="+311"/>
-        <location line="+856"/>
+        <location filename="../rpcconsole.cpp" line="+322"/>
+        <location line="+861"/>
         <source>Select a peer to view detailed information.</source>
         <translation>Kies &apos;n eweknie om gedetailleerde inligting te sien.</translation>
     </message>
@@ -2451,7 +2525,7 @@
         <translation>Tydsverrekening</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="-736"/>
+        <location filename="../rpcconsole.cpp" line="-741"/>
         <source>&amp;Disconnect Node</source>
         <translation>&amp;Ontkoppel nodus</translation>
     </message>
@@ -2466,22 +2540,22 @@
     <message>
         <location line="-3"/>
         <source>1 &amp;hour</source>
-        <translation>1 uur</translation>
+        <translation>1 &amp;uur</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>1 &amp;day</source>
-        <translation>1 dag</translation>
+        <translation>1 &amp;dag</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>1 &amp;week</source>
-        <translation>1 week</translation>
+        <translation>1 &amp;week</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>1 &amp;year</source>
-        <translation>1 jaar</translation>
+        <translation>1 &amp;jaar</translation>
     </message>
     <message>
         <location line="+48"/>
@@ -2633,7 +2707,7 @@
     <message>
         <location line="+3"/>
         <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation>Hergebruik &apos;n bestaande ontvangsadres (nie aanbeveel nie)</translation>
+        <translation>&amp;Hergebruik &apos;n bestaande ontvangsadres (nie aanbeveel nie)</translation>
     </message>
     <message>
         <location line="+110"/>
@@ -3415,7 +3489,7 @@
         <location line="+3"/>
         <location line="+143"/>
         <source>Clear &amp;All</source>
-        <translation>Vee alles uit</translation>
+        <translation>&amp;Vee alles uit</translation>
     </message>
     <message>
         <location line="-84"/>
@@ -3784,12 +3858,12 @@
     <message>
         <location line="+3"/>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation>Bevestig tans (% 1 van % 2 aanbevole bevestigings)</translation>
+        <translation>Bevestig tans (%1 van %2 aanbevole bevestigings)</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Confirmed (%1 confirmations)</source>
-        <translation>Bevestig (% 1 bevestigings)</translation>
+        <translation>Bevestig (%1 bevestigings)</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -3809,7 +3883,7 @@
     <message>
         <location line="+3"/>
         <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation>Onvolwasse (% 1 bevestigings, sal beskikbaar wees na % 2)</translation>
+        <translation>Onvolwasse (%1 bevestigings, sal beskikbaar wees na %2)</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -3874,7 +3948,7 @@
     <message>
         <location line="+2"/>
         <source>Type of transaction.</source>
-        <translation>Tipe transaksie</translation>
+        <translation>Tipe transaksie.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -3917,7 +3991,7 @@
     <message>
         <location line="+7"/>
         <source>Tokens Displayed: </source>
-        <translation>Tokens Vertoon:</translation>
+        <translation>Tekens Vertoon: </translation>
     </message>
     <message>
         <location line="+34"/>
@@ -3932,7 +4006,7 @@
     <message>
         <location line="+15"/>
         <source>  Pay To: </source>
-        <translation>Betaal aan:</translation>
+        <translation>  Betaal aan: </translation>
     </message>
     <message>
         <location line="+13"/>
@@ -4040,7 +4114,12 @@
         <translation>As dit gemerk is, is hierdie item &apos;n subgroep.</translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+397"/>
+        <location filename="../tokensviewdialog.cpp" line="+85"/>
+        <source>Copy token id</source>
+        <translation>Kopieer teken-ID</translation>
+    </message>
+    <message>
+        <location line="+364"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -4064,11 +4143,11 @@
     </message>
     <message>
         <location line="+22"/>
-        <location line="+5"/>
-        <location line="+5"/>
+        <location line="+4"/>
+        <location line="+6"/>
         <location line="+84"/>
-        <location line="+5"/>
-        <location line="+5"/>
+        <location line="+4"/>
+        <location line="+6"/>
         <source>Total Mintage:</source>
         <translation>Totale oplage:</translation>
     </message>
@@ -4270,12 +4349,12 @@
         <location line="+1"/>
         <location line="+21"/>
         <location line="+35"/>
-        <location line="+108"/>
+        <location line="+110"/>
         <source>To</source>
         <translation>Aan</translation>
     </message>
     <message>
-        <location line="-157"/>
+        <location line="-159"/>
         <location line="+13"/>
         <location line="+122"/>
         <source>From</source>
@@ -4305,29 +4384,29 @@
     <message>
         <location line="-110"/>
         <location line="+28"/>
-        <location line="+107"/>
+        <location line="+109"/>
         <source>label</source>
         <translation>etiket</translation>
     </message>
     <message>
-        <location line="-116"/>
+        <location line="-118"/>
         <location line="+57"/>
-        <location line="+48"/>
-        <location line="+71"/>
+        <location line="+50"/>
+        <location line="+76"/>
         <source>Public label:</source>
         <translation>Openbare etiket:</translation>
     </message>
     <message>
-        <location line="-149"/>
+        <location line="-156"/>
         <location line="+41"/>
-        <location line="+63"/>
-        <location line="+47"/>
+        <location line="+65"/>
+        <location line="+52"/>
         <location line="+256"/>
         <source>Credit</source>
         <translation>Krediet</translation>
     </message>
     <message numerus="yes">
-        <location line="-404"/>
+        <location line="-411"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>verval in nog %n blok(e)</numerusform>
@@ -4340,8 +4419,8 @@
         <translation>Nie aanvaar nie</translation>
     </message>
     <message>
-        <location line="+102"/>
-        <location line="+31"/>
+        <location line="+104"/>
+        <location line="+36"/>
         <location line="+261"/>
         <source>Debit</source>
         <translation>Debiet</translation>
@@ -5308,13 +5387,13 @@ Wanneer jy op &quot;OK&quot; klik, sal Nexa afskakel om die proses te voltooi.</
     </message>
     <message>
         <location line="+6"/>
-        <source>%s </source>
-        <translation>%s </translation>
+        <source>%s corrupt, salvage failed</source>
+        <translation>%s korrup, herwinning het misluk</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s korrup, herwinning het misluk</translation>
+        <source>%s</source>
+        <translation>%s</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5420,6 +5499,11 @@ Wanneer jy op &quot;OK&quot; klik, sal Nexa afskakel om die proses te voltooi.</
         <location line="+1"/>
         <source>Error opening block database</source>
         <translation>Kon nie blokdatabasis oopmaak nie</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error upgrading block database</source>
+        <translation>Kon nie blokdatabasis opgradeer nie</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5668,8 +5752,18 @@ Wanneer jy op &quot;OK&quot; klik, sal Nexa afskakel om die proses te voltooi.</
     </message>
     <message>
         <location line="+1"/>
+        <source>Unknown block index version found</source>
+        <translation>Onbekende blokindeksweergawe gevind</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Onbekende netwerk gespesifiseer in -onlynet: &apos;%s&apos;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Upgrading Block Index...</source>
+        <translation>Opgradering van Blokindeks...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5720,6 +5814,11 @@ Wanneer jy op &quot;OK&quot; klik, sal Nexa afskakel om die proses te voltooi.</
         <location line="+1"/>
         <source>Warning</source>
         <translation>Waarskuwing</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>You will need to run a -reindex on the next startup.</source>
+        <translation>Jy sal &apos;n -reindex met die volgende opstart moet uitvoer.</translation>
     </message>
     <message>
         <location line="+1"/>

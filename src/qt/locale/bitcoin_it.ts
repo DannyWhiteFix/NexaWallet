@@ -721,6 +721,19 @@
     </message>
 </context>
 <context>
+    <name>BlockDescDialog</name>
+    <message>
+        <location filename="../forms/blockdescdialog.ui" line="+17"/>
+        <source>Block details</source>
+        <translation>Blocca i dettagli</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This pane shows a detailed description of the token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&gt;&lt;body&gt;&lt;p&gt;Questo riquadro mostra una descrizione dettagliata del token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+</context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="+14"/>
@@ -1002,6 +1015,38 @@
     </message>
 </context>
 <context>
+    <name>DagWidget</name>
+    <message>
+        <location filename="../dagwidget.cpp" line="+176"/>
+        <source>Block: </source>
+        <translation>Bloccare: </translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <source>Previous block: </source>
+        <translation>Blocco precedente: </translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Height: </source>
+        <translation>Blocco precedente: </translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <source>Number: </source>
+        <translation>Numero: </translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <location line="+4"/>
+        <source>Type: </source>
+        <translation>Tipo: </translation>
+    </message>
+</context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="+14"/>
@@ -1154,18 +1199,12 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <location filename="../utilitydialog.cpp" line="+39"/>
+        <location filename="../utilitydialog.cpp" line="+40"/>
         <source>version</source>
         <translation>versione</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <location line="+2"/>
-        <source>(%1-bit)</source>
-        <translation>(%1-bit)</translation>
-    </message>
-    <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>About %1</source>
         <translation>Informazioni su %1</translation>
     </message>
@@ -1428,7 +1467,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
     <message>
         <location line="-504"/>
         <source>&amp;Network</source>
-        <translation>Rete</translation>
+        <translation>&amp;Rete</translation>
     </message>
     <message>
         <location line="-177"/>
@@ -1948,7 +1987,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Importo</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="+135"/>
+        <location filename="../guiutil.cpp" line="+136"/>
         <source>Enter a NEXA address (e.g. %1)</source>
         <translation>Inserisci un indirizzo NEXA (ad es. %1)</translation>
     </message>
@@ -2069,7 +2108,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
 <context>
     <name>RPCConsole</name>
     <message>
-        <location filename="../forms/debugwindow.ui" line="+239"/>
+        <location filename="../forms/debugwindow.ui" line="+242"/>
         <location line="+16"/>
         <location line="+16"/>
         <location line="+16"/>
@@ -2078,7 +2117,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <location line="+29"/>
         <location line="+16"/>
         <location line="+16"/>
-        <location line="+17"/>
+        <location line="+16"/>
         <location line="+16"/>
         <location line="+29"/>
         <location line="+16"/>
@@ -2090,7 +2129,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <location line="+19"/>
         <location line="+16"/>
         <location line="+16"/>
-        <location line="+1753"/>
+        <location line="+1879"/>
         <location line="+23"/>
         <location line="+23"/>
         <location line="+23"/>
@@ -2111,7 +2150,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>N/D</translation>
     </message>
     <message>
-        <location line="-2715"/>
+        <location line="-2840"/>
         <source>Client version</source>
         <translation>Versione client</translation>
     </message>
@@ -2121,17 +2160,17 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>&amp;Informazioni</translation>
     </message>
     <message>
-        <location line="-10"/>
+        <location line="-13"/>
         <source>Debug window</source>
         <translation>Finestra di debug</translation>
     </message>
     <message>
-        <location line="+620"/>
+        <location line="+622"/>
         <source>General</source>
         <translation>Generale</translation>
     </message>
     <message>
-        <location line="-587"/>
+        <location line="-586"/>
         <source>Using BerkeleyDB version</source>
         <translation>Versione BerkeleyDB in uso</translation>
     </message>
@@ -2141,12 +2180,12 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Ora di avvio</translation>
     </message>
     <message>
-        <location line="+474"/>
+        <location line="+473"/>
         <source>Network</source>
         <translation>Rete</translation>
     </message>
     <message>
-        <location line="-467"/>
+        <location line="-466"/>
         <source>Name</source>
         <translation>Nome</translation>
     </message>
@@ -2156,24 +2195,24 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Numero di connessioni</translation>
     </message>
     <message>
-        <location line="+415"/>
+        <location line="+414"/>
         <source>Block chain</source>
         <translation>Block chain</translation>
     </message>
     <message>
-        <location line="-408"/>
+        <location line="-407"/>
         <source>Current number of blocks</source>
         <translation>Numero attuale di blocchi</translation>
     </message>
     <message>
-        <location line="+884"/>
-        <location line="+1694"/>
+        <location line="+883"/>
+        <location line="+1820"/>
         <source>Received</source>
         <translation>Ricevuto</translation>
     </message>
     <message>
-        <location line="-1614"/>
-        <location line="+1591"/>
+        <location line="-1740"/>
+        <location line="+1717"/>
         <source>Sent</source>
         <translation>Inviato</translation>
     </message>
@@ -2189,8 +2228,8 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
     </message>
     <message>
         <location line="+57"/>
-        <location filename="../rpcconsole.cpp" line="+311"/>
-        <location line="+856"/>
+        <location filename="../rpcconsole.cpp" line="+322"/>
+        <location line="+861"/>
         <source>Select a peer to view detailed information.</source>
         <translation>Seleziona un peer per visualizzare informazioni più dettagliate.</translation>
     </message>
@@ -2225,13 +2264,13 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Blocchi sincronizzati</translation>
     </message>
     <message>
-        <location line="-2488"/>
-        <location line="+2390"/>
+        <location line="-2613"/>
+        <location line="+2515"/>
         <source>User Agent</source>
         <translation>User Agent</translation>
     </message>
     <message>
-        <location line="-2370"/>
+        <location line="-2495"/>
         <source>Datadir</source>
         <translation>Rubrica dati</translation>
     </message>
@@ -2311,7 +2350,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Propagazione del blocco</translation>
     </message>
     <message>
-        <location line="+94"/>
+        <location line="+93"/>
         <source>Transaction Pools</source>
         <translation>Pool di transazioni</translation>
     </message>
@@ -2336,13 +2375,13 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Tasso istantaneo (1s)</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+14"/>
         <location line="+536"/>
         <source>Peak</source>
         <translation>Picco</translation>
     </message>
     <message>
-        <location line="-463"/>
+        <location line="-469"/>
         <location line="+257"/>
         <location line="+279"/>
         <location line="+257"/>
@@ -2366,18 +2405,53 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Visualizzato</translation>
     </message>
     <message>
-        <location line="-769"/>
+        <location line="-763"/>
         <location line="+536"/>
         <source>Average</source>
         <translation>Media</translation>
     </message>
     <message>
-        <location line="-265"/>
+        <location line="-271"/>
         <source>Smoothed Rate (60s)</source>
         <translation>Tasso livellato (60s)</translation>
     </message>
     <message>
-        <location line="+769"/>
+        <location line="+539"/>
+        <source>Block Viewer</source>
+        <translation>Visualizzatore di blocchi</translation>
+    </message>
+    <message>
+        <location line="+46"/>
+        <source>Increase Size</source>
+        <translation>Aumenta la dimensione</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>+</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Decrease Size</source>
+        <translation>Riduci la dimensione</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>-</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>Pause block tracking</source>
+        <translation>Metti in pausa il monitoraggio dei blocchi</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>||</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+236"/>
         <source>Services</source>
         <translation>Servizi</translation>
     </message>
@@ -2422,12 +2496,12 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Scarto Temporale</translation>
     </message>
     <message>
-        <location line="-2524"/>
+        <location line="-2649"/>
         <source>&amp;Open</source>
         <translation>&amp;Apri</translation>
     </message>
     <message>
-        <location line="+431"/>
+        <location line="+430"/>
         <source>&amp;Console</source>
         <translation>&amp;Console</translation>
     </message>
@@ -2447,7 +2521,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Totali</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="-530"/>
+        <location filename="../rpcconsole.cpp" line="-535"/>
         <source>In:</source>
         <translation>Entrata:</translation>
     </message>
@@ -2457,12 +2531,12 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Uscita:</translation>
     </message>
     <message>
-        <location filename="../forms/debugwindow.ui" line="-704"/>
+        <location filename="../forms/debugwindow.ui" line="-703"/>
         <source>Debug log file</source>
         <translation>File log del Debug</translation>
     </message>
     <message>
-        <location line="+541"/>
+        <location line="+540"/>
         <source>Clear console</source>
         <translation>Cancella console</translation>
     </message>
@@ -4046,7 +4120,12 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Se selezionato, questo elemento è un sottogruppo.</translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+397"/>
+        <location filename="../tokensviewdialog.cpp" line="+85"/>
+        <source>Copy token id</source>
+        <translation>Copia l&apos;ID del token</translation>
+    </message>
+    <message>
+        <location line="+364"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -4070,11 +4149,11 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
     </message>
     <message>
         <location line="+22"/>
-        <location line="+5"/>
-        <location line="+5"/>
+        <location line="+4"/>
+        <location line="+6"/>
         <location line="+84"/>
-        <location line="+5"/>
-        <location line="+5"/>
+        <location line="+4"/>
+        <location line="+6"/>
         <source>Total Mintage:</source>
         <translation>Conio totale:</translation>
     </message>
@@ -4260,12 +4339,12 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <location line="-142"/>
         <location line="+21"/>
         <location line="+35"/>
-        <location line="+108"/>
+        <location line="+110"/>
         <source>To</source>
         <translation>A</translation>
     </message>
     <message>
-        <location line="-209"/>
+        <location line="-211"/>
         <source>double spent</source>
         <translation>doppia spesa</translation>
     </message>
@@ -4293,29 +4372,29 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
     <message>
         <location line="-110"/>
         <location line="+28"/>
-        <location line="+107"/>
+        <location line="+109"/>
         <source>label</source>
         <translation>etichetta</translation>
     </message>
     <message>
-        <location line="-116"/>
+        <location line="-118"/>
         <location line="+57"/>
-        <location line="+48"/>
-        <location line="+71"/>
+        <location line="+50"/>
+        <location line="+76"/>
         <source>Public label:</source>
         <translation>Etichetta pubblica:</translation>
     </message>
     <message>
-        <location line="-149"/>
+        <location line="-156"/>
         <location line="+41"/>
-        <location line="+63"/>
-        <location line="+47"/>
+        <location line="+65"/>
+        <location line="+52"/>
         <location line="+256"/>
         <source>Credit</source>
         <translation>Credito</translation>
     </message>
     <message numerus="yes">
-        <location line="-404"/>
+        <location line="-411"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>matura tra %n blocco</numerusform>
@@ -4328,8 +4407,8 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>non accettate</translation>
     </message>
     <message>
-        <location line="+102"/>
-        <location line="+31"/>
+        <location line="+104"/>
+        <location line="+36"/>
         <location line="+261"/>
         <source>Debit</source>
         <translation>Debito</translation>
@@ -4483,7 +4562,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>falso</translation>
     </message>
     <message>
-        <location line="-533"/>
+        <location line="-540"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, non è ancora stata trasmessa con successo</translation>
     </message>
@@ -5092,7 +5171,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Prune: l&apos;ultima sincronizzazione del wallet risulta essere oltre la riduzione dei dati. È necessario eseguire un -reindex (scaricare nuovamente la blockchain in caso di nodo pruned)</translation>
     </message>
     <message>
-        <location line="+104"/>
+        <location line="+105"/>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Errore: si è presentato un errore interno fatale, consulta il file debug.log per maggiori dettagli</translation>
     </message>
@@ -5102,7 +5181,7 @@ Per specificare più URL separarli con una barra verticale &quot;|&quot;.</trans
         <translation>Pruning del blockstore...</translation>
     </message>
     <message>
-        <location line="-165"/>
+        <location line="-166"/>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>Distribuito secondo la licenza software MIT, vedi il file COPYING incluso oppure &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
@@ -5176,7 +5255,7 @@ Riavvia Nexa con &quot;-usehd=0&quot;.</translation>
         <translation>Errore durante l&apos;apertura del database blocchi</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Error: Disk space is low!</source>
         <translation>Errore: la spazio libero sul disco è insufficiente!</translation>
     </message>
@@ -5221,7 +5300,7 @@ Riavvia Nexa con &quot;-usehd=0&quot;.</translation>
         <translation>La transazione del token non è riuscita</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+20"/>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>Il commento del User Agent (%s) contiene caratteri non sicuri.</translation>
     </message>
@@ -5246,7 +5325,7 @@ Riavvia Nexa con &quot;-usehd=0&quot;.</translation>
         <translation>Il portamonete %s si trova al di fuori dalla cartella dati %s</translation>
     </message>
     <message>
-        <location line="-177"/>
+        <location line="-180"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Errore: attesa per connessioni in arrivo fallita (errore riportato %s)</translation>
     </message>
@@ -5276,7 +5355,7 @@ Riavvia Nexa con &quot;-usehd=0&quot;.</translation>
         <translation>Copyright (C) 2015-%i Gli sviluppatori di Bitcoin Unlimited</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+20"/>
         <source>Information</source>
         <translation>Informazioni</translation>
     </message>
@@ -5341,12 +5420,12 @@ Riavvia Nexa con &quot;-usehd=0&quot;.</translation>
         <translation>Impossibile associarsi a %s su questo computer (l&apos;associazione ha restituito l&apos;errore %s)</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+15"/>
         <source>Warning</source>
         <translation>Attenzione</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-44"/>
         <source>Loading addresses...</source>
         <translation>Caricamento indirizzi...</translation>
     </message>
@@ -5356,12 +5435,12 @@ Riavvia Nexa con &quot;-usehd=0&quot;.</translation>
         <translation>Indirizzo -proxy non valido: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+38"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Rete sconosciuta specificata in -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-66"/>
+        <location line="-68"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Impossibile risolvere indirizzo -bind: &apos;%s&apos;</translation>
     </message>
@@ -5371,7 +5450,7 @@ Riavvia Nexa con &quot;-usehd=0&quot;.</translation>
         <translation>Impossibile risolvere indirizzo -externalip: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+36"/>
         <source>Loading block index...</source>
         <translation>Caricamento dell&apos;indice dei blocchi...</translation>
     </message>
@@ -5381,7 +5460,7 @@ Riavvia Nexa con &quot;-usehd=0&quot;.</translation>
         <translation>Caricamento portamonete...</translation>
     </message>
     <message>
-        <location line="-38"/>
+        <location line="-39"/>
         <source>Cannot downgrade wallet</source>
         <translation>Non è possibile effettuare il downgrade del portamonete</translation>
     </message>
@@ -5539,13 +5618,13 @@ Quando fai clic su &quot;OK&quot; Nexa si spegnerà per completare il processo.<
     </message>
     <message>
         <location line="+6"/>
-        <source>%s </source>
-        <translation>%s </translation>
+        <source>%s corrupt, salvage failed</source>
+        <translation>%s corrotto, recupero fallito</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s corrotto, recupero fallito</translation>
+        <source>%s</source>
+        <translation></translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5593,7 +5672,12 @@ Quando fai clic su &quot;OK&quot; Nexa si spegnerà per completare il processo.<
         <translation>Errore durante il caricamento di %s: non puoi disabilitare HD su un portafoglio HD già esistente</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+2"/>
+        <source>Error upgrading block database</source>
+        <translation>Errore durante l&apos;aggiornamento del database dei blocchi</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Error: Keypool ran out, please call keypoolrefill first</source>
         <translation>Errore: Keypool esaurito, chiamare prima keypoolrefill</translation>
     </message>
@@ -5693,7 +5777,17 @@ Quando fai clic su &quot;OK&quot; Nexa si spegnerà per completare il processo.<
         <translation>Impossibile avviare i servizi RPC. Vedere il registro di debug per i dettagli.</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Unknown block index version found</source>
+        <translation>Trovata una versione sconosciuta dell&apos;indice del blocco</translation>
+    </message>
+    <message>
         <location line="+2"/>
+        <source>Upgrading Block Index...</source>
+        <translation>Aggiornamento dell&apos;indice dei blocchi...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Upgrading block database...This could take a while.</source>
         <translation>Aggiornamento del database dei blocchi... L&apos;operazione potrebbe richiedere del tempo.</translation>
     </message>
@@ -5714,21 +5808,26 @@ Quando fai clic su &quot;OK&quot; Nexa si spegnerà per completare il processo.<
     </message>
     <message>
         <location line="+2"/>
+        <source>You will need to run a -reindex on the next startup.</source>
+        <translation>Sarà necessario eseguire -reindex al prossimo avvio.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Zapping all transactions from wallet...</source>
         <translation>Eliminazione di tutte le transazioni dal portafoglio...</translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-72"/>
         <source>Done loading</source>
         <translation>Caricamento completato</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Error</source>
         <translation>Errore</translation>
     </message>
     <message>
-        <location line="-62"/>
+        <location line="-63"/>
         <source>Wallet is not password protected. Your funds may be at risk! Goto &quot;Settings&quot; and then select &quot;Encrypt Wallet&quot; to create a password.</source>
         <translation>Il portafoglio non è protetto da password. I tuoi fondi potrebbero essere a rischio! Vai a &quot;Impostazioni&quot; e poi seleziona &quot;Cifra il portamonete&quot; per creare una password.</translation>
     </message>

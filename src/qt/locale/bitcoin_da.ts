@@ -721,6 +721,19 @@
     </message>
 </context>
 <context>
+    <name>BlockDescDialog</name>
+    <message>
+        <location filename="../forms/blockdescdialog.ui" line="+17"/>
+        <source>Block details</source>
+        <translation>Bloker detaljer</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This pane shows a detailed description of the token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Denne rude viser en detaljeret beskrivelse af tokenet&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+</context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="+14"/>
@@ -1002,6 +1015,38 @@
     </message>
 </context>
 <context>
+    <name>DagWidget</name>
+    <message>
+        <location filename="../dagwidget.cpp" line="+176"/>
+        <source>Block: </source>
+        <translation>Blok:</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <source>Previous block: </source>
+        <translation>Forrige blok:</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Height: </source>
+        <translation>Højde:</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <source>Number: </source>
+        <translation>Antal:</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <location line="+4"/>
+        <source>Type: </source>
+        <translation>Type:</translation>
+    </message>
+</context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="+14"/>
@@ -1154,18 +1199,12 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <location filename="../utilitydialog.cpp" line="+39"/>
+        <location filename="../utilitydialog.cpp" line="+40"/>
         <source>version</source>
         <translation>version</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <location line="+2"/>
-        <source>(%1-bit)</source>
-        <translation>(%1-bit)</translation>
-    </message>
-    <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>About %1</source>
         <translation>Om %1</translation>
     </message>
@@ -1482,7 +1521,7 @@
     <message>
         <location line="+39"/>
         <source>&amp;Rescan wallet on startup</source>
-        <translation>Scan tegnebogen igen ved opstart</translation>
+        <translation>&amp;Scan tegnebogen igen ved opstart</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -1947,7 +1986,7 @@
         <translation>Beløb</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="+135"/>
+        <location filename="../guiutil.cpp" line="+136"/>
         <source>Enter a NEXA address (e.g. %1)</source>
         <translation>Indtast en NEXA-adresse (f.eks. %1)</translation>
     </message>
@@ -2068,7 +2107,7 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <location filename="../forms/debugwindow.ui" line="+239"/>
+        <location filename="../forms/debugwindow.ui" line="+242"/>
         <location line="+16"/>
         <location line="+16"/>
         <location line="+16"/>
@@ -2077,7 +2116,7 @@
         <location line="+29"/>
         <location line="+16"/>
         <location line="+16"/>
-        <location line="+17"/>
+        <location line="+16"/>
         <location line="+16"/>
         <location line="+29"/>
         <location line="+16"/>
@@ -2089,7 +2128,7 @@
         <location line="+19"/>
         <location line="+16"/>
         <location line="+16"/>
-        <location line="+1753"/>
+        <location line="+1879"/>
         <location line="+23"/>
         <location line="+23"/>
         <location line="+23"/>
@@ -2110,7 +2149,7 @@
         <translation>N/A</translation>
     </message>
     <message>
-        <location line="-2715"/>
+        <location line="-2840"/>
         <source>Client version</source>
         <translation>Klientversion</translation>
     </message>
@@ -2120,17 +2159,17 @@
         <translation>&amp;Information</translation>
     </message>
     <message>
-        <location line="-10"/>
+        <location line="-13"/>
         <source>Debug window</source>
         <translation>Fejlsøgningsvindue</translation>
     </message>
     <message>
-        <location line="+620"/>
+        <location line="+622"/>
         <source>General</source>
         <translation>Generelt</translation>
     </message>
     <message>
-        <location line="-587"/>
+        <location line="-586"/>
         <source>Using BerkeleyDB version</source>
         <translation>Bruger BerkeleyDB version</translation>
     </message>
@@ -2140,12 +2179,12 @@
         <translation>Opstartstidspunkt</translation>
     </message>
     <message>
-        <location line="+474"/>
+        <location line="+473"/>
         <source>Network</source>
         <translation>Netværk</translation>
     </message>
     <message>
-        <location line="-467"/>
+        <location line="-466"/>
         <source>Name</source>
         <translation>Navn</translation>
     </message>
@@ -2155,24 +2194,24 @@
         <translation>Antal forbindelser</translation>
     </message>
     <message>
-        <location line="+415"/>
+        <location line="+414"/>
         <source>Block chain</source>
         <translation>Blokkæde</translation>
     </message>
     <message>
-        <location line="-408"/>
+        <location line="-407"/>
         <source>Current number of blocks</source>
         <translation>Nuværende antal blokke</translation>
     </message>
     <message>
-        <location line="+884"/>
-        <location line="+1694"/>
+        <location line="+883"/>
+        <location line="+1820"/>
         <source>Received</source>
         <translation>Modtaget</translation>
     </message>
     <message>
-        <location line="-1614"/>
-        <location line="+1591"/>
+        <location line="-1740"/>
+        <location line="+1717"/>
         <source>Sent</source>
         <translation>Sendt</translation>
     </message>
@@ -2188,8 +2227,8 @@
     </message>
     <message>
         <location line="+57"/>
-        <location filename="../rpcconsole.cpp" line="+311"/>
-        <location line="+856"/>
+        <location filename="../rpcconsole.cpp" line="+322"/>
+        <location line="+861"/>
         <source>Select a peer to view detailed information.</source>
         <translation>Vælg en anden knude for at se detaljeret information.</translation>
     </message>
@@ -2224,13 +2263,13 @@
         <translation>Synkroniserede blokke</translation>
     </message>
     <message>
-        <location line="-2488"/>
-        <location line="+2390"/>
+        <location line="-2613"/>
+        <location line="+2515"/>
         <source>User Agent</source>
         <translation>Brugeragent</translation>
     </message>
     <message>
-        <location line="-2370"/>
+        <location line="-2495"/>
         <source>Datadir</source>
         <translation>Datamappe</translation>
     </message>
@@ -2310,7 +2349,7 @@
         <translation>Blok udbredelse</translation>
     </message>
     <message>
-        <location line="+94"/>
+        <location line="+93"/>
         <source>Transaction Pools</source>
         <translation>Transaktionspuljer</translation>
     </message>
@@ -2335,13 +2374,13 @@
         <translation>Øjeblikkelig hastighed (1 sek.)</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+14"/>
         <location line="+536"/>
         <source>Peak</source>
         <translation>Spids</translation>
     </message>
     <message>
-        <location line="-463"/>
+        <location line="-469"/>
         <location line="+257"/>
         <location line="+279"/>
         <location line="+257"/>
@@ -2365,18 +2404,53 @@
         <translation>Vises</translation>
     </message>
     <message>
-        <location line="-769"/>
+        <location line="-763"/>
         <location line="+536"/>
         <source>Average</source>
         <translation>Gennemsnit</translation>
     </message>
     <message>
-        <location line="-265"/>
+        <location line="-271"/>
         <source>Smoothed Rate (60s)</source>
         <translation>Udjævnet hastighed (60s)</translation>
     </message>
     <message>
-        <location line="+769"/>
+        <location line="+539"/>
+        <source>Block Viewer</source>
+        <translation>Bloker fremviser</translation>
+    </message>
+    <message>
+        <location line="+46"/>
+        <source>Increase Size</source>
+        <translation>Forøg størrelse</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>+</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Decrease Size</source>
+        <translation>Formindsk størrelse</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>-</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>Pause block tracking</source>
+        <translation>Sæt blokering på pause</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>||</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+236"/>
         <source>Services</source>
         <translation>Tjenester</translation>
     </message>
@@ -2421,12 +2495,12 @@
         <translation>Tidsforskydning</translation>
     </message>
     <message>
-        <location line="-2524"/>
+        <location line="-2649"/>
         <source>&amp;Open</source>
         <translation>&amp;Åbn</translation>
     </message>
     <message>
-        <location line="+431"/>
+        <location line="+430"/>
         <source>&amp;Console</source>
         <translation>&amp;Konsol</translation>
     </message>
@@ -2446,7 +2520,7 @@
         <translation>Totaler</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="-530"/>
+        <location filename="../rpcconsole.cpp" line="-535"/>
         <source>In:</source>
         <translation>Indkommende:</translation>
     </message>
@@ -2456,12 +2530,12 @@
         <translation>Udgående:</translation>
     </message>
     <message>
-        <location filename="../forms/debugwindow.ui" line="-704"/>
+        <location filename="../forms/debugwindow.ui" line="-703"/>
         <source>Debug log file</source>
         <translation>Fejlsøgningslogfil</translation>
     </message>
     <message>
-        <location line="+541"/>
+        <location line="+540"/>
         <source>Clear console</source>
         <translation>Ryd konsol</translation>
     </message>
@@ -4045,7 +4119,12 @@
         <translation>Hvis dette er markeret, er dette element en undergruppe.</translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+397"/>
+        <location filename="../tokensviewdialog.cpp" line="+85"/>
+        <source>Copy token id</source>
+        <translation>Kopiér token-id</translation>
+    </message>
+    <message>
+        <location line="+364"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -4069,11 +4148,11 @@
     </message>
     <message>
         <location line="+22"/>
-        <location line="+5"/>
-        <location line="+5"/>
+        <location line="+4"/>
+        <location line="+6"/>
         <location line="+84"/>
-        <location line="+5"/>
-        <location line="+5"/>
+        <location line="+4"/>
+        <location line="+6"/>
         <source>Total Mintage:</source>
         <translation>Samlet oplag:</translation>
     </message>
@@ -4259,12 +4338,12 @@
         <location line="-142"/>
         <location line="+21"/>
         <location line="+35"/>
-        <location line="+108"/>
+        <location line="+110"/>
         <source>To</source>
         <translation>Til</translation>
     </message>
     <message>
-        <location line="-209"/>
+        <location line="-211"/>
         <source>double spent</source>
         <translation>dobbelt brugt</translation>
     </message>
@@ -4292,29 +4371,29 @@
     <message>
         <location line="-110"/>
         <location line="+28"/>
-        <location line="+107"/>
+        <location line="+109"/>
         <source>label</source>
         <translation>mærkat</translation>
     </message>
     <message>
-        <location line="-116"/>
+        <location line="-118"/>
         <location line="+57"/>
-        <location line="+48"/>
-        <location line="+71"/>
+        <location line="+50"/>
+        <location line="+76"/>
         <source>Public label:</source>
         <translation>Offentligt mærke:</translation>
     </message>
     <message>
-        <location line="-149"/>
+        <location line="-156"/>
         <location line="+41"/>
-        <location line="+63"/>
-        <location line="+47"/>
+        <location line="+65"/>
+        <location line="+52"/>
         <location line="+256"/>
         <source>Credit</source>
         <translation>Kredit</translation>
     </message>
     <message numerus="yes">
-        <location line="-404"/>
+        <location line="-411"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>modner efter yderligere %n blok</numerusform>
@@ -4327,8 +4406,8 @@
         <translation>ikke accepteret</translation>
     </message>
     <message>
-        <location line="+102"/>
-        <location line="+31"/>
+        <location line="+104"/>
+        <location line="+36"/>
         <location line="+261"/>
         <source>Debit</source>
         <translation>Debet</translation>
@@ -4482,7 +4561,7 @@
         <translation>falsk</translation>
     </message>
     <message>
-        <location line="-533"/>
+        <location line="-540"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, er ikke blevet transmitteret endnu</translation>
     </message>
@@ -5091,7 +5170,7 @@
         <translation>Beskæring: Seneste synkronisering rækker udover beskårne data. Du er nødt til at bruge -reindex (downloade hele blokkæden igen i fald af beskåret knude)</translation>
     </message>
     <message>
-        <location line="+104"/>
+        <location line="+105"/>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Fejl: En alvorlig intern fejl er opstået. Se debug.log for detaljer</translation>
     </message>
@@ -5101,7 +5180,7 @@
         <translation>Beskærer bloklager…</translation>
     </message>
     <message>
-        <location line="-165"/>
+        <location line="-166"/>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>Distribueret under MIT-softwarelicensen; se den vedlagte fil COPYING eller &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
@@ -5170,7 +5249,7 @@ Genstart venligst Nexa med &quot;-usehd=0&quot;.</translation>
         <translation>Åbning af blokdatabase mislykkedes</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Error: Disk space is low!</source>
         <translation>Fejl: Mangel på ledig diskplads!</translation>
     </message>
@@ -5215,7 +5294,7 @@ Genstart venligst Nexa med &quot;-usehd=0&quot;.</translation>
         <translation>Signering af tokentransaktion mislykkedes</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+20"/>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>Brugeragent-kommentar (%s) indeholder usikre tegn.</translation>
     </message>
@@ -5240,7 +5319,7 @@ Genstart venligst Nexa med &quot;-usehd=0&quot;.</translation>
         <translation>Tegnebog %s findes uden for datamappe %s</translation>
     </message>
     <message>
-        <location line="-177"/>
+        <location line="-180"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Fejl: Lytning efter indkommende forbindelser mislykkedes (lytning resultarede i fejl %s)</translation>
     </message>
@@ -5270,7 +5349,7 @@ Genstart venligst Nexa med &quot;-usehd=0&quot;.</translation>
         <translation>Ophavsret © 2015-%i Udviklerne af Bitcoin Unlimited</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+20"/>
         <source>Information</source>
         <translation>Information</translation>
     </message>
@@ -5335,12 +5414,12 @@ Genstart venligst Nexa med &quot;-usehd=0&quot;.</translation>
         <translation>Ikke i stand til at tildele til %s på denne computer (bind returnerede fejl %s)</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+15"/>
         <source>Warning</source>
         <translation>Advarsel</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-44"/>
         <source>Loading addresses...</source>
         <translation>Indlæser adresser…</translation>
     </message>
@@ -5350,12 +5429,12 @@ Genstart venligst Nexa med &quot;-usehd=0&quot;.</translation>
         <translation>Ugyldig -proxy adresse: &quot;%s&quot;</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+38"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Ukendt netværk anført i -onlynet: &quot;%s&quot;</translation>
     </message>
     <message>
-        <location line="-66"/>
+        <location line="-68"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Kan ikke finde -bind adressen: &quot;%s&quot;</translation>
     </message>
@@ -5365,7 +5444,7 @@ Genstart venligst Nexa med &quot;-usehd=0&quot;.</translation>
         <translation>Kan ikke finde -externalip adressen: &quot;%s&quot;</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+36"/>
         <source>Loading block index...</source>
         <translation>Indlæser blokindeks…</translation>
     </message>
@@ -5375,7 +5454,7 @@ Genstart venligst Nexa med &quot;-usehd=0&quot;.</translation>
         <translation>Indlæser tegnebog…</translation>
     </message>
     <message>
-        <location line="-38"/>
+        <location line="-39"/>
         <source>Cannot downgrade wallet</source>
         <translation>Kan ikke nedgradere tegnebog</translation>
     </message>
@@ -5543,13 +5622,13 @@ Når du klikker på &quot;OK&quot; lukker Nexa ned for at fuldføre processen.</
     </message>
     <message>
         <location line="+6"/>
-        <source>%s </source>
-        <translation>%s </translation>
+        <source>%s corrupt, salvage failed</source>
+        <translation>%s korrupt, redning mislykkedes</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s korrupt, redning mislykkedes</translation>
+        <source>%s</source>
+        <translation></translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5597,7 +5676,12 @@ Når du klikker på &quot;OK&quot; lukker Nexa ned for at fuldføre processen.</
         <translation>Fejl ved indlæsning af %s: Du kan ikke deaktivere HD på en allerede eksisterende HD-tegnebog</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+2"/>
+        <source>Error upgrading block database</source>
+        <translation>Fejl ved opgradering af blokdatabase</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Error: Keypool ran out, please call keypoolrefill first</source>
         <translation>Fejl: Keypool løb tør, ring venligst først til keypoolrefill</translation>
     </message>
@@ -5697,7 +5781,17 @@ Når du klikker på &quot;OK&quot; lukker Nexa ned for at fuldføre processen.</
         <translation>Kan ikke starte RPC-tjenester. Se fejlretningslog for detaljer.</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Unknown block index version found</source>
+        <translation>Ukendt blokindeksversion fundet</translation>
+    </message>
+    <message>
         <location line="+2"/>
+        <source>Upgrading Block Index...</source>
+        <translation>Opgraderer blokindeks...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Upgrading block database...This could take a while.</source>
         <translation>Opgradering af blokdatabase...Dette kan tage et stykke tid.</translation>
     </message>
@@ -5718,16 +5812,21 @@ Når du klikker på &quot;OK&quot; lukker Nexa ned for at fuldføre processen.</
     </message>
     <message>
         <location line="+2"/>
+        <source>You will need to run a -reindex on the next startup.</source>
+        <translation>Du skal køre en -reindex ved næste opstart.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Zapping all transactions from wallet...</source>
         <translation>Zapper alle transaktioner fra tegnebogen...</translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-72"/>
         <source>Done loading</source>
         <translation>Indlæsning gennemført</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Error</source>
         <translation>Fejl</translation>
     </message>
