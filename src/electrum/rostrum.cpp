@@ -21,7 +21,8 @@ constexpr char ROSTRUM_BIN[] = "rostrum";
 
 static std::string monitoring_port(const std::string &network)
 {
-    std::map<std::string, std::string> portmap = {{"nexa", "3224"}, {"testnet", "13224"}, {"regtest", "23224"}};
+    std::map<std::string, std::string> portmap = {
+        {"nexa", "3224"}, {"testnet", "13224"}, {"regtest", "23224"}, {"stormtest", "33224"}};
 
     auto defaultPort = portmap.find(network);
     if (defaultPort == end(portmap))
@@ -37,7 +38,8 @@ static std::string monitoring_host() { return GetArg("-electrum.monitoring.host"
 static std::string rpc_host() { return GetArg("-electrum.host", "0.0.0.0"); }
 static std::string rpc_port(const std::string &network)
 {
-    std::map<std::string, std::string> portmap = {{"nexa", "20001"}, {"testnet", "30001"}, {"regtest", "30403"}};
+    std::map<std::string, std::string> portmap = {
+        {"nexa", "20001"}, {"testnet", "30001"}, {"regtest", "30403"}, {"stormtest", "33403"}};
 
     auto defaultPort = portmap.find(network);
     if (defaultPort == end(portmap))
@@ -52,7 +54,8 @@ static std::string rpc_port(const std::string &network)
 static std::string ws_host() { return GetArg("-electrum.ws.host", "0.0.0.0"); }
 static std::string ws_port(const std::string &network)
 {
-    const std::map<std::string, std::string> portmap = {{"nexa", "20003"}, {"testnet", "30003"}, {"regtest", "30404"}};
+    const std::map<std::string, std::string> portmap = {
+        {"nexa", "20003"}, {"testnet", "30003"}, {"regtest", "30404"}, {"stormtest", "33404"}};
 
     auto defaultPort = portmap.find(network);
     if (defaultPort == end(portmap))
@@ -200,7 +203,7 @@ std::vector<std::string> rostrum_args(int rpcport, int p2pport, const std::strin
 
     // Tell rostrum what network we're on
     const std::map<std::string, std::string> netmapping = {
-        {"nexa", "bitcoin"}, {"testnet", "testnet"}, {"regtest", "regtest"}};
+        {"nexa", "bitcoin"}, {"testnet", "testnet"}, {"regtest", "regtest"}, {"stormtest", "stormtest"}};
     if (!netmapping.count(network))
     {
         std::stringstream ss;

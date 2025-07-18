@@ -14,6 +14,7 @@ enum
 {
     NEXA_PORT = 7228,
     NEXA_TESTNET_PORT = 7230,
+    NEXA_STORMTEST_PORT = 7232,
     BTCBCH_DEFAULT_MAINNET_PORT = 8333,
     BTCBCH_TESTNET_PORT = 18333,
     DEFAULT_REGTESTNET_PORT = 18444,
@@ -33,6 +34,7 @@ public:
     static const std::string TESTNET;
     static const std::string SCALENET;
     static const std::string REGTEST;
+    static const std::string STORMTEST;
     static const std::string NEXA;
 
     enum Base58Type
@@ -185,6 +187,35 @@ public:
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
         base58Prefixes[SCRIPT_TEMPLATE_ADDRESS] = std::vector<unsigned char>(1, 8);
         cashaddrPrefix = "nexareg";
+    }
+};
+
+/**
+ * Stormtest
+ */
+class CBaseStormTestParams : public CBaseChainParams
+{
+public:
+    CBaseStormTestParams()
+    {
+        nRPCPort = 7231;
+        strDataDir = "stormtest";
+
+        strNetworkID = "stormtest"; // Do not use the const string because of ctor execution order issues
+        nDefaultPort = NEXA_STORMTEST_PORT;
+        nPruneAfterHeight = 100000;
+        fMiningRequiresPeers = true;
+        fDefaultConsistencyChecks = false;
+        fRequireStandard = true;
+        fMineBlocksOnDemand = false;
+        fTestnetToBeDeprecatedFieldRPC = true;
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<uint8_t>(1, 111);
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<uint8_t>(1, 196);
+        base58Prefixes[SECRET_KEY] = std::vector<uint8_t>(1, 239);
+        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
+        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
+        base58Prefixes[SCRIPT_TEMPLATE_ADDRESS] = std::vector<unsigned char>(1, 8);
+        cashaddrPrefix = "stormtest";
     }
 };
 
