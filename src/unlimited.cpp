@@ -825,7 +825,7 @@ void LoadFilter(CNode *pfrom, CBloomFilter *filter)
 {
     if (!filter->IsWithinSizeConstraints())
         // There is no excuse for sending a too-large filter
-        dosMan.Misbehaving(pfrom, 100);
+        dosMan.Misbehaving(pfrom, 100, BanReasonInvalidSize);
     else
     {
         uint64_t nSizeFilter;

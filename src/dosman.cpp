@@ -280,7 +280,7 @@ void CDoSManager::Misbehaving(CNode *pNode, int howmuch, BanReason reason)
     // return if the node is whitelised
     if (pNode->fWhitelisted)
     {
-        LOGA("%s is whitelisted, hence not ban score increase", pNode->GetLogName());
+        LOGA("%s is whitelisted, hence no ban score increase", pNode->GetLogName());
         return;
     }
 
@@ -330,11 +330,11 @@ void CDoSManager::UpdateMisbehavior(CNode *pNode)
  * Increment the misbehaving count score for this node.  If the ban threshold is reached, flag the node to be
  * banned.  No locks are needed to call this function.
  */
-void CDoSManager::Misbehaving(NodeId nodeid, int howmuch)
+void CDoSManager::Misbehaving(NodeId nodeid, int howmuch, BanReason reason)
 {
     CNodeRef nodeRef(connmgr->FindNodeFromId(nodeid));
 
-    Misbehaving(nodeRef.get(), howmuch);
+    Misbehaving(nodeRef.get(), howmuch, reason);
 }
 
 

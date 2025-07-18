@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(DoS_misbehaving_ban_tests)
     CAddress addr1(ip(0xa0b0c001));
     CNode dummyNode1(INVALID_SOCKET, addr1, "", true);
     dummyNode1.nVersion = 1;
-    dosMan.Misbehaving(&dummyNode1, 100); // Should get banned
+    dosMan.Misbehaving(&dummyNode1, 100, BanReasonUnknown); // Should get banned
     SendMessages(&dummyNode1);
     BOOST_CHECK(dosMan.IsBanned(addr1));
     BOOST_CHECK(!dosMan.IsBanned(ip(0xa0b0c001 | 0x0000ff00))); // Different IP, not banned
@@ -226,11 +226,11 @@ BOOST_AUTO_TEST_CASE(DoS_misbehaving_ban_tests)
     CAddress addr2(ip(0xa0b0c002));
     CNode dummyNode2(INVALID_SOCKET, addr2, "", true);
     dummyNode2.nVersion = 1;
-    dosMan.Misbehaving(&dummyNode2, 50);
+    dosMan.Misbehaving(&dummyNode2, 50, BanReasonUnknown);
     SendMessages(&dummyNode2);
     BOOST_CHECK(!dosMan.IsBanned(addr2)); // 2 not banned yet...
     BOOST_CHECK(dosMan.IsBanned(addr1)); // ... but 1 still should be
-    dosMan.Misbehaving(&dummyNode2, 50);
+    dosMan.Misbehaving(&dummyNode2, 50, BanReasonUnknown);
     SendMessages(&dummyNode2);
     BOOST_CHECK(dosMan.IsBanned(addr2));
 }
@@ -246,13 +246,13 @@ BOOST_AUTO_TEST_CASE(DoS_non_default_banscore)
     CNode dummyNode1(INVALID_SOCKET, addr1, "", true);
     dosMan.HandleCommandLine();
     dummyNode1.nVersion = 1;
-    dosMan.Misbehaving(&dummyNode1, 100);
+    dosMan.Misbehaving(&dummyNode1, 100, BanReasonUnknown);
     SendMessages(&dummyNode1);
     BOOST_CHECK(!dosMan.IsBanned(addr1));
-    dosMan.Misbehaving(&dummyNode1, 10);
+    dosMan.Misbehaving(&dummyNode1, 10, BanReasonUnknown);
     SendMessages(&dummyNode1);
     BOOST_CHECK(!dosMan.IsBanned(addr1));
-    dosMan.Misbehaving(&dummyNode1, 1);
+    dosMan.Misbehaving(&dummyNode1, 1, BanReasonUnknown);
     SendMessages(&dummyNode1);
     BOOST_CHECK(dosMan.IsBanned(addr1));
     mapArgs.erase("-banscore");
@@ -280,7 +280,7 @@ BOOST_AUTO_TEST_CASE(DoS_non_default_banscore)
     BOOST_CHECK(std::floor(dummyNode1.nMisbehavior.load()) == 0);
 
     // Add some more misbehavior and then let it decay
-    dosMan.Misbehaving(&dummyNode1, 50);
+    dosMan.Misbehaving(&dummyNode1, 50, BanReasonUnknown);
     BOOST_CHECK(std::floor(dummyNode1.nMisbehavior.load()) == 50);
     SetMockTime(nStartTime + 60 * 60 * 28);
     dosMan.UpdateMisbehavior(&dummyNode1);
@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime_expiration)
     CNode dummyNode(INVALID_SOCKET, addr, "", true);
     dummyNode.nVersion = 1;
 
-    dosMan.Misbehaving(&dummyNode, 100);
+    dosMan.Misbehaving(&dummyNode, 100, BanReasonUnknown);
     SendMessages(&dummyNode);
     BOOST_CHECK(dosMan.IsBanned(addr));
 

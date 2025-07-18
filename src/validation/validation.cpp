@@ -2924,7 +2924,7 @@ void InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state)
                     (unsigned char)state.GetRejectCode(), state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH),
                     pindex->GetBlockHash());
                 if (nDoS > 0)
-                    dosMan.Misbehaving(node.get(), nDoS);
+                    dosMan.Misbehaving(node.get(), nDoS, BanReasonInvalidBlock);
             }
         }
     }
@@ -3826,7 +3826,7 @@ bool _ActivateBestChain(CValidationState &state,
                         pfrom->PushMessage(NetMsgType::REJECT, (std::string)NetMsgType::BLOCK, state.GetRejectCode(),
                             state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), pblock->GetHash());
                     if (nDoS > 0)
-                        dosMan.Misbehaving(pfrom, nDoS);
+                        dosMan.Misbehaving(pfrom, nDoS, BanReasonInvalidBlock);
                 }
             }
             else
