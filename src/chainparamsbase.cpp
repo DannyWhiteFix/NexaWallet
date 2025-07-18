@@ -15,6 +15,7 @@ const std::string CBaseChainParams::LEGACY_UNIT_TESTS = "main";
 const std::string CBaseChainParams::TESTNET = "test";
 const std::string CBaseChainParams::SCALENET = "scale";
 const std::string CBaseChainParams::REGTEST = "regtest";
+const std::string CBaseChainParams::STORMTEST = "stormtest";
 const std::string CBaseChainParams::NEXA = "nexa";
 
 bool CBaseChainParams::RequireStandard() const { return fRequireStandard; }
@@ -46,6 +47,7 @@ static CBaseMainParams mainParams;
 static CBaseTestNetParams testNetParams;
 static CBaseScaleNetParams scaleNetParams;
 static CBaseRegTestParams regTestParams;
+static CBaseStormTestParams stormTestParams;
 static CBaseNexaParams nexaParams;
 
 
@@ -67,6 +69,8 @@ CBaseChainParams &BaseParams(const std::string &chain)
         return scaleNetParams;
     else if (chain == CBaseChainParams::REGTEST)
         return regTestParams;
+    else if (chain == CBaseChainParams::STORMTEST)
+        return stormTestParams;
     else if (chain == CBaseChainParams::NEXA)
         return nexaParams;
     else
@@ -81,17 +85,21 @@ std::string ChainNameFromCommandLine()
     num_selected += fRegTest;
     bool fTestNet = GetBoolArg("-testnet", false);
     num_selected += fTestNet;
+    bool fStormTest = GetBoolArg("-stormtest", false);
+    num_selected += fStormTest;
     bool fScaleNet = GetBoolArg("-scalenet", false);
     num_selected += fScaleNet;
     bool fNexa = GetBoolArg("-nexa", false);
     num_selected += fNexa;
 
     if (num_selected > 1)
-        throw std::runtime_error("Invalid combination of -regtest, -testnet, -scalenet");
+        throw std::runtime_error("Invalid combination of -regtest, -testnet, -scalenet, -stormtest");
     if (fRegTest)
         return CBaseChainParams::REGTEST;
     if (fTestNet)
         return CBaseChainParams::TESTNET;
+    if (fStormTest)
+        return CBaseChainParams::STORMTEST;
     if (fScaleNet)
         return CBaseChainParams::SCALENET;
     if (fNexa)

@@ -512,9 +512,113 @@ public:
         nUndoFileSize = 0x800000ULL; // 8MiB
     }
 };
-
 CTestNetParams testNetParams;
 
+class CStormParams : public CChainParams
+{
+public:
+    CStormParams()
+    {
+        nRPCPort = 7231;
+
+        strNetworkID = "stormtest"; // Do not use the const string because of ctor execution order issues
+        nDefaultPort = NEXA_STORMTEST_PORT;
+        nPruneAfterHeight = 100000;
+        fMiningRequiresPeers = true;
+        fDefaultConsistencyChecks = false;
+        fRequireStandard = true;
+        fMineBlocksOnDemand = false;
+        fTestnetToBeDeprecatedFieldRPC = false;
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 25); // P2PKH addresses begin with B
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 68); // P2SH  addresses begin with U
+        base58Prefixes[SECRET_KEY] = std::vector<unsigned char>(1, 35); // WIF   format begins with 2B or 2C
+        base58Prefixes[EXT_PUBLIC_KEY] = {0x42, 0x69, 0x67, 0x20};
+        base58Prefixes[EXT_SECRET_KEY] = {0x42, 0x6c, 0x6b, 0x73};
+        // use 8 for prefix of N in base58
+        // 19 for n in bech32
+        base58Prefixes[SCRIPT_TEMPLATE_ADDRESS] = std::vector<unsigned char>(1, 8);
+        cashaddrPrefix = strNetworkID;
+
+        consensus.nSubsidyHalvingInterval = 210000 * 5; // 2 minute blocks rather than 10 min -> * 5
+        uint32_t tgtBits = 0x200000ff;
+        bool fNegative;
+        bool fOverflow;
+        arith_uint256 tmp;
+        tmp.SetCompact(tgtBits, &fNegative, &fOverflow);
+        consensus.powLimit = ArithToUint256(tmp);
+        // consensus.powLimit = uint256S("0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.nPowTargetSpacing = 2 * 60;
+        consensus.fPowAllowMinDifficultyBlocks = true;
+        consensus.fPowNoRetargeting = true;
+        consensus.powAlgorithm = 1;
+        consensus.initialSubsidy = 10 * 1000000 * COIN;
+        consensus.coinbaseMaturity = COINBASE_MATURITY;
+        // The half life for the ASERT DAA. For every (nASERTHalfLife) seconds behind schedule the blockchain gets,
+        // difficulty is cut in half. Doubled if blocks are ahead of schedule.
+        // Two days (in seconds)
+        consensus.nASERTHalfLife = 2 * 24 * 60 * 60;
+
+        consensus.nextForkActivationTime = NEXT_FORK_ACTIVATION_TIME;
+
+        std::vector<unsigned char> nonce;
+        std::vector<unsigned char> hardCodedNonce;
+        nonce = hardCodedNonce = ParseHex("132a25");
+        genesis = CreateGenesisBlock("this is nexa stormtest", CScript() << OP_1, 1741344106, nonce, tgtBits, 0 * COIN);
+
+#if 0 // recalculate GB if needed (note that this code will not work with the java nexa shared library because it
+      // must start before the random numbers (initialized in ECC_Start are hooked up).
+        ECC_Start();
+        bool worked = MineIt(genesis, 1<<23, consensus);
+        assert(worked);
+        ECC_Stop();
+        consensus.hashGenesisBlock = genesis.GetHash();
+        if (genesis.nonce != hardCodedNonce)
+        {
+            printf("stormtest nonce changed:  hex:%s\n", HexStr(genesis.nonce).c_str());
+            printf("stormtest GB hash %s\n", consensus.hashGenesisBlock.GetHex().c_str());
+        }
+#else // check GB is what is expected
+        consensus.hashGenesisBlock = genesis.GetHash();
+        assert(
+            consensus.hashGenesisBlock == uint256S("47b0dc36eac6c19ae2a2ac5fa2a238176de3af3edbc97a499a10894ac57c1c6f"));
+#endif
+        /**
+         * The message start string is designed to be unlikely to occur in normal data.
+         * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
+         * a large 32-bit integer with any alignment.
+         */
+        pchMessageStart[0] = 0x72;
+        pchMessageStart[1] = 0x27;
+        pchMessageStart[2] = 0x13;
+        pchMessageStart[3] = 0x23;
+
+        consensus.nShortBlockWindow = SHORT_BLOCK_WINDOW;
+        consensus.nLongBlockWindow = LONG_BLOCK_WINDOW;
+        consensus.nBlockSizeMultiplier = BLOCK_SIZE_MULTIPLIER;
+        consensus.nNextMaxBlockSize = DEFAULT_NEXT_MAX_BLOCK_SIZE_FORK1;
+
+        vFixedSeeds.clear();
+        vSeeds.clear();
+        // vSeeds.push_back(CDNSSeedData("nextchain.cash", "seed.nextchain.cash", true));
+        // vSeeds.push_back(CDNSSeedData("nexa.org", "seeder.nexa.org", true));
+        // vSeeds.push_back(CDNSSeedData("bitcoinunlimited.info", "nexa-seeder.bitcoinunlimited.info", true));
+
+        // vFixedSeeds = std::vector<SeedSpec6>();
+
+        // clang-format off
+        // checkpoint related to various network upgrades need to be the first block
+        // for which the new rules are enforced, hence activation height + 1, where activation
+        // height is the first block for which MTP <= upgrade activation time
+        checkpointData = (CCheckpointData){{{0, consensus.hashGenesisBlock}}, 0};
+
+        // clang-format on
+
+
+        nBlockFileSize = 0x8000000ULL; // 128MiB
+        nUndoFileSize = 0x800000ULL; // 8MiB
+    }
+};
+CStormParams stormTestParams;
 
 class CNexaParams : public CChainParams
 {
@@ -614,6 +718,7 @@ public:
         // height is the first block for which MTP <= upgrade activation time
         checkpointData = CCheckpointData();
         MapCheckpoints &checkpoints = checkpointData.mapCheckpoints;
+        checkpointData = (CCheckpointData){{{0, consensus.hashGenesisBlock}}, 0};
         checkpoints[57000] = uint256S("0xdda01c756107f5016e88aa9dc1b1896e616462b750dbcbbc91214237f557cb89");
         // first block of 2023 (UTC)
         checkpoints[171593] = uint256S("0x7320015a1da0de3ee16cbfbe2ea2ff0ac595ffdb3627fb69be89e7345b16a4d1");
@@ -635,7 +740,6 @@ public:
         nUndoFileSize = 0x800000ULL; // 8MiB
     }
 };
-
 CNexaParams nexaParams;
 
 CChainParams *pCurrentParams = 0;
@@ -656,6 +760,8 @@ CChainParams &Params(const std::string &chain)
         assert(0);
     else if (chain == CBaseChainParams::REGTEST)
         return regTestParams;
+    else if (chain == CBaseChainParams::STORMTEST)
+        return stormTestParams;
     else if (chain == CBaseChainParams::NEXA)
         return nexaParams;
     throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));

@@ -67,5 +67,6 @@ static const int MAX_URI_LENGTH = 255;
 #define QAPP_APP_NAME "Nexa"
 #define QAPP_APP_NAME_TESTNET "Nexa-testnet"
 #define QAPP_APP_NAME_REGTEST "Nexa-regtest"
+#define QAPP_APP_NAME_STORMTEST "Nexa-stormtest"
 
 #endif // NEXA_QT_GUICONSTANTS_H
