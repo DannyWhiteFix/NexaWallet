@@ -75,7 +75,17 @@ std::pair<int, int64_t> CalculateSequenceLocks(const CTransactionRef tx,
 
         if (txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG)
         {
-            int64_t nCoinTime = block.GetAncestor(std::max(nCoinHeight - 1, 0))->GetMedianTimePast();
+            int64_t nCoinTime = 0;
+            const CBlockIndex *pindex = block.GetAncestor(std::max(nCoinHeight - 1, 0));
+            if (pindex)
+            {
+                nCoinTime = pindex->GetMedianTimePast();
+            }
+            else
+            {
+                LOGA("Corrupted database: GetAncestor() returns a nullptr. You need to reindex your blockchain");
+                abort();
+            }
             // NOTE: Subtract 1 to maintain nLockTime semantics
             // BIP 68 relative lock times have the semantics of calculating
             // the first block or time at which the transaction would be
