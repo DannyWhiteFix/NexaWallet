@@ -139,7 +139,7 @@ extern CCriticalSection cs_vUseDNSSeeds;
 // BITCOINUNLIMITED END
 
 extern CSemaphore *semOutbound;
-extern CSemaphore *semOutboundAddNode; // BU: separate semaphore for -addnodes
+extern CSemaphore *semOutboundAddNode; // separate semaphore for -addnodes
 std::condition_variable messageHandlerCondition;
 std::mutex wakeableDelayMutex;
 
@@ -2073,7 +2073,10 @@ void static ProcessOneShot()
         vOneShots.pop_front();
     }
     CAddress addr;
+    // Do a try_wait() rather than wait() when aquiring the semaphore. A try_wait() is
+    // indicated by passing "true" to CSemaphore grant().
     CSemaphoreGrant grant(*semOutbound, true);
+
     // Seeding nodes track against the original outbound semaphore.
     // Uses try-wait methodology because if a grant is given, there are outbound
     // slots to fill, and if the grant isn't given, there's no seeding to do.
@@ -2336,13 +2339,19 @@ void ThreadOpenAddedConnections()
             for (const std::string &strAddNode : lAddresses)
             {
                 CAddress addr;
-                // BU: always allow us to add a node manually. Whenever we use -addnode the maximum InBound connections
-                // are reduced by
-                //     the same number.  Here we use our own semaphore to ensure we have the outbound slots we need and
-                //     can reconnect to
-                //     nodes that have restarted.
-                CSemaphoreGrant grant(*semOutboundAddNode);
-                OpenNetworkConnection(addr, false, &grant, strAddNode.c_str());
+                // Always allow us to add a node manually. Whenever we use -addnode the maximum InBound connections
+                // are reduced by the same number.
+                //
+                // Use a separate semaphore for -addnode to ensure we have the outbound slots we need and can reconnect
+                // to nodes that have restarted.
+                //
+                // Do a try_wait() rather than wait() when aquiring the semaphore. A try_wait() is
+                // indicated by passing "true" to CSemaphore grant().
+                CSemaphoreGrant grant(*semOutboundAddNode, true);
+                if (grant)
+                {
+                    OpenNetworkConnection(addr, false, &grant, strAddNode.c_str());
+                }
                 MilliSleep(500);
             }
             // Retry every 15 seconds.  It is important to check often to make sure the Xpedited Relay network
@@ -2403,13 +2412,19 @@ void ThreadOpenAddedConnections()
 
         for (vector<CService> &vserv : lservAddressesToAdd)
         {
-            // Always allow us to add a node manually. Whenever we use -addnode the maximum InBound connections are
-            // reduced by
-            //     the same number.  Here we use our own semaphore to ensure we have the outbound slots we need and can
-            //     reconnect to
-            //     nodes that have restarted.
-            CSemaphoreGrant grant(*semOutboundAddNode);
-            OpenNetworkConnection(CAddress(vserv[i % vserv.size()]), false, &grant);
+            // Always allow us to add a node manually. Whenever we use -addnode the maximum InBound connections
+            // are reduced by the same number.
+            //
+            // Use a separate semaphore for -addnode to ensure we have the outbound slots we need and can reconnect
+            // to nodes that have restarted.
+            //
+            // Do a try_wait() rather than wait() when aquiring the semaphore. A try_wait() is
+            // indicated by passing "true" to CSemaphore grant().
+            CSemaphoreGrant grant(*semOutboundAddNode, true);
+            if (grant)
+            {
+                OpenNetworkConnection(CAddress(vserv[i % vserv.size()]), false, &grant);
+            }
             MilliSleep(500);
         }
         if (shutdown_threads.load() == true)
@@ -2956,7 +2971,7 @@ void NetCleanup()
         if (semOutbound)
             delete semOutbound;
         semOutbound = nullptr;
-        // BU: clean up the "-addnode" semaphore
+        // clean up the "-addnode" semaphore
         if (semOutboundAddNode)
             delete semOutboundAddNode;
         semOutboundAddNode = nullptr;
