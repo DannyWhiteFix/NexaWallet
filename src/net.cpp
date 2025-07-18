@@ -2902,11 +2902,6 @@ bool StopNode()
 {
     LOGA("StopNode()\n");
     MapPort(false);
-    if (semOutbound)
-    {
-        for (int i = 0; i < nMaxOutConnections; i++)
-            semOutbound->post();
-    }
     if (fAddressesInitialized)
     {
         DumpData(0);
