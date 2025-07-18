@@ -2415,6 +2415,9 @@ void ThreadOpenAddedConnections()
             }
         }
 
+        // Every loop through resize the semaphore if needed.
+        semOutboundAddNode->resize(nMaxOutConnections);
+
         for (vector<CService> &vserv : lservAddressesToAdd)
         {
             // Always allow us to add a node manually. Whenever we use -addnode the maximum InBound connections
