@@ -3113,10 +3113,11 @@ bool SendMessages(CNode *pto)
         // Start block sync
         if (pindexBestHeader == nullptr)
             pindexBestHeader = chainActive.Tip();
-        // Download if this is a nice peer, or we have no nice peers and this one might do.
-        bool fFetch = state->fPreferredDownload || (nPreferredDownload.load() == 0 && !pto->fOneShot);
         if (!state->fSyncStarted && !fImporting && !fReindex)
         {
+            // Download if this is a nice peer, or we have no nice peers and this one might do.
+            bool fFetch = state->fPreferredDownload || (nPreferredDownload.load() == 0 && !pto->fOneShot);
+
             // Only allow the downloading of headers from a single pruned peer.
             static int nSyncStartedPruned = 0;
             if (pto->fClient && nSyncStartedPruned >= 1)
@@ -3124,7 +3125,7 @@ bool SendMessages(CNode *pto)
 
             // Only actively request headers from a single peer, unless we're close to today.
             if ((nSyncStarted < MAX_HEADER_REQS_DURING_IBD && fFetch) ||
-                chainActive.Tip()->GetBlockTime() > GetAdjustedTime() - SINGLE_PEER_REQUEST_MODE_AGE)
+                (chainActive.Tip()->GetBlockTime() > (GetAdjustedTime() - SINGLE_PEER_REQUEST_MODE_AGE)))
             {
                 const CBlockIndex *pindexStart = chainActive.Tip();
                 /* If possible, start at the block preceding the currently
@@ -3136,7 +3137,7 @@ bool SendMessages(CNode *pto)
                    got back an empty response.  */
                 if (pindexStart->pprev)
                     pindexStart = pindexStart->pprev;
-                // BU Bug fix for Core:  Don't start downloading headers unless our chain is shorter
+                // Don't start downloading headers unless our chain is shorter
                 if (pindexStart->height() < pto->nStartingHeight)
                 {
                     CNodeStateAccessor modableState(nodestate, pto->GetId());
@@ -3165,13 +3166,18 @@ bool SendMessages(CNode *pto)
         {
             if (!pto->fClient)
             {
-                CNodeStateAccessor(nodestate, pto->GetId())->fRequestedInitialBlockAvailability = true;
+                // We have to get the actual current state again because it could have been modified.
+                CNodeStateAccessor modablestate(nodestate, pto->GetId());
+                if (!modablestate->fRequestedInitialBlockAvailability)
+                {
+                    modablestate->fRequestedInitialBlockAvailability = true;
 
-                // We only want one single header so we pass a null CBlockLocator.
-                pto->PushMessage(NetMsgType::GETHEADERS, CBlockLocator(), pindexBestHeader.load()->GetBlockHash());
-                LOG(NET | BLK, "Requesting header for initial blockavailability, peer=%s block=%s height=%d\n",
-                    pto->GetLogName(), pindexBestHeader.load()->GetBlockHash().ToString(),
-                    pindexBestHeader.load()->height());
+                    // We only want one single header so we pass a null CBlockLocator.
+                    pto->PushMessage(NetMsgType::GETHEADERS, CBlockLocator(), pindexBestHeader.load()->GetBlockHash());
+                    LOG(NET | BLK, "Requesting header for initial blockavailability, peer=%s block=%s height=%d\n",
+                        pto->GetLogName(), pindexBestHeader.load()->GetBlockHash().ToString(),
+                        pindexBestHeader.load()->height());
+                }
             }
         }
 

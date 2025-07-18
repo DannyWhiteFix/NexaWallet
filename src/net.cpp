@@ -2123,7 +2123,9 @@ void ThreadOpenConnections()
     {
         ProcessOneShot();
 
-        MilliSleep(100);
+        // This sleep time is very important to making stable
+        // connections.
+        MilliSleep(1000);
 
         // Only connect out to one peer per network group (/16 for IPv4).
         // Do this here so we don't have to critsect vNodes inside mapAddresses critsect.
