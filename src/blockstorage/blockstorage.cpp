@@ -858,6 +858,8 @@ bool FlushStateToDisk(CValidationState &state, FlushStateMode mode)
             if (!setFilesToPrune.empty())
             {
                 fFlushForPrune = true;
+
+                LOCK(cs_LastBlockFile);
                 if (!fHavePruned)
                 {
                     pblocktree->WriteFlag("prunedblockfiles", true);
@@ -896,9 +898,11 @@ bool FindBlockPos(CValidationState &state,
     uint64_t nTime,
     bool fKnown)
 {
-    // nDataPos for blockdb is a flag, just set to 1 to indicate we have that data. nFile is unused.
+    LOCK(cs_LastBlockFile);
+
     if (pblockdb)
     {
+        // nDataPos for blockdb is a flag, just set to 1 to indicate we have that data. nFile is unused.
         pos.nFile = 1;
         pos.nPos = nAddSize;
         if (CheckDiskSpace(nAddSize))
@@ -915,8 +919,6 @@ bool FindBlockPos(CValidationState &state,
         }
         return true;
     }
-
-    LOCK(cs_LastBlockFile);
 
     unsigned int nFile = fKnown ? pos.nFile : nLastBlockFile;
     if (vinfoBlockFile.size() <= nFile)

@@ -98,6 +98,8 @@ extern uint32_t nDropMessages;
 extern bool fRelayPriority;
 extern bool fPrintPriority;
 
+extern CCriticalSection cs_LastBlockFile;
+
 using namespace std;
 
 bool fFeeEstimatesInitialized = false;
@@ -1469,18 +1471,21 @@ bool AppInit2(Config &config)
 
                 // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
                 // in the past, but is now trying to run unpruned.
-                if (fHavePruned && !fPruneMode)
                 {
-                    strLoadError = _("You need to rebuild the database using -resync to go back to unpruned mode.  "
-                                     "This will redownload the entire blockchain.");
-                    break;
-                }
+                    LOCK(cs_LastBlockFile);
+                    if (fHavePruned && !fPruneMode)
+                    {
+                        strLoadError = _("You need to rebuild the database using -resync to go back to unpruned mode.  "
+                                         "This will redownload the entire blockchain.");
+                        break;
+                    }
 
-                uiInterface.InitMessage(_("Verifying blocks..."));
-                if (fHavePruned && GetArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP)
-                {
-                    LOGA("Prune: pruned datadir may not have more than %d blocks; only checking available blocks",
-                        MIN_BLOCKS_TO_KEEP);
+                    uiInterface.InitMessage(_("Verifying blocks..."));
+                    if (fHavePruned && GetArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP)
+                    {
+                        LOGA("Prune: pruned datadir may not have more than %d blocks; only checking available blocks",
+                            MIN_BLOCKS_TO_KEEP);
+                    }
                 }
                 CBlockIndex *tip = chainActive.Tip();
                 // we intentionally do not check if tip is a nullptr here

@@ -72,29 +72,12 @@
 #error "Bitcoin cannot be compiled without assertions."
 #endif
 
-/**
- * Global state
- */
+/** Number of nodes with fSyncStarted set to true. */
+std::atomic<int> nSyncStarted{0};
 
-std::atomic<bool> fImporting{false};
-std::atomic<bool> fReindex{false};
-std::atomic<bool> fVerifyDB{false};
+/** Number of preferable block download peers. */
+std::atomic<int> nPreferredDownload{0};
 
-bool fBlocksOnly = false;
-bool fWhiteListRelay = false;
-bool fWhiteListForceRelay = false;
-bool fTxIndex = false;
-bool fHavePruned = false;
-bool fPruneMode = false;
-bool fIsBareMultisigStd = DEFAULT_PERMIT_BAREMULTISIG;
-unsigned int nBytesPerSigOp = DEFAULT_BYTES_PER_SIGOP;
-bool fCheckBlockIndex = false;
-bool fCheckpointsEnabled = DEFAULT_CHECKPOINTS_ENABLED;
-uint64_t nPruneTarget = 0;
-uint64_t nDBUsedSpace = 0;
-uint32_t nXthinBloomFilterSize = SMALLEST_MAX_BLOOM_FILTER_SIZE;
-
-// BU: Move global objects to a single file
 extern CTxMemPool mempool;
 
 extern CTweak<unsigned int> blockDownloadWindow;
@@ -106,17 +89,6 @@ extern CCriticalSection cs_mapInboundConnectionTracker;
 
 extern uint64_t nDiskBlockIndexVersion;
 
-/** Number of nodes with fSyncStarted set to true. */
-std::atomic<int> nSyncStarted{0};
-
-/** Number of preferable block download peers. */
-std::atomic<int> nPreferredDownload{0};
-
-/** Global flag to indicate we should check to see if there are
- *  block/undo files that should be deleted.  Set on startup
- *  or if we allocate more file space when we're in prune mode
- */
-std::atomic<bool> fCheckForPruning = false;
 
 //////////////////////////////////////////////////////////////////////////////
 //
