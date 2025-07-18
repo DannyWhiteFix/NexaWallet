@@ -119,7 +119,7 @@ void RespendDetector::CheckForRespend(const CTxMemPool &pool, const CTransaction
                     {
                         LOG(DSPROOF, "DoubleSpendProof did not validate %s", dsp.GetHash().ToString());
                         pool.doubleSpendProofStorage()->remove(proofId);
-                        dosMan.Misbehaving(iter->second, 5);
+                        dosMan.Misbehaving(iter->second, 5, BanReasonInvalidDSProof);
                     }
                 }
             }

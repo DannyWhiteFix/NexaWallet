@@ -68,7 +68,7 @@ bool HandleMempoolSyncRequest(CDataStream &vRecv, CNode *pfrom, uint32_t msgCook
     // Requester should only contact peers that support mempool sync
     if (!syncMempoolWithPeers.Value())
     {
-        dosMan.Misbehaving(pfrom, 100);
+        dosMan.Misbehaving(pfrom, 100, BanReasonUnsupportedPeer);
         return error("Mempool sync requested from peer %s but not supported\n", pfrom->GetLogName());
     }
 
@@ -80,7 +80,7 @@ bool HandleMempoolSyncRequest(CDataStream &vRecv, CNode *pfrom, uint32_t msgCook
             ((GetStopwatchMicros() - mempoolSyncResponded[nodeId].lastUpdated) <
                 MEMPOOLSYNC_FREQ_US - MEMPOOLSYNC_FREQ_GRACE_US))
         {
-            dosMan.Misbehaving(pfrom, 100);
+            dosMan.Misbehaving(pfrom, 100, BanReasonMessageRequestsTooFrequent);
             return error("Mempool sync requested less than %d mu seconds ago from peer %s\n", MEMPOOLSYNC_FREQ_US,
                 pfrom->GetLogName());
         }
@@ -149,14 +149,14 @@ bool CMempoolSync::ReceiveMempoolSync(CDataStream &vRecv, CNode *pfrom, std::str
 
         if (!(mempoolSyncRequested.count(nodeId) == 1))
         {
-            dosMan.Misbehaving(pfrom, 10);
+            dosMan.Misbehaving(pfrom, 10, BanReasonUnrequestedObject);
             return error("Received unrequested mempool sync from peer %s\n", pfrom->GetLogName());
         }
 
         // Do not proceed if this request has already been processed
         if (mempoolSyncRequested[nodeId].completed)
         {
-            dosMan.Misbehaving(pfrom, 100);
+            dosMan.Misbehaving(pfrom, 100, BanReasonUnrequestedObject);
             return error(
                 "Received mempool sync from peer %s but synchronization has already completed", pfrom->GetLogName());
         }
@@ -239,7 +239,7 @@ bool CRequestMempoolSyncTx::HandleMessage(CDataStream &vRecv, uint32_t msgCookie
     // Message consistency checking
     if (reqMempoolSyncTx.setCheapHashesToRequest.empty())
     {
-        dosMan.Misbehaving(pfrom, 100);
+        dosMan.Misbehaving(pfrom, 100, BanReasonInvalidObject);
         return error("Incorrectly constructed getmemsynctx received.  Banning peer=%s", pfrom->GetLogName());
     }
 
@@ -250,14 +250,14 @@ bool CRequestMempoolSyncTx::HandleMessage(CDataStream &vRecv, uint32_t msgCookie
 
         if (mempoolSyncResponded.count(nodeId) == 0)
         {
-            dosMan.Misbehaving(pfrom, 10);
+            dosMan.Misbehaving(pfrom, 10, BanReasonUnrequestedObject);
             return error("Received getmemsynctx from peer %s but mempool sync is not in progress", pfrom->GetLogName());
         }
 
         // Already processed requested transactions
         if (mempoolSyncResponded[nodeId].completed)
         {
-            dosMan.Misbehaving(pfrom, 100);
+            dosMan.Misbehaving(pfrom, 100, BanReasonUnrequestedObject);
             return error(
                 "Received getmemsynctx from peer %s but mempool sync has already completed", pfrom->GetLogName());
         }
@@ -330,14 +330,14 @@ bool CMempoolSyncTx::HandleMessage(CDataStream &vRecv, uint32_t msgCookie, CNode
         // Do not process unrequested memsynctx.
         if (mempoolSyncRequested.count(nodeId) == 0)
         {
-            dosMan.Misbehaving(pfrom, 10);
+            dosMan.Misbehaving(pfrom, 10, BanReasonUnrequestedObject);
             return error("Received memsynctx from peer %s but mempool sync is not in progress", pfrom->GetLogName());
         }
 
         // Already received requested transactions
         if (mempoolSyncRequested[nodeId].completed)
         {
-            dosMan.Misbehaving(pfrom, 100);
+            dosMan.Misbehaving(pfrom, 100, BanReasonUnrequestedObject);
             return error(
                 "Received memsynctx from peer %s but transactions have already been sent", pfrom->GetLogName());
         }

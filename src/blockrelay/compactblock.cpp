@@ -135,7 +135,7 @@ bool CompactBlock::HandleMessage(CDataStream &vRecv, uint32_t msgCookie, CNode *
     // Message consistency checking
     if (!IsCompactBlockValid(pfrom, compactBlock))
     {
-        dosMan.Misbehaving(pfrom, 100);
+        dosMan.Misbehaving(pfrom, 100, BanReasonInvalidBlock);
         thinrelay.ClearAllBlockData(pfrom, pblock->GetHash());
         return error("Received an invalid compactblock from peer %s\n", pfrom->GetLogName());
     }
@@ -150,7 +150,7 @@ bool CompactBlock::HandleMessage(CDataStream &vRecv, uint32_t msgCookie, CNode *
     if (!ContextualCheckBlockHeader(Params(), compactBlock->header, state, pprev))
     {
         // compact block does not fit within our blockchain
-        dosMan.Misbehaving(pfrom, 100);
+        dosMan.Misbehaving(pfrom, 100, BanReasonInvalidHeader);
         return error(
             "compact block from peer %s contextual error: %s", pfrom->GetLogName(), state.GetRejectReason().c_str());
     }
@@ -163,7 +163,7 @@ bool CompactBlock::HandleMessage(CDataStream &vRecv, uint32_t msgCookie, CNode *
     // Ban a node for sending unrequested compact blocks
     if (!thinrelay.IsBlockInFlight(pfrom, NetMsgType::CMPCTBLOCK, inv.hash))
     {
-        dosMan.Misbehaving(pfrom, 100);
+        dosMan.Misbehaving(pfrom, 100, BanReasonUnrequestedBlock);
         return error("unrequested compact block from peer %s", pfrom->GetLogName());
     }
 
@@ -394,7 +394,7 @@ bool CompactReRequest::HandleMessage(CDataStream &vRecv, uint32_t msgCookie, CNo
     // Message consistency checking
     if (compactReRequest.indexes.empty() || compactReRequest.blockhash.IsNull())
     {
-        dosMan.Misbehaving(pfrom, 100);
+        dosMan.Misbehaving(pfrom, 100, BanReasonHashIsNull);
         return error("incorrectly constructed getblocktxn received.  Banning peer=%s", pfrom->GetLogName());
     }
 
@@ -407,7 +407,7 @@ bool CompactReRequest::HandleMessage(CDataStream &vRecv, uint32_t msgCookie, CNo
     CBlockIndex *hdr = LookupBlockIndex(inv.hash);
     if (!hdr)
     {
-        dosMan.Misbehaving(pfrom, 20);
+        dosMan.Misbehaving(pfrom, 20, BanReasonNotInBlockIndex);
         return error("Requested block is not available");
     }
     else
@@ -444,7 +444,7 @@ bool CompactReReqResponse::HandleMessage(CDataStream &vRecv, uint32_t msgCookie,
     CInv inv(MSG_CMPCT_BLOCK, compactReReqResponse.blockhash);
     if (compactReReqResponse.txn.empty() || compactReReqResponse.blockhash.IsNull())
     {
-        dosMan.Misbehaving(pfrom, 100);
+        dosMan.Misbehaving(pfrom, 100, BanReasonHashIsNull);
         return error(
             "incorrectly constructed compactReReqResponse or inconsistent compactblock data received.  Banning peer=%s",
             pfrom->GetLogName());
@@ -454,7 +454,7 @@ bool CompactReReqResponse::HandleMessage(CDataStream &vRecv, uint32_t msgCookie,
         // Do not process unrequested xblocktx unless from an expedited node.
         if (!thinrelay.IsBlockInFlight(pfrom, NetMsgType::CMPCTBLOCK, inv.hash) && !connmgr->IsExpeditedUpstream(pfrom))
         {
-            dosMan.Misbehaving(pfrom, 10);
+            dosMan.Misbehaving(pfrom, 10, BanReasonUnrequestedBlock);
             return error("Received compactReReqResponse %s from peer %s but was unrequested", inv.hash.ToString(),
                 pfrom->GetLogName());
         }

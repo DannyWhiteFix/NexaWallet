@@ -669,7 +669,7 @@ static bool processInvMsgs(CNode *pfrom, CDataStream &vRecv, std::vector<T> &vIn
     //   Validate that INVs are a valid type and not null.
     if (vInvSize > MAX_INV_SZ || vInv.empty())
     {
-        dosMan.Misbehaving(pfrom, 20);
+        dosMan.Misbehaving(pfrom, 20, BanReasonInvalidSize);
         return error("message inv size() = %u", vInvSize);
     }
 
@@ -868,7 +868,7 @@ bool ProcessMessage(CNode *pfrom,
             // ban peers older than this proto version
             pfrom->PushMessageWithCookie(NetMsgType::REJECT, msgCookie | 0xFFFF, strCommand, REJECT_OBSOLETE,
                 strprintf("Protocol Version must be %d or greater", MIN_PEER_PROTO_VERSION));
-            dosMan.Misbehaving(pfrom, 100);
+            dosMan.Misbehaving(pfrom, 100, BanReasonInvalidProtocolVersion);
             return error("Using obsolete protocol version %i - banning peer=%s version=%s", pfrom->nVersion,
                 pfrom->GetLogName(), pfrom->cleanSubVer);
         }
@@ -991,7 +991,7 @@ bool ProcessMessage(CNode *pfrom,
     else if ((pfrom->nVersion == 0 || pfrom->tVersionSent < 0) && !pfrom->fWhitelisted)
     {
         // Must have a version message before anything else
-        dosMan.Misbehaving(pfrom, 1);
+        dosMan.Misbehaving(pfrom, 1, BanReasonBadConnectionHandshake);
         pfrom->fDisconnect = true;
         return error("%s receieved before VERSION message - disconnecting peer=%s", strCommand, pfrom->GetLogName());
     }
@@ -1002,7 +1002,7 @@ bool ProcessMessage(CNode *pfrom,
         pfrom->extversionExpected = false;
         if (pfrom->fSuccessfullyConnected == true)
         {
-            dosMan.Misbehaving(pfrom, 1);
+            dosMan.Misbehaving(pfrom, 1, BanReasonBadConnectionHandshake);
             pfrom->fDisconnect = true;
             return error("odd peer behavior: received verack message before extversion, disconnecting \n");
         }
@@ -1049,7 +1049,7 @@ bool ProcessMessage(CNode *pfrom,
     {
         if (pfrom->fSuccessfullyConnected == true)
         {
-            dosMan.Misbehaving(pfrom, 1);
+            dosMan.Misbehaving(pfrom, 1, BanReasonBadConnectionHandshake);
             pfrom->fDisconnect = true;
             return error("duplicate verack messages");
         }
@@ -1163,7 +1163,7 @@ bool ProcessMessage(CNode *pfrom,
 
         if (vAddr.size() > 1000)
         {
-            dosMan.Misbehaving(pfrom, 20);
+            dosMan.Misbehaving(pfrom, 20, BanReasonInvalidSize);
             return error("%s message size() = %u", strCommand, vAddr.size());
         }
 
@@ -1311,7 +1311,7 @@ bool ProcessMessage(CNode *pfrom,
         // check size == 0 to be intolerant of an empty and useless request
         if ((vInv.size() > MAX_INV_SZ) || (vInv.size() == 0))
         {
-            dosMan.Misbehaving(pfrom, 20);
+            dosMan.Misbehaving(pfrom, 20, BanReasonInvalidSize);
             return error("message getdata size() = %u", vInv.size());
         }
 
@@ -1370,7 +1370,7 @@ bool ProcessMessage(CNode *pfrom,
         // check size == 0 to be intolerant of an empty and useless request
         if ((vInv.size() > MAX_INV_SZ) || (vInv.size() == 0))
         {
-            dosMan.Misbehaving(pfrom, 20);
+            dosMan.Misbehaving(pfrom, 20, BanReasonInvalidSize);
             return error("message getdata size() = %u", vInv.size());
         }
 
@@ -1429,7 +1429,7 @@ bool ProcessMessage(CNode *pfrom,
         // check size == 0 to be intolerant of an empty and useless request
         if ((vInv.size() > MAX_INV_SZ) || (vInv.size() == 0))
         {
-            dosMan.Misbehaving(pfrom, 20);
+            dosMan.Misbehaving(pfrom, 20, BanReasonInvalidSize);
             return error("message extgetdata size() = %u", vInv.size());
         }
 
@@ -1619,7 +1619,7 @@ bool ProcessMessage(CNode *pfrom,
         unsigned int nCount = ReadCompactSize(vRecv);
         if (nCount > MAX_HEADERS_RESULTS)
         {
-            dosMan.Misbehaving(pfrom, 20);
+            dosMan.Misbehaving(pfrom, 20, BanReasonInvalidSize);
             return error("headers message size = %u", nCount);
         }
         headers.resize(nCount);
@@ -1764,12 +1764,12 @@ bool ProcessMessage(CNode *pfrom,
                         pfrom->fDisconnect = true;
                     }
 
-                    int nDos;
+                    int nDos = 0;
                     if (state.IsInvalid(nDos))
                     {
                         if (nDos > 0)
                         {
-                            dosMan.Misbehaving(pfrom, nDos);
+                            dosMan.Misbehaving(pfrom, nDos, BanReasonInvalidHeader);
                         }
                     }
 
@@ -1963,7 +1963,7 @@ bool ProcessMessage(CNode *pfrom,
         // Message consistency checking
         if (hash.IsNull())
         {
-            dosMan.Misbehaving(pfrom, 100);
+            dosMan.Misbehaving(pfrom, 100, BanReasonHashIsNull);
             return error("invalid get_xthin type=%u hash=%s", invType, hash.ToString());
         }
 
@@ -1974,7 +1974,7 @@ bool ProcessMessage(CNode *pfrom,
             auto *invIndex = LookupBlockIndex(hash);
             if (!invIndex)
             {
-                dosMan.Misbehaving(pfrom, 100);
+                dosMan.Misbehaving(pfrom, 100, BanReasonNotInBlockIndex);
                 return error("Peer %srequested nonexistent block %s", pfrom->GetLogName(), hash.ToString());
             }
 
@@ -2018,14 +2018,14 @@ bool ProcessMessage(CNode *pfrom,
         // Message consistency checking
         if (hash.IsNull())
         {
-            dosMan.Misbehaving(pfrom, 100);
+            dosMan.Misbehaving(pfrom, 100, BanReasonHashIsNull);
             return error("invalid get_thin type=%u hash=%s", invType, hash.ToString());
         }
 
         auto *invIndex = LookupBlockIndex(hash);
         if (!invIndex)
         {
-            dosMan.Misbehaving(pfrom, 100);
+            dosMan.Misbehaving(pfrom, 100, BanReasonNotInBlockIndex);
             return error("Peer %srequested nonexistent block %s", pfrom->GetLogName(), hash.ToString());
         }
 
@@ -2443,7 +2443,7 @@ bool ProcessMessage(CNode *pfrom,
         if (!filter.IsWithinSizeConstraints())
         {
             // There is no excuse for sending a too-large filter
-            dosMan.Misbehaving(pfrom, 100);
+            dosMan.Misbehaving(pfrom, 100, BanReasonInvalidSize);
             return false;
         }
 
@@ -2467,7 +2467,7 @@ bool ProcessMessage(CNode *pfrom,
 
         if (!withinStackWidth(vData.size(), GetBlockScriptFlags(chainActive.Tip(), chainparams.GetConsensus())))
         {
-            dosMan.Misbehaving(pfrom, 100);
+            dosMan.Misbehaving(pfrom, 100, BanReasonInvalidSize);
         }
         else
         {
@@ -2475,7 +2475,7 @@ bool ProcessMessage(CNode *pfrom,
             if (pfrom->pfilter)
                 pfrom->pfilter->insert(vData);
             else
-                dosMan.Misbehaving(pfrom, 100);
+                dosMan.Misbehaving(pfrom, 100, BanReasonInvalidFilter);
         }
     }
 
@@ -2774,7 +2774,7 @@ bool ProcessMessages(CNode *pfrom)
                         {
                             pfrom->vRecvMsg_handshake.clear();
                             pfrom->fDisconnect = true;
-                            dosMan.Misbehaving(pfrom, 1);
+                            dosMan.Misbehaving(pfrom, 1, BanReasonBadConnectionHandshake);
                             return error("received handshake message '%s' after successful initialization,"
                                          "disconnecting peer=%s",
                                 frontCommand, pfrom->GetLogName());

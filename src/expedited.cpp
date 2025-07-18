@@ -8,7 +8,7 @@
 #include "connmgr.h"
 #include "dosman.h"
 #include "expedited.h"
-#include "main.h" // Misbehaving, cs_main
+#include "main.h" // cs_main
 #include "validation/validation.h"
 
 
@@ -28,7 +28,7 @@ bool HandleExpeditedRequest(CDataStream &vRecv, CNode *pfrom)
 
     if (!pfrom->ThinBlockCapable() || !IsThinBlocksEnabled())
     {
-        dosMan.Misbehaving(pfrom, 5);
+        dosMan.Misbehaving(pfrom, 5, BanReasonNotAnExpeditedNode);
         return false;
     }
 

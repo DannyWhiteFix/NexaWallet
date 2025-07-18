@@ -202,7 +202,7 @@ bool CGrapheneBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
     }
     if (grapheneBlockTx.blockhash.IsNull())
     {
-        dosMan.Misbehaving(pfrom, 100);
+        dosMan.Misbehaving(pfrom, 100, BanReasonHashIsNull);
         return error(
             "Incorrectly constructed grblocktx  data received, hash is NULL.  Banning peer=%s", pfrom->GetLogName());
     }
@@ -213,7 +213,7 @@ bool CGrapheneBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
         if (!thinrelay.IsBlockInFlight(pfrom, NetMsgType::GRAPHENEBLOCK, inv.hash) &&
             !connmgr->IsExpeditedUpstream(pfrom))
         {
-            dosMan.Misbehaving(pfrom, 10);
+            dosMan.Misbehaving(pfrom, 10, BanReasonUnrequestedBlock);
             return error(
                 "Received grblocktx %s from peer %s but was unrequested", inv.hash.ToString(), pfrom->GetLogName());
         }
@@ -225,7 +225,7 @@ bool CGrapheneBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
     std::shared_ptr<CGrapheneBlock> grapheneBlock = pblock->grapheneblock;
     if (grapheneBlock->vTxHashes256.size() < grapheneBlockTx.vMissingTx.size())
     {
-        dosMan.Misbehaving(pfrom, 100);
+        dosMan.Misbehaving(pfrom, 100, BanReasonBadBlockData);
         return error("Inconsistent graphene block data received.  Banning peer=%s", pfrom->GetLogName());
     }
 
@@ -309,7 +309,7 @@ bool CRequestGrapheneBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
     // Message consistency checking
     if (grapheneRequestBlockTx.setCheapHashesToRequest.empty() || blkHash.IsNull())
     {
-        dosMan.Misbehaving(pfrom, 100);
+        dosMan.Misbehaving(pfrom, 100, BanReasonIncorrectlyReconstructedBlock);
         return error("Incorrectly constructed get_grblocktx received.  Banning peer=%s", pfrom->GetLogName());
     }
 
@@ -361,7 +361,7 @@ bool CGrapheneBlock::HandleMessage(CDataStream &vRecv,
     // Message consistency checking (FIXME: some redundancy here with AcceptBlockHeader)
     if (!IsGrapheneBlockValid(pfrom, grapheneBlock->header))
     {
-        dosMan.Misbehaving(pfrom, 100);
+        dosMan.Misbehaving(pfrom, 100, BanReasonBadBlockData);
         thinrelay.ClearAllBlockData(pfrom, grapheneBlock->header.GetHash());
         return error("Received an invalid %s from peer %s\n", strCommand, pfrom->GetLogName());
     }
@@ -369,7 +369,7 @@ bool CGrapheneBlock::HandleMessage(CDataStream &vRecv,
     // Is there a previous block or header to connect with?
     if (!LookupBlockIndex(grapheneBlock->header.hashPrevBlock))
     {
-        dosMan.Misbehaving(pfrom, 10);
+        dosMan.Misbehaving(pfrom, 10, BanReasonNotInBlockIndex);
         thinrelay.ClearAllBlockData(pfrom, pblock->GetHash());
         return error(GRAPHENE, "Graphene block from peer %s will not connect, unknown previous block %s",
             pfrom->GetLogName(), grapheneBlock->header.hashPrevBlock.ToString());
@@ -381,13 +381,8 @@ bool CGrapheneBlock::HandleMessage(CDataStream &vRecv,
         CBlockIndex *pIndex = nullptr;
         if (!AcceptBlockHeader(grapheneBlock->header, state, Params(), &pIndex))
         {
-            int nDoS;
-            if (state.IsInvalid(nDoS))
-            {
-                if (nDoS > 0)
-                    dosMan.Misbehaving(pfrom, nDoS);
-                LOGA("Received an invalid %s header from peer %s\n", strCommand, pfrom->GetLogName());
-            }
+            dosMan.Misbehaving(pfrom, 10, BanReasonInvalidHeader);
+            LOGA("Received an invalid %s header from peer %s\n", strCommand, pfrom->GetLogName());
 
             thinrelay.ClearAllBlockData(pfrom, grapheneBlock->header.GetHash());
             return false;
@@ -436,7 +431,7 @@ bool CGrapheneBlock::HandleMessage(CDataStream &vRecv,
             // Do not process unrequested grapheneblocks.
             if (!thinrelay.IsBlockInFlight(pfrom, NetMsgType::GRAPHENEBLOCK, inv.hash))
             {
-                dosMan.Misbehaving(pfrom, 10);
+                dosMan.Misbehaving(pfrom, 10, BanReasonUnrequestedBlock);
                 return error(
                     "%s %s from peer %s but was unrequested\n", strCommand, inv.hash.ToString(), pfrom->GetLogName());
             }
@@ -1339,7 +1334,7 @@ void SendGrapheneBlock(ConstCBlockRef pblock,
     }
     else
     {
-        dosMan.Misbehaving(pfrom, 100);
+        dosMan.Misbehaving(pfrom, 100, BanReasonInvalidInventory);
 
         return;
     }
@@ -1391,7 +1386,7 @@ bool HandleGrapheneBlockRequest(CDataStream &vRecv, CNode *pfrom, uint32_t msgCo
     // Message consistency checking
     if (hash.IsNull())
     {
-        dosMan.Misbehaving(pfrom, 100);
+        dosMan.Misbehaving(pfrom, 100, BanReasonHashIsNull);
         return error("invalid GET_GRAPHENE message type=%u hash=%s", invType, hash.ToString());
     }
 
@@ -1694,7 +1689,7 @@ std::vector<CTransaction> TransactionsFromBlockByCheapHash(std::set<uint64_t> &v
     CBlockIndex *hdr = LookupBlockIndex(blockhash);
     if (!hdr)
     {
-        dosMan.Misbehaving(pfrom, 20);
+        dosMan.Misbehaving(pfrom, 20, BanReasonNotInBlockIndex);
         throw std::runtime_error("Requested block is not available");
     }
     else

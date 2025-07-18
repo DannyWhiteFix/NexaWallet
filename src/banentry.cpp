@@ -63,6 +63,48 @@ std::string CBanEntry::banReasonToString()
         return "Invalid Inventory";
     case BanReasonInvalidPeer:
         return "Invalid Peer for this Network";
+    case BanReasonBadBlockData:
+        return "Invalid block data";
+    case BanReasonIncorrectlyReconstructedBlock:
+        return "Incorrect block reconstruction";
+    case BanReasonNotInBlockIndex:
+        return "Block not found in Block Index";
+    case BanReasonInvalidHeader:
+        return "Invalid Block Header";
+    case BanReasonUnrequestedBlock:
+        return "Unrequested Thin Type Block";
+    case BanReasonHashIsNull:
+        return "Hash value is NULL";
+    case BanReasonInvalidSize:
+        return "Object Size is not in a valid range";
+    case BanReasonInvalidFilter:
+        return "Invalid or no filter present";
+    case BanReasonBadConnectionHandshake:
+        return "Incorrect or bad connection handshake";
+    case BanReasonInvalidProtocolVersion:
+        return "Unsupported protocol version";
+    case BanReasonInvalidOrMissingInputs:
+        return "Transaction invalid or missing inputs";
+    case BanReasonNotAnExpeditedNode:
+        return "Peer is not an expedited node";
+    case BanReasonInvalidBlock:
+        return "Invalid block";
+    case BanReasonInvalidPriority:
+        return "Invalid Priority";
+    case BanReasonDSProofOrphanExpiry:
+        return "DSProof orphan expiry";
+    case BanReasonInvalidDSProof:
+        return "Invalid DSProof";
+    case BanReasonUnsupportedPeer:
+        return "Message request from unsupported peer";
+    case BanReasonMessageRequestsTooFrequent:
+        return "Too many message requests";
+    case BanReasonUnrequestedObject:
+        return "Received and unrequested object";
+    case BanReasonInvalidObject:
+        return "Received an invalid object";
+    case BanReasonIncorrectMerkleRoot:
+        return "Incorrect Merkle Root";
     default:
         return "unknown";
     }

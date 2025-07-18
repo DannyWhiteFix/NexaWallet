@@ -197,7 +197,7 @@ void DoubleSpendProofStorage::periodicCleanup(const boost::system::error_code &e
             iter = m_orphans.erase(iter);
             remove(proofId);
 
-            dosMan.Misbehaving(peerId, 1);
+            dosMan.Misbehaving(peerId, 1, BanReasonDSProofOrphanExpiry);
         }
         else
         {

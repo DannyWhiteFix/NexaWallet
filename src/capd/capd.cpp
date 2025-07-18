@@ -522,7 +522,7 @@ bool CapdProtocol::HandleCapdMessage(CNode *pfrom,
         LOG(CAPD, "Capd: Received %d message INVs", vInv.size());
         if (vInv.size() > CAPD_MAX_INV_TO_SEND)
         {
-            dosMan.Misbehaving(pfrom, 20);
+            dosMan.Misbehaving(pfrom, 20, BanReasonInvalidSize);
             return error(CAPD, "Received message with too many (%d) INVs\n", vInv.size());
         }
         for (auto inv : vInv)
@@ -546,7 +546,7 @@ bool CapdProtocol::HandleCapdMessage(CNode *pfrom,
         LOG(CAPD, "Capd: Received %d message requests", msgIds.size());
         if (msgIds.size() > CAPD_MAX_MSG_TO_REQUEST)
         {
-            dosMan.Misbehaving(pfrom, 20);
+            dosMan.Misbehaving(pfrom, 20, BanReasonInvalidSize);
             return error(CAPD, "Capd drop: Received message with too many (%d) capd message requests\n", msgIds.size());
         }
 
@@ -584,7 +584,7 @@ bool CapdProtocol::HandleCapdMessage(CNode *pfrom,
             LOG(CAPD, "Msg priority %f\n", priority);
             if (priority < cn->receivePriority)
             {
-                dosMan.Misbehaving(pfrom, 1);
+                dosMan.Misbehaving(pfrom, 1, BanReasonInvalidPriority);
                 LOG(CAPD, "Capd drop: message %s priority below minimum for node %s: %f %f\n",
                     msgRef->GetHash().GetHex(), pfrom->GetLogName(), priority, cn->receivePriority);
                 continue;

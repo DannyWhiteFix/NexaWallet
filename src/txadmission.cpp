@@ -783,7 +783,7 @@ void ThreadTxAdmission()
                                     rejectCode, state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), inv.hash);
                                 if (nDoS > 0)
                                 {
-                                    dosMan.Misbehaving(from.get(), nDoS);
+                                    dosMan.Misbehaving(from.get(), nDoS, BanReasonInvalidOrMissingInputs);
                                 }
                             }
                         }

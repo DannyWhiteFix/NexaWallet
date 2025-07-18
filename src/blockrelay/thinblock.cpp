@@ -74,7 +74,7 @@ bool CThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom)
     // Message consistency checking
     if (!IsThinBlockValid(pfrom, thinBlock->vMissingTx, thinBlock->header, thinBlock->vTxHashes.size()))
     {
-        dosMan.Misbehaving(pfrom, 100);
+        dosMan.Misbehaving(pfrom, 100, BanReasonInvalidBlock);
         thinrelay.ClearAllBlockData(pfrom, thinBlock->header.GetHash());
         return error("Received an invalid xthin or thinblock from peer %s\n", pfrom->GetLogName());
     }
@@ -89,7 +89,7 @@ bool CThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom)
     if (!ContextualCheckBlockHeader(Params(), thinBlock->header, state, pprev))
     {
         // Thin block does not fit within our blockchain
-        dosMan.Misbehaving(pfrom, 100);
+        dosMan.Misbehaving(pfrom, 100, BanReasonInvalidHeader);
         return error(
             "thinblock from peer %s contextual error: %s", pfrom->GetLogName(), state.GetRejectReason().c_str());
     }
@@ -103,7 +103,7 @@ bool CThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom)
     {
         if (!thinrelay.IsBlockInFlight(pfrom, NetMsgType::XTHINBLOCK, inv.hash) && !connmgr->IsExpeditedUpstream(pfrom))
         {
-            dosMan.Misbehaving(pfrom, 100);
+            dosMan.Misbehaving(pfrom, 100, BanReasonUnrequestedObject);
             return error("unrequested thinblock from peer %s", pfrom->GetLogName());
         }
     }
@@ -142,7 +142,7 @@ bool CThinBlock::process(CNode *pfrom, std::shared_ptr<CBlockThinRelay> pblock)
         // This is the only place where we ban a peer for having the incorrect merkleroot because the
         // hashes provided in this thinblock must be the correct ones. (In other thintype block relay there
         // may be instances where collisions are possibly a false positive and so we don't ban in those cases.)
-        dosMan.Misbehaving(pfrom, 100);
+        dosMan.Misbehaving(pfrom, 100, BanReasonIncorrectMerkleRoot);
         return error("Thinblock merkle root does not match computed merkle root, peer=%s", pfrom->GetLogName());
     }
 
@@ -278,7 +278,7 @@ bool CXThinBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
     CInv inv(MSG_XTHINBLOCK, thinBlockTx.blockhash);
     if (thinBlockTx.vMissingTx.empty() || thinBlockTx.blockhash.IsNull())
     {
-        dosMan.Misbehaving(pfrom, 100);
+        dosMan.Misbehaving(pfrom, 100, BanReasonInvalidObject);
         return error("incorrectly constructed xblocktx or inconsistent thinblock data received.  Banning peer=%s",
             pfrom->GetLogName());
     }
@@ -287,7 +287,7 @@ bool CXThinBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
         // Do not process unrequested xblocktx unless from an expedited node.
         if (!thinrelay.IsBlockInFlight(pfrom, NetMsgType::XTHINBLOCK, inv.hash) && !connmgr->IsExpeditedUpstream(pfrom))
         {
-            dosMan.Misbehaving(pfrom, 10);
+            dosMan.Misbehaving(pfrom, 10, BanReasonUnrequestedObject);
             return error(
                 "Received xblocktx %s from peer %s but was unrequested", inv.hash.ToString(), pfrom->GetLogName());
         }
@@ -343,7 +343,7 @@ bool CXThinBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
     {
         thinrelay.ClearAllBlockData(pfrom, thinBlockTx.blockhash);
 
-        dosMan.Misbehaving(pfrom, 100);
+        dosMan.Misbehaving(pfrom, 100, BanReasonIncorrectMerkleRoot);
         return error("Merkle root for %s does not match computed merkle root, peer=%s", inv.hash.ToString(),
             pfrom->GetLogName());
     }
@@ -412,7 +412,7 @@ bool CXRequestThinBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
     // Message consistency checking
     if (thinRequestBlockTx.setCheapHashesToRequest.empty() || thinRequestBlockTx.blockhash.IsNull())
     {
-        dosMan.Misbehaving(pfrom, 100);
+        dosMan.Misbehaving(pfrom, 100, BanReasonInvalidObject);
         return error("incorrectly constructed get_xblocktx received.  Banning peer=%s", pfrom->GetLogName());
     }
 
@@ -425,7 +425,7 @@ bool CXRequestThinBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
     CBlockIndex *hdr = LookupBlockIndex(inv.hash);
     if (!hdr)
     {
-        dosMan.Misbehaving(pfrom, 20);
+        dosMan.Misbehaving(pfrom, 20, BanReasonNotInBlockIndex);
         return error("Requested block is not available");
     }
     else
@@ -477,7 +477,7 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, std::string st
         // Message consistency checking (FIXME: some redundancy here with AcceptBlockHeader)
         if (!IsThinBlockValid(pfrom, thinBlock->vMissingTx, thinBlock->header, thinBlock->vTxHashes.size()))
         {
-            dosMan.Misbehaving(pfrom, 100);
+            dosMan.Misbehaving(pfrom, 100, BanReasonInvalidObject);
             LOGA("Received an invalid %s from peer %s\n", strCommand, pfrom->GetLogName());
 
             thinrelay.ClearAllBlockData(pfrom, inv.hash);
@@ -555,7 +555,7 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, std::string st
             if (!thinrelay.IsBlockInFlight(pfrom, NetMsgType::XTHINBLOCK, inv.hash) &&
                 !connmgr->IsExpeditedUpstream(pfrom))
             {
-                dosMan.Misbehaving(pfrom, 10);
+                dosMan.Misbehaving(pfrom, 10, BanReasonUnrequestedObject);
                 return error(
                     "%s %s from peer %s but was unrequested\n", strCommand, inv.hash.ToString(), pfrom->GetLogName());
             }
@@ -1361,7 +1361,7 @@ void SendXThinBlock(const ConstCBlockRef pblock, uint32_t msgCookie, CNode *pfro
     }
     else
     {
-        dosMan.Misbehaving(pfrom, 100);
+        dosMan.Misbehaving(pfrom, 100, BanReasonInvalidInventory);
         return;
     }
     pfrom->blocksSent += 1;
