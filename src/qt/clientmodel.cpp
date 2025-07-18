@@ -94,7 +94,7 @@ QDateTime ClientModel::getLastBlockDate() const
 }
 
 long ClientModel::getMempoolSize() const { return mempool.size(); }
-long ClientModel::getOrphanPoolSize() const { return orphanpool.GetOrphanPoolSize(); }
+long ClientModel::getOrphanPoolSize() const { return orphanpool.GetPoolSize(); }
 long ClientModel::getCapdMessagePoolSize() const { return msgpool.Count(); }
 size_t ClientModel::getMempoolDynamicUsage() const { return mempool.DynamicMemoryUsage(); }
 double ClientModel::getVerificationProgress(const CBlockIndex *tipIn, bool fHeader) const

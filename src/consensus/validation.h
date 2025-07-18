@@ -39,6 +39,8 @@ static const unsigned char REJECT_RETRY = 0x48;
  Currently used when too many historical blocks have been requested.
 */
 static const unsigned char REJECT_ORPHAN = 0x49;
+/** Used when transaction is non-final and is rejected from entering the txpool */
+static const unsigned char REJECT_NONFINAL = 0x50;
 
 /** Capture information about block/transaction validation */
 class CValidationState

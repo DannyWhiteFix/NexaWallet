@@ -1323,6 +1323,8 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         int64_t parentSizes = 0;
         unsigned int parentSigOpCount = 0;
 
+        DbgAssert(CheckFinalTx(&tx, STANDARD_LOCKTIME_VERIFY_FLAGS), );
+
         bool inMempool = false;
         bool inOutpointMap = false;
         for (const CTxIn &txin : tx.vin)

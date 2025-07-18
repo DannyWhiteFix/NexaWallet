@@ -12,12 +12,12 @@
 #include "util.h"
 #include "utiltime.h"
 
-CTxOrphanPool::CTxOrphanPool() : nBytesOrphanPool(0){ nLastOrphanCheck.store(GetTime()); };
+CTxOrphanPool::CTxOrphanPool() : nPoolBytes(0) { nLastOrphanCheck.store(GetTime()); };
 
 bool CTxOrphanPool::AlreadyHaveOrphan(const uint256 &hash)
 {
     READLOCK(cs_orphanpool);
-    if (mapOrphanTransactions.count(hash))
+    if (mapOrphans.count(hash))
         return true;
     return false;
 }
@@ -26,11 +26,11 @@ bool CTxOrphanPool::AddOrphanTx(const CTransactionRef ptx, NodeId peer)
 {
     AssertWriteLockHeld(cs_orphanpool);
 
-    if (mapOrphanTransactions.empty())
-        DbgAssert(nBytesOrphanPool == 0, nBytesOrphanPool = 0);
+    if (mapOrphans.empty() && mapNonFinals.empty())
+        DbgAssert(nPoolBytes == 0, nPoolBytes = 0);
 
     const uint256 &hash = ptx->GetId();
-    if (mapOrphanTransactions.count(hash))
+    if (mapOrphans.count(hash))
         return false;
 
     // Ignore orphans larger than the largest txn size allowed.
@@ -41,13 +41,40 @@ bool CTxOrphanPool::AddOrphanTx(const CTransactionRef ptx, NodeId peer)
     }
 
     uint64_t nTxMemoryUsed = RecursiveDynamicUsage(*ptx) + sizeof(ptx);
-    mapOrphanTransactions.emplace(hash, COrphanTx{ptx, peer, GetTime(), nTxMemoryUsed});
+    mapOrphans.emplace(hash, COrphanTx{ptx, peer, GetTime(), nTxMemoryUsed});
     for (const CTxIn &txin : ptx->vin)
-        mapOrphanTransactionsByPrev[txin.prevout.hash].insert(hash);
+        mapOrphansByPrev[txin.prevout.hash].insert(hash);
 
-    nBytesOrphanPool += nTxMemoryUsed;
+    nPoolBytes += nTxMemoryUsed;
     LOG(MEMPOOL, "stored orphan tx %s bytes:%ld (mapsz %u prevsz %u), orphan pool bytes:%ld\n", hash.ToString(),
-        nTxMemoryUsed, mapOrphanTransactions.size(), mapOrphanTransactionsByPrev.size(), nBytesOrphanPool);
+        nTxMemoryUsed, mapOrphans.size(), mapOrphansByPrev.size(), nPoolBytes);
+    return true;
+}
+
+bool CTxOrphanPool::AddNonFinalTx(const CTransactionRef ptx, NodeId peer)
+{
+    AssertWriteLockHeld(cs_orphanpool);
+
+    if (mapNonFinals.empty() && mapOrphans.empty())
+        DbgAssert(nPoolBytes == 0, nPoolBytes = 0);
+
+    const uint256 &hash = ptx->GetId();
+    if (mapNonFinals.count(hash))
+        return false;
+
+    // Ignore non-finals larger than the largest txn size allowed.
+    if (ptx->GetTxSize() > MAX_STANDARD_TX_SIZE)
+    {
+        LOG(MEMPOOL, "ignoring large non-final tx (size: %u, hash: %s)\n", ptx->GetTxSize(), hash.ToString());
+        return false;
+    }
+
+    uint64_t nTxMemoryUsed = RecursiveDynamicUsage(*ptx) + sizeof(ptx);
+    mapNonFinals.emplace(hash, COrphanTx{ptx, peer, GetTime(), nTxMemoryUsed});
+
+    nPoolBytes += nTxMemoryUsed;
+    LOG(MEMPOOL, "stored non-final tx %s bytes:%ld (mapsz %u), orphan pool bytes:%ld\n", hash.ToString(), nTxMemoryUsed,
+        mapNonFinals.size(), nPoolBytes);
     return true;
 }
 
@@ -55,27 +82,42 @@ bool CTxOrphanPool::EraseOrphanTx(const uint256 &hash)
 {
     AssertWriteLockHeld(cs_orphanpool);
 
-    std::map<uint256, COrphanTx>::iterator it = mapOrphanTransactions.find(hash);
-    if (it == mapOrphanTransactions.end())
+    std::map<uint256, COrphanTx>::iterator it = mapOrphans.find(hash);
+    if (it == mapOrphans.end())
         return false;
     for (const CTxIn &txin : it->second.ptx->vin)
     {
-        std::map<uint256, std::set<uint256> >::iterator itPrev = mapOrphanTransactionsByPrev.find(txin.prevout.hash);
-        if (itPrev == mapOrphanTransactionsByPrev.end())
+        std::map<uint256, std::set<uint256> >::iterator itPrev = mapOrphansByPrev.find(txin.prevout.hash);
+        if (itPrev == mapOrphansByPrev.end())
             continue;
         itPrev->second.erase(hash);
         if (itPrev->second.empty())
-            mapOrphanTransactionsByPrev.erase(itPrev);
+            mapOrphansByPrev.erase(itPrev);
     }
 
-    nBytesOrphanPool -= it->second.nOrphanTxSize;
+    nPoolBytes -= it->second.nOrphanTxSize;
     LOG(MEMPOOL, "Erased orphan tx %s of size %ld bytes, orphan pool bytes:%ld\n", it->second.ptx->GetId().ToString(),
-        it->second.nOrphanTxSize, nBytesOrphanPool);
-    mapOrphanTransactions.erase(it);
+        it->second.nOrphanTxSize, nPoolBytes);
+    mapOrphans.erase(it);
     return true;
 }
 
-void CTxOrphanPool::EraseOrphansByTime()
+bool CTxOrphanPool::EraseNonFinalTx(const uint256 &hash)
+{
+    AssertWriteLockHeld(cs_orphanpool);
+
+    std::map<uint256, COrphanTx>::iterator it = mapNonFinals.find(hash);
+    if (it == mapNonFinals.end())
+        return false;
+
+    nPoolBytes -= it->second.nOrphanTxSize;
+    LOG(MEMPOOL, "Erased non-final tx %s of size %ld bytes, orphan pool bytes:%ld\n",
+        it->second.ptx->GetId().ToString(), it->second.nOrphanTxSize, nPoolBytes);
+    mapNonFinals.erase(it);
+    return true;
+}
+
+void CTxOrphanPool::EraseByTime()
 {
     // Because we have to iterate through the entire orphan cache which can be large we don't want to check this
     // every time a tx enters the mempool but just once every 5 minutes is good enough.
@@ -87,8 +129,10 @@ void CTxOrphanPool::EraseOrphansByTime()
     WRITELOCK(cs_orphanpool);
     int64_t nOrphanTxCutoffTime = 0;
     nOrphanTxCutoffTime = now - orphanPoolExpiry.Value() * 60 * 60;
-    std::map<uint256, COrphanTx>::iterator iter = mapOrphanTransactions.begin();
-    while (iter != mapOrphanTransactions.end())
+
+    // remove orphans
+    std::map<uint256, COrphanTx>::iterator iter = mapOrphans.begin();
+    while (iter != mapOrphans.end())
     {
         std::map<uint256, COrphanTx>::iterator mi = iter++; // increment to avoid iterator becoming invalid
         int64_t nEntryTime = mi->second.nEntryTime;
@@ -102,9 +146,26 @@ void CTxOrphanPool::EraseOrphansByTime()
             LOG(MEMPOOL, "Erased old orphan tx %s of age %d seconds\n", txHash.ToString(), now - nEntryTime);
         }
     }
+
+    // remove non-finals
+    std::map<uint256, COrphanTx>::iterator iter2 = mapNonFinals.begin();
+    while (iter2 != mapNonFinals.end())
+    {
+        std::map<uint256, COrphanTx>::iterator mi = iter2++; // increment to avoid iterator becoming invalid
+        int64_t nEntryTime = mi->second.nEntryTime;
+        if (nEntryTime < nOrphanTxCutoffTime)
+        {
+            // Uncache any coins that may exist for orphans that will be erased
+            pcoinsTip->UncacheTx(*mi->second.ptx);
+
+            const uint256 &txHash = mi->second.ptx->GetId();
+            EraseNonFinalTx(txHash);
+            LOG(MEMPOOL, "Erased old non-final tx %s of age %d seconds\n", txHash.ToString(), now - nEntryTime);
+        }
+    }
 }
 
-unsigned int CTxOrphanPool::LimitOrphanTxSize(unsigned int nMaxOrphans, uint64_t nMaxBytes)
+unsigned int CTxOrphanPool::LimitPoolSize(unsigned int nMaxItems, uint64_t nMaxBytes)
 {
     AssertWriteLockHeld(cs_orphanpool);
 
@@ -112,13 +173,37 @@ unsigned int CTxOrphanPool::LimitOrphanTxSize(unsigned int nMaxOrphans, uint64_t
     // Limiting by pool size to 1/10th the size of the maxmempool alone is not enough because the total number
     // of txns in the pool can adversely effect the size of the bloom filter in a get_xthin message.
     unsigned int nEvicted = 0;
-    while (mapOrphanTransactions.size() > nMaxOrphans || nBytesOrphanPool > nMaxBytes)
+    while (mapOrphans.size() > nMaxItems || nPoolBytes > nMaxBytes)
     {
+        if (mapOrphans.empty())
+            break;
+
         // Evict a random orphan:
         uint256 randomhash = GetRandHash();
-        std::map<uint256, COrphanTx>::iterator it = mapOrphanTransactions.lower_bound(randomhash);
-        if (it == mapOrphanTransactions.end())
-            it = mapOrphanTransactions.begin();
+        std::map<uint256, COrphanTx>::iterator it = mapOrphans.lower_bound(randomhash);
+        if (it == mapOrphans.end())
+            it = mapOrphans.begin();
+        if (it == mapOrphans.end())
+            break;
+
+        // Uncache any coins that may exist for orphans that will be erased
+        pcoinsTip->UncacheTx(*it->second.ptx);
+
+        EraseOrphanTx(it->first);
+        ++nEvicted;
+    }
+    while (mapNonFinals.size() > nMaxItems || nPoolBytes > nMaxBytes)
+    {
+        if (mapNonFinals.empty())
+            break;
+
+        // Evict a random non-final:
+        uint256 randomhash = GetRandHash();
+        std::map<uint256, COrphanTx>::iterator it = mapNonFinals.lower_bound(randomhash);
+        if (it == mapNonFinals.end())
+            it = mapNonFinals.begin();
+        if (it == mapNonFinals.end())
+            break;
 
         // Uncache any coins that may exist for orphans that will be erased
         pcoinsTip->UncacheTx(*it->second.ptx);
@@ -132,29 +217,32 @@ unsigned int CTxOrphanPool::LimitOrphanTxSize(unsigned int nMaxOrphans, uint64_t
 void CTxOrphanPool::QueryIds(std::vector<uint256> &vHashes)
 {
     READLOCK(cs_orphanpool);
-    for (auto &it : mapOrphanTransactions)
+    for (auto &it : mapOrphans)
         vHashes.push_back(it.first);
 }
 
 void CTxOrphanPool::RemoveForBlock(const std::vector<CTransactionRef> &vtx)
 {
     WRITELOCK(cs_orphanpool);
+    if (mapOrphans.empty() && mapNonFinals.empty())
+        return;
+
     for (auto &tx : vtx)
     {
         const uint256 &hash = tx->GetId();
-        if (txRecentlyInBlock.contains(hash))
-        {
-            EraseOrphanTx(hash);
-        }
+        EraseOrphanTx(hash);
+        EraseNonFinalTx(hash);
     }
 }
 
-std::vector<CTxOrphanPool::COrphanTx> CTxOrphanPool::AllTxOrphanPoolInfo() const
+std::vector<CTxOrphanPool::COrphanTx> CTxOrphanPool::AllTxPoolInfo() const
 {
     AssertLockHeld(orphanpool.cs_orphanpool);
     std::vector<COrphanTx> vInfo;
-    vInfo.reserve(mapOrphanTransactions.size());
-    for (auto &it : mapOrphanTransactions)
+    vInfo.reserve(mapOrphans.size());
+    for (auto &it : mapOrphans)
+        vInfo.push_back(it.second);
+    for (auto &it : mapNonFinals)
         vInfo.push_back(it.second);
 
     return vInfo;
@@ -233,7 +321,7 @@ bool CTxOrphanPool::DumpOrphanPool()
     std::vector<COrphanTx> vInfo;
     {
         READLOCK(cs_orphanpool);
-        vInfo = AllTxOrphanPoolInfo();
+        vInfo = AllTxPoolInfo();
     }
 
     uint64_t mid = GetStopwatchMicros();
@@ -272,4 +360,3 @@ bool CTxOrphanPool::DumpOrphanPool()
     }
     return true;
 }
-

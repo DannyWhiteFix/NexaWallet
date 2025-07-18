@@ -249,8 +249,7 @@ CXThinBlock::CXThinBlock(const CBlock &block) : nSize(0), collision(false)
         setPartialTxHash.insert(cheapHash);
 
         // if it is missing from this node, then add it to the thin block
-        if (!((mempool.exists(hash256)) ||
-                (orphanpool.mapOrphanTransactions.find(hash256) != orphanpool.mapOrphanTransactions.end())))
+        if (!((mempool.exists(hash256)) || (orphanpool.mapOrphans.find(hash256) != orphanpool.mapOrphans.end())))
         {
             vMissingTx.push_back(*block.vtx[i]);
         }
@@ -614,7 +613,7 @@ bool CXThinBlock::process(CNode *pfrom, std::string strCommand, std::shared_ptr<
         // collision.
         {
             READLOCK(orphanpool.cs_orphanpool);
-            for (auto &mi : orphanpool.mapOrphanTransactions)
+            for (auto &mi : orphanpool.mapOrphans)
             {
                 uint64_t cheapHash = mi.first.GetCheapHash();
                 if (mapPartialTxHash.count(cheapHash)) // Check for collisions
@@ -818,9 +817,8 @@ static bool ReconstructBlock(CNode *pfrom,
                 else
                 {
                     READLOCK(orphanpool.cs_orphanpool);
-                    std::map<uint256, CTxOrphanPool::COrphanTx>::iterator iter2 =
-                        orphanpool.mapOrphanTransactions.find(hash);
-                    if (iter2 != orphanpool.mapOrphanTransactions.end())
+                    std::map<uint256, CTxOrphanPool::COrphanTx>::iterator iter2 = orphanpool.mapOrphans.find(hash);
+                    if (iter2 != orphanpool.mapOrphans.end())
                     {
                         inOrphanCache = true;
                         ptx = iter2->second.ptx;

@@ -20,6 +20,7 @@
 #include "respend/respenddetector.h"
 #include "threadgroup.h"
 #include "timedata.h"
+#include "txadmission.h"
 #include "txmempool.h"
 #include "txorphanpool.h"
 #include "unlimited.h"
@@ -303,6 +304,13 @@ void ThreadCommitToMempool()
                     }
                 }
 #endif
+                {
+                    LOCK(orphanpool.cs_processorphans);
+                    if (!orphanpool.vProcessOrphans.empty())
+                    {
+                        break;
+                    }
+                }
             } while (txCommitQ->empty() && txDeferQ.empty());
         }
 
@@ -701,15 +709,17 @@ void ThreadTxAdmission()
                             state.GetRejectCode(), fMissingInputs ? "orphan" : "", state.GetDebugMessage(),
                             txd.nodeName, tx->GetId().ToString());
 
-                        if (fMissingInputs)
+                        if (fMissingInputs || state.GetRejectCode() == REJECT_NONFINAL)
                         {
                             WRITELOCK(orphanpool.cs_orphanpool);
-                            orphanpool.AddOrphanTx(tx, txd.nodeId);
+                            if (fMissingInputs)
+                                orphanpool.AddOrphanTx(tx, txd.nodeId);
+                            else
+                                orphanpool.AddNonFinalTx(tx, txd.nodeId);
 
-                            // DoS prevention: do not allow mapOrphanTransactions to grow unbounded
+                            // DoS prevention: do not allow the pool size to grow unbounded
                             const uint64_t nMaxOrphanPoolSize = maxTxPool.Value() * ONE_MEGABYTE / 10;
-                            unsigned int nEvicted =
-                                orphanpool.LimitOrphanTxSize(maxOrphanPool.Value(), nMaxOrphanPoolSize);
+                            unsigned int nEvicted = orphanpool.LimitPoolSize(maxOrphanPool.Value(), nMaxOrphanPoolSize);
                             if (nEvicted > 0)
                                 LOG(MEMPOOL, "mapOrphan overflow, removed %u tx\n", nEvicted);
                         }
@@ -957,7 +967,7 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
         }
         else
         {
-            return state.DoS(0, false, REJECT_NONSTANDARD, "non-final");
+            return state.DoS(0, false, REJECT_NONFINAL, "non-final");
         }
     }
 
@@ -1442,47 +1452,64 @@ TransactionClass ParseTransactionClass(const std::string &s)
 
 uint64_t ProcessOrphans(const std::vector<CTransactionRef> &vWorkQueue)
 {
-    // Recursively process any orphan transactions that depended on this one.
-    // NOTE: you must not return early since EraseOrphansByTime() must always be checked
+    // NOTE: you must not return early since EraseByTime() must always be checked
     std::vector<CTxInputData> vEnqueue;
     {
         READLOCK(orphanpool.cs_orphanpool);
-        if (orphanpool.mapOrphanTransactions.empty())
+        if (orphanpool.mapOrphans.empty() && orphanpool.mapNonFinals.empty())
         {
-            DbgAssert(orphanpool.mapOrphanTransactionsByPrev.empty(), );
+            DbgAssert(orphanpool.mapOrphansByPrev.empty(), );
             return 0;
         }
 
+        // Process non-finals adding the changes to vWhatChanged.  We have to add these
+        // so that for every non-final added back to the  txpool we can then check to see
+        // whether it has any chained orphans associated with it which could also be promoted
+        // to the txpool.
+        for (auto &it : orphanpool.mapNonFinals)
+        {
+            // Add the non-final to be enqueued later
+            if (CheckFinalTx(it.second.ptx, STANDARD_LOCKTIME_VERIFY_FLAGS))
+            {
+                CTxInputData txd;
+                txd.tx = it.second.ptx;
+                txd.nodeId = it.second.fromPeer;
+                txd.nodeName = "non-final";
+                LOG(MEMPOOL, "Resubmitting non-final tx: %s\n", it.second.ptx->GetId().ToString());
+                vEnqueue.push_back(std::move(txd));
+            }
+        }
+
+        // Recursively process any orphan transactions that depended on this one.
         for (auto tx : vWorkQueue)
         {
             for (unsigned int j = 0; j < tx->vout.size(); j++)
             {
                 std::map<uint256, std::set<uint256> >::iterator itByPrev =
-                    orphanpool.mapOrphanTransactionsByPrev.find(tx->OutpointAt(j).hash);
-                if (itByPrev == orphanpool.mapOrphanTransactionsByPrev.end())
+                    orphanpool.mapOrphansByPrev.find(tx->OutpointAt(j).hash);
+                if (itByPrev != orphanpool.mapOrphansByPrev.end())
                 {
-                    continue;
-                }
-                for (const auto &orphanHash : itByPrev->second)
-                {
-                    // Make sure we actually have an entry on the orphan cache. While this should never fail because
-                    // we always erase orphans and any mapOrphanTransactionsByPrev at the same time, still we need to
-                    // be sure.
-                    bool fOk = true;
-                    std::map<uint256, CTxOrphanPool::COrphanTx>::iterator iter =
-                        orphanpool.mapOrphanTransactions.find(orphanHash);
-                    DbgAssert(iter != orphanpool.mapOrphanTransactions.end(), fOk = false);
-                    if (!fOk)
-                        continue;
-
-                    // Add the orphan to be enqueued later
+                    for (const auto &orphanHash : itByPrev->second)
                     {
-                        CTxInputData txd;
-                        txd.tx = iter->second.ptx;
-                        txd.nodeId = iter->second.fromPeer;
-                        txd.nodeName = "orphan";
-                        LOG(MEMPOOL, "Resubmitting orphan tx: %s\n", orphanHash.ToString());
-                        vEnqueue.push_back(std::move(txd));
+                        // Make sure we actually have an entry on the orphan cache. While this should never fail because
+                        // we always erase orphans and any mapOrphansByPrev at the same time, still we need
+                        // to be sure.
+                        bool fOk = true;
+                        std::map<uint256, CTxOrphanPool::COrphanTx>::iterator iter =
+                            orphanpool.mapOrphans.find(orphanHash);
+                        DbgAssert(iter != orphanpool.mapOrphans.end(), fOk = false);
+                        if (!fOk)
+                            continue;
+
+                        // Add the orphan to be enqueued later
+                        {
+                            CTxInputData txd;
+                            txd.tx = iter->second.ptx;
+                            txd.nodeId = iter->second.fromPeer;
+                            txd.nodeName = "orphan";
+                            LOG(MEMPOOL, "Resubmitting orphan tx: %s\n", orphanHash.ToString());
+                            vEnqueue.push_back(std::move(txd));
+                        }
                     }
                 }
             }
@@ -1491,7 +1518,7 @@ uint64_t ProcessOrphans(const std::vector<CTransactionRef> &vWorkQueue)
 
     // First delete the orphans before enqueuing them otherwise we may end up putting them
     // in the queue twice.
-    orphanpool.EraseOrphansByTime();
+    orphanpool.EraseByTime();
     if (!vEnqueue.empty())
     {
         {
@@ -1501,7 +1528,9 @@ uint64_t ProcessOrphans(const std::vector<CTransactionRef> &vWorkQueue)
             {
                 // If the orphan was not erased then it must already have been erased/enqueued by another thread
                 // so do not enqueue this orphan again.
-                if (!orphanpool.EraseOrphanTx(it->tx->GetId()))
+                bool fErasedOrphan = orphanpool.EraseOrphanTx(it->tx->GetId());
+                bool fErasedNonFinal = orphanpool.EraseNonFinalTx(it->tx->GetId());
+                if (!fErasedOrphan && !fErasedNonFinal)
                     it = vEnqueue.erase(it);
                 else
                     it++;
@@ -1510,8 +1539,7 @@ uint64_t ProcessOrphans(const std::vector<CTransactionRef> &vWorkQueue)
         for (auto &txd : vEnqueue)
             EnqueueTxForAdmission(txd, true);
     }
-
-    return orphanpool.GetOrphanPoolSize();
+    return orphanpool.GetPoolSize();
 }
 
 
@@ -1612,18 +1640,7 @@ bool CheckFinalTx(const CTransaction *tx, int flags)
     // evaluated is what is used. Thus if we want to know if a
     // transaction can be part of the *next* block, we need to call
     // IsFinalTx() with one more than chainActive.Height().
-    //
-    // If we are processing a block then we have to increase the block height allowed for non-final
-    // transactions again by one. This is because transactions could be processing while the block
-    // is also processing and therefore the chaintip will not yet have been updated whereas on some
-    // other peer they could have received the block and already sent new transactions at that block height.
-    int nBlockHeightDelta = 0;
-    if (PV->NumBlocksValidating() > 0)
-    {
-        nBlockHeightDelta = 1;
-        // LOG(MEMPOOL, "CheckFinalTx() block height was increased by 1\n");
-    }
-    const int64_t nBlockHeight = chainActive.Height() + 1 + nBlockHeightDelta;
+    const int64_t nBlockHeight = chainActive.Height() + 1;
 
     // BIP113 will require that time-locked transactions have nLockTime set to
     // less than the median time of the previous block they're contained in.
