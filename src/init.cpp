@@ -1366,6 +1366,8 @@ bool AppInit2(Config &config)
                 delete pblocktreeother;
                 delete pblockdb;
                 delete ptokenDesc;
+                delete ptokenMint;
+                g_txindex = nullptr;
 
                 uiInterface.InitMessage(_("Opening Block database..."));
                 InitializeBlockStorage(
@@ -1373,7 +1375,6 @@ bool AppInit2(Config &config)
 
                 // fReset must be determined after InitializeBlockStorage()
                 fReset = (fReindex || fSync);
-
                 uiInterface.InitMessage(_("Opening UTXO database..."));
                 COverrideOptions overridecache;
                 overridecache.block_size = 4096;
@@ -1400,6 +1401,7 @@ bool AppInit2(Config &config)
                     {
                         // Startup with a database wipe if the txindex is likely corrupted.
                         LOGA("WARNING: txindex was likely corrupted. Database will be wiped and rebuilt...\n");
+                        g_txindex = nullptr;
                         txindex_db = new TxIndexDB(cacheConfig.nTxIndexCache, false, true);
                     }
                     g_txindex = std::make_unique<TxIndex>(txindex_db);
@@ -1413,7 +1415,6 @@ bool AppInit2(Config &config)
                     if (fPruneMode)
                         CleanupBlockRevFiles();
                 }
-
                 // Check the database for the genesis.
                 uiInterface.InitMessage(_("Loading block index..."));
                 CDiskBlockIndex pindex;
