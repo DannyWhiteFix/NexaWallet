@@ -87,7 +87,6 @@ void ModalOverlay::tipUpdate(int count, const QDateTime &blockDate, double nVeri
     {
         double progressStart = blockProcessTime[0].second;
         double progressDelta = 0;
-        double progressPerHour = 0;
         qint64 timeDelta = 0;
         qint64 remainingMSecs = 0;
         double remainingProgress = 1.0 - nVerificationProgress;
@@ -100,13 +99,10 @@ void ModalOverlay::tipUpdate(int count, const QDateTime &blockDate, double nVeri
             {
                 progressDelta = progressStart - sample.second;
                 timeDelta = blockProcessTime[0].first - sample.first;
-                progressPerHour = progressDelta / (double)timeDelta * 1000 * 3600;
                 remainingMSecs = remainingProgress / progressDelta * timeDelta;
                 break;
             }
         }
-        // show progress increase per hour
-        ui->progressIncreasePerH->setText(QString::number(progressPerHour * 100, 'f', 2) + "%");
 
         // show expected remaining time
         ui->expectedTimeLeft->setText(GUIUtil::formateNiceTimeOffset(remainingMSecs / 1000.0));
