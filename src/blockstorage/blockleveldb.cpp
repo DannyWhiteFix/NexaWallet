@@ -8,6 +8,8 @@
 #include "hashwrapper.h"
 #include "main.h"
 
+extern CCriticalSection cs_LastBlockFile;
+
 CBlockLevelDB::CBlockLevelDB(size_t nCacheSizeBlock, size_t nCacheSizeUndo, bool fMemory, bool fWipe, bool obfuscate)
 {
     COverrideOptions overrideblock;
@@ -163,6 +165,8 @@ bool CBlockLevelDB::EraseUndo(const CBlockIndex *pindex)
 
 uint64_t CBlockLevelDB::PruneDB(uint64_t nLastBlockWeCanPrune)
 {
+    AssertLockHeld(cs_LastBlockFile);
+
     CBlockIndex *pindexOldest = chainActive.Tip();
     while (pindexOldest->pprev && pindexOldest->pprev->nFile != 0)
     {

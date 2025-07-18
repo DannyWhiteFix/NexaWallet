@@ -673,10 +673,6 @@ static bool processInvMsgs(CNode *pfrom, CDataStream &vRecv, std::vector<T> &vIn
         return error("message inv size() = %u", vInvSize);
     }
 
-    // Allow whitelisted peers to send data other than blocks in blocks only mode if whitelistrelay is true
-    if (pfrom->fWhitelisted && fWhiteListRelay)
-        fBlocksOnly = false;
-
     for (unsigned int nInv = 0; nInv < vInvSize; nInv++)
     {
         if (shutdown_threads.load() == true)

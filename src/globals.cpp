@@ -83,6 +83,21 @@ CAmount GROUPED_SATOSHI_AMT = 0;
 // this flag is set to true when a wallet rescan has been invoked.
 std::atomic<bool> fRescan{false};
 
+/** Are we importing block files */
+std::atomic<bool> fImporting{false};
+
+/** Is a reindex in progress */
+std::atomic<bool> fReindex{false};
+
+/** Should we verify the database */
+std::atomic<bool> fVerifyDB{false};
+
+/** Indicates whether we should check if there are
+ *  block/undo files that should be deleted.  Set on startup
+ *  or if we allocate more file space when we're in prune mode
+ */
+std::atomic<bool> fCheckForPruning = false;
+
 /** The largest next max block size found in the block index */
 std::atomic<uint64_t> nLargestNextMaxBlockSize{0};
 
@@ -156,12 +171,26 @@ uint64_t nBlockSequenceId GUARDED_BY(cs_main) = 1;
  */
 std::map<uint256, NodeId> mapBlockSource GUARDED_BY(cs_main);
 
+/** Unguarded global state that gets modified only once during node startup */
+bool fWhiteListRelay = false;
+bool fWhiteListForceRelay = false;
+bool fPruneMode = false;
+uint64_t nPruneTarget = 0;
+bool fTxIndex = false;
+bool fIsBareMultisigStd = DEFAULT_PERMIT_BAREMULTISIG;
+uint32_t nBytesPerSigOp = DEFAULT_BYTES_PER_SIGOP;
+bool fCheckBlockIndex = false;
+bool fCheckpointsEnabled = DEFAULT_CHECKPOINTS_ENABLED;
+uint32_t nXthinBloomFilterSize = SMALLEST_MAX_BLOOM_FILTER_SIZE;
+bool fBlocksOnly = DEFAULT_BLOCKSONLY;
 
-/** Dirty block file entries. */
 CCriticalSection cs_LastBlockFile;
+/** Dirty block file entries. */
 std::set<int> setDirtyFileInfo GUARDED_BY(cs_LastBlockFile);
 std::vector<CBlockFileInfo> vinfoBlockFile GUARDED_BY(cs_LastBlockFile);
 int nLastBlockFile GUARDED_BY(cs_LastBlockFile) = 0;
+uint64_t nDBUsedSpace GUARDED_BY(cs_LastBlockFile) = 0;
+bool fHavePruned GUARDED_BY(cs_LastBlockFile) = false;
 
 /** Hold current block templates size and transaction counts */
 CCriticalSection csCurrentCandidate;

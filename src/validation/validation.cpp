@@ -513,13 +513,20 @@ bool LoadBlockIndexDB()
     LOCK(cs_main);
     /** This sync method will break on pruned nodes so we cant use if pruned*/
     // Check whether we have ever pruned block & undo files
-    pblocktree->ReadFlag("prunedblockfiles", fHavePruned);
-    if (!fHavePruned)
     {
-        // by default we want to sync from disk instead of network if possible
-        // run a db sync here to sync storage methods
-        // may increase startup time significantly but is faster than network sync
-        SyncStorage(chainparams);
+        LOCK(cs_LastBlockFile);
+        pblocktree->ReadFlag("prunedblockfiles", fHavePruned);
+        if (!fHavePruned)
+        {
+            // by default we want to sync from disk instead of network if possible
+            // run a db sync here to sync storage methods
+            // may increase startup time significantly but is faster than network sync
+            SyncStorage(chainparams);
+        }
+        else
+        {
+            LOGA("LoadBlockIndexDB(): Block files have previously been pruned\n");
+        }
     }
 
     delete pblocktreeother;
@@ -717,11 +724,6 @@ bool LoadBlockIndexDB()
         }
     }
 
-    if (fHavePruned)
-    {
-        LOGA("LoadBlockIndexDB(): Block files have previously been pruned\n");
-    }
-
     // Check whether we need to continue reindexing
     bool fReindexing = false;
     pblocktree->ReadReindexing(fReindexing);
@@ -801,9 +803,9 @@ void UnloadBlockIndex()
         setDirtyFileInfo.clear();
         vinfoBlockFile.clear();
         nLastBlockFile = 0;
+        fHavePruned = false;
     }
 
-    fHavePruned = false;
     recentRejects.reset();
 }
 
@@ -1109,7 +1111,10 @@ void CheckBlockIndex(const Consensus::Params &consensusParams)
         {
             // We HAVE_DATA for this block, have received data for all parents at some point, but we're currently
             // missing data for some parent.
-            assert(fHavePruned); // We must have pruned.
+            {
+                LOCK(cs_LastBlockFile);
+                assert(fHavePruned); // We must have pruned.
+            }
             // This block may have entered mapBlocksUnlinked if:
             //  - it has a descendant that at some point had more work than the
             //    tip, and
@@ -4001,6 +4006,7 @@ bool ProcessNewBlock(CValidationState &state,
 
 bool IsBlockPruned(const CBlockIndex *pblockindex)
 {
+    LOCK(cs_LastBlockFile);
     READLOCK(cs_mapBlockIndex); // for nStatus
     return (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && (pblockindex->processed()));
 }
