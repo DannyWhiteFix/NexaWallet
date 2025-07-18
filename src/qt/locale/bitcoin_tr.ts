@@ -76,7 +76,7 @@
     <message>
         <location line="+7"/>
         <source>Sending addresses</source>
-        <translation>&amp;Gönderme adresleri...</translation>
+        <translation>Gönderme adresleri</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -361,7 +361,7 @@
     <message>
         <location line="+10"/>
         <source>&amp;Token History</source>
-        <translation>Jeton Geçmişi</translation>
+        <translation>&amp;Jeton Geçmişi</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -719,6 +719,19 @@
     </message>
 </context>
 <context>
+    <name>BlockDescDialog</name>
+    <message>
+        <location filename="../forms/blockdescdialog.ui" line="+17"/>
+        <source>Block details</source>
+        <translation>Ayrıntıları engelle</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This pane shows a detailed description of the token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Bu bölmede belirtecin ayrıntılı bir açıklaması gösterilir&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+</context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="+14"/>
@@ -1000,6 +1013,38 @@
     </message>
 </context>
 <context>
+    <name>DagWidget</name>
+    <message>
+        <location filename="../dagwidget.cpp" line="+176"/>
+        <source>Block: </source>
+        <translation>Blok: </translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <source>Previous block: </source>
+        <translation>Önceki blok:</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Height: </source>
+        <translation>Yükseklik: </translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <source>Number: </source>
+        <translation>Sayı: </translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <location line="+4"/>
+        <source>Type: </source>
+        <translation>Tür: </translation>
+    </message>
+</context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="+14"/>
@@ -1152,18 +1197,12 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <location filename="../utilitydialog.cpp" line="+39"/>
+        <location filename="../utilitydialog.cpp" line="+40"/>
         <source>version</source>
         <translation>sürüm</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <location line="+2"/>
-        <source>(%1-bit)</source>
-        <translation>(%1-bit)</translation>
-    </message>
-    <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>About %1</source>
         <translation>%1 hakkında</translation>
     </message>
@@ -1943,7 +1982,7 @@
         <translation>Meblağ</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="+135"/>
+        <location filename="../guiutil.cpp" line="+136"/>
         <source>Enter a NEXA address (e.g. %1)</source>
         <translation>Bir NEXA adresi girin (ör. %1)</translation>
     </message>
@@ -2058,7 +2097,7 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <location filename="../forms/debugwindow.ui" line="+239"/>
+        <location filename="../forms/debugwindow.ui" line="+242"/>
         <location line="+16"/>
         <location line="+16"/>
         <location line="+16"/>
@@ -2067,7 +2106,7 @@
         <location line="+29"/>
         <location line="+16"/>
         <location line="+16"/>
-        <location line="+17"/>
+        <location line="+16"/>
         <location line="+16"/>
         <location line="+29"/>
         <location line="+16"/>
@@ -2079,7 +2118,7 @@
         <location line="+19"/>
         <location line="+16"/>
         <location line="+16"/>
-        <location line="+1753"/>
+        <location line="+1879"/>
         <location line="+23"/>
         <location line="+23"/>
         <location line="+23"/>
@@ -2100,7 +2139,7 @@
         <translation>Mevcut değil</translation>
     </message>
     <message>
-        <location line="-2715"/>
+        <location line="-2840"/>
         <source>Client version</source>
         <translation>İstemci sürümü</translation>
     </message>
@@ -2110,17 +2149,17 @@
         <translation>&amp;Malumat</translation>
     </message>
     <message>
-        <location line="-10"/>
+        <location line="-13"/>
         <source>Debug window</source>
         <translation>Hata ayıklama penceresi</translation>
     </message>
     <message>
-        <location line="+620"/>
+        <location line="+622"/>
         <source>General</source>
         <translation>Genel</translation>
     </message>
     <message>
-        <location line="-587"/>
+        <location line="-586"/>
         <source>Using BerkeleyDB version</source>
         <translation>Kullanılan BerkeleyDB sürümü</translation>
     </message>
@@ -2130,12 +2169,12 @@
         <translation>Başlama zamanı</translation>
     </message>
     <message>
-        <location line="+474"/>
+        <location line="+473"/>
         <source>Network</source>
         <translation>Şebeke</translation>
     </message>
     <message>
-        <location line="-467"/>
+        <location line="-466"/>
         <source>Name</source>
         <translation>İsim</translation>
     </message>
@@ -2145,24 +2184,24 @@
         <translation>Bağlantı sayısı</translation>
     </message>
     <message>
-        <location line="+415"/>
+        <location line="+414"/>
         <source>Block chain</source>
         <translation>Blok zinciri</translation>
     </message>
     <message>
-        <location line="-408"/>
+        <location line="-407"/>
         <source>Current number of blocks</source>
         <translation>Güncel blok sayısı</translation>
     </message>
     <message>
-        <location line="+884"/>
-        <location line="+1694"/>
+        <location line="+883"/>
+        <location line="+1820"/>
         <source>Received</source>
         <translation>Alınan</translation>
     </message>
     <message>
-        <location line="-1614"/>
-        <location line="+1591"/>
+        <location line="-1740"/>
+        <location line="+1717"/>
         <source>Sent</source>
         <translation>Yollanan</translation>
     </message>
@@ -2178,8 +2217,8 @@
     </message>
     <message>
         <location line="+57"/>
-        <location filename="../rpcconsole.cpp" line="+311"/>
-        <location line="+856"/>
+        <location filename="../rpcconsole.cpp" line="+322"/>
+        <location line="+861"/>
         <source>Select a peer to view detailed information.</source>
         <translation>Ayrıntılı bilgi görmek için bir eş seçin.</translation>
     </message>
@@ -2214,13 +2253,13 @@
         <translation>Eşleşmiş Bloklar</translation>
     </message>
     <message>
-        <location line="-2488"/>
-        <location line="+2390"/>
+        <location line="-2613"/>
+        <location line="+2515"/>
         <source>User Agent</source>
         <translation>Kullanıcı Yazılımı</translation>
     </message>
     <message>
-        <location line="-2370"/>
+        <location line="-2495"/>
         <source>Datadir</source>
         <translation>Veri dizini</translation>
     </message>
@@ -2300,7 +2339,7 @@
         <translation>Blok Yayılımı</translation>
     </message>
     <message>
-        <location line="+94"/>
+        <location line="+93"/>
         <source>Transaction Pools</source>
         <translation>İşlem Havuzları</translation>
     </message>
@@ -2325,13 +2364,13 @@
         <translation>Anlık Hız (1sn)</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+14"/>
         <location line="+536"/>
         <source>Peak</source>
         <translation>Tepe</translation>
     </message>
     <message>
-        <location line="-463"/>
+        <location line="-469"/>
         <location line="+257"/>
         <location line="+279"/>
         <location line="+257"/>
@@ -2355,18 +2394,53 @@
         <translation>Görüntülendi</translation>
     </message>
     <message>
-        <location line="-769"/>
+        <location line="-763"/>
         <location line="+536"/>
         <source>Average</source>
         <translation>Ortalama</translation>
     </message>
     <message>
-        <location line="-265"/>
+        <location line="-271"/>
         <source>Smoothed Rate (60s)</source>
         <translation>Düzleştirilmiş Hız (60s)</translation>
     </message>
     <message>
-        <location line="+769"/>
+        <location line="+539"/>
+        <source>Block Viewer</source>
+        <translation>Blok Görüntüleyici</translation>
+    </message>
+    <message>
+        <location line="+46"/>
+        <source>Increase Size</source>
+        <translation>Boyutu Artır</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>+</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Decrease Size</source>
+        <translation>Boyutu Azalt</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>-</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>Pause block tracking</source>
+        <translation>Blok izlemeyi duraklat</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>||</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+236"/>
         <source>Services</source>
         <translation>Servisler</translation>
     </message>
@@ -2411,12 +2485,12 @@
         <translation>Saat Farkı</translation>
     </message>
     <message>
-        <location line="-2524"/>
+        <location line="-2649"/>
         <source>&amp;Open</source>
         <translation>&amp;Aç</translation>
     </message>
     <message>
-        <location line="+431"/>
+        <location line="+430"/>
         <source>&amp;Console</source>
         <translation>&amp;Konsol</translation>
     </message>
@@ -2436,7 +2510,7 @@
         <translation>Toplamlar</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="-530"/>
+        <location filename="../rpcconsole.cpp" line="-535"/>
         <source>In:</source>
         <translation>İçeri:</translation>
     </message>
@@ -2446,12 +2520,12 @@
         <translation>Dışarı:</translation>
     </message>
     <message>
-        <location filename="../forms/debugwindow.ui" line="-704"/>
+        <location filename="../forms/debugwindow.ui" line="-703"/>
         <source>Debug log file</source>
         <translation>Hata ayıklama kütük dosyası</translation>
     </message>
     <message>
-        <location line="+541"/>
+        <location line="+540"/>
         <source>Clear console</source>
         <translation>Konsolu temizle</translation>
     </message>
@@ -4034,7 +4108,12 @@
         <translation>İşaretlenirse bu öğe bir alt gruptur.</translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+397"/>
+        <location filename="../tokensviewdialog.cpp" line="+85"/>
+        <source>Copy token id</source>
+        <translation>Jeton kimliğini kopyala</translation>
+    </message>
+    <message>
+        <location line="+364"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -4058,11 +4137,11 @@
     </message>
     <message>
         <location line="+22"/>
-        <location line="+5"/>
-        <location line="+5"/>
+        <location line="+4"/>
+        <location line="+6"/>
         <location line="+84"/>
-        <location line="+5"/>
-        <location line="+5"/>
+        <location line="+4"/>
+        <location line="+6"/>
         <source>Total Mintage:</source>
         <translation>Toplam Basım:</translation>
     </message>
@@ -4247,12 +4326,12 @@
         <location line="-142"/>
         <location line="+21"/>
         <location line="+35"/>
-        <location line="+108"/>
+        <location line="+110"/>
         <source>To</source>
         <translation>Alıcı</translation>
     </message>
     <message>
-        <location line="-209"/>
+        <location line="-211"/>
         <source>double spent</source>
         <translation>çift harcanmış</translation>
     </message>
@@ -4280,29 +4359,29 @@
     <message>
         <location line="-110"/>
         <location line="+28"/>
-        <location line="+107"/>
+        <location line="+109"/>
         <source>label</source>
         <translation>etiket</translation>
     </message>
     <message>
-        <location line="-116"/>
+        <location line="-118"/>
         <location line="+57"/>
-        <location line="+48"/>
-        <location line="+71"/>
+        <location line="+50"/>
+        <location line="+76"/>
         <source>Public label:</source>
         <translation>Genel etiket:</translation>
     </message>
     <message>
-        <location line="-149"/>
+        <location line="-156"/>
         <location line="+41"/>
-        <location line="+63"/>
-        <location line="+47"/>
+        <location line="+65"/>
+        <location line="+52"/>
         <location line="+256"/>
         <source>Credit</source>
         <translation>Gider</translation>
     </message>
     <message numerus="yes">
-        <location line="-404"/>
+        <location line="-411"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>%n ek blok sonrasında olgunlaşacak</numerusform>
@@ -4314,8 +4393,8 @@
         <translation>kabul edilmedi</translation>
     </message>
     <message>
-        <location line="+102"/>
-        <location line="+31"/>
+        <location line="+104"/>
+        <location line="+36"/>
         <location line="+261"/>
         <source>Debit</source>
         <translation>Gelir</translation>
@@ -4469,7 +4548,7 @@
         <translation>yanlış</translation>
     </message>
     <message>
-        <location line="-533"/>
+        <location line="-540"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, henüz başarılı bir şekilde yayınlanmadı</translation>
     </message>
@@ -5076,7 +5155,7 @@
         <translation>Budama: son cüzdan eşleşmesi budanmış verilerin ötesine gitmektedir. -reindex kullanmanız gerekmektedir (Budanmış düğüm ise tüm blok zincirini tekrar indirmeniz gerekir.)</translation>
     </message>
     <message>
-        <location line="+104"/>
+        <location line="+105"/>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Hata: Ölümcül dahili bir hata meydana geldi, ayrıntılar için debug.log dosyasına bakınız</translation>
     </message>
@@ -5086,7 +5165,7 @@
         <translation>Blockstore budanıyor...</translation>
     </message>
     <message>
-        <location line="-165"/>
+        <location line="-166"/>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>MIT yazılım lisansı kapsamında yayınlanmıştır, ekteki COPYING dosyasına ya da &lt;http://www.opensource.org/licenses/mit-license.php&gt; adresine bakınız.</translation>
     </message>
@@ -5155,7 +5234,7 @@ Lütfen Nexa&apos;yı &quot;-usehd=0&quot; ile yeniden başlatın.</translation>
         <translation>Blok veritabanının açılışı sırasında hata</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Error: Disk space is low!</source>
         <translation>Hata: Disk alanı düşük!</translation>
     </message>
@@ -5200,7 +5279,7 @@ Lütfen Nexa&apos;yı &quot;-usehd=0&quot; ile yeniden başlatın.</translation>
         <translation>İmzalama jetonu işlemi başarısız oldu</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+20"/>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>Kullanıcı Aracı açıklaması (%s) güvensiz karakterler içermektedir.</translation>
     </message>
@@ -5225,7 +5304,7 @@ Lütfen Nexa&apos;yı &quot;-usehd=0&quot; ile yeniden başlatın.</translation>
         <translation>%s cüzdan %s veri klasörünün dışında bulunuyor</translation>
     </message>
     <message>
-        <location line="-177"/>
+        <location line="-180"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Hata: İçeri gelen bağlantıların dinlenmesi başarısız oldu (dinleme %s hatasını verdi)</translation>
     </message>
@@ -5255,7 +5334,7 @@ Lütfen Nexa&apos;yı &quot;-usehd=0&quot; ile yeniden başlatın.</translation>
         <translation>Telif hakkı 2015-%i Bitcoin Çekirdeği Geliştiricileri</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+20"/>
         <source>Information</source>
         <translation>Bilgi</translation>
     </message>
@@ -5320,12 +5399,12 @@ Lütfen Nexa&apos;yı &quot;-usehd=0&quot; ile yeniden başlatın.</translation>
         <translation>Bu bilgisayarda %s unsuruna bağlanılamadı (bağlanma %s hatasını verdi)</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+15"/>
         <source>Warning</source>
         <translation>Uyarı</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-44"/>
         <source>Loading addresses...</source>
         <translation>Adresler yükleniyor...</translation>
     </message>
@@ -5335,12 +5414,12 @@ Lütfen Nexa&apos;yı &quot;-usehd=0&quot; ile yeniden başlatın.</translation>
         <translation>Geçersiz -proxy adresi: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+38"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>-onlynet için bilinmeyen bir şebeke belirtildi: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-66"/>
+        <location line="-68"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>-bind adresi çözümlenemedi: &apos;%s&apos;</translation>
     </message>
@@ -5350,7 +5429,7 @@ Lütfen Nexa&apos;yı &quot;-usehd=0&quot; ile yeniden başlatın.</translation>
         <translation>-externalip adresi çözümlenemedi: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+36"/>
         <source>Loading block index...</source>
         <translation>Blok indeksi yükleniyor...</translation>
     </message>
@@ -5360,7 +5439,7 @@ Lütfen Nexa&apos;yı &quot;-usehd=0&quot; ile yeniden başlatın.</translation>
         <translation>Cüzdan yükleniyor...</translation>
     </message>
     <message>
-        <location line="-38"/>
+        <location line="-39"/>
         <source>Cannot downgrade wallet</source>
         <translation>Cüzdan eski biçime geri alınamaz</translation>
     </message>
@@ -5528,13 +5607,13 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
     </message>
     <message>
         <location line="+6"/>
-        <source>%s </source>
-        <translation>%s </translation>
+        <source>%s corrupt, salvage failed</source>
+        <translation>%s bozuk, kurtarma başarısız oldu</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s bozuk, kurtarma başarısız oldu</translation>
+        <source>%s</source>
+        <translation></translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5582,7 +5661,12 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
         <translation>%s yüklenirken hata oluştu: Mevcut bir HD cüzdanında HD&apos;yi devre dışı bırakamazsınız</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+2"/>
+        <source>Error upgrading block database</source>
+        <translation>Blok veritabanı yükseltilirken hata oluştu</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Error: Keypool ran out, please call keypoolrefill first</source>
         <translation>Hata: Anahtar havuzu bitti, lütfen önce keypoolrefill&apos;i arayın</translation>
     </message>
@@ -5682,7 +5766,17 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
         <translation>RPC hizmetleri başlatılamıyor. Ayrıntılar için hata ayıklama günlüğüne bakın.</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Unknown block index version found</source>
+        <translation>Bilinmeyen blok dizin sürümü bulundu</translation>
+    </message>
+    <message>
         <location line="+2"/>
+        <source>Upgrading Block Index...</source>
+        <translation>Blok Dizini Yükseltiliyor...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Upgrading block database...This could take a while.</source>
         <translation>Blok veritabanı yükseltiliyor... Bu işlem biraz zaman alabilir.</translation>
     </message>
@@ -5703,16 +5797,21 @@ When you click &quot;OK&quot; Nexa will shutdown to complete the process.</sourc
     </message>
     <message>
         <location line="+2"/>
+        <source>You will need to run a -reindex on the next startup.</source>
+        <translation>Bir sonraki başlatmada -reindex komutunu çalıştırmanız gerekecektir.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Zapping all transactions from wallet...</source>
         <translation>Cüzdandaki tüm işlemler iptal ediliyor...</translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-72"/>
         <source>Done loading</source>
         <translation>Yükleme tamamlandı</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Error</source>
         <translation>Hata</translation>
     </message>

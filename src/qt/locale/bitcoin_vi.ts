@@ -16,7 +16,7 @@
     <message>
         <location line="+3"/>
         <source>&amp;New</source>
-        <translation>Tạo mới</translation>
+        <translation>&amp;Tạo mới</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -26,7 +26,7 @@
     <message>
         <location line="+3"/>
         <source>&amp;Copy</source>
-        <translation>Sao chép</translation>
+        <translation>Sao &amp;chép</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -41,12 +41,12 @@
     <message>
         <location line="+3"/>
         <source>&amp;Export</source>
-        <translation>Xuất khẩu</translation>
+        <translation>&amp;Xuất khẩu</translation>
     </message>
     <message>
         <location line="+20"/>
         <source>C&amp;lose</source>
-        <translation>Đóng</translation>
+        <translation>&amp;Đóng</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="+51"/>
@@ -61,7 +61,7 @@
     <message>
         <location line="+6"/>
         <source>C&amp;hoose</source>
-        <translation>Chọn</translation>
+        <translation>C&amp;họn</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -717,6 +717,19 @@
     </message>
 </context>
 <context>
+    <name>BlockDescDialog</name>
+    <message>
+        <location filename="../forms/blockdescdialog.ui" line="+17"/>
+        <source>Block details</source>
+        <translation>Chặn chi tiết</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This pane shows a detailed description of the token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Khung này hiển thị mô tả chi tiết về mã thông báo&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+</context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="+14"/>
@@ -998,6 +1011,38 @@
     </message>
 </context>
 <context>
+    <name>DagWidget</name>
+    <message>
+        <location filename="../dagwidget.cpp" line="+176"/>
+        <source>Block: </source>
+        <translation>Khối: </translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <source>Previous block: </source>
+        <translation>Khối trước: </translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Height: </source>
+        <translation>Chiều cao: </translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <source>Number: </source>
+        <translation>Con số: </translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <location line="+4"/>
+        <source>Type: </source>
+        <translation>Loại: </translation>
+    </message>
+</context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="+14"/>
@@ -1150,18 +1195,12 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <location filename="../utilitydialog.cpp" line="+39"/>
+        <location filename="../utilitydialog.cpp" line="+40"/>
         <source>version</source>
         <translation>phiên bản</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <location line="+2"/>
-        <source>(%1-bit)</source>
-        <translation>(%1-chút)</translation>
-    </message>
-    <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>About %1</source>
         <translation>Khoảng %1</translation>
     </message>
@@ -1941,7 +1980,7 @@
         <translation>Số lượng</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="+135"/>
+        <location filename="../guiutil.cpp" line="+136"/>
         <source>Enter a NEXA address (e.g. %1)</source>
         <translation>Nhập địa chỉ NEXA (ví dụ: %1)</translation>
     </message>
@@ -2061,7 +2100,7 @@
         <translation>Cửa sổ gỡ lỗi</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+13"/>
         <source>&amp;Information</source>
         <translation>thông tin</translation>
     </message>
@@ -2072,12 +2111,12 @@
     </message>
     <message>
         <location line="+7"/>
-        <location line="+2390"/>
+        <location line="+2515"/>
         <source>User Agent</source>
         <translation>Đại lý người dùng</translation>
     </message>
     <message>
-        <location line="-2380"/>
+        <location line="-2505"/>
         <source>Using BerkeleyDB version</source>
         <translation>Sử dụng phiên bản BerkeleyDB</translation>
     </message>
@@ -2196,7 +2235,7 @@
         <location line="+29"/>
         <location line="+16"/>
         <location line="+16"/>
-        <location line="+17"/>
+        <location line="+16"/>
         <location line="+16"/>
         <location line="+29"/>
         <location line="+16"/>
@@ -2208,7 +2247,7 @@
         <location line="+19"/>
         <location line="+16"/>
         <location line="+16"/>
-        <location line="+1753"/>
+        <location line="+1879"/>
         <location line="+23"/>
         <location line="+23"/>
         <location line="+23"/>
@@ -2229,12 +2268,12 @@
         <translation>không áp dụng</translation>
     </message>
     <message>
-        <location line="-2407"/>
+        <location line="-2532"/>
         <source>Block Propagation</source>
         <translation>Khối lan truyền</translation>
     </message>
     <message>
-        <location line="+94"/>
+        <location line="+93"/>
         <source>Transaction Pools</source>
         <translation>Nhóm giao dịch</translation>
     </message>
@@ -2290,18 +2329,18 @@
     </message>
     <message>
         <location line="+64"/>
-        <location line="+1694"/>
+        <location line="+1820"/>
         <source>Received</source>
         <translation>Đã nhận</translation>
     </message>
     <message>
-        <location line="-1614"/>
-        <location line="+1591"/>
+        <location line="-1740"/>
+        <location line="+1717"/>
         <source>Sent</source>
         <translation>Đã gửi</translation>
     </message>
     <message>
-        <location line="-1550"/>
+        <location line="-1676"/>
         <source>&amp;Transaction Rate</source>
         <translation>Tỷ giá giao dịch</translation>
     </message>
@@ -2311,13 +2350,13 @@
         <translation>Tốc độ tức thời (1 giây)</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+14"/>
         <location line="+536"/>
         <source>Peak</source>
         <translation>Đỉnh cao</translation>
     </message>
     <message>
-        <location line="-463"/>
+        <location line="-469"/>
         <location line="+257"/>
         <location line="+279"/>
         <location line="+257"/>
@@ -2341,18 +2380,53 @@
         <translation>Hiển thị</translation>
     </message>
     <message>
-        <location line="-769"/>
+        <location line="-763"/>
         <location line="+536"/>
         <source>Average</source>
         <translation>Trung bình</translation>
     </message>
     <message>
-        <location line="-265"/>
+        <location line="-271"/>
         <source>Smoothed Rate (60s)</source>
         <translation>Tốc độ làm mịn (60s)</translation>
     </message>
     <message>
         <location line="+539"/>
+        <source>Block Viewer</source>
+        <translation>Chặn người xem</translation>
+    </message>
+    <message>
+        <location line="+46"/>
+        <source>Increase Size</source>
+        <translation>Tăng kích thước</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>+</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Decrease Size</source>
+        <translation>Giảm kích thước</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>-</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>Pause block tracking</source>
+        <translation>Tạm dừng theo dõi khối</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>||</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>&amp;Peers</source>
         <translation>ngang hàng</translation>
     </message>
@@ -2363,8 +2437,8 @@
     </message>
     <message>
         <location line="+57"/>
-        <location filename="../rpcconsole.cpp" line="+311"/>
-        <location line="+856"/>
+        <location filename="../rpcconsole.cpp" line="+322"/>
+        <location line="+861"/>
         <source>Select a peer to view detailed information.</source>
         <translation>Chọn một đồng nghiệp để xem thông tin chi tiết.</translation>
     </message>
@@ -2444,7 +2518,7 @@
         <translation>Bù đắp thời gian</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="-736"/>
+        <location filename="../rpcconsole.cpp" line="-741"/>
         <source>&amp;Disconnect Node</source>
         <translation>Ngắt kết nối nút</translation>
     </message>
@@ -4032,7 +4106,12 @@
         <translation>Nếu được chọn thì mục này là một nhóm con.</translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+397"/>
+        <location filename="../tokensviewdialog.cpp" line="+85"/>
+        <source>Copy token id</source>
+        <translation>Sao chép id mã thông báo</translation>
+    </message>
+    <message>
+        <location line="+364"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -4056,11 +4135,11 @@
     </message>
     <message>
         <location line="+22"/>
-        <location line="+5"/>
-        <location line="+5"/>
+        <location line="+4"/>
+        <location line="+6"/>
         <location line="+84"/>
-        <location line="+5"/>
-        <location line="+5"/>
+        <location line="+4"/>
+        <location line="+6"/>
         <source>Total Mintage:</source>
         <translation>Tổng số tiền:</translation>
     </message>
@@ -4260,12 +4339,12 @@
         <location line="+1"/>
         <location line="+21"/>
         <location line="+35"/>
-        <location line="+108"/>
+        <location line="+110"/>
         <source>To</source>
         <translation>Cho</translation>
     </message>
     <message>
-        <location line="-157"/>
+        <location line="-159"/>
         <location line="+13"/>
         <location line="+122"/>
         <source>From</source>
@@ -4295,29 +4374,29 @@
     <message>
         <location line="-110"/>
         <location line="+28"/>
-        <location line="+107"/>
+        <location line="+109"/>
         <source>label</source>
         <translation>nhãn dữ liệu</translation>
     </message>
     <message>
-        <location line="-116"/>
+        <location line="-118"/>
         <location line="+57"/>
-        <location line="+48"/>
-        <location line="+71"/>
+        <location line="+50"/>
+        <location line="+76"/>
         <source>Public label:</source>
         <translation>Nhãn công cộng:</translation>
     </message>
     <message>
-        <location line="-149"/>
+        <location line="-156"/>
         <location line="+41"/>
-        <location line="+63"/>
-        <location line="+47"/>
+        <location line="+65"/>
+        <location line="+52"/>
         <location line="+256"/>
         <source>Credit</source>
         <translation>Tín dụng</translation>
     </message>
     <message numerus="yes">
-        <location line="-404"/>
+        <location line="-411"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>trưởng thành sau %n khối nữa</numerusform>
@@ -4329,8 +4408,8 @@
         <translation>không được chấp nhận</translation>
     </message>
     <message>
-        <location line="+102"/>
-        <location line="+31"/>
+        <location line="+104"/>
+        <location line="+36"/>
         <location line="+261"/>
         <source>Debit</source>
         <translation>Ghi nợ</translation>
@@ -5296,13 +5375,13 @@ Khi bạn nhấp vào &quot;OK&quot; Nexa sẽ tắt để hoàn tất quá trì
     </message>
     <message>
         <location line="+6"/>
-        <source>%s </source>
-        <translation>%s </translation>
+        <source>%s corrupt, salvage failed</source>
+        <translation>%s bị hỏng, việc cứu hộ không thành công</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s bị hỏng, việc cứu hộ không thành công</translation>
+        <source>%s</source>
+        <translation></translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5408,6 +5487,11 @@ Khi bạn nhấp vào &quot;OK&quot; Nexa sẽ tắt để hoàn tất quá trì
         <location line="+1"/>
         <source>Error opening block database</source>
         <translation>Lỗi mở cơ sở dữ liệu khối</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error upgrading block database</source>
+        <translation>Lỗi nâng cấp cơ sở dữ liệu khối</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5656,8 +5740,18 @@ Khi bạn nhấp vào &quot;OK&quot; Nexa sẽ tắt để hoàn tất quá trì
     </message>
     <message>
         <location line="+1"/>
+        <source>Unknown block index version found</source>
+        <translation>Đã tìm thấy phiên bản chỉ mục khối không xác định</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Mạng không xác định được chỉ định trong -onlynet: &apos;%s&apos;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Upgrading Block Index...</source>
+        <translation>Đang nâng cấp chỉ mục khối...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5708,6 +5802,11 @@ Khi bạn nhấp vào &quot;OK&quot; Nexa sẽ tắt để hoàn tất quá trì
         <location line="+1"/>
         <source>Warning</source>
         <translation>Cảnh báo</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>You will need to run a -reindex on the next startup.</source>
+        <translation>Bạn sẽ cần chạy lệnh -reindex khi khởi động lần tiếp theo.</translation>
     </message>
     <message>
         <location line="+1"/>

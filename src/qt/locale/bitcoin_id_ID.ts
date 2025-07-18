@@ -719,6 +719,19 @@
     </message>
 </context>
 <context>
+    <name>BlockDescDialog</name>
+    <message>
+        <location filename="../forms/blockdescdialog.ui" line="+17"/>
+        <source>Block details</source>
+        <translation>Blokir detailnya</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This pane shows a detailed description of the token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation> &lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Panel ini menampilkan deskripsi detail token&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+</context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="+14"/>
@@ -1000,6 +1013,38 @@
     </message>
 </context>
 <context>
+    <name>DagWidget</name>
+    <message>
+        <location filename="../dagwidget.cpp" line="+176"/>
+        <source>Block: </source>
+        <translation>Memblokir: </translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <source>Previous block: </source>
+        <translation>Blok sebelumnya: </translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Height: </source>
+        <translation>Tinggi: </translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <source>Number: </source>
+        <translation>Nomor: </translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <location line="+4"/>
+        <source>Type: </source>
+        <translation>Jenis: </translation>
+    </message>
+</context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="+14"/>
@@ -1152,18 +1197,12 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <location filename="../utilitydialog.cpp" line="+39"/>
+        <location filename="../utilitydialog.cpp" line="+40"/>
         <source>version</source>
         <translation>versi</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <location line="+2"/>
-        <source>(%1-bit)</source>
-        <translation>(%1-bit)</translation>
-    </message>
-    <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>About %1</source>
         <translation>Mengenai %1</translation>
     </message>
@@ -1519,7 +1558,7 @@
         <location line="+9"/>
         <location line="+187"/>
         <source>Proxy &amp;IP:</source>
-        <translation>IP Proxy:</translation>
+        <translation>&amp;IP Proxy:</translation>
     </message>
     <message>
         <location line="-155"/>
@@ -1943,7 +1982,7 @@
         <translation>Nilai</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="+135"/>
+        <location filename="../guiutil.cpp" line="+136"/>
         <source>Enter a NEXA address (e.g. %1)</source>
         <translation>Masukkan alamat NEXA (misalnya %1)</translation>
     </message>
@@ -2058,7 +2097,7 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <location filename="../forms/debugwindow.ui" line="+239"/>
+        <location filename="../forms/debugwindow.ui" line="+242"/>
         <location line="+16"/>
         <location line="+16"/>
         <location line="+16"/>
@@ -2067,7 +2106,7 @@
         <location line="+29"/>
         <location line="+16"/>
         <location line="+16"/>
-        <location line="+17"/>
+        <location line="+16"/>
         <location line="+16"/>
         <location line="+29"/>
         <location line="+16"/>
@@ -2079,7 +2118,7 @@
         <location line="+19"/>
         <location line="+16"/>
         <location line="+16"/>
-        <location line="+1753"/>
+        <location line="+1879"/>
         <location line="+23"/>
         <location line="+23"/>
         <location line="+23"/>
@@ -2100,7 +2139,7 @@
         <translation>T/S</translation>
     </message>
     <message>
-        <location line="-2715"/>
+        <location line="-2840"/>
         <source>Client version</source>
         <translation>Versi Klien</translation>
     </message>
@@ -2110,27 +2149,27 @@
         <translation>&amp;Informasi</translation>
     </message>
     <message>
-        <location line="-10"/>
+        <location line="-13"/>
         <source>Debug window</source>
         <translation>Jendela debug</translation>
     </message>
     <message>
-        <location line="+620"/>
+        <location line="+622"/>
         <source>General</source>
         <translation>Umum</translation>
     </message>
     <message>
-        <location line="-570"/>
+        <location line="-569"/>
         <source>Startup time</source>
         <translation>Waktu nyala</translation>
     </message>
     <message>
-        <location line="+474"/>
+        <location line="+473"/>
         <source>Network</source>
         <translation>Jaringan</translation>
     </message>
     <message>
-        <location line="-467"/>
+        <location line="-466"/>
         <source>Name</source>
         <translation>Nama</translation>
     </message>
@@ -2225,7 +2264,7 @@
         <translation>Blokir Propagasi</translation>
     </message>
     <message>
-        <location line="+94"/>
+        <location line="+93"/>
         <source>Transaction Pools</source>
         <translation>Kumpulan Transaksi</translation>
     </message>
@@ -2235,7 +2274,42 @@
         <translation>Rantai blok</translation>
     </message>
     <message>
-        <location line="+1986"/>
+        <location line="+1730"/>
+        <source>Block Viewer</source>
+        <translation>Blokir Penampil</translation>
+    </message>
+    <message>
+        <location line="+46"/>
+        <source>Increase Size</source>
+        <translation>Tingkatkan Ukuran</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>+</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Decrease Size</source>
+        <translation>Kurangi Ukuran</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>-</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>Pause block tracking</source>
+        <translation>Jeda pelacakan blok</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>||</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+262"/>
         <source>Starting Block</source>
         <translation>Blok Awal</translation>
     </message>
@@ -2290,24 +2364,24 @@
         <translation>Pengimbangan Waktu</translation>
     </message>
     <message>
-        <location line="-2650"/>
+        <location line="-2775"/>
         <source>Current number of blocks</source>
         <translation>Jumlah blok terkini</translation>
     </message>
     <message>
-        <location line="+884"/>
-        <location line="+1694"/>
+        <location line="+883"/>
+        <location line="+1820"/>
         <source>Received</source>
         <translation>Diterima</translation>
     </message>
     <message>
-        <location line="-1614"/>
-        <location line="+1591"/>
+        <location line="-1740"/>
+        <location line="+1717"/>
         <source>Sent</source>
         <translation>Terkirim</translation>
     </message>
     <message>
-        <location line="-1550"/>
+        <location line="-1676"/>
         <source>&amp;Transaction Rate</source>
         <translation>&amp;Tingkat Transaksi</translation>
     </message>
@@ -2317,13 +2391,13 @@
         <translation>Kecepatan Sesaat (1dtk)</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+14"/>
         <location line="+536"/>
         <source>Peak</source>
         <translation>Puncak</translation>
     </message>
     <message>
-        <location line="-463"/>
+        <location line="-469"/>
         <location line="+257"/>
         <location line="+279"/>
         <location line="+257"/>
@@ -2347,20 +2421,20 @@
         <translation>Ditampilkan</translation>
     </message>
     <message>
-        <location line="-769"/>
+        <location line="-763"/>
         <location line="+536"/>
         <source>Average</source>
         <translation>Rata-rata</translation>
     </message>
     <message>
-        <location line="-265"/>
+        <location line="-271"/>
         <source>Smoothed Rate (60s)</source>
         <translation>Kecepatan yang Dihaluskan (60 detik)</translation>
     </message>
     <message>
-        <location line="+539"/>
+        <location line="+665"/>
         <source>&amp;Peers</source>
-        <translation>&amp; Rekan-rekan</translation>
+        <translation>&amp;Rekan-rekan</translation>
     </message>
     <message>
         <location line="+50"/>
@@ -2369,8 +2443,8 @@
     </message>
     <message>
         <location line="+57"/>
-        <location filename="../rpcconsole.cpp" line="+311"/>
-        <location line="+856"/>
+        <location filename="../rpcconsole.cpp" line="+322"/>
+        <location line="+861"/>
         <source>Select a peer to view detailed information.</source>
         <translation>Pilih rekan untuk melihat informasi rinci.</translation>
     </message>
@@ -2390,8 +2464,8 @@
         <translation>Versi</translation>
     </message>
     <message>
-        <location line="-2367"/>
-        <location line="+2390"/>
+        <location line="-2492"/>
+        <location line="+2515"/>
         <source>User Agent</source>
         <translation>Agen Pengguna
 
@@ -2403,12 +2477,12 @@
         <translation>Layanan</translation>
     </message>
     <message>
-        <location line="-2242"/>
+        <location line="-2367"/>
         <source>&amp;Open</source>
         <translation>&amp;Buka</translation>
     </message>
     <message>
-        <location line="+431"/>
+        <location line="+430"/>
         <source>&amp;Console</source>
         <translation>&amp;Konsol</translation>
     </message>
@@ -2438,7 +2512,7 @@
         <translation>Total</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="-530"/>
+        <location filename="../rpcconsole.cpp" line="-535"/>
         <source>In:</source>
         <translation>Masuk:</translation>
     </message>
@@ -2448,12 +2522,12 @@
         <translation>Keluar:</translation>
     </message>
     <message>
-        <location filename="../forms/debugwindow.ui" line="-704"/>
+        <location filename="../forms/debugwindow.ui" line="-703"/>
         <source>Debug log file</source>
         <translation>Berkas catatan debug</translation>
     </message>
     <message>
-        <location line="+541"/>
+        <location line="+540"/>
         <source>Clear console</source>
         <translation>Bersihkan konsol</translation>
     </message>
@@ -2603,7 +2677,7 @@
     <message>
         <location line="-10"/>
         <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation>Gunakan lagi alamat penerima yang ada (tidak disarankan)</translation>
+        <translation>&amp;Gunakan lagi alamat penerima yang ada (tidak disarankan)</translation>
     </message>
     <message>
         <location line="-19"/>
@@ -3223,7 +3297,7 @@
     <message>
         <location line="+3"/>
         <source>S&amp;ubtract fee from amount</source>
-        <translation>Kurangi biaya dari jumlah</translation>
+        <translation>&amp;Kurangi biaya dari jumlah</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -3233,7 +3307,7 @@
     <message>
         <location line="+10"/>
         <source>Private &amp;Label:</source>
-        <translation>Pribadi &amp; Label:</translation>
+        <translation>Pribadi &amp;Label:</translation>
     </message>
     <message>
         <location line="+51"/>
@@ -4036,7 +4110,12 @@
         <translation>Jika dicentang maka item ini adalah subgrup.</translation>
     </message>
     <message>
-        <location filename="../tokensviewdialog.cpp" line="+397"/>
+        <location filename="../tokensviewdialog.cpp" line="+85"/>
+        <source>Copy token id</source>
+        <translation>Salin id token</translation>
+    </message>
+    <message>
+        <location line="+364"/>
         <location line="+7"/>
         <location line="+4"/>
         <source>Data</source>
@@ -4060,11 +4139,11 @@
     </message>
     <message>
         <location line="+22"/>
-        <location line="+5"/>
-        <location line="+5"/>
+        <location line="+4"/>
+        <location line="+6"/>
         <location line="+84"/>
-        <location line="+5"/>
-        <location line="+5"/>
+        <location line="+4"/>
+        <location line="+6"/>
         <source>Total Mintage:</source>
         <translation>Total Cetakan:</translation>
     </message>
@@ -4259,12 +4338,12 @@
         <location line="-142"/>
         <location line="+21"/>
         <location line="+35"/>
-        <location line="+108"/>
+        <location line="+110"/>
         <source>To</source>
         <translation>Untuk</translation>
     </message>
     <message>
-        <location line="-137"/>
+        <location line="-139"/>
         <source>change address</source>
         <translation>mengubah alamat</translation>
     </message>
@@ -4282,29 +4361,29 @@
     <message>
         <location line="-110"/>
         <location line="+28"/>
-        <location line="+107"/>
+        <location line="+109"/>
         <source>label</source>
         <translation>label</translation>
     </message>
     <message>
-        <location line="-116"/>
+        <location line="-118"/>
         <location line="+57"/>
-        <location line="+48"/>
-        <location line="+71"/>
+        <location line="+50"/>
+        <location line="+76"/>
         <source>Public label:</source>
         <translation>Label publik</translation>
     </message>
     <message>
-        <location line="-149"/>
+        <location line="-156"/>
         <location line="+41"/>
-        <location line="+63"/>
-        <location line="+47"/>
+        <location line="+65"/>
+        <location line="+52"/>
         <location line="+256"/>
         <source>Credit</source>
         <translation>Kredit</translation>
     </message>
     <message numerus="yes">
-        <location line="-404"/>
+        <location line="-411"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>cukup tua sesudah %n blok lagi</numerusform>
@@ -4316,8 +4395,8 @@
         <translation>tidak diterima</translation>
     </message>
     <message>
-        <location line="+102"/>
-        <location line="+31"/>
+        <location line="+104"/>
+        <location line="+36"/>
         <location line="+261"/>
         <source>Debit</source>
         <translation>Debet</translation>
@@ -4471,7 +4550,7 @@
         <translation>salah</translation>
     </message>
     <message>
-        <location line="-533"/>
+        <location line="-540"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, belum berhasil disiarkan</translation>
     </message>
@@ -5117,7 +5196,7 @@ Silakan luncurkan kembali Nexa dengan &quot;-usehd=0&quot;.</translation>
         <translation>Menemukan masalah membukakan database blok</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Error: Disk space is low!</source>
         <translation>Gagal: Hard disk hampir terisi!</translation>
     </message>
@@ -5147,7 +5226,7 @@ Silakan luncurkan kembali Nexa dengan &quot;-usehd=0&quot;.</translation>
         <translation>Penandatanganan transaksi token gagal</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+21"/>
         <source>Verifying blocks...</source>
         <translation>Blok-blok sedang diverifikasi...</translation>
     </message>
@@ -5167,12 +5246,12 @@ Silakan luncurkan kembali Nexa dengan &quot;-usehd=0&quot;.</translation>
         <translation>Dompet %s ada diluar direktori data %s</translation>
     </message>
     <message>
-        <location line="-72"/>
+        <location line="-75"/>
         <source>Cannot resolve -whitebind address: &apos;%s&apos;</source>
         <translation>Tidak dapat menyelesaikan alamat -whitebind: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+23"/>
         <source>Information</source>
         <translation>Informasi</translation>
     </message>
@@ -5207,22 +5286,22 @@ Silakan luncurkan kembali Nexa dengan &quot;-usehd=0&quot;.</translation>
         <translation>Nilai transaksi harus positif</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+20"/>
         <source>Warning</source>
         <translation>Peringatan</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-44"/>
         <source>Loading addresses...</source>
         <translation>Memuat alamat...</translation>
     </message>
     <message>
-        <location line="-112"/>
+        <location line="-113"/>
         <source>Rescans are not possible in pruned mode. You will need to use -resync which will download the whole blockchain again.</source>
         <translation>Pemindaian ulang tidak dapat dilakukan dalam mode pemangkasan. Anda perlu menggunakan -resync yang akan mengunduh kembali seluruh blockchain.</translation>
     </message>
     <message>
-        <location line="+107"/>
+        <location line="+108"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>Alamat -proxy salah: &apos;%s&apos;</translation>
     </message>
@@ -5262,12 +5341,12 @@ Silakan luncurkan kembali Nexa dengan &quot;-usehd=0&quot;.</translation>
         <translation>Tidak dapat memulai layanan RPC. Lihat log debug untuk detailnya.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Jaringan tidak diketahui yang ditentukan dalam -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-66"/>
+        <location line="-68"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Tidak dapat menyelesaikan alamat -bind: &apos;%s&apos;</translation>
     </message>
@@ -5277,7 +5356,7 @@ Silakan luncurkan kembali Nexa dengan &quot;-usehd=0&quot;.</translation>
         <translation>Tidak dapat menyelesaikan alamat -externalip: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+36"/>
         <source>Loading block index...</source>
         <translation>Memuat indeks blok...</translation>
     </message>
@@ -5287,7 +5366,7 @@ Silakan luncurkan kembali Nexa dengan &quot;-usehd=0&quot;.</translation>
         <translation>Memuat dompet...</translation>
     </message>
     <message>
-        <location line="-38"/>
+        <location line="-39"/>
         <source>Cannot downgrade wallet</source>
         <translation>Tidak dapat menurunkan versi dompet</translation>
     </message>
@@ -5495,13 +5574,13 @@ Ketika Anda mengklik &quot;OK&quot; Nexa akan dimatikan untuk menyelesaikan pros
     </message>
     <message>
         <location line="+6"/>
-        <source>%s </source>
-        <translation>%s </translation>
+        <source>%s corrupt, salvage failed</source>
+        <translation>%s rusak, penyelamatan gagal</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s rusak, penyelamatan gagal</translation>
+        <source>%s</source>
+        <translation></translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5559,7 +5638,12 @@ Ketika Anda mengklik &quot;OK&quot; Nexa akan dimatikan untuk menyelesaikan pros
         <translation>Kesalahan saat memuat %s: Anda tidak dapat menonaktifkan HD pada dompet HD yang sudah ada</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
+        <source>Error upgrading block database</source>
+        <translation>Terjadi kesalahan saat memutakhirkan basis data blok</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Kesalahan: Terjadi kesalahan internal yang fatal, lihat debug.log untuk detailnya</translation>
     </message>
@@ -5679,7 +5763,17 @@ Ketika Anda mengklik &quot;OK&quot; Nexa akan dimatikan untuk menyelesaikan pros
         <translation>Memindai ulang...</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+15"/>
+        <source>Unknown block index version found</source>
+        <translation>Versi indeks blok tidak dikenal ditemukan</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Upgrading Block Index...</source>
+        <translation>Meningkatkan Indeks Blok...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Upgrading block database...This could take a while.</source>
         <translation>Memutakhirkan basis data blok...Ini mungkin memakan waktu cukup lama.</translation>
     </message>
@@ -5705,16 +5799,21 @@ Ketika Anda mengklik &quot;OK&quot; Nexa akan dimatikan untuk menyelesaikan pros
     </message>
     <message>
         <location line="+2"/>
+        <source>You will need to run a -reindex on the next startup.</source>
+        <translation>Anda perlu menjalankan -reindex pada startup berikutnya.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Zapping all transactions from wallet...</source>
         <translation>Menghapus semua transaksi dari dompet...</translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-72"/>
         <source>Done loading</source>
         <translation>Memuat selesai</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Error</source>
         <translation>Gagal</translation>
     </message>
