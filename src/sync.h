@@ -534,6 +534,12 @@ public:
             size = newSize;
         }
     }
+
+    int available()
+    {
+        nexa_unique_lock<nexa_mutex> lock(mutex);
+        return value;
+    }
 };
 
 /** RAII-style semaphore lock */
