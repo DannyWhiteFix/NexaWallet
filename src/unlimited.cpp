@@ -105,16 +105,6 @@ std::string OutboundConnectionValidator(const int &value, int *item, bool valida
             return "This field cannot be reduced at run time since that would kick out existing connections";
         }
     }
-    else // Do anything to "take" the new value
-    {
-        if (value < *item) // note that now value is the old value and *item has been set to the new.
-        {
-            int diff = *item - value;
-            if (semOutboundAddNode) // Add the additional slots to the outbound semaphore
-                for (int i = 0; i < diff; i++)
-                    semOutboundAddNode->post();
-        }
-    }
     return std::string();
 }
 

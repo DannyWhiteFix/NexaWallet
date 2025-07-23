@@ -2124,6 +2124,9 @@ void ThreadOpenConnections()
     int64_t nNextFeeler = PoissonNextSend(nStart, FEELER_INTERVAL);
     while (shutdown_threads.load() == false)
     {
+        // Every loop through resize the semaphore if needed.
+        semOutbound->resize(nMaxOutConnections);
+
         ProcessOneShot();
 
         // This sleep time is very important to making stable
@@ -2411,6 +2414,9 @@ void ThreadOpenAddedConnections()
                 }
             }
         }
+
+        // Every loop through resize the semaphore if needed.
+        semOutboundAddNode->resize(nMaxOutConnections);
 
         for (vector<CService> &vserv : lservAddressesToAdd)
         {
@@ -2896,11 +2902,6 @@ bool StopNode()
 {
     LOGA("StopNode()\n");
     MapPort(false);
-    if (semOutbound)
-    {
-        for (int i = 0; i < nMaxOutConnections; i++)
-            semOutbound->post();
-    }
     if (fAddressesInitialized)
     {
         DumpData(0);

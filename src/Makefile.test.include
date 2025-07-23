@@ -102,7 +102,6 @@ NEXA_TESTS =\
   test/iblt_tests.cpp \
   test/key_tests.cpp \
   test/lcg_tests.cpp \
-  test/lcg.h \
   test/limitedmap_tests.cpp \
   test/lockswap_tests.cpp \
   test/dbwrapper_tests.cpp \
@@ -137,6 +136,7 @@ NEXA_TESTS =\
   test/scriptnum_tests.cpp \
   test/scriptresource_tests.cpp \
   test/scripttemplate_tests.cpp \
+  test/semaphore_tests.cpp \
   test/serialize_tests.cpp \
   test/sigencoding_tests.cpp \
   test/sighash_tests.cpp \

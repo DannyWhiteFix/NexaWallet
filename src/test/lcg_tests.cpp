@@ -9,13 +9,15 @@
 
 BOOST_AUTO_TEST_SUITE(lcg_tests);
 
-BOOST_AUTO_TEST_CASE(lcg_test1) {
+BOOST_AUTO_TEST_CASE(lcg_test1)
+{
     {
         MMIXLinearCongruentialGenerator lcg;
         // We want that the first iteration is 0 which is a helpful special
         // case.
         BOOST_CHECK_EQUAL(lcg.next(), 0x00000000U);
-        for (int i = 0; i < 99; i++) {
+        for (int i = 0; i < 99; i++)
+        {
             lcg.next();
         }
         // Make sure the LCG is producing expected value after many iterations.
@@ -27,7 +29,8 @@ BOOST_AUTO_TEST_CASE(lcg_test1) {
         MMIXLinearCongruentialGenerator lcg(42);
         // We this also should make first iteration as 0.
         BOOST_CHECK_EQUAL(lcg.next(), 0x00000000U);
-        for (int i = 0; i < 99; i++) {
+        for (int i = 0; i < 99; i++)
+        {
             lcg.next();
         }
         // Make sure the LCG is producing expected value after many iterations.
@@ -39,7 +42,8 @@ BOOST_AUTO_TEST_CASE(lcg_test1) {
         // just some big seed
         MMIXLinearCongruentialGenerator lcg(0xdeadbeef00000000);
         BOOST_CHECK_EQUAL(lcg.next(), 0xdeadbeefU);
-        for (int i = 0; i < 99; i++) {
+        for (int i = 0; i < 99; i++)
+        {
             lcg.next();
         }
         // Make sure the LCG is producing expected value after many iterations.
