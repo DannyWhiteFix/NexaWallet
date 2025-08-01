@@ -8,6 +8,7 @@
 #define NEXA_WALLET_WALLET_H
 
 #include "amount.h"
+#include "chain.h"
 #include "clientversion.h"
 #include "consensus/grouptokens.h"
 #include "policy/policy.h"
@@ -34,6 +35,7 @@
 
 #include <boost/shared_ptr.hpp>
 
+extern CChain chainActive;
 extern CWallet *pwalletMain;
 
 /**

@@ -57,28 +57,3 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params 
 
     return true;
 }
-
-arith_uint256 GetBlockProof(const CBlockIndex &block) { return GetWorkForDifficultyBits(block.tgtBits()); }
-int64_t GetBlockProofEquivalentTime(const CBlockIndex &to,
-    const CBlockIndex &from,
-    const CBlockIndex &tip,
-    const Consensus::Params &params)
-{
-    arith_uint256 r;
-    int sign = 1;
-    if (to.chainWork() > from.chainWork())
-    {
-        r = to.chainWork() - from.chainWork();
-    }
-    else
-    {
-        r = from.chainWork() - to.chainWork();
-        sign = -1;
-    }
-    r = r * arith_uint256(params.nPowTargetSpacing) / GetBlockProof(tip);
-    if (r.bits() > 63)
-    {
-        return sign * std::numeric_limits<int64_t>::max();
-    }
-    return sign * r.GetLow64();
-}

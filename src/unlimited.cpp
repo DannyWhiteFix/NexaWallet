@@ -562,7 +562,7 @@ UniValue getblockversion(const UniValue &params, bool fHelp)
                             "\nExamples:\n" +
                             HelpExampleCli("getblockversion", "") + HelpExampleRpc("getblockversion", ""));
     const CBlockIndex *pindex = chainActive.Tip();
-    return UnlimitedComputeBlockVersion(pindex, Params().GetConsensus(), pindex->time());
+    return UnlimitedComputeBlockVersion(pindex, Params().GetConsensus(), pindex->GetBlockTime());
 }
 
 UniValue setblockversion(const UniValue &params, bool fHelp)

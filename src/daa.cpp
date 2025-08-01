@@ -5,7 +5,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "pow.h"
+#include "daa.h"
 
 #include "arith_uint256.h"
 #include "chain.h"
@@ -125,7 +125,7 @@ uint32_t GetNextASERTWorkRequired(const CBlockIndex *pindexPrev,
     const int64_t nTimeDiff = pindexPrev->GetBlockTime() - anchorTime;
     // Height difference is from current block to anchor block
     const int64_t nHeightDiff = pindexPrev->height() - pindexAnchorBlock->height();
-    const arith_uint256 refBlockTarget = arith_uint256().SetCompact(pindexAnchorBlock->header.nBits);
+    const arith_uint256 refBlockTarget = arith_uint256().SetCompact(pindexAnchorBlock->tgtBits());
     // Do the actual target adaptation calculation in separate
     // CalculateASERT() function
     arith_uint256 nextTarget = CalculateASERT(

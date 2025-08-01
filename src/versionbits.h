@@ -8,6 +8,7 @@
 #define NEXA_VERSIONBITS
 
 #include "chain.h"
+#include "chainparams.h"
 #include <map>
 
 /** What block version to use for new blocks (pre versionbits) */
@@ -108,6 +109,18 @@ void ClearBip135Votes();
 // Pass vote=1 to start voting or vote=0 stop voting.
 // returns false if any feature is not defined.
 bool AssignBip135Votes(const std::string &features, int vote);
+
+/**
+ * Returns true if a deployment is considered active on a particular network
+ */
+
+bool IsConfiguredDeployment(const Consensus::Params &consensusParams, const int bit);
+
+/**
+ * Dump the fork deployment parameters for the given BIP70 chain name.
+ * @throws std::runtime_error when the chain is not supported.
+ */
+const std::string NetworkDeploymentInfoCSV(const std::string &chain);
 
 
 #endif // NEXA_VERSIONBITS_H

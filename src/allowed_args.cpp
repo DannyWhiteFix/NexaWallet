@@ -656,7 +656,7 @@ static void addTweaks(AllowedArgs &allowedArgs, CTweakMap *pTweaks)
         CTweakBase *tweak = i->second;
         std::string optName = tweak->GetName();
 
-        // Do not display the following tweaks
+        // Do not display the following tweaks in the Command Line options output
         std::set<std::string> hiddenTweaks = {"mining.xval", "net.blockDownloadWindow", "net.blockRetryInterval",
             "net.grapheneBloomFprOverride", "net.grapheneFastFilterCompatibility", "net.grapheneIbltSizeOverride",
             "net.grapheneMaxVersionSupported", "net.grapheneMinVersionSupported", "net.ignoreTimeouts", "net.magic",
@@ -664,7 +664,7 @@ static void addTweaks(AllowedArgs &allowedArgs, CTweakMap *pTweaks)
             "net.txRetryInterval", "test.maxSatoScriptOps", "test.maxScriptTemplateOps", "test.maxBlockSigChecks",
             "test.parallel", "test.pvtest", "test.blockLookAheadInterval", "test.maxAllowedNetMessage",
             "test.nextMaxBlockSize", "test.enforceMinTxSize", "test.avoidReconsiderMostWorkChain", "test.extVersion",
-            "consensus.fork1Time", "blockchain.maxReorgDepth"};
+            "consensus.fork1Time", "blockchain.maxReorgDepth", "cache.maxHeaders"};
         if (hiddenTweaks.count(optName))
             fDebugArg = true;
 

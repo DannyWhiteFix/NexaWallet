@@ -19,7 +19,7 @@ static void SetMTP(std::array<CBlockIndex, 12> &blocks, int64_t mtp)
 
     for (size_t i = 0; i < len; ++i)
     {
-        blocks[i].header.nTime = mtp + (i - (len / 2));
+        blocks[i].SetBlockHeaderTime(mtp + (i - (len / 2)));
     }
 
     assert(blocks.back().GetMedianTimePast() == mtp);
@@ -34,11 +34,15 @@ BOOST_AUTO_TEST_CASE(isfork1enabled)
     const auto activation = config.GetConsensus().nextForkActivationTime;
 
     BOOST_CHECK(!IsFork1Activated(nullptr));
-
     std::array<CBlockIndex, 12> blocks;
-    for (size_t i = 1; i < blocks.size(); ++i)
+    for (size_t i = 0; i < blocks.size(); ++i)
     {
-        blocks[i].pprev = &blocks[i - 1];
+        if (i == 0)
+            blocks[i].pprev = nullptr;
+        else
+            blocks[i].pprev = &blocks[i - 1];
+        blocks[i].SetBlockHeaderBits(1);
+        blocks[i].SetBlockHeaderHeight(i);
     }
 
     SetMTP(blocks, activation - 1);

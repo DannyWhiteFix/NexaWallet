@@ -1556,7 +1556,7 @@ bool CheckSequenceLocks(const CTransactionRef tx, int flags, LockPoints *lp, boo
     // evaluated is what is used.
     // Thus if we want to know if a transaction can be part of the
     // *next* block, we need to use one more than chainActive.Height()
-    index.header.height = tip->height() + 1;
+    index.SetBlockHeaderHeight(tip->height() + 1);
 
     std::pair<int, int64_t> lockPair;
     if (useExistingLockPoints)

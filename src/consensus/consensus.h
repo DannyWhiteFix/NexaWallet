@@ -7,12 +7,10 @@
 #ifndef NEXA_CONSENSUS_CONSENSUS_H
 #define NEXA_CONSENSUS_CONSENSUS_H
 
-#include "chain.h"
 #include "script/interpreter.h"
 #include "tweak.h"
 #include "uint256.h"
 
-extern CChain chainActive;
 extern CTweak<uint64_t> maxSigChecks;
 extern CTweak<uint64_t> maxAllowedNetMessage;
 extern CTweak<uint64_t> nextMaxBlockSize;

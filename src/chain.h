@@ -8,6 +8,7 @@
 #define NEXA_CHAIN_H
 
 #include "arith_uint256.h"
+#include "consensus/consensus.h"
 #include "pow.h"
 #include "primitives/block.h"
 #include "sync.h"
@@ -15,12 +16,19 @@
 #include "uint256.h"
 #include "util.h"
 
+
 #include <atomic>
 #include <vector>
 
+/* Number of headers to keep in RAM for the blockindex */
+static const uint32_t DEFAULT_HEADERS_TO_KEEP_IN_RAM = 100;
+
+CBlockHeader GetBlockHeaderFromDB(const uint256 &hash);
 extern CSharedCriticalSection cs_mapBlockIndex;
 extern CTweak<uint64_t> nextMaxBlockSize;
 extern uint64_t nDiskBlockIndexVersion;
+
+CBlockIndex *InsertBlockIndex(const uint256 &hash);
 
 class CBlockFileInfo
 {
@@ -163,6 +171,8 @@ std::string ToString(BlockStatus s);
  */
 class CBlockIndex
 {
+    friend class CBlockHeadersDB;
+
 public:
     //! (memory only) pointer to the hash of the block, if any. Memory is owned by this CBlockIndex
     const uint256 *phashBlock;
@@ -173,30 +183,45 @@ public:
     //! (memory only) pointer to the index of some further predecessor of this block
     CBlockIndex *pskip;
 
-    //! height of the entry in the chain. The genesis block has height 0
-    int64_t height() const { return ((int64_t)header.height); }
+    //! (memory only) height of the entry in the chain. The genesis block has height 0
+    //  Although we can get this info from the header, getting header info is slow because, in order to save RAM, we
+    //  don't load all headers into memory. In this way we still save RAM but give fast access to data we need often.
+    uint32_t nHeight;
+    int64_t height() const { return (int64_t)nHeight; }
 
     //! Which # file this block is stored in (blk?????.dat)
-    int nFile;
+    int32_t nFile;
 
     //! Byte offset within blk?????.dat where this block's data is stored
-    unsigned int nDataPos;
+    uint32_t nDataPos;
 
     //! Byte offset within rev?????.dat where this block's undo data is stored
-    unsigned int nUndoPos;
+    uint32_t nUndoPos;
 
     //! Access the chain's total work as committed in the block header
-    arith_uint256 chainWork() const { return UintToArith256(header.chainWork); }
+    arith_uint256 nChainWork;
+    arith_uint256 chainWork() const { return nChainWork; }
+
+    //! The block size taken fron the block header.
+    uint64_t nSize;
+    uint64_t GetBlockSize() const { return nSize; }
+
     //! Access the transaction count as committed in the block header
-    unsigned int txCount() const { return header.txCount; }
+    uint32_t nTx;
+    uint32_t txCount() const { return nTx; }
+
     //! Access the block time as committed in the block header
-    unsigned int time() const { return header.nTime; }
+    uint32_t nTime;
+    int64_t GetBlockTime() const { return (int64_t)nTime; }
+
     //! Access the difficulty target in "nBits" format, as committed in the block header
-    uint32_t tgtBits() const { return header.nBits; }
+    uint32_t nBits;
+    uint32_t tgtBits() const { return nBits; }
+
     //! Access the merkle root as committed in the block header
-    uint256 hashMerkleRoot() const { return header.hashMerkleRoot; }
+    uint256 hashMerkleRoot() const { return GetBlockHeader().hashMerkleRoot; }
     //! Access the nonce as committed in the block header
-    const std::vector<unsigned char> &nonce() const { return header.nonce; }
+    const std::vector<unsigned char> nonce() const { return GetBlockHeader().nonce; }
 
     //! Return true if this block has been processed */
     bool processed() const { return ((nStatus & BLOCK_PROCESSED) != 0); }
@@ -209,13 +234,15 @@ public:
     uint64_t nChainTx;
 
     //! Verification status of this block. See enum BlockStatus
-    unsigned int nStatus;
+    uint32_t nStatus;
 
-    //! block header
-    CBlockHeader header;
+protected:
+    //! block header - must be private to prevent a nullptr access. Use GetBlockHeader() and SetBlockHeader().
+    std::shared_ptr<CBlockHeader> header;
 
+public:
     //! Sequential id assigned to distinguish order in which blocks are received.
-    uint64_t nSequenceId;
+    uint32_t nSequenceId;
 
     //! The time (in seconds) the block header was added to the index.
     uint64_t nTimeReceived;
@@ -228,6 +255,11 @@ public:
         phashBlock = nullptr;
         pprev = nullptr;
         pskip = nullptr;
+        nHeight = 0;
+        nSize = 0;
+        nTx = 0;
+        nTime = 0;
+        nBits = 0;
         nFile = 0;
         nDataPos = 0;
         nUndoPos = 0;
@@ -237,14 +269,26 @@ public:
         nTimeReceived = 0;
         nNextMaxBlockSize = 0;
 
-        header.SetNull();
+        header = nullptr;
+        nChainWork = 0;
     }
 
-    CBlockIndex() { SetNull(); }
+    CBlockIndex()
+    {
+        SetNull();
+        header = std::make_shared<CBlockHeader>(CBlockHeader());
+    }
+
     CBlockIndex(const CBlockHeader &block)
     {
         SetNull();
-        header = block;
+        header = std::make_shared<CBlockHeader>(block);
+        nHeight = block.height;
+        nChainWork = UintToArith256(block.chainWork);
+        nSize = block.size;
+        nTx = block.txCount;
+        nTime = block.nTime;
+        nBits = block.nBits;
     }
 
     CDiskBlockPos GetBlockPos() const
@@ -269,15 +313,72 @@ public:
         return ret;
     }
 
+    bool IsHeaderNull() const { return header == nullptr; }
+    void SetBlockHeader(std::shared_ptr<CBlockHeader> _header) { header = _header; }
+    void SetBlockHeaderHeight(uint32_t _height)
+    {
+        WRITELOCK(cs_mapBlockIndex);
+        if (header != nullptr)
+        {
+            header->height = _height;
+            nHeight = _height;
+        }
+    }
+
+    void SetBlockHeaderBits(uint32_t _nBits)
+    {
+        WRITELOCK(cs_mapBlockIndex);
+        if (header != nullptr)
+        {
+            header->nBits = _nBits;
+            nBits = _nBits;
+        }
+    }
+
+    void SetBlockHeaderTime(uint32_t _nTime)
+    {
+        WRITELOCK(cs_mapBlockIndex);
+        if (header != nullptr)
+        {
+            header->nTime = _nTime;
+            nTime = _nTime;
+        }
+    }
+
+    void SetBlockHeaderSize(uint32_t _nSize)
+    {
+        WRITELOCK(cs_mapBlockIndex);
+        if (header != nullptr)
+        {
+            header->size = _nSize;
+            nSize = _nSize;
+        }
+    }
+
+    void SetBlockHeaderChainWork(uint256 _nChainWork)
+    {
+        WRITELOCK(cs_mapBlockIndex);
+        if (header != nullptr)
+        {
+            header->chainWork = _nChainWork;
+            nChainWork = UintToArith256(_nChainWork);
+        }
+    }
+
     CBlockHeader GetBlockHeader() const
     {
-        CBlockHeader block = header;
-        // hashPrevBlock not initialized? So in release mode overwrite it
-        if (pprev)
+        // We take a temporary so we don't have to grab a lock
+        // on mapBlockIndex.
+        std::shared_ptr<CBlockHeader> tmp = header;
+        if (tmp != nullptr && !tmp->IsNull())
         {
-            DbgAssert(header.hashPrevBlock == pprev->GetBlockHash(), block.hashPrevBlock = pprev->GetBlockHash());
+            return *tmp;
         }
-        return block;
+        else
+        {
+            assert(phashBlock);
+            return GetBlockHeaderFromDB(*(phashBlock));
+        }
     }
 
     uint256 GetBlockHash() const
@@ -285,10 +386,9 @@ public:
         if (phashBlock)
             return *phashBlock;
         else
-            return header.GetHash();
+            return GetBlockHeader().GetHash();
     }
-    int64_t GetBlockTime() const { return (int64_t)header.nTime; }
-    uint64_t GetBlockSize() const { return header.size; }
+
     enum
     {
         nMedianTimeSpan = 11
@@ -317,8 +417,8 @@ public:
     int64_t GetHeaderReceivedTime() const { return nTimeReceived; }
     std::string ToString() const
     {
-        return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s)", pprev, header.height,
-            header.hashMerkleRoot.ToString(), GetBlockHash().ToString());
+        return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s)", pprev, height(),
+            hashMerkleRoot().ToString(), GetBlockHash().ToString());
     }
 
     //! Check whether this block index entry is valid up to the passed validity level.
@@ -385,6 +485,9 @@ int64_t GetBlockProofEquivalentTime(const CBlockIndex &to,
     const CBlockIndex &tip,
     const Consensus::Params &);
 
+/** Get block's work: that is the work equivalent for the nBits of difficulty specified in this block */
+arith_uint256 GetBlockProof(const CBlockIndex &block);
+
 /** Find the last common ancestor two blocks have.
  *  Both pa and pb must be non-nullptr. */
 const CBlockIndex *LastCommonAncestor(const CBlockIndex *pa, const CBlockIndex *pb);
@@ -400,6 +503,8 @@ class CDiskBlockIndex : public CBlockIndex
 public:
     CDiskBlockIndex() {}
     explicit CDiskBlockIndex(const CBlockIndex *pindex) : CBlockIndex(*pindex) {}
+
+    uint256 prevHash;
 
     friend bool operator<(const CDiskBlockIndex &a, const CDiskBlockIndex &b) { return a.height() < b.height(); }
     ADD_SERIALIZE_METHODS;
@@ -420,8 +525,67 @@ public:
         if (nStatus & BLOCK_HAVE_UNDO)
             READWRITE(VARINT(nUndoPos));
 
-        // block header
-        READWRITE(header);
+        // block header is saved only in older versions of block index.
+        if (nDiskBlockIndexVersion <= 1)
+        {
+            if (ser_action.ForRead())
+            {
+                CBlockHeader tmp;
+                READWRITE(tmp);
+                header = std::make_shared<CBlockHeader>(tmp);
+            }
+            else
+            {
+                READWRITE(*header);
+            }
+        }
+        // For index version 2 and above we have split the block index storage into
+        // two databases. One for the main index data which is accessed frequently
+        // and is loaded fully into RAM and another database just for the headers
+        // which get accessed directly from disk much less frequently.
+        else if (nDiskBlockIndexVersion >= 2)
+        {
+            // pprev
+            if (ser_action.ForRead())
+            {
+                READWRITE(prevHash);
+            }
+            else
+            {
+                uint256 tmp;
+                if (pprev && pprev->phashBlock)
+                    tmp = *(pprev->phashBlock);
+                READWRITE(tmp);
+            }
+
+            // nHeight
+            READWRITE(VARINT(nHeight));
+
+            // nChainWork
+            if (ser_action.ForRead())
+            {
+                uint256 tmp;
+                READWRITE(tmp);
+                nChainWork = UintToArith256(tmp);
+            }
+            else
+            {
+                uint256 tmp = ArithToUint256(nChainWork);
+                READWRITE(tmp);
+            }
+
+            // nSize
+            READWRITE(VARINT(nSize));
+
+            // nTx
+            READWRITE(VARINT(nTx));
+
+            // nTime
+            READWRITE(VARINT(nTime));
+
+            // nBits
+            READWRITE(VARINT(nBits));
+        }
 
         // sequence id and time received
         READWRITE(VARINT(nSequenceId));
@@ -437,7 +601,7 @@ public:
         }
     }
 
-    uint256 GetBlockHash() const { return header.GetHash(); }
+    uint256 GetBlockHash() const { return GetBlockHeader().GetHash(); }
 
 
     std::string ToString() const
@@ -445,7 +609,7 @@ public:
         std::string str = "CDiskBlockIndex(";
         str += CBlockIndex::ToString();
         str += strprintf("\n                hashBlock=%s, hashPrevBlock=%s)", GetBlockHash().ToString(),
-            header.hashPrevBlock.ToString());
+            GetBlockHeader().hashPrevBlock.ToString());
         return str;
     }
 };
@@ -534,7 +698,7 @@ public:
                 if (*i->phashBlock == hash)
                     return i;
             }
-            else if (i->header.GetHash() == hash)
+            else if (i->GetBlockHeader().GetHash() == hash)
                 return i;
         }
         return nullptr;

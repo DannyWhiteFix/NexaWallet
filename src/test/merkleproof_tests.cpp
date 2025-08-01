@@ -130,7 +130,7 @@ VchType halg(MerkleRootAlg alg, VchType a)
 }
 
 
-BOOST_FIXTURE_TEST_SUITE(merkleproof, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(merkleproof_tests, BasicTestingSetup)
 
 template <typename Hasher, int HashSize>
 void treeExpansionTest()

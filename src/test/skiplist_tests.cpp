@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(skiplist_test)
 
     for (int i = 0; i < SKIPLIST_LENGTH; i++)
     {
-        vIndex[i].header.height = i;
+        vIndex[i].SetBlockHeaderHeight(i);
         vIndex[i].pprev = (i == 0) ? nullptr : &vIndex[i - 1];
         vIndex[i].BuildSkip();
     }
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(getlocator_test)
     for (unsigned int i = 0; i < vBlocksMain.size(); i++)
     {
         vHashMain[i] = ArithToUint256(i); // Set the hash equal to the height, so we can quickly check the distances.
-        vBlocksMain[i].header.height = i;
+        vBlocksMain[i].SetBlockHeaderHeight(i);
         vBlocksMain[i].pprev = i ? &vBlocksMain[i - 1] : nullptr;
         vBlocksMain[i].phashBlock = &vHashMain[i];
         vBlocksMain[i].BuildSkip();
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(getlocator_test)
     {
         // Add 1<<128 to the hashes, so GetLow64() still returns the height.
         vHashSide[i] = ArithToUint256(i + 50000 + (arith_uint256(1) << 128));
-        vBlocksSide[i].header.height = i + 50000;
+        vBlocksSide[i].SetBlockHeaderHeight(i + 50000);
         vBlocksSide[i].pprev = i ? &vBlocksSide[i - 1] : &vBlocksMain[49999];
         vBlocksSide[i].phashBlock = &vHashSide[i];
         vBlocksSide[i].BuildSkip();

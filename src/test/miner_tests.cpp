@@ -287,8 +287,10 @@ static struct
 
 CBlockIndex CreateBlockIndex(int nHeight)
 {
+    CBlockHeader _header;
     CBlockIndex index;
-    index.header.height = nHeight;
+    index.SetBlockHeader(std::make_shared<CBlockHeader>(_header));
+    index.SetBlockHeaderHeight(nHeight);
     index.pprev = chainActive.Tip();
     return index;
 }
@@ -955,11 +957,11 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         next->phashBlock = new uint256(InsecureRand256());
         pcoinsTip->SetBestBlock(next->GetBlockHash());
         next->pprev = prev;
-        next->header.nBits = chainTgtBits;
-        next->header.chainWork = ArithToUint256(prev->chainWork() + GetBlockProof(*next));
-        next->header.height = prev->height() + 1;
-        next->BuildSkip();
+        next->SetBlockHeaderBits(chainTgtBits);
+        next->SetBlockHeaderChainWork(ArithToUint256(prev->chainWork() + GetBlockProof(*next)));
+        next->SetBlockHeaderHeight(prev->height() + 1);
         next->nNextMaxBlockSize = DEFAULT_NEXT_MAX_BLOCK_SIZE;
+        next->BuildSkip();
         chainActive.SetTip(next);
     }
     BOOST_CHECK(pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey));
@@ -972,9 +974,9 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         next->phashBlock = new uint256(InsecureRand256());
         pcoinsTip->SetBestBlock(next->GetBlockHash());
         next->pprev = prev;
-        next->header.height = prev->height() + 1;
-        next->BuildSkip();
+        next->SetBlockHeaderHeight(prev->height() + 1);
         next->nNextMaxBlockSize = DEFAULT_NEXT_MAX_BLOCK_SIZE;
+        next->BuildSkip();
         chainActive.SetTip(next);
     }
     BOOST_CHECK(pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey));
@@ -994,6 +996,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     mempool.clear();
     // PerformanceTest_PackageSelection(chainparams, scriptPubKey, txFirst);
 
+    // Must reset this to "true" or you'll cause a thread to hang in the main test loop.
     fCheckpointsEnabled = true;
 
     enforceMinTxSize.Set(true);
@@ -1083,11 +1086,14 @@ BOOST_AUTO_TEST_CASE(AdaptiveBlockSize)
         uint64_t nBlockSize = ((nMultiplyer + 1) * 1000000) + (InsecureRandRange(256) * 1000 * 1000);
         if (InsecureRandRange(50) == 0)
             nMultiplyer = InsecureRandRange(100);
-        pindex->header.height = nHeight;
-        pindex->header.size = nBlockSize;
+        CBlockHeader header;
+        pindex->SetBlockHeader(std::make_shared<CBlockHeader>(header));
+        pindex->SetBlockHeaderHeight(nHeight);
+        pindex->SetBlockHeaderSize(nBlockSize);
+        pindex->SetBlockHeaderBits(1);
         pindex->pprev = pprev;
         pprev = pindex;
-        mapIndex.emplace(pindex->header.GetHash(), pindex);
+        mapIndex.emplace(pindex->GetBlockHeader().GetHash(), pindex);
 
         if (!pindex->pprev)
             continue;
@@ -1106,11 +1112,14 @@ BOOST_AUTO_TEST_CASE(AdaptiveBlockSize)
             CBlockIndex *pindexFork = new CBlockIndex();
             // Block size must be at least 1 or certain debug assertion sanity checks are triggered
             uint64_t nBlockSizeFork = (nMultiplyer * 1000000) + (InsecureRandRange(256) * 1000 * 1000) + 1;
-            pindexFork->header.height = nHeight;
-            pindexFork->header.size = nBlockSizeFork;
+            CBlockHeader _header;
+            pindexFork->SetBlockHeader(std::make_shared<CBlockHeader>(_header));
+            pindexFork->SetBlockHeaderHeight(nHeight);
+            pindexFork->SetBlockHeaderSize(nBlockSizeFork);
+            pindexFork->SetBlockHeaderBits(1);
             pindexFork->pprev = pindex->pprev;
             pprev = pindexFork;
-            mapIndex.emplace(pindexFork->header.GetHash(), pindexFork);
+            mapIndex.emplace(pindexFork->GetBlockHeader().GetHash(), pindexFork);
 
             uint64_t nMedianFork1 = 0;
             uint64_t nMedianFork2 = 0;

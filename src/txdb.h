@@ -52,8 +52,8 @@ static const uint64_t nMinMemToKeepAvailable = 300 * 1000 * 1000;
 static const size_t nMaxDBBatchSize = 16 << 20;
 //! Max memory allocated to block tree DB specific cache, if no -txindex (MiB)
 static const int64_t nMaxBlockDBCache = 2;
-//! BlockTreeDB (block index) version.
-static const uint32_t BLOCK_INDEX_VERSION = 1;
+//! Block index version.
+static const uint32_t BLOCK_INDEX_VERSION = 2;
 
 /** Get the current available memory */
 uint64_t GetAvailableMemory();
@@ -206,12 +206,32 @@ public:
     bool ReadFlag(const std::string &name, bool &fValue);
     bool FindBlockIndex(uint256 blockhash, CDiskBlockIndex &pindex);
     bool LoadBlockIndexGuts();
-    bool GetSortedHashIndex(std::vector<std::pair<int, CDiskBlockIndex> > &hashesByHeight);
+    bool GetSortedHashIndex(std::vector<std::pair<int, std::pair<uint256, CDiskBlockIndex> > > &hashesByHeight);
     uint64_t GetBestBlockHeaderChainTx() const;
     bool WriteBestBlockHeaderChainTx(const uint64_t nChainTx);
     uint32_t GetBlockIndexVersion() const;
     bool WriteBlockIndexVersion(const uint32_t nVersion);
 };
+
+/** Access to the block database (blocks/headers/) */
+class CBlockHeadersDB : public CDBWrapper
+{
+public:
+    CBlockHeadersDB(size_t nCacheSize, std::string folder, bool fMemory = false, bool fWipe = false);
+
+private:
+    CBlockHeadersDB(const CBlockHeadersDB &);
+    void operator=(const CBlockHeadersDB &);
+
+public:
+    bool WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo *> > &fileInfo,
+        int nLastFile,
+        const std::vector<const CBlockIndex *> &blockinfo);
+    bool FindBlockHeader(const uint256 &blockhash, CBlockHeader &header);
+};
+
+/** Get the header directly from the appropriate database */
+CBlockHeader GetBlockHeaderFromDB(const uint256 &hash);
 
 /** Access to the token description database (indexes/tokendesc */
 class CTokenDescriptionDB : public CDBWrapper

@@ -24,7 +24,6 @@ BOOST_AUTO_TEST_CASE(PartitionAlert)
     CBlockIndex indexDummy[500];
     CChainParams &params = Params(CBaseChainParams::NEXA);
     int64_t nPowTargetSpacing = params.GetConsensus().nPowTargetSpacing;
-
     // Generate fake blockchain timestamps relative to
     // an arbitrary time:
     int64_t now = 1427379054;
@@ -36,8 +35,10 @@ BOOST_AUTO_TEST_CASE(PartitionAlert)
             indexDummy[i].pprev = nullptr;
         else
             indexDummy[i].pprev = &indexDummy[i - 1];
-        indexDummy[i].header.height = i;
-        indexDummy[i].header.nTime = now - (500 - i) * nPowTargetSpacing;
+        indexDummy[i].SetBlockHeaderHeight(i);
+        indexDummy[i].SetBlockHeaderBits(1);
+        indexDummy[i].SetBlockHeaderSize(1);
+        indexDummy[i].SetBlockHeaderTime(now - (500 - i) * nPowTargetSpacing);
         // Other members don't matter, the partition check code doesn't
         // use them
     }
@@ -69,7 +70,9 @@ BOOST_AUTO_TEST_CASE(PartitionAlert)
     SetMockTime(now);
     int64_t quickSpacing = nPowTargetSpacing * 2 / 5;
     for (int i = 0; i < 500; i++) // Tweak chain timestamps:
-        indexDummy[i].header.nTime = now - (500 - i) * quickSpacing;
+    {
+        indexDummy[i].SetBlockHeaderTime(now - (500 - i) * quickSpacing);
+    }
     PartitionCheck(falseFunc, csDummy, &indexDummy[99], nPowTargetSpacing);
     BOOST_CHECK(!strMiscWarning.empty());
     BOOST_TEST_MESSAGE(std::string("Got alert text: ") + strMiscWarning);

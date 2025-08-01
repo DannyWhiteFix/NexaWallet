@@ -71,13 +71,14 @@ BasicTestingSetup::BasicTestingSetup(const std::string &chainName)
         printf("acceptnonstdtxn is not currently supported for %s chain", ModifiableParams().NetworkIDString().c_str());
         assert(false);
     }
+
+    // Set forktime here so that all tests have access to it.
+    nMiningForkTime = Params().GetConsensus().nextForkActivationTime;
 }
 
 BasicTestingSetup::~BasicTestingSetup() { ECC_Stop(); }
 TestingSetup::TestingSetup(const std::string &chainName) : BasicTestingSetup(chainName)
 {
-    nMiningForkTime = Params().GetConsensus().nextForkActivationTime;
-
     insecure_rand_seed = GetRandHash();
     insecure_rand_ctx = FastRandomContext(insecure_rand_seed);
 
@@ -91,6 +92,7 @@ TestingSetup::TestingSetup(const std::string &chainName) : BasicTestingSetup(cha
     fs::create_directories(pathTemp);
     blockcache.Init();
     pblocktree = new CBlockTreeDB(1 << 20, "", true);
+    pblockheaders = new CBlockHeadersDB(1 << 20, "", true);
     pcoinsdbview = new CCoinsViewDB(1 << 23, true);
     pcoinsTip = new CCoinsViewCache(pcoinsdbview);
     txCommitQ = new CIndexedCommitQ();
@@ -129,6 +131,7 @@ TestingSetup::~TestingSetup()
     delete pcoinsTip;
     delete pcoinsdbview;
     delete pblocktree;
+    delete pblockheaders;
     delete ptokenDesc;
     delete ptokenMint;
     fs::remove_all(pathTemp);
