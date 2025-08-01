@@ -164,11 +164,11 @@ const CBlockIndex *CBlockIndex::GetChildsConsensusAncestor() const
 
 CBlockIndex *CBlockIndex::GetAncestor(int ansHeight)
 {
-    if (ansHeight > height() || ansHeight < 0)
+    int heightWalk = height();
+    if (ansHeight > heightWalk || ansHeight < 0)
         return nullptr;
 
     CBlockIndex *pindexWalk = this;
-    int heightWalk = height();
     while (heightWalk > ansHeight)
     {
         int heightSkip = GetSkipHeight(heightWalk);
@@ -239,3 +239,29 @@ bool AreOnTheSameFork(const CBlockIndex *pa, const CBlockIndex *pb)
     const CBlockIndex *pindexCommon = LastCommonAncestor(pa, pb);
     return pindexCommon == pa || pindexCommon == pb;
 }
+
+int64_t GetBlockProofEquivalentTime(const CBlockIndex &to,
+    const CBlockIndex &from,
+    const CBlockIndex &tip,
+    const Consensus::Params &params)
+{
+    arith_uint256 r;
+    int sign = 1;
+    if (to.chainWork() > from.chainWork())
+    {
+        r = to.chainWork() - from.chainWork();
+    }
+    else
+    {
+        r = from.chainWork() - to.chainWork();
+        sign = -1;
+    }
+    r = r * arith_uint256(params.nPowTargetSpacing) / GetBlockProof(tip);
+    if (r.bits() > 63)
+    {
+        return sign * std::numeric_limits<int64_t>::max();
+    }
+    return sign * r.GetLow64();
+}
+
+arith_uint256 GetBlockProof(const CBlockIndex &block) { return GetWorkForDifficultyBits(block.tgtBits()); }

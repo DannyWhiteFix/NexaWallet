@@ -93,26 +93,27 @@ UniValue blockheaderToJSON(const CBlockIndex *blockindex, UniValue &result)
     // Only report confirmations if the block is on the main chain
     if (mainChain)
         confirmations = chainActive.Height() - blockindex->height() + 1;
+    const CBlockHeader header = blockindex->GetBlockHeader();
     result.pushKV("confirmations", confirmations);
     result.pushKV("height", (uint64_t)blockindex->height());
-    result.pushKV("size", blockindex->header.size);
-    result.pushKV("txcount", blockindex->header.txCount);
-    result.pushKV("feePoolAmt", blockindex->header.feePoolAmt);
-    result.pushKV("merkleroot", blockindex->hashMerkleRoot().GetHex());
-    result.pushKV("time", (int64_t)blockindex->time());
+    result.pushKV("size", header.size);
+    result.pushKV("txcount", header.txCount);
+    result.pushKV("feePoolAmt", header.feePoolAmt);
+    result.pushKV("merkleroot", header.hashMerkleRoot.GetHex());
+    result.pushKV("time", (int64_t)header.nTime);
     result.pushKV("mediantime", (int64_t)blockindex->GetMedianTimePast());
-    result.pushKV("nonce", HexStr(blockindex->nonce()));
-    result.pushKV("bits", strprintf("%08x", blockindex->tgtBits()));
+    result.pushKV("nonce", HexStr(header.nonce));
+    result.pushKV("bits", strprintf("%08x", header.nBits));
     result.pushKV("difficulty", GetDifficulty(blockindex));
-    result.pushKV("chainwork", blockindex->chainWork().GetHex());
-    result.pushKV("utxoCommitment", HexStr(blockindex->header.utxoCommitment));
-    result.pushKV("minerData", HexStr(blockindex->header.minerData));
+    result.pushKV("chainwork", ArithToUint256(blockindex->chainWork()).GetHex());
+    result.pushKV("utxoCommitment", HexStr(header.utxoCommitment));
+    result.pushKV("minerData", HexStr(header.minerData));
     result.pushKV("status", ToString((BlockStatus)blockindex->nStatus));
     result.pushKV("onMainChain", mainChain);
 
     if (blockindex->pprev)
         result.pushKV("previousblockhash", blockindex->pprev->GetBlockHash().GetHex());
-    result.pushKV("ancestorhash", blockindex->header.hashAncestor.GetHex());
+    result.pushKV("ancestorhash", header.hashAncestor.GetHex());
 
     CBlockIndex *pnext = chainActive.Next(blockindex);
     if (pnext)
@@ -1475,7 +1476,7 @@ UniValue getblockchaininfo(const UniValue &params, bool fHelp)
     }
     obj.pushKV("verificationprogress", Checkpoints::GuessVerificationProgress(tip, !fCheckpointsEnabled));
     obj.pushKV("initialblockdownload", IsInitialBlockDownload());
-    obj.pushKV("chainwork", tip->chainWork().GetHex());
+    obj.pushKV("chainwork", ArithToUint256(tip->chainWork()).GetHex());
     obj.pushKV("coinsupply", GetCoinsMinted((int)tip->height(), Params().GetConsensus()));
     obj.pushKV("size_on_disk", CalculateCurrentUsage());
     obj.pushKV("pruned", fPruneMode);
@@ -1611,7 +1612,7 @@ UniValue getchaintips(const UniValue &params, bool fHelp)
     {
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("height", block->height());
-        obj.pushKV("chainwork", block->chainWork().GetHex());
+        obj.pushKV("chainwork", ArithToUint256(block->chainWork()).GetHex());
         obj.pushKV("hash", block->phashBlock->GetHex());
 
         const int branchLen = block->height() - chainActive.FindFork(block)->height();
@@ -2364,7 +2365,7 @@ static UniValue getblockstats(const UniValue &params, bool fHelp)
     ret_all.pushKV("outs", outputs);
     {
         READLOCK(cs_mapBlockIndex);
-        ret_all.pushKV("sequence_id", pindex->nSequenceId);
+        ret_all.pushKV("sequence_id", (int64_t)pindex->nSequenceId);
     }
     ret_all.pushKV("subsidy", ValueFromAmount(GetBlockSubsidy(pindex->height(), Params().GetConsensus())));
     ret_all.pushKV("time", pindex->GetBlockTime());
@@ -2507,7 +2508,7 @@ UniValue getchaintxstats(const UniValue &params, bool fHelp)
     int nTxDiff = pindex->nChainTx - pindexPast->nChainTx;
 
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("time", (int64_t)pindex->time());
+    ret.pushKV("time", pindex->GetBlockTime());
     ret.pushKV("txcount", (int64_t)pindex->nChainTx);
     ret.pushKV("txrate", ((double)nTxDiff) / nTimeDiff);
     ret.pushKV("window_final_block_hash", pindex->GetBlockHash().GetHex());

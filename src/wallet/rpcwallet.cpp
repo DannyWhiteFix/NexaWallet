@@ -3032,7 +3032,7 @@ UniValue getwalletinfo(const UniValue &params, bool fHelp)
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("walletversion", pwalletMain->GetVersion());
-    obj.pushKV("syncblock", chainActive.Tip()->header.GetHash().ToString());
+    obj.pushKV("syncblock", chainActive.Tip()->GetBlockHash().ToString());
     obj.pushKV("syncheight", chainActive.Tip()->height());
     obj.pushKV("balance", ValueFromAmount(pwalletMain->GetBalance()));
     obj.pushKV("unconfirmed_balance", ValueFromAmount(pwalletMain->GetUnconfirmedBalance()));

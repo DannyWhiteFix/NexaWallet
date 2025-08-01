@@ -27,6 +27,7 @@ extern std::vector<CBlockFileInfo> vinfoBlockFile;
 extern int nLastBlockFile;
 extern CTweak<uint64_t> pruneIntervalTweak;
 extern CTweak<uint64_t> dbcacheTweak;
+extern CTweak<uint32_t> maxHeadersToKeepInRAM;
 extern std::atomic<uint64_t> nTotalChainTx;
 
 CCriticalSection cs_flushstate;
@@ -40,14 +41,16 @@ uint64_t undofile_chunk_size = DEFAULT_UNDOFILE_CHUNK_SIZE;
  */
 BlockDBMode BLOCK_DB_MODE = DEFAULT_BLOCK_DB_MODE;
 
-static void InitBlockTreeDB(std::string folder, uint64_t _nBlockTreeDBCache)
+static void InitBlockIndexDatabases(std::string folder, uint64_t _nBlockTreeDBCache)
 {
     // Check if we had scheduled a reindex on last shutdown
     uint64_t nChainTx = 0;
+    uint32_t nCurrentBlockIndexVersion = 0;
     try
     {
         // Startup the database with the reindex (wipe database) flag set to false and get the value of nChainTx
         pblocktree = new CBlockTreeDB(_nBlockTreeDBCache, folder, false, false);
+        pblockheaders = new CBlockHeadersDB(_nBlockTreeDBCache, folder, false, false);
         bool fScheduledReindex = false;
         bool fRead = pblocktree->ReadReindexing(fScheduledReindex);
         if (fRead && fScheduledReindex)
@@ -55,6 +58,7 @@ static void InitBlockTreeDB(std::string folder, uint64_t _nBlockTreeDBCache)
             fReindex = true;
         }
         nChainTx = pblocktree->GetBestBlockHeaderChainTx();
+        nCurrentBlockIndexVersion = pblocktree->GetBlockIndexVersion();
     }
     catch (...)
     {
@@ -66,9 +70,16 @@ static void InitBlockTreeDB(std::string folder, uint64_t _nBlockTreeDBCache)
         delete pblocktree;
         pblocktree = nullptr;
 
-        // Restart the database and wipe the data but re-add the nChainTx after restart.
+        delete pblockheaders;
+        pblockheaders = nullptr;
+
+        // Restart the index database and wipe the data but re-add the nChainTx after restart.
         pblocktree = new CBlockTreeDB(_nBlockTreeDBCache, folder, false, true);
         pblocktree->WriteBestBlockHeaderChainTx(nChainTx);
+        pblocktree->WriteBlockIndexVersion(nCurrentBlockIndexVersion);
+
+        // Restart the database and wipe the data.
+        pblockheaders = new CBlockHeadersDB(_nBlockTreeDBCache, folder, false, true);
     }
     nTotalChainTx.store(nChainTx);
 }
@@ -89,14 +100,14 @@ void InitializeBlockStorage(const int64_t &_nBlockTreeDBCache,
     blockcache.Init();
     if (BLOCK_DB_MODE == SEQUENTIAL_BLOCK_FILES) // BLOCK_DB_MODE 0
     {
-        InitBlockTreeDB("blocks", _nBlockTreeDBCache);
+        InitBlockIndexDatabases("blocks", _nBlockTreeDBCache);
 
         delete pblockdb;
         pblockdb = nullptr;
     }
     else if (BLOCK_DB_MODE == LEVELDB_BLOCK_STORAGE) // BLOCK_DB_MODE 1
     {
-        InitBlockTreeDB("blockdb", _nBlockTreeDBCache);
+        InitBlockIndexDatabases("blockdb", _nBlockTreeDBCache);
 
         if (fs::exists(GetDataDir() / "blockdb" / "blocks"))
         {
@@ -113,18 +124,20 @@ void InitializeBlockStorage(const int64_t &_nBlockTreeDBCache,
     }
 }
 
-// grab the block tree for mode and put it at pblocktreeother
-void GetBlockTreeOther(BlockDBMode mode)
+// grab the block indices for mode and put it at pblocktreeother and pblockheadersother
+static void InitializeOtherBlockIndices(BlockDBMode mode)
 {
     // hardcode 2MiB here, it is a negligable amount and is only used temporarily
     int64_t _nBlockTreeDBCache = (1 << 21);
     if (mode == SEQUENTIAL_BLOCK_FILES)
     {
         pblocktreeother = new CBlockTreeDB(_nBlockTreeDBCache, "blocks", false, fReindex);
+        pblockheadersother = new CBlockHeadersDB(_nBlockTreeDBCache, "blocks", false, fReindex);
     }
     else if (mode == LEVELDB_BLOCK_STORAGE)
     {
         pblocktreeother = new CBlockTreeDB(_nBlockTreeDBCache, "blockdb", false, fReindex);
+        pblockheadersother = new CBlockHeadersDB(_nBlockTreeDBCache, "blockdb", false, fReindex);
     }
 }
 
@@ -172,7 +185,7 @@ bool DetermineStorageSync(BlockDBMode &_otherMode)
     {
         return false;
     }
-    GetBlockTreeOther(_otherMode);
+    InitializeOtherBlockIndices(_otherMode);
     CDiskBlockIndex bestIndexMode;
     CDiskBlockIndex bestIndexOther;
     pblocktree->FindBlockIndex(bestHashMode, bestIndexMode);
@@ -207,17 +220,22 @@ void SyncStorage(const CChainParams &chainparams)
             LOGA("ERROR: could not open blockdbsync\n");
             abort();
         }
-
-        std::vector<std::pair<int, CDiskBlockIndex> > hashesByHeight;
+        std::vector<std::pair<int, std::pair<uint256, CDiskBlockIndex> > > hashesByHeight;
         pblocktreeother->GetSortedHashIndex(hashesByHeight);
         CValidationState state;
         int bestHeight = 0;
         CBlockIndex *pindexBest = nullptr;
         std::vector<CBlockIndex *> blocksToRemove;
-        for (const std::pair<int, CDiskBlockIndex> &item : hashesByHeight)
+        for (const std::pair<int, std::pair<uint256, CDiskBlockIndex> > &item : hashesByHeight)
         {
             CBlockIndex *index;
-            if (item.second.GetBlockHash() == chainparams.GetConsensus().hashGenesisBlock)
+            const uint256 &blockhash = item.second.first;
+            if (blockhash.IsNull())
+            {
+                LOGA("SyncStorage(): block hash is null");
+                assert(false);
+            }
+            if (blockhash == chainparams.GetConsensus().hashGenesisBlock)
             {
                 CBlock genesis = chainparams.GenesisBlock();
                 const ConstCBlockRef pblock = std::make_shared<const CBlock>(genesis);
@@ -242,26 +260,57 @@ void SyncStorage(const CChainParams &chainparams)
                 }
                 continue;
             }
-
-            index = LookupBlockIndex(item.second.GetBlockHash());
+            index = LookupBlockIndex(blockhash);
             if (!index)
             {
-                // TODO only one thread should create a new pindex at a time.
-                CBlockIndex *pindexNew = InsertBlockIndex(item.second.GetBlockHash());
-                pindexNew->pprev = InsertBlockIndex(item.second.header.hashPrevBlock);
-                pindexNew->header = item.second.header;
+                CBlockIndex *pindexNew = InsertBlockIndex(blockhash);
+                if (!pindexNew)
+                {
+                    LOGA("SyncStorage(): Index entry could not be created");
+                    assert(false);
+                }
+                CBlockHeader tmpHeader;
+                if (!pblockheadersother->FindBlockHeader(blockhash, tmpHeader))
+                {
+                    LOGA("SyncStorage(): Header not found");
+                    assert(false);
+                }
+
+                pindexNew->pprev = InsertBlockIndex(tmpHeader.hashPrevBlock);
+                pindexNew->SetBlockHeader(std::make_shared<CBlockHeader>(tmpHeader));
+                pindexNew->nHeight = tmpHeader.height;
+                pindexNew->nSize = tmpHeader.size;
+                pindexNew->nChainWork = UintToArith256(tmpHeader.chainWork);
+                pindexNew->nTx = tmpHeader.txCount;
+                pindexNew->nTime = tmpHeader.nTime;
+                pindexNew->nBits = tmpHeader.nBits;
                 pindexNew->nFile = 0;
                 pindexNew->nDataPos = 0;
                 pindexNew->nUndoPos = 0;
-                pindexNew->nStatus = item.second.nStatus;
-                pindexNew->nSequenceId = item.second.nSequenceId;
-                pindexNew->nTimeReceived = item.second.nTimeReceived;
-                pindexNew->nNextMaxBlockSize = item.second.nNextMaxBlockSize;
+                pindexNew->nStatus = item.second.second.nStatus;
+                pindexNew->nSequenceId = item.second.second.nSequenceId;
+                pindexNew->nTimeReceived = item.second.second.nTimeReceived;
+                pindexNew->nNextMaxBlockSize = item.second.second.nNextMaxBlockSize;
                 index = pindexNew;
             }
+            else
+            {
+                CBlockHeader tmpHeader;
+                if (!pblockheadersother->FindBlockHeader(blockhash, tmpHeader))
+                {
+                    LOGA("SyncStorage(): Header not found");
+                    assert(false);
+                }
+                index->nHeight = tmpHeader.height;
+                index->nSize = tmpHeader.size;
+                index->nChainWork = UintToArith256(tmpHeader.chainWork);
+                index->SetBlockHeader(std::make_shared<CBlockHeader>(tmpHeader));
+                index->pprev = InsertBlockIndex(tmpHeader.hashPrevBlock);
+            }
+
 
             // Update the block data
-            if (index->nStatus & BLOCK_HAVE_DATA && item.second.nDataPos != 0)
+            if (index->nStatus & BLOCK_HAVE_DATA && item.second.second.nDataPos != 0)
             {
                 CBlock block_lev;
                 if (pblockdbsync->ReadBlock(index, block_lev))
@@ -295,7 +344,7 @@ void SyncStorage(const CChainParams &chainparams)
             }
 
             // Update the undo data
-            if (index->nStatus & BLOCK_HAVE_UNDO && item.second.nUndoPos != 0)
+            if (index->nStatus & BLOCK_HAVE_UNDO && item.second.second.nUndoPos != 0)
             {
                 CBlockUndo blockundo;
                 if (pblockdbsync->ReadUndo(blockundo, index->pprev))
@@ -364,7 +413,7 @@ void SyncStorage(const CChainParams &chainparams)
 
     else if (BLOCK_DB_MODE == LEVELDB_BLOCK_STORAGE)
     {
-        std::vector<std::pair<int, CDiskBlockIndex> > indexByHeight;
+        std::vector<std::pair<int, std::pair<uint256, CDiskBlockIndex> > > indexByHeight;
         pblocktreeother->GetSortedHashIndex(indexByHeight);
         LOGA("indexByHeight size = %u \n", indexByHeight.size());
         int64_t bestHeight = 0;
@@ -382,10 +431,11 @@ void SyncStorage(const CChainParams &chainparams)
             pblocktreeother->ReadBlockFileInfo(nFile, blockfiles[nFile]);
         }
 
-        for (const std::pair<int, CDiskBlockIndex> &item : indexByHeight)
+        for (const std::pair<int, std::pair<uint256, CDiskBlockIndex> > &item : indexByHeight)
         {
             CBlockIndex *index;
-            if (item.second.GetBlockHash() == chainparams.GetConsensus().hashGenesisBlock)
+            const uint256 &blockhash = item.second.first;
+            if (blockhash == chainparams.GetConsensus().hashGenesisBlock)
             {
                 CBlock genesis = chainparams.GenesisBlock();
                 const ConstCBlockRef pblock = std::make_shared<const CBlock>(genesis);
@@ -412,24 +462,56 @@ void SyncStorage(const CChainParams &chainparams)
                 continue;
             }
 
-            index = LookupBlockIndex(item.second.GetBlockHash());
+            index = LookupBlockIndex(blockhash);
             if (!index)
             {
-                CBlockIndex *pindexNew = InsertBlockIndex(item.second.GetBlockHash());
-                pindexNew->pprev = InsertBlockIndex(item.second.header.hashPrevBlock);
+                CBlockIndex *pindexNew = InsertBlockIndex(blockhash);
+                if (!pindexNew)
+                {
+                    LOGA("SyncStorage(): Index entry could not be created");
+                    assert(false);
+                }
+                CBlockHeader tmpHeader;
+                if (!pblockheadersother->FindBlockHeader(blockhash, tmpHeader))
+                {
+                    LOGA("SyncStorage(): Header not found");
+                    assert(false);
+                }
+
+
+                pindexNew->pprev = InsertBlockIndex(tmpHeader.hashPrevBlock);
                 // for blockdb nFile, nDataPos, and nUndoPos are switches, 0 is dont have. !0 is have. actual value
                 // irrelevant
-                pindexNew->nFile = item.second.nFile;
-                pindexNew->nDataPos = item.second.nDataPos;
-                pindexNew->nUndoPos = item.second.nUndoPos;
-                pindexNew->header = item.second.header;
-                pindexNew->nStatus = item.second.nStatus;
-                pindexNew->nSequenceId = item.second.nSequenceId;
-                pindexNew->nTimeReceived = item.second.nTimeReceived;
-                pindexNew->nNextMaxBlockSize = item.second.nNextMaxBlockSize;
+                pindexNew->nHeight = tmpHeader.height;
+                pindexNew->nSize = tmpHeader.size;
+                pindexNew->nChainWork = UintToArith256(tmpHeader.chainWork);
+                pindexNew->nTx = tmpHeader.txCount;
+                pindexNew->nTime = tmpHeader.nTime;
+                pindexNew->nBits = tmpHeader.nBits;
+                pindexNew->nFile = item.second.second.nFile;
+                pindexNew->nDataPos = item.second.second.nDataPos;
+                pindexNew->nUndoPos = item.second.second.nUndoPos;
+                pindexNew->SetBlockHeader(std::make_shared<CBlockHeader>(tmpHeader));
+                pindexNew->nStatus = item.second.second.nStatus;
+                pindexNew->nSequenceId = item.second.second.nSequenceId;
+                pindexNew->nTimeReceived = item.second.second.nTimeReceived;
+                pindexNew->nNextMaxBlockSize = item.second.second.nNextMaxBlockSize;
                 index = pindexNew;
             }
-
+            else
+            {
+                CBlockHeader tmpHeader;
+                if (!pblockheadersother->FindBlockHeader(blockhash, tmpHeader))
+                {
+                    LOGA("SyncStorage(): Header not found");
+                    assert(false);
+                }
+                index->nHeight = tmpHeader.height;
+                index->nSize = tmpHeader.size;
+                index->nChainWork = UintToArith256(tmpHeader.chainWork);
+                index->SetBlockHeader(std::make_shared<CBlockHeader>(tmpHeader));
+                index->pprev = InsertBlockIndex(tmpHeader.hashPrevBlock);
+            }
             // Update the block data
             if (index->nStatus & BLOCK_HAVE_DATA && !index->GetBlockPos().IsNull())
             {
@@ -462,7 +544,8 @@ void SyncStorage(const CChainParams &chainparams)
                         index->GetBlockHash().GetHex().c_str());
                     assert(false);
                 }
-                if (!ReadUndoFromDiskSequential(blockundo, pos, index->pprev->GetBlockHash()))
+                uint256 prevhash = index->pprev->GetBlockHash();
+                if (!ReadUndoFromDiskSequential(blockundo, pos, prevhash))
                 {
                     LOGA("SyncStorage(): critical error, failure to read undo data from sequential files \n");
                     assert(false);
@@ -483,6 +566,7 @@ void SyncStorage(const CChainParams &chainparams)
                     pindexBest = index;
                 }
             }
+
             setDirtyBlockIndex.insert(index);
             if (lastFinishedFile <= loadedblockfile && index->height() > (int)blockfiles[lastFinishedFile].nHeightLast)
             {
@@ -505,7 +589,9 @@ void SyncStorage(const CChainParams &chainparams)
     FlushStateToDisk();
     LOGA("Block database upgrade completed.\n");
     if (pblockdbsync)
+    {
         delete pblockdbsync;
+    }
 }
 
 bool WriteBlockToDisk(const ConstCBlockRef pblock,
@@ -651,6 +737,7 @@ bool FlushStateToDiskInternal(CValidationState &state,
     static int64_t nLastFlush = 0;
     static int64_t nLastSetChain = 0;
     static int64_t nLastCoinsCacheReset = 0;
+    static size_t nLastMapBlockIndexFlushSize = maxHeadersToKeepInRAM.Value();
 
     TRY_LOCK(cs_flushstate, lock);
     if (!lock)
@@ -699,8 +786,12 @@ bool FlushStateToDiskInternal(CValidationState &state,
     bool fCoinCacheReset = nNow > nLastCoinsCacheReset + (int64_t)DATABASE_FLUSH_INTERVAL * 1000000;
     bool fDoFullFlush =
         (mode == FLUSH_STATE_ALWAYS) || fCacheCritical || fAutoCache || fPeriodicFlush || fCoinCacheReset;
+    // if in IBD allow a larger window, otherwise flush the blockindex more often.
+    size_t nFlushBlockIndexWindow = IsInitialBlockDownload() ? MAX_HEADERS_RESULTS : maxHeadersToKeepInRAM.Value();
+    bool fFlushBlockIndex = ((mapBlockIndex.size() - nLastMapBlockIndexFlushSize) > nFlushBlockIndexWindow);
+
     // Write blocks and block index to disk.
-    if (fDoFullFlush || fPeriodicWrite || fFlushForPrune)
+    if (fDoFullFlush || fPeriodicWrite || fFlushForPrune || fFlushBlockIndex)
     {
         // Depend on nMinDiskSpace to ensure we can write block index
         if (!CheckDiskSpace(0))
@@ -733,15 +824,14 @@ bool FlushStateToDiskInternal(CValidationState &state,
                 }
                 tmpLastBlockFile = nLastBlockFile;
             }
+
             std::vector<const CBlockIndex *> vBlocks;
             vBlocks.reserve(setDirtyBlockIndex.size());
             {
                 WRITELOCK(cs_mapBlockIndex);
-                for (std::set<CBlockIndex *>::iterator it = setDirtyBlockIndex.begin(); it != setDirtyBlockIndex.end();)
-                {
-                    vBlocks.push_back(*it);
-                    setDirtyBlockIndex.erase(it++);
-                }
+                vBlocks.insert(vBlocks.begin(), setDirtyBlockIndex.begin(), setDirtyBlockIndex.end());
+                setOldDirtyBlockIndex.insert(setDirtyBlockIndex.begin(), setDirtyBlockIndex.end());
+                setDirtyBlockIndex.clear();
             }
 
             // we write different info depending on block storage system
@@ -749,7 +839,11 @@ bool FlushStateToDiskInternal(CValidationState &state,
             {
                 if (!pblocktree->WriteBatchSync(vFiles, tmpLastBlockFile, vBlocks))
                 {
-                    return AbortNode(state, "Files to write to block index database");
+                    return AbortNode(state, "Failed to write to block index database");
+                }
+                if (!pblockheaders->WriteBatchSync(vFiles, tmpLastBlockFile, vBlocks))
+                {
+                    return AbortNode(state, "Failed to write to block headers database");
                 }
             }
             else // if (pblockdb) //we are using a db, not sequential files
@@ -758,8 +852,30 @@ bool FlushStateToDiskInternal(CValidationState &state,
                 std::vector<std::pair<int, const CBlockFileInfo *> > vFilesEmpty;
                 if (!pblocktree->WriteBatchSync(vFilesEmpty, 0, vBlocks))
                 {
-                    return AbortNode(state, "Files to write to block index database");
+                    return AbortNode(state, "Failed to write to block index database");
                 }
+                if (!pblockheaders->WriteBatchSync(vFilesEmpty, 0, vBlocks))
+                {
+                    return AbortNode(state, "Failed to write to block headers database");
+                }
+            }
+
+            // Trim headers from the in memory blockindex if there are any to trim.
+            // We have to check and remove only entries from the old dirty block index otherwise, due to the need
+            // to release cs_mapBlockIndex above and reaquire it here, we may end up deleting headers that haven't
+            // yet been commited to disk.
+            if (!setHeadersToTrim.empty())
+            {
+                WRITELOCK(cs_mapBlockIndex);
+                for (CBlockIndex *pindex : setOldDirtyBlockIndex)
+                {
+                    if (setHeadersToTrim.count(pindex))
+                    {
+                        pindex->SetBlockHeader(nullptr);
+                        setHeadersToTrim.erase(pindex);
+                    }
+                }
+                nLastMapBlockIndexFlushSize = mapBlockIndex.size();
             }
         }
         // Finally remove any pruned files, this will be empty for blockdb mode

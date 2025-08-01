@@ -3589,7 +3589,7 @@ bool HandleHeaderPathMessage(CDataStream &vRecv, CNode *pfrom, uint32_t msgCooki
 
         for (size_t i = 0; i < sz; i++)
         {
-            headers[i] = chainActive._idx(path[i])->header;
+            headers[i] = chainActive._idx(path[i])->GetBlockHeader();
         }
     }
 

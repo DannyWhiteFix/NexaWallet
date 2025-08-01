@@ -66,9 +66,14 @@ public:
 extern CStatusString statusStrings;
 
 extern std::set<CBlockIndex *> setDirtyBlockIndex;
+
+// structures used for trimming headers from the blockindex
+extern std::set<CBlockIndex *> setOldDirtyBlockIndex;
+extern std::set<const CBlockIndex *> setHeadersToTrim;
+
 extern uint32_t blockVersion; // Overrides the mined block version if non-zero
 
-/** BU Default maximum number of Outbound connections to simultaneously allow*/
+/** Default maximum number of Outbound connections to simultaneously allow*/
 extern int nMaxOutConnections;
 
 // BU005: Strings specific to the config of this client that should be communicated to other clients

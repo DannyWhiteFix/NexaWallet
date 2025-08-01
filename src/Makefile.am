@@ -149,6 +149,7 @@ BITCOIN_CORE_H = \
   core_io.h \
   core_memusage.h \
   cuckoocache.h \
+  daa.h \
   datastream.h \
   deadlock-detection/locklocation.h \
   deadlock-detection/lockorder.h \
@@ -643,7 +644,6 @@ libnexa_common_a_SOURCES = \
   utilstrencodings.cpp \
   utilstrencodings.h \
   version.h \
-  versionbits.cpp \
   $(BITCOIN_CORE_H)
 
 # util: shared between all executables.
@@ -769,11 +769,8 @@ nexa_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 # nexa-miner binary #
 nexa_miner_SOURCES = nexa-miner.cpp \
   pow.cpp \
-  daa.cpp \
   arith_uint256.cpp \
   arith_uint256.h \
-  validation/forks.cpp \
-  validation/forks.h \
   uint256.cpp \
   uint256.h
 

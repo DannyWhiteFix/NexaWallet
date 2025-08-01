@@ -122,7 +122,7 @@ void ModalOverlay::tipUpdate(int count, const QDateTime &blockDate, double nVeri
 
     // show remaining amount of blocks
     // estimate the number of headers left based on nPowTargetSpacing
-    int nEstimateNumHeadersLeft = QDateTime::fromTime_t(pindexBestHeader.load()->time()).secsTo(currentDate) /
+    int nEstimateNumHeadersLeft = QDateTime::fromTime_t(pindexBestHeader.load()->GetBlockTime()).secsTo(currentDate) /
                                   Params().GetConsensus().nPowTargetSpacing;
     bool fHasBestHeader = pindexBestHeader.load()->height() >= count;
     if (nEstimateNumHeadersLeft < HEADER_HEIGHT_SYNC_DELTA && fHasBestHeader)

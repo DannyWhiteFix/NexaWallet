@@ -773,64 +773,9 @@ void SelectParams(const std::string &network)
     pCurrentParams = &Params(network);
 }
 
-// bip135 begin
-/**
- * Return true if a deployment is considered to be configured for the network.
- * Deployments with a zero-length name, or a windowsize or threshold equal to
- * zero are not considered to be configured, and will be reported as 'unknown'
- * if signals are detected for them.
- * Unconfigured deployments can be ignored to save processing time, e.g.
- * in ComputeBlockVersion() when computing the default block version to emit.
- */
-bool IsConfiguredDeployment(const Consensus::Params &consensusParams, const int bit)
-{
-    DbgAssert(bit >= 0 && bit <= (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS, return false);
-
-    const Consensus::ForkDeployment *vdeployments = consensusParams.vDeployments;
-    const struct ForkDeploymentInfo &vbinfo = VersionBitsDeploymentInfo[bit];
-
-    if (strlen(vbinfo.name) == 0)
-        return false;
-
-    return (vdeployments[bit].windowsize != 0 && vdeployments[bit].threshold != 0);
-}
 
 /**
- * Return a string representing CSV-formatted deployments for the network.
- * Only configured deployments satisfying IsConfiguredDeployment() are included.
- */
-const std::string NetworkDeploymentInfoCSV(const std::string &network)
-{
-    const Consensus::Params &consensusParams = Params(network).GetConsensus();
-    const Consensus::ForkDeployment *vdeployments = consensusParams.vDeployments;
-
-    std::string networkInfoStr;
-    networkInfoStr = "# deployment info for network '" + network + "':\n";
-
-    for (int bit = 0; bit < Consensus::MAX_VERSION_BITS_DEPLOYMENTS; bit++)
-    {
-        const struct ForkDeploymentInfo &vbinfo = VersionBitsDeploymentInfo[bit];
-        if (IsConfiguredDeployment(consensusParams, bit))
-        {
-            networkInfoStr += network + ",";
-            networkInfoStr += std::to_string(bit) + ",";
-            networkInfoStr += std::string(vbinfo.name) + ",";
-            networkInfoStr += std::to_string(vdeployments[bit].nStartTime) + ",";
-            networkInfoStr += std::to_string(vdeployments[bit].nTimeout) + ",";
-            networkInfoStr += std::to_string(vdeployments[bit].windowsize) + ",";
-            networkInfoStr += std::to_string(vdeployments[bit].threshold) + ",";
-            networkInfoStr += std::to_string(vdeployments[bit].minlockedblocks) + ",";
-            networkInfoStr += std::to_string(vdeployments[bit].minlockedtime) + ",";
-            networkInfoStr += (vbinfo.gbt_force ? "true" : "false");
-            networkInfoStr += "\n";
-        }
-    }
-    return networkInfoStr;
-}
-
-/**
- * Return a modifiable reference to the chain params, to be updated by the
- * CSV deployment data reading routine.
+ * Return a modifiable reference to the chain params
  */
 CChainParams &ModifiableParams()
 {

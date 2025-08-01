@@ -322,6 +322,8 @@ void Shutdown()
         pcoinsdbview = nullptr;
         delete pblocktree;
         pblocktree = nullptr;
+        delete pblockheaders;
+        pblockheaders = nullptr;
         delete pblockdb;
         pblockdb = nullptr;
     }
@@ -1366,6 +1368,8 @@ bool AppInit2(Config &config)
                 delete pcoinscatcher;
                 delete pblocktree;
                 delete pblocktreeother;
+                delete pblockheaders;
+                delete pblockheadersother;
                 delete pblockdb;
                 delete ptokenDesc;
                 delete ptokenMint;
@@ -1417,8 +1421,14 @@ bool AppInit2(Config &config)
                     if (fPruneMode)
                         CleanupBlockRevFiles();
                 }
-                // Check the database for the genesis.
+
+                // Start loading of block index
                 uiInterface.InitMessage(_("Loading block index..."));
+
+                // Set the current block index version
+                nDiskBlockIndexVersion = pblocktree->GetBlockIndexVersion();
+
+                // Check the database for the genesis.
                 CDiskBlockIndex pindex;
                 bool fHaveGenesis = pblocktree->FindBlockIndex(Params().GetConsensus().hashGenesisBlock, pindex);
                 // If genesis found and we have only 1 or less chain tx then load the genesis,
@@ -1492,7 +1502,7 @@ bool AppInit2(Config &config)
                 // we intentionally do not check if tip is a nullptr here
                 // ActivateBestChain has already been called in either LoadBlockIndex or InitBlockIndex, if tip
                 // is nullptr here then there is a critical error somewhere
-                if (tip->time() > GetAdjustedTime() + 2 * 60 * 60)
+                if (tip->GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60)
                 {
                     strLoadError = _("The block database contains a block which appears to be from the future. "
                                      "This may be due to your computer's date and time being set incorrectly. "

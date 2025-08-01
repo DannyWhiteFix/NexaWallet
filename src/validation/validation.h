@@ -14,7 +14,6 @@
 #include "parallel.h"
 #include "txdebugger.h"
 #include "txmempool.h"
-#include "versionbits.h"
 
 // The group token cache can and should be compiled even when the wallet is disabled.
 #include "wallet/grouptokencache.h"

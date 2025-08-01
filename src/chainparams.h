@@ -124,7 +124,6 @@ SatoshiBlock CreateGenesisBlock(CScript prefix,
     int32_t nVersion,
     const CAmount &genesisReward);
 
-// bip135 begin
 /**
  * Return the currently selected parameters. Can be changed by reading in
  * some additional config files (e.g. CSV deployment data)
@@ -132,18 +131,5 @@ SatoshiBlock CreateGenesisBlock(CScript prefix,
  * This can only be used during initialization because modification is not threadsafe
  */
 CChainParams &ModifiableParams();
-
-/**
- * Returns true if a deployment is considered active on a particular network
- */
-
-bool IsConfiguredDeployment(const Consensus::Params &consensusParams, const int bit);
-
-/**
- * Dump the fork deployment parameters for the given BIP70 chain name.
- * @throws std::runtime_error when the chain is not supported.
- */
-const std::string NetworkDeploymentInfoCSV(const std::string &chain);
-// bip135 end
 
 #endif // NEXA_CHAINPARAMS_H

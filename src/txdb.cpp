@@ -280,53 +280,6 @@ size_t CCoinsViewDB::TotalWriteBufferSize() const
     return db.TotalWriteBufferSize();
 }
 
-CBlockTreeDB::CBlockTreeDB(size_t nCacheSize, string folder, bool fMemory, bool fWipe)
-    : CDBWrapper(GetDataDir() / folder.c_str() / "index", nCacheSize, fMemory, fWipe)
-{
-}
-
-uint32_t CBlockTreeDB::GetBlockIndexVersion() const
-{
-    uint32_t nVersion = 0;
-    if (!Read(DB_BLOCK_INDEX_VERSION, nVersion))
-        return 0;
-    return nVersion;
-}
-
-bool CBlockTreeDB::WriteBlockIndexVersion(const uint32_t nVersion) { return Write(DB_BLOCK_INDEX_VERSION, nVersion); }
-bool CBlockTreeDB::ReadBlockFileInfo(int nFile, CBlockFileInfo &info)
-{
-    return Read(make_pair(DB_BLOCK_FILES, nFile), info);
-}
-
-bool CBlockTreeDB::WriteReindexing(bool fReindexing)
-{
-    if (fReindexing)
-        return Write(DB_REINDEX_FLAG, '1');
-    else
-        return Erase(DB_REINDEX_FLAG);
-}
-
-bool CBlockTreeDB::ReadReindexing(bool &fReindexing)
-{
-    fReindexing = Exists(DB_REINDEX_FLAG);
-    return true;
-}
-
-uint64_t CBlockTreeDB::GetBestBlockHeaderChainTx() const
-{
-    uint64_t nChainTx = 0;
-    if (!Read(DB_BEST_BLOCKHEADER_CHAINTX, nChainTx))
-        return 0;
-    return nChainTx;
-}
-
-bool CBlockTreeDB::WriteBestBlockHeaderChainTx(const uint64_t nChainTx)
-{
-    return Write(DB_BEST_BLOCKHEADER_CHAINTX, nChainTx);
-}
-
-bool CBlockTreeDB::ReadLastBlockFile(int &nFile) { return Read(DB_LAST_BLOCK, nFile); }
 CCoinsViewCursor *CCoinsViewDB::Cursor() const
 {
     CCoinsViewDBCursor *i = new CCoinsViewDBCursor(const_cast<CDBWrapper *>(&db)->NewIterator(), GetBestBlock());
@@ -376,6 +329,85 @@ void CCoinsViewDBCursor::Next()
     }
 }
 
+CBlockTreeDB::CBlockTreeDB(size_t nCacheSize, string folder, bool fMemory, bool fWipe)
+    : CDBWrapper(GetDataDir() / folder.c_str() / "index", nCacheSize, fMemory, fWipe)
+{
+}
+
+uint32_t CBlockTreeDB::GetBlockIndexVersion() const
+{
+    uint32_t nVersion = 0;
+    if (!Read(DB_BLOCK_INDEX_VERSION, nVersion))
+        return BLOCK_INDEX_VERSION;
+    return nVersion;
+}
+
+bool CBlockTreeDB::WriteBlockIndexVersion(const uint32_t nVersion) { return Write(DB_BLOCK_INDEX_VERSION, nVersion); }
+bool CBlockTreeDB::ReadBlockFileInfo(int nFile, CBlockFileInfo &info)
+{
+    return Read(make_pair(DB_BLOCK_FILES, nFile), info);
+}
+
+bool CBlockTreeDB::WriteReindexing(bool fReindexing)
+{
+    if (fReindexing)
+        return Write(DB_REINDEX_FLAG, '1');
+    else
+        return Erase(DB_REINDEX_FLAG);
+}
+
+bool CBlockTreeDB::ReadReindexing(bool &fReindexing)
+{
+    fReindexing = Exists(DB_REINDEX_FLAG);
+    return true;
+}
+
+uint64_t CBlockTreeDB::GetBestBlockHeaderChainTx() const
+{
+    uint64_t nChainTx = 0;
+    if (!Read(DB_BEST_BLOCKHEADER_CHAINTX, nChainTx))
+        return 0;
+    return nChainTx;
+}
+
+bool CBlockTreeDB::WriteBestBlockHeaderChainTx(const uint64_t nChainTx)
+{
+    return Write(DB_BEST_BLOCKHEADER_CHAINTX, nChainTx);
+}
+
+CBlockHeader GetBlockHeaderFromDB(const uint256 &hash)
+{
+    if (nDiskBlockIndexVersion <= 1)
+    {
+        CDiskBlockIndex pindex;
+        if (!pblocktree->FindBlockIndex(hash, pindex))
+        {
+            return CBlockHeader{};
+        }
+        else
+        {
+            return pindex.GetBlockHeader();
+        }
+    }
+    else if (nDiskBlockIndexVersion >= 2)
+    {
+        CBlockHeader header;
+        if (!pblockheaders->FindBlockHeader(hash, header))
+        {
+            return CBlockHeader{};
+        }
+        else
+        {
+            return header;
+        }
+    }
+    else
+    {
+        return CBlockHeader{};
+    }
+}
+
+bool CBlockTreeDB::ReadLastBlockFile(int &nFile) { return Read(DB_LAST_BLOCK, nFile); }
 bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo *> > &fileInfo,
     int nLastFile,
     const std::vector<const CBlockIndex *> &blockinfo)
@@ -418,15 +450,11 @@ bool CBlockTreeDB::FindBlockIndex(uint256 blockhash, CDiskBlockIndex &pindex)
 
 bool CBlockTreeDB::LoadBlockIndexGuts()
 {
-    uint32_t nBlockIndexVersion = GetBlockIndexVersion();
+    uint32_t nStoredBlockIndexVersion = GetBlockIndexVersion();
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->Seek(make_pair(DB_BLOCK_INDEX, uint256()));
 
     // Load mapBlockIndex
-    uint64_t ONE_WEEK_OF_BLOCKS = ONE_DAY_OF_BLOCKS * 7;
-    uint64_t nSkip = 0;
-    uint64_t nSkipTo = 1; // always check at least the first key
-    FastRandomContext ctx;
     while (pcursor->Valid())
     {
         if (shutdown_threads.load() == true)
@@ -440,33 +468,43 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
             if (pcursor->GetValue(diskindex))
             {
                 // Construct block index object
-                CBlockIndex *pindexNew = InsertBlockIndex(diskindex.GetBlockHash());
-                pindexNew->pprev = InsertBlockIndex(diskindex.header.hashPrevBlock);
+                CBlockIndex *pindexNew = InsertBlockIndex(key.second);
+                if (nStoredBlockIndexVersion <= 1)
+                {
+                    pindexNew->pprev = InsertBlockIndex(diskindex.GetBlockHeader().hashPrevBlock);
+                    pindexNew->nHeight = diskindex.GetBlockHeader().height;
+                    pindexNew->nSize = diskindex.GetBlockHeader().size;
+                    pindexNew->nChainWork = UintToArith256(diskindex.GetBlockHeader().chainWork);
+                    pindexNew->nTx = diskindex.GetBlockHeader().txCount;
+                    pindexNew->nTime = diskindex.GetBlockHeader().nTime;
+                    pindexNew->nBits = diskindex.GetBlockHeader().nBits;
+                    pindexNew->SetBlockHeader(std::make_shared<CBlockHeader>(diskindex.GetBlockHeader()));
+                }
+                else if (nStoredBlockIndexVersion >= 2)
+                {
+                    pindexNew->pprev = InsertBlockIndex(diskindex.prevHash);
+                    pindexNew->nHeight = diskindex.nHeight;
+                    pindexNew->nSize = diskindex.nSize;
+                    pindexNew->nChainWork = diskindex.nChainWork;
+                    pindexNew->nTx = diskindex.nTx;
+                    pindexNew->nTime = diskindex.nTime;
+                    pindexNew->nBits = diskindex.nBits;
+                    pindexNew->SetBlockHeader(nullptr);
+                }
+
                 pindexNew->nFile = diskindex.nFile;
                 pindexNew->nDataPos = diskindex.nDataPos;
                 pindexNew->nUndoPos = diskindex.nUndoPos;
-                pindexNew->header = diskindex.header;
                 pindexNew->nStatus = diskindex.nStatus;
                 pindexNew->nSequenceId = diskindex.nSequenceId;
                 pindexNew->nTimeReceived = diskindex.nTimeReceived;
                 pindexNew->nNextMaxBlockSize = diskindex.nNextMaxBlockSize;
-                if (nBlockIndexVersion >= 1)
+                if (nStoredBlockIndexVersion >= 1)
                 {
                     pindexNew->nChainTx = diskindex.nChainTx;
                 }
                 // Update the global atomic value
                 SetLargestNextMaxBlockSize(diskindex.nNextMaxBlockSize);
-
-                // Proof of work in NEXA takes a signifcant amount of time greatly affecting the loading of the block
-                // index so just spot check, randomly, once per week.
-                if (nSkip++ == nSkipTo)
-                {
-                    if (!CheckProofOfWork(
-                            pindexNew->header.GetMiningHash(), pindexNew->tgtBits(), Params().GetConsensus()))
-                        return error("LoadBlockIndex(): CheckProofOfWork failed: %s", pindexNew->ToString());
-                    nSkip = 0;
-                    nSkipTo = std::max((uint64_t)1, ctx.randrange(ONE_WEEK_OF_BLOCKS));
-                }
 
                 pcursor->Next();
             }
@@ -483,7 +521,8 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
     return true;
 }
 
-bool CBlockTreeDB::GetSortedHashIndex(std::vector<std::pair<int, CDiskBlockIndex> > &hashesByHeight)
+bool CBlockTreeDB::GetSortedHashIndex(
+    std::vector<std::pair<int, std::pair<uint256, CDiskBlockIndex> > > &hashesByHeight)
 {
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->Seek(make_pair(DB_BLOCK_INDEX, uint256()));
@@ -501,7 +540,8 @@ bool CBlockTreeDB::GetSortedHashIndex(std::vector<std::pair<int, CDiskBlockIndex
             if (pcursor->GetValue(diskindex))
             {
                 // Construct block index object
-                hashesByHeight.push_back(std::make_pair(diskindex.height(), diskindex));
+                auto entry = std::make_pair(key.second, diskindex);
+                hashesByHeight.push_back(std::make_pair(diskindex.height(), entry));
                 pcursor->Next();
             }
             else
@@ -516,6 +556,37 @@ bool CBlockTreeDB::GetSortedHashIndex(std::vector<std::pair<int, CDiskBlockIndex
     }
     std::sort(hashesByHeight.begin(), hashesByHeight.end());
     return true;
+}
+
+
+CBlockHeadersDB::CBlockHeadersDB(size_t nCacheSize, string folder, bool fMemory, bool fWipe)
+    : CDBWrapper(GetDataDir() / folder.c_str() / "headers", nCacheSize, fMemory, fWipe)
+{
+}
+
+bool CBlockHeadersDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo *> > &fileInfo,
+    int nLastFile,
+    const std::vector<const CBlockIndex *> &blockinfo)
+{
+    CDBBatch batch(*this);
+    for (std::vector<const CBlockIndex *>::const_iterator it = blockinfo.begin(); it != blockinfo.end(); it++)
+    {
+        // Sometimes the header could be null as in the case of receiving block data which then causes
+        // the block status field to need an update but the header in the block index was previously pruned. This
+        // is perfectly fine because the header, which is static data, would have already been written to disk.
+        if ((*it)->IsHeaderNull())
+        {
+            continue;
+        }
+
+        batch.Write(make_pair(DB_BLOCK_INDEX, (*it)->GetBlockHash()), *(*it)->header);
+    }
+    return WriteBatch(batch, true);
+}
+
+bool CBlockHeadersDB::FindBlockHeader(const uint256 &blockhash, CBlockHeader &header)
+{
+    return Read(make_pair(DB_BLOCK_INDEX, blockhash), header);
 }
 
 namespace

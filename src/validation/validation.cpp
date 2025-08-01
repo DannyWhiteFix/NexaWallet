@@ -16,6 +16,7 @@
 #include "consensus/grouptokens.h"
 #include "consensus/merkle.h"
 #include "consensus/tx_verify.h"
+#include "daa.h"
 #include "dosman.h"
 #include "expedited.h"
 #include "index/txindex.h"
@@ -43,6 +44,7 @@
 
 extern CTweak<int> maxReorgDepth;
 extern CTweak<bool> pvtest;
+extern CTweak<uint32_t> maxHeadersToKeepInRAM;
 extern std::atomic<uint64_t> nTotalChainTx;
 extern uint64_t nDiskBlockIndexVersion;
 
@@ -307,14 +309,18 @@ bool AcceptBlockHeader(const CBlockHeader &block,
         }
 
         if (!ContextualCheckBlockHeader(chainparams, block, state, pindexPrev))
+        {
             return false;
+        }
 
         {
             READLOCK(cs_mapBlockIndex);
             if (pindexPrev->nStatus & BLOCK_FAILED_MASK)
+            {
                 return state.DoS(100,
                     error("%s: previous block %s is invalid", __func__, pindexPrev->GetBlockHash().GetHex().c_str()),
                     REJECT_INVALID, "bad-prevblk");
+            }
         }
     }
     if (pindex == nullptr)
@@ -360,14 +366,17 @@ CBlockIndex *AddToBlockIndex(const CChainParams &chainparams, const CBlockHeader
 {
     AssertLockHeld(cs_main);
     WRITELOCK(cs_mapBlockIndex);
+
     // Check for duplicate
     uint256 hash = block.GetHash();
     BlockMap::iterator it = mapBlockIndex.find(hash);
     if (it != mapBlockIndex.end())
         return it->second;
 
-    // Construct new block index object
+    // Construct a new block index object.
+    // Block height, size and chainwork are automatically assigned on object instantiation.
     CBlockIndex *pindexNew = new CBlockIndex(block);
+
     // We assign the sequence id to blocks only when the full data is available,
     // to avoid miners withholding blocks but broadcasting headers, to get a
     // competitive advantage.
@@ -376,8 +385,8 @@ CBlockIndex *AddToBlockIndex(const CChainParams &chainparams, const CBlockHeader
     if (miPrev != mapBlockIndex.end())
     {
         pindexNew->pprev = (*miPrev).second;
-        pindexNew->header.height = pindexNew->pprev->height() + 1;
         pindexNew->BuildSkip();
+
         // If the prior block or an ancestor has failed, mark this one failed
         if (pindexNew->pprev && pindexNew->pprev->nStatus & BLOCK_FAILED_MASK)
             pindexNew->nStatus |= BLOCK_FAILED_CHILD;
@@ -390,16 +399,20 @@ CBlockIndex *AddToBlockIndex(const CChainParams &chainparams, const CBlockHeader
 
     auto expectedWork =
         ArithToUint256((pindexNew->pprev ? pindexNew->pprev->chainWork() : 0) + GetBlockProof(*pindexNew));
-    if (pindexNew->header.chainWork != expectedWork)
+    if (pindexNew->GetBlockHeader().chainWork != expectedWork)
     {
         pindexNew->nStatus |= BLOCK_FAILED_VALID; // block doesn't match checkpoints so invalid
         delete pindexNew;
         return nullptr; // Do not insert a block that does not meet work -- its a memory DOS attack.
     }
-    // We do not create any blocks whose parents are TREE/HEADER invalid, so correct work in this block implies
-    // the TREE validity level.
-    else // Don't use raisevalidity, because it refuses to raise if BLOCK_FAILED_CHILD is set.
+    else
+    {
+        // We do not create any blocks whose parents are TREE/HEADER invalid, so correct work in this block implies
+        // the TREE validity level.
+        //
+        // Don't use raisevalidity, because it refuses to raise if BLOCK_FAILED_CHILD is set.
         pindexNew->nStatus = (pindexNew->nStatus & ~BLOCK_VALID_MASK) | BLOCK_VALID_TREE;
+    }
 
     assert((pindexNew->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TREE);
 
@@ -407,6 +420,17 @@ CBlockIndex *AddToBlockIndex(const CChainParams &chainparams, const CBlockHeader
     BlockMap::iterator mi = mapBlockIndex.insert(std::make_pair(hash, pindexNew)).first;
     pindexNew->phashBlock = &((*mi).first);
     setDirtyBlockIndex.insert(pindexNew);
+
+    // Find the index where a header can be trimmed and save it.
+    int64_t nHeightToTrim = (int64_t)pindexNew->nHeight - maxHeadersToKeepInRAM.Value();
+    if (nHeightToTrim > 0)
+    {
+        CBlockIndex *pindexToTrim = pindexNew->GetAncestor(nHeightToTrim);
+        if (pindexToTrim)
+        {
+            setHeadersToTrim.insert(pindexToTrim);
+        }
+    }
 
     // If the block belongs to the set of check-pointed blocks but it has a mismatched hash,
     // then we are on the wrong fork so ignore.
@@ -445,16 +469,17 @@ CBlockIndex *LookupBlockIndex(const uint256 &hash)
     BlockMap::iterator mi = mapBlockIndex.find(hash);
     if (mi == mapBlockIndex.end())
         return nullptr;
-    return mi->second; // I can return this CBlockIndex because header pointers are never deleted
+    return mi->second;
 }
 
 CBlockIndex *InsertBlockIndex(const uint256 &hash)
 {
     if (hash.IsNull())
         return nullptr;
-    WRITELOCK(cs_mapBlockIndex);
+
 
     // Return existing
+    WRITELOCK(cs_mapBlockIndex);
     BlockMap::iterator mi = mapBlockIndex.find(hash);
     if (mi != mapBlockIndex.end())
         return (*mi).second;
@@ -560,6 +585,7 @@ bool LoadBlockIndexDB()
     std::vector<std::pair<int, CBlockIndex *> > vSortedByHeight;
     vSortedByHeight.reserve(mapBlockIndex.size());
     std::set<int> setBlkDataFiles;
+    uint32_t nBlockIndexVersion = pblocktree->GetBlockIndexVersion();
     for (const std::pair<const uint256, CBlockIndex *> &item : mapBlockIndex)
     {
         CBlockIndex *pindex = item.second;
@@ -571,24 +597,30 @@ bool LoadBlockIndexDB()
         }
     }
 
-    // Calculate nChainWork
+    // Get the blockindex of current best chain
+    CBlockIndex *pBestIndexOnStartup = nullptr;
+    uint256 besthash = pcoinsdbview->GetBestBlock();
+    BlockMap::iterator iter = mapBlockIndex.find(besthash);
+    if (iter != mapBlockIndex.end())
+    {
+        pBestIndexOnStartup = iter->second;
+    }
+
+    // Finish loading and preparing of the block index and related chain parameters
     std::sort(vSortedByHeight.begin(), vSortedByHeight.end());
     for (const std::pair<int, CBlockIndex *> &item : vSortedByHeight)
     {
         CBlockIndex *pindex = item.second;
-        auto expectedChainWork =
-            ArithToUint256((pindex->pprev ? pindex->pprev->chainWork() : 0) + GetBlockProof(*pindex));
-        assert(pindex->header.chainWork == expectedChainWork); // DB corrupted
+
         // We can link the chain of blocks for which we've received transactions at some point.
         // Pruned nodes may have deleted the block.
-        uint32_t nVersion = pblocktree->GetBlockIndexVersion();
-        if (nVersion == (BLOCK_INDEX_VERSION - 1))
+        if (nBlockIndexVersion == 0)
         {
             if (pindex->processed() > 0)
             {
                 if (pindex->pprev)
                 {
-                    pindex->nNextMaxBlockSize = CalculateNextMaxBlockSize(pindex->pprev, pindex->header.size);
+                    pindex->nNextMaxBlockSize = CalculateNextMaxBlockSize(pindex->pprev, pindex->GetBlockSize());
                     if (pindex->pprev->nChainTx)
                     {
                         pindex->nChainTx = pindex->pprev->nChainTx + pindex->txCount();
@@ -624,7 +656,7 @@ bool LoadBlockIndexDB()
                 }
             }
         }
-        else if (nVersion == BLOCK_INDEX_VERSION) // Blockindex is updated so no need to re-calculate nChainTx
+        else if (nBlockIndexVersion >= 1 && nBlockIndexVersion <= 2)
         {
             if (pindex->processed() > 0)
             {
@@ -673,23 +705,70 @@ bool LoadBlockIndexDB()
             // if the parent is invalid I am too
             pindex->nStatus |= BLOCK_FAILED_CHILD;
         }
-        if (pindex->IsValid(BLOCK_VALID_TRANSACTIONS) && (pindex->IsLinked() || pindex->pprev == nullptr))
+        CBlockIndex *pBestHeader = pindexBestHeader.load();
+        if ((pBestHeader == nullptr || pindex->chainWork() >= pBestHeader->chainWork()) &&
+            pindex->chainWork() >= pBestIndexOnStartup->chainWork() && pindex->IsValid(BLOCK_VALID_TRANSACTIONS) &&
+            (pindex->IsLinked() || pindex->pprev == nullptr))
+        {
             setBlockIndexCandidates.insert(pindex);
+        }
         CBlockIndex *pBestInvalid = pindexBestInvalid.load();
         if (pindex->nStatus & BLOCK_FAILED_MASK && (!pBestInvalid || pindex->chainWork() > pBestInvalid->chainWork()))
             pindexBestInvalid = pindex;
         if (pindex->pprev)
             pindex->BuildSkip();
-        CBlockIndex *pBestHeader = pindexBestHeader.load();
+
         if (pindex->IsValid(BLOCK_VALID_TREE) &&
             (pBestHeader == nullptr || CBlockIndexWorkComparator()(pBestHeader, pindex)))
             pindexBestHeader = pindex;
     }
 
-    if (!pblockdb) // sequential files
+    // For blockindex version 2 and above, in order to save RAM the headers will all be nulled after loading, but
+    // it's likely we'll need some of the more recent ones often so load a few of them.
+    if (nBlockIndexVersion >= 2)
+    {
+        // how many headers to load into memory
+        uint32_t nToLoad = maxHeadersToKeepInRAM.Value();
+
+        // used for spot checking proof of work.
+        FastRandomContext ctx;
+        size_t nSkipTo = 1; // always check at least the first key
+        const size_t nSkipRange = vSortedByHeight.size() - 1; // spot check the entire index
+
+        for (auto it = vSortedByHeight.end() - 1; it != vSortedByHeight.begin(); it--)
+        {
+            CBlockHeader header;
+            if (pblockheaders->FindBlockHeader(*(it->second->phashBlock), header))
+            {
+                it->second->SetBlockHeader(std::make_shared<CBlockHeader>(header));
+            }
+            else
+            {
+                LOGA("Could not find header in database. Run -reindex on next startup. Exiting.\n");
+                abort();
+            }
+
+            // Proof of work in NEXA takes a signifcant amount of time greatly affecting the loading of the block
+            // index so just do random spot checks which span the entire index.
+            {
+                const CBlockIndex *index = vSortedByHeight[nSkipTo].second;
+                CBlockHeader _header = index->GetBlockHeader();
+                if (!CheckProofOfWork(_header.GetMiningHash(), _header.nBits, Params().GetConsensus()))
+                    return error("LoadBlockIndex(): CheckProofOfWork failed: %s", index->ToString());
+
+                nSkipTo = std::max((uint64_t)1, ctx.randrange(nSkipRange));
+                // LOGA("spot check header %s %ld\n", index->phashBlock->ToString().c_str(), index->height());
+            }
+
+            if (--nToLoad == 0)
+                break;
+        }
+    }
+
+    // Do for sequential files
+    if (!pblockdb)
     {
         // Check presence of blk files
-
         LOGA("Checking all blk files are present...\n");
         for (std::set<int>::iterator it = setBlkDataFiles.begin(); it != setBlkDataFiles.end(); it++)
         {
@@ -731,13 +810,11 @@ bool LoadBlockIndexDB()
         fReindex = fReindexing;
 
     // Load pointer to end of best chain
-    uint256 bestblockhash = pcoinsdbview->GetBestBlock();
-    BlockMap::iterator it = mapBlockIndex.find(bestblockhash);
-    if (it == mapBlockIndex.end())
+    if (!pBestIndexOnStartup)
     {
         return true;
     }
-    chainActive.SetTip(it->second);
+    chainActive.SetTip(pBestIndexOnStartup);
 
     // set the current maximum sequence id in the block index
     nBlockSequenceId = mapBlockIndex.size() + 1;
@@ -783,6 +860,7 @@ void UnloadBlockIndex()
     {
         WRITELOCK(cs_mapBlockIndex);
         setDirtyBlockIndex.clear();
+        setHeadersToTrim.clear();
         versionbitscache.Clear();
         for (BlockMap::value_type &entry : mapBlockIndex)
         {
@@ -850,7 +928,7 @@ bool UpgradeBlockIndex()
 
 bool LoadBlockIndex()
 {
-    nDiskBlockIndexVersion = BLOCK_INDEX_VERSION;
+    nDiskBlockIndexVersion = pblocktree->GetBlockIndexVersion();
 
     // Load block index from databases
     if (!fReindex && !LoadBlockIndexDB())
@@ -867,8 +945,6 @@ bool LoadBlockIndex()
 
 bool InitBlockIndex(const CChainParams &chainparams)
 {
-    nDiskBlockIndexVersion = BLOCK_INDEX_VERSION;
-
     LOCK(cs_main);
 
     // Initialize global variables that cannot be constructed at startup.
@@ -904,6 +980,11 @@ bool InitBlockIndex(const CChainParams &chainparams)
         {
             return error("LoadBlockIndex(): genesis block cannot be activated");
         }
+
+        // Only set the blockindex version after a succesful initialization. The only other place
+        // we would set the version is after a blockindex upgrade.
+        pblocktree->WriteBlockIndexVersion(nDiskBlockIndexVersion);
+
         // Force a chainstate write so that when we VerifyDB in a moment, it doesn't check stale data
         return FlushStateToDisk(state, FLUSH_STATE_ALWAYS);
     }
@@ -912,9 +993,6 @@ bool InitBlockIndex(const CChainParams &chainparams)
         return error("LoadBlockIndex(): failed to initialize block database: %s", e.what());
     }
 
-    // Only set the blockindex version after a succesful initialization. The only other place
-    // we would set the version is after a blockindex upgrade.
-    pblocktree->WriteBlockIndexVersion(BLOCK_INDEX_VERSION);
 
     return true;
 }
@@ -1877,10 +1955,6 @@ bool ContextualCheckBlock(ConstCBlockRef pblock, CValidationState &state, CBlock
             REJECT_INVALID, "bad-cb-height");
     }
 
-    CBlockIndex indexDummy(*pblock);
-    indexDummy.pprev = pindexPrev;
-    indexDummy.header.height = pindexPrev == nullptr ? 1 : pindexPrev->height() + 1;
-
     return true;
 }
 
@@ -1997,7 +2071,7 @@ bool ReceivedBlockTransactions(ConstCBlockRef pblock,
     pindexNew->nSequenceId = ++nBlockSequenceId;
 
     // Did not commit to the correct # of transactions
-    if (pindexNew->header.txCount != pblock->vtx.size())
+    if (pindexNew->txCount() != pblock->vtx.size())
     {
         pindexNew->nStatus |= BLOCK_FAILED_VALID;
     }
@@ -2122,6 +2196,7 @@ bool AcceptBlock(ConstCBlockRef pblock,
             return false;
         }
     }
+
     int nHeight = pindex->height();
     // Write block to history file
     try
@@ -2414,7 +2489,7 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
     nFees = 0;
     int64_t nTime2 = GetStopwatchMicros();
     LOG(BLK, "Canonical ordering for %s MTP: %d\n", pblock->GetHash().ToString(), pindex->GetMedianTimePast());
-    //  Enforce BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY)
+    // Enforce BIP68(sequence locks) and BIP112(CHECKSEQUENCEVERIFY)
     int nLockTimeFlags = 0;
     nLockTimeFlags |= LOCKTIME_VERIFY_SEQUENCE;
 
@@ -2762,9 +2837,8 @@ bool ConnectBlock(ConstCBlockRef pblock,
     bool fJustCheck,
     bool fParallel)
 {
-    // pindex should be the header structure for this new block.  Check this by making sure that the nonces are the
-    // same.
-    assert(pindex->header.nonce == pblock->nonce);
+    // pindex should be the header structure for this new block.
+    assert(pindex->GetBlockSize() == pblock->size && pindex->height() == pblock->height);
 
     // Special case for the genesis block, skipping connection of its transactions
     // (its coinbase is unspendable)
@@ -3118,7 +3192,7 @@ void UpdateTip(CBlockIndex *pindexNew)
 
     cvBlockChange.notify_all();
 
-    LOGA("%s: new best=%s  height=%d bits=%d log2_work=%.8g  tx=%lu  date=%s progress=%f  cache=%.1fMiB(%utxo)\n",
+    LOGA("%s: new best=%s  height=%d bits=%d log2_work=%.8g  tx=%lu date=%s progress=%f  cache=%.1fMiB(%utxo)\n",
         __func__, chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(), chainActive.Tip()->tgtBits(),
         log(chainActive.Tip()->chainWork().getdouble()) / log(2.0), (unsigned long)chainActive.Tip()->nChainTx,
         FormatISO8601DateTime(chainActive.Tip()->GetBlockTime()),
