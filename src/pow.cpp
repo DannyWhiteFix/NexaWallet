@@ -9,11 +9,11 @@
 #include "util.h"
 #include "validation/forks.h"
 
-static uint256 sha256(uint256 data)
+static uint256 sha256(uint256 &data)
 {
     uint256 ret;
     CSHA256 sha;
-    sha.Write(data.begin(), 256 / 8);
+    sha.Write(data.begin(), 32);
     sha.Finalize(ret.begin());
     return ret;
 }
@@ -66,4 +66,3 @@ bool CheckProofOfWork(uint256 hash,
 
     return true;
 }
-

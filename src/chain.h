@@ -486,7 +486,7 @@ int64_t GetBlockWorkEquivalentTime(const CBlockIndex &to,
     const Consensus::Params &);
 
 /** Get block's work: that is the work equivalent for the nBits of difficulty specified in this block */
-arith_uint256 GetBlockProof(const CBlockIndex &block);
+arith_uint256 GetBlockWork(const CBlockIndex &block);
 
 /** Find the last common ancestor two blocks have.
  *  Both pa and pb must be non-nullptr. */

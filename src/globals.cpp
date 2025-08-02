@@ -49,6 +49,7 @@
 #include "utilstrencodings.h"
 #include "utiltime.h"
 #include "validation/parallel.h"
+#include "validation/tailstorm.h"
 #include "validation/validation.h"
 #include "validationinterface.h"
 #include "version.h"
@@ -201,9 +202,17 @@ CCriticalSection csCurrentCandidate;
 uint64_t nLastBlockTx GUARDED_BY(csCurrentCandidate) = 0;
 uint64_t nLastBlockSize GUARDED_BY(csCurrentCandidate) = 0;
 
+/** Signals whether to force a new mining candidate to be calculated */
+std::atomic<bool> forceTemplateRecalc{false};
+
 /** Holds temporary mining candidates */
 CCriticalSection csMiningCandidates;
-map<int64_t, CMiningCandidate> miningCandidatesMap GUARDED_BY(csMiningCandidates);
+std::map<int64_t, CMiningCandidate> miningCandidatesMap GUARDED_BY(csMiningCandidates);
+
+/** Is tailstorm enabled or not. The flag gets set to true once the fork is active */
+std::atomic<bool> fTailstormEnabled{false};
+/** Holds all tailstorm subblocks and dag information */
+CTailstormForest tailstormForest;
 
 /** Flags for coinbase transactions we create */
 CCriticalSection cs_coinbaseFlags;
@@ -389,32 +398,6 @@ CTweak<bool> doubleSpendProofs("net.doubleSpendProofs",
     "Process and forward double spend proofs (default: true)",
     true);
 
-extern bool forceTemplateRecalc;
-std::string TailstormChanged(const bool &value, CTweak<bool> *item, bool validate)
-{
-    if (validate == false)
-    {
-        if (true) // clear old candidates to force creation of new ones because mining alg is changing.
-        {
-            LOCK(csMiningCandidates);
-            miningCandidatesMap.clear();
-            // lastMiningCandidateId = 0;
-            forceTemplateRecalc = true;
-        }
-        if (item->Value())
-        {
-            ModifiableParams().GetModifiableConsensus().tailstormSubblocks = 4;
-        }
-        else
-        {
-            ModifiableParams().GetModifiableConsensus().tailstormSubblocks = 0;
-        }
-    }
-    return std::string(); // we accept the change
-}
-CTweak<bool> tailstormEnabled("mining.tailstorm", "Enable tailstorm block mining", false, &TailstormChanged);
-
-
 CTweak<uint64_t> coinbaseReserve("mining.coinbaseReserve",
     strprintf("How much space to reserve for the coinbase transaction, in bytes (default: %d)",
         DEFAULT_COINBASE_RESERVE_SIZE),
@@ -447,7 +430,7 @@ CTweak<bool> fastBlockTemplate("mining.fastBlockTemplate",
         DEFAULT_FASTBLOCKTEMPLATE));
 
 
-CTweakRef<uint64_t> miningForkTime("consensus.fork1Time",
+CTweakRef<uint64_t> miningForkTime("consensus.fork2Time",
     "Time in seconds since the epoch to initiate the Nexa Fork1 protocol upgrade.  A "
     "setting of 0 will turn on the fork at the appropriate time.",
     &nMiningForkTime,

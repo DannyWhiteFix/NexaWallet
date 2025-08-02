@@ -487,15 +487,8 @@ class RoTest(BitcoinTestFramework):
     def run_test(self):
         miningNode = self.nodes[1]
         # Mine some blocks to get utxos etc
-        miningNode.generate(1)
-        # Activate the hard fork
-        bestblock = miningNode.getbestblockhash()
-        lastblocktime = miningNode.getblockheader(bestblock)['time']
-        activationtime = lastblocktime - 2000
-        for n in self.nodes:
-            n.set("consensus.fork1Time=" + str(activationtime))
-
-        miningNode.generate(109)
+        miningNode.generate(110)
+        sync_blocks(self.nodes)
 
         # Inject a very controlled amount of utxos into the working wallet
         addr = self.nodes[0].getnewaddress()

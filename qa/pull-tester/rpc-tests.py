@@ -197,6 +197,7 @@ testScripts = [ RpcTest(t) for t in [
     'readonlyinputs',
     'readonlyinputssim',
     Disabled('hardfork1_activation_blocksizelimit', "Already activated on fork1"),
+    'hardfork2_activation_tailstorm',
     'headerPath',
     'rejectReply',
     'msgCookie',

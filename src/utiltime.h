@@ -25,6 +25,9 @@ int64_t GetLogTimeMicros();
 /** Sets a fake time value, which is very useful for testing */
 void SetMockTime(int64_t nMockTimeIn);
 
+/** Is the mocktime value set */
+bool IsMockTime();
+
 /** Sleep for n milliseconds */
 void MilliSleep(int64_t n);
 

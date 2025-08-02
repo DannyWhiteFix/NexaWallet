@@ -127,6 +127,15 @@ void FinalizeNode(NodeId nodeid)
         if (state->fSyncStarted)
             nSyncStarted--;
 
+        // If all peers are disconnected then set the initial sync complete flag to false.
+        if (nSyncStarted == 0)
+        {
+            bool fInit = false;
+            IsInitialSyncCompleteInit(&fInit);
+            fInit = true;
+            IsInitialBlockDownloadInit(&fInit);
+        }
+
         nPreferredDownload.fetch_sub(state->fPreferredDownload);
     }
 

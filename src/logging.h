@@ -91,7 +91,7 @@ enum
 
     GRAPHENE       = 0x10000000,
     RESPEND        = 0x20000000,
-    WB             = 0x40000000, // weak blocks
+    TAIL           = 0x40000000,
     CMPCT          = 0x80000000, // compact blocks
 
     ELECTRUM       = 0x100000000,
@@ -102,6 +102,7 @@ enum
     TWEAKS         = 0x1000000000,
     SCRIPT         = 0x2000000000,
     CAPD           = 0x4000000000,
+    DAG            = 0x8000000000,
     VALIDATION     = 0x4000000000000000UL,
     TOKEN          = 0x8000000000000000UL
     // clang-format on

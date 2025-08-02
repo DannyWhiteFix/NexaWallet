@@ -593,6 +593,7 @@ bool CRequestManager::RequestBlock(CNode *pfrom, CInv &obj)
 
                 pfrom->PushMessageWithCookie(NetMsgType::GET_GRAPHENE, getCookie(), ss);
                 LOG(GRAPHENE, "Requesting graphene block %s from peer %s\n", hash.ToString(), pfrom->GetLogName());
+                LOGA("Requesting graphene block %s from peer %s\n", hash.ToString(), pfrom->GetLogName());
                 return true;
             }
         }

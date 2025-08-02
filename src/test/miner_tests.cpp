@@ -10,9 +10,11 @@
 #include "consensus/merkle.h"
 #include "consensus/tx_verify.h"
 #include "consensus/validation.h"
+#include "daa.h"
 #include "init.h"
 #include "main.h"
 #include "miner.h"
+#include "pow.h"
 #include "pubkey.h"
 #include "script/standard.h"
 #include "txadmission.h"
@@ -959,7 +961,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         pcoinsTip->SetBestBlock(next->GetBlockHash());
         next->pprev = prev;
         next->SetBlockHeaderBits(chainTgtBits);
-        next->SetBlockHeaderChainWork(ArithToUint256(prev->chainWork() + GetBlockProof(*next)));
+        next->SetBlockHeaderChainWork(ArithToUint256(prev->chainWork() + GetBlockWork(*next)));
         next->SetBlockHeaderHeight(prev->height() + 1);
         next->nNextMaxBlockSize = DEFAULT_NEXT_MAX_BLOCK_SIZE;
         next->BuildSkip();

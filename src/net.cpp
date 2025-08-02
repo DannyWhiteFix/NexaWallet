@@ -660,7 +660,7 @@ void CNode::LookAhead()
         static const uint32_t padding = 4 * 8;
         /* The expected size of a serialized block header plus padding for various VARINTs*/
         static const uint32_t SERIALIZED_HEADER_SIZE =
-            ::GetSerializeSize(CBlockHeader(), SER_NETWORK, PROTOCOL_VERSION) + padding;
+            ::GetSerializeSize(CBlockHeader(), SER_NETWORK, PROTOCOL_VERSION) + padding + CBlockHeader::MAX_NONCE_SIZE;
         if (msg.nDataPos >= SERIALIZED_HEADER_SIZE)
         {
             try
@@ -1426,7 +1426,7 @@ void ThreadSocketHandler()
 
         // Only process disconnect node requests occasionally but not
         // too infrequently either. This helps alleviate contention on cs_vNodes.
-        if (GetTimeMillis() - nLastCleanup > 500)
+        if (GetTimeMillis() - nLastCleanup > 500 || IsMockTime())
         {
             CleanupDisconnectedNodes();
             nLastCleanup = GetTimeMillis();
@@ -3278,7 +3278,6 @@ CNode::CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNa
     fGetAddr = false;
     nNextLocalAddrSend = 0;
     nNextAddrSend = 0;
-    nNextInvSend = 0;
     fRelayTxes = false;
     fSentAddr = false;
     pfilter = new CBloomFilter();

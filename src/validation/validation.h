@@ -1,7 +1,7 @@
 
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2015-2022 The Bitcoin Unlimited developers
+// Copyright (c) 2015-2025 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,6 +14,8 @@
 #include "parallel.h"
 #include "txdebugger.h"
 #include "txmempool.h"
+#include "undo.h"
+#include "validation/headervalidation.h"
 
 // The group token cache can and should be compiled even when the wallet is disabled.
 #include "wallet/grouptokencache.h"
@@ -30,25 +32,6 @@ enum DisconnectResult
     DISCONNECT_UNCLEAN, // Rolled back, but UTXO set was inconsistent with block.
     DISCONNECT_FAILED // Something else went wrong.
 };
-
-/** Context-independent validity checks */
-bool CheckBlockHeader(const Consensus::Params &consensusParams,
-    const CBlockHeader &block,
-    CValidationState &state,
-    bool fCheckPOW = true);
-
-/** Context-independent summary block validity checks.
-    Do any additional (context-free) checks on this block header so make sure it is a valid summary block.
-    It is expected that this block has already been check to have a valid header.
-
-    Since this is a context-free check, the transactions in this block are NOT checked to be consistent with
-    its referenced subblocks' transactions.
-*/
-bool CheckSummaryBlockHeader(const Consensus::Params &consensusParams,
-    const ConstCBlockRef pblock,
-    CValidationState &state,
-    bool fCheckPOW);
-
 
 /** Context-dependent validity header checks */
 bool ContextualCheckBlockHeader(const CChainParams &chainparams,
@@ -173,6 +156,21 @@ bool ConnectBlock(ConstCBlockRef pblock,
     bool fJustCheck = false,
     bool fParallel = false);
 
+bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
+    CValidationState &state,
+    CBlockIndex *pindex,
+    CCoinsViewCache &view,
+    const CChainParams &chainparams,
+    bool fJustCheck,
+    bool fParallel,
+    bool fScriptChecks,
+    CAmount &nFees,
+    CBlockUndo &blockundo,
+    std::vector<std::pair<uint256, CDiskTxPos> > &vPos,
+    std::map<CGroupTokenID, CAmount> &accumulatedMintages,
+    std::map<CGroupTokenID, CAuth> &accumulatedAuthorities,
+    const std::map<uint256, CTransactionRef> *mapDagTxns = nullptr);
+
 /** Disconnect the current chainActive.Tip() */
 bool DisconnectTip(CValidationState &state, const Consensus::Params &consensusParams, const bool fRollBack = false);
 
@@ -190,6 +188,14 @@ bool _ActivateBestChain(CValidationState &state,
     ConstCBlockRef pblock = nullptr,
     bool fParallel = false,
     CNode *pfrom = nullptr);
+
+/** Initially performs a re-org if necessary before connecting all the blocks to the most work chain */
+bool ActivateBestChainStep(CValidationState &state,
+    const CChainParams &chainparams,
+    CBlockIndex *pindexMostWork,
+    ConstCBlockRef pblock,
+    bool fParallel);
+
 /**
  * Process an incoming block. This only returns after the best known valid
  * block is made active. Note that it does not, however, guarantee that the

@@ -400,7 +400,7 @@ void CCoinsViewCache::UncacheTx(const CTransaction &tx)
         Uncache(txin.prevout);
 }
 
-unsigned int CCoinsViewCache::GetCacheSize() const
+uint64_t CCoinsViewCache::GetCacheSize() const
 {
     READLOCK(cs_utxo);
     return cacheCoins.size();

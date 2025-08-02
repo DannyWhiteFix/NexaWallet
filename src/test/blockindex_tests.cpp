@@ -6,6 +6,7 @@
 
 #include "blockstorage/blockstorage.h"
 #include "chainparams.h"
+#include "daa.h"
 #include "main.h"
 #include "miner.h"
 #include "validation/validation.h"

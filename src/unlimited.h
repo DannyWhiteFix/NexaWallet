@@ -177,14 +177,19 @@ extern CLeakyBucket sendShaper;
 extern bool IsTrafficShapingEnabled();
 
 // Check whether we are doing an initial block download (synchronizing from disk or network)
-extern bool IsInitialBlockDownload();
-extern void IsInitialBlockDownloadInit(bool *fInit = nullptr);
+bool IsInitialBlockDownload();
+void IsInitialBlockDownloadInit(bool *fInit = nullptr);
 
 // Check whether we are nearly sync'd.  Used primarily to determine whether an xthin can be retrieved.
-extern bool IsChainNearlySyncd();
-extern bool IsChainSyncd();
-extern void IsChainNearlySyncdInit();
-extern void IsChainNearlySyncdSet(bool fSync);
+bool IsChainNearlySyncd();
+bool IsChainSyncd();
+void IsChainNearlySyncdInit();
+void IsChainNearlySyncdSet(bool fSync);
+
+// Used just after startup to determine whether we should download all the current
+// tailstorm subblocks from another peer.
+void IsInitialSyncCompleteInit(bool *fInit = nullptr);
+bool IsInitialSyncComplete();
 
 // BUIP010 Xtreme Thinblocks: begin
 // Xpress Validation: begin

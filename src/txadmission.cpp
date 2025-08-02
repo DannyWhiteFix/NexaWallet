@@ -26,7 +26,9 @@
 #include "unlimited.h"
 #include "util.h"
 #include "utiltime.h"
+#include "validation/dag.h"
 #include "validation/forks.h"
+#include "validation/tailstorm.h"
 #include "validation/validation.h"
 #include "validationinterface.h"
 
@@ -1046,10 +1048,10 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
         CAmount nModifiedFees = 0;
         {
             READLOCK(pool.cs_txmempool);
-
-            CCoinsViewMemPool viewMemPool(pcoinsTip, mempool);
+            CCoinsViewCache *ptip = fTailstormEnabled ? tailstormForest.pcoinsDag : pcoinsTip;
+            CCoinsViewMemPool viewMemPool(ptip, mempool);
             view.SetBackend(viewMemPool);
-            coinstip.SetBackend(*pcoinsTip);
+            coinstip.SetBackend(*ptip);
 
             // do all inputs exist?
             if (pfMissingInputs)

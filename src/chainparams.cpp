@@ -1,6 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2015-2022 The Bitcoin Unlimited developers
+// Copyright (c) 2015-2025 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,9 +18,10 @@
 #include <assert.h>
 
 
-/** Next protocol upgrade will be activated once MTP >= 12:00:00 PM, March 31st 2025, GMT
+/** Next protocol upgrade will be activated once MTP >= 12:00:00 PM, March 15th 2026, GMT
  */
-const uint64_t NEXT_FORK_ACTIVATION_TIME = 1743422400;
+const uint64_t NEXT_FORK_ACTIVATION_TIME = 1773576000;
+
 
 // Must be zero on startup. Do not set this to any other value.
 // To change consensus forktime you can either set the global value
@@ -282,6 +283,9 @@ public:
         consensus.nBlockSizeMultiplier = BLOCK_SIZE_MULTIPLIER;
         consensus.nNextMaxBlockSize = DEFAULT_NEXT_MAX_BLOCK_SIZE_FORK1;
 
+        consensus.tailstorm_k = 0;
+        consensus.tailstormEnforceDepth = 0;
+
         std::vector<unsigned char> nonce;
         std::vector<unsigned char> hardCodedNonce;
         nonce = hardCodedNonce = ParseHex("00000000");
@@ -351,14 +355,7 @@ public:
         cashaddrPrefix = "nexareg";
 
         consensus.nSubsidyHalvingInterval = 150;
-        // tailstorm: was 0x1e0fffff; make it 16x harder so there is room for subblocks to be easier
-        uint32_t tgtBits = 0x1e03ffff;
-        bool fNegative;
-        bool fOverflow;
-        arith_uint256 tmp;
-        tmp.SetCompact(tgtBits, &fNegative, &fOverflow);
-        // tailstorm:  make the easiest pow 8 times easier than the starting
-        consensus.powLimit = ArithToUint256(tmp * 8);
+        consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
@@ -386,17 +383,17 @@ public:
         consensus.nBlockSizeMultiplier = BLOCK_SIZE_MULTIPLIER;
         consensus.nNextMaxBlockSize = DEFAULT_NEXT_MAX_BLOCK_SIZE_FORK1_REGTEST;
 
+        consensus.tailstorm_k = 4;
+        consensus.tailstormEnforceDepth = DEPTH_TO_ENFORCE_CORRECT_SUBBLOCKS;
+
         std::vector<unsigned char> nonce;
-        nonce.resize(4);
-        nonce[0] = 0x6d;
-        nonce[1] = 0x0f;
-        nonce[2] = 0x0d;
-        nonce[3] = 0x0;
-        genesis = CreateGenesisBlock("This is regtest", CScript() << OP_1, 1744987388, nonce, tgtBits, 0 * COIN);
-#if 1 // recalculate GB if needed (note that this code will not work with the java nexa shared library because it
+        nonce.resize(1);
+        nonce[0] = 5;
+        genesis = CreateGenesisBlock("This is regtest", CScript() << OP_1, 1626275623, nonce, 0x207fffff, 0 * COIN);
+#if 0 // recalculate GB if needed (note that this code will not work with the java nexa shared library because it
       // must start before the random numbers (initialized in ECC_Start are hooked up).
         ECC_Start();
-        bool worked = MineIt(genesis, 2550000000, consensus);
+        bool worked = MineIt(genesis, 255, consensus);
         ECC_Stop();
         consensus.hashGenesisBlock = genesis.GetHash();
         if (genesis.nonce[0] != nonce[0])
@@ -405,11 +402,9 @@ public:
             printf("regtest soln %d hex:%s\n", worked, HexStr(genesis.nonce).c_str());
         }
 #else
-        // uint32_t tgtBits = 0x1e00ffff;
-        genesis = CreateGenesisBlock("This is regtest", CScript() << OP_1, 1744987388, nonce, tgtBits, 0 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(
-            consensus.hashGenesisBlock == uint256S("b7a7d37600394dd5b8cbf3fb2d1f3b9b9bd81423492230711c2d9d064091eea7"));
+            consensus.hashGenesisBlock == uint256S("d71ee431e307d12dfef31a6b21e071f1d5652c0eb6155c04e3222612c9d0b371"));
 #endif
 
         vFixedSeeds.clear(); //! Regtest mode doesn't have any fixed seeds.
@@ -422,6 +417,7 @@ public:
     }
 };
 static CRegTestParams regTestParams;
+
 
 class CTestNetParams : public CChainParams
 {
@@ -466,7 +462,7 @@ public:
         // Two days (in seconds)
         consensus.nASERTHalfLife = 2 * 24 * 60 * 60;
 
-        consensus.nextForkActivationTime = 1739361600; // Feb 12, 2025 at 12:00:00 GMT
+        consensus.nextForkActivationTime = NEXT_FORK_ACTIVATION_TIME;
 
         std::vector<unsigned char> nonce;
         std::vector<unsigned char> hardCodedNonce;
@@ -503,6 +499,9 @@ public:
         consensus.nLongBlockWindow = LONG_BLOCK_WINDOW_TESTNET;
         consensus.nBlockSizeMultiplier = BLOCK_SIZE_MULTIPLIER;
         consensus.nNextMaxBlockSize = DEFAULT_NEXT_MAX_BLOCK_SIZE_FORK1;
+
+        consensus.tailstorm_k = TAILSTORM_K;
+        consensus.tailstormEnforceDepth = DEPTH_TO_ENFORCE_CORRECT_SUBBLOCKS;
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -554,35 +553,61 @@ public:
         cashaddrPrefix = strNetworkID;
 
         consensus.nSubsidyHalvingInterval = 210000 * 5; // 2 minute blocks rather than 10 min -> * 5
-        uint32_t tgtBits = 0x200000ff;
+        std::vector<unsigned char> nonce;
+        std::vector<unsigned char> hardCodedNonce;
+
+        uint256 hashGenesis;
+#if 0
+        // slower mining like -testnet: use fPowNoRetargeting = false;
+        uint32_t tgtBits = 506382016;
+        consensus.fPowAllowMinDifficultyBlocks = true;
+        consensus.fPowNoRetargeting = false;
+        nonce = hardCodedNonce = ParseHex("82333300");
+        hashGenesis = uint256S("9d5165fd725811a2fcc4519735d79e7c7ea38d1b97d4ab4ce8d2b9a2b78e8fe9");
+#else
+        // faster mining of nearly 1 per second- use fPowNoReTargeting = true;
+        uint32_t tgtBits = 0x1f0effff;
+        consensus.fPowAllowMinDifficultyBlocks = true;
+        consensus.fPowNoRetargeting = true;
+        nonce = hardCodedNonce = ParseHex("e8382500");
+        hashGenesis = uint256S("0c33d2c4023d3071f4f71741556a0c4585586d28804f991d9266a2ee4aab58e6");
+#endif
+
         bool fNegative;
         bool fOverflow;
         arith_uint256 tmp;
         tmp.SetCompact(tgtBits, &fNegative, &fOverflow);
         consensus.powLimit = ArithToUint256(tmp);
-        // consensus.powLimit = uint256S("0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetSpacing = 2 * 60;
-        consensus.fPowAllowMinDifficultyBlocks = true;
-        consensus.fPowNoRetargeting = true;
         consensus.powAlgorithm = 1;
         consensus.initialSubsidy = 10 * 1000000 * COIN;
-        consensus.coinbaseMaturity = COINBASE_MATURITY;
+        consensus.coinbaseMaturity = COINBASE_MATURITY_TESTNET;
+        consensus.nextForkActivationTime = NEXT_FORK_ACTIVATION_TIME;
+
         // The half life for the ASERT DAA. For every (nASERTHalfLife) seconds behind schedule the blockchain gets,
         // difficulty is cut in half. Doubled if blocks are ahead of schedule.
         // Two days (in seconds)
         consensus.nASERTHalfLife = 2 * 24 * 60 * 60;
 
-        consensus.nextForkActivationTime = NEXT_FORK_ACTIVATION_TIME;
+        genesis = CreateGenesisBlock("this is nexa stormtest", CScript() << OP_1, 1626275623, nonce, tgtBits, 0 * COIN);
+        // Uncomment this code block when you want to enable extremely fast mining like found on regtest
+        /*
+        {
+            consensus.fPowAllowMinDifficultyBlocks = true;
+            consensus.fPowNoRetargeting = true;
+            consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+            nonce.resize(1);
+            nonce[0] = 5;
+            hashGenesis = uint256S("d71ee431e307d12dfef31a6b21e071f1d5652c0eb6155c04e3222612c9d0b371");
+            genesis = CreateGenesisBlock("This is regtest", CScript() << OP_1, 1626275623, nonce, 0x207fffff, 0 * COIN);
+        }
+        */
 
-        std::vector<unsigned char> nonce;
-        std::vector<unsigned char> hardCodedNonce;
-        nonce = hardCodedNonce = ParseHex("132a25");
-        genesis = CreateGenesisBlock("this is nexa stormtest", CScript() << OP_1, 1741344106, nonce, tgtBits, 0 * COIN);
-
-#if 0 // recalculate GB if needed (note that this code will not work with the java nexa shared library because it
-      // must start before the random numbers (initialized in ECC_Start are hooked up).
+#if 0
+        // recalculate GB if needed (note that this code will not work with the java nexa shared library because it
+        // must start before the random numbers (initialized in ECC_Start are hooked up).
         ECC_Start();
-        bool worked = MineIt(genesis, 1<<23, consensus);
+        bool worked = MineIt(genesis, 1 << 23, consensus);
         assert(worked);
         ECC_Stop();
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -591,10 +616,10 @@ public:
             printf("stormtest nonce changed:  hex:%s\n", HexStr(genesis.nonce).c_str());
             printf("stormtest GB hash %s\n", consensus.hashGenesisBlock.GetHex().c_str());
         }
-#else // check GB is what is expected
+#else
+        // check GB is what is expected
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(
-            consensus.hashGenesisBlock == uint256S("47b0dc36eac6c19ae2a2ac5fa2a238176de3af3edbc97a499a10894ac57c1c6f"));
+        assert(consensus.hashGenesisBlock == hashGenesis);
 #endif
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -610,6 +635,9 @@ public:
         consensus.nLongBlockWindow = LONG_BLOCK_WINDOW;
         consensus.nBlockSizeMultiplier = BLOCK_SIZE_MULTIPLIER;
         consensus.nNextMaxBlockSize = DEFAULT_NEXT_MAX_BLOCK_SIZE_FORK1;
+
+        consensus.tailstorm_k = 4;
+        consensus.tailstormEnforceDepth = DEPTH_TO_ENFORCE_CORRECT_SUBBLOCKS;
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -717,6 +745,9 @@ public:
         consensus.nLongBlockWindow = LONG_BLOCK_WINDOW;
         consensus.nBlockSizeMultiplier = BLOCK_SIZE_MULTIPLIER;
         consensus.nNextMaxBlockSize = DEFAULT_NEXT_MAX_BLOCK_SIZE_FORK1;
+
+        consensus.tailstorm_k = TAILSTORM_K;
+        consensus.tailstormEnforceDepth = DEPTH_TO_ENFORCE_CORRECT_SUBBLOCKS;
 
         vFixedSeeds.clear();
         vSeeds.clear();

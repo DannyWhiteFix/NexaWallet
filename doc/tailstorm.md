@@ -154,31 +154,17 @@ If a block not being added to the tip, its transactions no longer need to be con
    * Why interleave:  Byte interleaving (F("ABC", "DEF") -> F("ADBECF")) ensures that if one of the two parameters
      are held constant or precomputed, the intermediate state of this computation of cannot be used.
 
+## The minerData field in the block heaader
 
-### Allowing a variable number of subblocks in a block
-
-If we do not make this a chain constant, we could adjust the # of subblocks without a subsequent hard fork.  We would do this by ensuring that the subblock work sums to the needed work rather than checking that N subblocks exist.
-
-However, we don't want to store each nBits in the minerData.  We'd assume the nBits of the summary block.  But this would allow lucky subblocks to matter.  To fix that, nBits needs to be a hashed parameter in the PoW like prevBlockHash.
-
+The minerData field in pre-tailstorm blocks is empty and so when the miner data version is queried it returns with a "0".  Once tailstorm is activated subblocks will have the minerData version set to "1" but have no other miner data present, and summary blocks will have a minerData version of "2" and have a full set of mining hashes with their respective nonce data.
 
 ## Notes on Testing
 
 Some new config parameters were added, and should be put in your nexa.conf:
 
 ```
-mining.regtest=1  # This makes regtest a PoW mined network
+stormtest=1  # This makes regtest a PoW mined network
 ```
-
-```
-mining.tailstorm=1  # Build tailstorm blocks
-```
-
-You can change how many tailstorm blocks are built with the chain parameter: ModifiableParams().GetModifiableConsensus().tailstormSubblocks.
-Setting mining.tailstorm=1 sets tailstormSubblocks to 4, clearing it sets tailstormSubblocks to 0.
-
-You can turn tailstorm blocks on and off over the course of the same test.
-
 
 ### Run example
 
@@ -195,19 +181,19 @@ Use gettailstorminfo to see what is happening:
 ```
 ./nexa-cli -datadir=/w/ts1 gettailstorminfo
 {
-  "size": 8,
-  "tip": "e95edf4a71095cbabcb8c236bcbeee3facbd7e90d1c60521c13e9cea7dc31b6f",
-  "tipSubblocks": 2,
-  "committedSubblocks": 6,
-  "competingSubblocks": 0
+  "chaintip": "d9cff979f0c29fc3ce7824b254ab8ae5243c3938d4f56fe41f0c62a9247fc93d",
+  "dagtip": "d9cff979f0c29fc3ce7824b254ab8ae5243c3938d4f56fe41f0c62a9247fc93d",
+  "total": 0,
+  "bestdag": 0,
+  "competing": 0
 }
 ```
 
-size is the number of subblocks.
-tipSubblocks is the subblocks off the tip.
-committedSubblocks are subblocks older than the tip (kept for validation and relay).
-competingSubblocks are subblocks off a different tip (or incompatible with the txpool).
-
+chaintip is the current summary block tip
+dagtip is the best dag subblock
+total is the number of subblocks in the forest
+bestdag is the number of subblocks in the best dag
+competing is the number of double spend subblocks
 
 ### Can We Reduce The Difficulty?
 

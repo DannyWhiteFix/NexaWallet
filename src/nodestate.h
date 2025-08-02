@@ -47,6 +47,10 @@ struct CNodeState
     //! Whether this peer wants invs or headers (when possible) for block announcements.
     bool fPreferHeaders;
 
+    //! A map of tailstorm subblock headers sent to or received from this peer
+    //  The key is the hash of the subblock and the value is its height.
+    std::map<uint256, uint64_t> mapSubblockHeaders;
+
     CNodeState(CAddress addrIn, std::string addrNameIn);
 };
 

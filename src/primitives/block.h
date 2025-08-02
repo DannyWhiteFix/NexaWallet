@@ -78,8 +78,8 @@ public:
     uint64_t feePoolAmt;
     /** commitment to a data structure containing all unspent coins */
     std::vector<unsigned char> utxoCommitment; // MUST be len 0 for now. MUST be < 128 bytes
-    /** miner-specific data -- this is not a free-for all field.  It must follow documented conventions */
-    std::vector<unsigned char> minerData; // MUST be len 0 for now
+    /** miner-specific data holding the mining commitement and nonce for each tailstorm subblock */
+    std::vector<unsigned char> minerData;
     /** mining nonce */
     // nonce length must be <= 16 bytes.  This means the header hash + nonce fit in 1 sha256 round (with spare room)
     std::vector<unsigned char> nonce;
@@ -115,13 +115,6 @@ public:
     /** How many subblocks does this block reference.  This does NOT include this block itself,
      so all PoW calculations should add 1 to this number. */
     uint64_t NumSubblocks() const;
-
-    /** Is this block a summary block?
-        This returns true if there are enough subblocks to make or exceed the required PoW to be a summary
-        (aka blockchain, tailstorm DAG collapse) block
-     */
-    // IsSummaryBlock(ConstCBlockRef blk, CBlockIndex *prev) in validation.h
-    // bool IsSummaryBlock(const Consensus::Params& params) const;
 
     bool operator==(const CBlockHeader &b)
     {
@@ -322,6 +315,13 @@ struct CBlockLocator
     transaction list needs to be the full transaction list rather than additional tx on top of referenced subblocks.
  */
 std::vector<std::pair<uint256, std::vector<uint8_t> > > ParseMinerData(const std::vector<unsigned char> &data);
+
+/** Return the miner data version used in determining whether this is a subblock, tailstorm block or legacy block.
+    "0" is a legacy block
+    "1" is a tailstorm subblock
+    "2" is a tailstorm summary block
+ */
+uint8_t GetMinerDataVersion(const std::vector<unsigned char> &data);
 
 
 typedef std::shared_ptr<CBlock> CBlockRef;

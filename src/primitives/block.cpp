@@ -12,9 +12,9 @@
 #include "hashwrapper.h"
 #include "pow.h"
 #include "streams.h"
-#include "tailstorm.h"
 #include "tinyformat.h"
 #include "utilstrencodings.h"
+#include "validation/tailstorm.h"
 
 uint256 CBlockHeader::GetMiningHeaderCommitment() const
 {
@@ -48,12 +48,6 @@ uint64_t CBlockHeader::NumSubblocks() const
     auto subblks = ParseMinerData(minerData);
     return subblks.size();
 }
-
-// bool CBlockHeader::IsSummaryBlock(const Consensus::Params& params) const
-//{
-//     auto subblks = ParseMinerData(minerData);
-//     return NumSubblocks() >= params.tailstormSubblocks-1;
-// }
 
 uint256 CBlockHeader::GetHash() const
 {
@@ -152,4 +146,27 @@ arith_uint256 GetWorkForTarget(arith_uint256 bnTarget)
     // as bnTarget+1, it is equal to ((2**256 - bnTarget - 1) / (bnTarget+1)) + 1,
     // or ~bnTarget / (nTarget+1) + 1.
     return (~bnTarget / (bnTarget + 1)) + 1;
+}
+
+std::vector<std::pair<uint256, std::vector<uint8_t> > > ParseMinerData(const std::vector<unsigned char> &data)
+{
+    if (data.empty())
+        return {};
+
+    std::vector<std::pair<uint256, std::vector<uint8_t> > > ret;
+    uint8_t minerDataVersion = 0;
+    CDataStream ds(data, SER_NETWORK, PROTOCOL_VERSION);
+    ds >> minerDataVersion >> ret;
+    return ret;
+}
+
+uint8_t GetMinerDataVersion(const std::vector<unsigned char> &data)
+{
+    if (data.empty())
+        return 0;
+
+    uint8_t minerDataVersion = 0;
+    CDataStream ds(data, SER_NETWORK, PROTOCOL_VERSION);
+    ds >> minerDataVersion;
+    return minerDataVersion;
 }

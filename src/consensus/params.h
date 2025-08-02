@@ -88,7 +88,7 @@ struct ForkDeployment
  */
 struct Params
 {
-    /** what pow algorithm to use (nextchain's = 1 or BTC/BCH = 0) */
+    /** what pow algorithm to use (Nexa = 1 or BTC/BCH = 0) */
     unsigned int powAlgorithm = 1;
     /** Initial subsidy */
     CAmount initialSubsidy;
@@ -139,16 +139,6 @@ struct Params
     uint256 powLimit;
     bool fPowAllowMinDifficultyBlocks;
     bool fPowNoRetargeting;
-    /** Number of tailstorm subblocks needed to make up a block.
-        This *includes* the current block so the actual number of subblocks a summary block needs to reference is
-        this amount - 1.
-        TODO tailstorm:  If we do not make this a chain constant, we could adjust the # of subblocks without a
-        subsequent hard fork.  We would do this by ensuring that the subblock work sums to the needed work
-        rather than checking that N subblocks exist.
-     */
-    uint64_t tailstormSubblocks = 0;
-    /** Enforce subblock correctness this deep from the chain tip */
-    uint64_t tailstormEnforceCorrectSubblocks = 5;
     int64_t nPowTargetSpacing;
     // The half life for the ASERT DAA. For every (nASERTHalfLife) seconds behind schedule the blockchain gets,
     // difficulty is cut in half. Doubled if blocks are ahead of schedule.
@@ -162,6 +152,15 @@ struct Params
     uint64_t nLongBlockWindow;
     uint64_t nBlockSizeMultiplier;
     uint64_t nNextMaxBlockSize;
+
+    /** Number of tailstorm subblocks needed to make up a block.
+     *  This *includes* the current block so the actual number of subblocks a summary block needs to reference is
+     *  this amount - 1.
+     */
+    uint32_t tailstorm_k;
+
+    /** Enforce subblock correctness this deep from the chain tip */
+    uint32_t tailstormEnforceDepth;
 };
 } // namespace Consensus
 

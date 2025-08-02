@@ -163,12 +163,7 @@ bool CalculateMedianSize(CBlockIndex *pindexNew,
 uint64_t CalculateNextMaxBlockSize(CBlockIndex *pindexPrev, uint64_t nBlockSize)
 {
     uint64_t nBlockSizeMultiplier = Params().GetConsensus().nBlockSizeMultiplier;
-
-    uint64_t nNextMaxBlockSize = 0;
-    if (IsFork1Activated(pindexPrev))
-        nNextMaxBlockSize = Params().GetConsensus().nNextMaxBlockSize;
-    else
-        nNextMaxBlockSize = DEFAULT_NEXT_MAX_BLOCK_SIZE;
+    uint64_t nNextMaxBlockSize = Params().GetConsensus().nNextMaxBlockSize;
 
     if (!pindexPrev)
         return nNextMaxBlockSize;
@@ -197,14 +192,18 @@ uint64_t CalculateNextMaxBlockSize(CBlockIndex *pindexPrev, uint64_t nBlockSize)
     }
     LOG(VALIDATION, "Validation: Next maximum block size candidate (bytes): %" PRIu64, nNextMaxBlockSize);
 
-    // use the default value if next max size is too small.
-    if (IsFork1Activated(pindexPrev))
+    // If tailstorm is enabled (fork2) then the nextmaxblocksize must at least be tailstorm_k times the smallest
+    // block possible (100Kb), because a subblock must be able to contain at least the largest transaction possible.
+    // This means that if tailstorm_k is great than 4 then the nextmaxblocksize will be greater than the 2Mb size
+    // currently configured. For example, if tailstorm_k is 120, then the nextmaxblocksize must be 12Mb (120 x 100Kb).
+    if (IsFork2Pending(pindexPrev) || IsFork2Activated(pindexPrev))
     {
-        nNextMaxBlockSize = std::max(nNextMaxBlockSize, Params().GetConsensus().nNextMaxBlockSize);
+        nNextMaxBlockSize =
+            std::max(nNextMaxBlockSize, Params().GetConsensus().tailstorm_k * DEFAULT_NEXT_MAX_BLOCK_SIZE);
     }
     else
     {
-        nNextMaxBlockSize = std::max(nNextMaxBlockSize, DEFAULT_NEXT_MAX_BLOCK_SIZE);
+        nNextMaxBlockSize = std::max(nNextMaxBlockSize, Params().GetConsensus().nNextMaxBlockSize);
     }
 
     // make sure we are not over the maximum allowed

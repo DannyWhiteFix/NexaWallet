@@ -1,17 +1,17 @@
 // Copyright (c) 2025 The Bitcoin Unlimited developers
 
-#ifndef NEXA_TAILSTORM_H
-#define NEXA_TAILSTORM_H
-
+#include "validation/tailstorm.h"
+#include "chain.h"
 #include "chainparams.h"
 #include "consensus/validation.h"
 #include "datastream.h"
+#include "net.h"
 #include "pow.h"
 #include "sync.h"
-#include "tailstorm.h"
 
-extern bool forceTemplateRecalc;
-
+extern CChain chainActive;
+extern CBlockIndex *pindexBestHeader;
+extern std::atomic<bool> forceTemplateRecalc;
 /**
    Subblocks are not stored persistently.  They are just stored here in RAM.
 
@@ -57,7 +57,7 @@ extern bool forceTemplateRecalc;
    Pack = F0(nonce >< subblock)
    PoW = F1(parent hash >< Pack) < target
    The block provides Pack for each subblock (the parent hash is the same as the block's parent hash so is known).
-   
+
    In this case, an attacker could simply choose random values for Pack (skipping the F(subblock >< nonce) computation).
    This reduces their PoW work to F(D >< parent hash) < target.
 
@@ -68,7 +68,7 @@ extern bool forceTemplateRecalc;
    Pack = F0(subblock)
    PoW = F1((nonce >< parent hash) . Pack)
    The block provides the nonce and pack for each subblock.
-   
+
    It is expected that Pack is precomputed by honest nodes, so there is little benefit to an attacker to use
    random numbers (we interleave the nonce with the parent hash to reduce the attacker's ability to precompute
    an F(nonce) intermediate state for many nonces.  We do NOT interleave Pack, so that choosing a random number
@@ -86,71 +86,119 @@ extern bool forceTemplateRecalc;
      are held constant or precomputed, the intermediate state of this computation of cannot be used.
  */
 
-CCriticalSection cs_mapSubblocks;
-std::map<uint256, SubblockMapItem> mapSubblocks GUARDED_BY(cs_mapSubblocks);
+void PruneSubblocks(ConstCBlockRef pblock)
+{
+    if (pblock)
+    {
+        // Prune subblocks but leave enough for checking and enforcing the validity
+        // of summary blocks up to the enforce depth.
+        if (pindexBestHeader != nullptr)
+        {
+            const uint32_t nBlockHeight =
+                std::max((uint32_t)pindexBestHeader->height(), pblock->GetBlockHeader().height);
+            const uint32_t nHeightToPrune = nBlockHeight > DEPTH_TO_ENFORCE_CORRECT_SUBBLOCKS ?
+                                                nBlockHeight - DEPTH_TO_ENFORCE_CORRECT_SUBBLOCKS - 1 :
+                                                0;
+
+            LOCK(tailstormForest.cs_forest);
+            tailstormForest.ClearByHeight(nHeightToPrune);
+        }
+    }
+}
+
+bool IsSummaryBlock(ConstCBlockRef pblock) { return IsSummaryBlock(*pblock); }
+bool IsSummaryBlock(const CBlock &block)
+{
+    if (GetMinerDataVersion(block.minerData) != DEFAULT_MINER_DATA_SUBBLOCK_VERSION)
+    {
+        return true;
+    }
+    return false;
+}
+
+bool IsTailstormSummaryBlock(ConstCBlockRef pblock) { return IsTailstormSummaryBlock(*pblock); }
+bool IsTailstormSummaryBlock(const CBlock &block)
+{
+    return (GetMinerDataVersion(block.minerData) == DEFAULT_MINER_DATA_SUMMARYBLOCK_VERSION);
+}
 
 void AcceptSubblock(ConstCBlockRef pblock)
 {
-    LOCK(cs_mapSubblocks);
-    mapSubblocks[pblock->SubblockId()] = SubblockMapItem(pblock);
-}
+    if (!pblock)
+        return;
 
-std::vector<uint8_t> assembleSubBlocks(uint64_t heightPrevBlock, uint256 hashPrevBlock, int maxSubblocks,
-    int tailstormEnforceCorrectSubblocks)
-{
-    int subblocks = 0;
-    uint8_t minerDataVersion = 1;
-    std::vector<std::pair<uint256, std::vector<uint8_t> > > sbs;
-    LOCK(cs_mapSubblocks);
-    for (auto it = mapSubblocks.begin(); it != mapSubblocks.end(); )
+    bool fCheckForReorg = false;
+    std::set<uint256> setToAnnounce;
     {
+        LOCK(tailstormForest.cs_forest);
 
-        auto& subblock = it->second.subblock;
-        // TODO keep these around for validation and INV purposes
-        // until they exceed
-        // heightPrevBlock is the height of the subblock ancestor, so any sibling subblock should be heightPrevBlock+1
-        if (subblock->height <= heightPrevBlock - tailstormEnforceCorrectSubblocks)  // its so old we should forget about it
+        // Insert new subblock into dag
+        if (tailstormForest._Insert(pblock))
         {
-            it = mapSubblocks.erase(it);
+            fCheckForReorg = true;
+
+            // Process Orphans
+            setToAnnounce = tailstormForest.ProcessOrphans();
+            setToAnnounce.insert(pblock->GetHash());
+
+            // Check for subblocks to prune
+            PruneSubblocks(pblock);
+
+            forceTemplateRecalc.store(true);
         }
         else
+            LOG(DAG, "Insert subblock failed : %s\n", pblock->GetHash().ToString());
+    }
+
+    // Announce accepted subblocks to other peers
+    if (!setToAnnounce.empty())
+    {
+        LOCK(cs_vNodes);
+        for (const uint256 &_hash : setToAnnounce)
         {
-            // Its on this fork
-            if (hashPrevBlock == subblock->hashPrevBlock)
+            for (CNode *pnode : vNodes)
             {
-                sbs.push_back(std::pair(subblock->GetMiningHeaderCommitment(),subblock->nonce));
-                subblocks++;
-                if (subblocks == maxSubblocks-1) break;
+                pnode->PushSubblockHash(_hash);
             }
-            ++it;
         }
     }
 
-    if (sbs.size() == 0) return std::vector<uint8_t>();
-    CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
-    ds.reserve(1 + maxSubblocks*(32+16));
-    ds << minerDataVersion << sbs;
-    return std::vector<uint8_t>(ds.begin(),ds.end());
+    // Check that we're on the best dag and if not then
+    // initiate a re-org over to the summary block that has
+    // the best dag connected to it.
+    //
+    // NOTE: you can not put this call to CheckForReorg() in the above
+    // code block where the cs_forest lock is taken. This will cause
+    // a lockorder issue with cs_main.
+    if (fCheckForReorg)
+    {
+        tailstormForest.CheckForReorg();
+        tailstormForest.Check();
+    }
+
+    LOG(DAG, "Completed AcceptSubblock : %s", pblock->GetHash().ToString());
 }
 
-/** Gets the subblock information (mining header commitments) out of the block header's minerdata field.
-    This is stored as an array of pairs.  Each pair is the subblocks mining header commitment and the nonce.
-    This is all and the minimum that we need to prove the PoW of that subblock, since it must match the target
-    specified by this block's nBits fields (all subblocks have to have the same PoW target).
-
-    If this block references enough subblocks to make a summary block, then it IS the summary block, and its
-    transaction list needs to be the full transaction list rather than additional tx on top of referenced subblocks.
-    @returns vector of pairs of subblocks mining header commitment and the nonce
- */
-std::vector<std::pair<uint256, std::vector<uint8_t> > > ParseMinerData(const std::vector<unsigned char>& data)
+std::vector<uint8_t> GenerateMinerData(uint32_t tailstorm_k, std::set<CTreeNodeRef> &setBestDag)
 {
-    std::vector<std::pair<uint256, std::vector<uint8_t> > > ret;
-    if (data.size() == 0) return ret;
-    uint8_t minerDataVersion = 0;
-    CDataStream ds(data, SER_NETWORK, PROTOCOL_VERSION);
-    ds >> minerDataVersion >> ret;
-    return ret;
+    std::vector<std::pair<uint256, std::vector<uint8_t> > > vMinerData;
+    uint8_t nMinerDataVersion = 0;
+    if (setBestDag.size() < (size_t)tailstorm_k - 1)
+    {
+        nMinerDataVersion = DEFAULT_MINER_DATA_SUBBLOCK_VERSION;
+    }
+    else
+    {
+        nMinerDataVersion = DEFAULT_MINER_DATA_SUMMARYBLOCK_VERSION;
+        for (CTreeNodeRef node : setBestDag)
+        {
+            vMinerData.push_back(std::pair(node->subblock->GetMiningHeaderCommitment(), node->subblock->nonce));
+        }
+    }
+
+    CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
+    ds.reserve(1 + vMinerData.size() * (32 + CBlockHeader::MAX_NONCE_SIZE));
+    ds << nMinerDataVersion << vMinerData;
+
+    return std::vector<uint8_t>(ds.begin(), ds.end());
 }
-
-
-#endif

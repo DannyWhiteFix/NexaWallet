@@ -2,6 +2,7 @@
 #include "consensus/merkle.h"
 #include "core_io.h"
 #include "init.h"
+#include "pow.h"
 #include "unlimited.h"
 #include "versionbits.h" // bip135 added
 

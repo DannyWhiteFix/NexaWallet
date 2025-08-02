@@ -7,6 +7,7 @@
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
+#include <daa.h>
 #include <miner.h>
 #include <pow.h>
 #include <test/test_nexa.h>

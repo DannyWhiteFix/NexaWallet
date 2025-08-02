@@ -29,6 +29,7 @@
 #include "txorphanpool.h"
 #include "util.h"
 #include "utiltime.h"
+#include "validation/tailstorm.h"
 #include "validation/validation.h"
 
 static bool ReconstructBlock(CNode *pfrom,
@@ -70,6 +71,7 @@ bool CThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom)
     pblock->thinblock = std::make_shared<CThinBlock>(std::forward<CThinBlock>(tmp));
 
     std::shared_ptr<CThinBlock> thinBlock = pblock->thinblock;
+    bool fSummaryBlock = IsSummaryBlock(thinBlock->header);
 
     // Message consistency checking
     if (!IsThinBlockValid(pfrom, thinBlock->vMissingTx, thinBlock->header, thinBlock->vTxHashes.size()))
@@ -81,7 +83,7 @@ bool CThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom)
 
     // Is there a previous block or header to connect with?
     CBlockIndex *pprev = LookupBlockIndex(thinBlock->header.hashPrevBlock);
-    if (!pprev)
+    if (fSummaryBlock && !pprev)
         return error("thinblock from peer %s will not connect, unknown previous block %s", pfrom->GetLogName(),
             thinBlock->header.hashPrevBlock.ToString());
 
@@ -422,16 +424,20 @@ bool CXRequestThinBlockTx::HandleMessage(CDataStream &vRecv, CNode *pfrom)
     LOG(THIN, "received get_xblocktx for %s peer=%s\n", inv.hash.ToString(), pfrom->GetLogName());
 
     std::vector<CTransaction> vTx;
-    CBlockIndex *hdr = LookupBlockIndex(inv.hash);
-    if (!hdr)
-    {
-        dosMan.Misbehaving(pfrom, 20, BanReasonNotInBlockIndex);
-        return error("Requested block is not available");
-    }
-    else
     {
         const Consensus::Params &consensusParams = Params().GetConsensus();
-        ConstCBlockRef pblock = ReadBlockFromDisk(hdr, consensusParams);
+        ConstCBlockRef pblock;
+        if (!tailstormForest.Find(inv.hash, pblock))
+        {
+            CBlockIndex *hdr = LookupBlockIndex(inv.hash);
+            if (!hdr)
+            {
+                dosMan.Misbehaving(pfrom, 20, BanReasonNotInBlockIndex);
+                return error("Requested block is not available");
+            }
+            pblock = ReadBlockFromDisk(hdr, consensusParams);
+        }
+
         if (!pblock)
         {
             // We do not assign misbehavior for not being able to read a block from disk because we already
@@ -470,6 +476,7 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, std::string st
 
     std::shared_ptr<CXThinBlock> thinBlock = pblock->xthinblock;
     CInv inv(MSG_BLOCK, thinBlock->header.GetHash());
+    bool fSummaryBlock = IsSummaryBlock(thinBlock->header);
     {
         // Message consistency checking (FIXME: some redundancy here with AcceptBlockHeader)
         if (!IsThinBlockValid(pfrom, thinBlock->vMissingTx, thinBlock->header, thinBlock->vTxHashes.size()))
@@ -481,8 +488,9 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, std::string st
             return false;
         }
 
-        // Is there a previous block or header to connect with?
-        if (!LookupBlockIndex(thinBlock->header.hashPrevBlock))
+        // Is there a previous block or header to connect with either in the block index?
+        ConstCBlockRef subblock;
+        if (fSummaryBlock && !LookupBlockIndex(thinBlock->header.hashPrevBlock))
         {
             return error("xthinblock from peer %s will not connect, unknown previous block %s", pfrom->GetLogName(),
                 thinBlock->header.hashPrevBlock.ToString());
@@ -499,14 +507,13 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, std::string st
         }
 
         // pIndex should always be set by AcceptBlockHeader
-        if (!pIndex)
+        if (fSummaryBlock && !pIndex)
         {
             LOGA("INTERNAL ERROR: pIndex null in CXThinBlock::HandleMessage");
             thinrelay.ClearAllBlockData(pfrom, inv.hash);
             return true;
         }
 
-        inv.hash = pIndex->GetBlockHash();
         requester.UpdateBlockAvailability(pfrom->GetId(), inv.hash);
 
         // Return early if we already have the block data
@@ -523,8 +530,8 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, std::string st
             return true;
         }
 
-        // Request full block if it isn't extending the best chain
-        if (pIndex->chainWork() <= chainActive.Tip()->chainWork())
+        // Request full block if it isn't extending the best chain or the tailstorm dag
+        if (fSummaryBlock && (pIndex->chainWork() <= chainActive.Tip()->chainWork()))
         {
             thinrelay.RequestBlock(pfrom, thinBlock->header.GetHash());
             thinrelay.ClearAllBlockData(pfrom, inv.hash);

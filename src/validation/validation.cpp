@@ -21,6 +21,7 @@
 #include "expedited.h"
 #include "index/txindex.h"
 #include "init.h"
+#include "miner.h"
 #include "requestManager.h"
 #include "sync.h"
 #include "tailstorm.h"
@@ -31,7 +32,9 @@
 #include "util.h"
 #include "utilstrencodings.h"
 #include "utiltranslate.h"
+#include "validation/dag.h"
 #include "validation/forks.h"
+#include "validation/tailstorm.h"
 #include "validationinterface.h"
 
 #ifdef ENABLE_WALLET
@@ -48,6 +51,7 @@ extern CTweak<bool> pvtest;
 extern CTweak<uint32_t> maxHeadersToKeepInRAM;
 extern std::atomic<uint64_t> nTotalChainTx;
 extern uint64_t nDiskBlockIndexVersion;
+extern std::atomic<bool> forceTemplateRecalc;
 
 extern CCriticalSection cs_LastBlockFile;
 
@@ -148,41 +152,30 @@ static int64_t nTimePostConnect = 0;
 // Protected by cs_main
 static ThresholdConditionCache warningcache[Consensus::MAX_VERSION_BITS_DEPLOYMENTS];
 
-/** Is this subblock a summary block (does it meet the total PoW required)? */
-bool IsSummaryBlock(const CBlock &blk, CBlockIndex *prev, const Consensus::Params &consensusParams)
-{
-    // TODO tailstorm: This allows full work, non-tailstorm blocks, so should be removed if we choose to
-    // disallow hybrid (but its useful in regtest)
-    if (blk.minerData.size() == 0)
-    {
-        arith_uint256 tgt = GetNextNonTailstormBlockTarget(prev, &blk, consensusParams);
-        uint32_t expectedNbits = tgt.GetCompact();
-        // This is a full work block
-        if (blk.nBits == expectedNbits)
-            return true;
-    }
-
-    // TODO tailstorm variable # of subblocks
-    return (blk.NumSubblocks() >= consensusParams.tailstormSubblocks - 1);
-}
-bool IsSummaryBlock(ConstCBlockRef blk, CBlockIndex *prev)
-{
-    const Consensus::Params &consensusParams = Params().GetConsensus();
-    return IsSummaryBlock(*blk, prev, consensusParams);
-}
-
 bool ContextualCheckBlockHeader(const CChainParams &chainparams,
     const CBlockHeader &block,
     CValidationState &state,
     CBlockIndex *const pindexPrev)
 {
     const Consensus::Params &consensusParams = chainparams.GetConsensus();
-    const uint32_t nHeight = pindexPrev == nullptr ? 0 : pindexPrev->height() + 1;
 
-    if (block.height != nHeight)
+    uint32_t nPrevHeight = 0;
+    bool fSummaryBlock = IsSummaryBlock(block);
+    if (!fSummaryBlock)
+        nPrevHeight = chainActive.Tip()->height();
+    else
+        nPrevHeight = pindexPrev->height();
+    const uint32_t nHeight = pindexPrev == nullptr && IsSummaryBlock(block) ? 0 : nPrevHeight + 1;
+
+    if (fSummaryBlock && block.height != nHeight)
     {
         return state.DoS(100, error("%s: incorrect height. Height %d, expected %d", __func__, block.height, nHeight),
             REJECT_INVALID, "bad-height");
+    }
+    else
+    {
+        // For subblocks this check has to happen where we actually connect the subblock to the dag. This is in
+        // the tailstormForest.Insert() function.
     }
 
     if (block.feePoolAmt != 0)
@@ -190,77 +183,148 @@ bool ContextualCheckBlockHeader(const CChainParams &chainparams,
         return state.DoS(100, error("%s: premature fee pool use", __func__), REJECT_INVALID, "bad-fee-pool");
     }
 
-    const CBlockIndex *ancestor = pindexPrev->GetChildsConsensusAncestor();
-    if (ancestor == nullptr)
+    if (fSummaryBlock)
     {
-        if (block.height != 0)
-            return state.DoS(100, error("%s: ancestor is null", __func__), REJECT_INVALID, "bad-ancestor-hash");
-        if (block.hashAncestor != uint256())
-            return state.DoS(
-                100, error("%s: genesis ancestor hash must be 0", __func__), REJECT_INVALID, "bad-ancestor-hash");
-    }
-    else
-    {
-        if (block.hashAncestor != ancestor->GetBlockHash())
+        const CBlockIndex *ancestor = pindexPrev->GetChildsConsensusAncestor();
+        if (ancestor == nullptr)
         {
-            return state.DoS(100, error("%s: incorrect ancestor hash", __func__), REJECT_INVALID, "bad-ancestor-hash");
+            if (block.height != 0)
+                return state.DoS(100, error("%s: ancestor is null", __func__), REJECT_INVALID, "bad-ancestor-hash");
+            if (block.hashAncestor != uint256())
+                return state.DoS(
+                    100, error("%s: genesis ancestor hash must be 0", __func__), REJECT_INVALID, "bad-ancestor-hash");
         }
+        else
+        {
+            if (block.hashAncestor != ancestor->GetBlockHash())
+            {
+                return state.DoS(
+                    100, error("%s: incorrect ancestor hash", __func__), REJECT_INVALID, "bad-ancestor-hash");
+            }
+        }
+    }
+
+    // Check miner data field is correct
+    if (GetMinerDataVersion(block.minerData) > 2)
+    {
+        return state.DoS(100, error("%s: bad miner data version", __func__), REJECT_INVALID, "bad-miner-data-version");
+    }
+    if (!fSummaryBlock && (block.NumSubblocks() > 0))
+    {
+        return state.DoS(100, error("%s: subblock has miner data in it", __func__), REJECT_INVALID, "bad-subblock");
+    }
+    if (!IsFork2Pending(pindexPrev) && !IsFork2Activated(pindexPrev) && (block.NumSubblocks() > 0))
+    {
+        return state.DoS(100, error("%s: premature miner data use", __func__), REJECT_INVALID, "bad-miner-data");
+    }
+
+    // Once the fork is activated then old style legacy blocks are no longer accepted.
+    if (IsFork2Activated(pindexPrev) && fSummaryBlock && !IsTailstormSummaryBlock(block))
+    {
+        return state.DoS(
+            100, error("%s: legacy block type no longer valid", __func__), REJECT_INVALID, "bad-block-invalid");
     }
 
     if (block.hashTxFilter != uint256())
     {
         return state.DoS(100, error("%s: premature transaction filter use", __func__), REJECT_INVALID, "bad-txfilter");
     }
-    // Ensure that the blocksize is within limits according to the adaptive block size algorithm.
-    if (pindexPrev && block.size > pindexPrev->GetNextMaxBlockSize())
+
+    // Ensure for both Summary and Subblocks, that the blocksize is within limits according to the adaptive
+    // block size algorithm.
+    CBlockIndex *pindexLastSummary = nullptr;
+    if (fSummaryBlock && pindexPrev && block.size > pindexPrev->GetNextMaxBlockSize())
     {
         return state.DoS(100,
-            error("%s: announced block size too large. Candidate blk size: %llu, Max size: %llu, Block hash: %s, "
-                  "Ancestor hash: %s",
-                __func__, block.size, pindexPrev->GetNextMaxBlockSize(), block.GetHash().ToString(),
-                ancestor->GetBlockHash().ToString()),
+            error("%s: announced block size too large. Candidate blk size: %llu, Max size: %llu, Block hash: %s, ",
+                __func__, block.size, pindexPrev->GetNextMaxBlockSize(), block.GetHash().ToString()),
             REJECT_INVALID, "bad-blk-size");
     }
-
-    int subblocks = block.NumSubblocks();
-    // Check proof of work
-    uint32_t expectedNbits = 0;
-    if (subblocks == 0) // normal block
+    else if (!fSummaryBlock)
     {
-        expectedNbits = GetNextNonTailstormWorkRequired(pindexPrev, &block, consensusParams);
-        if (block.nBits != expectedNbits)
+        // Need to find pindexPrev from the dag, then lookup the summary
+        // block we're building the dag on top of, then get the next max
+        // block size from it's pindex next max value.
+        uint256 hashLastSummary;
+        std::set<CTreeNodeRef> setBestDag;
+        tailstormForest.GetBestDagFor(block.hashPrevBlock, setBestDag);
+        if (!setBestDag.empty())
+        {
+            for (auto treenode : setBestDag)
+            {
+                if (treenode->IsBase())
+                {
+                    hashLastSummary = treenode->subblock->hashPrevBlock;
+                    break;
+                }
+            }
+            pindexLastSummary = LookupBlockIndex(hashLastSummary);
+        }
+        else
+        {
+            pindexLastSummary = LookupBlockIndex(block.hashPrevBlock);
+        }
+
+        if (!pindexLastSummary)
+            pindexLastSummary = chainActive.Tip();
+        assert(pindexLastSummary);
+
+        uint64_t nNextMaxSubblockSize = pindexLastSummary->GetNextMaxBlockSize() / Params().GetConsensus().tailstorm_k;
+        if (block.size > nNextMaxSubblockSize)
         {
             return state.DoS(100,
-                error("%s: incorrect proof of work. Height %d, Block nBits 0x%x, expected 0x%x", __func__, nHeight,
-                    block.nBits, expectedNbits),
-                REJECT_INVALID, "bad-diffbits");
+                error("%s: announced subblock size too large. Candidate size: %llu, Max size: %llu, hash: %s, ",
+                    __func__, block.size, nNextMaxSubblockSize, block.GetHash().ToString()),
+                REJECT_INVALID, "bad-subblock-size");
+        }
+    }
+
+    // Check proof of work
+    uint32_t expectedNbits = 0;
+    if (fSummaryBlock && !IsTailstormSummaryBlock(block)) // normal legacy block
+    {
+        expectedNbits = GetNextNonTailstormWorkRequired(pindexPrev, &block, consensusParams);
+    }
+    else // both tailstorm summary, and subblocks
+    {
+        expectedNbits = GetNextWorkRequired(pindexPrev, &block, consensusParams);
+    }
+    if (block.nBits != expectedNbits)
+    {
+        return state.DoS(100,
+            error("%s: incorrect proof of work. Height %d, Block nBits 0x%x, expected 0x%x", __func__, nHeight,
+                block.nBits, expectedNbits),
+            REJECT_INVALID, "bad-diffbits");
+    }
+
+    if (fSummaryBlock)
+    {
+        uint32_t subblocks = block.NumSubblocks();
+        if (IsTailstormSummaryBlock(block))
+        {
+            if (subblocks != chainparams.GetConsensus().tailstorm_k - 1)
+            {
+                return state.DoS(100, error("incomplete miner data"), REJECT_INVALID, "bad-miner-data-size");
+            }
+        }
+
+        auto expectedChainWork = ArithToUint256(
+            (pindexPrev ? pindexPrev->chainWork() : 0) + ((subblocks + 1) * GetWorkForDifficultyBits(expectedNbits)));
+        if (block.chainWork != expectedChainWork)
+        {
+            return state.DoS(100,
+                error("%s: incorrect chain work. Height %d, chainWork 0x%s, expected 0x%s", __func__, nHeight,
+                    block.chainWork.GetHex(), expectedChainWork.GetHex()),
+                REJECT_INVALID, "bad-chainwork");
         }
     }
     else
     {
-        expectedNbits = GetNextWorkRequired(pindexPrev, &block, consensusParams);
-        if (block.nBits != expectedNbits)
-        {
-            return state.DoS(100,
-                error("%s: incorrect proof of work. Height %d, Block nBits 0x%x, expected 0x%x", __func__, nHeight,
-                    block.nBits, expectedNbits),
-                REJECT_INVALID, "bad-diffbits");
-        }
-    }
-    // auto fullblockWork = GetNextSummaryBlockWorkRequired(pindexPrev, pblock.get(), conparams);
-    // auto expectedChainWork = ArithToUint256((pindexPrev ? pindexPrev->chainWork() : 0) +
-    // GetWorkForDifficultyBits(fullblockWork));
-    auto expectedChainWork = ArithToUint256(
-        (pindexPrev ? pindexPrev->chainWork() : 0) + ((subblocks + 1) * GetWorkForDifficultyBits(expectedNbits)));
-    if (block.chainWork != expectedChainWork)
-    {
-        return state.DoS(100,
-            error("%s: incorrect chain work. Height %d, chainWork 0x%s, expected 0x%s", __func__, nHeight,
-                block.chainWork.GetHex(), expectedChainWork.GetHex()),
-            REJECT_INVALID, "bad-chainwork");
+        // For subblocks this check has to happen where we actually connect the subblock to the dag. This is in
+        // the tailstormForest.Insert() function.
     }
 
-    if (fCheckpointsEnabled)
+    if (fSummaryBlock && fCheckpointsEnabled)
     {
         // If this block belongs to the set of checkpointed blocks but it has a mismatched hash,
         // then we are on the wrong fork so ignore
@@ -288,8 +352,17 @@ bool ContextualCheckBlockHeader(const CChainParams &chainparams,
     }
 
     // Check timestamp against prev
-    if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
-        return state.Invalid(error("%s: block's timestamp is too early", __func__), REJECT_INVALID, "time-too-old");
+    if (fSummaryBlock)
+    {
+        if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
+            return state.Invalid(error("%s: block's timestamp is too early", __func__), REJECT_INVALID, "time-too-old");
+    }
+    else
+    {
+        if (pindexLastSummary && (block.GetBlockTime() <= pindexLastSummary->GetMedianTimePast()))
+            return state.Invalid(
+                error("%s: subblock's timestamp is too early", __func__), REJECT_INVALID, "time-too-old");
+    }
 
     return true;
 }
@@ -311,6 +384,32 @@ static void NotifyHeaderTip()
         nLastTime = GetTime();
     }
 }
+static void NotifyHeaderTipDag(const CBlockIndex *pindex)
+{
+    if (!pindexBestHeader.load())
+        return;
+
+    if (pindex && pindex->phashBlock && pindex->pprev && pindex->pprev->phashBlock)
+    {
+        CBlockHeader header = pindex->GetBlockHeader();
+        uint32_t nDagHeight = GetMinerDataVersion(header.minerData) != 0 ? Params().GetConsensus().tailstorm_k : 1;
+        uiInterface.NotifyHeaderTipDag(!IsInitialSyncComplete(), nDagHeight, 0, header, !IsSummaryBlock(header));
+    }
+}
+
+static void NotifyBlockTipDag(const CBlockIndex *pindex)
+{
+    if (!pindexBestHeader.load())
+        return;
+
+    if (pindex && pindex->phashBlock && pindex->pprev && pindex->pprev->phashBlock)
+    {
+        CBlockHeader header = pindex->GetBlockHeader();
+        uint32_t nDagHeight = GetMinerDataVersion(header.minerData) != 0 ? Params().GetConsensus().tailstorm_k : 1;
+        uiInterface.NotifyBlockTipDag(!IsInitialSyncComplete(), nDagHeight, 0, header, !IsSummaryBlock(header));
+    }
+}
+
 bool AcceptBlockHeader(const CBlockHeader &block,
     CValidationState &state,
     const CChainParams &chainparams,
@@ -339,11 +438,13 @@ bool AcceptBlockHeader(const CBlockHeader &block,
         }
 
         if (!CheckBlockHeader(conparams, block, state))
+        {
             return false;
+        }
 
         // Get prev block index
         CBlockIndex *pindexPrev = LookupBlockIndex(block.hashPrevBlock);
-        if (!pindexPrev)
+        if (IsSummaryBlock(block) && !pindexPrev)
         {
             return state.DoS(10,
                 error("%s: previous block %s not found while accepting %s", __func__, block.hashPrevBlock.ToString(),
@@ -356,6 +457,7 @@ bool AcceptBlockHeader(const CBlockHeader &block,
             return false;
         }
 
+        if (IsSummaryBlock(block))
         {
             READLOCK(cs_mapBlockIndex);
             if (pindexPrev->nStatus & BLOCK_FAILED_MASK)
@@ -366,6 +468,12 @@ bool AcceptBlockHeader(const CBlockHeader &block,
             }
         }
     }
+
+    // If this is a subblock then return here since
+    // we don't want to add it to the block index
+    // and so ppindex with remain a nullptr.
+    if (!IsSummaryBlock(block))
+        return true;
 
     if (pindex == nullptr)
     {
@@ -410,116 +518,123 @@ CBlockIndex *AddToBlockIndex(const CChainParams &chainparams, const CBlockHeader
 {
     AssertLockHeld(cs_main);
     const auto &conparams = chainparams.GetConsensus();
-    WRITELOCK(cs_mapBlockIndex);
-
-    // Check for duplicate
-    uint256 hash = block.GetHash();
-    BlockMap::iterator it = mapBlockIndex.find(hash);
-    if (it != mapBlockIndex.end())
-        return it->second;
 
     // Construct a new block index object.
     // Block height, size and chainwork are automatically assigned on object instantiation.
     CBlockIndex *pindexNew = new CBlockIndex(block);
 
-    // We assign the sequence id to blocks only when the full data is available,
-    // to avoid miners withholding blocks but broadcasting headers, to get a
-    // competitive advantage.
-    pindexNew->nTimeReceived = GetTime();
-    BlockMap::iterator miPrev = mapBlockIndex.find(block.hashPrevBlock);
-    if (miPrev != mapBlockIndex.end())
     {
-        pindexNew->pprev = (*miPrev).second;
-        pindexNew->BuildSkip();
+        WRITELOCK(cs_mapBlockIndex);
+        // Check for duplicate
+        uint256 hash = block.GetHash();
+        BlockMap::iterator it = mapBlockIndex.find(hash);
+        if (it != mapBlockIndex.end())
+            return it->second;
 
-        // If the prior block or an ancestor has failed, mark this one failed
-        if (pindexNew->pprev && pindexNew->pprev->nStatus & BLOCK_FAILED_MASK)
-            pindexNew->nStatus |= BLOCK_FAILED_CHILD;
-    }
-    bool summaryBlock = IsSummaryBlock(block, pindexNew->pprev, conparams);
-    pindexNew->nNextMaxBlockSize = CalculateNextMaxBlockSize(pindexNew->pprev, block.size);
-    if (summaryBlock)
-    {
-        if (block.minerData.size() == 0)
+        // We assign the sequence id to blocks only when the full data is available,
+        // to avoid miners withholding blocks but broadcasting headers, to get a
+        // competitive advantage.
+        pindexNew->nTimeReceived = GetTime();
+        BlockMap::iterator miPrev = mapBlockIndex.find(block.hashPrevBlock);
+        if (miPrev != mapBlockIndex.end())
         {
-            // this is a non-tailstorm block
-            auto work = GetBlockWork(*pindexNew);
-            auto expectedWork = ArithToUint256((pindexNew->pprev ? pindexNew->pprev->chainWork() : 0) + work);
-            if (pindexNew->header.chainWork != expectedWork)
+            pindexNew->pprev = (*miPrev).second;
+            pindexNew->BuildSkip();
+
+            // If the prior block or an ancestor has failed, mark this one failed
+            if (pindexNew->pprev && pindexNew->pprev->nStatus & BLOCK_FAILED_MASK)
+                pindexNew->nStatus |= BLOCK_FAILED_CHILD;
+        }
+
+        bool fSummaryBlock = IsSummaryBlock(block);
+        if (fSummaryBlock)
+        {
+            arith_uint256 work;
+            if (GetMinerDataVersion(block.minerData) == 0)
+            {
+                // This is a non-tailstorm legacy block
+                work = GetBlockWork(*pindexNew);
+            }
+            else
+            {
+                work = GetWorkForDifficultyBits(block.nBits);
+                if (conparams.tailstorm_k > 0)
+                {
+                    work *= conparams.tailstorm_k;
+                }
+            }
+            auto expectedWork = (pindexNew->pprev ? pindexNew->pprev->chainWork() : 0) + work;
+            if (pindexNew->chainWork() != expectedWork)
             {
                 pindexNew->nStatus |= BLOCK_FAILED_VALID; // block doesn't match checkpoints so invalid
                 delete pindexNew;
                 return nullptr; // Do not insert a block that does not meet work -- its a memory DOS attack.
             }
-        }
-        else
-        {
+
             pindexNew->nChainTx = (pindexNew->pprev ? pindexNew->pprev->nChainTx : 0) + block.txCount;
-            // Update the global atomic value
-            SetLargestNextMaxBlockSize(pindexNew->nNextMaxBlockSize);
 
-            auto work = GetWorkForDifficultyBits(block.nBits);
-            if (conparams.tailstormSubblocks > 0)
-                work *= conparams.tailstormSubblocks;
-            auto expectedWork = ArithToUint256((pindexNew->pprev ? pindexNew->pprev->chainWork() : 0) + work);
-            if (pindexNew->header.chainWork != expectedWork)
+            // Fix a bug in nextmaxblocksize when fork goes pending. We should be passing pindexNew
+            // and not the pprev.  This is important for the tailstorm fork because the summary block
+            // max size needs to be adjusted when the fork goes pending and not after otherwise it
+            // could be possible that the subblocks mined during this period won't fit into the first summary block.
+            if (IsFork2Pending(pindexNew) || IsFork2Activated(pindexNew))
             {
-                pindexNew->nStatus |= BLOCK_FAILED_VALID; // block doesn't match checkpoints so invalid
-                delete pindexNew;
-                return nullptr; // Do not insert a block that does not meet work -- its a memory DOS attack.
+                pindexNew->nNextMaxBlockSize = CalculateNextMaxBlockSize(pindexNew, block.size);
+            }
+            else
+            {
+                pindexNew->nNextMaxBlockSize = CalculateNextMaxBlockSize(pindexNew->pprev, block.size);
+            }
+            // Now that you have the right size calculated, update the global atomic value
+            SetLargestNextMaxBlockSize(pindexNew->nNextMaxBlockSize);
+        }
+
+        // We do not create any blocks whose parents are TREE/HEADER invalid, so correct work in this block implies
+        // the TREE validity level.
+        // Don't use raisevalidity, because it refuses to raise if BLOCK_FAILED_CHILD is set.
+        pindexNew->nStatus = (pindexNew->nStatus & ~BLOCK_VALID_MASK) | BLOCK_VALID_TREE;
+        assert((pindexNew->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TREE);
+
+
+        // Insert the record in the map
+        BlockMap::iterator mi = mapBlockIndex.insert(std::make_pair(hash, pindexNew)).first;
+        pindexNew->phashBlock = &((*mi).first);
+        setDirtyBlockIndex.insert(pindexNew);
+
+        // Find the index where a header can be trimmed and save it.
+        int64_t nHeightToTrim = (int64_t)pindexNew->nHeight - maxHeadersToKeepInRAM.Value();
+        if (nHeightToTrim > 0)
+        {
+            CBlockIndex *pindexToTrim = pindexNew->GetAncestor(nHeightToTrim);
+            if (pindexToTrim)
+            {
+                setHeadersToTrim.insert(pindexToTrim);
             }
         }
-    }
-    else
-    {
-        // tailstorm TODO Maybe check subblock nBits is what we need?
-    }
 
-    // We do not create any blocks whose parents are TREE/HEADER invalid, so correct work in this block implies
-    // the TREE validity level.
-    // Don't use raisevalidity, because it refuses to raise if BLOCK_FAILED_CHILD is set.
-    pindexNew->nStatus = (pindexNew->nStatus & ~BLOCK_VALID_MASK) | BLOCK_VALID_TREE;
-    assert((pindexNew->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TREE);
-
-
-    // Insert the record in the map
-    BlockMap::iterator mi = mapBlockIndex.insert(std::make_pair(hash, pindexNew)).first;
-    pindexNew->phashBlock = &((*mi).first);
-    setDirtyBlockIndex.insert(pindexNew);
-
-    // Find the index where a header can be trimmed and save it.
-    int64_t nHeightToTrim = (int64_t)pindexNew->nHeight - maxHeadersToKeepInRAM.Value();
-    if (nHeightToTrim > 0)
-    {
-        CBlockIndex *pindexToTrim = pindexNew->GetAncestor(nHeightToTrim);
-        if (pindexToTrim)
+        // If the block belongs to the set of check-pointed blocks but it has a mismatched hash,
+        // then we are on the wrong fork so ignore.
+        if (fCheckpointsEnabled && !CheckAgainstCheckpoint(pindexNew->height(), *pindexNew->phashBlock, chainparams))
         {
-            setHeadersToTrim.insert(pindexToTrim);
+            pindexNew->nStatus |= BLOCK_FAILED_VALID; // block doesn't match checkpoints so invalid
+            pindexNew->nStatus &= ~BLOCK_VALID_CHAIN;
         }
-    }
 
-    // If the block belongs to the set of check-pointed blocks but it has a mismatched hash,
-    // then we are on the wrong fork so ignore.
-    if (fCheckpointsEnabled && !CheckAgainstCheckpoint(pindexNew->height(), *pindexNew->phashBlock, chainparams))
-    {
-        pindexNew->nStatus |= BLOCK_FAILED_VALID; // block doesn't match checkpoints so invalid
-        pindexNew->nStatus &= ~BLOCK_VALID_CHAIN;
-    }
-
-    // Lastly, set the best header if this is a valid header on a valid chain and if the chain work
-    // is higher than the previous best header.
-    if (summaryBlock)
-    {
-        CBlockIndex *pBestHeader = pindexBestHeader.load();
-        if ((!(pindexNew->nStatus & BLOCK_FAILED_MASK)) &&
-            (pBestHeader == nullptr || pBestHeader->chainWork() < pindexNew->chainWork()))
+        // Lastly, set the best header if this is a valid header on a valid chain and if the chain work
+        // is higher than the previous best header.
+        if (fSummaryBlock)
         {
-            pindexBestHeader.store(pindexNew);
-        }
-        if (!fReindex)
-        {
-            nTotalChainTx.store(pindexBestHeader.load()->nChainTx);
-            pblocktree->WriteBestBlockHeaderChainTx(nTotalChainTx.load());
+            CBlockIndex *pBestHeader = pindexBestHeader.load();
+            if ((!(pindexNew->nStatus & BLOCK_FAILED_MASK)) &&
+                (pBestHeader == nullptr || pBestHeader->chainWork() < pindexNew->chainWork()))
+            {
+                pindexBestHeader.store(pindexNew);
+            }
+            if (!fReindex)
+            {
+                nTotalChainTx.store(pindexBestHeader.load()->nChainTx);
+                pblocktree->WriteBestBlockHeaderChainTx(nTotalChainTx.load());
+            }
         }
     }
 
@@ -527,7 +642,7 @@ CBlockIndex *AddToBlockIndex(const CChainParams &chainparams, const CBlockHeader
     NotifyHeaderTip();
 
     // Update the block viewer
-    uiInterface.NotifyHeaderTipDag(IsInitialBlockDownload(), pindexNew);
+    NotifyHeaderTipDag(pindexNew);
 
     return pindexNew;
 }
@@ -840,6 +955,10 @@ bool LoadBlockIndexDB()
         return true;
     }
     chainActive.SetTip(pBestIndexOnStartup);
+    if (IsFork2Pending(chainActive.Tip()) || IsFork2Activated(chainActive.Tip()))
+    {
+        fTailstormEnabled.store(true);
+    }
 
     // set the current maximum sequence id in the block index
     nBlockSequenceId = mapBlockIndex.size() + 1;
@@ -1814,6 +1933,7 @@ bool InvalidateBlock(CValidationState &state, const Consensus::Params &consensus
 
         // Lock block validation threads to make sure no new inbound block announcements
         // cause any block validation state to change while we're unwinding the chain.
+        LOCK(tailstormForest.cs_forest);
         LOCK(PV->cs_blockvalidationthread);
 
         while (chainActive.Contains(pindex))
@@ -1983,9 +2103,10 @@ bool ContextualCheckBlock(ConstCBlockRef pblock, CValidationState &state, CBlock
     }
 
     // Check all transactions in referenced subblocks are consistent with this block
-    if (pblock->minerData.size() > 0)
     {
-        // tailstorm TODO
+        // NOTE: This check is done in ConnectBlockPreprocessing() because we have to have all the subblocks
+        // before we attempt this check, however, we may not have them all when we receive the
+        // Summary block as it may come out of order with its expected subblocks.
     }
 
     return true;
@@ -2006,10 +2127,6 @@ bool CheckBlock(const Consensus::Params &consensusParams,
     // Check that the header is valid (particularly PoW).  This is mostly
     // redundant with the call in AcceptBlockHeader.
     if (!CheckBlockHeader(consensusParams, *pblock, state, fCheckPOW))
-    {
-        return false;
-    }
-    if (fSummaryBlock && !CheckSummaryBlockHeader(consensusParams, pblock, state, fCheckPOW))
     {
         return false;
     }
@@ -2166,7 +2283,7 @@ bool ReceivedBlockTransactions(ConstCBlockRef pblock,
 }
 
 /** Store block on disk. If dbp is non-nullptr, the file is known to already reside on disk */
-bool AcceptBlock(ConstCBlockRef pblock,
+static bool AcceptBlock(ConstCBlockRef pblock,
     CValidationState &state,
     const CChainParams &chainparams,
     CBlockIndex **ppindex,
@@ -2181,64 +2298,81 @@ bool AcceptBlock(ConstCBlockRef pblock,
     {
         return false;
     }
-    // AcceptBlockHeader should return false if pindex isn't created or found, but just in case
-    if (pindex == nullptr)
-        return false;
 
-    LOG(PARALLEL, "Check Block %s with chain work %s block height %d\n", pindex->phashBlock->ToString(),
-        pindex->chainWork().ToString(), pindex->height());
-
-    // Try to process all requested blocks that we don't have, but only
-    // process an unrequested block if it's new and has enough work to
-    // advance our tip, and isn't too many blocks ahead.
-    bool fAlreadyHave = false;
+    if (IsSummaryBlock(pblock))
     {
-        READLOCK(cs_mapBlockIndex);
-        fAlreadyHave = pindex->nStatus & BLOCK_HAVE_DATA;
-    }
-    bool fHasMoreWork = (chainActive.Tip() ? pindex->chainWork() > chainActive.Tip()->chainWork() : true);
-    // Blocks that are too out-of-order needlessly limit the effectiveness of
-    // pruning, because pruning will not delete block files that contain any
-    // blocks which are too close in height to the tip.  Apply this test
-    // regardless of whether pruning is enabled; it should generally be safe to
-    // not process unrequested blocks.
-    bool fTooFarAhead = (pindex->height() > int(chainActive.Height() + MIN_BLOCKS_TO_KEEP));
-
-    // TODO: deal better with return value and error conditions for duplicate
-    // and unrequested blocks.
-    if (fAlreadyHave)
-    {
-        return true;
-    }
-    // If we didn't ask for it:
-    if (!fRequested)
-    {
-        if (pindex->processed())
-            return true; // This is a previously-processed block that was pruned
-        if (!fHasMoreWork)
-            return true; // Don't process less-work chains
-        if (fTooFarAhead)
-            return true; // Block height is too high
-    }
-
-    {
-        if ((!CheckBlock(chainparams.GetConsensus(), pblock, state)) ||
-            !ContextualCheckBlock(pblock, state, pindex->pprev))
-        {
-            if (state.IsInvalid() && !state.CorruptionPossible())
-            {
-                {
-                    WRITELOCK(cs_mapBlockIndex);
-                    pindex->nStatus |= BLOCK_FAILED_VALID;
-                    setDirtyBlockIndex.insert(pindex);
-                }
-                // Now mark every block index on every chain that contains pindex as child of invalid
-                MarkAllContainingChainsInvalid(pindex);
-            }
+        // AcceptBlockHeader should return false if pindex isn't created or found, but just in case
+        if (pindex == nullptr)
             return false;
+
+        LOG(PARALLEL, "Check Block %s with chain work %s block height %d\n", pindex->phashBlock->ToString(),
+            pindex->chainWork().ToString(), pindex->height());
+
+        // Try to process all requested blocks that we don't have, but only
+        // process an unrequested block if it's new and has enough work to
+        // advance our tip, and isn't too many blocks ahead.
+        bool fAlreadyHave = false;
+        {
+            READLOCK(cs_mapBlockIndex);
+            fAlreadyHave = pindex->nStatus & BLOCK_HAVE_DATA;
+        }
+        bool fHasMoreWork = (chainActive.Tip() ? pindex->chainWork() > chainActive.Tip()->chainWork() : true);
+        // Blocks that are too out-of-order needlessly limit the effectiveness of
+        // pruning, because pruning will not delete block files that contain any
+        // blocks which are too close in height to the tip.  Apply this test
+        // regardless of whether pruning is enabled; it should generally be safe to
+        // not process unrequested blocks.
+        bool fTooFarAhead = (pindex->height() > int(chainActive.Height() + MIN_BLOCKS_TO_KEEP));
+
+        // TODO: deal better with return value and error conditions for duplicate
+        // and unrequested blocks.
+        if (fAlreadyHave)
+        {
+            return true;
+        }
+        // If we didn't ask for it:
+        if (!fRequested)
+        {
+            if (pindex->processed())
+                return true; // This is a previously-processed block that was pruned
+            if (!fHasMoreWork)
+                return true; // Don't process less-work chains
+            if (fTooFarAhead)
+                return true; // Block height is too high
         }
     }
-    if (!IsSummaryBlock(pblock, pindex->pprev))
+
+    if ((!CheckBlock(chainparams.GetConsensus(), pblock, state)))
+    {
+        if (state.IsInvalid() && !state.CorruptionPossible())
+        {
+            {
+                WRITELOCK(cs_mapBlockIndex);
+                pindex->nStatus |= BLOCK_FAILED_VALID;
+                setDirtyBlockIndex.insert(pindex);
+            }
+            // Now mark every block index on every chain that contains pindex as child of invalid
+            MarkAllContainingChainsInvalid(pindex);
+        }
+        return false;
+    }
+
+    if (IsSummaryBlock(pblock) && !ContextualCheckBlock(pblock, state, pindex->pprev))
+    {
+        if (state.IsInvalid() && !state.CorruptionPossible())
+        {
+            {
+                WRITELOCK(cs_mapBlockIndex);
+                pindex->nStatus |= BLOCK_FAILED_VALID;
+                setDirtyBlockIndex.insert(pindex);
+            }
+            // Now mark every block index on every chain that contains pindex as child of invalid
+            MarkAllContainingChainsInvalid(pindex);
+        }
+        return false;
+    }
+
+    if (!IsSummaryBlock(pblock))
     {
         AcceptSubblock(pblock);
     }
@@ -2436,11 +2570,12 @@ DisconnectResult DisconnectBlock(const ConstCBlockRef pblock, const CBlockIndex 
 }
 
 
-bool ConnectBlockPrevalidations(ConstCBlockRef pblock,
+static bool ConnectBlockPrevalidations(ConstCBlockRef pblock,
     CValidationState &state,
     CBlockIndex *pindex,
     CCoinsViewCache &view,
     const CChainParams &chainparams,
+    std::set<CTreeNodeRef> &setDag,
     bool fJustCheck)
 {
     int64_t nTimeStart = GetStopwatchMicros();
@@ -2482,6 +2617,74 @@ bool ConnectBlockPrevalidations(ConstCBlockRef pblock,
     // verify that the view's current state corresponds to the previous block
     uint256 hashPrevBlock = pindex->pprev == nullptr ? uint256() : pindex->pprev->GetBlockHash();
     assert(hashPrevBlock == view.GetBestBlock());
+
+    // verify that we have all the subblocks for this tailstorm summary block
+    if (IsInitialSyncComplete() && IsTailstormSummaryBlock(pblock))
+    {
+        auto subblockProofs = ParseMinerData(pblock->minerData);
+        if (subblockProofs.size() != chainparams.GetConsensus().tailstorm_k - 1)
+        {
+            return state.DoS(
+                100, error("ProcessNewBlock(): incomplete miner data"), REJECT_INVALID, "bad-miner-data-size");
+        }
+
+        LOCK(tailstormForest.cs_forest);
+        tailstormForest.GetDagForBlock(pblock, setDag);
+
+        // Get all mining hashes from the best dag that exists on top of
+        // the prevhash of this Summary Block.  Then Check if all
+        // the subblock minining hashes in the minerData of this block
+        // are present in the best dag.
+        std::set<uint256> setMiningHashes;
+        for (auto &treenode : setDag)
+        {
+            const auto &miningHeaderCommitment = treenode->subblock->GetMiningHeaderCommitment();
+            const auto &nonce = treenode->subblock->GetBlockHeader().nonce;
+            setMiningHashes.insert(GetMiningHash(miningHeaderCommitment, nonce));
+
+            // Check that the heights in the subblocks match the height of the summary block
+            if (pblock->GetBlockHeader().height != treenode->subblock->GetBlockHeader().height)
+            {
+                return state.DoS(100, error("ProcessNewBlock(): height in subblock does not match summary block"),
+                    REJECT_INVALID, "bad-subblock-height");
+            }
+        }
+
+        // Check to make sure all subblocks were received before connecting the Summary Block
+        for (const auto &pair : subblockProofs)
+        {
+            const auto &miningHeaderCommitment = pair.first;
+            const auto &nonce = pair.second;
+            uint256 miningHash = GetMiningHash(miningHeaderCommitment, nonce);
+
+            if (!setMiningHashes.count(miningHash))
+            {
+                // Defer processing of this block by adding it to the tailstorm orphan map.
+                tailstormForest.AddSummaryBlockOrphan(pblock);
+                LOG(DAG, "Some subblocks not found in dag. Defer summary block orphan %s",
+                    pblock->GetHash().ToString());
+                return true;
+            }
+        }
+        tailstormForest.RemoveSummaryBlockOrphan(pblock);
+
+        // Check that all the transactions in the given subblocks are in the summary block.
+        std::set<uint256> setBlockHashes;
+        std::map<uint256, CTransactionRef> mapDagTxns;
+        tailstormForest.GetDagTxns(setDag, mapDagTxns);
+        for (unsigned int i = 1; i < pblock->vtx.size(); i++)
+        {
+            setBlockHashes.insert(pblock->vtx[i]->GetId());
+        }
+        for (auto &mi : mapDagTxns)
+        {
+            if (!setBlockHashes.count(mi.first))
+            {
+                return state.DoS(100, error("ProcessNewBlock(): transaction in subblock not found in block"),
+                    REJECT_INVALID, "bad-blk-missing-txn");
+            }
+        }
+    }
 
     int64_t nTime1 = GetStopwatchMicros();
     nTimeCheck += nTime1 - nTimeStart;
@@ -2531,7 +2734,8 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
     CBlockUndo &blockundo,
     std::vector<std::pair<uint256, CDiskTxPos> > &vPos,
     std::map<CGroupTokenID, CAmount> &accumulatedMintages,
-    std::map<CGroupTokenID, CAuth> &accumulatedAuthorities)
+    std::map<CGroupTokenID, CAuth> &accumulatedAuthorities,
+    const std::map<uint256, CTransactionRef> *mapDagTxns)
 {
     nFees = 0;
     int64_t nTime2 = GetStopwatchMicros();
@@ -2589,6 +2793,11 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
         for (unsigned int i = 0; i < pblock->vtx.size(); i++)
         {
             const CTransactionRef &txref = pblock->vtx[i];
+
+            // Skip transactions we already have checked in other subblocks
+            if (mapDagTxns && mapDagTxns->count(txref->GetId()))
+                continue;
+
             for (size_t j = 0; j < txref->vin.size(); j++)
             {
                 if (txref->vin[j].IsReadOnly())
@@ -2610,7 +2819,7 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
                         return state.DoS(100,
                             error("%s: block %s read only inputs missing or spent in tx.in: %d.%d txid: %s", __func__,
                                 pblock->GetHash().ToString(), i, j, txref->GetId().ToString()),
-                            REJECT_INVALID, "bad-txns-read-only-inputs-missing-or-spent");
+                            REJECT_CONFLICT, "bad-txns-read-only-inputs-missing-or-spent");
                     }
                 }
             }
@@ -2618,12 +2827,16 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
                 return false;
         }
 
-
         // Outputs then Inputs algorithm: add outputs to the coin cache and validate lexical ordering
         uint256 prevTxHash;
         for (unsigned int i = 0; i < pblock->vtx.size(); i++)
         {
             const CTransaction &tx = *(pblock->vtx[i]);
+
+            // Skip transactions we already have checked in other subblocks
+            if (mapDagTxns && mapDagTxns->count(tx.GetId()))
+                continue;
+
             try
             {
                 AddCoins(view, tx, pindex->height());
@@ -2659,6 +2872,11 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
         for (unsigned int i = 0; i < pblock->vtx.size(); i++)
         {
             const CTransactionRef &txref = pblock->vtx[i];
+
+            // Skip transactions we already have checked in other subblocks
+            if (mapDagTxns && mapDagTxns->count(txref->GetId()))
+                continue;
+
             if (!txref->IsCoinBase())
             {
                 if (!fJustCheck && !fVerifyDB.load())
@@ -2690,17 +2908,22 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
             const CTransaction &tx = *(pblock->vtx[i]);
             const CTransactionRef &txref = pblock->vtx[i];
 
+            // Skip transactions we already have checked in other subblocks
+            if (mapDagTxns && mapDagTxns->count(txref->GetId()))
+                continue;
+
             nInputs += tx.vin.size();
 
             if (!tx.IsCoinBase())
             {
-                const char *errCode = nullptr;
+                const char *errStr = nullptr;
                 // Check that transaction is BIP68 final
                 // BIP68 lock checks (as opposed to nLockTime checks) must
                 // be in ConnectBlock because they require the UTXO set
                 prevheights.resize(tx.vin.size());
                 {
                     int badIdx = -1;
+                    uint32_t errCode = 0;
                     for (size_t j = 0; j < tx.vin.size(); j++)
                     {
                         if (!tx.vin[j].IsReadOnly())
@@ -2713,7 +2936,8 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
                                 LOGA("block %s: TX %d (idem: %s:%d) normal input missing or spent (%s)\n",
                                     pblock->GetHash().ToString(), i, tx.GetIdem().GetHex(), j,
                                     tx.vin[j].prevout.GetHex());
-                                errCode = "bad-txns-inputs-missingorspent";
+                                errCode = REJECT_CONFLICT;
+                                errStr = "bad-txns-inputs-missingorspent";
                                 break;
                             }
                             prevheights[j] = coin->height();
@@ -2724,7 +2948,8 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
                                 LOGA("block %s: TX %d (idem: %s:%d) amount mismatch (%d, %d)\n",
                                     pblock->GetHash().ToString(), i, tx.GetIdem().GetHex(), j, coin->out.nValue,
                                     tx.vin[j].amount);
-                                errCode = "bad-txns-input-amount-mismatch";
+                                errCode = REJECT_INVALID;
+                                errStr = "bad-txns-input-amount-mismatch";
                                 break;
                             }
                         }
@@ -2742,7 +2967,7 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
                         return state.DoS(100,
                             error("%s: block %s inputs missing, spent, or invalid in tx %d.%d %s", __func__,
                                 pblock->GetHash().ToString(), i, badIdx, tx.GetId().ToString()),
-                            REJECT_INVALID, errCode);
+                            errCode, errStr);
                     }
                 }
                 nFees = nFees - tx.GetValueOut();
@@ -2752,7 +2977,7 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
                     return state.DoS(100,
                         error("%s: block %s contains a non-BIP68-final transaction", __func__,
                             pblock->GetHash().ToString()),
-                        REJECT_INVALID, "bad-txns-nonfinal");
+                        REJECT_NONFINAL, "bad-txns-nonfinal");
                 }
 
                 {
@@ -2802,6 +3027,10 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
         {
             const CTransaction &tx = *(pblock->vtx[i]);
 
+            // Skip transactions we already have checked in other subblocks
+            if (mapDagTxns && mapDagTxns->count(tx.GetId()))
+                continue;
+
             CTxUndo undoDummy;
             if (i > 0)
             {
@@ -2812,12 +3041,11 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
                 return state.DoS(100,
                     error("%s: block %s inputs missing or spent (possibly doublespent) in tx: %d txid: %s", __func__,
                         pblock->GetHash().ToString(), i, tx.GetId().ToString()),
-                    REJECT_INVALID, "bad-txns-inputs-missingorspent");
+                    REJECT_CONFLICT, "bad-txns-inputs-missingorspent");
             }
             if (PV->QuitReceived(this_id, fParallel))
                 return false;
         }
-
 
         LOG(BENCH, "Number of CheckInputs() performed: %d  Unverified count: %d\n", nChecked, nUnVerifiedChecked);
 
@@ -2829,7 +3057,9 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
             return state.DoS(100, false, REJECT_INVALID, "bad-blk-signatures", false, "parallel script check failed");
         }
 
-        // Validate we are within sigcheck limits
+        // Validate we are within sigcheck limits.
+        // Stop checking sigops when Fork2 becomes active.
+        if (!IsFork2Activated(pindex))
         {
             uint64_t blockSigChecks = 0;
             for (const auto &t : txResourceTracker) // its ok to add the coinbase sigchecks because they must be 0
@@ -2906,7 +3136,9 @@ bool ConnectBlock(ConstCBlockRef pblock,
     // Section for boost scoped lock on the scriptcheck_mutex
     boost::thread::id this_id(boost::this_thread::get_id());
 
-    if (!ConnectBlockPrevalidations(pblock, state, pindex, view, chainparams, fJustCheck))
+    // If this is a summary block then use the same dag set for validation throughout ConnectBlock()
+    std::set<CTreeNodeRef> setDag;
+    if (!ConnectBlockPrevalidations(pblock, state, pindex, view, chainparams, setDag, fJustCheck))
         return false;
 
     const arith_uint256 nStartingChainWork = chainActive.Tip()->chainWork();
@@ -2939,12 +3171,24 @@ bool ConnectBlock(ConstCBlockRef pblock,
         return false;
     }
 
+    // Check coinbase for correctness
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->height(), chainparams.GetConsensus());
     if (pblock->vtx[0]->GetValueOut() > blockReward)
+    {
         return state.DoS(100,
             error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)", pblock->vtx[0]->GetValueOut(),
                 blockReward),
             REJECT_INVALID, "bad-cb-amount");
+    }
+    // Check and validate a coinbase if this is tailstorm summary block.
+    if (IsTailstormSummaryBlock(pblock))
+    {
+        if (!ValidateSummaryBlockCoinbase(blockReward, pblock, setDag))
+        {
+            return state.DoS(100, error("ConnectBlock(): coinbase does not match the best dag"), REJECT_INVALID,
+                "bad-cb-no-dag-match");
+        }
+    }
 
     if (fJustCheck)
         return true;
@@ -3217,7 +3461,9 @@ void CheckAndAlertUnknownVersionbits(const CChainParams &chainParams, const CBlo
 /** Update chainActive and related internal data structures. */
 void UpdateTip(CBlockIndex *pindexNew)
 {
+    AssertLockHeld(tailstormForest.cs_forest);
     DbgAssert(txProcessingCorral.region() == CORRAL_TX_PAUSE, LOGA("Updating tip during tx processing"));
+
     chainActive.SetTip(pindexNew);
 
     // If the chain tip has changed previously rejected transactions
@@ -3235,6 +3481,56 @@ void UpdateTip(CBlockIndex *pindexNew)
         // If the fork is locked in to happen in the next block, force all tx to be readmitted into the pool
         // so that invalid txes are dropped
         ResubmitTransactions(nullptr);
+    }
+    if (IsFork2Pending(pindexNew))
+    {
+        fTailstormEnabled.store(true);
+
+        // If the fork is locked in to happen in the next block, force all tx to be readmitted into the pool
+        // so that invalid txes are dropped
+        ResubmitTransactions(nullptr);
+
+        // Processes to run only once when fork goes pending.
+        static bool fRunOnce = true;
+        if (fRunOnce)
+        {
+            // Clear out mining candidates and force a new one to be created for the next block
+            // which will be the fork block.
+            {
+                LOCK(csMiningCandidates);
+                miningCandidatesMap.clear();
+            }
+
+            // Get any subblocks that may have been mined already prior to our own fork activation.
+            // We must do this because the first subblock header may already have arrived however because
+            // tailstorm was not enabled it would have been rejected as not having enough POW. So we need
+            // to re-request any subblocks here so they properly ends up the subblock dag.
+            {
+                LOCK(cs_vNodes);
+                for (CNode *pnode : vNodes)
+                {
+                    std::set<uint256> setDagToSend;
+                    pnode->PushMessage(NetMsgType::GET_DAG, setDagToSend);
+                }
+            }
+            fRunOnce = false;
+        }
+    }
+
+    forceTemplateRecalc.store(true);
+
+    // If the dag has already received some of the subblocks before the chain tip
+    // was connected then we need to update the dag for it and any associated trees
+    // so that pcoinsDag is updated correctly before releasing the tx pause on the corral.
+    if (fTailstormEnabled)
+    {
+        // Get the grove for the chain active tip if it already exists and process the dag.
+        LOCK(tailstormForest.cs_forest);
+        CTailstormGroveRef grove = nullptr;
+        if (tailstormForest.GetGrove(*(pindexNew->phashBlock), grove))
+        {
+            tailstormForest.GenerateDagData(grove);
+        }
     }
 
     cvBlockChange.notify_all();
@@ -3297,6 +3593,7 @@ static void ResubmitTransactions(const ConstCBlockRef pblock)
 bool DisconnectTip(CValidationState &state, const Consensus::Params &consensusParams, const bool fRollBack)
 {
     AssertLockHeld(cs_main);
+    AssertLockHeld(tailstormForest.cs_forest);
     AssertLockHeld(PV->cs_blockvalidationthread);
 
     ConstCBlockRef pblock;
@@ -3434,6 +3731,7 @@ bool ConnectTip(CValidationState &state,
         // Stop txadmission, and flush the commitQ, before we flush coin state and remove txn conflicts
         // Ideally we'd do this here, but we cannot deadlock against cs_main
         // It is done in ActivateBestChain() where cs_main is locked
+        LOCK(tailstormForest.cs_forest); // maintain locking order
         TxAdmissionPause txlock;
 
         // Flush coin state
@@ -3476,10 +3774,15 @@ bool ConnectTip(CValidationState &state,
         LOG(BENCH, "  - Connect Tip total: %.2fms [%.2fs]\n", (nTime3 - nTime2) * 0.001, nTimeConnectTotal * 0.000001);
     }
 
+    // Once the block is connected and, if tailstorm is enabled, we have to prune the subblocks from
+    // the dag so we don't end up mining them into a new summary block
+    PruneSubblocks(pblock);
+
     // Update the syncd status after each block is handled
     int64_t nTime4 = GetStopwatchMicros();
     IsChainNearlySyncdInit();
     IsInitialBlockDownloadInit();
+    IsInitialSyncCompleteInit();
 
     if (!IsInitialBlockDownload())
     {
@@ -3605,6 +3908,7 @@ bool ActivateBestChainStep(CValidationState &state,
     while (chainActive.Tip() && chainActive.Tip() != pindexFork)
     {
         // Indicate that this thread has now initiated a re-org
+        LOCK(tailstormForest.cs_forest); // maintain locking order
         LOCK(PV->cs_blockvalidationthread);
         if (!fBlocksDisconnected)
             PV->MarkReorgInProgress(this_id, true, fParallel);
@@ -3639,7 +3943,7 @@ bool ActivateBestChainStep(CValidationState &state,
      *  want to pass a nullptr so that the next block is read from disk, because we will definitely not
      *  have the block.
      */
-    bool fBlock = true;
+    bool fBlock = pblock ? true : false;
     int nHeight = pindexFork ? pindexFork->height() : -1;
     while (fContinue && nHeight < pindexMostWork->height())
     {
@@ -3714,8 +4018,7 @@ bool ActivateBestChainStep(CValidationState &state,
                 }
 
                 // Update the block viewer (only do this once)
-                uiInterface.NotifyBlockTipDag(IsInitialBlockDownload(), pindexNewTip);
-
+                NotifyBlockTipDag(pindexNewTip);
 
                 PruneBlockIndexCandidates();
                 if (!pindexOldTip || chainActive.Tip()->chainWork() > pindexOldTip->chainWork())
@@ -3750,11 +4053,11 @@ bool ActivateBestChainStep(CValidationState &state,
         }
         fBlock = false; // read next blocks from disk
 
-        // Update the syncd status after each block is handled
+        // Update the synced status after each block is handled
         IsChainNearlySyncdInit();
         IsInitialBlockDownloadInit();
+        IsInitialSyncCompleteInit();
     }
-
 
     // Relay Inventory
     CBlockIndex *pindexNewTip = chainActive.Tip();
@@ -3811,7 +4114,9 @@ bool ActivateBestChainStep(CValidationState &state,
         return false;
     }
     else
+    {
         CheckForkWarningConditions();
+    }
 
     return true;
 }
@@ -3954,7 +4259,6 @@ bool _ActivateBestChain(CValidationState &state,
             }
             else
             {
-                LOGA("Chain activation failed, but state is not invalid\n");
                 return false;
             }
         }
@@ -3997,8 +4301,7 @@ bool ProcessNewBlock(CValidationState &state,
     LOG(BLK, "Processing new block %s from peer %s.\n", hexHash, fromName);
     // Preliminary checks
     if (!CheckBlockHeader(cparams, *pblock, state, true))
-    { // block header is bad
-        // demerit the sender
+    {
         LOG(BLK, "Invalid block %s:  from:%s  Bad header:%s\n", hexHash, fromName, state.GetLogString());
         return error("%s: CheckBlockHeader FAILED", __func__);
     }
@@ -4027,6 +4330,7 @@ bool ProcessNewBlock(CValidationState &state,
     //          TODO: in order to lock cs_main all the way through we must remove the locking from ActivateBestChain
     //                but it will require great care because ActivateBestChain requires cs_main however it is also
     //                called from other places.  Currently it seems best to leave cs_main here as is.
+    CBlockIndex *pindex = nullptr;
     {
         LOCK(cs_main);
         uint256 hash = pblock->GetHash();
@@ -4038,7 +4342,6 @@ bool ProcessNewBlock(CValidationState &state,
         }
 
         // Store to disk
-        CBlockIndex *pindex = nullptr;
         bool ret = AcceptBlock(pblock, state, chainparams, &pindex, fRequested, dbp);
         if (pindex && pfrom)
         {
@@ -4060,22 +4363,41 @@ bool ProcessNewBlock(CValidationState &state,
             // We must indicate to the request manager that the block was received only after it has
             // been stored to disk (or been shown to be invalid). Doing so prevents unnecessary re-requests.
             requester.Received(inv, pfrom);
+
+            // Let the subblock tracking know that this peer has this subblock already
+            // TODO: better that this update should go together with AcceptSubblock() and before
+            // we make header announcements but for now it's fine here.
+            if (pfrom && !IsSummaryBlock(pblock))
+            {
+                CNodeStateAccessor modablestate(nodestate, pfrom->GetId());
+                modablestate->mapSubblockHeaders.emplace(inv.hash, pblock->GetBlockHeader().height);
+                LOG(DAG, "Added to modable state after acceptsubblock");
+            }
         }
     }
-    if (!ActivateBestChain(state, chainparams, pblock, fParallel))
+
+    if (IsSummaryBlock(pblock))
     {
-        if (state.IsInvalid() || state.IsError())
+        if (!ActivateBestChain(state, chainparams, pblock, fParallel))
         {
-            LOG(BLK, "Invalid block %s: time:%d TX size:%d len:%d ActivateBestChain: %s\n", hexHash, pblock->nTime,
-                pblock->vtx.size(), pblock->GetBlockSize(), state.GetLogString());
-            return error("%s: ActivateBestChain failed", __func__);
+            if (state.IsInvalid() || state.IsError())
+            {
+                LOG(BLK, "Invalid block %s: time:%d TX size:%d len:%d ActivateBestChain: %s\n", hexHash, pblock->nTime,
+                    pblock->vtx.size(), pblock->GetBlockSize(), state.GetLogString());
+                return error("%s: ActivateBestChain failed", __func__);
+            }
+            else
+            {
+                LOG(BLK,
+                    "Stopped activation of block %s: time:%d TX size:%d len:%d ActivateBestChain returned false: %s\n",
+                    hexHash, pblock->nTime, pblock->vtx.size(), pblock->GetBlockSize(), state.GetLogString());
+                return false;
+            }
         }
-        else
-        {
-            LOG(BLK, "Stopped activation of block %s: time:%d TX size:%d len:%d ActivateBestChain returned false: %s\n",
-                hexHash, pblock->nTime, pblock->vtx.size(), pblock->GetBlockSize(), state.GetLogString());
-            return false;
-        }
+    }
+    else
+    {
+        LOG(BLK | DAG, "Processing subblock: %s", pblock->GetHash().ToString());
     }
 
     int64_t end = GetStopwatchMicros();

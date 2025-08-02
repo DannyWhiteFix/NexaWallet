@@ -33,7 +33,6 @@
 #include "rpc/server.h"
 #include "script/standard.h"
 #include "stat.h"
-#include "tailstorm.h"
 #include "timedata.h"
 #include "tinyformat.h"
 #include "tweak.h"
@@ -66,11 +65,10 @@ extern void AlertNotify(const std::string &strMessage);
 
 using namespace std;
 
-extern bool forceTemplateRecalc;
+extern std::atomic<bool> forceTemplateRecalc;
 extern CTxMemPool mempool; // from main.cpp
 static atomic<bool> fIsChainNearlySyncd{false};
-extern CTweak<bool> tailstormEnabled;
-extern UniValue gettailstorminfo(const UniValue &params, bool fHelp);
+static atomic<bool> fIsInitialSyncComplete{false};
 
 // We always start with true so that when ActivateBestChain is called during the startup (init.cpp)
 // and we havn't finished initial sync then we don't accidentally trigger the auto-dbcache
@@ -149,7 +147,7 @@ std::string Bip135VoteValidator(const std::string &value, std::string *item, boo
     {
         ClearBip135Votes();
         AssignBip135Votes(*item, 1);
-        SignalBlockTemplateChange();
+        forceTemplateRecalc.store(true);
     }
     return std::string();
 }
@@ -421,15 +419,6 @@ void UnlimitedSetup(void)
     miningOrphanBlocks.init("mining/orphans");
     miningNumMiners.init("mining/miners", STAT_OP_AVE | STAT_KEEP | STAT_KEEP_COUNT);
     std::vector<std::string> msgTypes = getAllNetMessageTypes();
-
-    if (tailstormEnabled.Value() == true)
-    {
-        ModifiableParams().GetModifiableConsensus().tailstormSubblocks = 4;
-    }
-    else
-    {
-        ModifiableParams().GetModifiableConsensus().tailstormSubblocks = 0;
-    }
 
     for (std::vector<std::string>::const_iterator i = msgTypes.begin(); i != msgTypes.end(); ++i)
     {
@@ -751,10 +740,13 @@ UniValue settrafficshaping(const UniValue &params, bool fHelp)
 // This way we avoid having to lock cs_main so often which tends to be a bottleneck.
 void IsInitialBlockDownloadInit(bool *fInit)
 {
+    static bool fInitialSyncComplete = false;
+
     // For unit testing purposes, this step allows us to explicitly set the state of block sync.
     if (fInit)
     {
         fIsInitialBlockDownload.store(*fInit);
+        fInitialSyncComplete = !(*fInit);
         return;
     }
 
@@ -779,7 +771,6 @@ void IsInitialBlockDownloadInit(bool *fInit)
 
     // Using fInitialSyncComplete, once the chain is caught up the first time, and if we fall behind again due to a
     // large re-org or for lack of mined blocks, then we continue to return false for IsInitialBlockDownload().
-    static bool fInitialSyncComplete = false;
     if (fInitialSyncComplete)
     {
         fIsInitialBlockDownload.store(false);
@@ -823,6 +814,58 @@ bool IsChainSyncd()
     // lock free since both are atomics
     return pindexBestHeader.load() == chainActive.Tip();
 }
+
+void IsInitialSyncCompleteInit(bool *fInit)
+{
+    static bool fComplete = false;
+
+    // For unit testing purposes, this step allows us to explicitly set the state of block sync.
+    if (fInit)
+    {
+        fIsInitialSyncComplete.store(*fInit);
+        fComplete = *fInit;
+        return;
+    }
+
+    const CChainParams &chainParams = Params();
+    LOCK(cs_main);
+    if (!pindexBestHeader.load())
+    {
+        // Not nearly synced if we don't have any blocks!
+        fIsInitialSyncComplete.store(false);
+        return;
+    }
+    if (fImporting || fReindex)
+    {
+        fIsInitialSyncComplete.store(false);
+        return;
+    }
+    if (fCheckpointsEnabled && chainActive.Height() < Checkpoints::GetTotalBlocksEstimate(chainParams.Checkpoints()))
+    {
+        fIsInitialSyncComplete.store(false);
+        return;
+    }
+
+    // Using fInitialSyncComplete, once the chain is caught up the first time, and if we fall behind again due to a
+    // large re-org or for lack of mined blocks, then we continue to return false for IsInitialBlockDownload().
+    if (fComplete)
+    {
+        fIsInitialSyncComplete.store(true);
+        return;
+    }
+
+    bool fStillSyncing = (chainActive.Height() < pindexBestHeader.load()->height() ||
+                          std::max(chainActive.Tip()->GetBlockTime(), pindexBestHeader.load()->GetBlockTime()) <
+                              GetTime() - nMaxTipAge);
+    if (!fStillSyncing)
+    {
+        fComplete = true;
+    }
+    fIsInitialSyncComplete.store(fComplete);
+    return;
+}
+
+bool IsInitialSyncComplete() { return fIsInitialSyncComplete.load(); }
 
 void LoadFilter(CNode *pfrom, CBloomFilter *filter)
 {
@@ -1137,9 +1180,11 @@ static CMiningCandidate *FindRecentMiningCandidate(CScript *coinbaseScript)
     LOCK(csMiningCandidates);
     if ((lastMiningCandidateId == 0) || (miningCandidatesMap.size() == 0))
         return nullptr; // No candidates
+
     auto it = miningCandidatesMap.find(lastMiningCandidateId);
     if (it == miningCandidatesMap.end())
         return nullptr; // latest candidate has been removed
+
     CMiningCandidate &candid = it->second;
     if (candid.creationTime + minMiningCandidateInterval.Value() <= (uint64_t)GetTime())
         return nullptr; // Too old
@@ -1311,18 +1356,20 @@ UniValue getminingcandidate(const UniValue &params, bool fHelp)
             recentCandidate = FindRecentMiningCandidate(nullptr);
         }
 
-        if (recentCandidate)
+        if (recentCandidate && !forceTemplateRecalc)
         {
             ret = MkMiningCandidateJson(*recentCandidate);
             return ret;
         }
         else
         {
+            LEAVE_CRITICAL_SECTION(csMiningCandidates);
             candid.block = MakeBlockRef();
             mkblocktemplate(UniValue(UniValue::VARR), coinbaseSize, candid.block.get(), coinbaseScript);
             candid.creationTime = GetTime();
 
             // Save candidate so it can be looked up:
+            ENTER_CRITICAL_SECTION(csMiningCandidates);
             AddMiningCandidate(candid);
 
             ret = MkMiningCandidateJson(candid);
@@ -1383,10 +1430,10 @@ UniValue submitminingsolution(const UniValue &params, bool fHelp)
 
     UniValue uvsub = SubmitBlock(block); // returns string on failure
     // It worked so we need new solutions
-    if (uvsub.size() == 0)
+    if (uvsub.empty())
     {
         RmOldMiningCandidates(true);
-        forceTemplateRecalc = true;
+        forceTemplateRecalc.store(true);
     }
     return uvsub;
 }
@@ -1430,73 +1477,6 @@ UniValue crash(const UniValue &params, bool fHelp)
 }
 #endif
 
-UniValue tailstormInfoToJSON()
-{
-    UniValue ret(UniValue::VOBJ);
-    LOCK(cs_mapSubblocks);
-    ret.pushKV("size", (int64_t)mapSubblocks.size());
-    //ret.pushKV("bytes", (int64_t)mempool.GetTotalTxSize());
-    //ret.pushKV("usage", (int64_t)mempool.DynamicMemoryUsage(false));
-
-    CBlockIndex *tip = chainActive.Tip();
-    if (tip != nullptr)
-    {
-        ret.pushKV("tip", tip->GetBlockHash().GetHex());
-        int64_t subsOnTip = 0;
-        int64_t staleSubs = 0;
-        int64_t competingSubs = 0;
-        for (const auto& it : mapSubblocks)
-        {
-            auto& subblock = it.second.subblock;
-            if (subblock->height <= tip->height())  // its old
-            {
-                staleSubs++;
-            }
-            else
-            {
-                // Its on this fork
-                if (tip->GetBlockHash() == subblock->hashPrevBlock)
-                {
-                    subsOnTip++;
-                }
-                else
-                {
-                    competingSubs++;
-                }
-            }
-        }
-    ret.pushKV("tipSubblocks", subsOnTip);
-    ret.pushKV("committedSubblocks", staleSubs);
-    ret.pushKV("competingSubblocks", competingSubs);
-    }
-
-    return ret;
-}
-
-
-UniValue gettailstorminfo(const UniValue &params, bool fHelp)
-{
-    if (fHelp || params.size() != 0)
-        throw std::runtime_error("gettailstorminfo\n"
-                            "\nReturns details on the active state of the Tailstorm subblock pool.\n"
-                            "\nResult:\n"
-                            "{\n"
-                            "  \"size\": x,               (numeric) Current subblock count\n"
-                            //"  \"bytes\": x,              (numeric) Sum of all tx sizes\n"
-                            //"  \"usage\": x,              (numeric) Total memory usage for the transaction pool\n"
-                            "  \"tip\": x,          (numeric) Current summary block tip\n"
-                            "  \"subblocks\": x        (numeric) Number of known subblocks below this tip\n"
-                            "  \"committedSubblocks\": x   (numeric) Number of subblocks above this tip \n"
-                            "  \"competingSubblocks\": x  (numeric) Number of subblocks on a fork \n"
-                            "  \"peak_tps\": xxxxx            (numeric) Peak Transactions per second accepted\n"
-                            "}\n"
-                            "\nExamples:\n" +
-                            HelpExampleCli("gettailstorminfo", "") + HelpExampleRpc("gettailstorminfo", ""));
-
-    return tailstormInfoToJSON();
-}
-
-
 /* clang-format off */
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         okSafeMode
@@ -1517,7 +1497,6 @@ static const CRPCCommand commands[] =
     { "mining",             "validateblocktemplate",  &validateblocktemplate,  true  },
     { "mining",             "getminingcandidate",     &getminingcandidate,     true  },
     { "mining",             "submitminingsolution",   &submitminingsolution,   true  },
-    { "mining",             "gettailstorminfo",       &gettailstorminfo,       true  },
 
     /* Utility functions */
     { "util",               "getstatlist",            &getstatlist,            true  },

@@ -471,7 +471,7 @@ static bool FoundNewBlock()
     try
     {
         UniValue params(UniValue::VARR);
-        UniValue replyAttempt = CallRPC("getbestblockhash", params);
+        UniValue replyAttempt = CallRPC("getbestdagtiphash", params);
 
         // Parse reply
         result = find_value(replyAttempt, "result");

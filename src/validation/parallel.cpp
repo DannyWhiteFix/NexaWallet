@@ -19,6 +19,7 @@
 #include "unlimited.h"
 #include "util.h"
 #include "utiltime.h"
+#include "validation/tailstorm.h"
 #include "validation/validation.h"
 #include <map>
 #include <string>
@@ -139,10 +140,10 @@ unsigned int CParallelValidation::QueueCount()
 
 bool CParallelValidation::Initialize(const boost::thread::id this_id, const CBlockIndex *pindex, const bool fParallel)
 {
-    AssertLockHeld(cs_main);
-
     if (fParallel)
     {
+        AssertLockHeld(cs_main);
+
         // If the chain tip has passed this block by, its an orphan.  It cannot be connected to the active chain, so
         // return.
         if (chainActive.Tip()->chainWork() > pindex->chainWork())
@@ -484,7 +485,7 @@ uint32_t CParallelValidation::MaxWorkChainBeingProcessed()
 //  HandleBlockMessage launches a HandleBlockMessageThread.  And HandleBlockMessageThread processes each block and
 //  updates the UTXO if the block has been accepted and the tip updated. We cleanup and release the semaphore after
 //  the thread has finished.
-void CParallelValidation::HandleBlockMessage(CNode *pfrom,
+bool CParallelValidation::HandleBlockMessage(CNode *pfrom,
     const string &strCommand,
     ConstCBlockRef pblock,
     const uint256 &hash)
@@ -493,8 +494,16 @@ void CParallelValidation::HandleBlockMessage(CNode *pfrom,
     // prevents us from re-requesting the block during the time it is being processed.
     requester.ProcessingBlock(pblock->GetHash(), pfrom);
 
-    // NOTE: You must not have a cs_main lock before you aquire the semaphore grant or you can end up deadlocking
+
+    // Indicate that the block was fully received. At this point we have either a block or a fully reconstructed
+    // thin type block but we still need to maintain a mapBlocksInFlight entry so that we don't re-request a
+    // full block from the same node while the block is processing.
+    thinrelay.BlockWasReceived(pfrom, hash);
+
+    // NOTE: You must not have a cs_main or the cs_forest lock before you aquire the semaphore grant
+    // or you can end up deadlocking
     AssertLockNotHeld(cs_main);
+    AssertLockNotHeld(tailstormForest.cs_forest);
 
     // Aquire semaphore grant
     if (IsChainNearlySyncd())
@@ -543,17 +552,23 @@ void CParallelValidation::HandleBlockMessage(CNode *pfrom,
                         LOG(PARALLEL,
                             "New Block validation terminated - Too many blocks currently being validated: %s\n",
                             pblock->GetHash().ToString());
-                        return;
+                        return false;
                     }
                     // Terminate the thread with the largest block.
                     else if (miLargestBlock != mapBlockValidationThreads.end())
                     {
-                        Quit(miLargestBlock); // terminate the script queue thread
                         LOG(PARALLEL,
                             "Too many blocks being validated, interrupting thread with blockhash %s "
                             "and previous blockhash %s\n",
                             (*miLargestBlock).second.hash.ToString(),
                             (*miLargestBlock).second.hashPrevBlock.ToString());
+
+                        // Terminate the script queue thread if it's a competing full summary block
+                        // For subblocks just return false so we can store it as an orphan for later processing.
+                        if (IsSummaryBlock(pblock))
+                            Quit(miLargestBlock);
+                        else
+                            return false;
                     }
                 }
             } // We must not hold the lock here because we could be waiting for a grant, below.
@@ -585,6 +600,7 @@ void CParallelValidation::HandleBlockMessage(CNode *pfrom,
     {
         HandleBlockMessageThread(noderef, strCommand, pblock, hash);
     }
+    return true;
 }
 
 void HandleBlockMessageThread(CNodeRef noderef, const string strCommand, ConstCBlockRef pblock, const uint256 hash)
@@ -597,11 +613,6 @@ void HandleBlockMessageThread(CNodeRef noderef, const string strCommand, ConstCB
         uint64_t nSizeBlock = pblock->GetBlockSize();
         int64_t startTime = GetStopwatchMicros();
         CValidationState state;
-
-        // Indicate that the block was fully received. At this point we have either a block or a fully reconstructed
-        // thin type block but we still need to maintain a map*BlocksInFlight entry so that we don't re-request a
-        // full block from the same node while the block is processing.
-        thinrelay.BlockWasReceived(pfrom, hash);
 
         PV->InitThread(this_id, pfrom, pblock, hash, nSizeBlock); // initialize the mapBlockValidationThread entries
 
@@ -665,6 +676,45 @@ void HandleBlockMessageThread(CNodeRef noderef, const string strCommand, ConstCB
         // process the block advance the tip.
         if (IsChainNearlySyncd())
             FlushStateToDisk(state, FLUSH_STATE_ALWAYS);
+
+
+        // Perform tailstorm related function for connecting orphans and initiating
+        // potential re-orgs.
+        //
+        // Check for any orphaned blocks or summary blocks and connected them if possible.
+        std::set<uint256> setToAnnounce;
+        {
+            LOCK(tailstormForest.cs_forest);
+            setToAnnounce = tailstormForest.ProcessOrphans();
+
+            // Check for subblocks to prune
+            PruneSubblocks(pblock);
+        }
+
+        // Announce accepted subblocks to other peers
+        {
+            LOCK(cs_vNodes);
+            for (const uint256 &_hash : setToAnnounce)
+            {
+                for (CNode *pnode : vNodes)
+                {
+                    pnode->PushSubblockHash(_hash);
+                }
+            }
+        }
+
+        // Check that we're on the best dag and if not then
+        // initiate a re-org over to the summary block that has
+        // the best dag connected to it.
+        //
+        // NOTE: you can not put this call to CheckForReorg() in the above
+        // code block where the cs_forest lock is taken. This will cause
+        // a lockorder issue with cs_main.
+        if (!setToAnnounce.empty())
+        {
+            tailstormForest.CheckForReorg();
+            tailstormForest.Check();
+        }
     }
     catch (const std::exception &e)
     {

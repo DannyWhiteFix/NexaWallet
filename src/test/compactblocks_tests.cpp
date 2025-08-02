@@ -6,6 +6,7 @@
 #include "blockrelay/compactblock.h"
 #include "chainparams.h"
 #include "consensus/merkle.h"
+#include "daa.h"
 #include "random.h"
 
 #include "test/test_nexa.h"

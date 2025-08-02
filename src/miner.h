@@ -9,6 +9,7 @@
 
 #include "primitives/block.h"
 #include "txmempool.h"
+#include "validation/dag.h"
 
 #include <memory>
 #include <stdint.h>
@@ -119,19 +120,23 @@ public:
 private:
     // utility functions
     /** Clear the block's state and prepare for assembling a new block */
-    void resetBlock(const CScript &scriptPubKeyIn, int64_t coinbaseSize = -1);
+    void resetBlock(const CScript &scriptPubKeyIn,
+        int64_t coinbaseSize = -1,
+        std::set<CTreeNodeRef> *setBestDag = nullptr);
     /** Add a tx to the block */
     void AddToBlock(std::vector<const CTxMemPoolEntry *> *vtxe, CTxMemPool::TxIdIter iter);
     void RemoveFromBlock(std::vector<const CTxMemPoolEntry *> *vtxe, CTxMemPool::TxIdIter iter);
 
     // Methods for how to add transactions to a block.
     /** Add transactions based on tx "priority" */
-    void addPriorityTxs(std::vector<const CTxMemPoolEntry *> *vtxe);
+    void addPriorityTxs(std::vector<const CTxMemPoolEntry *> *vtxe, std::set<uint256> &setBestDagTxids);
 
     /** Add transactions based on feerate including unconfirmed ancestors. Return of "true" means
      *  the block is not full and there are still dirty transactions which could be added
      */
-    bool addPackageTxs(std::vector<const CTxMemPoolEntry *> *vtxe, bool fAllowDirty);
+    bool addPackageTxs(std::vector<const CTxMemPoolEntry *> *vtxe,
+        bool fAllowDirty,
+        std::set<uint256> &setBestDagTxids);
 
     // helper function for addPriorityTxs
     bool IsIncrementallyGood(uint64_t nExtraSize, unsigned int nExtraSigOps);
@@ -141,10 +146,15 @@ private:
     bool isStillDependent(CTxMemPool::TxIdIter iter);
 
     /** Bytes to reserve for coinbase and block header */
-    uint64_t reserveBlockSize(const CScript &scriptPubKeyIn, int64_t coinbaseSize = -1);
+    uint64_t reserveBlockSize(const CScript &scriptPubKeyIn,
+        int64_t coinbaseSize = -1,
+        std::set<CTreeNodeRef> *setBestDag = nullptr);
 
     /** Constructs a coinbase transaction */
-    CTransactionRef coinbaseTx(const CScript &scriptPubKeyIn, int nHeight, CAmount nValue);
+    CTransactionRef coinbaseTx(const CScript &scriptPubKeyIn,
+        int nHeight,
+        CAmount nValue,
+        std::set<CTreeNodeRef> *setBestDag = nullptr);
 
     // helper functions for addPackageTxs()
     /** Test whether a package, if added to the block, would make the block exceed the sigops limits */
@@ -169,5 +179,9 @@ UniValue mkblocktemplate(const UniValue &params,
 
 // Force block template recalculation the next time a template is requested
 void SignalBlockTemplateChange();
+
+// Taking a tailstorm dag as an input, generate a vout for a tailstorm summary block
+// which has its outputs grouped by their public keys.
+bool ValidateSummaryBlockCoinbase(CAmount nBlockReward, ConstCBlockRef pblock, std::set<CTreeNodeRef> &setBestDag);
 
 #endif // NEXA_MINER_H

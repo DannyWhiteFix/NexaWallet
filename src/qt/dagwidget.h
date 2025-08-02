@@ -5,6 +5,7 @@
 #ifndef DAGWIDGET_H
 #define DAGWIDGET_H
 
+#include "chainparams.h"
 #include "sync.h"
 #include "ui_blockdescdialog.h"
 #include "uint256.h"
@@ -71,8 +72,13 @@ public:
     struct ItemInfo
     {
         uint256 blockhash;
+        uint256 mininghash;
+        uint32_t nDagViewerHeight = 0;
+        uint32_t nDagHeight = 0;
+        uint32_t nSequenceId = 0;
         uint32_t nBlockHeight = 0;
-        uint32_t nBlockNum = 0;
+        uint64_t nTransactions = 0;
+        uint64_t nBlockSize = 0;
         uint32_t nFork = 0;
         qreal x = 0;
         qreal y = 0;
@@ -83,6 +89,7 @@ public:
         bool fHasDoubleSpend = false;
         uint8_t blockType = 0;
         bool fHaveBlock = false;
+        CBlockHeader header;
 
         QGraphicsPathItem *item = nullptr;
         QGraphicsPathItem *itemText = nullptr;
@@ -91,15 +98,45 @@ public:
         QGraphicsLineItem *litem = nullptr;
     };
 
-    // Add a new block item to the viewer
-    void AddItem(uint256 hash,
+    // Defer a new block item. To be added to the viewer when
+    // the previous blocks finally arrive and are added first.
+    void DeferItem(uint256 hash,
+        uint256 mininghash,
         uint256 prevhash,
-        uint32_t nHeight,
+        uint32_t nDagHeight,
+        uint32_t nSequenceId,
+        uint32_t nBlockHeight,
+        uint64_t nTransactions,
+        uint64_t nBlockSize,
         std::vector<Link> &_vpointsto,
         bool fDoubleSpend,
         uint32_t nFork,
         uint8_t blockType,
-        bool fHeader);
+        bool fHeader,
+        const CBlockHeader &header);
+
+    // Add a new block item to the viewer
+    void AddItem(uint256 hash,
+        uint256 mininghash,
+        uint256 prevhash,
+        uint32_t nDagHeight,
+        uint32_t nSequenceId,
+        uint32_t nBlockHeight,
+        uint64_t nTransactions,
+        uint64_t nBlockSize,
+        std::vector<Link> &_vpointsto,
+        bool fDoubleSpend,
+        uint32_t nFork,
+        uint8_t blockType,
+        bool fHeader,
+        const CBlockHeader &header);
+
+    // Get the next height in the dag which we use to position the item
+    // in the dagviewer's scene.
+    int32_t GetNextDagViewerHeight(uint256 &prevDagHash, const CBlockHeader &header);
+
+    // Try to connect any orphaned items.
+    void ProcessOrphans();
 
 private:
     QWidget *_parent; // pointer to the layout
@@ -113,6 +150,8 @@ private:
 
     // Data structures for holding graphic items and related data
     std::map<uint256, std::shared_ptr<ItemInfo> > mapInfo GUARDED_BY(cs_info);
+    std::map<uint256, std::shared_ptr<ItemInfo> > mapInfoByMiningHash GUARDED_BY(cs_info);
+    std::map<uint256, std::shared_ptr<ItemInfo> > mapDeferredInfo GUARDED_BY(cs_info);
     std::map<uint32_t, std::vector<std::shared_ptr<ItemInfo> > > mapDag GUARDED_BY(cs_info);
 
     // The last block item which was clicked on.
@@ -132,6 +171,9 @@ private:
 
     // Did we pause tracking new blocks
     bool fPause GUARDED_BY(cs_info) = false;
+
+    // Last summary dag viewer height.
+    uint32_t nLastSummaryDagViewerHeight GUARDED_BY(cs_info) = 0;
 
     // pens and brushes
     QPen borderPen;
@@ -164,8 +206,6 @@ private:
     const qreal DEFAULT_WIDTH_OF_VIEW = 100 * 1000;
     /** The maximum number of blocks we keep in the graphics scene (make it a little bigger than the view can hold) */
     const size_t DEFAULT_MAX_BLOCKS = (DEFAULT_WIDTH_OF_VIEW * 1.05) / (size_t)(width + distance);
-    /** The number of Storm blocks than make up one Summary block */
-    const uint32_t DEFAULT_NUM_STORM_BLOCKS_PER_SUMMARY = 120;
     /** Are QLabels enabled */
     const bool fQLabelsEnabled = false;
 
@@ -184,7 +224,7 @@ private:
     {
         LOCK(cs_info);
         nStormBlockNum++;
-        if (nStormBlockNum > DEFAULT_NUM_STORM_BLOCKS_PER_SUMMARY)
+        if (nStormBlockNum > Params().GetConsensus().tailstorm_k - 1)
             nStormBlockNum = 1;
         return nStormBlockNum;
     }
@@ -193,7 +233,7 @@ private:
     struct SimInfo
     {
         uint256 blockhash;
-        uint32_t nBlockHeight = 0;
+        uint32_t nDagViewerHeight = 0;
         std::vector<Link> vBlockPointsTo;
         bool fHaveBlock = false;
         bool fDoubleSpend = false;

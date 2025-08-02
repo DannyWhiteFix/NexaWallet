@@ -9,6 +9,7 @@
 
 #include "arith_uint256.h"
 #include "chain.h"
+#include "pow.h"
 #include "primitives/block.h"
 #include "uint256.h"
 #include "util.h"
@@ -141,12 +142,12 @@ uint32_t GetNextASERTWorkRequired(const CBlockIndex *pindexPrev,
     arith_uint256 nextTarget;
 
     // make the target N times easier to produce N subblocks per block (if we are doing tailstorm)
-    if (tailstorm && (params.tailstormSubblocks != 0))
+    if (tailstorm && (params.tailstorm_k != 0))
     {
         nextTarget = CalculateASERT(
             refBlockTarget, params.nPowTargetSpacing, nTimeDiff, nHeightDiff, powLimit, params.nASERTHalfLife);
         // Make the target easier by the number of PoW puzzles we are solving
-        nextTarget *= params.tailstormSubblocks;
+        nextTarget *= params.tailstorm_k;
         if (nextTarget > powLimit)
         {
             LOGA("warning: tailstorm target difficulty is too easy! %s > %s", nextTarget.ToString(),
@@ -156,12 +157,8 @@ uint32_t GetNextASERTWorkRequired(const CBlockIndex *pindexPrev,
     }
     else
     {
-        // powLimit/2: Force the non tailstorm blocks to be at least twice as hard as the tailstorm ones even if we
-        // are up against the pow limit.
-        // This makes a big difference in regtest because the GB has a long-ago time, so a lot of the initial blocks'
-        // difficulty will be at the pow limit.
         nextTarget = CalculateASERT(
-            refBlockTarget, params.nPowTargetSpacing, nTimeDiff, nHeightDiff, powLimit / 2, params.nASERTHalfLife);
+            refBlockTarget, params.nPowTargetSpacing, nTimeDiff, nHeightDiff, powLimit, params.nASERTHalfLife);
     }
 
     // CalculateASERT() already clamps to powLimit.
@@ -296,7 +293,7 @@ uint32_t GetNextNonTailstormWorkRequired(const CBlockIndex *pindexPrev,
     }
 
     const CBlockIndex *panchorBlock = GetASERTAnchorBlock(pindexPrev, params);
-    return GetNextASERTWorkRequired(pindexPrev, pblock, params, panchorBlock, true);
+    return GetNextASERTWorkRequired(pindexPrev, pblock, params, panchorBlock, false);
 }
 
 

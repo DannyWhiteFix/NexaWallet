@@ -122,6 +122,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     {"listunspent", 2},
     {"getblock", 1},
     {"getblock", 2},
+    {"getsubblock", 1},
+    {"getsubblock", 2},
     {"getblockheader", 1},
     {"getchaintxstats", 0},
     {"gettransaction", 1},

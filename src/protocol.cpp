@@ -96,6 +96,8 @@ const char *TOKENINFO = "tokeninfo";
 
 const char *GET_UTXO = "get_utxo";
 const char *UTXO = "utxo";
+
+const char *GET_DAG = "get_dag";
 }; // namespace NetMsgType
 
 /* clang-format off */
@@ -177,7 +179,8 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::CAPDQUERYREPLY,
     NetMsgType::TOKENINFO,
     NetMsgType::GET_UTXO,
-    NetMsgType::UTXO
+    NetMsgType::UTXO,
+    NetMsgType::GET_DAG
 };
 /* clang-format on */
 

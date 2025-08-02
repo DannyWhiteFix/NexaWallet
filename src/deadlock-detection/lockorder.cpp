@@ -61,6 +61,7 @@ void CLockOrderTracker::CheckForConflict(LockStackEntry &this_lock,
     const uint64_t &tid)
 {
     std::lock_guard<std::mutex> lock(lot_mutex);
+
     if (seenLockOrders.find(this_lock.first) == seenLockOrders.end())
     {
         return;
@@ -133,6 +134,7 @@ void CLockOrderTracker::TrackLockOrderHistory(const CLockLocation &locklocation,
     const std::vector<LockStackEntry> &heldLocks)
 {
     std::lock_guard<std::mutex> lock(lot_mutex);
+
     // build the new key
     std::string new_key = locklocation.GetMutexName() + " on " + locklocation.GetFileName() + ":" +
                           std::to_string(locklocation.GetLineNumber());
@@ -161,6 +163,7 @@ void CLockOrderTracker::TrackLockOrderHistory(const CLockLocation &locklocation,
 void CLockOrderTracker::DeleteCritical(void *cs)
 {
     std::lock_guard<std::mutex> lock(lot_mutex);
+
     std::map<void *, std::set<void *> >::iterator iter;
     iter = seenLockOrders.find(cs);
     if (iter != seenLockOrders.end())
