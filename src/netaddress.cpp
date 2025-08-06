@@ -339,7 +339,7 @@ bool CNetAddr::IsLocal() const
 
     // IPv6 loopback (::1/128)
     static const unsigned char pchLocal[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
-    if (memcmp(&ip[0], pchLocal, 16) == 0)
+    if (IsIPv6() && memcmp(ip.data(), pchLocal, 16) == 0)
         return true;
 
     return false;
@@ -670,7 +670,7 @@ int CNetAddr::GetReachabilityFrom(const CNetAddr *paddrPartner) const
     }
 }
 
-CService::CService() : port(0) {}
+CService::CService() : CNetAddr(), port(0) {}
 CService::CService(const CNetAddr &cip, unsigned short portIn) : CNetAddr(cip), port(portIn) {}
 CService::CService(const struct in_addr &ipv4Addr, unsigned short portIn) : CNetAddr(ipv4Addr), port(portIn) {}
 CService::CService(const struct in6_addr &ipv6Addr, unsigned short portIn) : CNetAddr(ipv6Addr), port(portIn) {}
@@ -685,28 +685,28 @@ CService::CService(const struct sockaddr_in6 &addr)
     assert(addr.sin6_family == AF_INET6);
 }
 
-CService::CService(const char *pszIpPort) : port(0)
+CService::CService(const char *pszIpPort) : CNetAddr(), port(0)
 {
     CService _ip;
     if (Lookup(pszIpPort, _ip, 0, false))
         *this = _ip;
 }
 
-CService::CService(const char *pszIpPort, int portDefault) : port(0)
+CService::CService(const char *pszIpPort, int portDefault) : CNetAddr(), port(0)
 {
     CService _ip;
     if (Lookup(pszIpPort, _ip, portDefault, false))
         *this = _ip;
 }
 
-CService::CService(const std::string &strIpPort) : port(0)
+CService::CService(const std::string &strIpPort) : CNetAddr(), port(0)
 {
     CService _ip;
     if (Lookup(strIpPort.c_str(), _ip, 0, false))
         *this = _ip;
 }
 
-CService::CService(const std::string &strIpPort, int portDefault) : port(0)
+CService::CService(const std::string &strIpPort, int portDefault) : CNetAddr(), port(0)
 {
     CService _ip;
     if (Lookup(strIpPort.c_str(), _ip, portDefault, false))
