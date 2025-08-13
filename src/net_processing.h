@@ -9,6 +9,8 @@
 
 #include "net.h"
 
+class CUtxo;
+
 /** Process protocol messages received from a given node */
 bool ProcessMessages(CNode *pfrom);
 
@@ -32,8 +34,8 @@ bool ProcessMessage(CNode *pfrom,
  * @param[in]   pto             The node which we are sending messages to.
  */
 bool SendMessages(CNode *pto);
-// BU: moves to parallel.h
-/** Run an instance of the script checking thread */
-// void ThreadScriptCheck();
+
+/** Create a utxo object for sending back data to the requester */
+void CreateUTXO(COutPoint &out, CUtxo &utxo);
 
 #endif

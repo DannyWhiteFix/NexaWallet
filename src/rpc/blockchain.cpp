@@ -50,6 +50,7 @@ static uint32_t nDefaultRollbackLimit = 100;
 using namespace std;
 
 void ScriptPubKeyToJSON(const CScript &scriptPubKey, UniValue &out, bool fIncludeHex);
+void CreateUTXO(COutPoint &out, CUtxo &utxo);
 
 double GetDifficulty(const CBlockIndex *blockindex)
 {
@@ -2741,8 +2742,61 @@ UniValue scantokens(const UniValue &params, bool fHelp)
     }
     return result;
 }
-
 #endif
+
+UniValue getutxo(const UniValue &params, bool fHelp)
+{
+    if (fHelp || params.size() < 1)
+        throw runtime_error(
+            "getutxo outpoint1 outpoint2 ...}] \n"
+
+            "\nGet information about one or more utxos\n"
+            "\nArguments:\n"
+            "1. \"outpoint\"  (list of outpoint hex strings, required).\n"
+            "\nResult:\n"
+            "The associated CTxOut() along with information about the output if it exists.\n"
+            "\nExamples:\n"
+            "\nGet utxos by using outpoints\n" +
+            HelpExampleCli("getutxo", "5aa546233d1275ea10a88940d9f07700d8da6a9a6012457d87e375fd1c513fdb  "
+                                      "3fa546233d1275ea10a88940d9f07700d8da6a9a6012457d87e375fd1c513fdb") +
+            "\n");
+
+    if (params.size() >= MAX_TX_NUM_VOUT)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid: too many outpoints supplied");
+
+    // Check all inputs are valid
+    UniValue result(UniValue::VARR);
+    for (size_t i = 0; i < params.size(); i++)
+    {
+        std::string parameter = "The supplied outpoint at position " + std::to_string(i + 1);
+        uint256 out256 = ParseHashV(params[i].get_str(), parameter);
+        if (!out256.IsNull())
+        {
+            UniValue entry(UniValue::VOBJ);
+            CUtxo utxo;
+            COutPoint outpoint(out256);
+            CreateUTXO(outpoint, utxo);
+            entry.pushKV("outpoint", outpoint.GetHex());
+            entry.pushKV("height", (int64_t)utxo.nHeight);
+            entry.pushKV("intxpool", utxo.fInTxPool);
+            entry.pushKV("spent", utxo.fSpent);
+            entry.pushKV("exists", utxo.fExists);
+
+            // Add txOut
+            UniValue txout(UniValue::VOBJ);
+            txout.pushKV("type", (int64_t)utxo.txOut.type);
+            txout.pushKV("value", (int64_t)utxo.txOut.nValue);
+            UniValue script(UniValue::VOBJ);
+            ScriptPubKeyToJSON(utxo.txOut.scriptPubKey, script, true);
+            txout.pushKV("scriptPubKey", script);
+            entry.pushKV("txout", txout);
+
+            result.push_back(entry);
+        }
+    }
+
+    return result;
+}
 
 static const CRPCCommand commands[] = {
     //  category              name                      actor (function)         okSafeMode
@@ -2775,6 +2829,7 @@ static const CRPCCommand commands[] = {
 #ifdef ENABLE_WALLET
     {"blockchain", "scantokens", &scantokens, true},
 #endif
+    {"blockchain", "getutxo", &getutxo, true},
     /* Not shown in help */
     {"hidden", "invalidateblock", &invalidateblock, true},
     {"hidden", "reconsiderblock", &reconsiderblock, true},

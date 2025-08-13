@@ -93,6 +93,9 @@ const char *CAPDQUERYREPLY = "capdqreply";
 const char *CAPDREMOVENOTIFY = "capdremove";
 
 const char *TOKENINFO = "tokeninfo";
+
+const char *GET_UTXO = "get_utxo";
+const char *UTXO = "utxo";
 }; // namespace NetMsgType
 
 /* clang-format off */
@@ -172,7 +175,9 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::CAPDINFO,
     NetMsgType::CAPDQUERY,
     NetMsgType::CAPDQUERYREPLY,
-    NetMsgType::TOKENINFO
+    NetMsgType::TOKENINFO,
+    NetMsgType::GET_UTXO,
+    NetMsgType::UTXO
 };
 /* clang-format on */
 
