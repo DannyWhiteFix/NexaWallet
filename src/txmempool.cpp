@@ -1723,6 +1723,12 @@ CInPoint CTxMemPool::_getTxIdx(const COutPoint &outpoint) const
     return CInPoint(i->GetSharedTx(), idx);
 }
 
+CTxOut CTxMemPool::get(const COutPoint &outpoint) const
+{
+    READLOCK(cs_txmempool);
+    return _get(outpoint);
+}
+
 CTxOut CTxMemPool::_get(const COutPoint &outpoint) const
 {
     AssertLockHeld(cs_txmempool);

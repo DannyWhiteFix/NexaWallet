@@ -436,6 +436,16 @@ extern const char *CAPDREMOVENOTIFY;
  */
 extern const char *TOKENINFO;
 
+/**
+ * Request utxo information for a list of outpoints
+ * @since protocol version 80007.
+ */
+extern const char *GET_UTXO;
+/**
+ * A vecttor of utxo information sent with explicit solicitation from a GET_UTXO message
+ * @since protocol version 80007.
+ */
+extern const char *UTXO;
 }; // namespace NetMsgType
 
 /* Get a vector of all valid message types (see above) */

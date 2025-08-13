@@ -924,6 +924,7 @@ public:
     /** Given a prevout hash, return the transaction and output offset */
     // std::tuple<CTransactionRef, size_t> _getTxIdx(const uint256 &hash) const;
     CInPoint _getTxIdx(const COutPoint &outpoint) const;
+    CTxOut get(const COutPoint &outpoint) const;
     CTxOut _get(const COutPoint &outpoint) const;
 
     TxMempoolInfo info(const uint256 &hash) const;

@@ -123,6 +123,18 @@ bool CCoinsViewCache::GetCoin(const COutPoint &outpoint, Coin &coin) const
     return false;
 }
 
+bool CCoinsViewCache::GetCoinFromCache(const COutPoint &outpoint, Coin &coin) const
+{
+    READLOCK(cs_utxo);
+    CCoinsMap::iterator it = cacheCoins.find(outpoint);
+    if (it != cacheCoins.end())
+    {
+        coin = it->second.coin;
+        return true;
+    }
+    return false;
+}
+
 void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin &&coin, bool possible_overwrite)
 {
     WRITELOCK(cs_utxo);

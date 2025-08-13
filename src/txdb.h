@@ -296,4 +296,32 @@ public:
     /// been upgraded yet to the new database.
     bool MigrateData(CBlockTreeDB &block_tree_db, const CBlockLocator &best_locator);
 };
+
+// UTXO object which is returned via the CNetMessage::GETUTXO request
+class CUtxo
+{
+public:
+    COutPoint outpoint;
+    CTxOut txOut;
+    uint32_t nHeight = 0;
+    bool fInTxPool = false;
+    bool fSpent = false;
+    bool fExists = false;
+
+public:
+    CUtxo(){};
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream &s, Operation ser_action)
+    {
+        READWRITE(outpoint);
+        READWRITE(txOut);
+        READWRITE(nHeight);
+        READWRITE(fInTxPool);
+        READWRITE(fSpent);
+        READWRITE(fExists);
+    }
+};
 #endif // NEXA_TXDB_H

@@ -315,6 +315,17 @@ public:
     bool HaveCoinInCache(const COutPoint &outpoint, bool &fSpent) const;
 
     /**
+     * Check if we have the given utxo in our local cache and return it.
+     * No calls to the backing CCoinsView are made.
+     *
+     * @param[in]  outpoint   A reference to an outpoint in the coin we are checking
+     * @param[out] coin       A reference to an coin which may have been found in cache.
+     *                        NOTE: this value will not be changed if the coin does not exist in cache.
+     * @return     bool       A return of true indicates the coin was found in cache.
+     */
+    bool GetCoinFromCache(const COutPoint &outpoint, Coin &coin) const;
+
+    /**
      * Return a reference to Coin in the cache, or a pruned one if not found. This is
      * more efficient than GetCoin. Modifications to other cache entries are
      * allowed while accessing the returned pointer.
