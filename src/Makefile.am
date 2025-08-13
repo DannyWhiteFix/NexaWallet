@@ -399,7 +399,10 @@ libnexa_wallet_a_SOURCES = \
 libnexa_a_CPPFLAGS = $(AM_CPPFLAGS) $(NEXA_INCLUDES)
 libnexa_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
-libnexa_a_common_SOURCES = \
+libnexa_a_SOURCES = \
+  libnexa/libnexa.cpp \
+  libnexa/libnexa.h \
+  libnexa/libnexa_jvm.cpp \
   libnexa/libnexa_common.cpp \
   libnexa/libnexa_common.h \
   libnexa/libnexa_script_machine.cpp \
@@ -491,13 +494,6 @@ libnexa_a_common_SOURCES = \
   utilgrouptoken.cpp \
   datastream.h \
   streams.h
-
-libnexa_a_SOURCES = \
-  libnexa/libnexa.cpp \
-  libnexa/libnexa.h \
-  libnexa/libnexa_jvm.cpp \
-  $(libnexa_a_common_SOURCES)
-
 
 # crypto primitives library
 crypto_libnexa_crypto_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_CONFIG_INCLUDES)
