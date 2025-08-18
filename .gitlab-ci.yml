@@ -104,11 +104,12 @@ gitian-binaries:
     extends: .docker_common
     script:
         - apt-get update && apt-get -y --no-install-recommends --no-upgrade -qq install openssh-client apt-cacher-ng ruby docker.io
-        - git clone https://github.com/devrandom/gitian-builder.git
+        - git clone https://gitlab.com/nexa/gitian-builder.git
         - cd gitian-builder
-        - bin/make-base-vm --suite focal --arch amd64 --docker > make-base-vm.log  2>&1
         - export USE_DOCKER=1
+        - bin/make-base-vm --suite focal --arch amd64 > make-base-vm.log  2>&1
         - mkdir result
+        - mkdir inputs
         - bin/gbuild -j `nproc` -m 6000 --url nexa=$CI_REPOSITORY_URL --commit nexa=$CI_DEFAULT_BRANCH $CI_PROJECT_DIR/contrib/gitian-descriptors/gitian-linux-x86.yml 2&>1 | tee gbuild.log
     artifacts:
         when: always
