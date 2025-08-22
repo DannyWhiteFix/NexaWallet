@@ -1327,13 +1327,6 @@ bool ProcessMessage(CNode *pfrom,
                 return error("message inv invalid type = %u", inv.type);
             }
 
-            // Make basic checks
-            if (inv.type == MSG_CMPCT_BLOCK)
-            {
-                if (!requester.CheckForRequestDOS(pfrom, chainparams))
-                    return false;
-            }
-
             invDeque.push_back(std::pair<CInv, uint32_t>(inv, msgCookie));
             // These will be deferred, so we need to provide a different cookie for each one.
             if ((inv.type == MSG_BLOCK) || (inv.type == MSG_CMPCT_BLOCK))
@@ -1384,13 +1377,6 @@ bool ProcessMessage(CNode *pfrom,
             {
                 dosMan.Misbehaving(pfrom, 20, BanReasonInvalidInventory);
                 return error("message inv invalid type = %u", inv.type);
-            }
-
-            // Make basic checks
-            if (inv.type == MSG_CMPCT_BLOCK)
-            {
-                if (!requester.CheckForRequestDOS(pfrom, chainparams))
-                    return false;
             }
 
             invDeque.push_back(std::pair<CInv2, uint32_t>(inv, msgCookie));
@@ -1938,9 +1924,6 @@ bool ProcessMessage(CNode *pfrom,
     // Handle Xthinblocks and Thinblocks
     else if (strCommand == NetMsgType::GET_XTHIN && !fImporting && !fReindex && IsThinBlocksEnabled())
     {
-        if (!requester.CheckForRequestDOS(pfrom, chainparams))
-            return false;
-
         CBloomFilter filterMemPool;
         uint256 hash;
         int invType = 0;
@@ -1993,9 +1976,6 @@ bool ProcessMessage(CNode *pfrom,
     }
     else if (strCommand == NetMsgType::GET_THIN && !fImporting && !fReindex && IsThinBlocksEnabled())
     {
-        if (!requester.CheckForRequestDOS(pfrom, chainparams))
-            return false;
-
         uint256 hash;
         int invType = 0;
 
@@ -2075,9 +2055,6 @@ bool ProcessMessage(CNode *pfrom,
     else if (strCommand == NetMsgType::GET_XBLOCKTX && !fImporting && !fReindex && !IsInitialBlockDownload() &&
              IsThinBlocksEnabled())
     {
-        if (!requester.CheckForRequestDOS(pfrom, chainparams))
-            return false;
-
         LOCK(pfrom->cs_thintype);
         return CXRequestThinBlockTx::HandleMessage(vRecv, pfrom);
     }
@@ -2094,9 +2071,6 @@ bool ProcessMessage(CNode *pfrom,
     else if (strCommand == NetMsgType::GET_GRAPHENE && !fImporting && !fReindex && IsGrapheneBlockEnabled() &&
              grapheneVersionCompatible)
     {
-        if (!requester.CheckForRequestDOS(pfrom, chainparams))
-            return false;
-
         LOCK(pfrom->cs_thintype);
         return HandleGrapheneBlockRequest(vRecv, pfrom, msgCookie, chainparams);
     }
@@ -2112,9 +2086,6 @@ bool ProcessMessage(CNode *pfrom,
     else if (strCommand == NetMsgType::GET_GRAPHENETX && !fImporting && !fReindex && !IsInitialBlockDownload() &&
              IsGrapheneBlockEnabled() && grapheneVersionCompatible)
     {
-        if (!requester.CheckForRequestDOS(pfrom, chainparams))
-            return false;
-
         LOCK(pfrom->cs_thintype);
         return CRequestGrapheneBlockTx::HandleMessage(vRecv, pfrom);
     }
@@ -2129,18 +2100,12 @@ bool ProcessMessage(CNode *pfrom,
 
     else if (strCommand == NetMsgType::GET_GRAPHENE_RECOVERY && IsGrapheneBlockEnabled() && grapheneVersionCompatible)
     {
-        if (!requester.CheckForRequestDOS(pfrom, chainparams))
-            return false;
-
         LOCK(pfrom->cs_thintype);
         return HandleGrapheneBlockRecoveryRequest(vRecv, pfrom, msgCookie, chainparams);
     }
 
     else if (strCommand == NetMsgType::GRAPHENE_RECOVERY && IsGrapheneBlockEnabled() && grapheneVersionCompatible)
     {
-        if (!requester.CheckForRequestDOS(pfrom, chainparams))
-            return false;
-
         LOCK(pfrom->cs_thintype);
         return HandleGrapheneBlockRecoveryResponse(vRecv, pfrom, chainparams);
     }
@@ -2155,9 +2120,6 @@ bool ProcessMessage(CNode *pfrom,
     else if (strCommand == NetMsgType::GETBLOCKTXN && !fImporting && !fReindex && !IsInitialBlockDownload() &&
              IsCompactBlocksEnabled())
     {
-        if (!requester.CheckForRequestDOS(pfrom, chainparams))
-            return false;
-
         LOCK(pfrom->cs_thintype);
         return CompactReRequest::HandleMessage(vRecv, msgCookie, pfrom);
     }

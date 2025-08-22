@@ -34,9 +34,6 @@ successful receipt, "requester.Rejected(...)" to indicate a bad object (request 
 
 #include <atomic>
 
-// Max requests allowed in a 10 minute window
-static const uint8_t MAX_THINTYPE_OBJECT_REQUESTS = 100;
-
 // How many peers are connected before we start looking for slow peers to disconnect.
 static const uint32_t BEGIN_PRUNING_PEERS = 4;
 
@@ -141,10 +138,6 @@ struct CRequestManagerNodeState
 
     // How many blocks are currently in flight and requested by this node.
     uint64_t nBlocksInFlight;
-
-    // Track how many thin type objects were requested for this peer
-    double nNumRequests;
-    uint64_t nLastRequest;
 
     CRequestManagerNodeState();
 };
@@ -299,9 +292,6 @@ public:
 
     // Send all block and transaction requests
     void SendRequests();
-
-    // Check whether the limit for thintype object requests has been exceeded
-    bool CheckForRequestDOS(CNode *pfrom, const CChainParams &chainparams);
 
     // Check whether the last unknown block a peer advertised is not yet known.
     void ProcessBlockAvailability(NodeId nodeid);
