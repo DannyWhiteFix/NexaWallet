@@ -22,7 +22,7 @@
 static const int DEFAULT_MAX_REORG_DEPTH = -1; // disabled
 
 /** Is express validation turned on/off */
-static const bool DEFAULT_XVAL_ENABLED = true;
+static const bool DEFAULT_XVAL_ENABLED = false;
 
 enum DisconnectResult
 {

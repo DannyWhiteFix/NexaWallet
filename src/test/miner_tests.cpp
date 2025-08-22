@@ -602,6 +602,7 @@ void PerformanceTest_PackageSelection(const CChainParams &chainparams,
 // NOTE: These tests rely on CreateNewBlock doing its own self-validation!
 BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 {
+    xvalTweak.Set(true);
     enforceMinTxSize.Set(false);
 
     // Note was MAIN, but takes too long to generate mainnet block for a test.  Need to pre-generate them.
@@ -1000,6 +1001,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     fCheckpointsEnabled = true;
 
     enforceMinTxSize.Set(true);
+    xvalTweak.Set(false);
 }
 
 BOOST_AUTO_TEST_CASE(AdaptiveBlockSize)

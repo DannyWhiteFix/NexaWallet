@@ -70,8 +70,6 @@ CRequestManagerNodeState::CRequestManagerNodeState()
 {
     nDownloadingFromPeerSince = 0;
     nBlocksInFlight = 0;
-    nNumRequests = 0;
-    nLastRequest = 0;
 }
 
 CRequestManager::CRequestManager()
@@ -1239,38 +1237,6 @@ void CRequestManager::SendTxnRequests(OdMap &mapTxns)
 
         mapBatchTxnRequestsInv2.clear();
     }
-}
-
-bool CRequestManager::CheckForRequestDOS(CNode *pfrom, const CChainParams &chainparams)
-{
-    // Check for Misbehaving and DOS
-    // If they make more than MAX_THINTYPE_OBJECT_REQUESTS requests in 10 minutes then assign misbehavior points.
-    //
-    // Other networks have variable mining rates, so only apply these rules to mainnet only.
-    if (chainparams.NetworkIDString() == "main")
-    {
-        LOCK(cs_objDownloader);
-
-        std::map<NodeId, CRequestManagerNodeState>::iterator it = mapRequestManagerNodeState.find(pfrom->GetId());
-        DbgAssert(it != mapRequestManagerNodeState.end(), return false);
-        CRequestManagerNodeState *state = &it->second;
-
-        // First decay the previous value
-        uint64_t nNow = GetTime();
-        state->nNumRequests = std::pow(1.0 - 1.0 / 600.0, (double)(nNow - state->nLastRequest));
-
-        // Now add one request and update the time
-        state->nNumRequests++;
-        state->nLastRequest = nNow;
-
-        if (state->nNumRequests >= MAX_THINTYPE_OBJECT_REQUESTS)
-        {
-            pfrom->fDisconnect = true;
-            return error("Disconnecting  %s. Making too many (%f) thin object requests.", pfrom->GetLogName(),
-                state->nNumRequests);
-        }
-    }
-    return true;
 }
 
 // Check whether the last unknown block a peer advertised is not yet known.
