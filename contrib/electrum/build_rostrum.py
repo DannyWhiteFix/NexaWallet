@@ -87,8 +87,8 @@ def verify_repo(allow_modified):
         logging.warning("Rostrum is not fixed to a specific revision.  Please assign the EXPECT_HEAD variable in build_rostrum.py before releasing.")
     if EXPECT_HEAD != None and repo.head.object.hexsha != EXPECT_HEAD:
         # TODO: Add command line option to reset HEAD to GIT_BRANCH at EXPECT_HEAD
-        logging.error("Validation failed - %s HEAD differs from expected (%s vs %s)",
-                PROJECT_NAME, repo.head.object.hexsha, EXPECT_HEAD)
+        logging.error("Validation failed - %s HEAD differs from expected (%s vs %s).  You probably need to (cd ../rostrum; git pull; git checkout %s)",
+                      PROJECT_NAME, repo.head.object.hexsha, EXPECT_HEAD, GIT_BRANCH)
         allow_modified or bail("Bailing")
 
 def output_reader(pipe, queue):
