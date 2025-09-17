@@ -10,7 +10,7 @@ ACLOCAL_AMFLAGS = -I build-aux/m4
 SUBDIRS = src
 .PHONY: deploy FORCE rostrum
 
-GZIP_ENV="-9n"
+override GZIP_ENV="-9n"
 export PYTHONPATH
 
 if BUILD_NEXA_LIBS

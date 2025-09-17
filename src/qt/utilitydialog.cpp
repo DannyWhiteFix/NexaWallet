@@ -16,7 +16,6 @@
 #include "guiutil.h"
 #include "intro.h"
 #include "nexagui.h"
-#include "paymentrequestplus.h"
 
 #include "clientversion.h"
 #include "copyright.h"

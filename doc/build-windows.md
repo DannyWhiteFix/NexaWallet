@@ -47,8 +47,7 @@ sudo apt-get install build-essential libtool autotools-dev automake pkg-config b
 ```
 
 A host toolchain (`build-essential`) is necessary because some dependency
-packages (such as `protobuf`) need to build host utilities that are used in the
-build process.
+packages need to build host utilities that are used in the build process.
 
 See also: [dependencies.md](dependencies.md).
 

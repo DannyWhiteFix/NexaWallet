@@ -5302,11 +5302,6 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>L&apos;import de la transacció és massa petit per enviar-la després que se&apos;n dedueixi la comissió</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>Aquest producte inclou programari desenvolupat pel projecte OpenSSL per a ús a l&apos;OpenSSL Toolkit &lt;https://www.openssl.org/&gt; i programari criptogràfic escrit per Eric Young i programari UPnP escrit per Thomas Bernard.</translation>
-    </message>
-    <message>
         <location line="+63"/>
         <source>Activating best chain...</source>
         <translation>S&apos;està activant la millor cadena...</translation>

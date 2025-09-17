@@ -628,14 +628,10 @@ static void addElectrumOptions(AllowedArgs &allowedArgs)
 static void addUiOptions(AllowedArgs &allowedArgs)
 {
     allowedArgs.addHeader(_("UI Options:"))
-        .addDebugArg("allowselfsignedrootcertificates", optionalBool,
-            strprintf("Allow self signed root certificates (default: %u)", DEFAULT_SELFSIGNED_ROOTCERTS))
         .addArg("choosedatadir", optionalBool,
             strprintf(_("Choose data directory on startup (default: %u)"), DEFAULT_CHOOSE_DATADIR))
         .addArg("lang=<lang>", requiredStr, _("Set language, for example \"de_DE\" (default: system locale)"))
         .addArg("min", optionalBool, _("Start minimized"))
-        .addArg("rootcertificates=<file>", optionalStr,
-            _("Set SSL root certificates for payment request (default: -system-)"))
         .addArg(
             "splash", optionalBool, strprintf(_("Show splash screen on startup (default: %u)"), DEFAULT_SPLASHSCREEN))
         .addArg("resetguisettings", optionalBool, _("Reset all settings changes made over the GUI"))

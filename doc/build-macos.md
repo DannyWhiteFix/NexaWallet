@@ -16,7 +16,7 @@ Then install [Homebrew](http://brew.sh).
 ## Dependencies
 
 ```bash
-brew install automake libtool boost miniupnpc openssl pkg-config protobuf qt5 libevent gmp
+brew install automake libtool boost miniupnpc pkg-config protobuf qt5 libevent gmp
 ```
 
 If you plane to run nexa linked to berkeley-db 4.8.3 (ie use `--with-incompatible-bdb`) you

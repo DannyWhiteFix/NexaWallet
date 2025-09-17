@@ -5289,11 +5289,6 @@ Do you want to reindex on the next restart?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location line="+4"/>
         <source>Total length of network version string with uacomments added exceeded the maximum length (%i) and have been truncated.  Reduce the number or size of uacomments to avoid truncation.</source>
         <translation type="unfinished"></translation>

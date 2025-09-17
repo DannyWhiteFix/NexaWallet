@@ -5334,11 +5334,6 @@ Veuillez relancer Nexa avec &quot;-usehd=0&quot;.</translation>
         <translation>Le montant de la transaction est trop bas pour être envoyé une fois que les frais ont été déduits</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>Ce produit comprend des logiciels développés par le projet OpenSSL pour être utilisés dans la boîte à outils OpenSSL &lt;https://www.openssl.org/&gt; et un logiciel cryptographique écrit par Eric Young, ainsi qu&apos;un logiciel UPnP écrit par Thomas Bernard.</translation>
-    </message>
-    <message>
         <location line="+63"/>
         <source>Activating best chain...</source>
         <translation>Activation de la meilleure chaîne...</translation>

@@ -5329,11 +5329,6 @@ Vennligst start Nexa på nytt med &quot;-usehd=0&quot;.</translation>
         <translation>Transaksjonsbeløpet er for lite til å sendes etter at gebyret er fratrukket</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>Dette produktet inneholder programvare utviklet av OpenSSL Project for bruk i OpenSSL Toolkit &lt;https://www.openssl.org/&gt; og kryptografisk programvare skrevet av Eric Young og UPnP-programvare skrevet av Thomas Bernard.</translation>
-    </message>
-    <message>
         <location line="+63"/>
         <source>Activating best chain...</source>
         <translation>Aktiverer beste kjede...</translation>

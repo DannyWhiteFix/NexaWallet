@@ -255,8 +255,6 @@ qt/optionsmodel.cpp
 qt/optionsmodel.h
 qt/overviewpage.cpp
 qt/overviewpage.h
-qt/paymentrequestplus.cpp
-qt/paymentrequestplus.h
 qt/paymentserver.cpp
 qt/paymentserver.h
 qt/peertablemodel.cpp

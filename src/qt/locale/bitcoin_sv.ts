@@ -5328,11 +5328,6 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Transaktionen är för liten att skicka efter det att avgiften har dragits</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användning i OpenSSL Toolkit &lt;https://www.openssl.org/&gt; och kryptografisk mjukvara utvecklad av Eric Young samt UPnP-mjukvara skriven av Thomas Bernard.</translation>
-    </message>
-    <message>
         <location line="+63"/>
         <source>Activating best chain...</source>
         <translation>Aktiverar bästa kedjan...</translation>

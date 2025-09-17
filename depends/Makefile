@@ -121,7 +121,6 @@ qt_packages_$(NO_QT) = $(qt_packages) $(qt_$(host_os)_packages) $(qt_$(host_arch
 
 boost_packages_$(NO_BOOST) = $(boost_packages)
 libevent_packages_$(NO_LIBEVENT) = $(libevent_packages)
-openssl_packages_$(NO_OPENSSL) = $(openssl_packages)
 zeromq_packages_$(NO_ZEROMQ) = $(zeromq_packages)
 
 wallet_packages_$(NO_WALLET) = $(wallet_packages)
@@ -129,7 +128,7 @@ upnp_packages_$(NO_UPNP) = $(upnp_packages)
 rust_packages_$(NO_RUST) = $(rust_packages)
 
 packages += $($(host_arch)_$(host_os)_packages) $($(host_os)_packages) $(boost_packages_) \
-	$(libevent_packages_) $(openssl_packages_) $(zeromq_packages_) $(qt_packages_) \
+	$(libevent_packages_) $(zeromq_packages_) $(qt_packages_) \
 	$(wallet_packages_) $(upnp_packages_) $(rust_packages_)
 
 # this line is macos specific, it adds the darwin_native_packages to the build
@@ -143,6 +142,7 @@ ifneq ($(boost_packages_),)
 native_packages += $($(host_arch)_$(host_os)_native_boost_packages) $($(host_os)_native_boost_packages)
 endif
 
+# FIXME: do I need to remove it?
 ifneq ($(qt_packages_),)
 native_packages += $(qt_native_packages)
 endif

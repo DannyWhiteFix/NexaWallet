@@ -336,7 +336,6 @@ void SendCoinsDialog::on_sendButton_clicked()
             QString address = "<span style='font-family: monospace;'>" + rcp.address;
             address.append("</span>");
 
-            if (!rcp.paymentRequest.IsInitialized()) // normal payment
             {
                 if (rcp.label.length() > 0) // label with address
                 {
@@ -347,14 +346,6 @@ void SendCoinsDialog::on_sendButton_clicked()
                 {
                     recipientElement = tr("%1 to %2").arg(amount, address);
                 }
-            }
-            else if (!rcp.authenticatedMerchant.isEmpty()) // authenticated payment request
-            {
-                recipientElement = tr("%1 to %2").arg(amount, GUIUtil::HtmlEscape(rcp.authenticatedMerchant));
-            }
-            else // unauthenticated payment request
-            {
-                recipientElement = tr("%1 to %2").arg(amount, address);
             }
         } // else if (!rcp.labelPublic.isEmpty())
 

@@ -37,7 +37,7 @@ endif
 EXTRA_LIBRARIES =
 
 BITCOIN_CONFIG_INCLUDES=-I$(builddir)/config
-NEXA_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
+NEXA_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
 
 NEXA_INCLUDES += -I$(srcdir)/secp256k1/include
 NEXA_INCLUDES += -I$(srcdir)/univalue/include
@@ -715,7 +715,7 @@ nexad_LDADD = \
   $(LIBSECP256K1)
 
 
-nexad_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
+nexad_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
 
 # nexa-cli binary #
 nexa_cli_SOURCES = nexa-cli.cpp
@@ -736,7 +736,7 @@ nexa_cli_LDADD = \
   $(LIBNEXA_CRYPTO_AVX2) \
   $(LIBNEXA_FALCON)
 
-nexa_cli_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
+nexa_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS)
 #
 
 # nexa tx binary #
@@ -759,7 +759,7 @@ nexa_tx_LDADD = \
   $(LIBNEXA_FALCON) \
   $(LIBSECP256K1)
 
-nexa_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+nexa_tx_LDADD += $(BOOST_LIBS)
 #
 
 # nexa-miner binary #
@@ -790,7 +790,7 @@ nexa_miner_LDADD = \
   $(LIBNEXA_FALCON) \
   $(LIBSECP256K1)
 
-nexa_miner_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
+nexa_miner_LDADD += $(BOOST_LIBS) $(EVENT_LIBS)
 endif # not BUILD_ONLY_LIBNEXA
 
 # nexa library #
@@ -801,7 +801,7 @@ if GLIBC_BACK_COMPAT
 libnexa_la_SOURCES += compat/glibc_compat.cpp
 endif
 
-libnexa_la_LDFLAGS = $(AM_LDFLAGS) $(CRYPTO_LIBS) $(BOOST_LIBS) -no-undefined $(RELDFLAGS) $(PTHREAD_FLAGS)
+libnexa_la_LDFLAGS = $(AM_LDFLAGS) $(BOOST_LIBS) -no-undefined $(RELDFLAGS) $(PTHREAD_FLAGS)
 libnexa_la_LIBADD = $(LIBSECP256K1)
 libnexa_la_CPPFLAGS = $(AM_CPPFLAGS) $(NEXA_INCLUDES) $(BOOST_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include $(JNI_CXXFLAGS) -DBUILD_BITCOIN_INTERNAL
 libnexa_la_CXXFLAGS = $(AM_CXXFLAGS) -DPIC
@@ -847,9 +847,9 @@ clean-local:
 	## FIXME: How to get the appropriate modulename_CPPFLAGS in here?
 	$(AM_V_GEN) $(WINDRES) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) -DWINDRES_PREPROC -i $< -o $@
 
-.mm.o:
-	$(AM_V_CXX) $(OBJCXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	  $(CPPFLAGS) $(AM_CXXFLAGS) $(QT_INCLUDES) $(AM_CXXFLAGS) $(PIE_FLAGS) $(CXXFLAGS) -c -o $@ $<
+#.mm.o:
+#	$(AM_V_CXX) $(OBJCXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+#	  $(CPPFLAGS) $(AM_CXXFLAGS) $(QT_INCLUDES) $(AM_CXXFLAGS) $(PIE_FLAGS) $(CXXFLAGS) -c -o $@ $<
 
 check-symbols: $(bin_PROGRAMS)
 if TARGET_DARWIN
@@ -892,10 +892,6 @@ run-formatting:
 	@echo "Source formatting style with $(CLANG_FORMAT_BIN) ..."
 	(cd $(top_srcdir)/src; ../contrib/devtools/clang-format.py format $(CLANG_FORMAT_BIN) `cat ./.formatted-files`)
 
-
-%.pb.cc %.pb.h: %.proto
-	@test -f $(PROTOC)
-	$(AM_V_GEN) $(PROTOC) --cpp_out=$(@D) --proto_path=$(abspath $(<D) $<)
 
 if EMBEDDED_LEVELDB
 include Makefile.leveldb.include
