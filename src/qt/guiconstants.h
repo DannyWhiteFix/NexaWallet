@@ -18,7 +18,6 @@ static const int MAX_PASSPHRASE_SIZE = 1024;
 static const int STATUSBAR_ICONSIZE = 16;
 
 static const bool DEFAULT_CHOOSE_DATADIR = false;
-static const bool DEFAULT_SELFSIGNED_ROOTCERTS = false;
 static const bool DEFAULT_SPLASHSCREEN = true;
 
 static const std::string DEFAULT_UIPLATFORM =

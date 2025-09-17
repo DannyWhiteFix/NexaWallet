@@ -15,9 +15,6 @@
 #include <limits>
 #include <stdint.h>
 
-/* Seed OpenSSL PRNG with additional entropy data */
-void RandAddSeed();
-
 /**
  * Functions to gather random data
  */
@@ -26,14 +23,6 @@ void GetRandBytes(Span<unsigned char> bytes) noexcept;
 uint64_t GetRand(uint64_t nMax);
 int GetRandInt(int nMax);
 uint256 GetRandHash() noexcept;
-
-/**
- * Add a little bit of randomness to the output of GetStrongRangBytes.
- * This sleeps for a millisecond, so should only be called when there is
- * no other work to be done.
- */
-void RandAddSeedSleep();
-
 
 /**
  * Function to gather random data from multiple sources, failing whenever any

@@ -5292,11 +5292,6 @@ Please relaunch Nexa with &quot;-usehd=0&quot;.</source>
         <translation>Portofelul %s se află în afara dosarului de date %s</translation>
     </message>
     <message>
-        <location line="-142"/>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>Acest produs include programe dezvoltate de către Proiectul OpenSSL pentru a fi folosite în OpenSSL Toolkit &lt;https://www.openssl.org/&gt; şi programe criptografice scrise de către Eric Young şi programe UPnP scrise de către Thomas Bernard.</translation>
-    </message>
-    <message>
         <location line="+67"/>
         <source>Cannot resolve -whitebind address: &apos;%s&apos;</source>
         <translation>Nu se poate rezolva adresa -whitebind: &apos;%s&apos;</translation>

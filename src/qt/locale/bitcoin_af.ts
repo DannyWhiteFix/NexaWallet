@@ -5281,11 +5281,6 @@ Wil jy herindekseer met die volgende herbegin?</translation>
         <translation>Dit is &apos;n voorvrystelling-toetsbou - gebruik op eie risiko - moenie vir mynbou- of handelaartoepassings gebruik nie</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>Hierdie produk sluit sagteware in wat ontwikkel is deur die OpenSSL Project vir gebruik in die OpenSSL Toolkit &lt;https://www.openssl.org/&gt; en kriptografiese sagteware geskryf deur Eric Young en UPnP sagteware geskryf deur Thomas Bernard.</translation>
-    </message>
-    <message>
         <location line="+4"/>
         <source>Total length of network version string with uacomments added exceeded the maximum length (%i) and have been truncated.  Reduce the number or size of uacomments to avoid truncation.</source>
         <translation>Totale lengte van netwerkweergawestring met uacomments bygevoeg het die maksimum lengte (%i) oorskry en is afgekap. Verminder die aantal of grootte van uacomments om afkapping te vermy.</translation>

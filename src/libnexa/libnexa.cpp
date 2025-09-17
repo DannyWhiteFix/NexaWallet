@@ -1489,7 +1489,7 @@ SLAPI int RandomBytes(unsigned char *buf, int num)
         return 0;
     return num;
 }
-// Implement APIs normally provided by random.cpp calling openssl
+// Implement APIs normally provided by random.cpp
 void GetRandBytes(unsigned char *buf, int num)
 {
     // it would be dangerous to return if we aren't getting random bytes

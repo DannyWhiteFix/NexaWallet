@@ -13,7 +13,7 @@ Run the following to install the base dependencies for building:
 
 
 ```bash
-sudo apt-get install build-essential libtool autotools-dev autoconf automake pkg-config libssl-dev libevent-dev libgmp-dev bsdmainutils git
+sudo apt-get install build-essential libtool autotools-dev autoconf automake pkg-config libevent-dev libgmp-dev bsdmainutils git
 ```
 
 On at least Ubuntu 14.04+ and Debian 7+ there are generic names for the
@@ -75,7 +75,7 @@ To build without GUI pass `--without-gui`.
 To build with Qt 5.3 or higher you need the following:
 
 ```bash
-sudo apt-get install libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libprotobuf-dev protobuf-compiler
+sudo apt-get install libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools
 ```
 
 libqrencode (optional) can be installed with:
@@ -93,7 +93,6 @@ These dependencies are required:
 
  Library     | Purpose          | Description
  ------------|------------------|----------------------
- libssl      | Crypto           | Random Number Generation, Elliptic Curve Cryptography
  libboost    | Utility          | Library for threading, data structures, etc
  libevent    | Networking       | OS independent asynchronous networking
  libgmp      | Math             | Arbitrary precision arithmetic
@@ -105,7 +104,6 @@ Optional dependencies:
  miniupnpc   | UPnP Support     | Firewall-jumping support
  libdb5.3    | Berkeley DB      | Wallet storage (only needed when wallet enabled)
  qt          | GUI              | GUI toolkit (only needed when GUI enabled)
- protobuf    | Payments in GUI  | Data interchange format used for payment protocol (only needed when GUI enabled)
  libqrencode | QR codes in GUI  | Optional for generating QR codes (only needed when GUI enabled)
  libzmq3     | ZMQ notification | Optional, allows generating ZMQ notifications (requires ZMQ version >= 4.x)
 

@@ -49,7 +49,6 @@
 #include <QLocale>
 #include <QMessageBox>
 #include <QSettings>
-#include <QSslConfiguration>
 #include <QThread>
 #include <QTimer>
 #include <QTranslator>
@@ -425,7 +424,6 @@ void NexaApplication::initializeResult(int retval)
         // Log this only after AppInit2 finishes, as then logging setup is guaranteed complete
         qWarning() << "Platform customization:" << platformStyle->getName();
 #ifdef ENABLE_WALLET
-        PaymentServer::LoadRootCAs();
         paymentServer->setOptionsModel(optionsModel);
 #endif
 
@@ -640,11 +638,6 @@ int main(int argc, char *argv[])
 #ifdef Q_OS_MAC
     QApplication::setAttribute(Qt::AA_DontShowIconsInMenus);
 #endif
-    // Because of the POODLE attack it is recommended to disable SSLv3 (https://disablessl3.com/),
-    // so set SSL protocols to TLS1.0+.
-    QSslConfiguration sslconf = QSslConfiguration::defaultConfiguration();
-    sslconf.setProtocol(QSsl::TlsV1_0OrLater);
-    QSslConfiguration::setDefaultConfiguration(sslconf);
 
     // Register meta types used for QMetaObject::invokeMethod
     qRegisterMetaType<bool *>();

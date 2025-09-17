@@ -5497,11 +5497,6 @@ Apakah Anda ingin mengindeks ulang pada restart berikutnya?</translation>
         <translation>Ini adalah uji coba pra-rilis - gunakan dengan risiko Anda sendiri - jangan gunakan untuk aplikasi penambangan atau pedagang</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>Produk ini mencakup perangkat lunak yang dikembangkan oleh Proyek OpenSSL untuk digunakan dalam OpenSSL Toolkit &lt;https://www.openssl.org/&gt; dan perangkat lunak kriptografi yang ditulis oleh Eric Young dan perangkat lunak UPnP yang ditulis oleh Thomas Bernard.</translation>
-    </message>
-    <message>
         <location line="+4"/>
         <source>Total length of network version string with uacomments added exceeded the maximum length (%i) and have been truncated.  Reduce the number or size of uacomments to avoid truncation.</source>
         <translation>Panjang total string versi jaringan dengan uakomentar yang ditambahkan melebihi panjang maksimum (%i) dan telah terpotong. Kurangi jumlah atau ukuran komentar untuk menghindari pemotongan.</translation>

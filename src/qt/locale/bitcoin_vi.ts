@@ -5269,11 +5269,6 @@ Bạn có muốn lập chỉ mục lại vào lần khởi động lại tiếp 
         <translation>Đây là bản dựng thử nghiệm trước khi phát hành - bạn tự chịu rủi ro khi sử dụng - không sử dụng cho các ứng dụng khai thác hoặc thương mại</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>Sản phẩm này bao gồm phần mềm do Dự án OpenSSL phát triển để sử dụng trong Bộ công cụ OpenSSL &lt;https://www.openssl.org/&gt; và phần mềm mật mã do Eric Young viết và phần mềm UPnP do Thomas Bernard viết.</translation>
-    </message>
-    <message>
         <location line="+4"/>
         <source>Total length of network version string with uacomments added exceeded the maximum length (%i) and have been truncated.  Reduce the number or size of uacomments to avoid truncation.</source>
         <translation>Tổng độ dài của chuỗi phiên bản mạng có thêm nhận xét ua đã vượt quá độ dài tối đa (%i) và đã bị cắt bớt. Giảm số lượng hoặc kích thước của uacomments để tránh bị cắt bớt.</translation>

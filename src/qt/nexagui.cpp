@@ -366,7 +366,7 @@ void BitcoinGUI::createActions()
     usedReceivingAddressesAction->setStatusTip(tr("Show the list of used receiving addresses and labels"));
 
     openAction = new QAction(platformStyle->TextColorIcon(":/icons/open"), tr("Open &URI..."), this);
-    openAction->setStatusTip(tr("Open a %1: URI or payment request").arg(GUIUtil::bitcoinURIScheme(*cfg)));
+    openAction->setStatusTip(tr("Open a %1: URI").arg(GUIUtil::bitcoinURIScheme(*cfg)));
 
     showHelpMessageAction =
         new QAction(platformStyle->TextColorIcon(":/icons/info"), tr("&Command-line options"), this);

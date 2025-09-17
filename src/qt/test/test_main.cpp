@@ -14,14 +14,11 @@
 
 #ifdef ENABLE_WALLET
 #include "guiutiltests.h"
-#include "paymentservertests.h"
 #endif
 
 #include <QCoreApplication>
 #include <QObject>
 #include <QTest>
-
-#include <openssl/ssl.h>
 
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
@@ -50,16 +47,10 @@ int main(int argc, char *argv[])
     QCoreApplication app(argc, argv);
     app.setApplicationName("Nexa-Qt-test");
 
-    SSL_library_init();
-
     URITests test1;
     if (QTest::qExec(&test1) != 0)
         fInvalid = true;
 #ifdef ENABLE_WALLET
-    PaymentServerTests test2;
-    if (QTest::qExec(&test2) != 0)
-        fInvalid = true;
-
     GUIUtilTests test5;
     if (QTest::qExec(&test5) != 0) fInvalid = true;
     AddressValidatorTests test6;

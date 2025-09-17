@@ -77,10 +77,6 @@ QT_TRANSLATE_NOOP("nexa", ""
 "This is a pre-release test build - use at your own risk - do not use for "
 "mining or merchant applications"),
 QT_TRANSLATE_NOOP("nexa", ""
-"This product includes software developed by the OpenSSL Project for use in "
-"the OpenSSL Toolkit <https://www.openssl.org/> and cryptographic software "
-"written by Eric Young and UPnP software written by Thomas Bernard."),
-QT_TRANSLATE_NOOP("nexa", ""
 "Total length of network version string with uacomments added exceeded the "
 "maximum length (%i) and have been truncated.  Reduce the number or size of "
 "uacomments to avoid truncation."),

@@ -12,7 +12,7 @@ We will not cover building the GUI.
 Run the following as root to install the base dependencies for building:
 
 ```bash
-pkg install autoconf automake gmake git libevent libtool boost-libs pkgconf openssl python
+pkg install autoconf automake gmake git libevent libtool boost-libs pkgconf python
 ```
 
 See [dependencies.md](dependencies.md) for a complete overview.

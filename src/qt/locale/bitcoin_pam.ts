@@ -5455,11 +5455,6 @@ Gusto mo bang mag-reindex sa susunod na pag-restart?</translation>
         <translation>Ang halaga ng transportasyon ay masyadong maliit upang ipadala pagkatapos ibabawas ang bayad</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>Ang halaga ng transportasyon ay masyadong maliit upang ipadala pagkatapos ibabawas ang bayad</translation>
-    </message>
-    <message>
         <location line="+4"/>
         <source>Total length of network version string with uacomments added exceeded the maximum length (%i) and have been truncated.  Reduce the number or size of uacomments to avoid truncation.</source>
         <translation>Ang kabuuang haba ng string ng bersyon ng network na may mga naidagdag na mga komento ay lumampas sa maximum na haba (%i) at naputol. Bawasan ang bilang o laki ng mga komento upang maiwasan ang pagputol.</translation>
