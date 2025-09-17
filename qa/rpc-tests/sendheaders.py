@@ -773,10 +773,11 @@ class SendHeadersTest(BitcoinTestFramework):
                 blocks_reverse.append(blocks[3])
                 blocks_reverse.append(blocks[4])
 
-            # Send the header of the second block -> this won't connect.
-            test_node.send_header_for_blocks(blocks_reverse)
-            test_node.sync_with_ping()
-            assert_not_equal(int(self.nodes[0].getbestblockhash(), 16), blocks[1].gethash())
+            for j in range(20):
+                # Send the header of the second block -> this won't connect.
+                test_node.send_header_for_blocks(blocks_reverse)
+                test_node.sync_with_ping()
+                assert_not_equal(int(self.nodes[0].getbestblockhash(), 16), blocks[1].gethash())
 
             # Now send them in the right order
             test_node.send_header_for_blocks([blocks[0]])
