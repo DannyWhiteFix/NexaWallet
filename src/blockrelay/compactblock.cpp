@@ -412,9 +412,6 @@ bool CompactReRequest::HandleMessage(CDataStream &vRecv, uint32_t msgCookie, CNo
     }
     else
     {
-        if (hdr->height() < (chainActive.Tip()->height() - (int)thinrelay.MAX_THINTYPE_BLOCKS_IN_FLIGHT))
-            return error(CMPCT, "getblocktxn request too far from the tip");
-
         const Consensus::Params &consensusParams = Params().GetConsensus();
         ConstCBlockRef pblock = ReadBlockFromDisk(hdr, consensusParams);
         if (!pblock)

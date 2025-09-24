@@ -1694,9 +1694,6 @@ std::vector<CTransaction> TransactionsFromBlockByCheapHash(std::set<uint64_t> &v
     }
     else
     {
-        if (hdr->height() < (chainActive.Tip()->height() - (int)thinrelay.MAX_THINTYPE_BLOCKS_IN_FLIGHT))
-            throw std::runtime_error("get_grblocktx request too far from the tip");
-
         const Consensus::Params &consensusParams = Params().GetConsensus();
         ConstCBlockRef pblock = ReadBlockFromDisk(hdr, consensusParams);
         if (!pblock)
