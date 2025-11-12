@@ -102,45 +102,9 @@ uint256 CCoinsViewDB::_GetBestBlock() const
 {
     AssertLockHeld(cs_utxo);
     uint256 hashBestChain;
-    std::string strmode = std::to_string(static_cast<int32_t>(BLOCK_DB_MODE));
-    if (pblockdb)
+    if (!db.Read(DB_BEST_BLOCK, hashBestChain))
     {
-        // just use the int that is the db mode as its key for the best block it has
-        if (!db.Read(strmode, hashBestChain))
-            return uint256();
-    }
-    else
-    {
-        if (!db.Read(DB_BEST_BLOCK, hashBestChain))
-            return uint256();
-    }
-    return hashBestChain;
-}
-
-uint256 CCoinsViewDB::GetBestBlock(BlockDBMode mode) const
-{
-    READLOCK(cs_utxo);
-    return _GetBestBlock(mode);
-}
-
-uint256 CCoinsViewDB::_GetBestBlock(BlockDBMode mode) const
-{
-    AssertLockHeld(cs_utxo);
-    uint256 hashBestChain;
-    // if override isnt end, override the fetch to get the best block of a specific mode
-    if (mode != END_STORAGE_OPTIONS)
-    {
-        std::string strmode = std::to_string(static_cast<int32_t>(mode));
-        if (mode == SEQUENTIAL_BLOCK_FILES)
-        {
-            if (!db.Read(DB_BEST_BLOCK, hashBestChain))
-                return uint256();
-        }
-        else
-        {
-            if (!db.Read(strmode, hashBestChain))
-                return uint256();
-        }
+        return uint256();
     }
     return hashBestChain;
 }
@@ -154,42 +118,7 @@ void CCoinsViewDB::WriteBestBlock(const uint256 &hashBlock)
 void CCoinsViewDB::_WriteBestBlock(const uint256 &hashBlock)
 {
     AssertWriteLockHeld(cs_utxo);
-    std::string strmode = std::to_string(static_cast<int32_t>(BLOCK_DB_MODE));
-    if (!hashBlock.IsNull())
-    {
-        if (pblockdb)
-        {
-            // just use the int that is the db mode as its key for the best block it has
-            db.Write(strmode, hashBlock);
-        }
-        else // sequential files doesnt use the int of its mode for backwards compatibility reasons
-        {
-            db.Write(DB_BEST_BLOCK, hashBlock);
-        }
-    }
-}
-
-void CCoinsViewDB::WriteBestBlock(const uint256 &hashBlock, BlockDBMode mode)
-{
-    WRITELOCK(cs_utxo);
-    _WriteBestBlock(hashBlock);
-}
-
-void CCoinsViewDB::_WriteBestBlock(const uint256 &hashBlock, BlockDBMode mode)
-{
-    AssertWriteLockHeld(cs_utxo);
-    if (mode != END_STORAGE_OPTIONS)
-    {
-        std::string strmode = std::to_string(static_cast<int32_t>(mode));
-        if (mode == SEQUENTIAL_BLOCK_FILES)
-        {
-            db.Write(DB_BEST_BLOCK, hashBlock);
-        }
-        else
-        {
-            db.Write(strmode, hashBlock);
-        }
-    }
+    db.Write(DB_BEST_BLOCK, hashBlock);
 }
 
 bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins,
@@ -418,10 +347,7 @@ bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockF
     {
         batch.Write(make_pair(DB_BLOCK_FILES, it->first), *it->second);
     }
-    if (!pblockdb)
-    {
-        batch.Write(DB_LAST_BLOCK, nLastFile);
-    }
+    batch.Write(DB_LAST_BLOCK, nLastFile);
     for (std::vector<const CBlockIndex *>::const_iterator it = blockinfo.begin(); it != blockinfo.end(); it++)
     {
         batch.Write(make_pair(DB_BLOCK_INDEX, (*it)->GetBlockHash()), CDiskBlockIndex(*it));
@@ -783,26 +709,8 @@ CacheConfig CacheSizeCalculations(int64_t _nTotalCache)
     // If we are in block db storage mode then calculated the level db cache size for the block and undo caches.
     // As a safeguard make them at least as large as the _nBlockTreeDBCache;
     _nTotalCache -= cache.nBlockTreeDBCache;
-    if (BLOCK_DB_MODE == LEVELDB_BLOCK_STORAGE)
-    {
-        // use up to 10% for the level db block cache but no bigger than 1GB
-        cache.nBlockDBCache = _nTotalCache * 0.10;
-        if (cache.nBlockDBCache < cache.nBlockTreeDBCache)
-            cache.nBlockDBCache = cache.nBlockTreeDBCache;
-        else if (cache.nBlockDBCache > 1024 << 20)
-            cache.nBlockDBCache = 1024 << 20;
-
-        // use up to 2% for the level db undo cache but no bigger than 128MB
-        cache.nBlockUndoDBCache = _nTotalCache * 0.02;
-        if (cache.nBlockUndoDBCache < cache.nBlockTreeDBCache)
-            cache.nBlockUndoDBCache = cache.nBlockTreeDBCache;
-        else if (cache.nBlockUndoDBCache > 128 << 20)
-            cache.nBlockUndoDBCache = 128 << 20;
-    }
 
     // use 12.5%-25% of the remainder for the utxo leveldb disk cache
-    _nTotalCache -= cache.nBlockDBCache;
-    _nTotalCache -= cache.nBlockUndoDBCache;
     cache.nCoinDBCache = std::min(_nTotalCache / 4, (_nTotalCache / 8) + (1 << 23));
     if (!fTxIndex)
     {

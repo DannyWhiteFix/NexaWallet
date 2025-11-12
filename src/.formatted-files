@@ -27,9 +27,6 @@ blockrelay/compactblock.cpp
 blockrelay/compactblock.h
 blockrelay/blockrelay_common.h
 blockrelay/blockrelay_common.cpp
-blockstorage/blockleveldb.cpp
-blockstorage/blockleveldb.h
-blockstorage/dbabstract.h
 blockstorage/sequential_files.cpp
 blockstorage/sequential_files.h
 blockstorage/blockstorage.cpp

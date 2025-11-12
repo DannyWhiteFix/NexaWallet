@@ -7,7 +7,6 @@
 #ifndef BLOCKDB_BLOCKSTORAGE_H
 #define BLOCKDB_BLOCKSTORAGE_H
 
-#include "blockleveldb.h"
 #include "main.h"
 #include "undo.h"
 
@@ -20,11 +19,6 @@ enum FlushStateMode
     FLUSH_STATE_ALWAYS
 };
 
-
-static const BlockDBMode DEFAULT_BLOCK_DB_MODE = SEQUENTIAL_BLOCK_FILES;
-extern BlockDBMode BLOCK_DB_MODE;
-extern CDatabaseAbstract *pblockdb;
-
 /** The pre-allocation chunk size for blk?????.dat files */
 static const uint64_t DEFAULT_BLOCKFILE_CHUNK_SIZE = 0x1000000; // 16 MiB
 /** The pre-allocation chunk size for rev?????.dat files */
@@ -32,12 +26,7 @@ static const uint64_t DEFAULT_UNDOFILE_CHUNK_SIZE = 0x100000; // 1 MiB
 extern uint64_t blockfile_chunk_size;
 extern uint64_t undofile_chunk_size;
 
-void InitializeBlockStorage(const int64_t &_nBlockTreeDBCache,
-    const int64_t &_nBlockDBCache,
-    const int64_t &_nBlockUndoDBCache);
-
-/** Catch leveldb up with sequential block files */
-void SyncStorage(const CChainParams &chainparams);
+void InitializeBlockStorage(const int64_t &_nBlockTreeDBCache);
 
 /** Functions for disk access for blocks */
 ConstCBlockRef ReadBlockFromDisk(const CBlockIndex *pindex, const Consensus::Params &consensusParams);
@@ -89,8 +78,5 @@ bool FindBlockPos(CValidationState &state,
     bool fKnown = false);
 
 bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, uint64_t nAddSize);
-
-
-extern BlockDBMode BLOCK_DB_MODE;
 
 #endif // BLOCKDB_BLOCKSTORAGE_H
