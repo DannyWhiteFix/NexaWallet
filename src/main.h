@@ -270,9 +270,6 @@ extern CCoinsViewCache *pcoinsTip;
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern CBlockTreeDB *pblocktree;
 extern CBlockHeadersDB *pblockheaders;
-/** Global variable that points to the block tree on the inactive storage method (protected by cs_main) */
-extern CBlockTreeDB *pblocktreeother;
-extern CBlockHeadersDB *pblockheadersother;
 /** Global variable that points to the token description database (protected by tokencache.cs_tokencache) */
 extern CTokenDescriptionDB *ptokenDesc;
 /** Global variable that points to the token mintage database (protected by tokenmint.cs_tokenmint) */

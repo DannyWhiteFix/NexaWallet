@@ -324,8 +324,6 @@ void Shutdown()
         pblocktree = nullptr;
         delete pblockheaders;
         pblockheaders = nullptr;
-        delete pblockdb;
-        pblockdb = nullptr;
     }
 #ifdef ENABLE_WALLET
     if (pwalletMain)
@@ -1329,21 +1327,9 @@ bool AppInit2(Config &config)
         fReindex = GetBoolArg("-reindex", DEFAULT_REINDEX);
     }
 
-    int64_t requested_block_mode = GetArg("-useblockdb", DEFAULT_BLOCK_DB_MODE);
-    if (requested_block_mode >= 0 && requested_block_mode < END_STORAGE_OPTIONS)
-    {
-        BLOCK_DB_MODE = static_cast<BlockDBMode>(requested_block_mode);
-    }
-    else
-    {
-        BLOCK_DB_MODE = DEFAULT_BLOCK_DB_MODE;
-    }
-
     // Return the initial values for the various in memory caches.
     CacheConfig cacheConfig = DiscoverCacheConfiguration();
     LOGA("Cache configuration:\n");
-    LOGA("* Using %.1fMiB for block database\n", cacheConfig.nBlockDBCache * (1.0 / 1024 / 1024));
-    LOGA("* Using %.1fMiB for block undo database\n", cacheConfig.nBlockUndoDBCache * (1.0 / 1024 / 1024));
     LOGA("* Using %.1fMiB for block index database\n", cacheConfig.nBlockTreeDBCache * (1.0 / 1024 / 1024));
     LOGA("* Using %.1fMiB for txindex database\n", cacheConfig.nTxIndexCache * (1.0 / 1024 / 1024));
     LOGA("* Using %.1fMiB for chain state database\n", cacheConfig.nCoinDBCache * (1.0 / 1024 / 1024));
@@ -1367,17 +1353,13 @@ bool AppInit2(Config &config)
                 delete pcoinsdbview;
                 delete pcoinscatcher;
                 delete pblocktree;
-                delete pblocktreeother;
                 delete pblockheaders;
-                delete pblockheadersother;
-                delete pblockdb;
                 delete ptokenDesc;
                 delete ptokenMint;
                 g_txindex = nullptr;
 
                 uiInterface.InitMessage(_("Opening Block database..."));
-                InitializeBlockStorage(
-                    cacheConfig.nBlockTreeDBCache, cacheConfig.nBlockDBCache, cacheConfig.nBlockUndoDBCache);
+                InitializeBlockStorage(cacheConfig.nBlockTreeDBCache);
 
                 // fReset must be determined after InitializeBlockStorage()
                 fReset = (fReindex || fSync);

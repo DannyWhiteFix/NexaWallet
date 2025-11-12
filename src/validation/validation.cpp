@@ -498,15 +498,7 @@ bool LoadBlockIndexDB()
     // through the index files and load the block index. While this is a bit of a hack, it has an enormous
     // effect on speeding up the reading in of the block index data particularly when the index data is stored
     // on spinning disk. The problem appears to lie in some issue with leveldb cache innefficiency.
-    fs::path path_index;
-    if (BLOCK_DB_MODE == SEQUENTIAL_BLOCK_FILES)
-    {
-        path_index = GetDataDir() / "blocks" / "index";
-    }
-    else
-    {
-        path_index = GetDataDir() / "blockdb" / "index";
-    }
+    fs::path path_index = GetDataDir() / "blocks" / "index";
     std::vector<fs::path> vIndexFiles;
     std::copy(fs::directory_iterator(path_index), fs::directory_iterator(), std::back_inserter(vIndexFiles));
     for (const std::filesystem::path &path_file : vIndexFiles)
@@ -541,40 +533,8 @@ bool LoadBlockIndexDB()
     {
         LOCK(cs_LastBlockFile);
         pblocktree->ReadFlag("prunedblockfiles", fHavePruned);
-        if (!fHavePruned)
-        {
-            // by default we want to sync from disk instead of network if possible
-            // run a db sync here to sync storage methods
-            // may increase startup time significantly but is faster than network sync
-            SyncStorage(chainparams);
-        }
-        else
-        {
-            LOGA("LoadBlockIndexDB(): Block files have previously been pruned\n");
-        }
     }
-
-    delete pblocktreeother;
-    pblocktreeother = nullptr;
-    // lock cs_mapBlockIndex after running SyncStorage to avoid an issue with
-    // deadlocks, this is only safe to do because only the programs main thread
-    // is running at the time LocdBlockIndexDB is called.
     WRITELOCK(cs_mapBlockIndex);
-    try
-    {
-        if (BLOCK_DB_MODE == SEQUENTIAL_BLOCK_FILES)
-        {
-            fs::remove_all(GetDataDir() / "blockdb");
-        }
-        else
-        {
-            fs::remove_all(GetDataDir() / "blocks");
-        }
-    }
-    catch (fs::filesystem_error const &e)
-    {
-        LOG(PRUNE, "%s \n", e.code().message());
-    }
 
     if (shutdown_threads.load() == true)
     {
@@ -765,41 +725,37 @@ bool LoadBlockIndexDB()
         }
     }
 
-    // Do for sequential files
-    if (!pblockdb)
+    // Check presence of blk files
+    LOGA("Checking all blk files are present...\n");
+    for (std::set<int>::iterator it = setBlkDataFiles.begin(); it != setBlkDataFiles.end(); it++)
     {
-        // Check presence of blk files
-        LOGA("Checking all blk files are present...\n");
-        for (std::set<int>::iterator it = setBlkDataFiles.begin(); it != setBlkDataFiles.end(); it++)
+        CDiskBlockPos pos(*it, 0);
+        fs::path path = GetBlockPosFilename(pos, "blk");
+        if (!fs::exists(path))
         {
-            CDiskBlockPos pos(*it, 0);
-            fs::path path = GetBlockPosFilename(pos, "blk");
-            if (!fs::exists(path))
-            {
-                LOGA("missing path = %s\n", path.string().c_str());
-                return false;
-            }
+            LOGA("missing path = %s\n", path.string().c_str());
+            return false;
         }
-        // Load block file info
-        pblocktree->ReadLastBlockFile(nLastBlockFile);
-        vinfoBlockFile.resize(nLastBlockFile + 1);
-        LOGA("%s: last block file = %i\n", __func__, nLastBlockFile);
-        for (int nFile = 0; nFile <= nLastBlockFile; nFile++)
+    }
+    // Load block file info
+    pblocktree->ReadLastBlockFile(nLastBlockFile);
+    vinfoBlockFile.resize(nLastBlockFile + 1);
+    LOGA("%s: last block file = %i\n", __func__, nLastBlockFile);
+    for (int nFile = 0; nFile <= nLastBlockFile; nFile++)
+    {
+        pblocktree->ReadBlockFileInfo(nFile, vinfoBlockFile[nFile]);
+    }
+    LOGA("%s: last block file info: %s\n", __func__, vinfoBlockFile[nLastBlockFile].ToString());
+    for (int nFile = nLastBlockFile + 1; true; nFile++)
+    {
+        CBlockFileInfo info;
+        if (pblocktree->ReadBlockFileInfo(nFile, info))
         {
-            pblocktree->ReadBlockFileInfo(nFile, vinfoBlockFile[nFile]);
+            vinfoBlockFile.push_back(info);
         }
-        LOGA("%s: last block file info: %s\n", __func__, vinfoBlockFile[nLastBlockFile].ToString());
-        for (int nFile = nLastBlockFile + 1; true; nFile++)
+        else
         {
-            CBlockFileInfo info;
-            if (pblocktree->ReadBlockFileInfo(nFile, info))
-            {
-                vinfoBlockFile.push_back(info);
-            }
-            else
-            {
-                break;
-            }
+            break;
         }
     }
 
@@ -2296,8 +2252,7 @@ DisconnectResult DisconnectBlock(const ConstCBlockRef pblock, const CBlockIndex 
 
     CBlockUndo blockUndo;
     CDiskBlockPos pos = pindex->GetUndoPos();
-    // blockdb mode does not use the file pos system
-    if (pos.IsNull() && BLOCK_DB_MODE == SEQUENTIAL_BLOCK_FILES)
+    if (pos.IsNull())
     {
         error("DisconnectBlock(): no undo data available");
         return DISCONNECT_FAILED;

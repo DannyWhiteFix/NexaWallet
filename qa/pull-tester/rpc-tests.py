@@ -213,7 +213,6 @@ testScripts = [ RpcTest(t) for t in [
     'mining_ctor',
     'mining_adaptive_blocksize',
     Disabled('nov152018_forkactivation','Nov 2018 already activated'),
-    'blockstorage',
     'miningtest',
     'libnexatest',
     'tweak',
