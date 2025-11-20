@@ -1,7 +1,7 @@
 #!/bin/bash
 # script modified from: https://gist.github.com/enh/b2dc8e2cbbce7fffffde2135271b10fd
 
-version=1.87.0
+version=1.88.0
 echo "Retrieving boost $version..."
 
 set -eu
@@ -18,7 +18,7 @@ fi
 if [[ "$(uname -s)" == "Darwin" ]]; then
     echo "skipping checksum check on macos"
 else
-    echo "af57be25cb4c4f4b413ed692fe378affb4352ea50fbe294a11ef548f4d527d89  boost_1_87_0.tar.bz2" | sha256sum --check || { echo "sha256sum of boost failed"; exit 1; }
+    echo "46d9d2c06637b219270877c9e16155cbd015b6dc84349af064c088e9b5b12f7b  boost_1_88_0.tar.bz2" | sha256sum --check || { echo "sha256sum of boost failed"; exit 1; }
 fi
 
 

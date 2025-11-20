@@ -15,6 +15,7 @@ CHECKSIG
 Since the pubkeyhash changes for each address, a slightly different script is created for each address.  A script template factors this data out of the script, expecting it as arguments (i.e. on the stack) before the script is executed.  This means that every pay-to-pubkey-hash script is the exact same bytes.
 
 This confers several advantages:
+
 * easy script identification
 * parameter extraction is unnecessary
 * The hash of the script template does not change when parameters change
@@ -25,6 +26,7 @@ Note that the arguments may themselves be scripts, executed via the EXEC opcode.
 ## 3 Participant Interaction
 
 A smart contract or covenant system contains 3 agents (an "agent" is defined by lack of trust) whereas traditional bitcoin contains two.  The 3 agents are:
+
 * The contract/covenant author (often the group creator)
 * The current holder
 * The spender

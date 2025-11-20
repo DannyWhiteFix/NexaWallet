@@ -417,6 +417,31 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_signO
     return makeJByteArray(env, result, resultLen);
 }
 
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_calcSigHash(JNIEnv *env,
+    jobject ths,
+    jbyteArray txData,
+    jbyteArray hashType,
+    jlong inputIdx,
+    jlong inputAmount,
+    jbyteArray prevoutScript)
+{
+    ByteArrayAccessor tx(env, txData);
+    ByteArrayAccessor prevout(env, prevoutScript);
+    ByteArrayAccessor sigHashType(env, hashType);
+
+    unsigned char result[32];
+    uint32_t resultLen = calcSigHash(tx.data, tx.size, inputIdx, inputAmount, prevout.data, prevout.size,
+        sigHashType.data, sigHashType.size, result, 32);
+
+    if (resultLen == 0)
+    {
+        triggerJavaIllegalStateException(env, "sighash calculation operation failed");
+        return nullptr;
+    }
+    return makeJByteArray(env, result, resultLen);
+}
+
+
 extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_signHashSchnorr(JNIEnv *env,
     jobject ths,
     jbyteArray message,

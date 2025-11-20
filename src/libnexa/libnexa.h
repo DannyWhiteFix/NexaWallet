@@ -153,6 +153,22 @@ SLAPI int signTxOneInputUsingSchnorr(const unsigned char *txData,
     unsigned char *result,
     unsigned int resultLen);
 
+/** Calculate the sighash for one input of a transaction
+    All buffer arguments should in binary-serialized data.
+    The transaction (txData) must contain the COutPoint (tx hash and vout) of all relevant inputs,
+    however, it is not necessary to provide the spend script.
+*/
+SLAPI int calcSigHash(const unsigned char *txData,
+    int txbuflen,
+    unsigned int inputIdx,
+    int64_t inputAmount,
+    const unsigned char *prevoutScript,
+    uint32_t priorScriptLen,
+    const unsigned char *hashType,
+    unsigned int hashTypeLen,
+    unsigned char *result,
+    unsigned int resultLen);
+
 /* DEPRECATED: same as SignTxOneInputUsingSchnorr */
 SLAPI int SignTxSchnorr(const unsigned char *txData,
     int txbuflen,
