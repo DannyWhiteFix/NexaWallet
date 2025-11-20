@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version=3480000
+version=3500400
 echo "Retrieving SQlite $version..."
 
 set -eu
@@ -17,7 +17,8 @@ fi
 if [[ "$(uname -s)" == "Darwin" ]]; then
     echo "skipping checksum check on macos"
 else
-    echo "d9a15a42db7c78f88fe3d3c5945acce2f4bfe9e4da9f685cd19f6ea1d40aa884 sqlite-amalgamation-3480000.zip" | sha256sum --check || { echo "sha256sum of sqlite3 failed"; exit 1; }
+  # openssl dgst -sha3-256 sqlite-amalgamation-3500400.zip
+    echo "1d3049dd0f830a025a53105fc79fd2ab9431aea99e137809d064d8ee8356b032 sqlite-amalgamation-3500400.zip" | sha256sum --check || { echo "sha256sum of sqlite3 failed"; exit 1; }
 fi
 
 echo "Extracting..."

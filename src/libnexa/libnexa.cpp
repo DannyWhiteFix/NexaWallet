@@ -382,6 +382,70 @@ SLAPI int signBchTxOneInputUsingSchnorr(const unsigned char *txData,
     return (int)sigSize;
 }
 
+
+/** Calculate the sighash for one input of a transaction
+    All buffer arguments should be in binary-serialized data.
+    The transaction (txData) must contain the COutPoint (tx hash and vout) of all relevant inputs,
+    Of course, it is not necessary to provide the spend script within the transaction.
+*/
+
+SLAPI int calcSigHash(const unsigned char *txData,
+    int txbuflen,
+    unsigned int inputIdx,
+    int64_t inputAmount,
+    const unsigned char *prevoutScript,
+    uint32_t priorScriptLen,
+    const unsigned char *hashType,
+    unsigned int hashTypeLen,
+    unsigned char *result,
+    unsigned int resultLen)
+{
+    checkSigInit();
+    CTransaction tx;
+    result[0] = 0;
+
+    std::vector<uint8_t> sigHashVec(hashType, hashType + hashTypeLen);
+    SigHashType sigHashType;
+    sigHashType.fromBytes(sigHashVec);
+    // p("SigHashType vec size: %d, %d, %s(%s): invalid: %d\n", sigHashVec.size(), hashTypeLen,
+    //    sigHashType.ToString().c_str(), sigHashType.HexStr().c_str(), sigHashType.isInvalid());
+
+    CDataStream ssData((char *)txData, (char *)txData + txbuflen, SER_NETWORK, PROTOCOL_VERSION);
+    try
+    {
+        ssData >> tx;
+    }
+    catch (const std::exception &)
+    {
+        set_error(LIBNEXA_ERROR::DECODE_FAILURE, "tx data provided failed to decode\n");
+        return 0;
+    }
+
+    if (inputIdx >= tx.vin.size())
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "input index larger than tx vin size\n");
+        return 0;
+    }
+
+    CScript priorScript(prevoutScript, prevoutScript + priorScriptLen);
+
+    size_t nHashedOut = 0;
+    uint256 sighash;
+    if (!SignatureHashNexa(priorScript, tx, inputIdx, sigHashType, sighash, &nHashedOut))
+    {
+        return 0;
+    }
+    if (sighash.size() > resultLen)
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
+        return 0;
+    }
+    std::copy(sighash.begin(), sighash.end(), result);
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
+    return (int)sighash.size();
+}
+
+
 /** Sign one input of a transaction
     All buffer arguments should be in binary-serialized data.
     The transaction (txData) must contain the COutPoint (tx hash and vout) of all relevant inputs,
