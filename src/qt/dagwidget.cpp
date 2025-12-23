@@ -48,8 +48,6 @@ void BlockDescDialog::hideEvent(QHideEvent *event)
 
 DagWidget::DagWidget(QWidget *parent) : QWidget(parent)
 {
-    assert(nStormBlockNum == 0);
-
     // Which simulation to run (1, 2, 3, 4 or 5).
     // Simulation 3 and 4 use the data from the setup of simulation 2.
     // If Zero is chosen then the simulation won't run and we'll pick up the actual blocks being mined instead.
@@ -208,16 +206,20 @@ void DagWidget::mousePressEvent(QMouseEvent *event)
                                 }
                                 else
                                 {
-                                    infoString.append(
-                                        "<b> " + tr("Previous Subblock: ") + "</b>  " +
-                                        QString::fromStdString(info->vBlockPointsTo[0].prevBlock.ToString()) + "<br>");
+                                    for (auto &link : info->vBlockPointsTo)
+                                    {
+                                        infoString.append("<b> " + tr("Previous Subblock: ") + "</b>  " +
+                                                          QString::fromStdString(link.prevBlock.ToString()) + "<br>");
+                                    }
                                 }
                             }
                             else if (info->blockType == SUMMARY)
                             {
-                                infoString.append("<b> " + tr("Previous Subblock: ") + "</b>  " +
-                                                  QString::fromStdString(info->vBlockPointsTo[0].prevBlock.ToString()) +
-                                                  "<br>");
+                                for (auto &link : info->vBlockPointsTo)
+                                {
+                                    infoString.append("<b> " + tr("Previous Subblock: ") + "</b>  " +
+                                                      QString::fromStdString(link.prevBlock.ToString()) + "<br>");
+                                }
                             }
                             else
                             {
@@ -239,7 +241,7 @@ void DagWidget::mousePressEvent(QMouseEvent *event)
                             }
 
                             // Dag Height
-                            if (info->blockType != LEGACY_BLOCK)
+                            if (info->blockType == STORM_BLOCK)
                             {
                                 infoString.append("<b> " + tr("Dag Height: ") + "</b>  " +
                                                   QString::number(info->nDagHeight) + "<br>");
@@ -605,6 +607,12 @@ void DagWidget::AddItem(uint256 hash,
                     continue;
 
                 // get the max y for blocks we're pointing to.
+                if (mapInfo.count(link.prevBlock) == 0)
+                {
+                    LOG(DAG, "Dagwidget: Did not find prevous link on the screen %s", link.prevBlock.ToString());
+                    continue;
+                }
+
                 qreal prev_y = mapInfo[link.prevBlock]->y;
                 if (prev_y > max_prev_y)
                     max_prev_y = prev_y;
@@ -675,6 +683,13 @@ void DagWidget::AddItem(uint256 hash,
             // Add the connecting lines
             for (Link link : info->vBlockPointsTo)
             {
+                // get the max y for blocks we're pointing to.
+                if (mapInfo.count(link.prevBlock) == 0)
+                {
+                    LOG(DAG, "Dagwidget: Did not find prevous link on the screen %s", link.prevBlock.ToString());
+                    continue;
+                }
+
                 // Add the lines from the center of one block to the center of the preceding block or blocks.
                 QPen pen;
                 if (link.fHardLink)
@@ -776,6 +791,13 @@ void DagWidget::AddItem(uint256 hash,
             // Add the connecting lines
             for (Link link : info->vBlockPointsTo)
             {
+                // get the max y for blocks we're pointing to.
+                if (mapInfo.count(link.prevBlock) == 0)
+                {
+                    LOG(DAG, "Dagwidget: Did not find prevous link on the screen %s", link.prevBlock.ToString());
+                    continue;
+                }
+
                 // Add the lines from the center of one block to the center of the preceding block or blocks.
                 QPen pen;
                 if (link.fHardLink)
@@ -878,6 +900,13 @@ void DagWidget::AddItem(uint256 hash,
             // Add the connecting lines
             for (Link link : info->vBlockPointsTo)
             {
+                // get the max y for blocks we're pointing to.
+                if (mapInfo.count(link.prevBlock) == 0)
+                {
+                    LOG(DAG, "Dagwidget: Did not find prevous link on the screen %s", link.prevBlock.ToString());
+                    continue;
+                }
+
                 // Add the lines from the center of one block to the center of the preceding block or blocks.
                 QPen pen;
                 if (link.fHardLink)
@@ -1012,17 +1041,6 @@ void DagWidget::ProcessOrphans()
     auto mi = mapDeferredInfo.begin();
     while (mi != mapDeferredInfo.end())
     {
-        uint256 prevhash;
-        if (!mi->second->vBlockPointsTo.empty())
-        {
-            // For now there will only ever be one entry so just take the first one
-            prevhash = mi->second->vBlockPointsTo[0].prevBlock;
-        }
-        else
-        {
-            DbgAssert(!mi->second->vBlockPointsTo.empty(), );
-        }
-
         uint256 hash = mi->first;
         uint256 mininghash = mi->second->mininghash;
         auto blockType = mi->second->blockType;
@@ -1031,8 +1049,12 @@ void DagWidget::ProcessOrphans()
         auto nTransactions = mi->second->nTransactions;
         auto nBlockSize = mi->second->nBlockSize;
         auto nSequenceId = mi->second->nSequenceId;
+        auto vBlockPointsTo = mi->second->vBlockPointsTo;
         bool fHeader = false;
         CBlockHeader header = mi->second->header;
+
+        DbgAssert(!vBlockPointsTo.empty(), );
+        const uint256 &prevhash = header.hashPrevBlock;
 
         uint256 prevDagHash;
         if ((blockType == SUMMARY))
@@ -1048,8 +1070,8 @@ void DagWidget::ProcessOrphans()
                 if (mapInfo.count(prevDagHash))
                 {
                     // add summary block
-                    LOG(DAG, "Dagwidget: Adding summary block %s from orphans pointing back to %s",
-                        hash.ToString().c_str(), prevDagHash.ToString().c_str());
+                    LOG(DAG, "Dagwidget: Adding summary block %s from orphans pointing back to %s", hash.ToString(),
+                        prevDagHash.ToString());
                     std::vector<DagWidget::Link> link = {{prevDagHash, true}}; // just use a placeholder for now.
                     AddItem(hash, mininghash, prevDagHash, nDagHeight, nSequenceId, nBlockHeight, nTransactions,
                         nBlockSize, link, false /* ds */, 0 /* nfork */, blockType, fHeader, header);
@@ -1064,28 +1086,39 @@ void DagWidget::ProcessOrphans()
                 LOG(DAG,
                     "Dagwidget: Subblocks not in dag yet. Keelping summary block in mapdeffered: %s pointing back to "
                     "%s",
-                    hash.ToString().c_str(), prevhash.ToString().c_str());
+                    hash.ToString(), prevhash.ToString());
                 mi++;
             }
         }
-        else if (blockType == STORM_BLOCK && mapInfo.count(prevhash))
+        else if (blockType == STORM_BLOCK)
         {
-            prevDagHash = prevhash;
-            LOG(DAG, "Dagwidget: Adding subblock %s from orphans pointing back to %s", hash.ToString().c_str(),
-                prevDagHash.ToString().c_str());
-            std::vector<DagWidget::Link> link = {{prevDagHash, true}}; // just use a placeholder for now.
-            AddItem(hash, mininghash, prevDagHash, nDagHeight, nSequenceId, nBlockHeight, nTransactions, nBlockSize,
-                link, false /* ds */, 0 /* nfork */, blockType, fHeader, header);
+            bool fHaveAll = true;
+            for (auto link : vBlockPointsTo)
+            {
+                if (!mapInfo.count(link.prevBlock))
+                {
+                    fHaveAll = false;
+                    break;
+                }
+            }
 
-            mapDeferredInfo.erase(mi);
-            mi = mapDeferredInfo.begin();
-        }
-        else
-        {
-            LOG(DAG, "Dagwidget: Still in mapdeffered: %s pointing back to %s", hash.ToString().c_str(),
-                prevhash.ToString().c_str());
+            if (fHaveAll)
+            {
+                LOG(DAG, "Dagwidget: Adding subblock %s from orphans pointing back to %s", hash.ToString(),
+                    vBlockPointsTo[0].prevBlock.ToString());
+                AddItem(hash, mininghash, prevhash, nDagHeight, nSequenceId, nBlockHeight, nTransactions, nBlockSize,
+                    vBlockPointsTo, false /* ds */, 0 /* nfork */, blockType, fHeader, header);
 
-            mi++;
+                mapDeferredInfo.erase(mi);
+                mi = mapDeferredInfo.begin();
+            }
+            else
+            {
+                LOG(DAG, "Dagwidget: Still in mapdefered: %s pointing back to %s", hash.ToString(),
+                    prevhash.ToString());
+
+                mi++;
+            }
         }
     }
     LOG(DAG, "Dagwidget: mapdeferred size after process orphans %ld\n", mapDeferredInfo.size());
@@ -1170,7 +1203,7 @@ int32_t DagWidget::GetNextDagViewerHeight(uint256 &prevDagHash, const CBlockHead
         return 1;
 
     // Check in we have all the previous items on screen already. In the case
-    // of a Subblock we just need the previous block, in the case of a Summary
+    // of a Subblock we just need the previous blocks, in the case of a Summary
     // block we need to check all the mining hashes in the minerData to see
     // if all of them are on screen and if so then use the one with the biggest
     // dagviewer height as your previous block.
@@ -1180,7 +1213,7 @@ int32_t DagWidget::GetNextDagViewerHeight(uint256 &prevDagHash, const CBlockHead
     if (GetMinerDataVersion(header.minerData) == DEFAULT_MINER_DATA_SUMMARYBLOCK_VERSION)
     {
         uint32_t nPrevDagViewerHeight = 0;
-        auto subblockProofs = ParseMinerData(header.minerData);
+        auto subblockProofs = ParseSummaryBlockMinerData(header.minerData);
         for (const auto &pair : subblockProofs)
         {
             const auto &miningHeaderCommitment = pair.first;
@@ -1204,31 +1237,51 @@ int32_t DagWidget::GetNextDagViewerHeight(uint256 &prevDagHash, const CBlockHead
 
         if (fHavePrevInfo || (fHaveOneItem && nPrevDagViewerHeight < Params().GetConsensus().tailstorm_k))
         {
-            LOG(DAG, "Dagwidget: got next viewer height %ld for summary.\n", nPrevDagViewerHeight + 1);
+            LOG(DAG, "Dagwidget: got next viewer height %ld for summary.", nPrevDagViewerHeight + 1);
             return nMaxDagHeight + 1;
         }
         else
         {
-            LOG(DAG, "Dagwidget: prevhash %s not found for SUMMARY !!! - defer in dagviewer\n\n",
-                header.GetHash().ToString().c_str());
+            LOG(DAG, "Dagwidget: prevhash %s not found for SUMMARY !!! - defer in dagviewer",
+                header.GetHash().ToString());
             return -1;
         }
     }
     else
     {
+        // If this is a subblock then also make sure all the prevhashes in minerData are
+        // accounted for in the viewer
+        if (GetMinerDataVersion(header.minerData) == DEFAULT_MINER_DATA_SUBBLOCK_VERSION)
+        {
+            uint32_t nMaxDagViewerHeight = 0;
+            auto setPrevHashes = GetPrevHashes(header);
+            for (auto &prevhash : setPrevHashes)
+            {
+                if (!mapInfo.count(prevhash) && mapInfo.size() > Params().GetConsensus().tailstorm_k)
+                {
+                    LOG(DAG, "Dagwidget: prevhash %s not found for subblock !!! - defer in dagviewer",
+                        prevhash.ToString());
+                    return -1;
+                }
+                if (mapInfo[prevhash]->nDagViewerHeight > nMaxDagViewerHeight)
+                {
+                    prevDagHash = prevhash;
+                    nMaxDagViewerHeight = mapInfo[prevhash]->nDagViewerHeight;
+                }
+            }
+            LOG(DAG, "Dagwidget: got next dagviewer subblock height %ld from prevhashes", nMaxDagViewerHeight + 1);
+            return nMaxDagViewerHeight + 1;
+        }
+
+        // Check the prevhash exists for both Legacy blocks.
         if (mapInfo.count(prevDagHash))
         {
-            LOG(DAG, "Dagwidget: got next dagviewer subblock height from prevhash %s : %ld\n",
-                prevDagHash.ToString().c_str(), mapInfo[prevDagHash]->nDagViewerHeight + 1);
+            LOG(DAG, "Dagwidget: got next dagviewer subblock height from prevhash %s : %ld", prevDagHash.ToString(),
+                mapInfo[prevDagHash]->nDagViewerHeight + 1);
             return mapInfo[prevDagHash]->nDagViewerHeight + 1;
         }
-        else
-        {
-            LOG(DAG, "Dagwidget: prevhash %s not found for subblock !!! - defer in dagviewer\n\n",
-                prevDagHash.ToString().c_str());
 
-            return -1;
-        }
+        return -1;
     }
 }
 
@@ -1249,6 +1302,15 @@ static void BlockTipChanged(DagWidget *dagwidget,
     uint32_t nBlockHeight = header.height;
     uint256 mininghash = header.GetMiningHash();
 
+    // Create the links object
+    auto setPrevHashes = GetPrevHashes(header);
+    std::vector<DagWidget::Link> vLinks;
+    for (auto &_hash : setPrevHashes)
+    {
+        DagWidget::Link link = {_hash, true};
+        vLinks.push_back(link);
+    }
+
     // Add the item to the viewer
     bool fHeader = false;
     uint256 prevDagHash = prevhash;
@@ -1257,26 +1319,35 @@ static void BlockTipChanged(DagWidget *dagwidget,
     {
         blockType = fSubblock ? DagWidget::STORM_BLOCK : DagWidget::SUMMARY;
         auto nNextDagViewerHeight = dagwidget->GetNextDagViewerHeight(prevDagHash, header);
+        if (!fSubblock)
+        {
+            // Special case for summary blocks. The vLinks will point back to the best dag tip
+            // rather than the summary block's prevhash.
+            vLinks = {{prevDagHash, true}};
+        }
+
         if (nNextDagViewerHeight == -1)
         {
             // defer summary block
             if (!fSubblock)
-                LOG(DAG, "Dagwidget: Deferring summary block in dagwidget %s which points to %s",
-                    hash.ToString().c_str(), prevDagHash.ToString().c_str());
+            {
+                LOG(DAG, "Dagwidget: Deferring summary block in dagwidget %s which points to %s", hash.ToString(),
+                    prevDagHash.ToString());
+            }
             else
-                LOG(DAG, "Dagwidget: Deferring subblock in dagwidget %s", hash.ToString().c_str());
+            {
+                LOG(DAG, "Dagwidget: Deferring subblock in dagwidget %s", hash.ToString());
+            }
 
-            std::vector<DagWidget::Link> link = {{prevDagHash, true}};
             dagwidget->DeferItem(hash, mininghash, prevDagHash, nDagHeight, nSequenceId, nBlockHeight, nTransactions,
-                nBlockSize, link, false /* ds */, 0 /* nfork */, blockType, fHeader, header);
+                nBlockSize, vLinks, false /* ds */, 0 /* nfork */, blockType, fHeader, header);
 
             return;
         }
     }
 
-    std::vector<DagWidget::Link> link = {{prevDagHash, true}};
     dagwidget->AddItem(hash, mininghash, prevDagHash, nDagHeight, nSequenceId, nBlockHeight, nTransactions, nBlockSize,
-        link, false /* ds */, 0 /* nfork */, blockType, fHeader, header);
+        vLinks, false /* ds */, 0 /* nfork */, blockType, fHeader, header);
 
     dagwidget->ProcessOrphans();
 }
@@ -1298,34 +1369,55 @@ static void BlockHeaderChanged(DagWidget *dagwidget,
     uint32_t nBlockHeight = header.height;
     uint256 mininghash = header.GetMiningHash();
 
+    // Create the links object
+    auto setPrevHashes = GetPrevHashes(header);
+    std::vector<DagWidget::Link> vLinks;
+    for (auto &_hash : setPrevHashes)
+    {
+        DagWidget::Link link = {_hash, true};
+        vLinks.push_back(link);
+    }
+
     // Add the item to the viewer
     bool fHeader = true;
     uint256 prevDagHash = prevhash;
     auto blockType = DagWidget::LEGACY_BLOCK;
     if (GetMinerDataVersion(header.minerData) != 0)
     {
-        blockType = fSubblock ? DagWidget::STORM_BLOCK : DagWidget::SUMMARY;
         auto nNextDagViewerHeight = dagwidget->GetNextDagViewerHeight(prevDagHash, header);
+        if (!fSubblock)
+        {
+            // Special case for summary blocks. The vLinks will point back to the best dag tip
+            // rather than the summary block's prevhash.
+            vLinks = {{prevDagHash, true}};
+        }
+
+        blockType = fSubblock ? DagWidget::STORM_BLOCK : DagWidget::SUMMARY;
         if (nNextDagViewerHeight == -1)
         {
             // defer summary block
             if (!fSubblock)
-                LOG(DAG, "Dagwidget: Deferring summary block in dagwidget %s which points to %s",
-                    hash.ToString().c_str(), prevDagHash.ToString().c_str());
+            {
+                // Special case for summary blocks. The vLinks will point back to the best dag tip
+                // rather than the summary block's prevhash.
+                vLinks = {{prevDagHash, true}};
+                LOG(DAG, "Dagwidget: Deferring summary block in dagwidget %s which points to %s", hash.ToString(),
+                    prevDagHash.ToString());
+            }
             else
-                LOG(DAG, "Dagwidget: Deferring subblock in dagwidget %s", hash.ToString().c_str());
+            {
+                LOG(DAG, "Dagwidget: Deferring subblock in dagwidget %s", hash.ToString());
+            }
 
-            std::vector<DagWidget::Link> link = {{prevDagHash, true}};
             dagwidget->DeferItem(hash, mininghash, prevDagHash, nDagHeight, nSequenceId, nBlockHeight, nTransactions,
-                nBlockSize, link, false /* ds */, 0 /* nfork */, blockType, fHeader, header);
+                nBlockSize, vLinks, false /* ds */, 0 /* nfork */, blockType, fHeader, header);
 
             return;
         }
     }
 
-    std::vector<DagWidget::Link> link = {{prevDagHash, true}};
     dagwidget->AddItem(hash, mininghash, prevDagHash, nDagHeight, nSequenceId, nBlockHeight, nTransactions, nBlockSize,
-        link, false /* ds */, 0 /* nfork */, blockType, fHeader, header);
+        vLinks, false /* ds */, 0 /* nfork */, blockType, fHeader, header);
 
     dagwidget->ProcessOrphans();
 }
@@ -1468,11 +1560,11 @@ void DagWidget::SetupSimulation1()
     mapSimulation1[7][blockhash7b] = h;
 
     uint256 blockhash7c = GetRandHash();
-    std::vector<Link> i = {{blockhash6c, true}};
+    std::vector<Link> i = {{blockhash6c, true}, {blockhash6d, true}, {blockhash6e, true}};
     mapSimulation1[7][blockhash7c] = i;
 
     uint256 blockhash8 = GetRandHash();
-    std::vector<Link> j = {{blockhash7a, true}, {blockhash7b, false}, {blockhash7c, false}};
+    std::vector<Link> j = {{blockhash7a, true}, {blockhash7b, true}, {blockhash7c, true}};
     mapSimulation1[8][blockhash8] = j;
 
     uint256 blockhash9a = GetRandHash();
@@ -1482,7 +1574,7 @@ void DagWidget::SetupSimulation1()
     mapSimulation1[9][blockhash9b] = k;
 
     uint256 blockhash10 = GetRandHash();
-    std::vector<Link> l = {{blockhash9a, true}};
+    std::vector<Link> l = {{blockhash9a, true}, {blockhash9b, true}};
     mapSimulation1[10][blockhash10] = l;
 
     uint256 blockhash11 = GetRandHash();
@@ -1498,7 +1590,7 @@ void DagWidget::SetupSimulation1()
     mapSimulation1[12][blockhash12c] = n;
 
     uint256 blockhash13 = GetRandHash();
-    std::vector<Link> o = {{blockhash12c, true}, {blockhash12b, false}};
+    std::vector<Link> o = {{blockhash12c, true}, {blockhash12b, true}, {blockhash12a, true}};
     mapSimulation1[13][blockhash13] = o;
 
     uint256 blockhash14 = GetRandHash();
@@ -1555,7 +1647,7 @@ void DagWidget::SetupSimulation2()
     mapSimulation2[6][blockhash6b] = f;
     mapSimulation2[6][blockhash6c] = f;
 
-    std::vector<Link> g = {{blockhash6b, true}};
+    std::vector<Link> g = {{blockhash6a, true}};
     uint256 blockhash7a = GetRandHash();
     mapSimulation2[7][blockhash7a] = g;
 
@@ -1575,7 +1667,7 @@ void DagWidget::SetupSimulation2()
     mapSimulation2[10][blockhash10] = l;
 
     uint256 blockhash11 = GetRandHash();
-    std::vector<Link> m = {{blockhash9b, false}, {blockhash10, true}};
+    std::vector<Link> m = {{blockhash9b, true}, {blockhash10, true}};
     mapSimulation2[11][blockhash11] = m;
 
     uint256 blockhash12a = GetRandHash();
@@ -1587,7 +1679,7 @@ void DagWidget::SetupSimulation2()
     mapSimulation2[12][blockhash12c] = n;
 
     uint256 blockhash13 = GetRandHash();
-    std::vector<Link> o = {{blockhash12c, true}, {blockhash12b, false}};
+    std::vector<Link> o = {{blockhash12c, true}, {blockhash12b, true}, {blockhash12a, true}};
     mapSimulation2[13][blockhash13] = o;
 
     uint256 blockhash14 = GetRandHash();
@@ -1597,7 +1689,7 @@ void DagWidget::SetupSimulation2()
     mapSimulation2[14][blockhash14a] = p;
 
     uint256 blockhash15 = GetRandHash();
-    std::vector<Link> q = {{blockhash14, true}};
+    std::vector<Link> q = {{blockhash14, true}, {blockhash14a, true}};
     mapSimulation2[15][blockhash15] = q;
 }
 

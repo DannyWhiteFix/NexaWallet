@@ -159,13 +159,8 @@ bool ContextualCheckBlockHeader(const CChainParams &chainparams,
 {
     const Consensus::Params &consensusParams = chainparams.GetConsensus();
 
-    uint32_t nPrevHeight = 0;
     bool fSummaryBlock = IsSummaryBlock(block);
-    if (!fSummaryBlock)
-        nPrevHeight = chainActive.Tip()->height();
-    else
-        nPrevHeight = pindexPrev->height();
-    const uint32_t nHeight = pindexPrev == nullptr && IsSummaryBlock(block) ? 0 : nPrevHeight + 1;
+    const uint32_t nHeight = pindexPrev == nullptr ? 0 : pindexPrev->height() + 1;
 
     if (fSummaryBlock && block.height != nHeight)
     {
@@ -209,10 +204,6 @@ bool ContextualCheckBlockHeader(const CChainParams &chainparams,
     {
         return state.DoS(100, error("%s: bad miner data version", __func__), REJECT_INVALID, "bad-miner-data-version");
     }
-    if (!fSummaryBlock && (block.NumSubblocks() > 0))
-    {
-        return state.DoS(100, error("%s: subblock has miner data in it", __func__), REJECT_INVALID, "bad-subblock");
-    }
     if (!IsFork2Pending(pindexPrev) && !IsFork2Activated(pindexPrev) && (block.NumSubblocks() > 0))
     {
         return state.DoS(100, error("%s: premature miner data use", __func__), REJECT_INVALID, "bad-miner-data");
@@ -232,7 +223,6 @@ bool ContextualCheckBlockHeader(const CChainParams &chainparams,
 
     // Ensure for both Summary and Subblocks, that the blocksize is within limits according to the adaptive
     // block size algorithm.
-    CBlockIndex *pindexLastSummary = nullptr;
     if (fSummaryBlock && pindexPrev && block.size > pindexPrev->GetNextMaxBlockSize())
     {
         return state.DoS(100,
@@ -240,36 +230,9 @@ bool ContextualCheckBlockHeader(const CChainParams &chainparams,
                 __func__, block.size, pindexPrev->GetNextMaxBlockSize(), block.GetHash().ToString()),
             REJECT_INVALID, "bad-blk-size");
     }
-    else if (!fSummaryBlock)
+    else if (!fSummaryBlock && pindexPrev)
     {
-        // Need to find pindexPrev from the dag, then lookup the summary
-        // block we're building the dag on top of, then get the next max
-        // block size from it's pindex next max value.
-        uint256 hashLastSummary;
-        std::set<CTreeNodeRef> setBestDag;
-        tailstormForest.GetBestDagFor(block.hashPrevBlock, setBestDag);
-        if (!setBestDag.empty())
-        {
-            for (auto treenode : setBestDag)
-            {
-                if (treenode->IsBase())
-                {
-                    hashLastSummary = treenode->subblock->hashPrevBlock;
-                    break;
-                }
-            }
-            pindexLastSummary = LookupBlockIndex(hashLastSummary);
-        }
-        else
-        {
-            pindexLastSummary = LookupBlockIndex(block.hashPrevBlock);
-        }
-
-        if (!pindexLastSummary)
-            pindexLastSummary = chainActive.Tip();
-        assert(pindexLastSummary);
-
-        uint64_t nNextMaxSubblockSize = pindexLastSummary->GetNextMaxBlockSize() / Params().GetConsensus().tailstorm_k;
+        uint64_t nNextMaxSubblockSize = pindexPrev->GetNextMaxBlockSize() / Params().GetConsensus().tailstorm_k;
         if (block.size > nNextMaxSubblockSize)
         {
             return state.DoS(100,
@@ -352,14 +315,11 @@ bool ContextualCheckBlockHeader(const CChainParams &chainparams,
     }
 
     // Check timestamp against prev
-    if (fSummaryBlock)
+    if (pindexPrev && (block.GetBlockTime() <= pindexPrev->GetMedianTimePast()))
     {
-        if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
+        if (fSummaryBlock)
             return state.Invalid(error("%s: block's timestamp is too early", __func__), REJECT_INVALID, "time-too-old");
-    }
-    else
-    {
-        if (pindexLastSummary && (block.GetBlockTime() <= pindexLastSummary->GetMedianTimePast()))
+        else
             return state.Invalid(
                 error("%s: subblock's timestamp is too early", __func__), REJECT_INVALID, "time-too-old");
     }
@@ -2621,7 +2581,7 @@ static bool ConnectBlockPrevalidations(ConstCBlockRef pblock,
     // verify that we have all the subblocks for this tailstorm summary block
     if (IsInitialSyncComplete() && IsTailstormSummaryBlock(pblock))
     {
-        auto subblockProofs = ParseMinerData(pblock->minerData);
+        auto subblockProofs = ParseSummaryBlockMinerData(pblock->minerData);
         if (subblockProofs.size() != chainparams.GetConsensus().tailstorm_k - 1)
         {
             return state.DoS(

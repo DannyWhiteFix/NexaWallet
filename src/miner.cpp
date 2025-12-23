@@ -307,12 +307,15 @@ CTransactionRef BlockAssembler::coinbaseTx(const CScript &scriptPubKeyIn,
     uint32_t dataIdx = 1;
     if (!setBestDag || setBestDag->empty())
     {
-        // Construct vout for the legacy block OR the tailstorm subblock
+        // printf("\nset best dag is empty\n\n");
+        //  Construct vout for the legacy block OR the tailstorm subblock
         tx.vout.resize(dataIdx + 1);
         tx.vout[0] = CTxOut(nValue, scriptPubKeyIn);
     }
     else
     {
+        // printf("\nset best dag is NOT empty\n\n");
+
         // Construct vout for the tailstorm Summary block. For now it's just temporary
         // and will be cleared out and reconstructed later when/if the vouts get grouped
         // by their pubkeys.
@@ -466,7 +469,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
     // If tailstorm is enabled then gather all the txid's that are in the best dag so
     // we can filter those out when we add new transactions to a new subblock or summary
     // block template.
-    uint256 dagActiveTip;
     std::set<uint256> setBestDagTxids;
     if (fTailstormEnabled)
     {
@@ -479,20 +481,15 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
             }
         }
 
-        // If we're building a subblock we have to potentially clear the dag in order to properly
-        // construct the coinbase and other data so get the dagActiveTip which is needed for the prevHash
-        // of a potential subblock
-        dagActiveTip = GetActiveDagTip(setBestDag);
-        if (setBestDag.size() < (size_t)conparams.tailstorm_k - 1)
-        {
-            setBestDag.clear();
-        }
-
         // Generate the minerData field.
         pblock->minerData = GenerateMinerData(conparams.tailstorm_k, setBestDag);
     }
 
     // Init the block counters and size the coinbase accordingly.
+    if (setBestDag.size() < (size_t)conparams.tailstorm_k - 1)
+    {
+        setBestDag.clear();
+    }
     resetBlock(scriptPubKeyIn, coinbaseSize, &setBestDag);
 
     // Largest block you're willing to create:
@@ -642,16 +639,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
 
 
         // Fill in header
-        if (IsSummaryBlock(pblock))
-        {
-            // For normal blocks or summary blocks
-            pblock->hashPrevBlock = pindexPrev->GetBlockHash();
-        }
-        else
-        {
-            // For subblocks the previous block will be the previous best dag tip.
-            pblock->hashPrevBlock = dagActiveTip;
-        }
+        pblock->hashPrevBlock = pindexPrev->GetBlockHash();
 
         if (fTailstormEnabled)
             pblock->nBits = GetNextWorkRequired(pindexPrev, pblock.get(), conparams);

@@ -45,7 +45,7 @@ uint256 GetMiningHash(const uint256 &headerCommitment, const std::vector<unsigne
 
 uint64_t CBlockHeader::NumSubblocks() const
 {
-    auto subblks = ParseMinerData(minerData);
+    auto subblks = ParseSummaryBlockMinerData(minerData);
     return subblks.size();
 }
 
@@ -148,7 +148,8 @@ arith_uint256 GetWorkForTarget(arith_uint256 bnTarget)
     return (~bnTarget / (bnTarget + 1)) + 1;
 }
 
-std::vector<std::pair<uint256, std::vector<uint8_t> > > ParseMinerData(const std::vector<unsigned char> &data)
+std::vector<std::pair<uint256, std::vector<uint8_t> > > ParseSummaryBlockMinerData(
+    const std::vector<unsigned char> &data)
 {
     if (data.empty())
         return {};
@@ -156,7 +157,63 @@ std::vector<std::pair<uint256, std::vector<uint8_t> > > ParseMinerData(const std
     std::vector<std::pair<uint256, std::vector<uint8_t> > > ret;
     uint8_t minerDataVersion = 0;
     CDataStream ds(data, SER_NETWORK, PROTOCOL_VERSION);
-    ds >> minerDataVersion >> ret;
+
+    // First get the miner data version and make sure we only continue to process a tailstorm
+    // summary block otherwise.
+    try
+    {
+        ds >> minerDataVersion;
+    }
+    catch (...)
+    {
+        return {};
+    }
+    if (minerDataVersion != DEFAULT_MINER_DATA_SUMMARYBLOCK_VERSION)
+        return {};
+
+    // Now get the summary block miner data
+    try
+    {
+        ds >> ret;
+    }
+    catch (...)
+    {
+        return {};
+    }
+    return ret;
+}
+
+std::vector<uint256> ParseSubblockMinerData(const std::vector<unsigned char> &data)
+{
+    if (data.empty())
+        return {};
+
+    std::vector<uint256> ret;
+    uint8_t minerDataVersion = 0;
+    CDataStream ds(data, SER_NETWORK, PROTOCOL_VERSION);
+
+    // First get the miner data version and make sure we only continue to process a tailstorm
+    // summary block otherwise.
+    try
+    {
+        ds >> minerDataVersion;
+    }
+    catch (...)
+    {
+        return {};
+    }
+    if (minerDataVersion != DEFAULT_MINER_DATA_SUBBLOCK_VERSION)
+        return {};
+
+    // Now get the subblock data
+    try
+    {
+        ds >> ret;
+    }
+    catch (...)
+    {
+        return {};
+    }
     return ret;
 }
 

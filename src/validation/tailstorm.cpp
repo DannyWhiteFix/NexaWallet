@@ -145,9 +145,13 @@ void AcceptSubblock(ConstCBlockRef pblock)
             PruneSubblocks(pblock);
 
             forceTemplateRecalc.store(true);
+            LOG(DAG, "Completed AcceptSubblock : %s", pblock->GetHash().ToString());
         }
         else
+        {
             LOG(DAG, "Insert subblock failed : %s\n", pblock->GetHash().ToString());
+            return;
+        }
     }
 
     // Announce accepted subblocks to other peers
@@ -175,30 +179,70 @@ void AcceptSubblock(ConstCBlockRef pblock)
         tailstormForest.CheckForReorg();
         tailstormForest.Check();
     }
-
-    LOG(DAG, "Completed AcceptSubblock : %s", pblock->GetHash().ToString());
 }
 
 std::vector<uint8_t> GenerateMinerData(uint32_t tailstorm_k, std::set<CTreeNodeRef> &setBestDag)
 {
-    std::vector<std::pair<uint256, std::vector<uint8_t> > > vMinerData;
-    uint8_t nMinerDataVersion = 0;
+    CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
+
+    // If the dag size is not large enough then assume this is for a subblock
     if (setBestDag.size() < (size_t)tailstorm_k - 1)
     {
-        nMinerDataVersion = DEFAULT_MINER_DATA_SUBBLOCK_VERSION;
+        uint8_t nMinerDataVersion = DEFAULT_MINER_DATA_SUBBLOCK_VERSION;
+
+        std::vector<uint256> vMinerData;
+        for (auto node : setBestDag)
+        {
+            // Pack in any additional prev dag tip hashes but not the active dag tip which
+            // will already be stored in header->hashPrevBlock.
+            if (node->IsTip())
+            {
+                vMinerData.push_back(node->hash);
+            }
+        }
+        ds.reserve(1 + vMinerData.size() * 32);
+        ds << nMinerDataVersion << vMinerData;
     }
-    else
+    else // generate the summary block miner data field
     {
-        nMinerDataVersion = DEFAULT_MINER_DATA_SUMMARYBLOCK_VERSION;
+        uint8_t nMinerDataVersion = DEFAULT_MINER_DATA_SUMMARYBLOCK_VERSION;
+
+        std::vector<std::pair<uint256, std::vector<uint8_t> > > vMinerData;
         for (CTreeNodeRef node : setBestDag)
         {
             vMinerData.push_back(std::pair(node->subblock->GetMiningHeaderCommitment(), node->subblock->nonce));
         }
+        ds.reserve(1 + vMinerData.size() * (32 + CBlockHeader::MAX_NONCE_SIZE));
+        ds << nMinerDataVersion << vMinerData;
     }
 
-    CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
-    ds.reserve(1 + vMinerData.size() * (32 + CBlockHeader::MAX_NONCE_SIZE));
-    ds << nMinerDataVersion << vMinerData;
-
     return std::vector<uint8_t>(ds.begin(), ds.end());
+}
+
+std::set<uint256> GetPrevHashes(const CBlockHeader &header)
+{
+    std::set<uint256> setPrevHashes;
+    if (GetMinerDataVersion(header.minerData) != DEFAULT_MINER_DATA_SUBBLOCK_VERSION)
+    {
+        // Add the prev hash from the header
+        setPrevHashes.insert(header.hashPrevBlock);
+    }
+    else
+    {
+        // Add the prev hashes from the miner data.  Only subblocks will
+        // return with anything. For summary blocks there is only one prev
+        // hash which is included above.
+        auto vHashes = ParseSubblockMinerData(header.minerData);
+        if (!vHashes.empty())
+        {
+            setPrevHashes.insert(vHashes.begin(), vHashes.end());
+        }
+        else
+        {
+            // Special case for the first subblock in a dag.  It will point back to the
+            // previous "Summary" block.
+            setPrevHashes.insert(header.hashPrevBlock);
+        }
+    }
+    return setPrevHashes;
 }

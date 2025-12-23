@@ -166,9 +166,6 @@ private:
     // Is the viewer activated and ready to show blocks.
     bool fStartBlockViewer GUARDED_BY(cs_info) = false;
 
-    // The sequential block number
-    uint32_t nStormBlockNum GUARDED_BY(cs_info) = 0;
-
     // Did we pause tracking new blocks
     bool fPause GUARDED_BY(cs_info) = false;
 
@@ -219,15 +216,6 @@ private:
 
     void SubscribeToCoreSignals();
     void UnsubscribeFromCoreSignals();
-
-    uint32_t GetNextStormBlockNum()
-    {
-        LOCK(cs_info);
-        nStormBlockNum++;
-        if (nStormBlockNum > Params().GetConsensus().tailstorm_k - 1)
-            nStormBlockNum = 1;
-        return nStormBlockNum;
-    }
 
     // Structures and functions for running simulations
     struct SimInfo

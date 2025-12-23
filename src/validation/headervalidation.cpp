@@ -14,7 +14,7 @@ static bool CheckTailstormSummaryBlockProofOfWork(const Consensus::Params &conse
     CValidationState &state)
 {
     // tailstorm grab the subblock POW proofs out of pblock->minerData and verify them
-    auto subblockProofs = ParseMinerData(block.minerData);
+    auto subblockProofs = ParseSummaryBlockMinerData(block.minerData);
     // A summary block must reference K-1 subblocks, -1 because it is *itself* a subblock.
     if (subblockProofs.size() != consensusParams.tailstorm_k - 1)
     {
@@ -30,9 +30,6 @@ static bool CheckTailstormSummaryBlockProofOfWork(const Consensus::Params &conse
     {
         const auto &miningHeaderCommitment = pair.first;
         const auto &nonce = pair.second;
-
-        // TODO: INSECURE the parent (summary) block hash needs to be part of this function, or an attacker can
-        // reuse old subblocks.
         uint256 powHash = GetMiningHash(miningHeaderCommitment, nonce);
 
         if (!CheckProofOfWork(powHash, block.nBits, consensusParams))

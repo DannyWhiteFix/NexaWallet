@@ -11,6 +11,7 @@
 #include "txmempool.h"
 #include "txorphanpool.h"
 #include "ui_interface.h"
+#include "validation/tailstorm.h"
 #include "validation/validation.h"
 
 extern bool IsInitialBlockDownload();
@@ -21,6 +22,8 @@ class CValidationState;
 
 CBlockIndex *LookupBlockIndex(const uint256 &hash);
 bool IsSummaryBlock(const CBlock &block);
+
+std::set<uint256> GetPrevHashes(const CBlockHeader &header);
 
 // Find the hash of the tip of the dag which has the best dag height
 static CTreeNodeRef FindDagTipNode(std::set<CTreeNodeRef> &dag)
@@ -371,8 +374,7 @@ bool CTailstormGrove::InitializeTree(CTreeNodeRef newNode, CCoinsViewCache *coin
     if (!newNode->subblock)
         return false;
 
-    const uint256 &prevSummaryHash = newNode->subblock->hashPrevBlock;
-    roothash = prevSummaryHash;
+    roothash = newNode->subblock->hashPrevBlock;
 
     // In case we attempted to initialize before and failed
     if (tree->view)
@@ -383,8 +385,8 @@ bool CTailstormGrove::InitializeTree(CTreeNodeRef newNode, CCoinsViewCache *coin
 
     tree->_pcoinsTip = coinsCache;
     tree->view = new CCoinsViewCache(coinsCache);
-    tree->view->SetBestBlock(prevSummaryHash);
-    tree->pindexSummaryRoot = LookupBlockIndex(prevSummaryHash);
+    tree->view->SetBestBlock(roothash);
+    tree->pindexSummaryRoot = LookupBlockIndex(roothash);
     assert(tree->pindexSummaryRoot);
 
     nRootHeight = tree->pindexSummaryRoot->height();
@@ -428,36 +430,38 @@ bool CTailstormGrove::InsertIntoTree(CTreeNodeRef newNode)
         }
     }
 
-    // Add the very first tree items.  These are subblocks with dagHeight 1.  The first time through
+    // Add the very first tree items. These are subblocks with dagHeight 1.  The first time through
     // we initialize the tree.  If there is a second subblock at dagHeight 1 then we just do a simple insert.
-    uint256 prevHash = newNode->subblock->hashPrevBlock;
-    if (tree->dag.empty() || (!prevHash.IsNull() && prevHash == roothash))
+    auto setHashes = GetPrevHashes(newNode->subblock->GetBlockHeader());
+    if (setHashes.size() == 1 && (*setHashes.begin()) == newNode->subblock->hashPrevBlock)
     {
-        newNode->dagHeight = 1;
-        LOG(DAG, "%s(): updated dagHeight to %ld for %s", __func__, newNode->dagHeight, newNode->hash.ToString());
-
         auto res = mapGroveNodes.emplace(newNode->hash, newNode);
         if (res.second)
         {
-            // The first subblock we receive the roothash will be null so we create
-            // the tree. However we may still receive a second subblocks with dag height of "1"
-            // (forming a tree with two roots) so on the second pass we just add the new subblock
-            // to the tree.
-            if (!prevHash.IsNull() && prevHash != roothash)
+            newNode->dagHeight = 1;
+            LOG(DAG, "%s(): Initialize Tree: updated dagHeight to %ld for %s", __func__, newNode->dagHeight,
+                newNode->hash.ToString());
+
+            if (tree->dag.empty())
             {
                 if (!InitializeTree(newNode, _pcoinsTip))
                 {
                     mapGroveNodes.erase(newNode->hash);
                     return false;
                 }
+                LOG(DAG, "%s(): Initialize Tree: completed init tree for %s", __func__, newNode->hash.ToString());
             }
             else
             {
                 if (!tree->Insert(newNode))
                 {
                     mapGroveNodes.erase(newNode->hash);
+                    tailstormForest.AddSubblockOrphan(newNode);
+                    LOG(DAG, "%s(): Initialize Tree: adding orphan to unused nodes", __func__);
                     return false;
                 }
+                LOG(DAG, "%s(): Initialize Tree: completed insert into tree for %s", __func__,
+                    newNode->hash.ToString());
             }
 
             // Notify the dagviewer
@@ -465,20 +469,11 @@ bool CTailstormGrove::InsertIntoTree(CTreeNodeRef newNode)
             const CBlockHeader header = pblock->GetBlockHeader();
             const uint256 &hashprev = header.hashPrevBlock;
             uint32_t nSequenceId = newNode->nSequenceId;
-            uiInterface.NotifyBlockTipDag(false, tailstormForest.GetDagHeight(hashprev) + 1, nSequenceId, header, true);
+            uiInterface.NotifyBlockTipDag(false, newNode->dagHeight, nSequenceId, header, true);
         }
     }
     else // Insert all other tree items
     {
-        // Check that the prevhash exists in grove nodes
-        std::map<uint256, CTreeNodeRef>::iterator prev_iter = mapGroveNodes.find(prevHash);
-        if (prev_iter == mapGroveNodes.end())
-        {
-            LOG(DAG, "%s(): ERROR, subblock %s previous subblock %s is missing from the grove", __func__,
-                newNode->hash.GetHex().c_str(), prevHash.GetHex());
-            return false;
-        }
-
         auto res = mapGroveNodes.emplace(newNode->hash, newNode);
         if (res.second)
         {
@@ -492,29 +487,40 @@ bool CTailstormGrove::InsertIntoTree(CTreeNodeRef newNode)
             // be careful of that as well.
             for (auto &_tree : setValidTrees)
             {
-                // check that we have the treenode of the prevHash
-                CTreeNodeRef prevNode = nullptr;
+                // check that we have the treenode of all prevHashes
+                std::set<CTreeNodeRef> setPrevNodes;
                 {
-                    // Then find it in our tree
-                    auto iter_tree = _tree->dag.find(prevHash);
-                    if (iter_tree == _tree->dag.end())
+                    bool fNotFound = false;
+                    auto setPrevHashes = GetPrevHashes(newNode->subblock->GetBlockHeader());
+                    for (auto prevhash : setPrevHashes)
                     {
-                        continue;
-                    }
-                    else
-                    {
-                        prevNode = iter_tree->second;
-                        LOG(DAG, "%s(): Found prevhash in dag %s for %s", __func__, prevHash.ToString(),
+                        // Then find it in our tree
+                        auto iter_tree = _tree->dag.find(prevhash);
+                        if (iter_tree == _tree->dag.end())
+                        {
+                            fNotFound = true;
+                            break;
+                        }
+                        LOG(DAG, "%s(): Found prevhash in dag %s for %s", __func__, prevhash.ToString(),
                             iter_tree->second->hash.ToString());
+                        setPrevNodes.insert(iter_tree->second);
                     }
+                    if (fNotFound)
+                        continue; // if they're not all present in the dag then don't try to connect this new node.
                 }
 
                 // add ancestor information regardless of being added to the tree
-                if (prevNode != nullptr)
+                if (!setPrevNodes.empty())
                 {
-                    newNode->AddAncestor(prevNode);
-                    newNode->dagHeight = prevNode->dagHeight + 1;
-                    prevNode->AddDescendant(newNode);
+                    uint32_t nBestDagHeight = 0;
+                    newNode->AddAncestors(setPrevNodes);
+                    for (auto node : setPrevNodes)
+                    {
+                        node->AddDescendant(newNode);
+                        if (nBestDagHeight < node->dagHeight)
+                            nBestDagHeight = node->dagHeight;
+                    }
+                    newNode->dagHeight = nBestDagHeight + 1;
                     LOG(DAG, "%s(): updated dagHeight to %ld dagsize %ld for %s", __func__, newNode->dagHeight,
                         _tree->dag.size(), newNode->hash.ToString());
                 }
@@ -549,7 +555,7 @@ bool CTailstormGrove::InsertIntoTree(CTreeNodeRef newNode)
             const CBlockHeader header = pblock->GetBlockHeader();
             const uint256 &hashprev = header.hashPrevBlock;
             uint32_t nSequenceId = newNode->nSequenceId;
-            uiInterface.NotifyBlockTipDag(false, tailstormForest.GetDagHeight(hashprev) + 1, nSequenceId, header, true);
+            uiInterface.NotifyBlockTipDag(false, newNode->dagHeight, nSequenceId, header, true);
         }
     }
 
@@ -826,7 +832,8 @@ bool CTailstormForest::_Insert(ConstCBlockRef subblock)
             // Make sure the height of this subblock is 1 more that the previous summary block
             if (subblock->height != pindex->height() + 1)
             {
-                LOG(DAG, "%s: invalid height - could not add subblock to grove", __func__);
+                LOG(DAG, "%s: invalid subblock height %ld should be %ld - could not add subblock to grove", __func__,
+                    subblock->height, pindex->height() + 1);
                 return false;
             }
 
@@ -948,8 +955,21 @@ std::set<uint256> CTailstormForest::ProcessOrphans()
 
             const uint256 &prevhash = iter->second->subblock->hashPrevBlock;
             auto pindex = LookupBlockIndex(prevhash);
-            if (((pindex && pindex->IsLinked()) || mapAllGroves.count(prevhash)) &&
-                (!mapSummaryBlocksUnlinked.count(prevhash)))
+
+            auto setHashes = GetPrevHashes(iter->second->subblock->GetBlockHeader());
+            bool fHaveAllPrevSubblocks = true;
+            for (auto &hash : setHashes)
+            {
+                if (hash == prevhash)
+                    continue;
+
+                if (!mapAllGroves.count(hash))
+                {
+                    fHaveAllPrevSubblocks = false;
+                }
+            }
+
+            if (((pindex && pindex->IsLinked()) && fHaveAllPrevSubblocks) && !mapSummaryBlocksUnlinked.count(prevhash))
             {
                 LOG(DAG, "%s(): process orphans - found orphan %s connecting to prev block %s", __func__,
                     iter->second->hash.ToString(), prevhash.ToString());
@@ -996,7 +1016,7 @@ std::set<uint256> CTailstormForest::ProcessOrphans()
                 }
 
                 // Check to make sure all subblocks were received before connecting the Summary Block
-                auto subblockProofs = ParseMinerData(pblock->minerData);
+                auto subblockProofs = ParseSummaryBlockMinerData(pblock->minerData);
                 bool fHaveSubblocks = true;
                 for (const auto &pair : subblockProofs)
                 {
@@ -1144,7 +1164,10 @@ bool CTailstormForest::GetDagForBlock(ConstCBlockRef &pblock, std::set<CTreeNode
         // Check each tree for a full set of treenodes that match the block. If we find
         // a match then break and return a positive result. If we don't match then keep
         // looking in any other trees than may be in the grove.
-        auto subblockProofs = ParseMinerData(pblock->minerData);
+        //
+        // If this function returns "true" then this means that all subblocks have been correctly
+        // accepted into the dag and is not also not an orphaned subblock.
+        auto subblockProofs = ParseSummaryBlockMinerData(pblock->minerData);
         for (auto &tree : grove->setValidTrees)
         {
             dag.clear();
@@ -1153,10 +1176,13 @@ bool CTailstormForest::GetDagForBlock(ConstCBlockRef &pblock, std::set<CTreeNode
             // get all mining hashes in the tree
             for (auto &mi : tree->dag)
             {
-                const CTreeNodeRef &treenode = mi.second;
-                const auto &miningHeaderCommitment = treenode->subblock->GetMiningHeaderCommitment();
-                const auto &nonce = treenode->subblock->GetBlockHeader().nonce;
-                mapDagMiningHashes.emplace(GetMiningHash(miningHeaderCommitment, nonce), treenode);
+                const CTreeNodeRef &node = mi.second;
+                if (!node->fProcessed)
+                    continue;
+
+                const auto &miningHeaderCommitment = node->subblock->GetMiningHeaderCommitment();
+                const auto &nonce = node->subblock->GetBlockHeader().nonce;
+                mapDagMiningHashes.emplace(GetMiningHash(miningHeaderCommitment, nonce), node);
             }
 
             // does each mining hash in the block's minerDag have a corresoponding one in the dag
@@ -1555,6 +1581,16 @@ void CTailstormForest::Check()
         assert(grove->nRootHeight > 0);
 
         setAllTrees.insert(grove->setValidTrees.begin(), grove->setValidTrees.end());
+
+        // make sure all tree entries also have an entry in mapGroveNodes.
+        for (auto &tree : grove->setValidTrees)
+        {
+            for (auto &mi : tree->dag)
+            {
+                assert(grove->mapGroveNodes.count(mi.first));
+                assert(grove->mapGroveNodes[mi.first] == mi.second);
+            }
+        }
     }
     assert(mapAllNodes.size() == nAllGroveNodes + mapNodesUnlinked.size());
 
@@ -1593,25 +1629,43 @@ void CTailstormForest::Check()
             for (uint32_t i = 0; i < vSortedDagHeights.size(); i++)
             {
                 CTreeNodeRef node = vSortedDagHeights[i].second;
+                auto setPrevHashes = GetPrevHashes(node->subblock->GetBlockHeader());
+                assert(!setPrevHashes.empty());
 
                 if (i == 0)
                     assert(node->dagHeight == 1);
 
                 if (node->dagHeight == 1)
                 {
-                    assert(node->ancestor == nullptr);
+                    assert(node->setAncestors.empty());
+                    assert(setPrevHashes.size() == 1);
+                    assert(setPrevHashes.count(node->subblock->hashPrevBlock));
                 }
                 else
                 {
-                    assert(node->ancestor->dagHeight == node->dagHeight - 1);
-                    assert(node->ancestor->hash == node->subblock->hashPrevBlock);
-                    for (auto &desc : node->vDescendants)
+                    for (auto &ancestor : node->setAncestors)
                     {
-                        assert(desc->subblock->hashPrevBlock == node->hash);
+                        assert(ancestor->dagHeight <= node->dagHeight - 1);
+                        assert(setPrevHashes.count(ancestor->hash));
+                    }
+                    for (auto &desc : node->setDescendants)
+                    {
+                        auto setDescHashes = GetPrevHashes(desc->subblock->GetBlockHeader());
+                        assert(setDescHashes.count(node->hash));
                     }
                 }
             }
         }
     }
     assert(mapAllNodes.size() == setAllTreeNodes.size() + mapNodesUnlinked.size());
+
+    // Check minerData versions
+    for (auto &mi : mapNodesUnlinked)
+    {
+        assert(GetMinerDataVersion(mi.second->subblock->minerData) == DEFAULT_MINER_DATA_SUBBLOCK_VERSION);
+    }
+    for (auto &mi : mapSummaryBlocksUnlinked)
+    {
+        assert(GetMinerDataVersion(mi.second->minerData) == DEFAULT_MINER_DATA_SUMMARYBLOCK_VERSION);
+    }
 }

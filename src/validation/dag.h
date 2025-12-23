@@ -43,8 +43,8 @@ public:
 
     ConstCBlockRef subblock = nullptr;
 
-    CTreeNodeRef ancestor = nullptr; // should point to the node of the parentHash
-    std::set<CTreeNodeRef> vDescendants; // points to the nodes of the children
+    std::set<CTreeNodeRef> setAncestors; // points to the parents of this subblock
+    std::set<CTreeNodeRef> setDescendants; // points to the nodes of the children
 
 private:
     CTreeNode() {} // disable default constructor
@@ -61,14 +61,14 @@ public:
 
     friend bool operator<(const CTreeNode a, const CTreeNode b) { return a.hash < b.hash; }
 
-    void AddAncestor(CTreeNodeRef _ancestor) { ancestor = _ancestor; }
-    void AddDescendant(CTreeNodeRef _descendent) { vDescendants.emplace(_descendent); }
+    void AddAncestors(std::set<CTreeNodeRef> &ancestors) { setAncestors.insert(ancestors.begin(), ancestors.end()); }
+    void AddDescendant(CTreeNodeRef _descendent) { setDescendants.emplace(_descendent); }
 
     // This subblock is just after the last summary block
-    bool IsBase() { return (ancestor == nullptr && dagHeight == 1); }
+    bool IsBase() { return (setAncestors.empty() && dagHeight == 1); }
 
     // This subblock is a tree tip
-    bool IsTip() { return vDescendants.empty(); }
+    bool IsTip() { return setDescendants.empty(); }
 };
 
 // All datamembers are protected by cs_forest
