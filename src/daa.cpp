@@ -15,6 +15,8 @@
 #include "util.h"
 #include "validation/forks.h"
 
+extern std::atomic<bool> fTailstormEnabled;
+
 static std::atomic<const CBlockIndex *> cachedAnchor{nullptr};
 
 void ResetASERTAnchorBlockCache() noexcept { cachedAnchor = nullptr; }
@@ -331,11 +333,14 @@ bool MineBlock(CBlockHeader &blockHeader, unsigned long int tries, const Consens
             count = count | (blockHeader.nonce[x] << (x * 8));
 
     uint256 headerCommitment = blockHeader.GetMiningHeaderCommitment();
+    uint256 prevhash;
+    if (fTailstormEnabled)
+        prevhash = blockHeader.hashPrevBlock;
 
     while (tries > 0)
     {
         uint256 mhash = ::GetMiningHash(headerCommitment, blockHeader.nonce);
-        if (CheckProofOfWork(mhash, blockHeader.nBits, cparams))
+        if (CheckProofOfWork(mhash, prevhash, blockHeader.nBits, cparams))
         {
             // printf("pow hash: %s\n", mhash.GetHex().c_str());
             return true;

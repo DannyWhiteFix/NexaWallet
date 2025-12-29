@@ -839,6 +839,7 @@ bool LoadBlockIndexDB()
         size_t nSkipTo = 1; // always check at least the first key
         const size_t nSkipRange = vSortedByHeight.size() - 1; // spot check the entire index
 
+        auto consensusParams = Params().GetConsensus();
         for (auto it = vSortedByHeight.end() - 1; it != vSortedByHeight.begin(); it--)
         {
             CBlockHeader header;
@@ -857,8 +858,22 @@ bool LoadBlockIndexDB()
             {
                 const CBlockIndex *index = vSortedByHeight[nSkipTo].second;
                 CBlockHeader _header = index->GetBlockHeader();
-                if (!CheckProofOfWork(_header.GetMiningHash(), _header.nBits, Params().GetConsensus()))
-                    return error("LoadBlockIndex(): CheckProofOfWork failed: %s", index->ToString());
+
+                if (GetMinerDataVersion(_header.minerData) == DEFAULT_MINER_DATA_SUMMARYBLOCK_VERSION)
+                {
+                    CValidationState state;
+                    if (!CheckTailstormSummaryBlockProofOfWork(consensusParams, _header, state))
+                        return error("LoadBlockIndex(): CheckProofOfWork failed: %s", index->ToString());
+                }
+                else
+                {
+                    uint256 prevhash;
+                    if (GetMinerDataVersion(_header.minerData) == DEFAULT_MINER_DATA_SUBBLOCK_VERSION)
+                        prevhash = _header.hashPrevBlock;
+
+                    if (!CheckProofOfWork(_header.GetMiningHash(), prevhash, _header.nBits, consensusParams))
+                        return error("LoadBlockIndex(): CheckProofOfWork failed: %s", index->ToString());
+                }
 
                 nSkipTo = std::max((uint64_t)1, ctx.randrange(nSkipRange));
                 // LOGA("spot check header %s %ld\n", index->phashBlock->ToString().c_str(), index->height());

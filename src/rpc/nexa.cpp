@@ -83,7 +83,8 @@ UniValue genesis(const UniValue &params, bool fHelp)
     uint32_t count = 0;
     pblock->nonce.resize(4);
     pblock->GetBlockSize();
-    while (!CheckProofOfWork(pblock->GetMiningHash(), pblock->nBits, conp))
+    uint256 dummyHash;
+    while (!CheckProofOfWork(pblock->GetMiningHash(), dummyHash, pblock->nBits, conp))
     {
         ++count;
         pblock->nonce[0] = count & 255;

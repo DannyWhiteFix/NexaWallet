@@ -69,6 +69,7 @@ extern std::atomic<bool> forceTemplateRecalc;
 extern CTxMemPool mempool; // from main.cpp
 static atomic<bool> fIsChainNearlySyncd{false};
 static atomic<bool> fIsInitialSyncComplete{false};
+extern std::atomic<bool> fTailstormEnabled;
 
 // We always start with true so that when ActivateBestChain is called during the startup (init.cpp)
 // and we havn't finished initial sync then we don't accidentally trigger the auto-dbcache
@@ -1209,6 +1210,12 @@ static UniValue MkMiningCandidateJson(CMiningCandidate &candid)
     ret.pushKV("id", candid.id);
     ret.pushKV("headerCommitment", block.GetMiningHeaderCommitment().GetHex());
     ret.pushKV("nBits", strprintf("%08x", block.nBits));
+
+    uint256 prevHash;
+    if (fTailstormEnabled)
+        prevHash = block.hashPrevBlock;
+
+    ret.pushKV("previousBlockHash", prevHash.GetHex());
 
 #if 0 // Merkle path is no longer needed for mining.  Mining pool should provide us with its output script and we'll
       // make the coinbase tx.  However, leave this code for demonstration purposes.

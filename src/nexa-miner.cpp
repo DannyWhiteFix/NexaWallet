@@ -56,6 +56,7 @@ CCriticalSection cs_commitment;
 uint256 g_headerCommitment;
 uint32_t g_nBits = 0;
 UniValue g_id;
+uint256 g_previousBlockHash;
 bool deterministicStartCount = false;
 
 CCriticalSection cs_blockhash;
@@ -166,7 +167,11 @@ void static MinerThread(int threadNum)
     }
 }
 
-static bool CpuMinerJsonToData(const UniValue &params, uint256 &headerCommitment, uint32_t &nBits, UniValue &id)
+static bool CpuMinerJsonToData(const UniValue &params,
+    uint256 &headerCommitment,
+    uint32_t &nBits,
+    UniValue &id,
+    uint256 &previousBlockHash)
 {
     string tmpstr;
     tmpstr = params["headerCommitment"].get_str();
@@ -183,12 +188,18 @@ static bool CpuMinerJsonToData(const UniValue &params, uint256 &headerCommitment
 
     id = params["id"];
 
+    tmpstr = params["previousBlockHash"].get_str();
+    std::vector<unsigned char> vec2 = ParseHex(tmpstr);
+    std::reverse(vec2.begin(), vec2.end()); // sent reversed
+    previousBlockHash = uint256(vec2);
+
     return true;
 }
 
 static bool CpuMineBlockHasherNextChain(int &ntries,
     uint256 headerCommitment,
     uint32_t nBits,
+    uint256 prevHash,
     const RandFunc &randFunc,
     const Consensus::Params &conp,
     uint32_t &count,
@@ -232,7 +243,7 @@ static bool CpuMineBlockHasherNextChain(int &ntries,
             nonce[2] = (count >> 16) & 255;
 
             uint256 miningHash = GetMiningHash(headerCommitment, nonce);
-            if (CheckProofOfWork(miningHash, target, conp, &finalHash))
+            if (CheckProofOfWork(miningHash, prevHash, target, conp, &finalHash))
             {
                 // Found a solution
                 found = true;
@@ -307,12 +318,14 @@ static UniValue CpuMineBlock(unsigned int searchDuration, bool &found, const Ran
 
     uint256 headerCommitment;
     uint32_t nBits = 0;
+    uint256 previousBlockHash;
     UniValue id;
     {
         LOCK(cs_commitment);
         headerCommitment = g_headerCommitment;
         nBits = g_nBits;
         id = g_id;
+        previousBlockHash = g_previousBlockHash;
     }
     if (!nBits)
     {
@@ -383,7 +396,7 @@ static UniValue CpuMineBlock(unsigned int searchDuration, bool &found, const Ran
         // header.nTime = (header.nTime < GetTime()) ? GetTime() : header.nTime;
         int tries = ChunkAmt;
         found = CpuMineBlockHasherNextChain(
-            tries, headerCommitment, nBits, randFunc, conp, startCount, rollAt, threadNum, nonce);
+            tries, headerCommitment, nBits, previousBlockHash, randFunc, conp, startCount, rollAt, threadNum, nonce);
         checked += ChunkAmt - tries;
     }
 
@@ -607,13 +620,15 @@ static bool CheckForNewMiningCandidate()
                 uint256 headerCommitment;
                 uint32_t nBits = 0;
                 UniValue id;
-                CpuMinerJsonToData(result, headerCommitment, nBits, id);
+                uint256 previousBlockHash;
+                CpuMinerJsonToData(result, headerCommitment, nBits, id, previousBlockHash);
 
                 {
                     LOCK(cs_commitment);
                     g_headerCommitment = headerCommitment;
                     g_nBits = nBits;
                     g_id = id;
+                    g_previousBlockHash = previousBlockHash;
                 }
                 const BlkInfo blkInfo = {headerCommitment.GetCheapHash(), nBits};
                 sharedBlkInfo.store(blkInfo);

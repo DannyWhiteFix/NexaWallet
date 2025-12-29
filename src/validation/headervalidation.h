@@ -14,5 +14,8 @@ bool CheckBlockHeader(const Consensus::Params &consensusParams,
     CValidationState &state,
     bool fCheckPOW = true);
 
+bool CheckTailstormSummaryBlockProofOfWork(const Consensus::Params &consensusParams,
+    const CBlockHeader &block,
+    CValidationState &state);
 
 #endif

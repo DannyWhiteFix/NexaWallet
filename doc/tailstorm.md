@@ -156,7 +156,7 @@ If a block not being added to the tip, its transactions no longer need to be con
 
 ## The minerData field in the block heaader
 
-The minerData field in pre-tailstorm blocks is empty and so when the miner data version is queried it returns with a "0".  Once tailstorm is activated subblocks will have the minerData version set to "1" but have no other miner data present, and summary blocks will have a minerData version of "2" and have a full set of mining hashes with their respective nonce data.
+The minerData field in pre-tailstorm blocks is empty and so when the miner data version is queried it returns with a "0".  Once tailstorm is activated subblocks will have the minerData version set to "1" with the minerData containing the previous subblock hash(s) that this subblock was mined on top of. Summary blocks will have a minerData version of "2" and have a full set of mining hashes and their respective nonce data for each subblock that was included in the Summary block.
 
 ## Notes on Testing
 

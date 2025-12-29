@@ -18,7 +18,7 @@ static uint256 sha256(uint256 &data)
     return ret;
 }
 
-bool CheckProofOfWork(const uint256 &hash, unsigned int nBits, const Consensus::Params &params)
+bool CheckProofOfWork(const uint256 &hash, const uint256 &prevhash, unsigned int nBits, const Consensus::Params &params)
 {
     bool fNegative;
     bool fOverflow;
@@ -28,10 +28,11 @@ bool CheckProofOfWork(const uint256 &hash, unsigned int nBits, const Consensus::
     // Check range
     if (fNegative || target == 0 || fOverflow || target > UintToArith256(params.powLimit))
         return false;
-    return CheckProofOfWork(hash, target, params, nullptr);
+    return CheckProofOfWork(hash, prevhash, target, params, nullptr);
 }
 
 bool CheckProofOfWork(uint256 hash,
+    uint256 prevhash,
     const arith_uint256 &bnTarget,
     const Consensus::Params &params,
     arith_uint256 *hashout)
@@ -42,7 +43,23 @@ bool CheckProofOfWork(uint256 hash,
         // This means that any hardware optimization will need to implement signature generation.
         // What we really want is signature validation to be implemented in hardware, so more thought needs to
         // happen.
-        uint256 h1 = sha256(hash);
+        //
+        // When tailstorm is enabled the prevhash will not be NULL and then we combine both the hash
+        // and the previous summary block hash together so that the mininghashes returned can only be
+        // used for the block they were created for.
+        uint256 h1;
+        if (!prevhash.IsNull())
+        {
+            CSHA256Writer combine;
+            combine << hash << prevhash;
+            uint256 h = combine.GetHash();
+            h1 = sha256(h);
+        }
+        else
+        {
+            h1 = sha256(hash);
+        }
+
         CKey k; // Use hash as a private key
         k.Set(hash.begin(), hash.end(), false);
         if (!k.IsValid())

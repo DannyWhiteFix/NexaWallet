@@ -105,8 +105,9 @@ bool MiningLoop(const Consensus::Params &cparams,
     uint64_t nsz = nonce.size();
     while ((tries > 0) && ((abort == nullptr) || (*abort == false)))
     {
+        uint256 dummyHash;
         uint256 mhash = ::GetMiningHash(headerCommitment, nonce);
-        if (CheckProofOfWork(mhash, nBits, cparams))
+        if (CheckProofOfWork(mhash, dummyHash, nBits, cparams))
         {
             // printf("pow hash: %s\n", mhash.GetHex().c_str());
             return true;

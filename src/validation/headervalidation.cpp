@@ -9,7 +9,7 @@
 #include "timedata.h"
 #include "validation/tailstorm.h"
 
-static bool CheckTailstormSummaryBlockProofOfWork(const Consensus::Params &consensusParams,
+bool CheckTailstormSummaryBlockProofOfWork(const Consensus::Params &consensusParams,
     const CBlockHeader &block,
     CValidationState &state)
 {
@@ -32,7 +32,7 @@ static bool CheckTailstormSummaryBlockProofOfWork(const Consensus::Params &conse
         const auto &nonce = pair.second;
         uint256 powHash = GetMiningHash(miningHeaderCommitment, nonce);
 
-        if (!CheckProofOfWork(powHash, block.nBits, consensusParams))
+        if (!CheckProofOfWork(powHash, block.hashPrevBlock, block.nBits, consensusParams))
         {
             return state.DoS(50, error("CheckSummaryBlockHeader(): proof of work failed"), REJECT_INVALID,
                 "bad-blk-subblock-high-hash");
@@ -77,7 +77,11 @@ bool CheckBlockHeader(const Consensus::Params &consensusParams,
         }
         else
         {
-            if (!CheckProofOfWork(miningHash, block.nBits, consensusParams))
+            uint256 prevhash;
+            if (GetMinerDataVersion(block.minerData) == DEFAULT_MINER_DATA_SUBBLOCK_VERSION)
+                prevhash = block.hashPrevBlock;
+
+            if (!CheckProofOfWork(miningHash, prevhash, block.nBits, consensusParams))
                 return state.DoS(50, error("CheckBlockHeader(): proof of work failed"), REJECT_INVALID, "high-hash");
         }
     }
