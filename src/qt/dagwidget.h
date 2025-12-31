@@ -138,6 +138,19 @@ public:
     // Try to connect any orphaned items.
     void ProcessOrphans();
 
+    // Reset the dag viewer
+    void Reset()
+    {
+        LOCK(cs_info);
+        mapDag.clear();
+        mapInfo.clear();
+        mapInfoByMiningHash.clear();
+        mapDeferredInfo.clear();
+
+        if (scene)
+            scene->clear();
+    }
+
 private:
     QWidget *_parent; // pointer to the layout
     BlockDescDialog *uiBlockDesc = nullptr; // block description message box
@@ -153,6 +166,9 @@ private:
     std::map<uint256, std::shared_ptr<ItemInfo> > mapInfoByMiningHash GUARDED_BY(cs_info);
     std::map<uint256, std::shared_ptr<ItemInfo> > mapDeferredInfo GUARDED_BY(cs_info);
     std::map<uint32_t, std::vector<std::shared_ptr<ItemInfo> > > mapDag GUARDED_BY(cs_info);
+
+    // The time the last item was successfully connected to the dag viewer
+    int64_t nTimeLastAddSuccessful GUARDED_BY(cs_info) = 0;
 
     // The last block item which was clicked on.
     std::shared_ptr<ItemInfo> pSelected GUARDED_BY(cs_info) = nullptr;

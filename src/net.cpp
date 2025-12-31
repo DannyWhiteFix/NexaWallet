@@ -87,7 +87,7 @@ extern bool fBlocksOnly;
 #endif
 
 extern std::atomic<bool> fRescan;
-extern bool fReindex;
+extern std::atomic<bool> fReindex;
 extern CTxMemPool mempool;
 extern CTweak<uint64_t> grapheneMinVersionSupported;
 extern CTweak<uint64_t> grapheneMaxVersionSupported;
