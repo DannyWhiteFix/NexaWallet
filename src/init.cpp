@@ -139,7 +139,7 @@ static const char *FEE_ESTIMATES_FILENAME = "fee_estimates.dat";
 // created by AppInit() or the Qt main() function.
 //
 // A clean exit happens when StartShutdown() or the SIGTERM
-// signal handler sets fRequestShutdown, which triggers
+// signal handler sets shutdown_threads, which triggers
 // the DetectShutdownThread(), which interrupts the main thread group.
 // DetectShutdownThread() then exits, which causes AppInit() to
 // continue (it .joins the shutdown thread).
@@ -153,15 +153,14 @@ static const char *FEE_ESTIMATES_FILENAME = "fee_estimates.dat";
 // immediately and the parent exits from main().
 //
 // Shutdown for Qt is very similar, only it uses a QTimer to detect
-// fRequestShutdown getting set, and then does the normal Qt
+// if shutdown_threads getting set, and then does the normal Qt
 // shutdown thing.
 //
 
-std::atomic<bool> fRequestShutdown{false};
 std::atomic<bool> fDumpTxPoolLater{false};
 
-void StartShutdown() { fRequestShutdown = true; }
-bool ShutdownRequested() { return fRequestShutdown; }
+void StartShutdown() { shutdown_threads.store(true); }
+bool ShutdownRequested() { return shutdown_threads.load() == true; }
 class CCoinsViewErrorCatcher : public CCoinsViewBacked
 {
 private:
@@ -192,7 +191,7 @@ public:
                 {
                     _pblocktree->WriteReindexing(true);
                 }
-                fRequestShutdown = true;
+                StartShutdown();
                 return false;
             }
             else
@@ -367,7 +366,7 @@ void Shutdown()
 /**
  * Signal handlers are very limited in what they are allowed to do, so:
  */
-void HandleSIGTERM(int) { fRequestShutdown = true; }
+void HandleSIGTERM(int) { StartShutdown(); }
 void HandleSIGHUP(int) { fReopenDebugLog = true; }
 bool static Bind(const CService &addr, unsigned int flags)
 {
@@ -534,7 +533,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles, bool fSync)
                 LoadExternalBlockFile(chainparams, file, &pos);
                 nFile++;
 
-                if (fRequestShutdown)
+                if (ShutdownRequested())
                     return;
             }
             pblocktree->WriteReindexing(false);
@@ -542,7 +541,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles, bool fSync)
             fReindex = false;
             LOGA("Reindexing finished");
         }
-        if (fRequestShutdown)
+        if (ShutdownRequested())
             return;
 
         // hardcoded $DATADIR/bootstrap.dat
@@ -565,7 +564,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles, bool fSync)
                 LOGA("Warning: Could not open bootstrap file %s\n", pathBootstrap.string());
             }
         }
-        if (fRequestShutdown)
+        if (ShutdownRequested())
             return;
 
         // -loadblock=
@@ -583,7 +582,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles, bool fSync)
                 LOGA("Warning: Could not open blocks file %s\n", path.string());
             }
 
-            if (fRequestShutdown)
+            if (ShutdownRequested())
                 return;
         }
 
@@ -602,7 +601,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles, bool fSync)
     while (!fAppInit2.load())
     {
         MilliSleep(100);
-        if (fRequestShutdown)
+        if (ShutdownRequested())
             return;
     }
 
@@ -621,7 +620,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles, bool fSync)
             pwalletMain->ReacceptWalletTransactions();
         }
 #endif
-        if (fRequestShutdown)
+        if (ShutdownRequested())
             return;
 
         // Load the mempool if necessary
@@ -671,9 +670,9 @@ void ThreadImport(std::vector<fs::path> vImportFiles, bool fSync)
                     }
                 }
             }
-            fDumpTxPoolLater = !fRequestShutdown;
+            fDumpTxPoolLater = !ShutdownRequested();
         }
-        if (fRequestShutdown)
+        if (ShutdownRequested())
             return;
 
         // scan for better chains in the block chain database, that are not yet connected in the active best chain
@@ -683,7 +682,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles, bool fSync)
         {
             LOGA("WARNING: ActivateBestChain failed on startup\n");
         }
-        if (fRequestShutdown)
+        if (ShutdownRequested())
             return;
 
         // Reconsider the most work chain again here if we're not already synced. This is necessary
@@ -691,7 +690,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles, bool fSync)
         // node before a hardfork. This must be done directly after ActivateBestChain() or
         // a switch from ABC/BCHN to a BU node may not work because some blocks may have been parked.
         ReconsiderChainOnStartup();
-        if (fRequestShutdown)
+        if (ShutdownRequested())
             return;
 
         // Initialize the atomic flags used for determining whether we are in IBD or whether the chain
@@ -1521,7 +1520,7 @@ bool AppInit2(Config &config)
                 if (fRet)
                 {
                     fReindex = true;
-                    fRequestShutdown = false;
+                    shutdown_threads.store(false);
                 }
                 else
                 {
@@ -1541,7 +1540,7 @@ bool AppInit2(Config &config)
     // As LoadBlockIndex can take several minutes, it's possible the user
     // requested to kill the GUI during the last operation. If so, exit.
     // As the program has not fully started yet, Shutdown() is possibly overkill.
-    if (fRequestShutdown)
+    if (ShutdownRequested())
     {
         LOGA("Shutdown requested. Exiting.\n");
         return false;
@@ -1804,12 +1803,12 @@ bool AppInit2(Config &config)
 
     uiInterface.InitMessage(_("Waiting for Genesis Block..."));
     CBlockIndex *tip = nullptr;
-    while (!fRequestShutdown && !tip)
+    while (!ShutdownRequested() && !tip)
     {
         tip = chainActive.Tip();
         MilliSleep(10);
 
-        if (fRequestShutdown)
+        if (ShutdownRequested())
             return false;
     }
 
