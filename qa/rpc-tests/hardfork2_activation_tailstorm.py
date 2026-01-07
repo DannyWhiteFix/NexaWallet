@@ -522,10 +522,10 @@ class TailstormActivationTest(BitcoinTestFramework):
 
         assert_equal(wallet0_balance_delta, Decimal('10000000.00'))
         assert_equal(wallet0_unconfirmed_balance_delta, 0)
-        assert_equal(wallet0_immature_balance_delta, Decimal('-8333332.24'))
+        assert_equal(wallet0_immature_balance_delta, Decimal('-7999998.69'))
         assert_equal(wallet1_balance_delta, Decimal('30000.00'))
         assert_equal(wallet1_unconfirmed_balance_delta, Decimal('-30000.00'))
-        assert_equal(wallet1_immature_balance_delta, Decimal('8333338.81'))
+        assert_equal(wallet1_immature_balance_delta, Decimal('8000005.26'))
 
         ###### Do a few more tests to check correct block reward distribution
 

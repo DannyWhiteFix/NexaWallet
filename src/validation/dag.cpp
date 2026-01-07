@@ -62,6 +62,122 @@ static uint256 FindDagTip(std::set<CTreeNodeRef> &dag)
         return {};
 }
 
+// Find all the ancestor nodes for this node
+static std::set<CTreeNodeRef> CalculateAncestors(CTreeNodeRef &node)
+{
+    std::set<CTreeNodeRef> setValidAncestors;
+    setValidAncestors.insert(node->setAncestors.begin(), node->setAncestors.end());
+
+    std::set<CTreeNodeRef> setLastAncestors = node->setAncestors;
+    std::set<CTreeNodeRef> setNextAncestors;
+    while (!setLastAncestors.empty())
+    {
+        for (auto ancestor : setLastAncestors)
+        {
+            setNextAncestors.insert(ancestor->setAncestors.begin(), ancestor->setAncestors.end());
+        }
+        setValidAncestors.insert(setNextAncestors.begin(), setNextAncestors.end());
+        setLastAncestors = setNextAncestors;
+        setNextAncestors.clear();
+    }
+
+    return setValidAncestors;
+}
+
+// Find all the "valid" descendant nodes for this node.  A valid descendant is one
+// which has a dag height of only one more than the previous. Any descendants that are
+// more than one height from the previous are not considered "valid" for scoring purposes.
+static std::set<CTreeNodeRef> CalculateValidDescendants(CTreeNodeRef &node)
+{
+    std::set<CTreeNodeRef> setValidDescendants;
+
+    for (auto desc : node->setDescendants)
+    {
+        if (desc->dagHeight == node->dagHeight + 1)
+        {
+            setValidDescendants.insert(desc);
+        }
+    }
+
+    std::set<CTreeNodeRef> setLastDescendants = setValidDescendants;
+    std::set<CTreeNodeRef> setNextDescendants;
+    while (!setLastDescendants.empty())
+    {
+        for (auto _node : setLastDescendants)
+        {
+            for (auto desc : _node->setDescendants)
+            {
+                if (desc->dagHeight == _node->dagHeight + 1)
+                {
+                    setNextDescendants.insert(desc);
+                }
+            }
+        }
+        setValidDescendants.insert(setNextDescendants.begin(), setNextDescendants.end());
+        setLastDescendants = setNextDescendants;
+        setNextDescendants.clear();
+    }
+
+    return setValidDescendants;
+}
+
+std::map<CTreeNodeRef, uint32_t> GetDagScores(std::set<CTreeNodeRef> &setBestDag)
+{
+    std::set<CTreeNodeRef> setNodesToRecalculate;
+    std::map<CTreeNodeRef, uint32_t> mapBestDagScores;
+    uint32_t nMaxDagHeight = 0;
+    for (auto node : setBestDag)
+    {
+        // Initialize the map entry if it doesn't already exist.
+        mapBestDagScores.emplace(node, 0);
+
+        // Get all ancestors of this node
+        std::set<CTreeNodeRef> setAllAncestors = CalculateAncestors(node);
+
+        // initialize the new node with its initial score
+        mapBestDagScores[node] += (setAllAncestors.size() + 1);
+
+        // Now search through the ancestors and add "1" to the score
+        // of any valid ancestor.
+        for (auto ancestor : setAllAncestors)
+        {
+            // Initialize the map entry if it doesn't already exist.
+            mapBestDagScores.emplace(ancestor, 0);
+
+            // Add the score
+            mapBestDagScores[ancestor] += 1;
+        }
+
+        // Track skipped height nodes since these need to be scored differently
+        // then later recaculate the scores for these by finding all ancestors and "valid" decendants.
+        // and re-tally the score for those special individual nodes.
+        for (auto desc : node->setDescendants)
+        {
+            if (desc->dagHeight > node->dagHeight + 1)
+            {
+                setNodesToRecalculate.insert(node);
+            }
+        }
+
+        // Track the max dagheight. We'll need it later.
+        if (node->dagHeight > nMaxDagHeight)
+        {
+            nMaxDagHeight = node->dagHeight;
+        }
+    }
+
+    // Re-calculate the scores for the special cases.
+    for (auto node : setNodesToRecalculate)
+    {
+        std::set<CTreeNodeRef> setAncestors = CalculateAncestors(node);
+        std::set<CTreeNodeRef> setValidDescendants = CalculateValidDescendants(node);
+
+        mapBestDagScores[node] = setAncestors.size() + setValidDescendants.size() + 1;
+    }
+
+    return mapBestDagScores;
+}
+
 // Get the current best dag tip for mining on top of
 uint256 GetActiveDagTip(std::set<CTreeNodeRef> &dag)
 {
@@ -355,6 +471,7 @@ bool CTailstormTree::Insert(CTreeNodeRef newNode, bool *fAllowRecursion)
             mapDagTxns.emplace(ptx->GetId(), ptx);
         }
 
+        // Set the processed flag
         newNode->fProcessed = true;
 
         return true;
@@ -467,7 +584,6 @@ bool CTailstormGrove::InsertIntoTree(CTreeNodeRef newNode)
             // Notify the dagviewer
             ConstCBlockRef pblock = newNode->subblock;
             const CBlockHeader header = pblock->GetBlockHeader();
-            const uint256 &hashprev = header.hashPrevBlock;
             uint32_t nSequenceId = newNode->nSequenceId;
             uiInterface.NotifyBlockTipDag(false, newNode->dagHeight, nSequenceId, header, true);
         }
@@ -553,7 +669,6 @@ bool CTailstormGrove::InsertIntoTree(CTreeNodeRef newNode)
             // Notify the dagviewer
             ConstCBlockRef pblock = newNode->subblock;
             const CBlockHeader header = pblock->GetBlockHeader();
-            const uint256 &hashprev = header.hashPrevBlock;
             uint32_t nSequenceId = newNode->nSequenceId;
             uiInterface.NotifyBlockTipDag(false, newNode->dagHeight, nSequenceId, header, true);
         }

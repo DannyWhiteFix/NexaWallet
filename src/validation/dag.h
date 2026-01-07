@@ -33,6 +33,10 @@ static inline CTailstormGroveRef MakeTailstormGroveRef(Grove &&groveIn)
     return std::make_shared<CTailstormGrove>(std::forward<Grove>(groveIn));
 }
 
+// Return a map of all the subblock scores for any nodes in the dag
+// NOTE: An int32_t is used because scores can temporarily go negative during the calculation process.
+std::map<CTreeNodeRef, uint32_t> GetDagScores(std::set<CTreeNodeRef> &setBestDag);
+
 class CTreeNode
 {
 public:
@@ -46,10 +50,8 @@ public:
     std::set<CTreeNodeRef> setAncestors; // points to the parents of this subblock
     std::set<CTreeNodeRef> setDescendants; // points to the nodes of the children
 
-private:
-    CTreeNode() {} // disable default constructor
+    CTreeNode() {}
 
-public:
     CTreeNode(ConstCBlockRef _subblock)
     {
         hash = _subblock->GetHash();

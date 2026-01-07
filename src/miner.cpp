@@ -101,47 +101,28 @@ bool ValidateSummaryBlockCoinbase(CAmount nBlockReward, ConstCBlockRef pblock, s
     std::vector<CTxOut> vout;
     vout.resize(setBestDag.size() + 1);
 
-    // Calculate the percentage of the rewards that each subblock receives based
-    // on tailstorm dag rules that rewards are first proportioned by dag height
-    // and then at each height the rewards are divided equally among any subblocks
-    // at that height.
-    uint32_t nMaxDagHeight = 0;
-    for (auto treenode : setBestDag)
+    // Calculate the scores for each node and divide up the rewards accordingly.
+    auto mapScores = GetDagScores(setBestDag);
+    uint32_t nSummaryBlockScore = Params().GetConsensus().tailstorm_k - 1;
+    uint32_t nTotalScores = nSummaryBlockScore;
+    for (auto &mi : mapScores)
     {
-        if (nMaxDagHeight < treenode->dagHeight)
-        {
-            nMaxDagHeight = treenode->dagHeight;
-        }
+        nTotalScores += mi.second;
     }
-    // Add one to the max height. This is the height of our own
-    // Summary block, which is also the final subblock.
-    nMaxDagHeight++;
-    std::map<uint32_t, uint32_t> mapHeights;
-    for (uint32_t i; i <= nMaxDagHeight; i++)
-    {
-        mapHeights[i] = 0;
-    }
-    for (auto treenode : setBestDag)
-    {
-        mapHeights[treenode->dagHeight]++;
-    }
-    mapHeights[nMaxDagHeight] = 1;
-    CAmount nRewardsAtEachHeight = mapHeights.empty() ? 0 : nBlockReward / mapHeights.size();
-    LOG(DAG, "%s: block rewards for each dag height %ld", __func__, nRewardsAtEachHeight);
 
-    // Now that we have the rewards at each height and the number of subblocks at each
-    // height we can divide up the rewards accordinly.
     int j = 0;
     CAmount nTotalSubsidies = 0;
-    for (auto treenode : setBestDag)
+    for (auto &mi : mapScores)
     {
-        vout[j] = treenode->subblock->vtx[0]->vout[0];
-        vout[j].nValue = nRewardsAtEachHeight / mapHeights[treenode->dagHeight];
+        vout[j] = mi.first->subblock->vtx[0]->vout[0];
+        vout[j].nValue = nBlockReward * mi.second / nTotalScores;
         nTotalSubsidies += vout[j].nValue;
         j++;
     }
-    // Add the vout for the Summary block itself (the final subblock)
-    vout[j] = CTxOut(nRewardsAtEachHeight, scriptPubKeySummaryBlock);
+
+    // Add the vout for the Summary blocks' subblock...the final subblock!
+    CAmount nSummaryBlockReward = nBlockReward * nSummaryBlockScore / nTotalScores;
+    vout[j] = CTxOut(nSummaryBlockReward, scriptPubKeySummaryBlock);
     nTotalSubsidies += vout[j].nValue;
     LOG(DAG, "%s: total subsidies %ld with bestdag vout size %ld", __func__, nTotalSubsidies, vout.size());
 
@@ -307,66 +288,47 @@ CTransactionRef BlockAssembler::coinbaseTx(const CScript &scriptPubKeyIn,
     uint32_t dataIdx = 1;
     if (!setBestDag || setBestDag->empty())
     {
-        // printf("\nset best dag is empty\n\n");
         //  Construct vout for the legacy block OR the tailstorm subblock
         tx.vout.resize(dataIdx + 1);
         tx.vout[0] = CTxOut(nValue, scriptPubKeyIn);
     }
     else
     {
-        // printf("\nset best dag is NOT empty\n\n");
-
         // Construct vout for the tailstorm Summary block. For now it's just temporary
         // and will be cleared out and reconstructed later when/if the vouts get grouped
         // by their pubkeys.
         std::vector<CTxOut> vout;
         vout.resize(setBestDag->size() + 1);
 
-        // Calculate the percentage of the rewards that each subblock receives based
-        // on tailstorm dag rules that rewards are first proportioned by dag height
-        // and then at each height the rewards are divided equally among any subblocks
-        // at that height.
-        uint32_t nMaxDagHeight = 0;
-        for (auto treenode : *setBestDag)
+        // Calculate the scores for each node and divide up the rewards accordingly.
+        auto mapScores = GetDagScores(*setBestDag);
+        uint32_t nSummaryBlockScore = Params().GetConsensus().tailstorm_k - 1;
+        uint32_t nTotalScores = nSummaryBlockScore;
+        for (auto &mi : mapScores)
         {
-            if (nMaxDagHeight < treenode->dagHeight)
-            {
-                nMaxDagHeight = treenode->dagHeight;
-            }
+            nTotalScores += mi.second;
         }
-        // Add one to the max height. This is the height of our own
-        // Summary block, which is also the final subblock.
-        nMaxDagHeight++;
-        std::map<uint32_t, uint32_t> mapHeights;
-        for (uint32_t i; i <= nMaxDagHeight; i++)
-        {
-            mapHeights[i] = 0;
-        }
-        for (auto treenode : *setBestDag)
-        {
-            mapHeights[treenode->dagHeight]++;
-        }
-        mapHeights[nMaxDagHeight] = 1;
-        uint32_t nRewardsAtEachHeight = mapHeights.empty() ? 0 : nValue / mapHeights.size();
 
-        // Now that we have the rewards at each height and the number of subblocks at each
-        // height we can divide up the rewards accordinly.
         int j = 0;
-        uint32_t nTotalSubsidies = 0;
-        for (auto treenode : *setBestDag)
+        CAmount nTotalSubsidies = 0;
+        for (auto &mi : mapScores)
         {
-            vout[j] = treenode->subblock->vtx[0]->vout[0];
-            vout[j].nValue = nRewardsAtEachHeight / mapHeights[treenode->dagHeight];
+            vout[j] = mi.first->subblock->vtx[0]->vout[0];
+            vout[j].nValue = nValue * mi.second / nTotalScores;
             nTotalSubsidies += vout[j].nValue;
             j++;
         }
+
         // Add the vout for the Summary blocks' subblock...the final subblock!
-        vout[j] = CTxOut(nRewardsAtEachHeight, scriptPubKeyIn);
+        CAmount nSummaryBlockReward = nValue * nSummaryBlockScore / nTotalScores;
+        vout[j] = CTxOut(nSummaryBlockReward, scriptPubKeyIn);
         nTotalSubsidies += vout[j].nValue;
+        LOG(DAG, "%s: total subsidies %ld with bestdag vout size %ld", __func__, nTotalSubsidies, vout.size());
 
         // Adjust the last vout for round off errors. Give any remaining subsidy to the
         // last vout (the SummaryBlock's subblock)
         vout[j].nValue += (nValue - nTotalSubsidies);
+        LOG(DAG, "%s: nValue for the summary block itself %ld", __func__, vout[j].nValue);
 
         // Combine vout's that have the same scriptPubKey. Over time this can save a large amount
         // blockchain diskspace
