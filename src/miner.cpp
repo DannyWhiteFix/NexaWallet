@@ -423,10 +423,18 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
     CBlockIndex *pindexPrev = chainActive.Tip();
     assert(pindexPrev); // can't make a new block if we don't even have the genesis block
 
-    // Get the current best tailstorm dag whether and for the purpose of syncronization
-    // we'll use this same dataset throughout block constuction.
+    // Get the current best tailstorm dag and associated double spends, and for the purpose of syncronization
+    // we'll use this same dataset throughout summary block construction.
+    //
+    // If there are less than tailstorm_k - 1 subblocks in the dag then the assumption is that we're creating a
+    // subblock and so the data sets returned will be empty.
     std::set<CTreeNodeRef> setBestDag;
-    tailstormForest.GetBestDagFor(pindexPrev->GetBlockHash(), setBestDag);
+    std::vector<std::map<uint256, CTreeNodeRef> > vDoubleSpendTxns;
+    std::map<COutPoint, CTransactionRef> mapInputs;
+    tailstormForest.GetBestDagFor(pindexPrev->GetBlockHash(), setBestDag, &vDoubleSpendTxns, &mapInputs);
+
+    // Get the set of invalid double spends which we "DO NOT" want to include in the final summary block.
+    std::set<uint256> setTxnExclusions = GetTxnExclusionSet(setBestDag, vDoubleSpendTxns, mapInputs);
 
     // If tailstorm is enabled then gather all the txid's that are in the best dag so
     // we can filter those out when we add new transactions to a new subblock or summary
@@ -549,7 +557,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
         }
 
         // If we're creating a tailstorm Summary Block then add in all the Subblock transactions
-        // and, avoiding any dupicates, update the blocksize and fees collected.
+        // and, avoiding any dupicates and double spends we don't want, update the blocksize and fees collected.
         if (fTailstormEnabled && IsSummaryBlock(pblock))
         {
             uint64_t nBestDagVtxSize = 0;
@@ -561,7 +569,11 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
                 const auto &vtx = treenode->subblock->vtx;
                 for (size_t i = 1; i < vtx.size(); i++)
                 {
+                    // If txns are already in the summary block's "subblock" then don't add them again.
                     if (setTxidsInBlock.count(vtx[i]->GetId()))
+                        continue;
+                    // If this is a double spend exclusion then don't add this to the block.
+                    if (setTxnExclusions.count(vtx[i]->GetId()))
                         continue;
 
                     pblocktemplate->block->vtx.push_back(vtx[i]);

@@ -1711,8 +1711,7 @@ bool TestBlockValidity(CValidationState &state,
     const ConstCBlockRef pblock,
     CBlockIndex *pindexPrev,
     bool fCheckPOW,
-    bool fCheckMerkleRoot,
-    bool fSummaryBlock)
+    bool fCheckMerkleRoot)
 {
     AssertLockHeld(cs_main);
     assert(pindexPrev && pindexPrev == chainActive.Tip());
@@ -1727,7 +1726,7 @@ bool TestBlockValidity(CValidationState &state,
     // NOTE: CheckBlockHeader is called by CheckBlock
     if (!ContextualCheckBlockHeader(chainparams, *pblock, state, pindexPrev))
         return false;
-    if (!CheckBlock(chainparams.GetConsensus(), pblock, state, fCheckPOW, fCheckMerkleRoot, fSummaryBlock))
+    if (!CheckBlock(chainparams.GetConsensus(), pblock, state, fCheckPOW, fCheckMerkleRoot))
         return false;
 
     if (!ContextualCheckBlock(pblock, state, pindexPrev))
@@ -2091,8 +2090,7 @@ bool CheckBlock(const Consensus::Params &consensusParams,
     const ConstCBlockRef pblock,
     CValidationState &state,
     bool fCheckPOW,
-    bool fCheckMerkleRoot,
-    bool fSummaryBlock)
+    bool fCheckMerkleRoot)
 {
     // These are checks that are independent of context.
     if (pblock->fChecked)
@@ -2604,7 +2602,10 @@ static bool ConnectBlockPrevalidations(ConstCBlockRef pblock,
         }
 
         LOCK(tailstormForest.cs_forest);
-        tailstormForest.GetDagForBlock(pblock, setDag);
+        setDag.clear();
+        std::vector<std::map<uint256, CTreeNodeRef> > vDoubleSpendTxns;
+        std::map<COutPoint, CTransactionRef> mapInputs;
+        tailstormForest.GetDagForBlock(pblock, setDag, &vDoubleSpendTxns, &mapInputs);
 
         // Get all mining hashes from the best dag that exists on top of
         // the prevhash of this Summary Block.  Then Check if all
@@ -2651,8 +2652,14 @@ static bool ConnectBlockPrevalidations(ConstCBlockRef pblock,
         {
             setBlockHashes.insert(pblock->vtx[i]->GetId());
         }
+        std::set<uint256> setTxnExclusions = GetTxnExclusionSet(setDag, vDoubleSpendTxns, mapInputs);
         for (auto &mi : mapDagTxns)
         {
+            // Don't check for excluded txns. These would be double spends that were not the ones
+            // chosen to be included in the final summary block
+            if (setTxnExclusions.count(mi.first))
+                continue;
+
             if (!setBlockHashes.count(mi.first))
             {
                 return state.DoS(100, error("ProcessNewBlock(): transaction in subblock not found in block"),
@@ -2710,7 +2717,8 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
     std::vector<std::pair<uint256, CDiskTxPos> > &vPos,
     std::map<CGroupTokenID, CAmount> &accumulatedMintages,
     std::map<CGroupTokenID, CAuth> &accumulatedAuthorities,
-    const std::map<uint256, CTransactionRef> *mapDagTxns)
+    const std::map<uint256, CTransactionRef> *mapDagTxns,
+    const std::set<uint256> *setTxnExclusions)
 {
     nFees = 0;
     int64_t nTime2 = GetStopwatchMicros();
@@ -2772,6 +2780,8 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
             // Skip transactions we already have checked in other subblocks
             if (mapDagTxns && mapDagTxns->count(txref->GetId()))
                 continue;
+            if (setTxnExclusions && setTxnExclusions->count(txref->GetId()))
+                continue;
 
             for (size_t j = 0; j < txref->vin.size(); j++)
             {
@@ -2810,6 +2820,8 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
 
             // Skip transactions we already have checked in other subblocks
             if (mapDagTxns && mapDagTxns->count(tx.GetId()))
+                continue;
+            if (setTxnExclusions && setTxnExclusions->count(tx.GetId()))
                 continue;
 
             try
@@ -2851,6 +2863,8 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
             // Skip transactions we already have checked in other subblocks
             if (mapDagTxns && mapDagTxns->count(txref->GetId()))
                 continue;
+            if (setTxnExclusions && setTxnExclusions->count(txref->GetId()))
+                continue;
 
             if (!txref->IsCoinBase())
             {
@@ -2885,6 +2899,8 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
 
             // Skip transactions we already have checked in other subblocks
             if (mapDagTxns && mapDagTxns->count(txref->GetId()))
+                continue;
+            if (setTxnExclusions && setTxnExclusions->count(txref->GetId()))
                 continue;
 
             nInputs += tx.vin.size();
@@ -3004,6 +3020,8 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
 
             // Skip transactions we already have checked in other subblocks
             if (mapDagTxns && mapDagTxns->count(tx.GetId()))
+                continue;
+            if (setTxnExclusions && setTxnExclusions->count(tx.GetId()))
                 continue;
 
             CTxUndo undoDummy;
@@ -3497,15 +3515,16 @@ void UpdateTip(CBlockIndex *pindexNew)
     // If the dag has already received some of the subblocks before the chain tip
     // was connected then we need to update the dag for it and any associated trees
     // so that pcoinsDag is updated correctly before releasing the tx pause on the corral.
-    if (fTailstormEnabled)
+    static bool fRunOnce2 = true;
+    if (fTailstormEnabled && fRunOnce2 && IsInitialSyncComplete())
     {
         // Get the grove for the chain active tip if it already exists and process the dag.
-        LOCK(tailstormForest.cs_forest);
         CTailstormGroveRef grove = nullptr;
         if (tailstormForest.GetGrove(*(pindexNew->phashBlock), grove))
         {
             tailstormForest.GenerateDagData(grove);
         }
+        fRunOnce2 = false;
     }
 
     cvBlockChange.notify_all();

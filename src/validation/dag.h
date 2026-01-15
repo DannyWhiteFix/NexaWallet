@@ -35,7 +35,12 @@ static inline CTailstormGroveRef MakeTailstormGroveRef(Grove &&groveIn)
 
 // Return a map of all the subblock scores for any nodes in the dag
 // NOTE: An int32_t is used because scores can temporarily go negative during the calculation process.
-std::map<CTreeNodeRef, uint32_t> GetDagScores(std::set<CTreeNodeRef> &setBestDag);
+std::map<CTreeNodeRef, uint32_t> GetDagScores(const std::set<CTreeNodeRef> &setBestDag);
+
+// Get the set of invalid double spends which we "DO NOT" want to include in the final summary block.
+std::set<uint256> GetTxnExclusionSet(const std::set<CTreeNodeRef> &setBestDag,
+    std::vector<std::map<uint256, CTreeNodeRef> > &_vDoubleSpendTxns,
+    std::map<COutPoint, CTransactionRef> &mapInputs);
 
 class CTreeNode
 {
@@ -84,8 +89,21 @@ protected:
     // also available in mapAllNodes at the forest level
     std::map<uint256, CTreeNodeRef> dag;
 
-    // map of unique transactions that are already in the dag for this tree
+    // map of unique transactions that are already in the dag for this tree. This
+    // data also includes all double spend transactions and is updated "after" a block
+    // successfully connects to the dag. It is used in connect block to skip the
+    // processing of a duplicate transaction which exists in some other subblock.
     std::map<uint256, CTransactionRef> mapDagTxns;
+
+    // a map of all inputs and the transactions they refer to that exist in the dag.
+    // Used in determining which transactions are chained. This data also includes
+    // all double spend transaction inputs.
+    std::map<COutPoint, CTransactionRef> mapInputs;
+
+    // a vector of sets of transactions that double spend each other. In each
+    // set the transactions in them double spend one another.
+    std::vector<std::map<uint256, CTreeNodeRef> > vDoubleSpendTxns;
+
 
     // global coins cache pointer
     CCoinsViewCache *_pcoinsTip = nullptr;
@@ -108,7 +126,7 @@ public:
     }
 
 protected:
-    bool Insert(CTreeNodeRef new_node, bool *fAllowRecursion = nullptr);
+    bool Insert(CTreeNodeRef new_node);
 };
 
 // All datamembers are protected by cs_forest
@@ -121,7 +139,8 @@ protected:
     // There can be many valid trees in a grove but, "tree" references the current active tree.
     std::shared_ptr<CTailstormTree> tree = nullptr;
 
-    // The set of valid trees.
+    // The set of valid trees. (Currently only one tree is ever used
+    // but this code is here in case it's ever needed again.)
     std::set<std::shared_ptr<CTailstormTree> > setValidTrees;
 
     // key is subblock hash for the node in value
@@ -152,7 +171,9 @@ protected:
     void Clear();
 
     bool Insert(CTreeNodeRef newNode);
-    bool GetBestDag(std::set<CTreeNodeRef> &dag);
+    bool GetBestDag(std::set<CTreeNodeRef> &dag,
+        std::vector<std::map<uint256, CTreeNodeRef> > *vDoubleSpendTxns = nullptr,
+        std::map<COutPoint, CTransactionRef> *mapInputs = nullptr);
     bool GetBestTipHash(uint256 &hash);
     void ActivateBestTree();
 };
@@ -252,10 +273,16 @@ public:
     std::map<uint256, CTreeNode> GetAllNodes();
 
     //! Return a set of tree nodes of the best dag
-    bool GetBestDagFor(const uint256 &hash, std::set<CTreeNodeRef> &dag);
+    bool GetBestDagFor(const uint256 &hash,
+        std::set<CTreeNodeRef> &dag,
+        std::vector<std::map<uint256, CTreeNodeRef> > *vDoubleSpendTxns = nullptr,
+        std::map<COutPoint, CTransactionRef> *mapInputs = nullptr);
 
     //! Return a set of nodes from a tree that matches what is in a block
-    bool GetDagForBlock(ConstCBlockRef &pblock, std::set<CTreeNodeRef> &dag);
+    bool GetDagForBlock(ConstCBlockRef &pblock,
+        std::set<CTreeNodeRef> &dag,
+        std::vector<std::map<uint256, CTreeNodeRef> > *vDoubleSpendTxns,
+        std::map<COutPoint, CTransactionRef> *mapInputs);
 
     //! Return the current hash of the tip of the dag which contains this hash
     bool GetBestTipHashFor(const uint256 &hash, uint256 &tiphash);

@@ -980,6 +980,7 @@ void CTxMemPool::_removeRecursive(const CTransaction &origTx, std::list<CTransac
     setAllRemoves.clear();
 }
 
+/* Currently not used but keep it since we may want to use it again in the future.
 void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight, int flags)
 {
     // Remove transactions spending a coinbase which are now immature and no-longer-final transactions
@@ -1026,6 +1027,7 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
         _removeRecursive(tx, removed);
     }
 }
+*/
 
 /*
 void CTxMemPool::removeConflicts(const CTransaction &tx, std::list<CTransactionRef> &removed)

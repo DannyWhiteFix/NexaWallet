@@ -1220,7 +1220,6 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
         CAmount inChainInputValue;
         bool fSpendsCoinbase = false;
         double dPriority = view.GetPriority(*tx, chainActive.Height(), inChainInputValue, fSpendsCoinbase);
-
         // Check that input script constraints are satisfied
         unsigned char sighashType = 0;
         if (!CheckInputs(tx, state, view, coinstip, true, flags, true, &resourceTracker, chainparams, nullptr,
@@ -1569,8 +1568,9 @@ bool CheckSequenceLocks(const CTransactionRef tx, int flags, LockPoints *lp, boo
     }
     else
     {
-        // pcoinsTip contains the UTXO set for chainActive.Tip()
-        CCoinsViewMemPool tmpView(pcoinsTip, mempool);
+        // ptip contains the UTXO set for chainActive.Tip() or the tailstorm dag tip
+        CCoinsViewCache *ptip = fTailstormEnabled ? tailstormForest.pcoinsDag : pcoinsTip;
+        CCoinsViewMemPool tmpView(ptip, mempool);
         CCoinsViewMemPool &viewMemPool = tmpView;
         std::vector<int> prevheights;
         prevheights.resize(tx->vin.size());

@@ -99,8 +99,7 @@ bool TestBlockValidity(CValidationState &state,
     const ConstCBlockRef pblock,
     CBlockIndex *pindexPrev,
     bool fCheckPOW = true,
-    bool fCheckMerkleRoot = true,
-    bool fSummaryBlock = false);
+    bool fCheckMerkleRoot = true);
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params &consensusParams);
 
@@ -128,8 +127,7 @@ bool CheckBlock(const Consensus::Params &consensusParams,
     ConstCBlockRef pblock,
     CValidationState &state,
     bool fCheckPOW = true,
-    bool fCheckMerkleRoot = true,
-    bool fSummaryBlock = false);
+    bool fCheckMerkleRoot = true);
 
 /** Mark a block as having its data received and checked (up to BLOCK_VALID_TRANSACTIONS). */
 bool ReceivedBlockTransactions(ConstCBlockRef pblock,
@@ -169,7 +167,8 @@ bool ConnectBlockCanonicalOrdering(ConstCBlockRef pblock,
     std::vector<std::pair<uint256, CDiskTxPos> > &vPos,
     std::map<CGroupTokenID, CAmount> &accumulatedMintages,
     std::map<CGroupTokenID, CAuth> &accumulatedAuthorities,
-    const std::map<uint256, CTransactionRef> *mapDagTxns = nullptr);
+    const std::map<uint256, CTransactionRef> *mapDagTxns = nullptr,
+    const std::set<uint256> *setTxnExclusions = nullptr);
 
 /** Disconnect the current chainActive.Tip() */
 bool DisconnectTip(CValidationState &state, const Consensus::Params &consensusParams, const bool fRollBack = false);
