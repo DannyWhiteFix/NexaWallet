@@ -151,8 +151,8 @@ extern CCriticalSection cs_mapInboundConnectionTracker;
 extern std::atomic<uint64_t> lastMempoolSync;
 
 // Signals for message handling
-extern CNodeSignals g_signals;
-CNodeSignals &GetNodeSignals() { return g_signals; }
+extern CNodeSignals g_nodeSignals;
+CNodeSignals &GetNodeSignals() { return g_nodeSignals; }
 void AddOneShot(const std::string &strDest)
 {
     LOCK(cs_vOneShots);
@@ -523,7 +523,7 @@ void CNode::CloseSocketDisconnect()
 
 void CNode::PushVersion()
 {
-    int nBestHeight = g_signals.GetHeight().get_value_or(0);
+    int nBestHeight = g_nodeSignals.GetHeight().get_value_or(0);
 
     int64_t nTime = (fInbound ? GetAdjustedTime() : GetTime());
     CAddress addrYou = (addr.IsRoutable() && !IsProxy(addr) ? addr : CAddress(CService("0.0.0.0", 0)));
@@ -2502,7 +2502,7 @@ static bool threadProcessMessages(CNode *pnode)
 {
     bool fSleep = true;
     // Receive messages from the net layer and put them into the receive queue.
-    if (!g_signals.ProcessMessages(pnode))
+    if (!g_nodeSignals.ProcessMessages(pnode))
         pnode->fDisconnect = true;
 
     // Discover if there's more work to be done
@@ -2616,14 +2616,14 @@ void ThreadMessageHandler()
             if (pnode->fSuccessfullyConnected)
             {
                 // parallel processing
-                g_signals.SendMessages(pnode);
+                g_nodeSignals.SendMessages(pnode);
             }
             else
             {
                 // serial processing during setup
                 TRY_LOCK(pnode->csSerialPhase, lockSerial);
                 if (lockSerial)
-                    g_signals.SendMessages(pnode);
+                    g_nodeSignals.SendMessages(pnode);
             }
             if (shutdown_threads.load() == true)
             {

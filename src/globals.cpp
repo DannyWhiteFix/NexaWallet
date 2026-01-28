@@ -312,7 +312,7 @@ list<CNode *> vNodesDisconnected GUARDED_BY(cs_vNodesDisconnected);
 
 CSemaphore *semOutbound = nullptr;
 CSemaphore *semOutboundAddNode = nullptr; // BU: separate semaphore for -addnodes
-CNodeSignals g_signals;
+CNodeSignals g_nodeSignals;
 CAddrMan addrman;
 CDoSManager dosMan;
 
