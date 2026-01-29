@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(coinbase_rewards)
        =======
        /     \
     -----    -----
-    | 6 |    | 1 | * low score from a skipped dagheight link.
+    | 6 |    | 5 |
     -----    -----
       |        /
       |       /
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(coinbase_rewards)
       |    \
       |     \
     -----    -----
-    | 6 |    | 5 | * low score from a skipped dagheight link.
+    | 6 |    | 5 |
     -----    -----
       |        /
       |       /
@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(coinbase_rewards)
     node.setDescendants.clear();
     noderef1b = MakeTreeNodeRef(node);
     setBestDag.insert(noderef1b);
-    mapExpectedScores.emplace(node.hash, 1);
+    mapExpectedScores.emplace(node.hash, 5);
 
     node.hash = InsecureRand256();
     node.dagHeight = 2;
@@ -849,7 +849,7 @@ BOOST_AUTO_TEST_CASE(coinbase_rewards)
       |      |  \      \
       |      |   \      \
     -----  -----  -----  -----
-    | 4 |  | 4 |  | 4 |  | 2 | *a possible selfish miner with a skipped dagheight link gets a low score
+    | 4 |  | 4 |  | 4 |  | 3 |
     -----  -----  -----  -----
         \    |    /     /
          \   |   /     /
@@ -925,7 +925,7 @@ BOOST_AUTO_TEST_CASE(coinbase_rewards)
     node.setAncestors.insert(noderef1b);
     CTreeNodeRef noderef2d = MakeTreeNodeRef(node);
     setBestDag.insert(noderef2d);
-    mapExpectedScores.emplace(node.hash, 2);
+    mapExpectedScores.emplace(node.hash, 3);
 
     node.hash = InsecureRand256();
     node.dagHeight = 3;
@@ -980,7 +980,7 @@ BOOST_AUTO_TEST_CASE(coinbase_rewards)
       |      |  \      \
       |      |   \      \
     -----  -----  -----  -----
-    | 4 |  | 4 |  | 4 |  | 4 | * has both skipped and non skipped dagheight links.
+    | 4 |  | 4 |  | 4 |  | 5 |
     -----  -----  -----  -----
         \    |    /     /  |
          \   |   /     /   |
@@ -1054,7 +1054,7 @@ BOOST_AUTO_TEST_CASE(coinbase_rewards)
     node.setAncestors.insert(noderef1b);
     noderef2d = MakeTreeNodeRef(node);
     setBestDag.insert(noderef2d);
-    mapExpectedScores.emplace(node.hash, 4);
+    mapExpectedScores.emplace(node.hash, 5);
 
     node.hash = InsecureRand256();
     node.dagHeight = 3;
@@ -1129,7 +1129,7 @@ BOOST_AUTO_TEST_CASE(coinbase_rewards)
       |      |  \      \
       |      |   \      \
     -----  -----  -----  -----
-    | 5 |  | 5 |  | 5 |  | 2 | * has 2 skipped dagheight links and a low score as a result
+    | 5 |  | 5 |  | 5 |  | 4 |
     -----  -----  -----  -----
         \    |    /     /  |
          \   |   /     /   |
@@ -1203,7 +1203,7 @@ BOOST_AUTO_TEST_CASE(coinbase_rewards)
     node.setAncestors.insert(noderef1b);
     noderef2d = MakeTreeNodeRef(node);
     setBestDag.insert(noderef2d);
-    mapExpectedScores.emplace(node.hash, 2);
+    mapExpectedScores.emplace(node.hash, 4);
 
     node.hash = InsecureRand256();
     node.dagHeight = 3;
@@ -1270,7 +1270,7 @@ BOOST_AUTO_TEST_CASE(coinbase_rewards)
       |      |  \      \
       |      |   \      \
     -----  -----  -----  -----
-    | 4 |  | 4 |  | 4 |  | 3 | * has both skipped and non skipped dagheight links.
+    | 4 |  | 4 |  | 4 |  | 4 | * has both skipped and non skipped dagheight links.
     -----  -----  -----  -----
         \    |    /     /  |
          \   |   /     /   |
@@ -1344,7 +1344,7 @@ BOOST_AUTO_TEST_CASE(coinbase_rewards)
     node.setAncestors.insert(noderef1b);
     noderef2d = MakeTreeNodeRef(node);
     setBestDag.insert(noderef2d);
-    mapExpectedScores.emplace(node.hash, 3);
+    mapExpectedScores.emplace(node.hash, 4);
 
     node.hash = InsecureRand256();
     node.dagHeight = 3;

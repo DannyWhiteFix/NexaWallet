@@ -93,7 +93,9 @@ static std::set<CTreeNodeRef> CalculateValidDescendants(CTreeNodeRef &node)
 
     for (auto desc : node->setDescendants)
     {
-        if (desc->dagHeight == node->dagHeight + 1)
+        // TODO: for now just allow all descenants.  We need more time
+        // to evaluate the benfits of not including skipped link descendants.
+        // if (desc->dagHeight == node->dagHeight + 1)
         {
             setValidDescendants.insert(desc);
         }
@@ -107,7 +109,9 @@ static std::set<CTreeNodeRef> CalculateValidDescendants(CTreeNodeRef &node)
         {
             for (auto desc : _node->setDescendants)
             {
-                if (desc->dagHeight == _node->dagHeight + 1)
+                // TODO: for now just allow all descenants.  We need more time
+                // to evaluate the benfits of not including skipped link descendants.
+                // if (desc->dagHeight == _node->dagHeight + 1)
                 {
                     setNextDescendants.insert(desc);
                 }
