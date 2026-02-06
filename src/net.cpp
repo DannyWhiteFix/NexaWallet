@@ -1414,6 +1414,9 @@ void ThreadSocketHandler()
     // Track when we last processed diconnections
     int64_t nLastCleanup = GetTimeMillis();
 
+    // Track whether we made a first connection, either inbound or outbound
+    bool fInitialConnection = false;
+
     while (true)
     {
         if (shutdown_threads.load() == true)
@@ -1437,6 +1440,17 @@ void ThreadSocketHandler()
         {
             nPrevNodeCount = vNodes.size();
             uiInterface.NotifyNumConnectionsChanged(nPrevNodeCount);
+        }
+
+        // If there are no connections or all connections are lost then reset the dagviewer.
+        if (!fInitialConnection && !vNodes.empty())
+        {
+            fInitialConnection = true;
+        }
+        else if (fInitialConnection && vNodes.empty())
+        {
+            uiInterface.ResetDagViewer();
+            fInitialConnection = false;
         }
 
         //

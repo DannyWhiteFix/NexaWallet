@@ -8,6 +8,7 @@
 #include "chainparams.h"
 #include "sync.h"
 #include "ui_blockdescdialog.h"
+#include "ui_interface.h"
 #include "uint256.h"
 
 #include <memory>
@@ -124,7 +125,7 @@ public:
         uint32_t nBlockHeight,
         uint64_t nTransactions,
         uint64_t nBlockSize,
-        std::vector<Link> &_vpointsto,
+        std::vector<Link> _vpointsto,
         bool fDoubleSpend,
         uint32_t nFork,
         uint8_t blockType,
@@ -139,17 +140,7 @@ public:
     void ProcessOrphans();
 
     // Reset the dag viewer
-    void Reset()
-    {
-        LOCK(cs_info);
-        mapDag.clear();
-        mapInfo.clear();
-        mapInfoByMiningHash.clear();
-        mapDeferredInfo.clear();
-
-        if (scene)
-            scene->clear();
-    }
+    void Reset();
 
 private:
     QWidget *_parent; // pointer to the layout
@@ -206,8 +197,8 @@ private:
     QBrush charcoalBrush;
 
     // block dimensions
-    const qreal width = 28;
-    const qreal height = 24;
+    const qreal subblockWidth = 28;
+    const qreal subblockHeight = 24;
     const qreal summaryHeight = 100;
     const qreal summaryWidth = 60;
     const qreal legacyHeight = 60;
@@ -218,7 +209,7 @@ private:
     /** The view width (in pixels) of the graphics scene. */
     const qreal DEFAULT_WIDTH_OF_VIEW = 100 * 1000;
     /** The maximum number of blocks we keep in the graphics scene (make it a little bigger than the view can hold) */
-    const size_t DEFAULT_MAX_BLOCKS = (DEFAULT_WIDTH_OF_VIEW * 1.05) / (size_t)(width + distance);
+    const size_t DEFAULT_MAX_BLOCKS = (DEFAULT_WIDTH_OF_VIEW * 1.05) / (size_t)(subblockWidth + distance);
     /** Are QLabels enabled */
     const bool fQLabelsEnabled = false;
 
@@ -266,6 +257,12 @@ private:
     void SetupSimulation1();
     void SetupSimulation2();
     void SetupSimulation5();
+
+    // Save boost signals so we can unsubsribe the exact signal.
+    boost::signals2::connection blockTipConn;
+    boost::signals2::connection headerTipConn;
+    boost::signals2::connection resetConn;
+
 
 private Q_SLOTS:
     void dagSimulation();

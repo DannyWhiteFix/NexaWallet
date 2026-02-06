@@ -113,6 +113,9 @@ public:
         void(bool initialSync, uint32_t dagheight, uint32_t nSequenceId, const CBlockHeader &header, bool fSubblock)>
         NotifyHeaderTipDag;
 
+    /** Reset Dag Viewer */
+    boost::signals2::signal<void(void)> ResetDagViewer;
+
     /** Banlist did change. */
     boost::signals2::signal<void(void)> BannedListChanged;
 };

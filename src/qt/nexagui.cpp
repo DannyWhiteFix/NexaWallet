@@ -267,7 +267,7 @@ void BitcoinGUI::createActions()
     tabGroup->addAction(historyAction);
 
     tokensAction = new QAction(platformStyle->SingleColorIcon(":/icons/send"), tr("&Tokens"), this);
-    tokensAction->setStatusTip(tr("Browse or Send Tokens").arg(GUIUtil::bitcoinURIScheme(*cfg)));
+    tokensAction->setStatusTip(tr("Browse or Send Tokens"));
     tokensAction->setToolTip(tokensAction->statusTip());
     tokensAction->setCheckable(true);
     tokensAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
@@ -278,7 +278,7 @@ void BitcoinGUI::createActions()
     tokensMenuAction->setToolTip(tokensMenuAction->statusTip());
 
     tokensHistoryAction = new QAction(platformStyle->SingleColorIcon(":/icons/history"), tr("&Token History"), this);
-    tokensHistoryAction->setStatusTip(tr("Browse Token History").arg(GUIUtil::bitcoinURIScheme(*cfg)));
+    tokensHistoryAction->setStatusTip(tr("Browse Token History"));
     tokensHistoryAction->setToolTip(tokensHistoryAction->statusTip());
     tokensHistoryAction->setCheckable(true);
     tokensHistoryAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));

@@ -5,7 +5,6 @@
 #include "dagwidget.h"
 #include "chain.h"
 #include "random.h"
-#include "ui_interface.h"
 #include "unlimited.h"
 #include "utiltime.h"
 #include "validation/tailstorm.h"
@@ -392,17 +391,6 @@ void DagWidget::DeferItem(uint256 hash,
         mapDeferredInfo.emplace(hash, info);
     }
     LOG(DAG, "Dagwidget: deferred map size %ld\n", mapDeferredInfo.size());
-
-    // Reset the dagviewer if we have gaps and blocks are not getting connected. This typically
-    // happens after a reindex or if the network connections have been dropped for any reason
-    //
-    // Deferred items should exist only momentarily so giving a 15 second window is more
-    // than enough time to be sure that the viewer needs a reset.
-    if ((GetTimeMillis() > nTimeLastAddSuccessful + 15000) && !mapDeferredInfo.empty())
-    {
-        LOG(DAG, "Dagwidget: resetting dagviewer because no successful added items in a while");
-        Reset();
-    }
 }
 
 void DagWidget::AddItem(uint256 hash,
@@ -413,7 +401,7 @@ void DagWidget::AddItem(uint256 hash,
     uint32_t nBlockHeight,
     uint64_t nTransactions,
     uint64_t nBlockSize,
-    std::vector<Link> &_vpointsto,
+    std::vector<Link> _vpointsto,
     bool fDoubleSpend,
     uint32_t nFork,
     uint8_t blockType,
@@ -450,11 +438,13 @@ void DagWidget::AddItem(uint256 hash,
                 {
                     scene->removeItem(it->itemText1);
                     delete it->itemText1;
+                    it->itemText1 = nullptr;
                 }
                 if (it->itemText2)
                 {
                     scene->removeItem(it->itemText2);
                     delete it->itemText2;
+                    it->itemText2 = nullptr;
                 }
             }
             else
@@ -463,6 +453,7 @@ void DagWidget::AddItem(uint256 hash,
                 {
                     scene->removeItem(it->itemText);
                     delete it->itemText;
+                    it->itemText = nullptr;
                 }
             }
 
@@ -470,12 +461,14 @@ void DagWidget::AddItem(uint256 hash,
             {
                 scene->removeItem(it->item);
                 delete it->item;
+                it->item = nullptr;
             }
 
             if (it->litem)
             {
                 scene->removeItem(it->litem);
                 delete it->litem;
+                it->litem = nullptr;
             }
 
             // now trim the block from the map
@@ -515,8 +508,8 @@ void DagWidget::AddItem(uint256 hash,
     // setup item info and tracking map for this block
     qreal x = 0;
     qreal y = 0;
-    qreal itemWidth = width;
-    qreal itemHeight = height;
+    qreal itemWidth = subblockWidth;
+    qreal itemHeight = subblockHeight;
     if (blockType == SUMMARY)
     {
         itemWidth = summaryWidth;
@@ -589,6 +582,18 @@ void DagWidget::AddItem(uint256 hash,
         else if (blockType == STORM_BLOCK)
         {
             offset = distance + (itemHeight / 2);
+
+            // Handle special case where a Summary Block had arrived and been
+            // drawn on screen first before a subblock orphan. In this case
+            // we need to make a small adjustment to re-position the subblock.
+            for (auto &item : vDag)
+            {
+                if (IsSummaryBlock(item->header))
+                {
+                    offset = distance + (summaryHeight / 2);
+                    break;
+                }
+            }
         }
         else
         {
@@ -833,8 +838,8 @@ void DagWidget::AddItem(uint256 hash,
                     // are withing the block rectangle won't be seen.
                     QGraphicsLineItem *litem = new QGraphicsLineItem();
                     litem->setLine(mapInfo[link.prevBlock]->x + (mapInfo[link.prevBlock]->itemWidth / 2),
-                        mapInfo[link.prevBlock]->y + (height / 2), x + (mapInfo[link.prevBlock]->itemWidth / 2),
-                        y + (height / 2));
+                        mapInfo[link.prevBlock]->y + (subblockHeight / 2), x + (mapInfo[link.prevBlock]->itemWidth / 2),
+                        y + (subblockHeight / 2));
                     litem->setPen(pen);
                     litem->setZValue(-1);
                     scene->addItem(litem);
@@ -903,7 +908,7 @@ void DagWidget::AddItem(uint256 hash,
             else
             {
                 QPainterPath path;
-                QRectF rect(x, y - (summaryHeight / 2) + (height / 2), summaryWidth, summaryHeight);
+                QRectF rect(x, y - (summaryHeight / 2) + (subblockHeight / 2), summaryWidth, summaryHeight);
                 path.addRoundedRect(rect, radius, radius - 1);
 
                 QGraphicsPathItem *item = scene->addPath(path, pen, brush);
@@ -944,8 +949,8 @@ void DagWidget::AddItem(uint256 hash,
                     // are withing the block rectangle won't be seen.
                     QGraphicsLineItem *litem = new QGraphicsLineItem();
                     litem->setLine(mapInfo[link.prevBlock]->x + (mapInfo[link.prevBlock]->itemWidth / 2),
-                        mapInfo[link.prevBlock]->y + (height / 2), x + (mapInfo[link.prevBlock]->itemWidth / 2),
-                        y + (height / 2));
+                        mapInfo[link.prevBlock]->y + (subblockHeight / 2), x + (mapInfo[link.prevBlock]->itemWidth / 2),
+                        y + (subblockHeight / 2));
                     litem->setPen(pen);
                     litem->setZValue(-1);
                     scene->addItem(litem);
@@ -1013,7 +1018,7 @@ void DagWidget::AddItem(uint256 hash,
             else
             {
                 QPainterPath path;
-                QRectF rect(x, y - (legacyHeight / 2) + (height / 2), legacyWidth, legacyHeight);
+                QRectF rect(x, y - (legacyHeight / 2) + (subblockHeight / 2), legacyWidth, legacyHeight);
                 path.addRoundedRect(rect, radius, radius - 1);
 
                 QGraphicsPathItem *item = scene->addPath(path, pen, brush);
@@ -1142,6 +1147,18 @@ void DagWidget::ProcessOrphans()
         }
     }
     LOG(DAG, "Dagwidget: mapdeferred size after process orphans %ld", mapDeferredInfo.size());
+}
+
+void DagWidget::Reset()
+{
+    LOCK(cs_info);
+    mapDag.clear();
+    mapInfo.clear();
+    mapInfoByMiningHash.clear();
+    mapDeferredInfo.clear();
+
+    if (scene)
+        scene->clear();
 }
 
 // for adding text to block rectangles
@@ -1277,13 +1294,14 @@ int32_t DagWidget::GetNextDagViewerHeight(uint256 &prevDagHash, const CBlockHead
             auto setPrevHashes = GetPrevHashes(header);
             for (auto &prevhash : setPrevHashes)
             {
-                if (!mapInfo.count(prevhash) && mapInfo.size() > Params().GetConsensus().tailstorm_k)
+                bool fHaveInfo = mapInfo.count(prevhash);
+                if (!fHaveInfo && mapInfo.size() > Params().GetConsensus().tailstorm_k)
                 {
                     LOG(DAG, "Dagwidget: prevhash %s not found for subblock !!! - defer in dagviewer",
                         prevhash.ToString());
                     return -1;
                 }
-                if (mapInfo[prevhash]->nDagViewerHeight > nMaxDagViewerHeight)
+                if (fHaveInfo && mapInfo[prevhash]->nDagViewerHeight > nMaxDagViewerHeight)
                 {
                     prevDagHash = prevhash;
                     nMaxDagViewerHeight = mapInfo[prevhash]->nDagViewerHeight;
@@ -1378,11 +1396,31 @@ static void BlockTipChanged(DagWidget *dagwidget,
             return;
         }
     }
+    bool fDoubleSpend = false;
+    uint32_t nFork = 0; // not really relevant anymore and could take out.
+    // NOTE: must use a lamba because of Qt's 10 parameter limit when using invokeMethod.
+    QMetaObject::invokeMethod(
+        dagwidget,
+        [=]()
+        {
+            if (dagwidget)
+            {
+                dagwidget->AddItem(hash, mininghash, prevDagHash, nDagHeight, nSequenceId, nBlockHeight, nTransactions,
+                    nBlockSize, vLinks, fDoubleSpend, nFork, blockType, fHeader, header);
+            }
+        },
+        Qt::QueuedConnection);
 
-    dagwidget->AddItem(hash, mininghash, prevDagHash, nDagHeight, nSequenceId, nBlockHeight, nTransactions, nBlockSize,
-        vLinks, false /* ds */, 0 /* nfork */, blockType, fHeader, header);
-
-    dagwidget->ProcessOrphans();
+    QMetaObject::invokeMethod(
+        dagwidget,
+        [=]()
+        {
+            if (dagwidget)
+            {
+                dagwidget->ProcessOrphans();
+            }
+        },
+        Qt::QueuedConnection);
 }
 
 static void BlockHeaderChanged(DagWidget *dagwidget,
@@ -1463,28 +1501,63 @@ static void BlockHeaderChanged(DagWidget *dagwidget,
         }
     }
 
-    dagwidget->AddItem(hash, mininghash, prevDagHash, nDagHeight, nSequenceId, nBlockHeight, nTransactions, nBlockSize,
-        vLinks, false /* ds */, 0 /* nfork */, blockType, fHeader, header);
+    bool fDoubleSpend = false;
+    uint32_t nFork = 0; // not really relevant anymore and could take out.
+    // NOTE: must use a lamba because of Qt's 10 parameter limit when using invokeMethod.
+    QMetaObject::invokeMethod(
+        dagwidget,
+        [=]()
+        {
+            if (dagwidget)
+            {
+                dagwidget->AddItem(hash, mininghash, prevDagHash, nDagHeight, nSequenceId, nBlockHeight, nTransactions,
+                    nBlockSize, vLinks, fDoubleSpend, nFork, blockType, fHeader, header);
+            }
+        },
+        Qt::QueuedConnection);
 
-    dagwidget->ProcessOrphans();
+    QMetaObject::invokeMethod(
+        dagwidget,
+        [=]()
+        {
+            if (dagwidget)
+            {
+                dagwidget->ProcessOrphans();
+            }
+        },
+        Qt::QueuedConnection);
+}
+
+static void ResetViewer(DagWidget *dagwidget)
+{
+    QMetaObject::invokeMethod(
+        dagwidget,
+        [=]()
+        {
+            if (dagwidget)
+            {
+                dagwidget->Reset();
+            }
+        },
+        Qt::QueuedConnection);
 }
 
 void DagWidget::SubscribeToCoreSignals()
 {
     // Connect core signals to block viewer
-    uiInterface.NotifyBlockTipDag.connect(boost::bind(
+    blockTipConn = uiInterface.NotifyBlockTipDag.connect(boost::bind(
         BlockTipChanged, this, boost::arg<1>(), boost::arg<2>(), boost::arg<3>(), boost::arg<4>(), boost::arg<5>()));
-    uiInterface.NotifyHeaderTipDag.connect(boost::bind(
+    headerTipConn = uiInterface.NotifyHeaderTipDag.connect(boost::bind(
         BlockHeaderChanged, this, boost::arg<1>(), boost::arg<2>(), boost::arg<3>(), boost::arg<4>(), boost::arg<5>()));
+    resetConn = uiInterface.ResetDagViewer.connect(boost::bind(ResetViewer, this));
 }
 
 void DagWidget::UnsubscribeFromCoreSignals()
 {
     // Disconnect signals from client
-    uiInterface.NotifyBlockTipDag.disconnect(boost::bind(
-        BlockTipChanged, this, boost::arg<1>(), boost::arg<2>(), boost::arg<3>(), boost::arg<4>(), boost::arg<5>()));
-    uiInterface.NotifyHeaderTipDag.disconnect(boost::bind(
-        BlockHeaderChanged, this, boost::arg<1>(), boost::arg<2>(), boost::arg<3>(), boost::arg<4>(), boost::arg<5>()));
+    blockTipConn.disconnect();
+    headerTipConn.disconnect();
+    resetConn.disconnect();
 }
 
 void DagWidget::RemoveHighlight()
@@ -1493,6 +1566,7 @@ void DagWidget::RemoveHighlight()
     if (scene && itemHighlight)
     {
         scene->removeItem(itemHighlight);
+        delete itemHighlight;
         itemHighlight = nullptr;
         pSelected = nullptr;
     }
@@ -2090,7 +2164,7 @@ void DagWidget::dagSimulation()
 
         SimInfo info = vSimulation5[item - 1];
         uint256 prevblock;
-        for (Link link : info.vBlockPointsTo)
+        for (auto link : info.vBlockPointsTo)
         {
             if (link.fHardLink)
             {
