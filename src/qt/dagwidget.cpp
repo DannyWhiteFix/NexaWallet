@@ -578,6 +578,26 @@ void DagWidget::AddItem(uint256 hash,
         if (blockType == SUMMARY)
         {
             offset = (distance / 2) + itemHeight;
+
+            // Handle special case where a Summary Block had arrived and been
+            // drawn on screen after some other subblocks have already been
+            // drawn on screen at the same intended view height. In such a case
+            // we need to reposition the summary block to be in alignement with
+            // the already existing subblocks.
+            //
+            // So first find if there are subblocks already on screen at the
+            // viewer height and if so then do the x axis adjustment.
+            {
+                for (auto &item : vDag)
+                {
+                    if (!IsSummaryBlock(item->header))
+                    {
+                        x -= subblockWidth / 2;
+                        info->x = x;
+                        break;
+                    }
+                }
+            }
         }
         else if (blockType == STORM_BLOCK)
         {
