@@ -57,30 +57,6 @@ class AdaptiveBlockSizeTest(BitcoinTestFramework):
         node.sendrawtransaction(signedtxn["hex"])
         return signedtxn["hex"]
 
-    def generateTx(self, node, txBytes, addrs, data=None):
-        wallet = node.listunspent()
-        wallet.sort(key=lambda x: x["amount"], reverse=False)
-
-        size = 0
-        count = 0
-        while size < txBytes:
-            count += 1
-            utxo = wallet.pop()
-            outp = {}
-            # Make the tx bigger by adding addtl outputs so it validates faster
-            payamt = satoshi_round(utxo["amount"] / 8)
-            for x in range(0, 8):
-                # its test code, I don't care if rounding error is folded into the fee
-                outp[addrs[(count + x) % len(addrs)]] = payamt
-            if data:
-                outp["data"] = data
-            txn = createrawtransaction([utxo], outp, createWastefulOutput)
-            # The python createrawtransaction is meant to have the same API as the node's RPC so you can also do:
-            signedtxn = node.signrawtransaction(txn)
-            size += len(binascii.unhexlify(signedtxn["hex"]))
-            node.sendrawtransaction(signedtxn["hex"], True)
-        return (count, size)
-
     def MineBlock(self, node, TEST_BLOCK_SIZE, NUM_ADDRS, DATA_SIZE):
         addrs = [node.getnewaddress() for _ in range(NUM_ADDRS)]
 

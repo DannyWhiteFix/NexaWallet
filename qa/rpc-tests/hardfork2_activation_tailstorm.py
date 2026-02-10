@@ -29,8 +29,8 @@ class TailstormActivationTest(BitcoinTestFramework):
     def setup_network(self):
         self.nodes = []
         self.is_network_split = False
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug=req", "-debug=net", "-debug=dag"]))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug=req", "-debug=net", "-debug=dag"]))
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug=req", "-debug=net", "-debug=dag", "-relay.dataCarrierSize=30000"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug=req", "-debug=net", "-debug=dag", "-relay.dataCarrierSize=30000"]))
         interconnect_nodes(self.nodes)
 
     def setmocktime(self, time):
@@ -40,7 +40,6 @@ class TailstormActivationTest(BitcoinTestFramework):
     def setforktime(self, time):
         for node in self.nodes:
             node.set("consensus.fork2Time=" + str(time))
-
 
     def run_test(self):
 
@@ -233,9 +232,9 @@ class TailstormActivationTest(BitcoinTestFramework):
         assert_equal(tailstorminfo['bestdag'], 0)
         assert_equal(tailstorminfo['competing'], 4)
 
-        info = self.nodes[0].getmininginfo();
-        assert_equal(info["currentmaxblocksize"], 400000);
-        assert_equal(info["currentmaxsubblocksize"], 100000);
+        info = self.nodes[0].getmininginfo()
+        assert_equal(info["currentmaxblocksize"], 400000)
+        assert_equal(info["currentmaxsubblocksize"], 100000)
 
         # Check that block rewards being given out correctly to the right miners
         waitFor(waitTime, lambda: self.nodes[0].getwalletinfo()['balance'] == 190000000)
@@ -930,6 +929,40 @@ class TailstormActivationTest(BitcoinTestFramework):
             self.nodes[1].generate(16)
             self.sync_all()
 
+        # Create enough large transactions that would more than fill a summary block
+        # and then mine them.
+        # This test proves we won't create a summary block that is oversized.
+        logging.info("Check blocksize limits")
+        info = self.nodes[0].getmininginfo();
+        maxSummaryBlockSize = info["currentmaxblocksize"]
+        maxSubblockSize = info["currentmaxsubblocksize"]
+
+        NUM_ADDRS = 10
+        TX_POOL_BYTES = 420000
+        TX_DATA_SIZE = 20000
+        addrs = [self.nodes[0].getnewaddress() for _ in range(NUM_ADDRS)]
+        generateTx(self.nodes[0], TX_POOL_BYTES, addrs, "01" * TX_DATA_SIZE)
+
+        # generate the subblocks and make sure their sizes are below accepted limits
+        subblockhash = self.nodes[0].generate(1)
+        subblockSize = self.nodes[0].getsubblock(subblockhash[0])["size"]
+        assert_greater_than(subblockSize, 90000)
+        assert_greater_than(maxSubblockSize, subblockSize)
+
+        subblockhash = self.nodes[0].generate(1)
+        subblockSize = self.nodes[0].getsubblock(subblockhash[0])["size"]
+        assert_greater_than(subblockSize, 90000)
+        assert_greater_than(maxSubblockSize, subblockSize)
+        subblockhash = self.nodes[0].generate(1)
+        subblockSize = self.nodes[0].getsubblock(subblockhash[0])["size"]
+        assert_greater_than(subblockSize, 90000)
+        assert_greater_than(maxSubblockSize, subblockSize)
+
+        # mine the summary block and make sure it's not over the limit.
+        summaryhash = self.nodes[0].generate(1)
+        summaryBlockSize = self.nodes[0].getblock(summaryhash[0])["size"]
+        assert_greater_than(summaryBlockSize, 300000)
+        assert_greater_than(maxSummaryBlockSize, summaryBlockSize)
 
 
 if __name__ == '__main__':

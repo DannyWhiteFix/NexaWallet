@@ -458,17 +458,31 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
     // Init the block counters and size the coinbase accordingly.
     if (setBestDag.size() < (size_t)conparams.tailstorm_k - 1)
     {
+        // Clearing the setBestDag is done here for a couple of reasons.
+        // First, we have already created setBestDagTxids above which gets used latger
+        // regardless of the setBestDag, and secondly in the case of a subblock
+        // we want the setBestDag cleared so we only create a simple coinbase whereas
+        // for a full Summary Block we'd need the setBestDag to create the full and more
+        // complex coinbase.
         setBestDag.clear();
     }
     resetBlock(scriptPubKeyIn, coinbaseSize, &setBestDag);
 
     // Largest block you're willing to create:
-    nBlockMaxSize = IsSummaryBlock(pblock) ? pindexPrev->GetNextMaxBlockSize() :
-                                             pindexPrev->GetNextMaxBlockSize() / conparams.tailstorm_k;
+    // TODO: in a future optimization we should be able to use up the any remaining space that the summary block
+    //       could offer by first adding the dag txns to the summary block template and filling the extra space after.
+    //       This would allow us to uncomment the nMaxBlockSize line below. However for now we just set the summary
+    //       block size to be the same as any subblock and fill it accordingly.
+    // nBlockMaxSize = IsSummaryBlock(pblock) ? pindexPrev->GetNextMaxBlockSize() :
+    //                                         pindexPrev->GetNextMaxBlockSize() / conparams.tailstorm_k;
+    nBlockMaxSize = pindexPrev->GetNextMaxBlockSize() / conparams.tailstorm_k;
+
     if (miningBlockSize.Value() > 0 && nBlockMaxSize > miningBlockSize.Value())
     {
-        nBlockMaxSize =
-            IsSummaryBlock(pblock) ? miningBlockSize.Value() : miningBlockSize.Value() / conparams.tailstorm_k;
+        // TODO: future optimization as above.
+        // nBlockMaxSize =
+        //    IsSummaryBlock(pblock) ? miningBlockSize.Value() : miningBlockSize.Value() / conparams.tailstorm_k;
+        nBlockMaxSize = miningBlockSize.Value() / conparams.tailstorm_k;
     }
 
     // Minimum block size you want to create; block will be filled with free transactions
