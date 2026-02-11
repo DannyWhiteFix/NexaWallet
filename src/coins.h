@@ -382,7 +382,7 @@ public:
     void UncacheTx(const CTransaction &tx);
 
     //! Calculate the size of the cache (in number of transaction outputs)
-    unsigned int GetCacheSize() const;
+    uint64_t GetCacheSize() const;
 
     //! Calculate the size of the cache (in bytes)
     size_t DynamicMemoryUsage() const;

@@ -34,6 +34,7 @@
 #include "txorphanpool.h"
 #include "util.h"
 #include "utiltime.h"
+#include "validation/tailstorm.h"
 #include "validation/validation.h"
 
 
@@ -131,6 +132,7 @@ bool CompactBlock::HandleMessage(CDataStream &vRecv, uint32_t msgCookie, CNode *
     pblock->cmpctblock = std::make_shared<CompactBlock>(std::forward<CompactBlock>(tmp));
 
     std::shared_ptr<CompactBlock> compactBlock = pblock->cmpctblock;
+    bool fSummaryBlock = IsSummaryBlock(compactBlock->header);
 
     // Message consistency checking
     if (!IsCompactBlockValid(pfrom, compactBlock))
@@ -142,7 +144,7 @@ bool CompactBlock::HandleMessage(CDataStream &vRecv, uint32_t msgCookie, CNode *
 
     // Is there a previous block or header to connect with?
     CBlockIndex *pprev = LookupBlockIndex(compactBlock->header.hashPrevBlock);
-    if (!pprev)
+    if (fSummaryBlock && !pprev)
         return error("compact block from peer %s will not connect, unknown previous block %s", pfrom->GetLogName(),
             compactBlock->header.hashPrevBlock.ToString());
 
@@ -404,16 +406,20 @@ bool CompactReRequest::HandleMessage(CDataStream &vRecv, uint32_t msgCookie, CNo
     LOG(CMPCT, "received getblocktxn for %s peer=%s\n", inv.hash.ToString(), pfrom->GetLogName());
 
     std::vector<CTransaction> vTx;
-    CBlockIndex *hdr = LookupBlockIndex(inv.hash);
-    if (!hdr)
-    {
-        dosMan.Misbehaving(pfrom, 20, BanReasonNotInBlockIndex);
-        return error("Requested block is not available");
-    }
-    else
     {
         const Consensus::Params &consensusParams = Params().GetConsensus();
-        ConstCBlockRef pblock = ReadBlockFromDisk(hdr, consensusParams);
+        ConstCBlockRef pblock;
+        if (!tailstormForest.Find(inv.hash, pblock))
+        {
+            CBlockIndex *hdr = LookupBlockIndex(inv.hash);
+            if (!hdr)
+            {
+                dosMan.Misbehaving(pfrom, 20, BanReasonNotInBlockIndex);
+                return error("Requested block is not available");
+            }
+            pblock = ReadBlockFromDisk(hdr, consensusParams);
+        }
+
         if (!pblock)
         {
             // We do not assign misbehavior for not being able to read a block from disk because we already

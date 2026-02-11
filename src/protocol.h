@@ -442,10 +442,18 @@ extern const char *TOKENINFO;
  */
 extern const char *GET_UTXO;
 /**
- * A vecttor of utxo information sent with explicit solicitation from a GET_UTXO message
+ * A vector of utxo information sent with explicit solicitation from a GET_UTXO message
  * @since protocol version 80007.
  */
 extern const char *UTXO;
+
+/**
+ * Request all current subblocks in the dag as well as unconnected subblocks.
+ * This request happens just after startup so that the miner can have an up to
+ * date set of subblocks to begin mining on top of.
+ * @since protocol version 80008.
+ */
+extern const char *GET_DAG;
 }; // namespace NetMsgType
 
 /* Get a vector of all valid message types (see above) */
@@ -666,7 +674,6 @@ enum
     // MSG_FILTERED_BLOCK/MSG_CMPCT_BLOCK should not appear in any invs except as a part of getdata.
     MSG_FILTERED_BLOCK = 3,
     MSG_CMPCT_BLOCK = 4,
-
     // MSG_XTHINBLOCK, MSG_GRAPHENEBLOCK and MSG_THINBLOCK are not strictly necessary but they do make
     // creating and validating the requestManager tests much easier.
     MSG_XTHINBLOCK = 5,

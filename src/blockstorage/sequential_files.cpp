@@ -7,7 +7,8 @@
 #include "sequential_files.h"
 
 #include "blockstorage.h"
-
+#include "validation/headervalidation.h"
+#include "validation/tailstorm.h"
 
 extern bool AbortNode(CValidationState &state, const std::string &strMessage, const std::string &userMessage = "");
 extern bool fCheckForPruning;
@@ -137,10 +138,23 @@ CBlockRef ReadBlockFromDiskSequential(const CDiskBlockPos &pos, const Consensus:
     }
 
     // Check the header
-    if (!CheckProofOfWork(pblock->GetMiningHash(), pblock->nBits, consensusParams))
+    CValidationState state;
+    if (GetMinerDataVersion(pblock->minerData) == DEFAULT_MINER_DATA_SUMMARYBLOCK_VERSION)
     {
-        LOGA("ERROR: ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
-        return nullptr;
+        if (!CheckTailstormSummaryBlockProofOfWork(consensusParams, *pblock, state))
+        {
+            LOGA("ERROR: ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
+            return nullptr;
+        }
+    }
+    else
+    {
+        uint256 dummyHash;
+        if (!CheckProofOfWork(pblock->GetMiningHash(), dummyHash, pblock->nBits, consensusParams))
+        {
+            LOGA("ERROR: ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
+            return nullptr;
+        }
     }
 
     return pblock;

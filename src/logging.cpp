@@ -38,6 +38,7 @@ To add a new log category:
         {CAPD, "capd"},                         \
         {COINDB, "coindb"},                     \
         {CMPCT, "cmpctblock"},                  \
+        {DAG, "dag"},                           \
         {DBASE, "dbase"},                       \
         {DSPROOF, "dsproof"},                   \
         {ELECTRUM, "electrum"},                 \
@@ -65,12 +66,12 @@ To add a new log category:
         {RPC, "rpc"},                           \
         {SCRIPT, "script"},                     \
         {SELECTCOINS, "selectcoins"},           \
+        {TAIL, "tailstorm"},                    \
         {THIN, "thin"},                         \
         {TOKEN, "token"},                       \
         {TOR, "tor"},                           \
         {TWEAKS, "tweaks"},                     \
         {VALIDATION, "validation"},             \
-        {WB, "weakblocks"},                     \
         {ZMQ, "zmq"},                           \
     }
 // clang-format on

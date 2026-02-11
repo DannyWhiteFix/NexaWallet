@@ -12,6 +12,7 @@
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "crypto/sha256.h"
+#include "daa.h"
 #include "fs.h"
 #include "key.h"
 #include "main.h"

@@ -32,6 +32,7 @@
 #include "undo.h"
 #include "util.h"
 #include "utilstrencodings.h"
+#include "validation/tailstorm.h"
 #include "validation/validation.h"
 #include "validation/verifydb.h"
 
@@ -52,21 +53,11 @@ using namespace std;
 void ScriptPubKeyToJSON(const CScript &scriptPubKey, UniValue &out, bool fIncludeHex);
 void CreateUTXO(COutPoint &out, CUtxo &utxo);
 
-double GetDifficulty(const CBlockIndex *blockindex)
+double GetDifficulty(uint32_t nBits)
 {
-    // Floating point number that is a multiple of the minimum difficulty,
-    // minimum difficulty = 1.0.
-    if (blockindex == nullptr)
-    {
-        if (chainActive.Tip() == nullptr)
-            return 1.0;
-        else
-            blockindex = chainActive.Tip();
-    }
+    int nShift = (nBits >> 24) & 0xff;
 
-    int nShift = (blockindex->tgtBits() >> 24) & 0xff;
-
-    double dDiff = (double)0x0000ffff / (double)(blockindex->tgtBits() & 0x00ffffff);
+    double dDiff = (double)0x0000ffff / (double)(nBits & 0x00ffffff);
 
     while (nShift < 29)
     {
@@ -80,6 +71,21 @@ double GetDifficulty(const CBlockIndex *blockindex)
     }
 
     return dDiff;
+}
+
+double GetDifficulty(const CBlockIndex *blockindex)
+{
+    // Floating point number that is a multiple of the minimum difficulty,
+    // minimum difficulty = 1.0.
+    if (blockindex == nullptr)
+    {
+        if (chainActive.Tip() == nullptr)
+            return 1.0;
+        else
+            blockindex = chainActive.Tip();
+    }
+
+    return GetDifficulty(blockindex->tgtBits());
 }
 
 
@@ -197,6 +203,20 @@ UniValue getbestblockhash(const UniValue &params, bool fHelp)
 
     return chainActive.Tip()->GetBlockHash().GetHex();
 }
+
+UniValue getbestdagtiphash(const UniValue &params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error("getbestdagtiphash\n"
+                            "\nReturns the hash of the best (tip) block or subblock in the dag.\n"
+                            "\nResult\n"
+                            "\"hex\"      (string) the block hash hex encoded\n"
+                            "\nExamples\n" +
+                            HelpExampleCli("getbestdagtiphash", "") + HelpExampleRpc("getbestdagtiphash", ""));
+
+    return tailstormForest.GetDagActiveTip().GetHex();
+}
+
 
 UniValue getdifficulty(const UniValue &params, bool fHelp)
 {
@@ -901,6 +921,7 @@ static UniValue getblock(const UniValue &params, bool fHelp)
     {
         height = params[0].get_int();
     }
+
     if (isNumber)
     {
         READLOCK(chainActive.cs_chainLock);
@@ -949,6 +970,207 @@ static UniValue getblock(const UniValue &params, bool fHelp)
         fVerbose = true;
 
     return blockToJSON(block, pindex, fVerbose, fListTxns);
+}
+
+UniValue subblockheaderToJSON(const CBlock &block, UniValue &result)
+{
+    result.pushKV("hash", block.GetHash().GetHex());
+    int confirmations = -1;
+    // confirmations = chainActive.Height() - blockindex->height() + 1;
+    const CBlockHeader header = block.GetBlockHeader();
+    result.pushKV("confirmations", confirmations);
+    result.pushKV("height", (uint64_t)header.height);
+    result.pushKV("size", header.size);
+    result.pushKV("txcount", header.txCount);
+    result.pushKV("feePoolAmt", header.feePoolAmt);
+    result.pushKV("merkleroot", header.hashMerkleRoot.GetHex());
+    result.pushKV("time", (int64_t)header.nTime);
+    result.pushKV("nonce", HexStr(header.nonce));
+    result.pushKV("bits", strprintf("%08x", header.nBits));
+    result.pushKV("difficulty", GetDifficulty(header.nBits));
+    result.pushKV("chainwork", header.chainWork.GetHex());
+    result.pushKV("utxoCommitment", HexStr(header.utxoCommitment));
+    result.pushKV("minerData", HexStr(header.minerData));
+    result.pushKV("previousblockhash", block.hashPrevBlock.GetHex());
+    result.pushKV("ancestorhash", header.hashAncestor.GetHex());
+    return result;
+}
+
+UniValue subblockToJSON(const CBlock &block, bool txDetails /* = false */, bool listTxns /* = true */)
+{
+    UniValue result(UniValue::VOBJ);
+    subblockheaderToJSON(block, result);
+
+    UniValue txs(UniValue::VARR);
+    UniValue txidems(UniValue::VARR);
+    if (listTxns)
+    {
+        int64_t txTime = -1; // Don't display the time in the tx because its in the block data.
+        for (const auto &tx : block.vtx)
+        {
+            if (txDetails)
+            {
+                UniValue objTx(UniValue::VOBJ);
+                TxToJSON(*tx, txTime, uint256(), objTx);
+                txs.push_back(objTx);
+            }
+            else
+            {
+                txs.push_back(tx->GetId().GetHex());
+                txidems.push_back(tx->GetIdem().GetHex());
+            }
+        }
+        if (txDetails) // Details contains both id an idem
+        {
+            result.pushKV("tx", txs);
+        }
+        else
+        {
+            result.pushKV("txid", txs);
+            result.pushKV("txidem", txidems);
+        }
+    }
+    else
+    {
+        result.pushKV("txcount", (uint64_t)block.vtx.size());
+    }
+    return result;
+}
+
+static UniValue getsubblock(const UniValue &params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 3)
+        throw runtime_error(
+            "getsubblock hash_or_height ( verbosity ) ( tx_count )\n"
+            "\nIf verbosity is 0, returns a string that is serialized, hex-encoded data for block 'hash'.\n"
+            "If verbosity is 1, returns the block header with a list of transaction hashes in the block\n"
+            "If verbosity is 2, returns the block header with a list of all decoded transaction details in the block\n"
+            "If tx_count is true, returns a block header with a count of all transactions in the block.\n"
+            "\nArguments:\n"
+            "1. \"hash_or_height\"      (string|numeric, required) The block hash or height.\n"
+            "2. \"verbosity\"           (numeric, optional, default=1) 0 for hex-encoded data, 1 \n"
+            "                          for a block header with list of txn hashes, and 2 for a block header with \n"
+            "                          detailed transaction data.\n"
+            "3. \"tx_count\"            (boolean, optional, default=false true to get a block header with a count of \n"
+            "                          of transactions in the block.\n"
+            "\nResult (for verbosity = 1, tx_count = false):\n"
+            "{\n"
+            "  \"hash\" : \"hash\",     (string) the block hash (same as provided)\n"
+            "  \"confirmations\" : n,   (numeric) The number of confirmations, or -1 if the block is not on the main "
+            "chain\n"
+            "  \"size\" : n,            (numeric) The block size\n"
+            "  \"height\" : n,          (numeric) The block height or index\n"
+            "  \"txcount\" : n,         (numeric) The number of transactions in the block\n"
+            "  \"feePoolAmt\" : n,      (numeric) The fee pool amount\n"
+            "  \"version\" : n,         (numeric) The block version\n"
+            "  \"versionHex\" : \"00000000\", (string) The block version formatted in hexadecimal\n"
+            "  \"merkleroot\" : \"xxxx\", (string) The merkle root\n"
+            "  \"tx\" : [               (array of string) The transaction ids\n"
+            "     \"transactionid\"     (string) The transaction id\n"
+            "     ,...\n"
+            "  ],\n"
+            "  \"time\" : ttt,          (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
+            "  \"nonce\" : n,           (numeric) The nonce\n"
+            "  \"bits\" : \"1d00ffff\", (string) The bits\n"
+            "  \"difficulty\" : x.xxx,  (numeric) The difficulty\n"
+            "  \"chainwork\" : \"xxxx\",  (string) Expected number of hashes required to produce the chain up to this "
+            "block (in hex)\n"
+            "  \"utxoCommitment\" : n,  (hash)    The utxo commitment\n"
+            "  \"minerdata\" : \"xxxx\",        (string) A hex string identifier that the miner provides\n"
+            "  \"previousblockhash\" : \"hash\",  (string) The hash of the previous block\n"
+            "  \"ancestorblockhash\" : \"hash\",  (string) The hash of the ancestor block\n"
+            "}\n"
+            "\nResult (for verbosity = 2, tx_count = false):\n"
+            "{\n"
+            "Same as for verbosity = 1 but with all the un-encoded details of each transaction\n"
+            "}\n"
+            "\nResult (for verbosity=0):\n"
+            "\"data\"             (string) A string that is serialized, hex-encoded data for block 'hash'.\n"
+            "\nExamples:\n" +
+            HelpExampleCli("getsubblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"") +
+            HelpExampleRpc("getsubblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\""));
+
+    ConstCBlockRef subblock;
+    bool isNumber = true;
+    int height = -1;
+    if (!params[0].isNum())
+    {
+        // determine if string is the height or block hash
+        const std::string param0 = params[0].get_str();
+        isNumber = (param0.size() <= 20);
+        if (isNumber)
+        {
+            // if it was a number as a string, try to convert it to an int
+            try
+            {
+                height = std::stoi(param0);
+            }
+            catch (const std::invalid_argument &ia)
+            {
+                throw JSONRPCError(
+                    RPC_INVALID_PARAMETER, strprintf("Invalid argument: %s. Subblock height %s is not a valid value",
+                                               ia.what(), param0.c_str()));
+            }
+        }
+        else
+        {
+            // if not grab the block by hash
+            const uint256 hash(uint256S(param0));
+            if (!tailstormForest.Find(hash, subblock))
+            {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Subblock not found in dag");
+            }
+        }
+    }
+    else
+    {
+        height = params[0].get_int();
+    }
+
+    if (isNumber)
+    {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("rpc getsubblock by height is not yet available"));
+
+        const int tip_height = subblock->height;
+        if (height < 0)
+        {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Target subblock height %d is negative", height));
+        }
+        if (height > tip_height)
+        {
+            throw JSONRPCError(
+                RPC_INVALID_PARAMETER, strprintf("Target subblock height %d after current tip %d", height, tip_height));
+        }
+        LOG(RPC, "%s for height %d (tip is at %d)", __func__, height, tip_height);
+    }
+
+    int nVerbose = 1;
+    bool fListTxns = true;
+    if (params.size() > 1)
+    {
+        if (params[1].isNum())
+            nVerbose = params[1].get_int();
+        else
+            nVerbose = is_param_trueish(params[1]);
+    }
+    if (params.size() == 3)
+    {
+        fListTxns = !(is_param_trueish(params[2]));
+    }
+
+
+    if (nVerbose == 0 && fListTxns == true)
+    {
+        return subblock->GetHex();
+    }
+
+    bool fVerbose = false;
+    if (nVerbose == 1)
+        fVerbose = false;
+    else if (nVerbose == 2)
+        fVerbose = true;
+
+    return subblockToJSON(*subblock, fVerbose, fListTxns);
 }
 
 static void ApplyStats(CCoinsStats &stats, CHashWriter &ss, const COutPoint &outpt, const Coin &coin)
@@ -1465,9 +1687,8 @@ UniValue getblockchaininfo(const UniValue &params, bool fHelp)
     if (forking)
     {
         obj.pushKV("forktime", (int64_t)nMiningForkTime);
-        obj.pushKV("forkactive", IsFork1Activated(tip)); // true of blocks belong to [x-1,+inf)
-        // true only if block is x-1
-        obj.pushKV("forkenforcednextblock", IsFork1Pending(tip));
+        obj.pushKV("forkactive", IsFork2Activated(tip)); // true of blocks belong to [x-1,+inf)
+        obj.pushKV("forkenforcednextblock", IsFork2Pending(tip)); // true only if block is x-1
     }
     else
     {
@@ -1846,6 +2067,7 @@ std::string RollBackChain(int nRollBackHeight, bool fOverride)
 
     // Lock block validation threads to make sure no new inbound block announcements
     // cause any block validation state to change while we're unwinding the chain.
+    LOCK(tailstormForest.cs_forest);
     LOCK(PV->cs_blockvalidationthread);
 
     while (chainActive.Height() > nRollBackHeight)
@@ -2527,6 +2749,58 @@ UniValue getchaintxstats(const UniValue &params, bool fHelp)
     return ret;
 }
 
+UniValue tailstormInfoToJSON()
+{
+    LOCK(tailstormForest.cs_forest);
+
+    CBlockIndex *tip = chainActive.Tip();
+    UniValue ret(UniValue::VOBJ);
+    if (tip != nullptr)
+    {
+        std::set<CTreeNodeRef> setBestDag;
+        tailstormForest.GetBestDagFor(tip->GetBlockHash(), setBestDag);
+        LOGA("getting tailstorm info for %s at height %ld setbestdag %ld\n", tip->GetBlockHash().ToString().c_str(),
+            tip->height(), setBestDag.size());
+        for (CTreeNodeRef node : setBestDag)
+        {
+            LOGA(" subblock in bestdag %s\n", node->hash.ToString());
+        }
+
+        uint256 dagTipHash = GetActiveDagTip(setBestDag);
+        int64_t competingSubs = tailstormForest.Size() - setBestDag.size();
+
+        ret.pushKV("chaintip", tip->GetBlockHash().GetHex());
+        ret.pushKV("dagtip", dagTipHash.GetHex());
+        ret.pushKV("total", (int64_t)tailstormForest.Size());
+        ret.pushKV("bestdag", (int64_t)setBestDag.size());
+        ret.pushKV("competing", competingSubs);
+    }
+
+    return ret;
+}
+
+UniValue gettailstorminfo(const UniValue &params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw std::runtime_error("gettailstorminfo\n"
+                                 "\nReturns details on the active state of the Tailstorm subblock pool.\n"
+                                 "\nResult:\n"
+                                 "{\n"
+                                 "  \"chaintip\": x,          (numeric) Current summary block tip hash\n"
+                                 "  \"dagtip\": x             (numeric) Current dag tip hash\n"
+                                 "  \"total\": x,             (numeric) Current total subblock count\n"
+                                 "  \"bestdag\": x            (numeric) Number of subblocks in the active dag\n"
+                                 "  \"competing\": x          (numeric) Number of subblocks on a fork \n"
+                                 "}\n"
+                                 "\nExamples:\n" +
+                                 HelpExampleCli("gettailstorminfo", "") + HelpExampleRpc("gettailstorminfo", ""));
+
+    if (!fTailstormEnabled)
+        throw runtime_error("tailstorm is not enabled\n");
+
+    return tailstormInfoToJSON();
+}
+
 
 //! Search for a given set of pubkey scripts
 bool FindGroupTokenID(std::atomic<int> &scan_progress,
@@ -2802,10 +3076,13 @@ static const CRPCCommand commands[] = {
     //  category              name                      actor (function)         okSafeMode
     //  --------------------- ------------------------  -----------------------  ----------
     {"blockchain", "getblockchaininfo", &getblockchaininfo, true},
+    {"blockchain", "gettailstorminfo", &gettailstorminfo, true},
     {"blockchain", "getchaintxstats", &getchaintxstats, true},
     {"blockchain", "getbestblockhash", &getbestblockhash, true},
+    {"blockchain", "getbestdagtiphash", &getbestdagtiphash, true},
     {"blockchain", "getblockcount", &getblockcount, true},
     {"blockchain", "getblock", &getblock, true},
+    {"blockchain", "getsubblock", &getsubblock, true},
     {"blockchain", "getblockhash", &getblockhash, true},
     {"blockchain", "getblockheader", &getblockheader, true},
     {"blockchain", "getchaintips", &getchaintips, true},

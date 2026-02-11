@@ -49,6 +49,7 @@
 #include "utilstrencodings.h"
 #include "utiltime.h"
 #include "validation/parallel.h"
+#include "validation/tailstorm.h"
 #include "validation/validation.h"
 #include "validationinterface.h"
 #include "version.h"
@@ -201,9 +202,17 @@ CCriticalSection csCurrentCandidate;
 uint64_t nLastBlockTx GUARDED_BY(csCurrentCandidate) = 0;
 uint64_t nLastBlockSize GUARDED_BY(csCurrentCandidate) = 0;
 
+/** Signals whether to force a new mining candidate to be calculated */
+std::atomic<bool> forceTemplateRecalc{false};
+
 /** Holds temporary mining candidates */
 CCriticalSection csMiningCandidates;
-map<int64_t, CMiningCandidate> miningCandidatesMap GUARDED_BY(csMiningCandidates);
+std::map<int64_t, CMiningCandidate> miningCandidatesMap GUARDED_BY(csMiningCandidates);
+
+/** Is tailstorm enabled or not. The flag gets set to true once the fork is active */
+std::atomic<bool> fTailstormEnabled{false};
+/** Holds all tailstorm subblocks and dag information */
+CTailstormForest tailstormForest;
 
 /** Flags for coinbase transactions we create */
 CCriticalSection cs_coinbaseFlags;
@@ -421,7 +430,7 @@ CTweak<bool> fastBlockTemplate("mining.fastBlockTemplate",
         DEFAULT_FASTBLOCKTEMPLATE));
 
 
-CTweakRef<uint64_t> miningForkTime("consensus.fork1Time",
+CTweakRef<uint64_t> miningForkTime("consensus.fork2Time",
     "Time in seconds since the epoch to initiate the Nexa Fork1 protocol upgrade.  A "
     "setting of 0 will turn on the fork at the appropriate time.",
     &nMiningForkTime,
@@ -452,6 +461,36 @@ CTweak<uint64_t> maxSigChecks("test.maxBlockSigChecks",
         " this override is turned off.  Use for testing only! (default: %ld)",
         0),
     0);
+
+std::string RegtestMining(const bool &value, CTweak<bool> *item, bool validate)
+{
+    auto &cp = ModifiableParams();
+
+    if (validate == false)
+    {
+        auto &con = cp.GetModifiableConsensus();
+        if (item->Value())
+        {
+            con.fPowNoRetargeting = false;
+            con.fPowAllowMinDifficultyBlocks = false;
+        }
+        else
+        {
+            con.fPowNoRetargeting = true;
+            con.fPowAllowMinDifficultyBlocks = true;
+        }
+        return std::string();
+    }
+    else
+    {
+        if (cp.NetworkIDString() == CBaseChainParams::REGTEST)
+            return std::string(); // we accept the change
+        else
+            return std::string("Changing this parameter only makes sense on regtest"); // disallowed
+    }
+}
+CTweak<bool> regtestMining("mining.regtest", "Require block mining on regtest", false, &RegtestMining);
+
 
 CTweak<bool> parallelTweak("test.parallel", "Turn Parallel Block Validation on or off (default: true)", true);
 CTweak<bool> pvtest("test.pvtest",

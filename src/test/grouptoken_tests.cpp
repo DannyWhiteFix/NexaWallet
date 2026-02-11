@@ -4,6 +4,7 @@
 
 #include "consensus/grouptokens.h"
 #include "consensus/merkle.h"
+#include "daa.h"
 #include "main.h"
 #include "miner.h"
 #include "net_processing.h"

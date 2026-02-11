@@ -551,10 +551,9 @@ public:
     CCriticalSection cs_inventory;
     std::vector<CInv> vInventoryToSend GUARDED_BY(cs_inventory);
     std::vector<CInv2> vInventoryToSend2 GUARDED_BY(cs_inventory);
-    int64_t nNextInvSend;
-    // Used for headers announcements - unfiltered blocks to relay
-    // Also protected by cs_inventory
-    std::vector<uint256> vBlockHashesToAnnounce;
+    // Used in headers or inv announcements for unfiltered blocks and subblocks to relay
+    std::vector<uint256> vBlockHashesToAnnounce GUARDED_BY(cs_inventory);
+    std::vector<uint256> vSubblockHashesToAnnounce GUARDED_BY(cs_inventory);
 
     // Ping time measurement:
     // The pong reply we're expecting, or 0 if no pong expected.
@@ -748,7 +747,7 @@ public:
     }
 
     /**
-     * Add a reference of a new hash block to the list of blocks need to be announced
+     * Add a reference of a new block hash to the list of blocks needed to be announced
      *
      * @param[in] hash reference to the hash of the new block to announce
      */
@@ -756,6 +755,17 @@ public:
     {
         LOCK(cs_inventory);
         vBlockHashesToAnnounce.push_back(hash);
+    }
+
+    /**
+     * Add a reference of a new subblock hash to the list of subblocks needed to be announced
+     *
+     * @param[in] hash reference to the hash of the new block to announce
+     */
+    void PushSubblockHash(const uint256 &hash)
+    {
+        LOCK(cs_inventory);
+        vSubblockHashesToAnnounce.push_back(hash);
     }
 
     void BeginMessage(const char *pszCommand, uint32_t, CDataStream &ssSend);

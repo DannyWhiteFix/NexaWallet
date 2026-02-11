@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(isfork1enabled)
     // Enable when next activation decided
     const auto activation = config.GetConsensus().nextForkActivationTime;
 
-    BOOST_CHECK(!IsFork1Activated(nullptr));
+    BOOST_CHECK(!IsFork2Activated(nullptr));
     std::array<CBlockIndex, 12> blocks;
     for (size_t i = 0; i < blocks.size(); ++i)
     {
@@ -46,16 +46,16 @@ BOOST_AUTO_TEST_CASE(isfork1enabled)
     }
 
     SetMTP(blocks, activation - 1);
-    BOOST_CHECK(!IsFork1Activated(&blocks.back()));
+    BOOST_CHECK(!IsFork2Activated(&blocks.back()));
 
     SetMTP(blocks, activation);
-    BOOST_CHECK(!IsFork1Activated(&blocks.back()));
-    BOOST_CHECK(IsFork1Pending(&blocks.back()));
+    BOOST_CHECK(!IsFork2Activated(&blocks.back()));
+    BOOST_CHECK(IsFork2Pending(&blocks.back()));
 
     SetMTP(blocks, activation + 1);
-    BOOST_CHECK(IsFork1Activated(&blocks.back()));
-    BOOST_CHECK(!IsFork1Pending(&blocks.back()));
-    BOOST_CHECK(!(IsFork1Activated(&blocks.back()) && !(IsFork1Activated(&blocks.end()[-2]))));
+    BOOST_CHECK(IsFork2Activated(&blocks.back()));
+    BOOST_CHECK(!IsFork2Pending(&blocks.back()));
+    BOOST_CHECK(!(IsFork2Activated(&blocks.back()) && !(IsFork2Activated(&blocks.end()[-2]))));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

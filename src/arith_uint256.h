@@ -291,6 +291,7 @@ public:
     friend arith_uint256 UintToArith256(const uint256 &);
 };
 
+arith_uint256 FromCompact(uint32_t);
 uint256 ArithToUint256(const arith_uint256 &);
 arith_uint256 UintToArith256(const uint256 &);
 

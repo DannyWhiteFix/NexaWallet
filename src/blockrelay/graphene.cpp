@@ -20,6 +20,7 @@
 #include "txorphanpool.h"
 #include "util.h"
 #include "utiltime.h"
+#include "validation/tailstorm.h"
 #include "validation/validation.h"
 
 #include <iomanip>
@@ -354,6 +355,7 @@ bool CGrapheneBlock::HandleMessage(CDataStream &vRecv,
     pblock->grapheneblock = std::make_shared<CGrapheneBlock>(std::forward<CGrapheneBlock>(tmp));
 
     std::shared_ptr<CGrapheneBlock> grapheneBlock = pblock->grapheneblock;
+    bool fSummaryBlock = IsSummaryBlock(grapheneBlock->header);
 
     LOG(GRAPHENE, "Block %s from peer %s using Graphene version %d\n", grapheneBlock->header.GetHash().ToString(),
         pfrom->GetLogName(), grapheneBlock->version);
@@ -367,7 +369,7 @@ bool CGrapheneBlock::HandleMessage(CDataStream &vRecv,
     }
 
     // Is there a previous block or header to connect with?
-    if (!LookupBlockIndex(grapheneBlock->header.hashPrevBlock))
+    if (fSummaryBlock && !LookupBlockIndex(grapheneBlock->header.hashPrevBlock))
     {
         dosMan.Misbehaving(pfrom, 10, BanReasonNotInBlockIndex);
         thinrelay.ClearAllBlockData(pfrom, pblock->GetHash());
@@ -389,14 +391,14 @@ bool CGrapheneBlock::HandleMessage(CDataStream &vRecv,
         }
 
         // pIndex should always be set by AcceptBlockHeader
-        if (!pIndex)
+        if (fSummaryBlock && !pIndex)
         {
             LOGA("INTERNAL ERROR: pIndex null in CGrapheneBlock::HandleMessage");
             thinrelay.ClearAllBlockData(pfrom, grapheneBlock->header.GetHash());
             return true;
         }
 
-        CInv inv(MSG_BLOCK, pIndex->GetBlockHash());
+        CInv inv(MSG_BLOCK, grapheneBlock->header.GetHash());
         requester.UpdateBlockAvailability(pfrom->GetId(), inv.hash);
 
         // Return early if we already have the block data
@@ -414,7 +416,7 @@ bool CGrapheneBlock::HandleMessage(CDataStream &vRecv,
         }
 
         // Request full block if this one isn't extending the best chain
-        if (pIndex->chainWork() <= chainActive.Tip()->chainWork())
+        if (fSummaryBlock && (pIndex->chainWork() <= chainActive.Tip()->chainWork()))
         {
             thinrelay.RequestBlock(pfrom, inv.hash);
             thinrelay.ClearAllBlockData(pfrom, grapheneBlock->header.GetHash());
@@ -1391,12 +1393,18 @@ bool HandleGrapheneBlockRequest(CDataStream &vRecv, CNode *pfrom, uint32_t msgCo
     }
 
     {
-        auto *hdr = LookupBlockIndex(hash);
-        if (!hdr)
-            return error("Peer %s requested nonexistent block %s", pfrom->GetLogName(), hash.ToString());
-
         const Consensus::Params &consensusParams = Params().GetConsensus();
-        ConstCBlockRef pblock = ReadBlockFromDisk(hdr, consensusParams);
+        ConstCBlockRef pblock;
+        if (!tailstormForest.Find(hash, pblock))
+        {
+            CBlockIndex *hdr = LookupBlockIndex(hash);
+            if (!hdr)
+            {
+                dosMan.Misbehaving(pfrom, 20, BanReasonNotInBlockIndex);
+                return error("Peer %s requested nonexistent block %s", pfrom->GetLogName(), hash.ToString());
+            }
+            pblock = ReadBlockFromDisk(hdr, consensusParams);
+        }
         if (!pblock)
         {
             // We don't have the block yet, although we know about it.
@@ -1686,36 +1694,38 @@ std::vector<CTransaction> TransactionsFromBlockByCheapHash(std::set<uint64_t> &v
     CNode *pfrom)
 {
     std::vector<CTransaction> vTx;
-    CBlockIndex *hdr = LookupBlockIndex(blockhash);
-    if (!hdr)
+    const Consensus::Params &consensusParams = Params().GetConsensus();
+    ConstCBlockRef pblock;
+    if (!tailstormForest.Find(blockhash, pblock))
     {
-        dosMan.Misbehaving(pfrom, 20, BanReasonNotInBlockIndex);
-        throw std::runtime_error("Requested block is not available");
+        CBlockIndex *hdr = LookupBlockIndex(blockhash);
+        if (!hdr)
+        {
+            dosMan.Misbehaving(pfrom, 20, BanReasonNotInBlockIndex);
+            throw std::runtime_error("Requested block is not available");
+        }
+        pblock = ReadBlockFromDisk(hdr, consensusParams);
+    }
+
+    if (!pblock)
+    {
+        // We do not assign misbehavior for not being able to read a block from disk because we already
+        // know that the block is in the block index from the step above. Secondly, a failure to read may
+        // be our own issue or the remote peer's issue in requesting too early.  We can't know at this point.
+        throw std::runtime_error("Cannot load block from disk -- Block txn request possibly received before assembled");
     }
     else
     {
-        const Consensus::Params &consensusParams = Params().GetConsensus();
-        ConstCBlockRef pblock = ReadBlockFromDisk(hdr, consensusParams);
-        if (!pblock)
+        for (auto &tx : pblock->vtx)
         {
-            // We do not assign misbehavior for not being able to read a block from disk because we already
-            // know that the block is in the block index from the step above. Secondly, a failure to read may
-            // be our own issue or the remote peer's issue in requesting too early.  We can't know at this point.
-            throw std::runtime_error(
-                "Cannot load block from disk -- Block txn request possibly received before assembled");
-        }
-        else
-        {
-            for (auto &tx : pblock->vtx)
-            {
-                uint64_t cheapHash = GetShortID(pfrom->gr_shorttxidk0.load(), pfrom->gr_shorttxidk1.load(), tx->GetId(),
-                    NegotiateGrapheneVersion(pfrom));
+            uint64_t cheapHash = GetShortID(pfrom->gr_shorttxidk0.load(), pfrom->gr_shorttxidk1.load(), tx->GetId(),
+                NegotiateGrapheneVersion(pfrom));
 
-                if (vCheapHashes.count(cheapHash))
-                    vTx.push_back(*tx);
-            }
+            if (vCheapHashes.count(cheapHash))
+                vTx.push_back(*tx);
         }
     }
+
 
     return vTx;
 }

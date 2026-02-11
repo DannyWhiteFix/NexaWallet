@@ -247,7 +247,10 @@ BITCOIN_CORE_H = \
   utiltime.h \
   utiltranslate.h \
   validation/forks.h \
+  validation/headervalidation.h \
   validation/parallel.h \
+  validation/tailstorm.h \
+  validation/dag.h \
   validation/validation.h \
   validation/verifydb.h \
   validationinterface.h \
@@ -360,6 +363,8 @@ libnexa_server_a_SOURCES = \
   validation/parallel.cpp \
   validation/validation.cpp \
   validation/headervalidation.cpp \
+  validation/tailstorm.cpp \
+  validation/dag.cpp \
   validation/verifydb.cpp \
   validationinterface.cpp \
   versionbits.cpp \
@@ -440,6 +445,7 @@ libnexa_a_SOURCES = \
   pow.cpp \
   pow.h \
   validation/headervalidation.cpp \
+  validation/headervalidation.h \
   random.cpp \
   random.h \
   randomenv.h \
@@ -637,6 +643,7 @@ libnexa_common_a_SOURCES = \
   utilstrencodings.cpp \
   utilstrencodings.h \
   version.h \
+  versionbits.cpp \
   $(BITCOIN_CORE_H)
 
 # util: shared between all executables.

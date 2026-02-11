@@ -33,58 +33,6 @@ class ScriptRegistersTest(BitcoinTestFramework):
         dest_addr = self.nodes[1].getnewaddress()
         dest_addr = self.nodes[1].getaddressforms(dest_addr)["legacy"]
         miningNode = self.nodes[2]
-        # check failure before activation
-        miningNode.generate(110)
-        self.sync_all()
-        bestblock = miningNode.getbestblockhash()
-        lastblocktime = miningNode.getblockheader(bestblock)['time']
-        activationtime = lastblocktime + 200000000
-        for n in self.nodes:
-            n.set("consensus.fork1Time=" + str(activationtime))
-
-        blockchaininfo = miningNode.getblockchaininfo()
-        assert_equal(blockchaininfo['forktime'], activationtime)
-        assert_equal(blockchaininfo['forkactive'], False)
-        assert_equal(blockchaininfo['forkenforcednextblock'], False)
-        assert_greater_than(activationtime, blockchaininfo['mediantime'])
-
-
-        utxos = self.nodes[2].listunspent()
-        assert(len(utxos) > 0)
-        utxo = utxos[0]
-        tx = CTransaction()
-        # Create an output with the new opcodes
-        tx_value = int(int(satoshi_round(utxo["amount"]) * COIN) * 0.95)
-        tx.vin = [CTxIn(COutPoint().fromIdemAndIdx(utxo['txidem'],utxo['vout']).rpcHex(), utxo["amount"])]
-        tx.vout = []
-        redeemScript = CScript([bitcoinAddress2bin(dest_addr), OP_DUP, OP_1, OP_STORE, OP_HASH160, OP_1, OP_LOAD, OP_EQUALVERIFY, OP_CHECKSIG])
-        tx.vout.append(CTxOut(tx_value, redeemScript))
-        tx_signed_hex = self.nodes[2].signrawtransaction(tx.toHex())["hex"]
-        res = self.nodes[2].sendrawtransaction(tx_signed_hex)
-
-        # Now spend them (should fail)
-        tx = CTransaction()
-        # Create an input that spends the new opcodes
-        tx.vin = [CTxIn(COutPoint().fromIdemAndIdx(res,0).rpcHex(), tx_value)]
-        tx.vout = []
-        s = CScript([OP_TRUE])
-        tx.vout.append(CTxOut(tx_value - 300, CScript([bitcoinAddress2bin(dest_addr), OP_DROP, OP_TRUE])))
-        tx_signed_hex = self.nodes[2].signrawtransaction(tx.toHex())["hex"]
-        try:
-            res2 = self.nodes[2].sendrawtransaction(tx_signed_hex)
-            print(res2)
-            assert(False)  # Should not work because we haven't activated!
-        except JSONRPCException as e:
-            # expected to get here
-            assert "Opcode missing or not understood" in str(e)
-
-        miningNode.generate(1)
-        # Activate the hard fork
-        bestblock = miningNode.getbestblockhash()
-        lastblocktime = miningNode.getblockheader(bestblock)['time']
-        activationtime = lastblocktime - 2000
-        for n in self.nodes:
-            n.set("consensus.fork1Time=" + str(activationtime))
 
         # get some utxos
         for n in self.nodes:
@@ -93,9 +41,6 @@ class ScriptRegistersTest(BitcoinTestFramework):
 
         miningNode.generate(120)
         sync_blocks(self.nodes)
-
-        blockchaininfo = miningNode.getblockchaininfo()
-        assert_equal(blockchaininfo['forkactive'], True)
 
         # do something that works and uses registers
         begin_node0_balance = self.nodes[0].getbalance()

@@ -37,6 +37,14 @@ int64_t GetTime()
 }
 
 void SetMockTime(int64_t nMockTimeIn) { nMockTime.store(nMockTimeIn, std::memory_order_relaxed); }
+bool IsMockTime()
+{
+    if (nMockTime.load(std::memory_order_relaxed) > 0)
+        return true;
+
+    return false;
+}
+
 int64_t GetTimeMillis()
 {
     int64_t mocktime = nMockTime.load(std::memory_order_relaxed);

@@ -15,6 +15,7 @@
 #include "consensus/merkle.h"
 #include "consensus/tx_verify.h"
 #include "consensus/validation.h"
+#include "daa.h"
 #include "hashwrapper.h"
 #include "main.h"
 #include "net.h"
@@ -27,6 +28,7 @@
 #include "unlimited.h"
 #include "util.h"
 #include "utilmoneystr.h"
+#include "validation/tailstorm.h"
 #include "validation/validation.h"
 #include "validationinterface.h"
 
@@ -64,8 +66,8 @@ using namespace std;
 //
 
 //
-// Unconfirmed transactions in the memory pool often depend on other
-// transactions in the memory pool. When we select transactions from the
+// Unconfirmed transactions in the txpool often depend on other
+// transactions in the txpool. When we select transactions from the
 // pool, we select by highest priority or fee rate, so we might consider
 // transactions that depend on transactions that aren't yet in the block.
 
@@ -79,18 +81,146 @@ int64_t UpdateTime(CBlockHeader *pblock, const Consensus::Params &consensusParam
 
     // Updating time can change work required on testnet:
     if (consensusParams.fPowAllowMinDifficultyBlocks)
-        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, consensusParams);
+    {
+        if (fTailstormEnabled)
+            pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, consensusParams);
+        else
+            pblock->nBits = GetNextNonTailstormWorkRequired(pindexPrev, pblock, consensusParams);
+    }
 
     return nNewTime - nOldTime;
 }
 
+bool ValidateSummaryBlockCoinbase(CAmount nBlockReward, ConstCBlockRef pblock, std::set<CTreeNodeRef> &setBestDag)
+{
+    CScript scriptPubKeySummaryBlock; // just a placeholder for the summary block
+
+    // Construct vout for the tailstorm Summary block. For now it's just temporary
+    // and will be cleared out and reconstructed later when/if the vouts get grouped
+    // by their pubkeys.
+    std::vector<CTxOut> vout;
+    vout.resize(setBestDag.size() + 1);
+
+    // Calculate the scores for each node and divide up the rewards accordingly.
+    auto mapScores = GetDagScores(setBestDag);
+    uint32_t nSummaryBlockScore = Params().GetConsensus().tailstorm_k - 1;
+    uint32_t nTotalScores = nSummaryBlockScore;
+    for (auto &mi : mapScores)
+    {
+        nTotalScores += mi.second;
+    }
+
+    int j = 0;
+    CAmount nTotalSubsidies = 0;
+    for (auto &mi : mapScores)
+    {
+        vout[j] = mi.first->subblock->vtx[0]->vout[0];
+        vout[j].nValue = nBlockReward * mi.second / nTotalScores;
+        nTotalSubsidies += vout[j].nValue;
+        j++;
+    }
+
+    // Add the vout for the Summary blocks' subblock...the final subblock!
+    CAmount nSummaryBlockReward = nBlockReward * nSummaryBlockScore / nTotalScores;
+    vout[j] = CTxOut(nSummaryBlockReward, scriptPubKeySummaryBlock);
+    nTotalSubsidies += vout[j].nValue;
+    LOG(DAG, "%s: total subsidies %ld with bestdag vout size %ld", __func__, nTotalSubsidies, vout.size());
+
+    // Adjust the last vout for round off errors. Give any remaining subsidy to the
+    // last vout (the SummaryBlock's subblock)
+    vout[j].nValue += (nBlockReward - nTotalSubsidies);
+    LOG(DAG, "%s: nValue for the summary block itself %ld", __func__, vout[j].nValue);
+
+    // Combine vout's that have the same scriptPubKey. Over time this can save a large amount
+    // blockchain diskspace
+    std::map<CScript, CTxOut> mapGroupedDagOutputs;
+    for (auto &out : vout)
+    {
+        if (!mapGroupedDagOutputs.count(out.scriptPubKey))
+        {
+            mapGroupedDagOutputs[out.scriptPubKey] = out;
+        }
+        else
+        {
+            mapGroupedDagOutputs[out.scriptPubKey].nValue += out.nValue;
+        }
+    }
+
+    // Begin to check whether the block's coinbase matches what we just created
+    // from the subblocks that were retreived from the dag. We do this by adding
+    // the block's coinbase outputs to a map which we'll use to compare to the
+    // map of grouped outputs we generated from the subblock bestDag.
+    std::map<CScript, CTxOut> mapCoinbaseOutputs;
+    for (auto iter = pblock->vtx[0]->vout.begin(); iter < pblock->vtx[0]->vout.end() - 1; iter++)
+    {
+        const CTxOut &out = *iter;
+        if (!mapCoinbaseOutputs.count(out.scriptPubKey))
+        {
+            mapCoinbaseOutputs[out.scriptPubKey] = out;
+        }
+        else
+        {
+            mapCoinbaseOutputs[out.scriptPubKey].nValue += out.nValue;
+        }
+    }
+    LOG(DAG, "%s: coinbase vout size %ld", __func__, pblock->vtx[0]->vout.size());
+
+    // Do the comparison.
+    //
+    // The output values and pubkeys from the best dag must match what is in the coinbase vout minus
+    // the summary blocks own reward.  There is a special case where the miner that mined the summary
+    // block also mined "ALL" the subblocks. In such a case, all the best dag coinbase vout pubkeys would
+    // be the same and "MUST" match the summary block pubkey the sum total of rewards also matching.
+    LOG(DAG, "%s: blockreward: %ld", __func__, nBlockReward);
+    CAmount nCoinbaseSummary = 0;
+
+    // Check special case where there is only one summary block coinbase output
+    if (mapCoinbaseOutputs.size() == 1)
+    {
+        for (auto treenode : setBestDag)
+        {
+            if (!mapCoinbaseOutputs.count(treenode->subblock->vtx[0]->vout[0].scriptPubKey))
+            {
+                return false;
+            }
+        }
+    }
+
+    for (auto iter : mapCoinbaseOutputs)
+    {
+        const CScript &pubkey = iter.first;
+        if ((mapGroupedDagOutputs.count(pubkey) > 0 && mapCoinbaseOutputs.count(pubkey) > 0 &&
+                mapCoinbaseOutputs.size() > 1) &&
+            (mapGroupedDagOutputs[pubkey].nValue == mapCoinbaseOutputs[pubkey].nValue))
+        {
+            mapGroupedDagOutputs.erase(pubkey);
+        }
+        else
+        {
+            nCoinbaseSummary += iter.second.nValue;
+        }
+    }
+
+    // Check the final values which should add up to equal the summary blocks value
+    // plus any other values that relate to the same pubkey.
+    CAmount nGroupedSummaryValue = 0;
+    for (auto iter : mapGroupedDagOutputs)
+    {
+        nGroupedSummaryValue += iter.second.nValue;
+    }
+    LOG(DAG, "%s: nGroupedSummaryValue is %ld nCoinbaseSummary is %ld", __func__, nGroupedSummaryValue,
+        nCoinbaseSummary);
+
+    return (nGroupedSummaryValue == nCoinbaseSummary);
+}
+
 BlockAssembler::BlockAssembler(const CChainParams &_chainparams) : chainparams(_chainparams) {}
-void BlockAssembler::resetBlock(const CScript &scriptPubKeyIn, int64_t coinbaseSize)
+void BlockAssembler::resetBlock(const CScript &scriptPubKeyIn, int64_t coinbaseSize, std::set<CTreeNodeRef> *setBestDag)
 {
     inBlock.clear();
     nonFinalChains.clear();
 
-    nBlockSize = reserveBlockSize(scriptPubKeyIn, coinbaseSize);
+    nBlockSize = reserveBlockSize(scriptPubKeyIn, coinbaseSize, setBestDag);
     nBlockSigOps = 0;
 
     // These counters do not include coinbase tx
@@ -101,10 +231,12 @@ void BlockAssembler::resetBlock(const CScript &scriptPubKeyIn, int64_t coinbaseS
     blockFinished = false;
 }
 
-uint64_t BlockAssembler::reserveBlockSize(const CScript &scriptPubKeyIn, int64_t coinbaseSize)
+uint64_t BlockAssembler::reserveBlockSize(const CScript &scriptPubKeyIn,
+    int64_t coinbaseSize,
+    std::set<CTreeNodeRef> *setBestDag)
 {
     CBlockHeader h;
-    uint64_t nHeaderSize, nCoinbaseSize, nCoinbaseReserve;
+    uint64_t nHeaderSize, nCoinbaseSize, nCoinbaseReserve = 0;
 
     // Add the proper block size quantity to the actual size
     // TODO make this a constant when header size stabilizes
@@ -116,11 +248,18 @@ uint64_t BlockAssembler::reserveBlockSize(const CScript &scriptPubKeyIn, int64_t
     nHeaderSize += HEIGHT_VARINT_PADDING;
     // feePoolAmt varints
     nHeaderSize += FEEPOOL_VARINT_PADDING;
+    // minerData size (minerData version byte, + the dag size * (mininghash size + max nonce size))
+    if (fTailstormEnabled)
+        nHeaderSize += (1 + (setBestDag->size() * (32 + 16)));
 
 
     // This serializes with output value, a fixed-length 8 byte field, of zero and height, a serialized CScript
     // signed integer taking up 4 bytes for heights 32768-8388607 (around the year 2167) after which it will use 5
-    nCoinbaseSize = ::GetSerializeSize(coinbaseTx(scriptPubKeyIn, 400000, 0), SER_NETWORK, PROTOCOL_VERSION);
+    //
+    // In tailstorm we have to account for a larger coinbase where the summary block coinbase can have up to tailstorm_k
+    // number of outputs in the summary block
+    nCoinbaseSize =
+        ::GetSerializeSize(coinbaseTx(scriptPubKeyIn, 400000, 0, setBestDag), SER_NETWORK, PROTOCOL_VERSION);
 
     if (coinbaseSize >= 0) // Explicit size of coinbase has been requested
     {
@@ -131,27 +270,102 @@ uint64_t BlockAssembler::reserveBlockSize(const CScript &scriptPubKeyIn, int64_t
         nCoinbaseReserve = coinbaseReserve.Value();
     }
 
-    // BU Miners take the block we give them, wipe away our coinbase and add their own.
+    // Miners take the block we give them, wipe away our coinbase and add their own.
     // So if their reserve choice is bigger then our coinbase then use that.
     nCoinbaseSize = std::max(nCoinbaseSize, nCoinbaseReserve);
 
     return nHeaderSize + nCoinbaseSize;
 }
-CTransactionRef BlockAssembler::coinbaseTx(const CScript &scriptPubKeyIn, int _nHeight, CAmount nValue)
+CTransactionRef BlockAssembler::coinbaseTx(const CScript &scriptPubKeyIn,
+    int _nHeight,
+    CAmount nValue,
+    std::set<CTreeNodeRef> *setBestDag)
 {
     CMutableTransaction tx;
-
     tx.vin.resize(0);
-    tx.vout.resize(2);
-    // Coinbase uniquification must be stored in a vout because idem does not cover scriptSig
-    const int dataIdx = 1;
-    tx.vout[dataIdx] = CTxOut(0, CScript() << OP_RETURN << _nHeight);
-    tx.vout[0] = CTxOut(nValue, scriptPubKeyIn);
 
-    // BU005 add block size settings to the coinbase
-    std::string cbmsg = FormatCoinbaseMessage(BUComments, minerComment);
-    const char *cbcstr = cbmsg.c_str();
-    vector<unsigned char> vec(cbcstr, cbcstr + cbmsg.size());
+    // Create vout for coinbase
+    uint32_t dataIdx = 1;
+    if (!setBestDag || setBestDag->empty())
+    {
+        //  Construct vout for the legacy block OR the tailstorm subblock
+        tx.vout.resize(dataIdx + 1);
+        tx.vout[0] = CTxOut(nValue, scriptPubKeyIn);
+    }
+    else
+    {
+        // Construct vout for the tailstorm Summary block. For now it's just temporary
+        // and will be cleared out and reconstructed later when/if the vouts get grouped
+        // by their pubkeys.
+        std::vector<CTxOut> vout;
+        vout.resize(setBestDag->size() + 1);
+
+        // Calculate the scores for each node and divide up the rewards accordingly.
+        auto mapScores = GetDagScores(*setBestDag);
+        uint32_t nSummaryBlockScore = Params().GetConsensus().tailstorm_k - 1;
+        uint32_t nTotalScores = nSummaryBlockScore;
+        for (auto &mi : mapScores)
+        {
+            nTotalScores += mi.second;
+        }
+
+        int j = 0;
+        CAmount nTotalSubsidies = 0;
+        for (auto &mi : mapScores)
+        {
+            vout[j] = mi.first->subblock->vtx[0]->vout[0];
+            vout[j].nValue = nValue * mi.second / nTotalScores;
+            nTotalSubsidies += vout[j].nValue;
+            j++;
+        }
+
+        // Add the vout for the Summary blocks' subblock...the final subblock!
+        CAmount nSummaryBlockReward = nValue * nSummaryBlockScore / nTotalScores;
+        vout[j] = CTxOut(nSummaryBlockReward, scriptPubKeyIn);
+        nTotalSubsidies += vout[j].nValue;
+        LOG(DAG, "%s: total subsidies %ld with bestdag vout size %ld", __func__, nTotalSubsidies, vout.size());
+
+        // Adjust the last vout for round off errors. Give any remaining subsidy to the
+        // last vout (the SummaryBlock's subblock)
+        vout[j].nValue += (nValue - nTotalSubsidies);
+        LOG(DAG, "%s: nValue for the summary block itself %ld", __func__, vout[j].nValue);
+
+        // Combine vout's that have the same scriptPubKey. Over time this can save a large amount
+        // blockchain diskspace
+        std::map<CScript, CTxOut> mapGroupedDagOutputs;
+        for (auto &out : vout)
+        {
+            if (!mapGroupedDagOutputs.count(out.scriptPubKey))
+            {
+                mapGroupedDagOutputs[out.scriptPubKey] = out;
+            }
+            else
+            {
+                mapGroupedDagOutputs[out.scriptPubKey].nValue += out.nValue;
+            }
+        }
+
+        // Construct the final vout for the tailstorm Summary block.
+        int i = 0;
+        dataIdx = mapGroupedDagOutputs.size();
+        tx.vout.resize(dataIdx + 1);
+        for (auto iter : mapGroupedDagOutputs)
+        {
+            tx.vout[i] = iter.second;
+            i++;
+        }
+    }
+
+    // Coinbase uniquification must be stored in a vout because idem does not cover scriptSig
+    // NOTE: when tailstorm is enabled subblocks do not really need to be uniquified so using
+    // whatever height the subblock has is fine regardless of whether other subblocks have the
+    // same height.
+    tx.vout[dataIdx] = CTxOut(0, CScript() << OP_RETURN << _nHeight);
+
+    // add block size settings to the coinbase
+    std::string cbMsg = FormatCoinbaseMessage(BUComments, minerComment);
+    const char *cbCStr = cbMsg.c_str();
+    vector<unsigned char> vec(cbCStr, cbCStr + cbMsg.size());
     {
         LOCK(cs_coinbaseFlags);
         COINBASE_FLAGS = CScript() << vec;
@@ -184,9 +398,15 @@ public:
     }
 };
 
+struct NumericallyLessVtxHashComparator
+{
+public:
+    bool operator()(const CTransactionRef a, const CTransactionRef b) const { return a->GetId() < b->GetId(); }
+};
+
 std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &scriptPubKeyIn, int64_t coinbaseSize)
 {
-    resetBlock(scriptPubKeyIn, coinbaseSize);
+    const auto &conparams = chainparams.GetConsensus();
 
     // The constructed block template
     std::unique_ptr<CBlockTemplate> pblocktemplate(new CBlockTemplate());
@@ -200,12 +420,74 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
 
     LOCK(cs_main);
 
-    // Largest block you're willing to create:
     CBlockIndex *pindexPrev = chainActive.Tip();
     assert(pindexPrev); // can't make a new block if we don't even have the genesis block
-    nBlockMaxSize = pindexPrev->GetNextMaxBlockSize();
-    if (miningBlockSize.Value() > 0 && nBlockMaxSize > miningBlockSize.Value())
-        nBlockMaxSize = miningBlockSize.Value();
+
+    // Get the current best tailstorm dag and associated double spends, and for the purpose of syncronization
+    // we'll use this same dataset throughout summary block construction.
+    //
+    // If there are less than tailstorm_k - 1 subblocks in the dag then the assumption is that we're creating a
+    // subblock and so the data sets returned will be empty.
+    std::set<CTreeNodeRef> setBestDag;
+    std::vector<std::map<uint256, CTreeNodeRef> > vDoubleSpendTxns;
+    std::map<COutPoint, CTransactionRef> mapInputs;
+    tailstormForest.GetBestDagFor(pindexPrev->GetBlockHash(), setBestDag, &vDoubleSpendTxns, &mapInputs);
+
+    // Get the set of invalid double spends which we "DO NOT" want to include in the final summary block.
+    std::set<uint256> setTxnExclusions = GetTxnExclusionSet(setBestDag, vDoubleSpendTxns, mapInputs);
+
+    // If tailstorm is enabled then gather all the txid's that are in the best dag so
+    // we can filter those out when we add new transactions to a new subblock or summary
+    // block template.
+    std::set<uint256> setBestDagTxids;
+    if (fTailstormEnabled)
+    {
+        for (auto &treenode : setBestDag)
+        {
+            const auto &vtx = treenode->subblock->vtx;
+            for (size_t i = 1; i < vtx.size(); i++)
+            {
+                setBestDagTxids.insert(vtx[i]->GetId());
+            }
+        }
+
+        // Generate the minerData field.
+        pblock->minerData = GenerateMinerData(conparams.tailstorm_k, setBestDag);
+    }
+
+    // Init the block counters and size the coinbase accordingly.
+    if (setBestDag.size() < (size_t)conparams.tailstorm_k - 1)
+    {
+        // Clearing the setBestDag is done here for a couple of reasons.
+        // First, we have already created setBestDagTxids above which gets used latger
+        // regardless of the setBestDag, and secondly in the case of a subblock
+        // we want the setBestDag cleared so we only create a simple coinbase whereas
+        // for a full Summary Block we'd need the setBestDag to create the full and more
+        // complex coinbase.
+        setBestDag.clear();
+    }
+    resetBlock(scriptPubKeyIn, coinbaseSize, &setBestDag);
+
+    // Largest block you're willing to create:
+    // TODO: in a future optimization we should be able to use up the any remaining space that the summary block
+    //       could offer by first adding the dag txns to the summary block template and filling the extra space after.
+    //       This would allow us to uncomment the nMaxBlockSize line below. However for now we just set the summary
+    //       block size to be the same as any subblock and fill it accordingly.
+    // nBlockMaxSize = IsSummaryBlock(pblock) ? pindexPrev->GetNextMaxBlockSize() :
+    //                                         pindexPrev->GetNextMaxBlockSize() / conparams.tailstorm_k;
+    nBlockMaxSize = IsSummaryBlock(pblock) && !IsTailstormSummaryBlock(pblock) ?
+                        pindexPrev->GetNextMaxBlockSize() :
+                        pindexPrev->GetNextMaxBlockSize() / conparams.tailstorm_k;
+
+    if (miningBlockSize.Value() > 0)
+    {
+        // TODO: future optimization as above.
+        // nBlockMaxSize =
+        //    IsSummaryBlock(pblock) ? miningBlockSize.Value() : miningBlockSize.Value() / conparams.tailstorm_k;
+        nBlockMaxSize = IsSummaryBlock(pblock) && !IsTailstormSummaryBlock(pblock) ?
+                            miningBlockSize.Value() :
+                            miningBlockSize.Value() / conparams.tailstorm_k;
+    }
 
     // Minimum block size you want to create; block will be filled with free transactions
     // until there are no more or the block reaches this size:
@@ -215,6 +497,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
     maxSigOpsAllowed = GetMaxBlockSigChecks(pindexPrev->GetNextMaxBlockSize());
 
     {
+        // Load the block template with transactions
         READLOCK(mempool.cs_txmempool);
         nHeight = pindexPrev->height() + 1;
 
@@ -227,7 +510,10 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
 
         std::vector<const CTxMemPoolEntry *> vtxe;
         bool fCreateFastTemplate = fastBlockTemplate.Value();
-        if (fCreateFastTemplate)
+        // TODO: get fast block template to work with tailstorm summary blocks.  We need to make sure that not only
+        // do all the txns from the txpool fit into the block, but that the summary block has all the
+        // txns that are in the dag present, and that we have accounted for any double spends as well.
+        if (fCreateFastTemplate && !IsTailstormSummaryBlock(pblock))
         {
             // Check if all txpool transactions will fit into a block and also doesn't exceed the sigops limit
             if (((nBlockSize + mempool._GetTotalTxSize()) <= nBlockMaxSize) &&
@@ -236,6 +522,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
                 // Dump all contents of txpool into the block
                 for (auto iter = mempool.mapTx.begin(); iter != mempool.mapTx.end(); iter++)
                 {
+                    if (!setBestDagTxids.empty() && setBestDagTxids.count(iter->GetSharedTx()->GetId()))
+                        continue;
+
                     AddToBlock(&vtxe, iter);
                 }
             }
@@ -249,7 +538,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
         // through to the slower method.
         if (!fCreateFastTemplate)
         {
-            addPriorityTxs(&vtxe);
+            addPriorityTxs(&vtxe, setBestDagTxids);
 
             // Mine by package (CPFP)
             // We make two passes through addPackageTxs(). The first pass is for
@@ -257,48 +546,124 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
             // of the block. Then a second quick pass is made to see if any dirty transactions
             // would be able to fill the rest of the block.
             int64_t nStartPackage = GetStopwatchMicros();
-            if (!addPackageTxs(&vtxe, false))
+            if (!addPackageTxs(&vtxe, false, setBestDagTxids))
             {
                 // Make another pass to add the dirty chains.
-                addPackageTxs(&vtxe, true);
+                addPackageTxs(&vtxe, true, setBestDagTxids);
             }
             nTotalPackage += GetStopwatchMicros() - nStartPackage;
         }
 
+        // For all block types generate the largest block possible for that block type.
+        std::set<uint256> setTxidsInBlock;
+        {
+            // sort transactions
+            if (!fTailstormEnabled || !IsSummaryBlock(pblock))
+            {
+                std::sort(vtxe.begin(), vtxe.end(), NumericallyLessTxHashComparator());
+            }
+
+            // Load the block template
+            pblocktemplate->block->vtx.reserve(vtxe.size());
+            pblocktemplate->vTxFees.reserve(vtxe.size());
+            pblocktemplate->vTxSigOps.reserve(vtxe.size());
+            for (auto &txe : vtxe)
+            {
+                pblocktemplate->block->vtx.push_back(txe->GetSharedTx());
+                pblocktemplate->vTxFees.push_back(txe->GetFee());
+                pblocktemplate->vTxSigOps.push_back(txe->GetSigOpCount());
+
+                setTxidsInBlock.insert(txe->GetSharedTx()->GetId());
+            }
+        }
+
+        // If we're creating a tailstorm Summary Block then add in all the Subblock transactions
+        // and, avoiding any dupicates and double spends we don't want, update the blocksize and fees collected.
+        if (fTailstormEnabled && IsSummaryBlock(pblock))
+        {
+            uint64_t nBestDagVtxSize = 0;
+            CAmount nBestDagFees = 0;
+            uint64_t nBestDagTx = 0;
+
+            for (auto &treenode : setBestDag)
+            {
+                const auto &vtx = treenode->subblock->vtx;
+                for (size_t i = 1; i < vtx.size(); i++)
+                {
+                    // If txns are already in the summary block's "subblock" then don't add them again.
+                    if (setTxidsInBlock.count(vtx[i]->GetId()))
+                        continue;
+                    // If this is a double spend exclusion then don't add this to the block.
+                    if (setTxnExclusions.count(vtx[i]->GetId()))
+                        continue;
+
+                    pblocktemplate->block->vtx.push_back(vtx[i]);
+                    nBestDagTx++;
+                    nBestDagVtxSize += ::GetSerializeSize(vtx[i], SER_NETWORK, PROTOCOL_VERSION);
+                    nBestDagFees += vtx[i]->GetValueIn() - vtx[i]->GetValueOut();
+
+                    setTxidsInBlock.insert(vtx[i]->GetId());
+                }
+            }
+            nBlockSize += nBestDagVtxSize;
+            nFees += nBestDagFees;
+            nBlockTx += nBestDagTx;
+
+            std::sort(pblocktemplate->block->vtx.begin() + 1, pblocktemplate->block->vtx.end(),
+                NumericallyLessVtxHashComparator());
+        }
+
+        // Update the candidate info
         {
             LOCK(csCurrentCandidate);
             nLastBlockTx = nBlockTx;
             nLastBlockSize = nBlockSize;
         }
 
-        LOGA("CreateNewBlock: total size %llu txs: %llu of %llu fees: %lld sigops %u\n", nBlockSize, nBlockTx,
-            mempool._size(), nFees, nBlockSigOps);
-
-        // sort transactions
-        std::sort(vtxe.begin(), vtxe.end(), NumericallyLessTxHashComparator());
-
-        // Load the block template
-        pblocktemplate->block->vtx.reserve(vtxe.size());
-        pblocktemplate->vTxFees.reserve(vtxe.size());
-        pblocktemplate->vTxSigOps.reserve(vtxe.size());
-        for (auto &txe : vtxe)
+        // Output appropriate log entry.
+        if (IsSummaryBlock(pblock))
         {
-            pblocktemplate->block->vtx.push_back(txe->GetSharedTx());
-            pblocktemplate->vTxFees.push_back(txe->GetFee());
-            pblocktemplate->vTxSigOps.push_back(txe->GetSigOpCount());
+            LOGA("Create New Block: total size %llu txs: %llu of txpool %llu fees: %lld sigops %u\n", nBlockSize,
+                nBlockTx, mempool._size(), nFees, nBlockSigOps);
+        }
+        else
+        {
+            LOGA("Create New Subblock: total size %llu txs: %llu of txpool %llu fees: %lld sigops %u\n", nBlockSize,
+                nBlockTx, mempool._size(), nFees, nBlockSigOps);
         }
 
-        // Create coinbase transaction.
-        pblock->vtx[0] =
-            coinbaseTx(scriptPubKeyIn, nHeight, nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus()));
-        pblocktemplate->vTxFees[0] = -nFees;
 
         // Fill in header
         pblock->hashPrevBlock = pindexPrev->GetBlockHash();
+
+        if (fTailstormEnabled)
+            pblock->nBits = GetNextWorkRequired(pindexPrev, pblock.get(), conparams);
+        else
+            pblock->nBits = GetNextNonTailstormWorkRequired(pindexPrev, pblock.get(), conparams);
+
+        // Create coinbase transaction.
+        pblock->vtx[0] = coinbaseTx(scriptPubKeyIn, nHeight, nFees + GetBlockSubsidy(nHeight, conparams), &setBestDag);
+        pblocktemplate->vTxFees[0] = -nFees;
+
         pblock->hashAncestor = pindexPrev->GetChildsConsensusAncestor()->GetBlockHash();
         UpdateTime(pblock.get(), chainparams.GetConsensus(), pindexPrev);
-        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock.get(), chainparams.GetConsensus());
-        pblock->chainWork = ArithToUint256(pindexPrev->chainWork() + GetWorkForDifficultyBits(pblock->nBits));
+
+        auto work = GetWorkForDifficultyBits(pblock->nBits);
+        work *= pblock->NumSubblocks() + 1;
+        pblock->chainWork = ArithToUint256(pindexPrev->chainWork() + work);
+        /*
+        if (pblock->NumSubblocks() + 1 == conparams.tailstorm_k)
+        {
+            auto target = FromCompact(pblock->nBits);
+            target *= conparams.tailstorm_k;
+            auto fullblockTgt = GetNextNonTailstormBlockTarget(pindexPrev, pblock.get(), conparams);
+            if (target != fullblockTgt)
+            {
+                throw std::runtime_error(strprintf("%s: work creation is broken", __func__));
+            }
+        }
+        */
+
         pblock->feePoolAmt = 0; // to be used later
         pblocktemplate->vTxSigOps[0] = 0;
     }
@@ -467,7 +832,9 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries &package,
 // where we pass in the inBlock vector of already added transactions. Even so, if we didn't do this shortcutting
 // the current algo is still much better than the older method which needed to update calculations for the
 // entire descendant tree after each package was added to the block.
-bool BlockAssembler::addPackageTxs(std::vector<const CTxMemPoolEntry *> *vtxe, bool fAllowDirtyTxns)
+bool BlockAssembler::addPackageTxs(std::vector<const CTxMemPoolEntry *> *vtxe,
+    bool fAllowDirtyTxns,
+    std::set<uint256> &setBestDagTxids)
 {
     AssertLockHeld(mempool.cs_txmempool);
 
@@ -481,7 +848,8 @@ bool BlockAssembler::addPackageTxs(std::vector<const CTxMemPoolEntry *> *vtxe, b
             fHaveDirty = true;
 
         // Skip txns we know are in the block and also skip if it's dirty but we're not allowing dirty txns.
-        if (inBlock.count(iter) || nonFinalChains.count(iter) || (!fAllowDirtyTxns && iter->IsDirty()))
+        if (inBlock.count(iter) || nonFinalChains.count(iter) || (!fAllowDirtyTxns && iter->IsDirty()) ||
+            (!setBestDagTxids.empty() && setBestDagTxids.count(iter->GetSharedTx()->GetId())))
         {
             continue;
         }
@@ -565,7 +933,7 @@ bool BlockAssembler::addPackageTxs(std::vector<const CTxMemPoolEntry *> *vtxe, b
     return !fHaveDirty;
 }
 
-void BlockAssembler::addPriorityTxs(std::vector<const CTxMemPoolEntry *> *vtxe)
+void BlockAssembler::addPriorityTxs(std::vector<const CTxMemPoolEntry *> *vtxe, std::set<uint256> &setBestDagTxids)
 {
     // How much of the block should be dedicated to high-priority transactions,
     // included regardless of the fees they pay
@@ -605,9 +973,8 @@ void BlockAssembler::addPriorityTxs(std::vector<const CTxMemPoolEntry *> *vtxe)
         vecPriority.pop_back();
 
         // If tx already in block, skip
-        if (inBlock.count(iter))
+        if (inBlock.count(iter) || (!setBestDagTxids.empty() && setBestDagTxids.count(iter->GetSharedTx()->GetId())))
         {
-            DbgAssert(false, ); // shouldn't happen for priority txs
             continue;
         }
 

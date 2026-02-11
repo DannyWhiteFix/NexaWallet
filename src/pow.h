@@ -8,7 +8,6 @@
 #define NEXA_POW_H
 
 #include "consensus/params.h"
-
 #include <stdint.h>
 
 class CBlockHeader;
@@ -16,14 +15,13 @@ class CBlockIndex;
 class uint256;
 class arith_uint256;
 
-/* Solve this block.  Not for performance use. The function modifies the nonce but does not change its size.
-   NOTE: if nonce size is 0 or small, there may be no solution ever found!
- */
-bool MineBlock(CBlockHeader &blockHeader, unsigned long int tries, const Consensus::Params &cparams);
-
-unsigned int GetNextWorkRequired(const CBlockIndex *pindexLast, const CBlockHeader *pblock, const Consensus::Params &);
-
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
-bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params &);
+bool CheckProofOfWork(const uint256 &hash, const uint256 &prevhash, unsigned int nBits, const Consensus::Params &);
+
+bool CheckProofOfWork(uint256 hash,
+    uint256 prevhash,
+    const arith_uint256 &bnTarget,
+    const Consensus::Params &params,
+    arith_uint256 *hashout);
 
 #endif // NEXA_POW_H

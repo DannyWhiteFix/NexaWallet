@@ -14,6 +14,7 @@
 #include "streams.h"
 #include "tinyformat.h"
 #include "utilstrencodings.h"
+#include "validation/tailstorm.h"
 
 uint256 CBlockHeader::GetMiningHeaderCommitment() const
 {
@@ -42,6 +43,11 @@ uint256 GetMiningHash(const uint256 &headerCommitment, const std::vector<unsigne
     return r;
 }
 
+uint64_t CBlockHeader::NumSubblocks() const
+{
+    auto subblks = ParseSummaryBlockMinerData(minerData);
+    return subblks.size();
+}
 
 uint256 CBlockHeader::GetHash() const
 {
@@ -68,6 +74,8 @@ uint256 CBlockHeader::GetMiningHash() const
     DbgAssert(size != 0, ); // Size must be properly calculated before we can figure out the hash
     return ::GetMiningHash(GetMiningHeaderCommitment(), nonce);
 }
+
+uint256 CBlockHeader::SubblockId() const { return GetMiningHash(); }
 
 std::string CBlock::ToString() const
 {
@@ -129,4 +137,93 @@ arith_uint256 GetWorkForDifficultyBits(uint32_t nBits)
     // as bnTarget+1, it is equal to ((2**256 - bnTarget - 1) / (bnTarget+1)) + 1,
     // or ~bnTarget / (nTarget+1) + 1.
     return (~bnTarget / (bnTarget + 1)) + 1;
+}
+
+arith_uint256 GetWorkForTarget(arith_uint256 bnTarget)
+{
+    // We need to compute 2**256 / (bnTarget+1), but we can't represent 2**256
+    // as it's too large for a arith_uint256. However, as 2**256 is at least as large
+    // as bnTarget+1, it is equal to ((2**256 - bnTarget - 1) / (bnTarget+1)) + 1,
+    // or ~bnTarget / (nTarget+1) + 1.
+    return (~bnTarget / (bnTarget + 1)) + 1;
+}
+
+std::vector<std::pair<uint256, std::vector<uint8_t> > > ParseSummaryBlockMinerData(
+    const std::vector<unsigned char> &data)
+{
+    if (data.empty())
+        return {};
+
+    std::vector<std::pair<uint256, std::vector<uint8_t> > > ret;
+    uint8_t minerDataVersion = 0;
+    CDataStream ds(data, SER_NETWORK, PROTOCOL_VERSION);
+
+    // First get the miner data version and make sure we only continue to process a tailstorm
+    // summary block otherwise.
+    try
+    {
+        ds >> minerDataVersion;
+    }
+    catch (...)
+    {
+        return {};
+    }
+    if (minerDataVersion != DEFAULT_MINER_DATA_SUMMARYBLOCK_VERSION)
+        return {};
+
+    // Now get the summary block miner data
+    try
+    {
+        ds >> ret;
+    }
+    catch (...)
+    {
+        return {};
+    }
+    return ret;
+}
+
+std::vector<uint256> ParseSubblockMinerData(const std::vector<unsigned char> &data)
+{
+    if (data.empty())
+        return {};
+
+    std::vector<uint256> ret;
+    uint8_t minerDataVersion = 0;
+    CDataStream ds(data, SER_NETWORK, PROTOCOL_VERSION);
+
+    // First get the miner data version and make sure we only continue to process a tailstorm
+    // summary block otherwise.
+    try
+    {
+        ds >> minerDataVersion;
+    }
+    catch (...)
+    {
+        return {};
+    }
+    if (minerDataVersion != DEFAULT_MINER_DATA_SUBBLOCK_VERSION)
+        return {};
+
+    // Now get the subblock data
+    try
+    {
+        ds >> ret;
+    }
+    catch (...)
+    {
+        return {};
+    }
+    return ret;
+}
+
+uint8_t GetMinerDataVersion(const std::vector<unsigned char> &data)
+{
+    if (data.empty())
+        return 0;
+
+    uint8_t minerDataVersion = 0;
+    CDataStream ds(data, SER_NETWORK, PROTOCOL_VERSION);
+    ds >> minerDataVersion;
+    return minerDataVersion;
 }

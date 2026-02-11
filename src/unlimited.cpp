@@ -65,8 +65,11 @@ extern void AlertNotify(const std::string &strMessage);
 
 using namespace std;
 
+extern std::atomic<bool> forceTemplateRecalc;
 extern CTxMemPool mempool; // from main.cpp
 static atomic<bool> fIsChainNearlySyncd{false};
+static atomic<bool> fIsInitialSyncComplete{false};
+extern std::atomic<bool> fTailstormEnabled;
 
 // We always start with true so that when ActivateBestChain is called during the startup (init.cpp)
 // and we havn't finished initial sync then we don't accidentally trigger the auto-dbcache
@@ -145,7 +148,7 @@ std::string Bip135VoteValidator(const std::string &value, std::string *item, boo
     {
         ClearBip135Votes();
         AssignBip135Votes(*item, 1);
-        SignalBlockTemplateChange();
+        forceTemplateRecalc.store(true);
     }
     return std::string();
 }
@@ -738,10 +741,13 @@ UniValue settrafficshaping(const UniValue &params, bool fHelp)
 // This way we avoid having to lock cs_main so often which tends to be a bottleneck.
 void IsInitialBlockDownloadInit(bool *fInit)
 {
+    static bool fInitialSyncComplete = false;
+
     // For unit testing purposes, this step allows us to explicitly set the state of block sync.
     if (fInit)
     {
         fIsInitialBlockDownload.store(*fInit);
+        fInitialSyncComplete = !(*fInit);
         return;
     }
 
@@ -766,7 +772,6 @@ void IsInitialBlockDownloadInit(bool *fInit)
 
     // Using fInitialSyncComplete, once the chain is caught up the first time, and if we fall behind again due to a
     // large re-org or for lack of mined blocks, then we continue to return false for IsInitialBlockDownload().
-    static bool fInitialSyncComplete = false;
     if (fInitialSyncComplete)
     {
         fIsInitialBlockDownload.store(false);
@@ -810,6 +815,58 @@ bool IsChainSyncd()
     // lock free since both are atomics
     return pindexBestHeader.load() == chainActive.Tip();
 }
+
+void IsInitialSyncCompleteInit(bool *fInit)
+{
+    static bool fComplete = false;
+
+    // For unit testing purposes, this step allows us to explicitly set the state of block sync.
+    if (fInit)
+    {
+        fIsInitialSyncComplete.store(*fInit);
+        fComplete = *fInit;
+        return;
+    }
+
+    const CChainParams &chainParams = Params();
+    LOCK(cs_main);
+    if (!pindexBestHeader.load())
+    {
+        // Not nearly synced if we don't have any blocks!
+        fIsInitialSyncComplete.store(false);
+        return;
+    }
+    if (fImporting || fReindex)
+    {
+        fIsInitialSyncComplete.store(false);
+        return;
+    }
+    if (fCheckpointsEnabled && chainActive.Height() < Checkpoints::GetTotalBlocksEstimate(chainParams.Checkpoints()))
+    {
+        fIsInitialSyncComplete.store(false);
+        return;
+    }
+
+    // Using fInitialSyncComplete, once the chain is caught up the first time, and if we fall behind again due to a
+    // large re-org or for lack of mined blocks, then we continue to return false for IsInitialBlockDownload().
+    if (fComplete)
+    {
+        fIsInitialSyncComplete.store(true);
+        return;
+    }
+
+    bool fStillSyncing = (chainActive.Height() < pindexBestHeader.load()->height() ||
+                          std::max(chainActive.Tip()->GetBlockTime(), pindexBestHeader.load()->GetBlockTime()) <
+                              GetTime() - nMaxTipAge);
+    if (!fStillSyncing)
+    {
+        fComplete = true;
+    }
+    fIsInitialSyncComplete.store(fComplete);
+    return;
+}
+
+bool IsInitialSyncComplete() { return fIsInitialSyncComplete.load(); }
 
 void LoadFilter(CNode *pfrom, CBloomFilter *filter)
 {
@@ -1058,9 +1115,16 @@ UniValue setlog(const UniValue &params, bool fHelp)
 static int64_t lastMiningCandidateId = 0;
 
 /** Oustanding candidates are removed 30 sec after a new block has been found*/
-static void RmOldMiningCandidates()
+static void RmOldMiningCandidates(bool clear = false)
 {
     LOCK(csMiningCandidates);
+
+    // TODO tailstorm: remove all old mining candidates so newly found subblocks can be
+    if (clear)
+    {
+        miningCandidatesMap.clear();
+        return;
+    }
 
     // Clean out mining candidates that are the same height as a discovered block.
     for (auto it = miningCandidatesMap.cbegin(); it != miningCandidatesMap.cend();)
@@ -1117,9 +1181,11 @@ static CMiningCandidate *FindRecentMiningCandidate(CScript *coinbaseScript)
     LOCK(csMiningCandidates);
     if ((lastMiningCandidateId == 0) || (miningCandidatesMap.size() == 0))
         return nullptr; // No candidates
+
     auto it = miningCandidatesMap.find(lastMiningCandidateId);
     if (it == miningCandidatesMap.end())
         return nullptr; // latest candidate has been removed
+
     CMiningCandidate &candid = it->second;
     if (candid.creationTime + minMiningCandidateInterval.Value() <= (uint64_t)GetTime())
         return nullptr; // Too old
@@ -1144,6 +1210,12 @@ static UniValue MkMiningCandidateJson(CMiningCandidate &candid)
     ret.pushKV("id", candid.id);
     ret.pushKV("headerCommitment", block.GetMiningHeaderCommitment().GetHex());
     ret.pushKV("nBits", strprintf("%08x", block.nBits));
+
+    uint256 prevHash;
+    if (fTailstormEnabled)
+        prevHash = block.hashPrevBlock;
+
+    ret.pushKV("previousBlockHash", prevHash.GetHex());
 
 #if 0 // Merkle path is no longer needed for mining.  Mining pool should provide us with its output script and we'll
       // make the coinbase tx.  However, leave this code for demonstration purposes.
@@ -1291,18 +1363,20 @@ UniValue getminingcandidate(const UniValue &params, bool fHelp)
             recentCandidate = FindRecentMiningCandidate(nullptr);
         }
 
-        if (recentCandidate)
+        if (recentCandidate && !forceTemplateRecalc)
         {
             ret = MkMiningCandidateJson(*recentCandidate);
             return ret;
         }
         else
         {
+            LEAVE_CRITICAL_SECTION(csMiningCandidates);
             candid.block = MakeBlockRef();
             mkblocktemplate(UniValue(UniValue::VARR), coinbaseSize, candid.block.get(), coinbaseScript);
             candid.creationTime = GetTime();
 
             // Save candidate so it can be looked up:
+            ENTER_CRITICAL_SECTION(csMiningCandidates);
             AddMiningCandidate(candid);
 
             ret = MkMiningCandidateJson(candid);
@@ -1362,7 +1436,12 @@ UniValue submitminingsolution(const UniValue &params, bool fHelp)
     }
 
     UniValue uvsub = SubmitBlock(block); // returns string on failure
-    RmOldMiningCandidates();
+    // It worked so we need new solutions
+    if (uvsub.empty())
+    {
+        RmOldMiningCandidates(true);
+        forceTemplateRecalc.store(true);
+    }
     return uvsub;
 }
 

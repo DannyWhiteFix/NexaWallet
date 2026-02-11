@@ -32,7 +32,8 @@ arith_uint256 CalculateASERT(const arith_uint256 &refTarget,
 uint32_t GetNextASERTWorkRequired(const CBlockIndex *pindexPrev,
     const CBlockHeader *pblock,
     const Consensus::Params &params,
-    const CBlockIndex *pindexReferenceBlock) noexcept;
+    const CBlockIndex *pindexReferenceBlock,
+    bool tailstorm = false) noexcept;
 
 /**
  * ASERT caches a special block index for efficiency. If block indices are
@@ -49,5 +50,12 @@ const CBlockIndex *GetASERTAnchorBlockCache() noexcept;
 
 unsigned int GetNextWorkRequired(const CBlockIndex *pindexLast, const CBlockHeader *pblock, const Consensus::Params &);
 
+uint32_t GetNextNonTailstormWorkRequired(const CBlockIndex *pindexPrev,
+    const CBlockHeader *pblock,
+    const Consensus::Params &params);
+
+arith_uint256 GetNextNonTailstormBlockTarget(const CBlockIndex *pindexPrev,
+    const CBlockHeader *pblock,
+    const Consensus::Params &params);
 
 #endif // NEXA_DAA_H

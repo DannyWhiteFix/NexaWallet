@@ -21,8 +21,8 @@ class MempoolPackagesTest(BitcoinTestFramework):
 
     def setup_network(self):
         self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-cache.maxOrphanPool=10000", "-debug=mempool", "-test.nextMaxBlockSize=10000000"]))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-cache.maxOrphanPool=10000", "-debug=mempool", "-test.nextMaxBlockSize=10000000"]))
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-cache.maxOrphanPool=10000", "-debug=net", "-debug=graphene", "-test.nextMaxBlockSize=10000000"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-cache.maxOrphanPool=10000", "-debug=net", "-debug=graphene", "-test.nextMaxBlockSize=10000000"]))
         connect_nodes(self.nodes[0], 1)
         self.is_network_split = False
 

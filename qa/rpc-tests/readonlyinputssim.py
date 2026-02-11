@@ -298,12 +298,7 @@ class RoTest(BitcoinTestFramework):
         miningNode = self.nodes[1]
         # Mine some blocks to get utxos etc
         miningNode.generate(1)
-        # Activate the hard fork
-        bestblock = miningNode.getbestblockhash()
-        lastblocktime = miningNode.getblockheader(bestblock)['time']
-        activationtime = lastblocktime - 2000
-        for n in self.nodes:
-            n.set("consensus.fork1Time=" + str(activationtime))
+        sync_blocks(self.nodes)
 
         for n in self.nodes:
             n.generate(int(60/len(self.nodes)))

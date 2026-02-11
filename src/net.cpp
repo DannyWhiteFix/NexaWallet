@@ -87,7 +87,7 @@ extern bool fBlocksOnly;
 #endif
 
 extern std::atomic<bool> fRescan;
-extern bool fReindex;
+extern std::atomic<bool> fReindex;
 extern CTxMemPool mempool;
 extern CTweak<uint64_t> grapheneMinVersionSupported;
 extern CTweak<uint64_t> grapheneMaxVersionSupported;
@@ -658,19 +658,25 @@ void CNode::LookAhead()
     {
         /* padding of 8 bytes for each of four VARINTs found in the header */
         static const uint32_t padding = 4 * 8;
-        /* The expected size of a serialized block header plus padding for various VARINTs plus nonce padding */
+        /* The expected size of a serialized block header plus padding for various VARINTs*/
         static const uint32_t SERIALIZED_HEADER_SIZE =
             ::GetSerializeSize(CBlockHeader(), SER_NETWORK, PROTOCOL_VERSION) + padding + CBlockHeader::MAX_NONCE_SIZE;
         if (msg.nDataPos >= SERIALIZED_HEADER_SIZE)
         {
-            CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-            ss.append(msg.vRecv, SERIALIZED_HEADER_SIZE);
+            try
+            {
+                CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                ss.append(msg.vRecv, SERIALIZED_HEADER_SIZE);
 
-            CBlockHeader header;
-            ss >> header;
-            requester.Downloading(header.GetHash(), this, msg.hdr.nMessageSize);
+                CBlockHeader header;
+                ss >> header;
+                requester.Downloading(header.GetHash(), this, msg.hdr.nMessageSize);
 
-            fDownloading.store(true);
+                fDownloading.store(true);
+            }
+            catch (std::ios_base::failure &e)
+            {
+            }
         }
     }
 }
@@ -1408,6 +1414,9 @@ void ThreadSocketHandler()
     // Track when we last processed diconnections
     int64_t nLastCleanup = GetTimeMillis();
 
+    // Track whether we made a first connection, either inbound or outbound
+    bool fInitialConnection = false;
+
     while (true)
     {
         if (shutdown_threads.load() == true)
@@ -1420,7 +1429,7 @@ void ThreadSocketHandler()
 
         // Only process disconnect node requests occasionally but not
         // too infrequently either. This helps alleviate contention on cs_vNodes.
-        if (GetTimeMillis() - nLastCleanup > 500)
+        if (GetTimeMillis() - nLastCleanup > 500 || IsMockTime())
         {
             CleanupDisconnectedNodes();
             nLastCleanup = GetTimeMillis();
@@ -1431,6 +1440,17 @@ void ThreadSocketHandler()
         {
             nPrevNodeCount = vNodes.size();
             uiInterface.NotifyNumConnectionsChanged(nPrevNodeCount);
+        }
+
+        // If there are no connections or all connections are lost then reset the dagviewer.
+        if (!fInitialConnection && !vNodes.empty())
+        {
+            fInitialConnection = true;
+        }
+        else if (fInitialConnection && vNodes.empty())
+        {
+            uiInterface.ResetDagViewer();
+            fInitialConnection = false;
         }
 
         //
@@ -3272,7 +3292,6 @@ CNode::CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNa
     fGetAddr = false;
     nNextLocalAddrSend = 0;
     nNextAddrSend = 0;
-    nNextInvSend = 0;
     fRelayTxes = false;
     fSentAddr = false;
     pfilter = new CBloomFilter();

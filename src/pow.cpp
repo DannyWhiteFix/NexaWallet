@@ -9,28 +9,57 @@
 #include "util.h"
 #include "validation/forks.h"
 
-static uint256 sha256(uint256 data)
+static uint256 sha256(uint256 &data)
 {
     uint256 ret;
     CSHA256 sha;
-    sha.Write(data.begin(), 256 / 8);
+    sha.Write(data.begin(), 32);
     sha.Finalize(ret.begin());
     return ret;
 }
 
-bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params &params)
+bool CheckProofOfWork(const uint256 &hash, const uint256 &prevhash, unsigned int nBits, const Consensus::Params &params)
 {
     bool fNegative;
     bool fOverflow;
-    arith_uint256 bnTarget;
+    arith_uint256 target;
+    target.SetCompact(nBits, &fNegative, &fOverflow);
 
+    // Check range
+    if (fNegative || target == 0 || fOverflow || target > UintToArith256(params.powLimit))
+        return false;
+    return CheckProofOfWork(hash, prevhash, target, params, nullptr);
+}
+
+bool CheckProofOfWork(uint256 hash,
+    uint256 prevhash,
+    const arith_uint256 &bnTarget,
+    const Consensus::Params &params,
+    arith_uint256 *hashout)
+{
     if (params.powAlgorithm == 1)
     {
         // This algorithm uses the hash as a priv key to sign sha256(hash) using deterministic k.
         // This means that any hardware optimization will need to implement signature generation.
         // What we really want is signature validation to be implemented in hardware, so more thought needs to
         // happen.
-        uint256 h1 = sha256(hash);
+        //
+        // When tailstorm is enabled the prevhash will not be NULL and then we combine both the hash
+        // and the previous summary block hash together so that the mininghashes returned can only be
+        // used for the block they were created for.
+        uint256 h1;
+        if (!prevhash.IsNull())
+        {
+            CSHA256Writer combine;
+            combine << hash << prevhash;
+            uint256 h = combine.GetHash();
+            h1 = sha256(h);
+        }
+        else
+        {
+            h1 = sha256(hash);
+        }
+
         CKey k; // Use hash as a private key
         k.Set(hash.begin(), hash.end(), false);
         if (!k.IsValid())
@@ -45,12 +74,9 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params 
         sha.Finalize(hash.begin());
     }
 
-    bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
-
-    // Check range
-    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(params.powLimit))
-        return false;
-
+    auto tmp = UintToArith256(hash);
+    if (hashout != nullptr)
+        *hashout = tmp;
     // Check proof of work matches claimed amount
     if (UintToArith256(hash) > bnTarget)
         return false;

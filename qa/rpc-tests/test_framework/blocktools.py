@@ -108,6 +108,31 @@ def create_lots_of_big_transactions(node, txouts, utxos, num, feePerKb):
         txidems.append(txidem)
     return (txidems, txids)
 
+# Generate transactions with large wasteful outputs. Useful
+# for filling up the txpool quickly to mine larger blocks.
+def generateTx(node, txBytes, addrs, data=None):
+    wallet = node.listunspent()
+    wallet.sort(key=lambda x: x["amount"], reverse=False)
+
+    size = 0
+    count = 0
+    while size < txBytes:
+        count += 1
+        utxo = wallet.pop()
+        outp = {}
+        # Make the tx bigger by adding addtl outputs so it validates faster
+        payamt = satoshi_round(utxo["amount"] / 8)
+        for x in range(0, 8):
+            # its test code, I don't care if rounding error is folded into the fee
+            outp[addrs[(count + x) % len(addrs)]] = payamt
+        if data:
+            outp["data"] = data
+        txn = createrawtransaction([utxo], outp, createWastefulOutput)
+        # The python createrawtransaction is meant to have the same API as the node's RPC so you can also do:
+        signedtxn = node.signrawtransaction(txn)
+        size += len(binascii.unhexlify(signedtxn["hex"]))
+        node.sendrawtransaction(signedtxn["hex"], True)
+
 def make_conform_to_ctor(block):
     for tx in block.vtx:
         tx.rehash()

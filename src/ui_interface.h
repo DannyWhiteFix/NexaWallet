@@ -17,6 +17,7 @@ class CBasicKeyStore;
 class CWallet;
 class uint256;
 class CBlockIndex;
+class CBlockHeader;
 
 /** General change type (added, updated, removed). */
 enum ChangeType
@@ -103,10 +104,17 @@ public:
     boost::signals2::signal<void(bool initialSync, const CBlockIndex *pIndex, bool fHeader)> NotifyHeaderTip;
 
     /** New block has been accepted */
-    boost::signals2::signal<void(bool initialSync, const CBlockIndex *pIndex)> NotifyBlockTipDag;
+    boost::signals2::signal<
+        void(bool initialSync, uint32_t dagheight, uint32_t nSequenceId, const CBlockHeader &header, bool fSubblock)>
+        NotifyBlockTipDag;
 
     /** New header has been accepted */
-    boost::signals2::signal<void(bool initialSync, const CBlockIndex *pIndex)> NotifyHeaderTipDag;
+    boost::signals2::signal<
+        void(bool initialSync, uint32_t dagheight, uint32_t nSequenceId, const CBlockHeader &header, bool fSubblock)>
+        NotifyHeaderTipDag;
+
+    /** Reset Dag Viewer */
+    boost::signals2::signal<void(void)> ResetDagViewer;
 
     /** Banlist did change. */
     boost::signals2::signal<void(void)> BannedListChanged;

@@ -204,46 +204,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         addr20Obj = self.nodes[2].validateaddress(addr20)
         addr21Obj = self.nodes[2].validateaddress(addr21)
 
-        # mine a few blocks 1 second apart so we can get a more meaningful "mediantime"
-        logging.info("starting fork tests")
-        bestblock = self.nodes[2].getbestblockhash()
-        lastblocktime = self.nodes[2].getblockheader(bestblock)['time']
-        mocktime = lastblocktime
-        for i in range(10):
-            mocktime = mocktime + 120
-            self.nodes[0].setmocktime(mocktime)
-            self.nodes[1].setmocktime(mocktime)
-            self.nodes[2].setmocktime(mocktime)
-            self.nodes[2].generate(1)
-        assert_equal(self.nodes[2].getblockcount(), 120)
-        self.sync_blocks()
-
-        # set the harfork activation to just a few blocks ahead
-        bestblock = self.nodes[2].getbestblockhash()
-        lastblocktime = self.nodes[2].getblockheader(bestblock)['time']
-        activationtime = lastblocktime + 240
-        self.nodes[0].set("consensus.fork1Time=" + str(activationtime))
-        self.nodes[1].set("consensus.fork1Time=" + str(activationtime))
-        self.nodes[2].set("consensus.fork1Time=" + str(activationtime))
-
-        blockchaininfo = self.nodes[2].getblockchaininfo()
-        assert_equal(blockchaininfo['forktime'], activationtime)
-        assert_equal(blockchaininfo['forkactive'], False)
-        assert_equal(blockchaininfo['forkenforcednextblock'], False)
-        assert_greater_than(activationtime, blockchaininfo['mediantime'])
-
-        # Mine just up to the hard fork activation minus 1 (activationtime will still be greater than mediantime).
-        for i in range(5):
-            mocktime = mocktime + 120
-            self.nodes[0].setmocktime(mocktime)
-            self.nodes[1].setmocktime(mocktime)
-            self.nodes[2].setmocktime(mocktime)
-            self.nodes[2].generate(1)
-            blockchaininfo = self.nodes[2].getblockchaininfo()
-            assert_equal(blockchaininfo['forkactive'], False)
-            assert_equal(blockchaininfo['forkenforcednextblock'], False)
-            assert_greater_than(activationtime, blockchaininfo['mediantime']) # activationtime > mediantime
-        self.sync_blocks()
 
         # Should not be able to create a multisig with more than 15 pubkeys because the script size limit will be exceeded.
         # This is actually not correct, we should be able to create 16 but for the stack limitations.  Once the hard fork
@@ -253,29 +213,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         except JSONRPCException as e:
             assert(e.error["message"] == "redeemScript exceeds size limit: 547")
 
-        # Try to create with one more than the maximum of 8. This should fail as there is a bug in the current
-        # implementation which the hardfork will fix.
-        mSigObj = self.nodes[2].addmultisigaddress(1, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey'], addr6Obj['pubkey'], addr7Obj['pubkey'], addr8Obj['pubkey'], addr9Obj['pubkey']])
-        mSigObjValid = self.nodes[1].validateaddress(mSigObj)
-
-        txId = self.nodes[2].sendtoaddress(mSigObj, 2200000)
-        decTx = self.nodes[2].gettransaction(txId)
-        rawTx = self.nodes[2].decoderawtransaction(decTx['hex'])
-        sPK = rawTx['vout'][0]['scriptPubKey']['hex']
-
-        txDetails = self.nodes[2].gettransaction(txId, True)
-        decrawTx = self.nodes[2].decoderawtransaction(txDetails['hex'])
-        vout = False
-        for outpoint in decrawTx['vout']:
-            if outpoint['value'] == Decimal('2200000.00'):
-                vout = outpoint
-                break
-
-        inputs = [{ "outpoint" : vout["outpoint"], "scriptPubKey" : vout['scriptPubKey']['hex'], "amount":str(vout['value']) }]
-        outputs = { self.nodes[2].getnewaddress() : 2190000 }
-        rawTx = self.nodes[2].createrawtransaction(inputs, outputs)
-        rawTxSigned = self.nodes[2].signrawtransaction(rawTx, inputs)
-        assert_equal(rawTxSigned['complete'], False)
 
         # Create one with the maximum number of pubkeys (currently only 8 will work - this is a bug in the current codebase
         # which the hardfork1 changes will also fix.
@@ -288,18 +225,8 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawTx = self.nodes[0].decoderawtransaction(decTx['hex'])
         sPK = rawTx['vout'][0]['scriptPubKey']['hex']
 
-        # Mine right up to the activation time
-        mocktime = mocktime + 120
-        self.nodes[0].setmocktime(mocktime)
-        self.nodes[1].setmocktime(mocktime)
-        self.nodes[2].setmocktime(mocktime)
         self.nodes[0].generate(1)
         self.sync_all()
-
-        # fork still not active
-        blockchaininfo = self.nodes[2].getblockchaininfo()
-        assert_equal(blockchaininfo['forkactive'], False)
-        assert_equal(blockchaininfo['forkenforcednextblock'], False)
 
         #THIS IS A INCOMPLETE FEATURE
         #NODE2 HAS TWO OF THREE KEY AND THE FUNDS SHOULD BE SPENDABLE AND COUNT AT BALANCE CALCULATION
@@ -325,25 +252,15 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawTx = self.nodes[0].decoderawtransaction(rawTxSigned['hex'])
         self.sync_all()
 
-        # Fork should be active after the next block mined (median time will be greater than or equal to blocktime)
-        logging.info("activate fork")
-        mocktime = mocktime + 120
-        self.nodes[0].setmocktime(mocktime)
-        self.nodes[1].setmocktime(mocktime)
-        self.nodes[2].setmocktime(mocktime)
         self.nodes[2].generate(2)
         self.sync_blocks()
-        blockchaininfo = self.nodes[2].getblockchaininfo()
-        assert_equal(blockchaininfo['forkactive'], True)
-        assert_equal(blockchaininfo['forkenforcednextblock'], False)
 
         # Check balance - NOTE: after the fork on mainnet and we remove the forking upgrade test we still
         # need to keep this line as it is part of the above test that we will be keeping.
         assert_equal(self.nodes[0].getbalance(), bal+(2*COINBASE_REWARD)+Decimal('2190000.00')) #block reward + tx
 
 
-        # after the hardfork is activated try to create one with 17 pubkeys
-        logging.info("post fork testing")
+        # try to create one with 17 pubkeys
         try:
             mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey'], addr6Obj['pubkey'], addr7Obj['pubkey'], addr8Obj['pubkey'], addr9Obj['pubkey'], addr10Obj['pubkey'],addr11Obj['pubkey'],addr12Obj['pubkey'],addr13Obj['pubkey'],addr14Obj['pubkey'], addr15Obj['pubkey'],addr16Obj['pubkey'], addr17Obj['pubkey']])
         except JSONRPCException as e:
@@ -361,8 +278,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_blocks()
         blockchaininfo = self.nodes[2].getblockchaininfo()
-        assert_equal(blockchaininfo['forkactive'], True)
-        assert_equal(blockchaininfo['forkenforcednextblock'], False)
 
         #THIS IS A INCOMPLETE FEATURE
         #NODE2 HAS TWO OF THREE KEY AND THE FUNDS SHOULD BE SPENDABLE AND COUNT AT BALANCE CALCULATION

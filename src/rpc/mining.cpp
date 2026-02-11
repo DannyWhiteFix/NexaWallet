@@ -13,6 +13,7 @@
 #include "consensus/params.h"
 #include "consensus/validation.h"
 #include "core_io.h"
+#include "daa.h"
 #include "dstencode.h"
 #include "init.h"
 #include "main.h"
@@ -43,6 +44,7 @@
 extern CCriticalSection csCurrentCandidate;
 extern uint64_t nLastBlockTx;
 extern uint64_t nLastBlockSize;
+extern std::atomic<bool> forceTemplateRecalc;
 
 using namespace std;
 
@@ -117,17 +119,11 @@ UniValue generateBlocks(boost::shared_ptr<CReserveScript> coinbaseScript,
     bool keepScript)
 {
     static const uint64_t nInnerLoopCount = 0x10000;
-    int nHeightStart = 0;
-    int nHeightEnd = 0;
-    int nHeight = 0;
-
-    nHeightStart = chainActive.Height();
-    nHeight = nHeightStart;
-    nHeightEnd = nHeightStart + nGenerate;
+    int nCount = 0;
 
     UniValue blockHashes(UniValue::VARR);
     auto p = Params().GetConsensus();
-    while (nHeight < nHeightEnd)
+    while (nCount < nGenerate)
     {
         std::unique_ptr<CBlockTemplate> pblocktemplate;
         {
@@ -166,7 +162,8 @@ UniValue generateBlocks(boost::shared_ptr<CReserveScript> coinbaseScript,
         CValidationState state;
         if (!ProcessNewBlock(state, Params(), nullptr, pblock, true, nullptr, false))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
-        ++nHeight;
+
+        ++nCount;
         blockHashes.push_back(pblock->GetHash().GetHex());
 
         // mark script as important because it was used at least for one coinbase output if the script came from the
@@ -261,17 +258,19 @@ UniValue getmininginfo(const UniValue &params, bool fHelp)
             "\nReturns a json object containing mining-related information."
             "\nResult:\n"
             "{\n"
-            "  \"blocks\": nnn,              (numeric) The number of blocks in the chain\n"
-            "  \"currentblocksize\": nnn,    (numeric) The current block template reserved size\n"
-            "  \"currentblocktx\": nnn,      (numeric) The current block template transaction count\n"
-            "  \"currentmaxblocksize\": nnn, (numeric) The current maximum block size possible\n"
-            "  \"difficulty\": xxx.xxxxx     (numeric) The current difficulty\n"
-            "  \"errors\": \"...\"           (string) Current errors\n"
-            "  \"pooledtx\": n               (numeric) The size of the transaction pool\n"
-            "  \"chain\": \"xxxx\",          (string) Current network name as defined in BIP70 (main, test, regtest)\n"
-            "  \"miners\": {                 (object) Miner information\n"
-            "    \"name\" : {                (object) Name reported by the miner\n"
-            "      \"lastrequest\" : nnn,    (numeric) Epoch time in seconds of this miner's last request\n"
+            "  \"blocks\": nnn,                 (numeric) The number of blocks in the chain\n"
+            "  \"currentblocksize\": nnn,       (numeric) The current block template reserved size\n"
+            "  \"currentblocktx\": nnn,         (numeric) The current block template transaction count\n"
+            "  \"currentmaxblocksize\": nnn,    (numeric) The current maximum block size possible\n"
+            "  \"currentmaxsubblocksize\": nnn, (numeric) The current maximum subblock size possible\n"
+            "  \"difficulty\": xxx.xxxxx        (numeric) The current difficulty\n"
+            "  \"errors\": \"...\"              (string) Current errors\n"
+            "  \"pooledtx\": n                  (numeric) The size of the transaction pool\n"
+            "  \"chain\": \"xxxx\",             (string) Current network name as defined in BIP70 (main, test, "
+            "regtest)\n"
+            "  \"miners\": {                    (object) Miner information\n"
+            "    \"name\" : {                   (object) Name reported by the miner\n"
+            "      \"lastrequest\" : nnn,       (numeric) Epoch time in seconds of this miner's last request\n"
             "      }\n"
             "      ...\n"
             "  }\n"
@@ -289,6 +288,15 @@ UniValue getmininginfo(const UniValue &params, bool fHelp)
         obj.pushKV("currentblocktx", (uint64_t)nLastBlockTx);
     }
     obj.pushKV("currentmaxblocksize", pindex->GetNextMaxBlockSize());
+    if (IsFork2Pending(pindex) || IsFork2Activated(pindex))
+    {
+        obj.pushKV("currentmaxsubblocksize",
+            std::max(DEFAULT_NEXT_MAX_BLOCK_SIZE, pindex->GetNextMaxBlockSize() / Params().GetConsensus().tailstorm_k));
+    }
+    else
+    {
+        obj.pushKV("currentmaxsubblocksize", "N/A");
+    }
     obj.pushKV("difficulty", (double)GetDifficulty());
     obj.pushKV("errors", GetWarnings("statusbar"));
     obj.pushKV("networkhashps", getnetworkhashps(params, false));
@@ -450,6 +458,7 @@ static UniValue MkFullMiningCandidateJson(const std::set<std::string> &setClient
     UniValue aCaps(UniValue::VARR);
     aCaps.push_back("proposal");
 
+    auto chaintip = chainActive.Tip();
     UniValue transactions(UniValue::VARR);
     map<uint256, int64_t> setTxIndex;
     int i = 0;
@@ -477,10 +486,13 @@ static UniValue MkFullMiningCandidateJson(const std::set<std::string> &setClient
         }
         entry.pushKV("depends", deps);
 
-        int index_in_template = i - 1;
-        entry.pushKV("fee", pblocktemplate->vTxFees[index_in_template]);
-        entry.pushKV("sigchecks", pblocktemplate->vTxSigOps[index_in_template]);
-        sigcheckTotal += pblocktemplate->vTxSigOps[index_in_template];
+        entry.pushKV("fee", (tx.GetValueIn() - tx.GetValueOut()));
+        if (!IsFork2Pending(chaintip) && !IsFork2Activated(chaintip))
+        {
+            int index_in_template = i - 1;
+            entry.pushKV("sigchecks", pblocktemplate->vTxSigOps[index_in_template]);
+            sigcheckTotal += pblocktemplate->vTxSigOps[index_in_template];
+        }
 
         transactions.push_back(entry);
     }
@@ -528,8 +540,12 @@ static UniValue MkFullMiningCandidateJson(const std::set<std::string> &setClient
     result.pushKV("mintime", (int64_t)pindexPrev->GetMedianTimePast() + 1);
     result.pushKV("mutable", aMutable);
     result.pushKV("noncerange", "00000000ffffffff");
-    result.pushKV("sigchecklimit", GetMaxBlockSigChecks(pindexPrev->GetNextMaxBlockSize()));
-    result.pushKV("sigchecktotal", sigcheckTotal);
+
+    if (!IsFork2Pending(chaintip) && !IsFork2Activated(chaintip))
+    {
+        result.pushKV("sigchecklimit", GetMaxBlockSigChecks(pindexPrev->GetNextMaxBlockSize()));
+        result.pushKV("sigchecktotal", sigcheckTotal);
+    }
 
     uint64_t nBlockMaxSize = pindexPrev->GetNextMaxBlockSize();
     if (miningBlockSize.Value() > 0 && nBlockMaxSize > miningBlockSize.Value())
@@ -553,14 +569,6 @@ returns JSON if pblockOut is nullptr
 pblockOut -A copy of the block if not nullptr
 */
 
-bool forceTemplateRecalc GUARDED_BY(cs_main) = false;
-// force block template recalculation
-void SignalBlockTemplateChange()
-{
-    LOCK(cs_main);
-
-    forceTemplateRecalc = true;
-}
 UniValue mkblocktemplate(const UniValue &params,
     int64_t coinbaseSize,
     CBlock *pblockOut,
@@ -722,13 +730,14 @@ UniValue mkblocktemplate(const UniValue &params,
     // 4. Txpool has changed and 5 seconds has elapsed.
     // 5. Passed-in coinbaseSize differs from cached.
     // 6. Passed-in coinbaseScript differs from cached.
-    if (pindexPrev != chainActive.Tip() || forceTemplateRecalc || // 1 & 2 above
+    if (pindexPrev != chainActive.Tip() || forceTemplateRecalc.load() || // 1 & 2 above
         (consensusParams.fPowAllowMinDifficultyBlocks && std::abs(GetTime() - nStart) > 30) || // 3 above
         // 4 above
         (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && std::abs(GetTime() - nStart) > 5) ||
-        prevCoinbaseSize != coinbaseSize || prevCoinbaseScript != coinbaseScript) // 5 & 6 above
+        prevCoinbaseSize != coinbaseSize || prevCoinbaseScript != coinbaseScript || // 5 & 6 above
+        pblocktemplate->block->nBits == 0) // its not a good template
     {
-        forceTemplateRecalc = false;
+        forceTemplateRecalc.store(false);
         // Clear pindexPrev so future calls make a new block, despite any failures from here on
         pindexPrev = nullptr;
 
@@ -851,8 +860,6 @@ UniValue getblocktemplate(const UniValue &params, bool fHelp)
             "outputs (in Satoshis); for coinbase transactions, this is a negative Number of the total collected block "
             "fees (ie, not including the block subsidy); if key is not present, fee is unknown and clients MUST NOT "
             "assume there isn't one\n"
-            "         \"sigops\" : n,               (numeric) total number of SigOps, as counted for purposes of block "
-            "limits; if key is not present, sigop count is unknown and clients MUST NOT assume there aren't any\n"
             "         \"required\" : true|false     (boolean) if provided and true, this transaction must be in the "
             "final block\n"
             "      }\n"
@@ -874,7 +881,6 @@ UniValue getblocktemplate(const UniValue &params, bool fHelp)
             "     ,...\n"
             "  ],\n"
             "  \"noncerange\" : \"00000000ffffffff\",   (string) A range of valid nonces\n"
-            "  \"sigoplimit\" : n,                 (numeric) limit of sigops in blocks\n"
             "  \"sizelimit\" : n,                  (numeric) limit of block size\n"
             "  \"curtime\" : ttt,                  (numeric) current timestamp in seconds since epoch (Jan 1 1970 "
             "GMT)\n"

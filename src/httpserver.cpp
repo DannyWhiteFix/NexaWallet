@@ -117,7 +117,7 @@ public:
         ThreadCounter count(*this);
         while (running)
         {
-            std::unique_ptr<WorkItem> i;
+            std::unique_ptr<WorkItem> i = nullptr;
             {
                 std::unique_lock<std::mutex> lock(cs_workQueue);
                 while (running && queue.empty())
@@ -127,7 +127,10 @@ public:
                 i = std::move(queue.front());
                 queue.pop_front();
             }
-            (*i)();
+            if (i)
+            {
+                (*i)();
+            }
         }
     }
     /** Interrupt and exit loops */

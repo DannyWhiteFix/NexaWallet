@@ -88,7 +88,7 @@ struct ForkDeployment
  */
 struct Params
 {
-    /** what pow algorithm to use (nextchain's = 1 or BTC/BCH = 0) */
+    /** what pow algorithm to use (Nexa = 1 or BTC/BCH = 0) */
     unsigned int powAlgorithm = 1;
     /** Initial subsidy */
     CAmount initialSubsidy;
@@ -152,6 +152,15 @@ struct Params
     uint64_t nLongBlockWindow;
     uint64_t nBlockSizeMultiplier;
     uint64_t nNextMaxBlockSize;
+
+    /** Number of tailstorm subblocks needed to make up a block.
+     *  This *includes* the current block so the actual number of subblocks a summary block needs to reference is
+     *  this amount - 1.
+     */
+    uint32_t tailstorm_k;
+
+    /** Enforce subblock correctness this deep from the chain tip */
+    uint32_t tailstormEnforceDepth;
 };
 } // namespace Consensus
 

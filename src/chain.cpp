@@ -240,7 +240,7 @@ bool AreOnTheSameFork(const CBlockIndex *pa, const CBlockIndex *pb)
     return pindexCommon == pa || pindexCommon == pb;
 }
 
-int64_t GetBlockProofEquivalentTime(const CBlockIndex &to,
+int64_t GetBlockWorkEquivalentTime(const CBlockIndex &to,
     const CBlockIndex &from,
     const CBlockIndex &tip,
     const Consensus::Params &params)
@@ -256,7 +256,7 @@ int64_t GetBlockProofEquivalentTime(const CBlockIndex &to,
         r = from.chainWork() - to.chainWork();
         sign = -1;
     }
-    r = r * arith_uint256(params.nPowTargetSpacing) / GetBlockProof(tip);
+    r = r * arith_uint256(params.nPowTargetSpacing) / GetBlockWork(tip);
     if (r.bits() > 63)
     {
         return sign * std::numeric_limits<int64_t>::max();
@@ -264,4 +264,4 @@ int64_t GetBlockProofEquivalentTime(const CBlockIndex &to,
     return sign * r.GetLow64();
 }
 
-arith_uint256 GetBlockProof(const CBlockIndex &block) { return GetWorkForDifficultyBits(block.tgtBits()); }
+arith_uint256 GetBlockWork(const CBlockIndex &block) { return GetWorkForDifficultyBits(block.tgtBits()); }

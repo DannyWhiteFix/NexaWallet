@@ -1029,6 +1029,7 @@ bool AppInit2(Config &config)
     if (ratio != 0)
     {
         mempool.setSanityCheck(1.0 / ratio);
+        tailstormForest.setSanityCheck(1.0 / ratio);
     }
     fCheckBlockIndex = GetBoolArg("-checkblockindex", chainparams.DefaultConsistencyChecks());
     fCheckpointsEnabled = GetBoolArg("-checkpoints", DEFAULT_CHECKPOINTS_ENABLED);
@@ -1376,6 +1377,9 @@ bool AppInit2(Config &config)
 
                 uiInterface.InitMessage(_("Opening Token Mintage database..."));
                 ptokenMint = new CTokenMintageDB(cacheConfig.nBlockTreeDBCache, false, fReset);
+
+                // Set the coins cache for the tailstorm forest
+                tailstormForest.SetBackend(pcoinsTip);
 
                 if (fTxIndex)
                 {

@@ -16,6 +16,10 @@ extern CTweak<uint64_t> maxAllowedNetMessage;
 extern CTweak<uint64_t> nextMaxBlockSize;
 extern std::atomic<uint64_t> nLargestNextMaxBlockSize;
 
+/** The number of subblocks in a summary block */
+static const uint32_t TAILSTORM_K = 120;
+/** How many blocks from the chaintip to enforce the correctness of the subblocks within the summary block */
+static const uint32_t DEPTH_TO_ENFORCE_CORRECT_SUBBLOCKS = 5;
 
 static const unsigned int ONE_MEGABYTE = 1000000;
 static const unsigned int ONE_DAY_OF_BLOCKS = 144 * 5; // average number of blocks mined per day

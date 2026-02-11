@@ -29,6 +29,8 @@
 #include "respend/dsproofstorage.h"
 #include "timedata.h"
 #include "txadmission.h"
+#include "validation/dag.h"
+#include "validation/tailstorm.h"
 #include "validation/validation.h"
 #include "validationinterface.h"
 #include "version.h"
@@ -89,7 +91,7 @@ void UpdatePreferredDownload(CNode *node)
     nPreferredDownload.fetch_add(state->fPreferredDownload);
 }
 
-bool PeerHasHeader(const CNodeState *state, CBlockIndex *pindex)
+static bool PeerHasHeader(const CNodeState *state, CBlockIndex *pindex)
 {
     if (pindex == nullptr)
         return false;
@@ -100,6 +102,104 @@ bool PeerHasHeader(const CNodeState *state, CBlockIndex *pindex)
     return false;
 }
 
+static bool PeerHasSubblockHeader(CNodeStateAccessor &state, const uint256 &hash)
+{
+    // Trim the tracking map by height when necessary.
+    //
+    // The map is allowed to grow larger than the trim size before a trim is triggered
+    // so that we don't end up trying to trim the map every time this function is called.
+    if (state->mapSubblockHeaders.size() >
+        (Params().GetConsensus().tailstorm_k * (DEPTH_TO_ENFORCE_CORRECT_SUBBLOCKS + 1)))
+    {
+        uint64_t nTrimHeight = chainActive.Height() - DEPTH_TO_ENFORCE_CORRECT_SUBBLOCKS;
+        auto mi = state->mapSubblockHeaders.begin();
+        while (mi != state->mapSubblockHeaders.end())
+        {
+            if (mi->second < nTrimHeight)
+            {
+                mi = state->mapSubblockHeaders.erase(mi);
+            }
+            else
+            {
+                mi++;
+            }
+        }
+    }
+
+    // Does the peer know about this header
+    if (state->mapSubblockHeaders.count(hash))
+        return true;
+
+    return false;
+}
+
+template <class T>
+void static SendBlock(CNode *pfrom,
+    T &inv,
+    ConstCBlockRef pblock,
+    const uint32_t msgCookie,
+    const uint32_t oneReplyPerInvCookie,
+    uint32_t &replyCookieCount,
+    unsigned char &noSendReason,
+    std::string &noSendStr,
+    const bool lastInv,
+    bool &fSend)
+{
+    if (inv.type == MSG_BLOCK)
+    {
+        LOG(NET, "Sending block via getdata message to %s\n", pfrom->GetLogName());
+        pfrom->blocksSent += 1;
+        pfrom->PushMessageWithCookie(NetMsgType::BLOCK, oneReplyPerInvCookie, *pblock);
+        replyCookieCount++;
+    }
+    else if (inv.type == MSG_CMPCT_BLOCK)
+    {
+        LOG(CMPCT, "Sending compactblock via getdata message to %s\n", pfrom->GetLogName());
+        SendCompactBlock(pblock, pfrom, msgCookie, inv.type);
+        replyCookieCount++;
+    }
+    else // MSG_FILTERED_BLOCK)
+    {
+        LOG(CMPCT, "Sending filtered block via getdata message to %s\n", pfrom->GetLogName());
+        LOCK(pfrom->cs_filter);
+        if (pfrom->pfilter)
+        {
+            CMerkleBlock merkleBlock(*pblock, *pfrom->pfilter);
+            pfrom->PushMessageWithCookie(NetMsgType::MERKLEBLOCK, msgCookie + replyCookieCount, merkleBlock);
+            replyCookieCount++;
+            pfrom->blocksSent += 1;
+            LOG(NET, "Bloom filtered block matched: %d tx\n", merkleBlock.vMatchedTxn.size());
+            // CMerkleBlock just contains hashes, so also push any transactions in the block the
+            // client did not see. This avoids hurting performance by pointlessly requiring a
+            // round-trip.
+            //
+            // Note that there is currently no way for a node to request any single transactions
+            // we didn't send here - they must either disconnect and retry or request the full
+            // block. Thus, the protocol spec specified allows for us to provide duplicate txn
+            // here, however we MUST always provide at least what the remote peer needs
+            typedef std::pair<unsigned int, uint256> PairType;
+            int txSz = merkleBlock.vMatchedTxn.size();
+            int txCount = 0;
+            for (PairType &pair : merkleBlock.vMatchedTxn)
+            {
+                txCount++;
+                bool lastTx = (txCount == txSz);
+                pfrom->txsSent += 1;
+                uint32_t replyCookie = msgCookie + replyCookieCount;
+                if (lastInv && lastTx)
+                    replyCookie = msgCookie | 0xFFFF;
+                pfrom->PushMessageWithCookie(NetMsgType::TX, replyCookie, pblock->vtx[pair.first]);
+                replyCookieCount++;
+            }
+        }
+        else
+        {
+            fSend = false;
+            noSendReason = REJECT_MALFORMED;
+            noSendStr = std::string("Merkle block requested but no filter installed");
+        }
+    }
+}
 template <class T>
 void static ProcessGetData(CNode *pfrom,
     const Consensus::Params &consensusParams,
@@ -146,153 +246,14 @@ void static ProcessGetData(CNode *pfrom,
 
         if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK)
         {
-            auto *mi = LookupBlockIndex(inv.hash);
-            if (mi)
+            ConstCBlockRef pblock;
+            if (tailstormForest.Find(inv.hash, pblock))
             {
                 bool fSend = false;
                 unsigned char noSendReason = 0;
                 std::string noSendStr = std::string("");
-
-                static const int nOneMonth = 30 * 24 * 60 * 60;
-                if (chainActive.Contains(mi))
-                {
-                    fSend = true;
-                }
-                else
-                {
-                    // To prevent fingerprinting attacks, only send blocks outside of the active
-                    // chain if they are valid, and no more than a month older (both in time, and in
-                    // best equivalent proof of work) than the best header chain we know about.
-                    {
-                        READLOCK(cs_mapBlockIndex);
-                        fSend = mi->IsValid(BLOCK_VALID_SCRIPTS) && (pindexBestHeader != NULL) &&
-                                (pindexBestHeader.load()->GetBlockTime() - mi->GetBlockTime() < nOneMonth) &&
-                                (GetBlockProofEquivalentTime(
-                                     *pindexBestHeader, *mi, *pindexBestHeader, consensusParams) < nOneMonth);
-                    }
-                    if (!fSend)
-                    {
-                        LOG(NET, "%s: ignoring request from peer=%s for old block that isn't in the main chain\n",
-                            __func__, pfrom->GetLogName());
-                        noSendStr = "Not on main chain";
-                        noSendReason = REJECT_FORK;
-                    }
-
-                    // TODO: in the future we can throttle old block requests by setting send=false if we are out
-                    // of bandwidth
-                }
-                // disconnect node in case we have reached the outbound limit for serving historical blocks
-                // never disconnect whitelisted nodes
-                if (fSend && CNode::OutboundTargetReached(true) &&
-                    (((pindexBestHeader != nullptr) &&
-                         (pindexBestHeader.load()->GetBlockTime() - mi->GetBlockTime() > nOneMonth)) ||
-                        inv.type == MSG_FILTERED_BLOCK) &&
-                    !pfrom->fWhitelisted)
-                {
-                    LOG(NET, "historical block serving limit reached, disconnect peer %s\n", pfrom->GetLogName());
-                    // disconnect node because it wants info that we are not going to give it
-                    pfrom->fDisconnect = true;
-                    fSend = false;
-                    noSendStr = "Historical block limit reached";
-                    noSendReason = REJECT_RETRY;
-                }
-                // Avoid leaking prune-height by never sending blocks below the
-                // NODE_NETWORK_LIMITED threshold.
-                // Add two blocks buffer extension for possible races
-                if (fSend && !pfrom->fWhitelisted &&
-                    ((((nLocalServices & NODE_NETWORK_LIMITED) == NODE_NETWORK_LIMITED) &&
-                        ((nLocalServices & NODE_NETWORK) != NODE_NETWORK) &&
-                        (chainActive.Tip()->height() - mi->height() > (int)NODE_NETWORK_LIMITED_MIN_BLOCKS + 2))))
-                {
-                    LOG(NET, "Ignore block request below NODE_NETWORK_LIMITED threshold from peer=%d\n",
-                        pfrom->GetId());
-                    // disconnect node and prevent it from stalling (would
-                    // otherwise wait for the missing block)
-                    pfrom->fDisconnect = true;
-                    fSend = false;
-                    noSendStr = "Block too old";
-                    noSendReason = REJECT_LIMITED;
-                }
-                if (!(mi->nStatus & BLOCK_HAVE_DATA))
-                {
-                    fSend = false;
-                    noSendStr = "Block pruned";
-                    noSendReason = REJECT_OBSOLETE;
-                }
-                // Pruned nodes may have deleted the block, so check whether
-                // it's available before trying to send.
-                if (fSend)
-                {
-                    // Send block from disk
-                    const ConstCBlockRef pblock = ReadBlockFromDisk(mi, consensusParams);
-                    if (!pblock)
-                    {
-                        // its possible that I know about it but haven't stored it yet
-                        LOG(THIN, "unable to load block %s from disk\n",
-                            mi->phashBlock ? mi->phashBlock->ToString() : "");
-                        fSend = false;
-                        noSendStr = "Block is processing";
-                        noSendReason = REJECT_WAITING;
-                    }
-                    else
-                    {
-                        if (inv.type == MSG_BLOCK)
-                        {
-                            LOG(NET, "Sending block via getdata message to %s\n", pfrom->GetLogName());
-                            pfrom->blocksSent += 1;
-                            pfrom->PushMessageWithCookie(NetMsgType::BLOCK, oneReplyPerInvCookie, *pblock);
-                            replyCookieCount++;
-                        }
-                        else if (inv.type == MSG_CMPCT_BLOCK)
-                        {
-                            LOG(CMPCT, "Sending compactblock via getdata message to %s\n", pfrom->GetLogName());
-                            SendCompactBlock(pblock, pfrom, msgCookie, inv.type);
-                            replyCookieCount++;
-                        }
-                        else // MSG_FILTERED_BLOCK)
-                        {
-                            LOG(CMPCT, "Sending filtered block via getdata message to %s\n", pfrom->GetLogName());
-                            LOCK(pfrom->cs_filter);
-                            if (pfrom->pfilter)
-                            {
-                                CMerkleBlock merkleBlock(*pblock, *pfrom->pfilter);
-                                pfrom->PushMessageWithCookie(
-                                    NetMsgType::MERKLEBLOCK, msgCookie + replyCookieCount, merkleBlock);
-                                replyCookieCount++;
-                                pfrom->blocksSent += 1;
-                                LOG(NET, "Bloom filtered block matched: %d tx\n", merkleBlock.vMatchedTxn.size());
-                                // CMerkleBlock just contains hashes, so also push any transactions in the block the
-                                // client did not see. This avoids hurting performance by pointlessly requiring a
-                                // round-trip.
-                                //
-                                // Note that there is currently no way for a node to request any single transactions
-                                // we didn't send here - they must either disconnect and retry or request the full
-                                // block. Thus, the protocol spec specified allows for us to provide duplicate txn
-                                // here, however we MUST always provide at least what the remote peer needs
-                                typedef std::pair<unsigned int, uint256> PairType;
-                                int txSz = merkleBlock.vMatchedTxn.size();
-                                int txCount = 0;
-                                for (PairType &pair : merkleBlock.vMatchedTxn)
-                                {
-                                    txCount++;
-                                    bool lastTx = (txCount == txSz);
-                                    pfrom->txsSent += 1;
-                                    uint32_t replyCookie = msgCookie + replyCookieCount;
-                                    if (lastInv && lastTx)
-                                        replyCookie = msgCookie | 0xFFFF;
-                                    pfrom->PushMessageWithCookie(NetMsgType::TX, replyCookie, pblock->vtx[pair.first]);
-                                    replyCookieCount++;
-                                }
-                            }
-                            else
-                            {
-                                fSend = false;
-                                noSendReason = REJECT_MALFORMED;
-                                noSendStr = std::string("Merkle block requested but no filter installed");
-                            }
-                        }
-                    }
-                }
+                SendBlock(pfrom, inv, pblock, msgCookie, oneReplyPerInvCookie, replyCookieCount, noSendReason,
+                    noSendStr, lastInv, fSend);
                 if (!fSend)
                 {
                     std::string strCommand = NetMsgType::BLOCK;
@@ -305,21 +266,128 @@ void static ProcessGetData(CNode *pfrom,
             }
             else
             {
-                // Trigger the peer node to send a getblocks request for the next batch of inventory
-                if (inv.hash == pfrom->hashContinue)
+                auto *mi = LookupBlockIndex(inv.hash);
+                if (mi)
                 {
-                    // Bypass PushInventory, this must send even if redundant,
-                    // and we want it right after the last block so they don't
-                    // wait for other stuff first.
-                    std::vector<T> oneInv;
-                    oneInv.push_back(T(MSG_BLOCK, chainActive.Tip()->GetBlockHash()));
-                    pfrom->PushMessageWithCookie(NetMsgType::INV, oneReplyPerInvCookie + replyCookieCount, oneInv);
-                    replyCookieCount++;
-                    pfrom->hashContinue.SetNull();
+                    bool fSend = false;
+                    unsigned char noSendReason = 0;
+                    std::string noSendStr = std::string("");
+
+                    static const int nOneMonth = 30 * 24 * 60 * 60;
+                    if (chainActive.Contains(mi))
+                    {
+                        fSend = true;
+                    }
+                    else
+                    {
+                        // To prevent fingerprinting attacks, only send blocks outside of the active
+                        // chain if they are valid, and no more than a month older (both in time, and in
+                        // best equivalent proof of work) than the best header chain we know about.
+                        {
+                            READLOCK(cs_mapBlockIndex);
+                            fSend = mi->IsValid(BLOCK_VALID_SCRIPTS) && (pindexBestHeader != nullptr) &&
+                                    (pindexBestHeader.load()->GetBlockTime() - mi->GetBlockTime() < nOneMonth) &&
+                                    (GetBlockWorkEquivalentTime(
+                                         *pindexBestHeader, *mi, *pindexBestHeader, consensusParams) < nOneMonth);
+                        }
+                        if (!fSend)
+                        {
+                            LOG(NET, "%s: ignoring request from peer=%s for old block that isn't in the main chain\n",
+                                __func__, pfrom->GetLogName());
+                            noSendStr = "Not on main chain";
+                            noSendReason = REJECT_FORK;
+                        }
+
+                        // TODO: in the future we can throttle old block requests by setting send=false if we are out
+                        // of bandwidth
+                    }
+                    // disconnect node in case we have reached the outbound limit for serving historical blocks
+                    // never disconnect whitelisted nodes
+                    if (fSend && CNode::OutboundTargetReached(true) &&
+                        (((pindexBestHeader != nullptr) &&
+                             (pindexBestHeader.load()->GetBlockTime() - mi->GetBlockTime() > nOneMonth)) ||
+                            inv.type == MSG_FILTERED_BLOCK) &&
+                        !pfrom->fWhitelisted)
+                    {
+                        LOG(NET, "historical block serving limit reached, disconnect peer %s\n", pfrom->GetLogName());
+                        // disconnect node because it wants info that we are not going to give it
+                        pfrom->fDisconnect = true;
+                        fSend = false;
+                        noSendStr = "Historical block limit reached";
+                        noSendReason = REJECT_RETRY;
+                    }
+                    // Avoid leaking prune-height by never sending blocks below the
+                    // NODE_NETWORK_LIMITED threshold.
+                    // Add two blocks buffer extension for possible races
+                    if (fSend && !pfrom->fWhitelisted &&
+                        ((((nLocalServices & NODE_NETWORK_LIMITED) == NODE_NETWORK_LIMITED) &&
+                            ((nLocalServices & NODE_NETWORK) != NODE_NETWORK) &&
+                            (chainActive.Tip()->height() - mi->height() > (int)NODE_NETWORK_LIMITED_MIN_BLOCKS + 2))))
+                    {
+                        LOG(NET, "Ignore block request below NODE_NETWORK_LIMITED threshold from peer=%d\n",
+                            pfrom->GetId());
+                        // disconnect node and prevent it from stalling (would
+                        // otherwise wait for the missing block)
+                        pfrom->fDisconnect = true;
+                        fSend = false;
+                        noSendStr = "Block too old";
+                        noSendReason = REJECT_LIMITED;
+                    }
+                    if (!(mi->nStatus & BLOCK_HAVE_DATA))
+                    {
+                        fSend = false;
+                        noSendStr = "Block pruned";
+                        noSendReason = REJECT_OBSOLETE;
+                    }
+                    // Pruned nodes may have deleted the block, so check whether
+                    // it's available before trying to send.
+                    if (fSend)
+                    {
+                        // Send block from disk
+                        pblock = ReadBlockFromDisk(mi, consensusParams);
+                        if (!pblock)
+                        {
+                            // its possible that I know about it but haven't stored it yet
+                            LOG(THIN, "unable to load block %s from disk\n",
+                                mi->phashBlock ? mi->phashBlock->ToString() : "");
+                            fSend = false;
+                            noSendStr = "Block is processing";
+                            noSendReason = REJECT_WAITING;
+                        }
+                        else
+                        {
+                            SendBlock(pfrom, inv, pblock, msgCookie, oneReplyPerInvCookie, replyCookieCount,
+                                noSendReason, noSendStr, lastInv, fSend);
+                        }
+                    }
+                    if (!fSend)
+                    {
+                        std::string strCommand = NetMsgType::BLOCK;
+                        uint32_t replyCookie = msgCookie + replyCookieCount;
+                        if (lastInv)
+                            replyCookie = msgCookie | 0xFFFF;
+                        pfrom->PushMessageWithCookie(
+                            NetMsgType::REJECT, replyCookie, strCommand, noSendReason, noSendStr, inv.hash);
+                    }
                 }
                 else
                 {
-                    vNotFound.push_back(inv);
+                    // Trigger the peer node to send a getblocks request for the next batch of inventory
+                    if (inv.hash == pfrom->hashContinue)
+                    {
+                        // Bypass PushInventory, this must send even if redundant,
+                        // and we want it right after the last block so they don't
+                        // wait for other stuff first.
+                        std::vector<T> oneInv;
+                        oneInv.push_back(T(MSG_BLOCK, chainActive.Tip()->GetBlockHash()));
+                        pfrom->PushMessageWithCookie(NetMsgType::INV, oneReplyPerInvCookie + replyCookieCount, oneInv);
+                        replyCookieCount++;
+                        pfrom->hashContinue.SetNull();
+                    }
+                    else
+                    {
+                        vNotFound.push_back(inv);
+                    }
                 }
             }
         }
@@ -812,6 +880,30 @@ static void enableCompactBlocks(CNode *pfrom)
     }
 }
 
+// Get the set of tailstorm subblocks which we don't have from each peer we connect to.
+// We tell the peer what "we" have and they send back what we don't have.
+static void GetInitialTailstormSubblocks(CNode *pfrom)
+{
+    // NOTE: we allow get intial subblocks no matter whether we're
+    // reindexing or doing an initial sync because the dag will continue
+    // to accept new subblocks as they get mined and prune them when necessary.
+    if (fTailstormEnabled)
+    {
+        // Construct the GET_DAG message by sending all the subblock hashes
+        // that we already have in our best dag. This way the sender can
+        // send us only what we still need.
+        std::set<CTreeNodeRef> setBestDag;
+        tailstormForest.GetBestDagFor(*(chainActive.Tip()->phashBlock), setBestDag);
+
+        std::set<uint256> setDagToSend;
+        for (auto &treenode : setBestDag)
+        {
+            setDagToSend.insert(treenode->subblock->GetHash());
+        }
+        pfrom->PushMessage(NetMsgType::GET_DAG, setDagToSend);
+    }
+}
+
 bool ProcessMessage(CNode *pfrom,
     std::string strCommand,
     uint32_t msgCookie,
@@ -820,7 +912,7 @@ bool ProcessMessage(CNode *pfrom,
 {
     int64_t receiptTime = GetTime();
     const CChainParams &chainparams = Params();
-    unsigned int msgSize = vRecv.size(); // BU for statistics
+    unsigned int msgSize = vRecv.size(); // for statistics
     UpdateRecvStats(pfrom, strCommand, msgSize, nStopwatchTimeReceived);
     LOG(NET, "received: %s (%u bytes) peer=%s\n", SanitizeString(strCommand), msgSize, pfrom->GetLogName());
 
@@ -1100,6 +1192,22 @@ bool ProcessMessage(CNode *pfrom,
     else if (strCommand == NetMsgType::SENDHEADERS)
     {
         CNodeStateAccessor(nodestate, pfrom->GetId())->fPreferHeaders = true;
+    }
+
+    else if (strCommand == NetMsgType::GET_DAG)
+    {
+        std::set<uint256> setDagFromPeer;
+        vRecv >> setDagFromPeer;
+
+        std::set<CTreeNodeRef> dag;
+        tailstormForest.GetBestDagFor(*(chainActive.Tip()->phashBlock), dag);
+        for (auto &treenode : dag)
+        {
+            if (!setDagFromPeer.count(treenode->subblock->GetHash()))
+            {
+                pfrom->PushMessage(NetMsgType::BLOCK, *(treenode->subblock));
+            }
+        }
     }
 
     else if (strCommand == NetMsgType::FILTERSIZEXTHIN)
@@ -1603,24 +1711,79 @@ bool ProcessMessage(CNode *pfrom,
 
         // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
         unsigned int nCount = ReadCompactSize(vRecv);
+
+        // Check size constraints
+        if (nCount == 0)
+        {
+            LOG(NET, "No more headers from peer %s\n", pfrom->GetLogName());
+            return true;
+        }
         if (nCount > MAX_HEADERS_RESULTS)
         {
             dosMan.Misbehaving(pfrom, 20, BanReasonInvalidSize);
             return error("headers message size = %u", nCount);
         }
+
         headers.resize(nCount);
         for (unsigned int n = 0; n < nCount; n++)
         {
             vRecv >> headers[n];
         }
 
-        // Nothing interesting. Stop asking this peers for more headers.
-        if (nCount == 0)
+
+        // Process subblock headers first.
         {
-            LOG(NET, "No more headers from peer %s\n", pfrom->GetLogName());
-            return true;
+            std::vector<CBlockHeader> vTempHeaders;
+            int64_t nTipHeight = chainActive.Height();
+            CNodeStateAccessor modablestate(nodestate, pfrom->GetId());
+            for (auto &header : headers)
+            {
+                // Save any summary block headers to a temporary vector to be
+                // processed later.
+                if (IsSummaryBlock(header))
+                {
+                    vTempHeaders.push_back(header);
+                    continue;
+                }
+
+                CValidationState state;
+                if (!AcceptBlockHeader(header, state, chainparams, nullptr))
+                {
+                    int nDos = 0;
+                    if (state.IsInvalid(nDos))
+                    {
+                        if (nDos > 0)
+                        {
+                            dosMan.Misbehaving(pfrom, nDos, BanReasonInvalidHeader);
+                        }
+                    }
+                    continue;
+                }
+
+                CInv inv(MSG_BLOCK, header.GetHash());
+
+                // update subblock header status for this peer
+                modablestate->mapSubblockHeaders.emplace(inv.hash, header.height);
+
+                // Only ask for subblocks near the chain tip and that we don't already have
+                if (header.height > (nTipHeight - DEPTH_TO_ENFORCE_CORRECT_SUBBLOCKS))
+                {
+                    if (!tailstormForest.Contains(inv.hash))
+                    {
+                        requester.AskFor(inv, pfrom);
+                        LOG(REQ, "AskFor subblock via headers direct fetch %s (%d) peer=%d\n", inv.hash.ToString(),
+                            header.height, pfrom->id);
+                    }
+                }
+            }
+
+            if (vTempHeaders.empty())
+                return true;
+            else
+                headers.swap(vTempHeaders);
         }
 
+        // Process legacy blocks or tailstorm Summary blocks
         CBlockIndex *pindexLast = nullptr;
         {
             // We need to handle appending the header and analyzing the unconnected ones sequentially, or
@@ -1641,7 +1804,7 @@ bool ProcessMessage(CNode *pfrom,
             {
                 const uint256 &hash = header.GetHash();
 
-                // LOG(NET, "Received header %s from %s\n", header.GetId().ToString(), pfrom->GetLogName());
+                LOG(NET, "Received header %s from %s\n", header.GetHash().ToString(), pfrom->GetLogName());
                 // check that the first header has a previous block in the blockindex.
                 if (hashLastBlock.IsNull())
                 {
@@ -1654,8 +1817,8 @@ bool ProcessMessage(CNode *pfrom,
                 {
                     // If we still haven't finished downloading the initial headers during node sync and we get
                     // an out of order header then we must disconnect the node so that we can finish downloading
-                    // initial headers from a diffeent peer. An out of order header at this point is likely an attack
-                    // to prevent the node from syncing.
+                    // initial headers from a diffeent peer. An out of order header at this point is likely an
+                    // attack to prevent the node from syncing.
                     if (header.GetBlockTime() < GetAdjustedTime() - 24 * 60 * 60)
                     {
                         pfrom->fDisconnect = true;
@@ -1665,7 +1828,8 @@ bool ProcessMessage(CNode *pfrom,
                     fNewUnconnectedHeaders = true;
                 }
 
-                // if we have an unconnected header then add every following header to the unconnected headers cache.
+                // if we have an unconnected header then add every following header to the unconnected headers
+                // cache.
                 if (fNewUnconnectedHeaders)
                 {
                     // LOG(NET, "Header %s from %s is unconnected\n", hash.ToString(), pfrom->GetLogName());
@@ -1681,8 +1845,8 @@ bool ProcessMessage(CNode *pfrom,
 
                 hashLastBlock = hash;
             }
-            // return without error if we have an unconnected header.  This way we can try to connect it when the next
-            // header arrives.
+            // return without error if we have an unconnected header.  This way we can try to connect it when the
+            // next header arrives.
             if (fNewUnconnectedHeaders)
                 return true;
 
@@ -1706,8 +1870,8 @@ bool ProcessMessage(CNode *pfrom,
                         continue;
                     }
 
-                    // Remove any entries that have been in the cache too long.  Unconnected headers should only exist
-                    // for a very short while, typically just a second or two.
+                    // Remove any entries that have been in the cache too long.  Unconnected headers should only
+                    // exist for a very short while, typically just a second or two.
                     bool fErase = false;
                     int64_t nTimeHeaderArrived = (*mi).second.second;
                     const uint256 &headerHash = (*mi).first;
@@ -1769,11 +1933,14 @@ bool ProcessMessage(CNode *pfrom,
                     break;
                 }
                 else
+                {
                     PV->UpdateMostWorkOurFork(header);
+                }
 
                 i++;
             }
         }
+
         if (pindexLast)
             requester.UpdateBlockAvailability(pfrom->GetId(), pindexLast->GetBlockHash());
 
@@ -1794,10 +1961,10 @@ bool ProcessMessage(CNode *pfrom,
                     state->nSyncStartTime = now; // reset the time because more headers needed
             }
 
-            // During the process of IBD we need to update block availability for every connected peer. To do that we
-            // request, from each NODE_NETWORK peer, a header that matches the last blockhash found in this recent set
-            // of headers. Once the requested header is received then the block availability for this peer will get
-            // updated.
+            // During the process of IBD we need to update block availability for every connected peer. To do that
+            // we request, from each NODE_NETWORK peer, a header that matches the last blockhash found in this
+            // recent set of headers. Once the requested header is received then the block availability for this
+            // peer will get updated.
             if (IsInitialBlockDownload())
             {
                 std::vector<CNode *> vNodesCopy;
@@ -1842,21 +2009,21 @@ bool ProcessMessage(CNode *pfrom,
             }
         }
 
-        bool fCanDirectFetch = CanDirectFetch(chainparams.GetConsensus());
 
+        bool fCanDirectFetch = CanDirectFetch(chainparams.GetConsensus());
         {
             CNodeStateAccessor state(nodestate, pfrom->GetId());
             DbgAssert(state != nullptr, return false);
 
             // During the initial peer handshake we must receive the initial headers which should be greater
             // than or equal to our block height at the time of requesting GETHEADERS. This is because the peer has
-            // advertised a height >= to our own. Furthermore, because the headers max returned is as much as 2000 this
-            // could not be a mainnet re-org.
+            // advertised a height >= to our own. Furthermore, because the headers max returned is as much as 2000
+            // this could not be a mainnet re-org.
             if (!state->fFirstHeadersReceived)
             {
-                // We want to make sure that the peer doesn't just send us any old valid header. The block height of the
-                // last header they send us should be equal to our block height at the time we made the GETHEADERS
-                // request.
+                // We want to make sure that the peer doesn't just send us any old valid header. The block height of
+                // the last header they send us should be equal to our block height at the time we made the
+                // GETHEADERS request.
                 if (pindexLast && state->nFirstHeadersExpectedHeight <= pindexLast->height())
                 {
                     state->fFirstHeadersReceived = true;
@@ -1866,12 +2033,18 @@ bool ProcessMessage(CNode *pfrom,
                 // Allow for very large reorgs (> 2000 blocks) on the nol test chain or other test net.
                 if (Params().NetworkIDString() != "main" && Params().NetworkIDString() != "regtest")
                     state->fFirstHeadersReceived = true;
+
+                // Get the initial tailstorm subblocks when we get the first headers so
+                // that we can initiate a re-org if needed when the subblocks arrive.
+                if (state->fFirstHeadersReceived)
+                    GetInitialTailstormSubblocks(pfrom);
             }
         }
 
-        // update the syncd status.  This should come before we make calls to requester.AskFor().
+        // update the synced status.  This should come before we make calls to requester.AskFor().
         IsChainNearlySyncdInit();
         IsInitialBlockDownloadInit();
+        IsInitialSyncCompleteInit();
 
         // If this set of headers is valid and ends in a block with at least as
         // much work as our tip, download as much as possible.
@@ -1957,15 +2130,22 @@ bool ProcessMessage(CNode *pfrom,
         // Validates that the filter is reasonably sized.
         LoadFilter(pfrom, &filterMemPool);
         {
-            auto *invIndex = LookupBlockIndex(hash);
-            if (!invIndex)
+            // Try to find the block in the dag and if it's not there then
+            // try to find the block in the block index.
+            ConstCBlockRef pblock;
+            if (!tailstormForest.Find(hash, pblock))
             {
-                dosMan.Misbehaving(pfrom, 100, BanReasonNotInBlockIndex);
-                return error("Peer %srequested nonexistent block %s", pfrom->GetLogName(), hash.ToString());
+                auto *invIndex = LookupBlockIndex(hash);
+                if (!invIndex)
+                {
+                    dosMan.Misbehaving(pfrom, 100, BanReasonNotInBlockIndex);
+                    return error("Peer %srequested nonexistent block %s", pfrom->GetLogName(), hash.ToString());
+                }
+
+                const Consensus::Params &consensusParams = Params().GetConsensus();
+                pblock = ReadBlockFromDisk(invIndex, consensusParams);
             }
 
-            const Consensus::Params &consensusParams = Params().GetConsensus();
-            const ConstCBlockRef pblock = ReadBlockFromDisk(invIndex, consensusParams);
             if (!pblock)
             {
                 // We don't have the block yet, although we know about it.
@@ -2005,15 +2185,22 @@ bool ProcessMessage(CNode *pfrom,
             return error("invalid get_thin type=%u hash=%s", invType, hash.ToString());
         }
 
-        auto *invIndex = LookupBlockIndex(hash);
-        if (!invIndex)
+        // Try to find the block in the dag and if it's not there then
+        // try to find the block in the block index.
+        ConstCBlockRef pblock;
+        if (!tailstormForest.Find(hash, pblock))
         {
-            dosMan.Misbehaving(pfrom, 100, BanReasonNotInBlockIndex);
-            return error("Peer %srequested nonexistent block %s", pfrom->GetLogName(), hash.ToString());
+            auto *invIndex = LookupBlockIndex(hash);
+            if (!invIndex)
+            {
+                dosMan.Misbehaving(pfrom, 100, BanReasonNotInBlockIndex);
+                return error("Peer %srequested nonexistent block %s", pfrom->GetLogName(), hash.ToString());
+            }
+
+            const Consensus::Params &consensusParams = Params().GetConsensus();
+            pblock = ReadBlockFromDisk(invIndex, consensusParams);
         }
 
-        const Consensus::Params &consensusParams = Params().GetConsensus();
-        const ConstCBlockRef pblock = ReadBlockFromDisk(invIndex, consensusParams);
         if (!pblock)
         {
             // We don't have the block yet, although we know about it.
@@ -2176,17 +2363,21 @@ bool ProcessMessage(CNode *pfrom,
         }
 
         const uint256 hash = pblock->GetHash();
-        LOG(BLK, "received block %s peer=%d\n", hash.ToString(), pfrom->id);
+        if (IsSummaryBlock(pblock))
+            LOG(BLK | NET, "received block %s peer=%d height=%d\n", hash.ToString(), pfrom->id, pblock->height);
+        else
+            LOG(BLK | NET, "received subblock %s peer=%d height=%d\n", hash.ToString(), pfrom->id, pblock->height);
         UnlimitedLogBlock(*pblock, hash.ToString(), receiptTime);
 
-        if (IsChainNearlySyncd()) // BU send the received block out expedited channels quickly
+        if (IsChainNearlySyncd()) // Send the received block out to expedited channels quickly
         {
             CValidationState state;
             if (CheckBlockHeader(chainparams.GetConsensus(), *pblock, state, true)) // block header is fine
                 SendExpeditedBlock(*pblock, pfrom);
         }
 
-        { // reset the getheaders time because block can consume all bandwidth
+        {
+            // Reset the getheaders time because block can consume all bandwidth
             int64_t now = GetTime();
             CNodeStateAccessor state(nodestate, pfrom->GetId());
             DbgAssert(state != nullptr, );
@@ -2197,10 +2388,31 @@ bool ProcessMessage(CNode *pfrom,
 
         // Message consistency checking
         // NOTE: consistency checking is handled by checkblock() which is called during
-        //       ProcessNewBlock() during HandleBlockMessage.
-        PV->HandleBlockMessage(pfrom, strCommand, pblock, hash);
+        //       ProcessNewBlock() in HandleBlockMessage.
+        if (!PV->HandleBlockMessage(pfrom, strCommand, pblock, hash))
+        {
+            // If we couldn't get a validation thread and this is a tailstorm subblock
+            // then we have to save it to dag map so it can be processed later as an
+            // orphan and if it's a summary block then just add it directly to the summary
+            // block orphan map.
+            if (IsInitialSyncComplete())
+            {
+                if (!IsSummaryBlock(pblock))
+                {
+                    tailstormForest.Insert(pblock);
+                }
+                else if (IsTailstormSummaryBlock(pblock))
+                {
+                    CValidationState state;
+                    if (AcceptBlockHeader(*pblock, state, Params()))
+                    {
+                        LOG(DAG, "%s(): Did not get validation thread - storing summary block orphan", __func__);
+                        tailstormForest.AddSummaryBlockOrphan(pblock);
+                    }
+                }
+            }
+        }
     }
-
 
     else if (strCommand == NetMsgType::GETADDR)
     {
@@ -2603,7 +2815,7 @@ bool ProcessMessage(CNode *pfrom,
 
     else if (strCommand == NetMsgType::REJECT)
     {
-        // BU: Request manager: this was restructured to not just be active in fDebug mode so that the request manager
+        // Request manager: this was restructured to not just be active in fDebug mode so that the request manager
         // can be notified of request rejections.
         try
         {
@@ -2617,7 +2829,7 @@ bool ProcessMessage(CNode *pfrom,
             std::ostringstream ss;
             ss << strMsg << " code " << itostr(ccode) << ": " << strReason;
 
-            // BU: Check request manager reject codes
+            // Check request manager reject codes
             if (strMsg == NetMsgType::BLOCK || strMsg == NetMsgType::TX)
             {
                 vRecv >> hash;
@@ -2635,22 +2847,11 @@ bool ProcessMessage(CNode *pfrom,
                     requester.Rejected(CInv(MSG_TX, hash), pfrom, ccode);
                 }
             }
-            // if (fDebug) {
-            // ostringstream ss;
-            // ss << strMsg << " code " << itostr(ccode) << ": " << strReason;
-
-            // if (strMsg == NetMsgType::BLOCK || strMsg == NetMsgType::TX)
-            //  {
-            //    ss << ": hash " << hash.ToString();
-            //  }
-            // LOG(NET, "Reject %s\n", SanitizeString(ss.str()));
-            // }
         }
         catch (const std::ios_base::failure &)
         {
             // Avoid feedback loops by preventing reject messages from triggering a new reject message.
-            LOG(NET, "Unparseable reject message received\n");
-            LOG(REQ, "Unparseable reject message received\n");
+            LOG(NET | REQ, "Unparseable reject message received\n");
         }
     }
 
@@ -3107,7 +3308,7 @@ bool SendMessages(CNode *pto)
             if (pto->fClient && nSyncStartedPruned >= 1)
                 fFetch = false;
 
-            // Only actively request headers from a single peer, unless we're close to today.
+            // Only actively request headers from a small number of peers, unless we're close to today.
             if ((nSyncStarted < MAX_HEADER_REQS_DURING_IBD && fFetch) ||
                 (chainActive.Tip()->GetBlockTime() > (GetAdjustedTime() - SINGLE_PEER_REQUEST_MODE_AGE)))
             {
@@ -3171,6 +3372,51 @@ bool SendMessages(CNode *pto)
         if (!fReindex && !fImporting && !IsInitialBlockDownload())
         {
             GetMainSignals().Broadcast(nTimeBestReceived.load());
+        }
+
+        //
+        // Try sending tailstorm subblock announcements via headers
+        //
+        {
+            std::vector<uint256> vSubblocksToAnnounce;
+            {
+                // Make a copy so that we do not need to keep cs_inventory
+                LOCK(pto->cs_inventory);
+                vSubblocksToAnnounce.swap(pto->vSubblockHashesToAnnounce);
+            }
+
+            std::vector<CBlockHeader> vHeaders;
+            {
+                CNodeStateAccessor modablestate(nodestate, pto->GetId());
+                for (const uint256 &hash : vSubblocksToAnnounce)
+                {
+                    // Skip subblocks that we don't have
+                    ConstCBlockRef pblock;
+                    if (!tailstormForest.Find(hash, pblock))
+                        continue;
+
+                    const CBlockHeader &header = pblock->GetBlockHeader();
+                    if (PeerHasSubblockHeader(modablestate, hash))
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        // update subblock header status for this peer
+                        modablestate->mapSubblockHeaders.emplace(hash, header.height);
+                    }
+
+                    vHeaders.push_back(header);
+                    LOG(NET, "%s: sending subblock header %s to peer=%d\n", __func__, hash.ToString(), pto->id);
+
+                    if (vHeaders.size() >= MAX_HEADERS_RESULTS)
+                        break;
+                }
+            }
+            if (!vHeaders.empty())
+            {
+                pto->PushMessage(NetMsgType::HEADERS, vHeaders);
+            }
         }
 
         //
