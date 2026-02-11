@@ -475,14 +475,18 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
     //       block size to be the same as any subblock and fill it accordingly.
     // nBlockMaxSize = IsSummaryBlock(pblock) ? pindexPrev->GetNextMaxBlockSize() :
     //                                         pindexPrev->GetNextMaxBlockSize() / conparams.tailstorm_k;
-    nBlockMaxSize = pindexPrev->GetNextMaxBlockSize() / conparams.tailstorm_k;
+    nBlockMaxSize = IsSummaryBlock(pblock) && !IsTailstormSummaryBlock(pblock) ?
+                        pindexPrev->GetNextMaxBlockSize() :
+                        pindexPrev->GetNextMaxBlockSize() / conparams.tailstorm_k;
 
-    if (miningBlockSize.Value() > 0 && nBlockMaxSize > miningBlockSize.Value())
+    if (miningBlockSize.Value() > 0)
     {
         // TODO: future optimization as above.
         // nBlockMaxSize =
         //    IsSummaryBlock(pblock) ? miningBlockSize.Value() : miningBlockSize.Value() / conparams.tailstorm_k;
-        nBlockMaxSize = miningBlockSize.Value() / conparams.tailstorm_k;
+        nBlockMaxSize = IsSummaryBlock(pblock) && !IsTailstormSummaryBlock(pblock) ?
+                            miningBlockSize.Value() :
+                            miningBlockSize.Value() / conparams.tailstorm_k;
     }
 
     // Minimum block size you want to create; block will be filled with free transactions
