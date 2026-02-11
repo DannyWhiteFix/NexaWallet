@@ -183,20 +183,20 @@ ScriptError ConvertWellKnownTemplateHash(VchType &templateHash, CScript &templat
     return SCRIPT_ERR_TEMPLATE; // All unknown values are illegal.
 }
 
-// This function looks at the input script and templateHash, extracts the template script, and verifies it.
-// Satisfier is input-only,
-// satisfierIter, and templateHash are input-output.  The satisfierIter is advanced if needed, the templateHash is
+// This function looks at the input scriptsig and templateHash, extracts the template script, and verifies it.
+// scriptSig is input-only,
+// scriptSigIter, and templateHash are input-output.  The scriptSigIter is advanced if needed, the templateHash is
 // updated to an actual hash if it encodes a well-known shorthand.
 // templateScript is output-only.
 //
-ScriptError LoadCheckTemplateHash(const CScript &satisfier,
-    CScript::const_iterator &satisfierIter,
+ScriptError LoadCheckTemplateHash(const CScript &scriptSig,
+    CScript::const_iterator &scriptSigIter,
     VchType &templateHash,
     CScript &templateScript)
 {
     // Handle well-known template identifiers
-    // Note that if the template is well-known there is NO value (not even OP_0) within the satisfier script.
-    // This is why well known templates are checked here, before the satisfier script is used.
+    // Note that if the template is well-known there is NO value (not even OP_0) within the scriptSig.
+    // This is why well known templates are checked here, before the scriptSig script is used.
     size_t templateHashSize = templateHash.size();
     if (templateHashSize>0 && templateHashSize<=2)
     {
@@ -205,9 +205,9 @@ ScriptError LoadCheckTemplateHash(const CScript &satisfier,
 
     std::vector<unsigned char> templateScriptBytes;
     opcodetype templateDataOpcode;
-    if (!satisfier.GetOp(satisfierIter, templateDataOpcode, templateScriptBytes))
+    if (!scriptSig.GetOp(scriptSigIter, templateDataOpcode, templateScriptBytes))
     {
-        LOG(SCRIPT, "Script template: satisfier has bad opcode");
+        LOG(SCRIPT, "Script template: scriptSig has bad opcode");
         return SCRIPT_ERR_TEMPLATE;
     }
     templateScript = CScript(templateScriptBytes.begin(), templateScriptBytes.end());
@@ -246,97 +246,101 @@ ScriptError LoadCheckTemplateHash(const CScript &satisfier,
     return SCRIPT_ERR_OK;
 }
 
-CScript ScriptTemplateLock(const VchType& scriptHash, const VchType &argsHash, const VchType &visibleArgs, const CGroupTokenID& group, CAmount grpQuantity)
+CScript ScriptTemplateLock(const VchType& templateHash, const VchType &hiddenArgsHash, const VchType &visibleArgs, const CGroupTokenID& group, CAmount grpQuantity)
 {
     CScript ret;
     if (group != NoGroup)
     {
         if (grpQuantity != -1)
         {
-            ret = (CScript(ScriptType::TEMPLATE) << group.bytes() << SerializeAmount(grpQuantity) << scriptHash << argsHash) + CScript(visibleArgs.begin(), visibleArgs.end());
+            ret = (CScript(ScriptType::TEMPLATE) << group.bytes() << SerializeAmount(grpQuantity) << templateHash << hiddenArgsHash) + CScript(visibleArgs.begin(), visibleArgs.end());
         }
         else  // Encodes an invalid quantity (for use within addresses)
         {
-            ret = (CScript(ScriptType::TEMPLATE) << group.bytes() << OP_0 << scriptHash << argsHash) + CScript(visibleArgs.begin(), visibleArgs.end());
+            ret = (CScript(ScriptType::TEMPLATE) << group.bytes() << OP_0 << templateHash << hiddenArgsHash) + CScript(visibleArgs.begin(), visibleArgs.end());
         }
     }
     else  // Not grouped
     {
-        ret = (CScript(ScriptType::TEMPLATE) << OP_0 << scriptHash << argsHash) + CScript(visibleArgs.begin(), visibleArgs.end());
+        ret = (CScript(ScriptType::TEMPLATE) << OP_0 << templateHash << hiddenArgsHash) + CScript(visibleArgs.begin(), visibleArgs.end());
     }
     return ret;
 }
 
-CScript ScriptTemplateLock(const VchType& scriptHash, const VchType &argsHash, const CScript &visibleArgs, const CGroupTokenID& group, CAmount grpQuantity)
+CScript ScriptTemplateLock(const VchType& templateHash, const VchType &hiddenArgsHash, const CScript &visibleArgs, const CGroupTokenID& group, CAmount grpQuantity)
 {
     CScript ret;
     if (group != NoGroup)
     {
         if (grpQuantity != -1)
         {
-            ret = (CScript(ScriptType::TEMPLATE) << group.bytes() << SerializeAmount(grpQuantity) << scriptHash << argsHash) + CScript(visibleArgs.begin(), visibleArgs.end());
+            ret = (CScript(ScriptType::TEMPLATE) << group.bytes() << SerializeAmount(grpQuantity) << templateHash << hiddenArgsHash) + CScript(visibleArgs.begin(), visibleArgs.end());
         }
         else  // Encodes an invalid quantity (for use within addresses)
         {
-            ret = (CScript(ScriptType::TEMPLATE) << group.bytes() << OP_0 << scriptHash << argsHash) + CScript(visibleArgs.begin(), visibleArgs.end());
+            ret = (CScript(ScriptType::TEMPLATE) << group.bytes() << OP_0 << templateHash << hiddenArgsHash) + CScript(visibleArgs.begin(), visibleArgs.end());
         }
     }
     else  // Not grouped
     {
-        ret = (CScript(ScriptType::TEMPLATE) << OP_0 << scriptHash << argsHash) + visibleArgs;
+        ret = (CScript(ScriptType::TEMPLATE) << OP_0 << templateHash << hiddenArgsHash) + visibleArgs;
     }
     return ret;
 }
 
-CScript ScriptWellKnownTemplateLock(const uint64_t wellKnownId, const VchType &argsHash, const VchType &visibleArgs, const CGroupTokenID& group, CAmount grpQuantity)
+CScript ScriptWellKnownTemplateLock(const uint64_t wellKnownId, const VchType &hiddenArgsHash, const VchType &visibleArgs, const CGroupTokenID& group, CAmount grpQuantity)
 {
     CScript ret;
     VchType constraint;
-    if (wellKnownId == 1) constraint = P2PKT_ID;
+    if (wellKnownId == 1)
+    {
+        constraint = P2PKT_ID;
+    }
     else assert(false);
     if (group != NoGroup)
     {
         if (grpQuantity != -1)
         {
-            ret = (CScript(ScriptType::TEMPLATE) << group.bytes() << SerializeAmount(grpQuantity) << wellKnownId << argsHash) + CScript(visibleArgs.begin(), visibleArgs.end());
+            ret = (CScript(ScriptType::TEMPLATE) << group.bytes() << SerializeAmount(grpQuantity) << wellKnownId << hiddenArgsHash) + CScript(visibleArgs.begin(), visibleArgs.end());
         }
         else  // Encodes an invalid quantity (for use within addresses)
         {
-            ret = (CScript(ScriptType::TEMPLATE) << group.bytes() << OP_0 << wellKnownId << argsHash) + CScript(visibleArgs.begin(), visibleArgs.end());
+            ret = (CScript(ScriptType::TEMPLATE) << group.bytes() << OP_0 << wellKnownId << hiddenArgsHash) + CScript(visibleArgs.begin(), visibleArgs.end());
         }
     }
     else  // Not grouped
     {
-        ret = (CScript(ScriptType::TEMPLATE) << OP_0 << wellKnownId << argsHash) + CScript(visibleArgs.begin(), visibleArgs.end());
+        ret = (CScript(ScriptType::TEMPLATE) << OP_0 << wellKnownId << hiddenArgsHash) + CScript(visibleArgs.begin(), visibleArgs.end());
     }
     return ret;
 }
 
-
-
-CScript ScriptTemplateLock(const CScript &constraintScript, const CScript &argsScript,
-    const CScript &visibleArgsScript, const CGroupTokenID &group,
+CScript ScriptTemplateLock(const CScript &templateScript, const CScript &hiddenArgs,
+    const CScript &visibleArgs, const CGroupTokenID &group,
     CAmount grpQuantity, uint8_t useHash256)
 {
-    VchType argsHash;
-    if (argsScript.size() > 0) argsHash = (useHash256 & 2) ? argsScript.Hash256() : argsScript.Hash160();
-    VchType constraintHash = (useHash256 & 1) ?  constraintScript.Hash256() : constraintScript.Hash160();
-    return ScriptTemplateLock(constraintHash, argsHash, visibleArgsScript, group, grpQuantity);
+    VchType hiddenArgsHash;
+    if (hiddenArgs.size() > 0)
+    {
+        hiddenArgsHash = (useHash256 & 2) ? hiddenArgs.Hash256() : hiddenArgs.Hash160();
+    }
+    VchType templateHash = (useHash256 & 1) ?  templateScript.Hash256() : templateScript.Hash160();
+    return ScriptTemplateLock(templateHash, hiddenArgsHash, visibleArgs, group, grpQuantity);
 }
 
-CScript ScriptTemplateLock(const CScript &templateIn, const CGroupTokenID& group, CAmount grpQuantity)
+CScript ScriptTemplateLock(const CScript &templateScript, const CGroupTokenID& group, CAmount grpQuantity)
 {
     CGroupTokenInfo currentGroupInfo;
-    VchType scriptHash;
-    VchType argsHash;
-    CScript::const_iterator rest = templateIn.begin();
+    VchType templateHash;
+    VchType hiddenArgsHash;
+    CScript::const_iterator rest = templateScript.begin();
 
     // Pull this output apart and then recombine with the new group and grpQuantity info.
-    ScriptTemplateError error = GetScriptTemplate(templateIn, &currentGroupInfo, &scriptHash, &argsHash, &rest);
+    ScriptTemplateError error = GetScriptTemplate(templateScript, &currentGroupInfo, &templateHash, &hiddenArgsHash, &rest);
     if (error == ScriptTemplateError::OK)
     {
-        VchType restOfScript(rest, templateIn.end());
-        return ScriptTemplateOutput(scriptHash, argsHash, restOfScript, group, grpQuantity);
+        VchType restOfScript(rest, templateScript.end());
+        return ScriptTemplateOutput(templateHash, hiddenArgsHash, restOfScript, group, grpQuantity);
     }
     else
     {
@@ -346,13 +350,16 @@ CScript ScriptTemplateLock(const CScript &templateIn, const CGroupTokenID& group
     }
 }
 
-CScript ScriptTemplateUnlock(const CScript &constraintScript,
-                             const CScript &satisfierScript, const CScript &argsScript)
+CScript ScriptTemplateUnlock(const CScript &templateScript,
+                             const CScript &satisfierArgs, const CScript &hiddenArgs)
 {
     auto ret = CScript();
-    ret << constraintScript.ToVch();
-    if (argsScript.size() > 0) ret << argsScript.ToVch();
-    return ret + satisfierScript;
+    ret << templateScript.ToVch();
+    if (hiddenArgs.size() > 0)
+    {
+        ret << hiddenArgs.ToVch();
+    }
+    return ret + satisfierArgs;
 }
 
 CScript ScriptWellKnownTemplateUnlock(uint64_t wellKnownId, const CScript &satisfierScript, const CScript &argsScript)

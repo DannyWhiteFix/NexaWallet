@@ -64,13 +64,13 @@ bool ScriptMachine::EvalParseCanonicalLockingBytecode(int64_t first, int64_t cou
 {
     CGroupTokenInfo grp;
     VchType templateHash;
-    VchType argsHash;
+    VchType hiddenArgsHash;
     CScript::const_iterator rest = pscript.begin();
     VchType zero; // OP_0 is pushing an empty item
     if (count == 0)
         return true;
 
-    ScriptTemplateError ret = GetScriptTemplate(pscript, &grp, &templateHash, &argsHash, &rest);
+    ScriptTemplateError ret = GetScriptTemplate(pscript, &grp, &templateHash, &hiddenArgsHash, &rest);
     if (ret != ScriptTemplateError::OK)
     {
         return set_error(&error, SCRIPT_ERR_PARSE);
@@ -127,7 +127,7 @@ bool ScriptMachine::EvalParseCanonicalLockingBytecode(int64_t first, int64_t cou
             pushedCount++;
             break;
         case 4:
-            PushStack(argsHash);
+            PushStack(hiddenArgsHash);
             pushedCount++;
             break;
         case 5:
@@ -158,38 +158,39 @@ bool ScriptMachine::EvalParseUnlockingTemplateBytecode(int64_t first,
 {
     CGroupTokenInfo grp;
     VchType templateHash;
-    VchType argsHash;
-    CScript::const_iterator lockingRest = lockingScript.begin();
+    VchType hiddenArgsHash;
+    CScript::const_iterator rest = lockingScript.begin();
     VchType zero; // OP_0 is pushing an empty item
     if (count == 0)
+    {
         return true;
-
-    // Parse the lockingScript into its pieces so we know what to expect in the unlocking script
-    ScriptTemplateError ret = GetScriptTemplate(lockingScript, &grp, &templateHash, &argsHash, &lockingRest);
+    }
+    // Parse the lockingScript into its pieces so we know what to expect in the unlockingScript
+    ScriptTemplateError ret = GetScriptTemplate(lockingScript, &grp, &templateHash, &hiddenArgsHash, &rest);
     if (ret != ScriptTemplateError::OK)
     {
         return set_error(&error, SCRIPT_ERR_PARSE);
     }
     CScript::const_iterator satisfierBegin = unlockingScript.begin();
-    CScript constraintScript;
-    std::vector<unsigned char> argsScriptBytes;
+    CScript templateScript;
+    std::vector<unsigned char> hiddenArgsPushBytes;
     ScriptError templateLoadError =
-        LoadCheckTemplateHash(unlockingScript, satisfierBegin, templateHash, constraintScript);
+        LoadCheckTemplateHash(unlockingScript, satisfierBegin, templateHash, templateScript);
     if (templateLoadError != SCRIPT_ERR_OK)
     {
         return set_error(&error, templateLoadError);
     }
-    if (argsHash.size() != 0) // no hash (OP_0) means no args
+    if (hiddenArgsHash.size() != 0) // no hash (OP_0) means no args
     {
-        // Grab the args script (its the 2nd data push in the scriptSig)
+        // Grab the args script (its the 2nd data push in the unlockingScript)
         opcodetype argsDataOpcode;
-        if (!unlockingScript.GetOp(satisfierBegin, argsDataOpcode, argsScriptBytes))
+        if (!unlockingScript.GetOp(satisfierBegin, argsDataOpcode, hiddenArgsPushBytes))
         {
             return set_error(&error, SCRIPT_ERR_TEMPLATE);
         }
     }
 
-    // The rest of the unlockingScript is the satisfier
+    // The rest of the unlockingScript is the satisfier args
     CScript satisfier(satisfierBegin, unlockingScript.end());
 
     // Now provide the requested items
@@ -204,12 +205,12 @@ bool ScriptMachine::EvalParseUnlockingTemplateBytecode(int64_t first,
         {
         case 0: // template code
         {
-            PushStack(constraintScript.ToVch());
+            PushStack(templateScript.ToVch());
             pushedCount++;
         }
         break;
-        case 1: // args code
-            PushStack(argsScriptBytes);
+        case 1: // constraint args code
+            PushStack(hiddenArgsPushBytes);
             pushedCount++;
             break;
         case 2:
