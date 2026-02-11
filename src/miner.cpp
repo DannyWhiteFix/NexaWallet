@@ -506,7 +506,10 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
 
         std::vector<const CTxMemPoolEntry *> vtxe;
         bool fCreateFastTemplate = fastBlockTemplate.Value();
-        if (fCreateFastTemplate)
+        // TODO: get fast block template to work with tailstorm summary blocks.  We need to make sure that not only
+        // do all the txns from the txpool fit into the block, but that the summary block has all the
+        // txns that are in the dag present, and that we have accounted for any double spends as well.
+        if (fCreateFastTemplate && !IsTailstormSummaryBlock(pblock))
         {
             // Check if all txpool transactions will fit into a block and also doesn't exceed the sigops limit
             if (((nBlockSize + mempool._GetTotalTxSize()) <= nBlockMaxSize) &&
