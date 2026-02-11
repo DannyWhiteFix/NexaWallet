@@ -174,13 +174,13 @@ bool MatchGroupedPayToPubkey(const CScript &script, valtype &pubkey, CGroupToken
 ScriptTemplateError GetScriptTemplate(const CScript &script,
     CGroupTokenInfo *groupInfo,
     std::vector<uint8_t> *templateHash,
-    std::vector<uint8_t> *argsHash,
+    std::vector<uint8_t> *hiddenArgsHash,
     CScript::const_iterator *pcout)
 {
     if (templateHash)
         templateHash->clear();
-    if (argsHash)
-        argsHash->clear();
+    if (hiddenArgsHash)
+        hiddenArgsHash->clear();
     if (groupInfo)
         groupInfo->clear();
     ScriptType scriptType = script.type;
@@ -222,11 +222,11 @@ ScriptTemplateError GetScriptTemplate(const CScript &script,
     if (err != ScriptTemplateError::OK)
         return err;
 
-    // args hash is third
-    std::vector<unsigned char> vchArgsHash;
-    if (!argsHash)
-        argsHash = &vchArgsHash;
-    if (!script.GetOp(pc, opcode, *argsHash))
+    // constraint hash is third
+    std::vector<unsigned char> vchConstraintArgsHash;
+    if (!hiddenArgsHash)
+        hiddenArgsHash = &vchConstraintArgsHash;
+    if (!script.GetOp(pc, opcode, *hiddenArgsHash))
     {
         return ScriptTemplateError::INVALID;
     }
@@ -235,9 +235,10 @@ ScriptTemplateError GetScriptTemplate(const CScript &script,
         return ScriptTemplateError::INVALID;
 
     /*  TODO: This is in consensus after fork1, see ContextualCheckTransaction.  Enable it here after activation
-    size_t argsHashSize = argsHash->size();
+    size_t hiddenArgsHashSize = hiddenArgsHash->size();
     // allow 2 different hash types, or no hashed args
-    if ((argsHashSize != CHash160::OUTPUT_SIZE) && (argsHashSize != CHash256::OUTPUT_SIZE) && (argsHashSize != 0))
+    if ((hiddenArgsHashSize != CHash160::OUTPUT_SIZE) && (hiddenArgsHashSize != CHash256::OUTPUT_SIZE) &&
+    (hiddenArgsHashSize != 0))
     {
         return ScriptTemplateError::INVALID;
     }

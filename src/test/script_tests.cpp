@@ -298,8 +298,8 @@ CMutableTransaction BuildSpendingTransaction(const CScript &scriptSig, const CMu
     return txSpend;
 }
 
-CMutableTransaction BuildTemplateCreditingTransaction(const CScript &constraintScript,
-    const CScript &argsScript,
+CMutableTransaction BuildTemplateCreditingTransaction(const CScript &templateScript,
+    const CScript &hiddenArgs,
     const CScript &visibleArgs,
     CAmount nValue)
 {
@@ -314,15 +314,15 @@ CMutableTransaction BuildTemplateCreditingTransaction(const CScript &constraintS
     txCredit.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
     txCredit.vin[0].amount = nValue;
     // We will access this one
-    txCredit.vout[0].scriptPubKey = ScriptTemplateLock(constraintScript, argsScript, visibleArgs);
+    txCredit.vout[0].scriptPubKey = ScriptTemplateLock(templateScript, hiddenArgs, visibleArgs);
     txCredit.vout[0].nValue = nValue;
     txCredit.vout[0].type = CTxOut::TEMPLATE;
     return txCredit;
 }
 
-CMutableTransaction BuildTemplateSpendingTransaction(const CScript &constraintScript,
-    const CScript &argsScript,
-    const CScript &satisfierScript,
+CMutableTransaction BuildTemplateSpendingTransaction(const CScript &templateScript,
+    const CScript &hiddenArgs,
+    const CScript &satisfierArgs,
     const CMutableTransaction &txCredit)
 {
     CMutableTransaction txSpend;
@@ -332,7 +332,7 @@ CMutableTransaction BuildTemplateSpendingTransaction(const CScript &constraintSc
     txSpend.vout.resize(1);
     txSpend.vin[0] = txCredit.SpendOutput(0);
 
-    txSpend.vin[0].scriptSig = ScriptTemplateUnlock(constraintScript, satisfierScript, argsScript);
+    txSpend.vin[0].scriptSig = ScriptTemplateUnlock(templateScript, satisfierArgs, hiddenArgs);
     txSpend.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
     txSpend.vout[0].scriptPubKey = CScript();
     txSpend.vout[0].nValue = txCredit.vout[0].nValue;
@@ -340,7 +340,7 @@ CMutableTransaction BuildTemplateSpendingTransaction(const CScript &constraintSc
 }
 
 CMutableTransaction BuildTemplateCreditingTransaction(uint64_t wkTemplate,
-    const CScript &argsScript,
+    const CScript &hiddenArgs,
     const CScript &visibleArgs,
     CAmount nValue)
 {
@@ -356,15 +356,15 @@ CMutableTransaction BuildTemplateCreditingTransaction(uint64_t wkTemplate,
     txCredit.vin[0].amount = nValue;
     // We will access this one
     txCredit.vout[0].scriptPubKey =
-        ScriptWellKnownTemplateLock(wkTemplate, argsScript.Hash160(), visibleArgs.ToVch(), NoGroup, 0);
+        ScriptWellKnownTemplateLock(wkTemplate, hiddenArgs.Hash160(), visibleArgs.ToVch(), NoGroup, 0);
     txCredit.vout[0].nValue = nValue;
     txCredit.vout[0].type = CTxOut::TEMPLATE;
     return txCredit;
 }
 
 CMutableTransaction BuildTemplateSpendingTransaction(uint64_t wkTemplate,
-    const CScript &argsScript,
-    const CScript &satisfierScript,
+    const CScript &hiddenArgs,
+    const CScript &satisfierArgs,
     const CMutableTransaction &txCredit)
 {
     CMutableTransaction txSpend;
@@ -374,7 +374,7 @@ CMutableTransaction BuildTemplateSpendingTransaction(uint64_t wkTemplate,
     txSpend.vout.resize(1);
     txSpend.vin[0] = txCredit.SpendOutput(0);
 
-    txSpend.vin[0].scriptSig = ScriptWellKnownTemplateUnlock(wkTemplate, satisfierScript, argsScript);
+    txSpend.vin[0].scriptSig = ScriptWellKnownTemplateUnlock(wkTemplate, satisfierArgs, hiddenArgs);
     txSpend.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
     txSpend.vout[0].scriptPubKey = CScript();
     txSpend.vout[0].nValue = txCredit.vout[0].nValue;
