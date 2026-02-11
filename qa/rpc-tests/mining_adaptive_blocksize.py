@@ -61,7 +61,7 @@ class AdaptiveBlockSizeTest(BitcoinTestFramework):
         addrs = [node.getnewaddress() for _ in range(NUM_ADDRS)]
 
         legacyAddrs = [node.getaddressforms(x)["legacy"] for x in addrs]
-        self.generateTx(node, TEST_BLOCK_SIZE, legacyAddrs, "01" * DATA_SIZE)
+        generateTx(node, TEST_BLOCK_SIZE, legacyAddrs, "01" * DATA_SIZE)
 
         node.generate(1)
 
