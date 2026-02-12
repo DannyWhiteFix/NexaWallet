@@ -414,8 +414,8 @@ bool CompactReRequest::HandleMessage(CDataStream &vRecv, uint32_t msgCookie, CNo
             CBlockIndex *hdr = LookupBlockIndex(inv.hash);
             if (!hdr)
             {
-                dosMan.Misbehaving(pfrom, 20, BanReasonNotInBlockIndex);
-                return error("Requested block is not available");
+                LOG(CMPCT, "Peer %s requested nonexistent block %s", pfrom->GetLogName(), inv.hash.ToString());
+                return false;
             }
             pblock = ReadBlockFromDisk(hdr, consensusParams);
         }
