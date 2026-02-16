@@ -659,6 +659,31 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_verif
     return makeJByteArray(env, pkv);
 }
 
+extern "C" JNIEXPORT jbyteArray JNICALL Java_org_nexa_libnexakotlin_Native_recoverPubkeyFromSignedMessage(JNIEnv *env,
+    jobject ths,
+    jbyteArray jmessage,
+    jbyteArray sigBytes)
+{
+    ByteArrayAccessor message(env, jmessage);
+    ByteArrayAccessor sig(env, sigBytes);
+
+    checkSigInit();
+
+    CHashWriter ss(SER_GETHASH, 0);
+    ss << strMessageMagic << message.vec();
+
+    uint256 msgHash = ss.GetHash();
+    CPubKey pubkey;
+    if (!pubkey.RecoverCompact(msgHash, sig.vec()))
+    {
+        return jbyteArray();
+    }
+
+    auto pkv = std::vector<unsigned char>(pubkey.begin(), pubkey.end());
+    return makeJByteArray(env, pkv);
+}
+
+
 extern "C" JNIEXPORT jboolean JNICALL Java_org_nexa_libnexakotlin_Native_verifyBlockHeader(JNIEnv *env,
     jobject ths,
     jbyte chainSelector,
