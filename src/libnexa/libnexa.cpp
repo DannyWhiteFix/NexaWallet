@@ -1016,6 +1016,45 @@ SLAPI int verifyMessage(const unsigned char *message,
     }
 }
 
+SLAPI int recoverPubkeyFromSignedMessage(const unsigned char *message,
+    unsigned int msgLen,
+    const unsigned char *sig,
+    unsigned int sigLen,
+    unsigned char *result,
+    unsigned int resultLen)
+{
+    checkSigInit();
+
+    CHashWriter ss(SER_GETHASH, 0);
+    ss << strMessageMagic << std::vector<unsigned char>(message, message + msgLen);
+    uint256 msgHash = ss.GetHash();
+
+    CPubKey pubkey;
+    std::vector<unsigned char> sigv(sig, sig + sigLen);
+    if (!pubkey.RecoverCompact(msgHash, sigv))
+    {
+        set_error(LIBNEXA_ERROR::DECODE_FAILURE, "could not recover pubkey from msg and sig data provided\n");
+        return 0;
+    }
+
+    const size_t sz = pubkey.size();
+    if (sz > std::numeric_limits<int>::max())
+    {
+        set_error(LIBNEXA_ERROR::RETURN_FAILURE, "number of bytes to be returned cannot be represented by an int\n");
+        return -1;
+    }
+    if (sz > resultLen)
+    {
+        set_error(LIBNEXA_ERROR::INVALID_ARG, "returned data larger than the result buffer provided\n");
+        return 0;
+    }
+    memcpy(result, pubkey.begin(), sz);
+    const int res = (int)sz;
+    set_error(LIBNEXA_ERROR::SUCCESS_NO_ERROR, "");
+    return res;
+}
+
+
 SLAPI bool verifyDataSchnorr(const unsigned char *message,
     unsigned int msgLen,
     const unsigned char *pubkey,

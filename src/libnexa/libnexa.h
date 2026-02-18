@@ -244,6 +244,13 @@ SLAPI int verifyMessage(const unsigned char *message,
     unsigned char *result,
     unsigned int resultLen);
 
+SLAPI int recoverPubkeyFromSignedMessage(const unsigned char *message,
+    unsigned int msgLen,
+    const unsigned char *sig,
+    unsigned int sigLen,
+    unsigned char *result,
+    unsigned int resultLen);
+
 SLAPI bool verifyBlockHeader(int chainSelector, const unsigned char *serializedHeader, int serLen);
 
 SLAPI int encodeCashAddr(int chainSelector,

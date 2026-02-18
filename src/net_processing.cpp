@@ -569,14 +569,9 @@ void static ProcessExtGetData(CNode *pfrom,
                 {
                     ti.decimals = std::stoi(vInfo[4]);
                 }
-                catch (...)
+                catch (...) // the decimals field is optional and defaults to 0 if unspecified
                 {
-                    pfrom->PushMessageWithCookie(NetMsgType::REJECT, replyCookieCount,
-                        std::string(NetMsgType::TOKENINFO), REJECT_INVALID,
-                        strprintf(
-                            "decimals information requested was not decoded for group id: %s", inv.ToString().c_str()),
-                        inv.hash);
-                    continue;
+                    ti.decimals = 0;
                 }
                 ti.genesisAddress = tokenmint.GetTokenGenesis(groupID);
                 pfrom->PushMessage(NetMsgType::TOKENINFO, ti);
