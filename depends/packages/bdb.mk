@@ -10,6 +10,7 @@ $(package)_config_opts=--disable-shared --enable-cxx --disable-replication --ena
 $(package)_config_opts_mingw32=--enable-mingw
 $(package)_config_opts_linux=--with-pic
 $(package)_cflags+=-Wno-error=implicit-function-declaration
+$(package)_cflags+=-Wno-error=incompatible-pointer-types
 $(package)_cxxflags+=-std=c++17
 endef
 
