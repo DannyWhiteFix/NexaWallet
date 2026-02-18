@@ -6,7 +6,7 @@ $(package)_download_path=https://www.bitcoinunlimited.info/depends-sources
 $(package)_file_name=gmp-$($(package)_version).tar.xz
 $(package)_sha256_hash=a3c2b80201b89e68616f4ad30bc66aee4927c3ce50e33929ca819d5c43538898
 
-$(package)_cflags+=-std=c17
+$(package)_config_env += CFLAGS="-std=c17"
 
 ifeq ($(HOST),i686-pc-linux-gnu)
   XTRA_CFG:=--disable-assembly
