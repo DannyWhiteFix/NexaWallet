@@ -1400,8 +1400,8 @@ bool HandleGrapheneBlockRequest(CDataStream &vRecv, CNode *pfrom, uint32_t msgCo
             CBlockIndex *hdr = LookupBlockIndex(hash);
             if (!hdr)
             {
-                dosMan.Misbehaving(pfrom, 20, BanReasonNotInBlockIndex);
-                return error("Peer %s requested nonexistent block %s", pfrom->GetLogName(), hash.ToString());
+                LOG(GRAPHENE, "Peer %s requested nonexistent block %s", pfrom->GetLogName(), hash.ToString());
+                return false;
             }
             pblock = ReadBlockFromDisk(hdr, consensusParams);
         }

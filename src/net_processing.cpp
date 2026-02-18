@@ -2138,8 +2138,8 @@ bool ProcessMessage(CNode *pfrom,
                 auto *invIndex = LookupBlockIndex(hash);
                 if (!invIndex)
                 {
-                    dosMan.Misbehaving(pfrom, 100, BanReasonNotInBlockIndex);
-                    return error("Peer %srequested nonexistent block %s", pfrom->GetLogName(), hash.ToString());
+                    LOG(THIN, "Peer %s requested nonexistent block %s", pfrom->GetLogName(), hash.ToString());
+                    return false;
                 }
 
                 const Consensus::Params &consensusParams = Params().GetConsensus();
@@ -2193,8 +2193,8 @@ bool ProcessMessage(CNode *pfrom,
             auto *invIndex = LookupBlockIndex(hash);
             if (!invIndex)
             {
-                dosMan.Misbehaving(pfrom, 100, BanReasonNotInBlockIndex);
-                return error("Peer %srequested nonexistent block %s", pfrom->GetLogName(), hash.ToString());
+                LOG(THIN, "Peer %s requested nonexistent block %s", pfrom->GetLogName(), hash.ToString());
+                return false;
             }
 
             const Consensus::Params &consensusParams = Params().GetConsensus();
