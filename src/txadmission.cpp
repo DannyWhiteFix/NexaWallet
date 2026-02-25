@@ -1417,9 +1417,10 @@ bool ParallelAcceptToMemoryPool(CTxMemPool &pool,
     uint64_t interval = (GetStopwatch() - start) / 1000;
     // typically too much logging, but useful when optimizing tx validation
     LOG(BENCH,
-        "ValidateTransaction, time: %d, tx: %s, len: %d, sigops: %u, Vin: "
-        "%llu, Vout: %llu\n",
-        interval, tx->GetId().ToString(), nSize, (unsigned int)nSigOps, tx->vin.size(), tx->vout.size());
+        "ValidateTransaction success, time: %d, txid: %s, len: %d, sigops: %u, Vin: "
+        "%llu, Vout: %llu txidem: %s\n",
+        interval, tx->GetId().ToString(), nSize, (unsigned int)nSigOps, tx->vin.size(), tx->vout.size(),
+        tx->GetIdem().ToString());
     nTxValidationTime << interval;
 
     // Update txn per second. We must do it here although technically the txn isn't in the mempool yet but

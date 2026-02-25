@@ -856,6 +856,16 @@ std::string toString(uint64_t value, const std::map<uint64_t, std::string> bitma
     return result;
 }
 
+std::string trimmed(const std::string &s)
+{
+    const auto ws = " \t\n\r\f\v";
+    const auto first = s.find_first_not_of(ws);
+    if (first == std::string::npos)
+        return {};
+    const auto last = s.find_last_not_of(ws);
+    return s.substr(first, last - first + 1);
+}
+
 #ifdef DEBUG_PAUSE
 
 // To integrate well with gdb, we want to show what thread has paused.  This requires some linux-specific code
