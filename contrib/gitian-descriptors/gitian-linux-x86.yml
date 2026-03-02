@@ -8,8 +8,9 @@ architectures:
 packages:
 - "curl"
 - "binutils"
-- "g++-10"
-- "gcc-10"
+- "llvm-11"
+- "clang-11"
+- "libclang-11-dev"
 - "binutils-gold"
 - "git"
 - "pkg-config"
@@ -101,8 +102,8 @@ script: |
   # Build dependencies for each host
   for i in $HOSTS; do
     if [ "${i}" = "x86_64-linux-gnu" ]; then
-      export CXX=g++-10
-      export CC=gcc-10
+      export CXX=clang++-11
+      export CC=clang-11
       make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}" ${DEPENDS_LIBNEXA}
     else
       make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}" NO_RUST=1 ${DEPENDS_LIBNEXA}
@@ -132,8 +133,8 @@ script: |
   # Extract the release tarball into a dir for each host and build
   for i in ${HOSTS}; do
     if [ "${i}" = "x86_64-linux-gnu" ]; then
-      export CXX=g++-10
-      export CC=gcc-10
+      export CXX=clang++-11
+      export CC=clang++-11
     fi
     export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
     mkdir -p distsrc-${i}
