@@ -175,6 +175,9 @@ inline bool IsSwitchChar(char c)
 #endif
 }
 
+/** Remove leading and trailing whitespace */
+std::string trimmed(const std::string &s);
+
 /**
  * Return string argument or default value
  *

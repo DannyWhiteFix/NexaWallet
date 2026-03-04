@@ -5,6 +5,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "logging.h"
+#include "util.h"
 
 std::atomic<bool> fLogTimestamps{DEFAULT_LOGTIMESTAMPS};
 std::atomic<bool> fLogTimeMicros{DEFAULT_LOGTIMEMICROS};
@@ -300,8 +301,10 @@ void LogInit(std::vector<std::string> categories)
     }
     else
     {
-        for (std::string &category : categories)
+        for (std::string &splitCategory : categories)
         {
+            // Remove leading and trailing whitespace
+            std::string category = trimmed(splitCategory);
             // it is ok to transform the categories vector itself as it is a copy
             std::transform(category.begin(), category.end(), category.begin(), ::tolower);
             // remove the category from the list of enables one
