@@ -45,8 +45,8 @@ uint256 GetMiningHash(const uint256 &headerCommitment, const std::vector<unsigne
 
 uint64_t CBlockHeader::NumSubblocks() const
 {
-    auto subblks = ParseSummaryBlockMinerData(minerData);
-    return subblks.size();
+    auto ret = ParseSummaryBlockMinerData(minerData);
+    return ret.vSubblockProofs.size();
 }
 
 uint256 CBlockHeader::GetHash() const
@@ -148,21 +148,20 @@ arith_uint256 GetWorkForTarget(arith_uint256 bnTarget)
     return (~bnTarget / (bnTarget + 1)) + 1;
 }
 
-std::vector<std::pair<uint256, std::vector<uint8_t> > > ParseSummaryBlockMinerData(
-    const std::vector<unsigned char> &data)
+CSummaryBlockMinerData ParseSummaryBlockMinerData(const std::vector<unsigned char> &data)
 {
     if (data.empty())
         return {};
 
-    std::vector<std::pair<uint256, std::vector<uint8_t> > > ret;
+    CSummaryBlockMinerData ret;
     uint8_t minerDataVersion = 0;
     CDataStream ds(data, SER_NETWORK, PROTOCOL_VERSION);
 
-    // First get the miner data version and make sure we only continue to process a tailstorm
-    // summary block otherwise.
+    // Get the miner data and make sure it's a tailstorm summary block
     try
     {
-        ds >> minerDataVersion;
+        ds >> minerDataVersion >> ret.prevOfprevhash >> ret.nUncles >> ret.nBitsUncle >> ret.nSubblocks >>
+            ret.nBitsSubblock >> ret.vSubblockProofs;
     }
     catch (...)
     {
@@ -171,15 +170,6 @@ std::vector<std::pair<uint256, std::vector<uint8_t> > > ParseSummaryBlockMinerDa
     if (minerDataVersion != DEFAULT_MINER_DATA_SUMMARYBLOCK_VERSION)
         return {};
 
-    // Now get the summary block miner data
-    try
-    {
-        ds >> ret;
-    }
-    catch (...)
-    {
-        return {};
-    }
     return ret;
 }
 
@@ -192,11 +182,10 @@ std::vector<uint256> ParseSubblockMinerData(const std::vector<unsigned char> &da
     uint8_t minerDataVersion = 0;
     CDataStream ds(data, SER_NETWORK, PROTOCOL_VERSION);
 
-    // First get the miner data version and make sure we only continue to process a tailstorm
-    // summary block otherwise.
+    // Get the miner data and make sure it's a tailstorm subblock.
     try
     {
-        ds >> minerDataVersion;
+        ds >> minerDataVersion >> ret;
     }
     catch (...)
     {
@@ -205,15 +194,6 @@ std::vector<uint256> ParseSubblockMinerData(const std::vector<unsigned char> &da
     if (minerDataVersion != DEFAULT_MINER_DATA_SUBBLOCK_VERSION)
         return {};
 
-    // Now get the subblock data
-    try
-    {
-        ds >> ret;
-    }
-    catch (...)
-    {
-        return {};
-    }
     return ret;
 }
 

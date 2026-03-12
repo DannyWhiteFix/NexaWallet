@@ -29,6 +29,7 @@
 #include "respend/dsproofstorage.h"
 #include "timedata.h"
 #include "txadmission.h"
+#include "ui_interface.h"
 #include "validation/dag.h"
 #include "validation/tailstorm.h"
 #include "validation/validation.h"
@@ -249,7 +250,7 @@ void static ProcessGetData(CNode *pfrom,
             ConstCBlockRef pblock;
             if (tailstormForest.Find(inv.hash, pblock))
             {
-                bool fSend = false;
+                bool fSend = true;
                 unsigned char noSendReason = 0;
                 std::string noSendStr = std::string("");
                 SendBlock(pfrom, inv, pblock, msgCookie, oneReplyPerInvCookie, replyCookieCount, noSendReason,
@@ -1930,6 +1931,18 @@ bool ProcessMessage(CNode *pfrom,
                 else
                 {
                     PV->UpdateMostWorkOurFork(header);
+
+                    // If we are far enough ahead of the chaintip then reset
+                    // the initial sync flag so that we'll snap back to the tip
+                    // as per "emergent consensus".
+                    if (IsInitialSyncComplete() &&
+                        ((header.height - chainActive.Tip()->height()) > DEPTH_TO_ENFORCE_CORRECT_SUBBLOCKS))
+                    {
+                        bool fSynced = false;
+                        IsInitialSyncCompleteInit(&fSynced);
+                        tailstormForest.Clear();
+                        uiInterface.ResetDagViewer();
+                    }
                 }
 
                 i++;

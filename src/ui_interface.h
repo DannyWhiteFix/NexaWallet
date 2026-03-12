@@ -113,6 +113,14 @@ public:
         void(bool initialSync, uint32_t dagheight, uint32_t nSequenceId, const CBlockHeader &header, bool fSubblock)>
         NotifyHeaderTipDag;
 
+    /** New uncle has been accepted */
+    boost::signals2::signal<void(bool initialSync,
+        uint32_t dagheight,
+        uint32_t nSequenceId,
+        const CBlockHeader &header,
+        const uint256 &roothash)>
+        NotifyDagViewerUncle;
+
     /** Reset Dag Viewer */
     boost::signals2::signal<void(void)> ResetDagViewer;
 

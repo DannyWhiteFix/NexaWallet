@@ -103,6 +103,7 @@ enum
     SCRIPT         = 0x2000000000,
     CAPD           = 0x4000000000,
     DAG            = 0x8000000000,
+    DAGVIEWER      = 0x10000000000,
     VALIDATION     = 0x4000000000000000UL,
     TOKEN          = 0x8000000000000000UL
     // clang-format on

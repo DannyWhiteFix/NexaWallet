@@ -14,6 +14,7 @@
 #include "uint256.h"
 #include "util.h"
 #include "validation/forks.h"
+#include "validation/tailstorm.h"
 
 extern std::atomic<bool> fTailstormEnabled;
 
@@ -148,8 +149,44 @@ uint32_t GetNextASERTWorkRequired(const CBlockIndex *pindexPrev,
     {
         nextTarget = CalculateASERT(
             refBlockTarget, params.nPowTargetSpacing, nTimeDiff, nHeightDiff, powLimit, params.nASERTHalfLife);
+
         // Make the target easier by the number of PoW puzzles we are solving
-        nextTarget *= params.tailstorm_k;
+        //
+        // For a subblock the nexttarget will be determined by tailstorm_k, but for a summary
+        // block we have to count up the work done by all previous subblocks and then calculate
+        // how much more work the summary block has to do to reach the overall target.
+        if (IsTailstormSummaryBlock(*pblock))
+        {
+            auto ret = ParseSummaryBlockMinerData(pblock->minerData);
+
+            // add up the work from all the uncle blocks and subblocks.
+            arith_uint256 nCurrentWorkInBlock = 0;
+            {
+                nCurrentWorkInBlock += (ret.nUncles * GetWorkForDifficultyBits(ret.nBitsUncle));
+                nCurrentWorkInBlock += (ret.nSubblocks * GetWorkForDifficultyBits(ret.nBitsSubblock));
+            }
+
+            // If the sum of the work from the uncle block + the subblocks + the expected work
+            // from the summary block is greater than our next expected target then just return
+            // the next expected target, however if the sum is less then we have to adjust
+            // the target for our summary block to make up for the reduction in overall work.
+            arith_uint256 nextExpectedTarget;
+            nextExpectedTarget = nextTarget * params.tailstorm_k;
+            if (nCurrentWorkInBlock + nextExpectedTarget >= nextTarget)
+            {
+                nextTarget *= params.tailstorm_k;
+            }
+            else
+            {
+                nextTarget = nextTarget - nCurrentWorkInBlock;
+            }
+            assert(nextTarget >= nextExpectedTarget);
+        }
+        else
+        {
+            nextTarget *= params.tailstorm_k;
+        }
+
         if (nextTarget > powLimit)
         {
             LOGA("warning: tailstorm target difficulty is too easy! %s > %s", nextTarget.ToString(),

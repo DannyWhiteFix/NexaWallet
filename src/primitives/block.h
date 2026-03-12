@@ -314,8 +314,16 @@ struct CBlockLocator
     If this block references enough subblocks to make a summary block, then it IS the summary block, and its
     transaction list needs to be the full transaction list rather than additional tx on top of referenced subblocks.
  */
-std::vector<std::pair<uint256, std::vector<uint8_t> > > ParseSummaryBlockMinerData(
-    const std::vector<unsigned char> &data);
+struct CSummaryBlockMinerData
+{
+    uint256 prevOfprevhash;
+    uint8_t nUncles = 0;
+    uint32_t nBitsUncle = 0;
+    uint8_t nSubblocks = 0;
+    uint32_t nBitsSubblock = 0;
+    std::vector<std::pair<uint256, std::vector<uint8_t> > > vSubblockProofs;
+};
+CSummaryBlockMinerData ParseSummaryBlockMinerData(const std::vector<unsigned char> &data);
 
 /** A subblock can have multiple prev block hashes so to fit them in we put them into the minerData
     field. This function gets those additional subblock hashes.

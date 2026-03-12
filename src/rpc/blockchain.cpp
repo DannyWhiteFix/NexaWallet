@@ -1041,11 +1041,12 @@ static UniValue getsubblock(const UniValue &params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 3)
         throw runtime_error(
-            "getsubblock hash_or_height ( verbosity ) ( tx_count )\n"
+            "getsubblock hash ( verbosity ) ( tx_count ) or hash remove\n"
             "\nIf verbosity is 0, returns a string that is serialized, hex-encoded data for block 'hash'.\n"
             "If verbosity is 1, returns the block header with a list of transaction hashes in the block\n"
             "If verbosity is 2, returns the block header with a list of all decoded transaction details in the block\n"
             "If tx_count is true, returns a block header with a count of all transactions in the block.\n"
+            "If remove is present then the subblock and any descendants will get deleted from the dag.\n"
             "\nArguments:\n"
             "1. \"hash_or_height\"      (string|numeric, required) The block hash or height.\n"
             "2. \"verbosity\"           (numeric, optional, default=1) 0 for hex-encoded data, 1 \n"
@@ -1093,10 +1094,11 @@ static UniValue getsubblock(const UniValue &params, bool fHelp)
     ConstCBlockRef subblock;
     bool isNumber = true;
     int height = -1;
+    std::string param0;
     if (!params[0].isNum())
     {
         // determine if string is the height or block hash
-        const std::string param0 = params[0].get_str();
+        param0 = params[0].get_str();
         isNumber = (param0.size() <= 20);
         if (isNumber)
         {
@@ -1148,10 +1150,20 @@ static UniValue getsubblock(const UniValue &params, bool fHelp)
     bool fListTxns = true;
     if (params.size() > 1)
     {
-        if (params[1].isNum())
-            nVerbose = params[1].get_int();
+        if (!params[1].isNum())
+        {
+            const std::string param1 = params[1].get_str();
+            if (param1 == "remove")
+            {
+                uint256 hash(uint256S(param0));
+                if (tailstormForest.Remove(hash))
+                    return "Removed from dag: " + param0;
+                else
+                    throw runtime_error(strprintf("Did not remove from dag: %s", param0));
+            }
+        }
         else
-            nVerbose = is_param_trueish(params[1]);
+            nVerbose = params[1].get_int();
     }
     if (params.size() == 3)
     {
@@ -2767,13 +2779,25 @@ UniValue tailstormInfoToJSON()
         }
 
         uint256 dagTipHash = GetActiveDagTip(setBestDag);
-        int64_t competingSubs = tailstormForest.Size() - setBestDag.size();
+
+        // calculate uncles
+        int64_t nUncles = 0;
+        for (auto node : setBestDag)
+        {
+            if (node->fUncle)
+                nUncles++;
+        }
+
+        int64_t nUnlinkedSubblocks = tailstormForest.GetUnlinkedSubblocks();
+        int64_t nUnlinkedSummaryBlocks = tailstormForest.GetUnlinkedSummaryBlocks();
 
         ret.pushKV("chaintip", tip->GetBlockHash().GetHex());
         ret.pushKV("dagtip", dagTipHash.GetHex());
         ret.pushKV("total", (int64_t)tailstormForest.Size());
+        ret.pushKV("unlinked_subblocks", nUnlinkedSubblocks);
+        ret.pushKV("unlinked_summaryblocks", nUnlinkedSummaryBlocks);
+        ret.pushKV("uncles", nUncles);
         ret.pushKV("bestdag", (int64_t)setBestDag.size());
-        ret.pushKV("competing", competingSubs);
     }
 
     return ret;
@@ -2782,18 +2806,21 @@ UniValue tailstormInfoToJSON()
 UniValue gettailstorminfo(const UniValue &params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
-        throw std::runtime_error("gettailstorminfo\n"
-                                 "\nReturns details on the active state of the Tailstorm subblock pool.\n"
-                                 "\nResult:\n"
-                                 "{\n"
-                                 "  \"chaintip\": x,          (numeric) Current summary block tip hash\n"
-                                 "  \"dagtip\": x             (numeric) Current dag tip hash\n"
-                                 "  \"total\": x,             (numeric) Current total subblock count\n"
-                                 "  \"bestdag\": x            (numeric) Number of subblocks in the active dag\n"
-                                 "  \"competing\": x          (numeric) Number of subblocks on a fork \n"
-                                 "}\n"
-                                 "\nExamples:\n" +
-                                 HelpExampleCli("gettailstorminfo", "") + HelpExampleRpc("gettailstorminfo", ""));
+        throw std::runtime_error(
+            "gettailstorminfo\n"
+            "\nReturns details on the active state of the Tailstorm subblock pool.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"chaintip\": x,                (numeric) Current summary block tip hash\n"
+            "  \"dagtip\": x                   (numeric) Current dag tip hash\n"
+            "  \"total\": x,                   (numeric) Current total subblock count in the forest\n"
+            "  \"unlinked_subblocks\": x       (numeric) Number of subblocks not linked in the forest \n"
+            "  \"unlinked_summaryblocks\": x   (numeric) Number of subblocks not linked in the forest \n"
+            "  \"uncles\": x                   (numeric) Number of uncle blocks in the best dag (active dag)\n"
+            "  \"bestdag\": x                  (numeric) Number of subblocks in the best dag (active dag)\n"
+            "}\n"
+            "\nExamples:\n" +
+            HelpExampleCli("gettailstorminfo", "") + HelpExampleRpc("gettailstorminfo", ""));
 
     if (!fTailstormEnabled)
         throw runtime_error("tailstorm is not enabled\n");

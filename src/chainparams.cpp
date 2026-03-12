@@ -636,7 +636,7 @@ public:
         consensus.nBlockSizeMultiplier = BLOCK_SIZE_MULTIPLIER;
         consensus.nNextMaxBlockSize = DEFAULT_NEXT_MAX_BLOCK_SIZE_FORK1;
 
-        consensus.tailstorm_k = 4;
+        consensus.tailstorm_k = 8;
         consensus.tailstormEnforceDepth = DEPTH_TO_ENFORCE_CORRECT_SUBBLOCKS;
 
         vFixedSeeds.clear();
