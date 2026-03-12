@@ -12,6 +12,7 @@
 extern CChain chainActive;
 extern CBlockIndex *pindexBestHeader;
 extern std::atomic<bool> forceTemplateRecalc;
+
 /**
    Subblocks are not stored persistently.  They are just stored here in RAM.
 
@@ -154,7 +155,9 @@ void AcceptSubblock(ConstCBlockRef pblock)
         }
     }
 
-    // Announce accepted subblocks to other peers
+    // Announce accepted subblocks to other peers after
+    // they've been successfully connected to the dag.
+    // (We don't announce them if they end up in the orphan map).
     if (!setToAnnounce.empty())
     {
         LOCK(cs_vNodes);
@@ -181,7 +184,9 @@ void AcceptSubblock(ConstCBlockRef pblock)
     }
 }
 
-std::vector<uint8_t> GenerateMinerData(uint32_t tailstorm_k, std::set<CTreeNodeRef> &setBestDag)
+std::vector<uint8_t> GenerateMinerData(const uint32_t tailstorm_k,
+    const std::set<CTreeNodeRef> &setBestDag,
+    const uint256 &prevOfprevhash)
 {
     CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
 
@@ -193,6 +198,9 @@ std::vector<uint8_t> GenerateMinerData(uint32_t tailstorm_k, std::set<CTreeNodeR
         std::vector<uint256> vMinerData;
         for (auto node : setBestDag)
         {
+            if (node->fUncle) // ignore uncles
+                continue;
+
             // Pack in any additional prev dag tip hashes but not the active dag tip which
             // will already be stored in header->hashPrevBlock.
             if (node->IsTip())
@@ -206,14 +214,42 @@ std::vector<uint8_t> GenerateMinerData(uint32_t tailstorm_k, std::set<CTreeNodeR
     else // generate the summary block miner data field
     {
         uint8_t nMinerDataVersion = DEFAULT_MINER_DATA_SUMMARYBLOCK_VERSION;
+        assert(setBestDag.size() == (size_t)tailstorm_k - 1);
 
         std::vector<std::pair<uint256, std::vector<uint8_t> > > vMinerData;
+        uint8_t nUncles = 0;
+        uint8_t nSubblocks = 0;
+        uint32_t nBitsUncle = 0;
+        uint32_t nBitsSubblock = 0;
         for (CTreeNodeRef node : setBestDag)
         {
+            // Count up how many of each subblock type there are. We'll need to
+            // pack this data into the mineData field
+            if (node->fUncle)
+            {
+                nUncles++;
+
+                // Save an example of the nBits for an uncle. They will
+                // all be the same so we only need one.
+                if (!nBitsUncle)
+                    nBitsUncle = node->subblock->nBits;
+            }
+            else
+            {
+                nSubblocks++;
+
+                // Save an example of the nBits for a subblock. They will
+                // all be the same so we only need one.
+                if (!nBitsSubblock)
+                    nBitsSubblock = node->subblock->nBits;
+            }
+
             vMinerData.push_back(std::pair(node->subblock->GetMiningHeaderCommitment(), node->subblock->nonce));
         }
-        ds.reserve(1 + vMinerData.size() * (32 + CBlockHeader::MAX_NONCE_SIZE));
-        ds << nMinerDataVersion << vMinerData;
+
+        ds.reserve(sizeof(uint8_t) + 32 + sizeof(uint8_t) + sizeof(uint32_t) + sizeof(uint8_t) + sizeof(uint32_t) +
+                   (vMinerData.size() * (32 + CBlockHeader::MAX_NONCE_SIZE)));
+        ds << nMinerDataVersion << prevOfprevhash << nUncles << nBitsUncle << nSubblocks << nBitsSubblock << vMinerData;
     }
 
     return std::vector<uint8_t>(ds.begin(), ds.end());

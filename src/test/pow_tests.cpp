@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(asert_difficulty_test)
 
     currentPow = arith_uint256().SetCompact(nBits);
     // Before we do anything else, check that timestamps *before* the anchor block work fine.
-    // Jumping 2 days into the past will give a timestamp before the achnor, and should halve the target
+    // Jumping 2 days into the past will give a timestamp before the anchor, and should halve the target
     blocks[i] = GetBlockIndex(&blocks[i - 1], 600 - 172800, nBits);
     nBits = GetNextASERTWorkRequired(&blocks[i++], &blkHeaderDummy, params, &blocks[1]);
     currentPow = arith_uint256().SetCompact(nBits);

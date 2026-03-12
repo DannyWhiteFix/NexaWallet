@@ -1379,7 +1379,12 @@ bool AppInit2(Config &config)
                 ptokenMint = new CTokenMintageDB(cacheConfig.nBlockTreeDBCache, false, fReset);
 
                 // Set the coins cache for the tailstorm forest
-                tailstormForest.SetBackend(pcoinsTip);
+                {
+                    LOCK(tailstormForest.cs_forest);
+                    TxAdmissionPause txlock;
+                    tailstormForest.SetBackend(pcoinsTip);
+                    tailstormForest.SetDagCoinsTip(pcoinsTip);
+                }
 
                 if (fTxIndex)
                 {

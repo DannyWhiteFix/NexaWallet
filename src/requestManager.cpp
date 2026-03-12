@@ -434,7 +434,13 @@ void CRequestManager::Rejected(const CInv &obj, CNode *from, unsigned char reaso
     }
     else
     {
-        LOG(REQ, "ReqMgr: Unknown TX rejection code [0x%x].\n", reason);
+        std::string error;
+        if (obj.type == MSG_TX)
+            error = "for tx: " + obj.hash.ToString();
+        else
+            error = "for block: " + obj.hash.ToString();
+
+        LOG(REQ, "ReqMgr: Unknown rejection code %s [0x%s].\n", error.c_str(), reason);
         // assert(0); // TODO
     }
 }

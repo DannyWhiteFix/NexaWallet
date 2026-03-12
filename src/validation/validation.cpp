@@ -262,17 +262,32 @@ bool ContextualCheckBlockHeader(const CChainParams &chainparams,
 
     if (fSummaryBlock)
     {
-        uint32_t subblocks = block.NumSubblocks();
+        auto ret = ParseSummaryBlockMinerData(block.minerData);
+
         if (IsTailstormSummaryBlock(block))
         {
-            if (subblocks != chainparams.GetConsensus().tailstorm_k - 1)
+            if ((ret.vSubblockProofs.size() != chainparams.GetConsensus().tailstorm_k - 1) &&
+                (ret.vSubblockProofs.size() != (ret.nUncles + ret.nSubblocks)))
             {
-                return state.DoS(100, error("incomplete miner data"), REJECT_INVALID, "bad-miner-data-size");
+                return state.DoS(
+                    100, error("%s(): incomplete miner data", __func__), REJECT_INVALID, "bad-miner-data-size");
             }
         }
 
-        auto expectedChainWork = ArithToUint256(
-            (pindexPrev ? pindexPrev->chainWork() : 0) + ((subblocks + 1) * GetWorkForDifficultyBits(expectedNbits)));
+        // Calculated the expected chainwork by adding the previous chain work to the sum of
+        // the the work of the uncle blocks, subblocks and the summary block's contribution.
+        arith_uint256 nExpectedChainWork = 0;
+        {
+            if (pindexPrev)
+                nExpectedChainWork = pindexPrev->chainWork();
+
+            // add up the work from all the block types.
+            nExpectedChainWork += (ret.nUncles * GetWorkForDifficultyBits(ret.nBitsUncle));
+            nExpectedChainWork += (ret.nSubblocks * GetWorkForDifficultyBits(ret.nBitsSubblock));
+            nExpectedChainWork += (GetWorkForDifficultyBits(block.nBits));
+        }
+
+        auto expectedChainWork = ArithToUint256(nExpectedChainWork);
         if (block.chainWork != expectedChainWork)
         {
             return state.DoS(100,
@@ -853,8 +868,8 @@ bool LoadBlockIndexDB()
                 abort();
             }
 
-            // Proof of work in NEXA takes a signifcant amount of time greatly affecting the loading of the block
-            // index so just do random spot checks which span the entire index.
+            // Proof of work in NEXA takes a signifcant amount of time greatly affecting the loading of the
+            // block index so just do random spot checks which span the entire index.
             {
                 const CBlockIndex *index = vSortedByHeight[nSkipTo].second;
                 CBlockHeader _header = index->GetBlockHeader();
@@ -2594,8 +2609,10 @@ static bool ConnectBlockPrevalidations(ConstCBlockRef pblock,
     // verify that we have all the subblocks for this tailstorm summary block
     if (IsInitialSyncComplete() && IsTailstormSummaryBlock(pblock))
     {
-        auto subblockProofs = ParseSummaryBlockMinerData(pblock->minerData);
-        if (subblockProofs.size() != chainparams.GetConsensus().tailstorm_k - 1)
+        auto ret = ParseSummaryBlockMinerData(pblock->minerData);
+
+        if ((ret.vSubblockProofs.size() != chainparams.GetConsensus().tailstorm_k - 1) &&
+            (ret.vSubblockProofs.size() != (ret.nUncles + ret.nSubblocks)))
         {
             return state.DoS(
                 100, error("ProcessNewBlock(): incomplete miner data"), REJECT_INVALID, "bad-miner-data-size");
@@ -2605,7 +2622,13 @@ static bool ConnectBlockPrevalidations(ConstCBlockRef pblock,
         setDag.clear();
         std::vector<std::map<uint256, CTreeNodeRef> > vDoubleSpendTxns;
         std::map<COutPoint, CTransactionRef> mapInputs;
-        tailstormForest.GetDagForBlock(pblock, setDag, &vDoubleSpendTxns, &mapInputs);
+        if (!tailstormForest.GetDagForBlock(pblock, setDag, &vDoubleSpendTxns, &mapInputs))
+        {
+            // Some subblocks were not found in the dag that match this blocks minerData
+            tailstormForest.AddSummaryBlockOrphan(pblock);
+            LOG(DAG, "Some subblocks not found in block. Defer summary block orphan %s", pblock->GetHash().ToString());
+            return false;
+        }
 
         // Get all mining hashes from the best dag that exists on top of
         // the prevhash of this Summary Block.  Then Check if all
@@ -2619,15 +2642,33 @@ static bool ConnectBlockPrevalidations(ConstCBlockRef pblock,
             setMiningHashes.insert(GetMiningHash(miningHeaderCommitment, nonce));
 
             // Check that the heights in the subblocks match the height of the summary block
-            if (pblock->GetBlockHeader().height != treenode->subblock->GetBlockHeader().height)
+            auto nSummaryBlockHeight = pblock->GetBlockHeader().height;
+            auto nSubblockHeight = treenode->subblock->GetBlockHeader().height;
+            if (nSummaryBlockHeight != nSubblockHeight)
             {
-                return state.DoS(100, error("ProcessNewBlock(): height in subblock does not match summary block"),
-                    REJECT_INVALID, "bad-subblock-height");
+                if (treenode->fUncle)
+                {
+                    if (nSummaryBlockHeight != nSubblockHeight + 1)
+                    {
+                        return state.DoS(100,
+                            error("ProcessNewBlock(): height %ld in subblock uncle does not match summary block height "
+                                  "%ld",
+                                nSubblockHeight, nSummaryBlockHeight),
+                            REJECT_INVALID, "bad-subblock-uncle-height");
+                    }
+                }
+                else
+                {
+                    return state.DoS(100,
+                        error("ProcessNewBlock(): height %ld in subblock does not match summary block height %ld",
+                            nSubblockHeight, nSummaryBlockHeight),
+                        REJECT_INVALID, "bad-subblock-height");
+                }
             }
         }
 
         // Check to make sure all subblocks were received before connecting the Summary Block
-        for (const auto &pair : subblockProofs)
+        for (const auto &pair : ret.vSubblockProofs)
         {
             const auto &miningHeaderCommitment = pair.first;
             const auto &nonce = pair.second;
@@ -2639,7 +2680,7 @@ static bool ConnectBlockPrevalidations(ConstCBlockRef pblock,
                 tailstormForest.AddSummaryBlockOrphan(pblock);
                 LOG(DAG, "Some subblocks not found in dag. Defer summary block orphan %s",
                     pblock->GetHash().ToString());
-                return true;
+                return false;
             }
         }
         tailstormForest.RemoveSummaryBlockOrphan(pblock);
@@ -4359,8 +4400,9 @@ bool ProcessNewBlock(CValidationState &state,
             requester.Received(inv, pfrom);
 
             // Let the subblock tracking know that this peer has this subblock already
-            // TODO: better that this update should go together with AcceptSubblock() and before
-            // we make header announcements but for now it's fine here.
+            // to prevent re-requests. Similar to just above here where we do the same
+            // for full summary blocks with requester.Received() where the item gets removed
+            // from the request manager.
             if (pfrom && !IsSummaryBlock(pblock))
             {
                 CNodeStateAccessor modablestate(nodestate, pfrom->GetId());

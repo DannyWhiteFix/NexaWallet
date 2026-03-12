@@ -432,6 +432,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
     std::vector<std::map<uint256, CTreeNodeRef> > vDoubleSpendTxns;
     std::map<COutPoint, CTransactionRef> mapInputs;
     tailstormForest.GetBestDagFor(pindexPrev->GetBlockHash(), setBestDag, &vDoubleSpendTxns, &mapInputs);
+    assert(setBestDag.size() <= conparams.tailstorm_k - 1);
 
     // Get the set of invalid double spends which we "DO NOT" want to include in the final summary block.
     std::set<uint256> setTxnExclusions = GetTxnExclusionSet(setBestDag, vDoubleSpendTxns, mapInputs);
@@ -444,6 +445,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
     {
         for (auto &treenode : setBestDag)
         {
+            if (treenode->fUncle) // we don't want txns from uncles.
+                continue;
+
             const auto &vtx = treenode->subblock->vtx;
             for (size_t i = 1; i < vtx.size(); i++)
             {
@@ -452,7 +456,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
         }
 
         // Generate the minerData field.
-        pblock->minerData = GenerateMinerData(conparams.tailstorm_k, setBestDag);
+        const uint256 &prevOfprevhash = *(pindexPrev->pprev->phashBlock);
+        pblock->minerData = GenerateMinerData(conparams.tailstorm_k, setBestDag, prevOfprevhash);
     }
 
     // Init the block counters and size the coinbase accordingly.
@@ -587,6 +592,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
 
             for (auto &treenode : setBestDag)
             {
+                if (treenode->fUncle) // we don't include txns from uncles
+                    continue;
+
                 const auto &vtx = treenode->subblock->vtx;
                 for (size_t i = 1; i < vtx.size(); i++)
                 {
@@ -648,21 +656,15 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &sc
         pblock->hashAncestor = pindexPrev->GetChildsConsensusAncestor()->GetBlockHash();
         UpdateTime(pblock.get(), chainparams.GetConsensus(), pindexPrev);
 
+        // Because of the potential inclusion of Uncle blocks we
+        // and that they may have a different amount of work we need
+        // to cycle through the dag to add the total work up.
         auto work = GetWorkForDifficultyBits(pblock->nBits);
-        work *= pblock->NumSubblocks() + 1;
-        pblock->chainWork = ArithToUint256(pindexPrev->chainWork() + work);
-        /*
-        if (pblock->NumSubblocks() + 1 == conparams.tailstorm_k)
+        for (auto node : setBestDag)
         {
-            auto target = FromCompact(pblock->nBits);
-            target *= conparams.tailstorm_k;
-            auto fullblockTgt = GetNextNonTailstormBlockTarget(pindexPrev, pblock.get(), conparams);
-            if (target != fullblockTgt)
-            {
-                throw std::runtime_error(strprintf("%s: work creation is broken", __func__));
-            }
+            work += GetWorkForDifficultyBits(node->subblock->nBits);
         }
-        */
+        pblock->chainWork = ArithToUint256(pindexPrev->chainWork() + work);
 
         pblock->feePoolAmt = 0; // to be used later
         pblocktemplate->vTxSigOps[0] = 0;

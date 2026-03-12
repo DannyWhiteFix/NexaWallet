@@ -13,42 +13,77 @@ bool CheckTailstormSummaryBlockProofOfWork(const Consensus::Params &consensusPar
     const CBlockHeader &block,
     CValidationState &state)
 {
-    // tailstorm grab the subblock POW proofs out of pblock->minerData and verify them
-    auto subblockProofs = ParseSummaryBlockMinerData(block.minerData);
+    // Grab the subblock POW proofs and other data out of pblock->minerData to use in verification
+    auto ret = ParseSummaryBlockMinerData(block.minerData);
+
     // A summary block must reference K-1 subblocks, -1 because it is *itself* a subblock.
-    if (subblockProofs.size() != consensusParams.tailstorm_k - 1)
+    if ((ret.vSubblockProofs.size() != consensusParams.tailstorm_k - 1) &&
+        (ret.vSubblockProofs.size() != (ret.nUncles + ret.nSubblocks)))
     {
         return state.DoS(100,
-            error("CheckSummaryBlockHeader: summary has incorrect number of subblocks: %ld", subblockProofs.size()),
+            error(
+                "CheckSummaryBlockHeader: summary has incorrect number of subblocks: %ld", ret.vSubblockProofs.size()),
             REJECT_INVALID, "bad-blk-wrong-number-of-subblocks");
     }
-    // And each subblock must have nBits work in them.  So the total work in this summary block is really
+
+    // Each subblock must have nBits work in them.  So the total work in this summary block is really
     // work(nBits) * # of subblocks.
+    //
+    // First check the summary block's subblock.
+    //
+    // Then check the subblocks in the minerData field and if they fail to validate then fall through
+    // and try them again as uncles.  To verify the work of included uncle blocks we need the prev hash of the prevhash.
+    if (!CheckProofOfWork(block.GetMiningHash(), block.hashPrevBlock, block.nBits, consensusParams))
+    {
+        return state.DoS(50, error("CheckTailstormSummaryBlockHeader(): proof of work failed - high hash"),
+            REJECT_INVALID, "bad-blk-subblock-high-hash");
+    }
 
     std::set<uint256> setExists;
-    for (const auto &pair : subblockProofs)
+    uint32_t nSubblocksFound = 0;
+    uint32_t nUnclesFound = 0;
+    for (const auto &pair : ret.vSubblockProofs)
     {
         const auto &miningHeaderCommitment = pair.first;
         const auto &nonce = pair.second;
         uint256 powHash = GetMiningHash(miningHeaderCommitment, nonce);
 
-        if (!CheckProofOfWork(powHash, block.hashPrevBlock, block.nBits, consensusParams))
+        if (!CheckProofOfWork(powHash, block.hashPrevBlock, ret.nBitsSubblock, consensusParams))
         {
-            return state.DoS(50, error("CheckSummaryBlockHeader(): proof of work failed"), REJECT_INVALID,
-                "bad-blk-subblock-high-hash");
-        }
-
-        // Check for repeats
-        if (setExists.count(miningHeaderCommitment))
-        {
-            return state.DoS(50, error("CheckSummaryBlockHeader(): proof of work failed"), REJECT_INVALID,
-                "bad-blk-duplicate-mining-commitment");
+            // If it fails then check again with the prevhash of the prevhash in case it's from an uncle
+            if (!CheckProofOfWork(powHash, ret.prevOfprevhash, ret.nBitsUncle, consensusParams))
+            {
+                return state.DoS(50, error("CheckTailstormSummaryBlockHeader(): proof of work failed - high hash"),
+                    REJECT_INVALID, "bad-blk-subblock-high-hash");
+            }
+            nUnclesFound++;
         }
         else
         {
-            setExists.insert(miningHeaderCommitment);
+            nSubblocksFound++;
+        }
+
+        // Check for repeats
+        if (setExists.count(powHash))
+        {
+            return state.DoS(50,
+                error("CheckTailstormSummaryBlockHeader(): proof of work failed - dup mining commitment"),
+                REJECT_INVALID, "bad-blk-duplicate-mining-commitment");
+        }
+        else
+        {
+            setExists.insert(powHash);
         }
     }
+
+    // Check that the stated counts for subblocks and uncles in the minerData field are correct
+    if ((ret.nBitsUncle != ret.nBitsSubblock) && (ret.nUncles != nUnclesFound || ret.nSubblocks != nSubblocksFound))
+    {
+        return state.DoS(50,
+            error("CheckTailstormSummaryBlockHeader(): proof of work failed - uncle or subblocks counts did not match"),
+            REJECT_INVALID, "bad-blk-invalid-uncle-or-subblock-count");
+    }
+
     return true;
 }
 bool CheckBlockHeader(const Consensus::Params &consensusParams,
@@ -82,7 +117,8 @@ bool CheckBlockHeader(const Consensus::Params &consensusParams,
                 prevhash = block.hashPrevBlock;
 
             if (!CheckProofOfWork(miningHash, prevhash, block.nBits, consensusParams))
-                return state.DoS(50, error("CheckBlockHeader(): proof of work failed"), REJECT_INVALID, "high-hash");
+                return state.DoS(
+                    50, error("CheckBlockHeader(): proof of work failed - high hash"), REJECT_INVALID, "high-hash");
         }
     }
 

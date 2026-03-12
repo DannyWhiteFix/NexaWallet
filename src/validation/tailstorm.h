@@ -38,7 +38,9 @@ bool IsTailstormSummaryBlock(const CBlock &block);
 void AcceptSubblock(ConstCBlockRef pblock);
 
 /** Create the miner data field that goes into the block header */
-std::vector<uint8_t> GenerateMinerData(uint32_t tailstorm_k, std::set<CTreeNodeRef> &setBestDag);
+std::vector<uint8_t> GenerateMinerData(const uint32_t tailstorm_k,
+    const std::set<CTreeNodeRef> &setBestDag,
+    const uint256 &prevOfprevhash);
 
 /** Get a vector of all prev hashes that this block references (subblocks could have more than one). */
 std::set<uint256> GetPrevHashes(const CBlockHeader &header);

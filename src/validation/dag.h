@@ -18,6 +18,8 @@
 extern CChain chainActive;
 extern CCoinsViewCache *pcoinsTip;
 
+static const uint32_t DEFAULT_UNCLE_SCORE_ADJUSTMENT = 4;
+
 class CTreeNode;
 typedef std::shared_ptr<CTreeNode> CTreeNodeRef;
 template <typename Node>
@@ -46,9 +48,11 @@ class CTreeNode
 {
 public:
     uint256 hash; // the subblock hash that is this node
-    uint32_t dagHeight;
-    uint32_t nSequenceId;
-    bool fProcessed;
+    uint32_t dagHeight = 0;
+    uint32_t nSequenceId = 0;
+    bool fProcessed = false;
+    bool fUncle = false; // is this a subblock (uncle) from the previous summary block
+    uint256 roothash; // the summary block hash of the dag that the treenode is being added to.
 
     ConstCBlockRef subblock = nullptr;
 
@@ -61,9 +65,6 @@ public:
     {
         hash = _subblock->GetHash();
         subblock = _subblock;
-        dagHeight = 0;
-        nSequenceId = 0;
-        fProcessed = false;
     }
 
     friend bool operator<(const CTreeNode a, const CTreeNode b) { return a.hash < b.hash; }
@@ -78,7 +79,7 @@ public:
     bool IsTip() { return setDescendants.empty(); }
 };
 
-// All datamembers are protected by cs_forest
+// All data members are protected by cs_forest
 class CTailstormTree
 {
     friend class CTailstormGrove;
@@ -88,6 +89,11 @@ protected:
     // pointers point to the nodes for this dag, a pointer to the same node is
     // also available in mapAllNodes at the forest level
     std::map<uint256, CTreeNodeRef> dag;
+
+    // A map of uncles. Uncles are orphans that didn't get included in the last
+    // summary block bbut which we could use in the current summary block. Uncles
+    // could be subblocks and/or summary blocks.
+    std::map<uint256, CTreeNodeRef> mapUncles;
 
     // map of unique transactions that are already in the dag for this tree. This
     // data also includes all double spend transactions and is updated "after" a block
@@ -139,10 +145,6 @@ protected:
     // There can be many valid trees in a grove but, "tree" references the current active tree.
     std::shared_ptr<CTailstormTree> tree = nullptr;
 
-    // The set of valid trees. (Currently only one tree is ever used
-    // but this code is here in case it's ever needed again.)
-    std::set<std::shared_ptr<CTailstormTree> > setValidTrees;
-
     // key is subblock hash for the node in value
     std::map<uint256, CTreeNodeRef> mapGroveNodes;
 
@@ -162,7 +164,6 @@ protected:
     {
         CTailstormTree temp;
         tree = std::make_shared<CTailstormTree>(temp);
-        setValidTrees.insert(tree);
 
         _pcoinsTip = coinsCache;
         assert(_pcoinsTip);
@@ -174,8 +175,8 @@ protected:
     bool GetBestDag(std::set<CTreeNodeRef> &dag,
         std::vector<std::map<uint256, CTreeNodeRef> > *vDoubleSpendTxns = nullptr,
         std::map<COutPoint, CTransactionRef> *mapInputs = nullptr);
+    bool GetFullDag(std::set<CTreeNodeRef> &dag);
     bool GetBestTipHash(uint256 &hash);
-    void ActivateBestTree();
 };
 
 class CTailstormForest
@@ -272,11 +273,14 @@ public:
     //! return a map of all tree nodes.
     std::map<uint256, CTreeNode> GetAllNodes();
 
-    //! Return a set of tree nodes of the best dag
+    //! Return a set of tree nodes of the best dag and associated data
     bool GetBestDagFor(const uint256 &hash,
         std::set<CTreeNodeRef> &dag,
         std::vector<std::map<uint256, CTreeNodeRef> > *vDoubleSpendTxns = nullptr,
         std::map<COutPoint, CTransactionRef> *mapInputs = nullptr);
+
+    //! Return the entire set of treen nodes and uncle nodes
+    bool GetFullDagFor(const uint256 &hash, std::set<CTreeNodeRef> &dag);
 
     //! Return a set of nodes from a tree that matches what is in a block
     bool GetDagForBlock(ConstCBlockRef &pblock,
@@ -295,6 +299,12 @@ public:
 
     //! Return a the grove that a subblock belongs to
     bool GetGrove(const uint256 &hash, CTailstormGroveRef &grove);
+
+    //! Return the number of unlinked subblocks
+    uint32_t GetUnlinkedSubblocks();
+
+    //! Return the number of unlinked summary blocks
+    uint32_t GetUnlinkedSummaryBlocks();
 
     //! Detemine if we need to re-org the chainActive tip to one that has a better dag.
     void CheckForReorg();
@@ -318,6 +328,13 @@ public:
 
     //! Atomically get the dag active tip
     uint256 GetDagActiveTip();
+
+    //! Get all Uncles for this node, whether they be subblocks or
+    //  summary blocks, which can then be added to a trees Uncle map
+    std::map<uint256, CTreeNodeRef> GetUncles(CTreeNodeRef node);
+
+    //! Remove a node and any descendants from the forest
+    bool Remove(uint256 &hash);
 
     //! Sanity check the dag for errors.
     void Check();

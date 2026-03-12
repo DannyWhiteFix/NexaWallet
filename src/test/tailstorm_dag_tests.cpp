@@ -1499,6 +1499,243 @@ BOOST_AUTO_TEST_CASE(coinbase_rewards)
         BOOST_CHECK_EQUAL(mapExpectedScores[mi.first->hash], mi.second);
     }
 
+
+    /*** The following tests are with dags that also have Uncle blocks in them ***/
+
+    /*
+    Dag (k=4) with 1 uncle, 2 subblocks and the summary's subblock
+
+    =======    -----
+    block 1    | 1 |  Uncle block
+    =======    -----
+       |
+     -----
+     | 3 |
+     -----
+       |
+     -----
+     | 3 |
+     -----
+       |
+    =======
+    block 2
+      (3)
+    =======
+
+    */
+
+    setBestDag.clear();
+    mapExpectedScores.clear();
+    mapScores.clear();
+
+    noderef1->dagHeight = 1;
+    noderef1->setAncestors.clear();
+    noderef1->setDescendants.clear();
+    setBestDag.insert(noderef1);
+    mapExpectedScores.emplace(noderef1->hash, 3);
+
+    noderef2->dagHeight = 2;
+    noderef2->setAncestors.clear();
+    noderef2->setDescendants.clear();
+    noderef2->setAncestors.insert(noderef1);
+    setBestDag.insert(noderef2);
+    mapExpectedScores.emplace(noderef2->hash, 3);
+
+    // Add the descendants
+    noderef1->setDescendants.insert(noderef2);
+
+    // Add Uncles
+    node.hash = InsecureRand256();
+    node.dagHeight = 1;
+    node.setAncestors.clear();
+    node.setDescendants.clear();
+    node.fUncle = true;
+    CTreeNodeRef noderefUncle1 = MakeTreeNodeRef(node);
+    setBestDag.insert(noderefUncle1);
+    mapExpectedScores.emplace(noderefUncle1->hash, 1);
+
+    mapScores = GetDagScores(setBestDag);
+    for (auto &mi : mapScores)
+    {
+        BOOST_CHECK_EQUAL(mapExpectedScores[mi.first->hash], mi.second);
+    }
+
+    /*
+    Wider dag (k=13) with 2 uncles, 10 subblocks and the summary's subblock. This also tests where
+    the linkage between some subblocks skips back more than one dagheight, and is what
+    we'd see with a selfish miner. (When we skip a dagheight we do not add any scores.)
+
+      =======    -----  -----
+      block 1    | 8 |  | 8 |  Uncle blocks
+      =======    -----  -----
+       /   \
+    -----  -----
+    | 6 |  | 10 | _____    
+    -----  -----      \
+      |      |  \      \
+      |      |   \      \
+    -----  -----  -----  -----
+    | 6 |  | 6 |  | 6 |  | 7 |
+    -----  -----  -----  -----
+        \    |    /     /  |
+         \   |   /     /   |
+          \  |  /     /    |
+           -----     /   -----
+           | 9 |    /    | 6 |
+           -----   /     -----
+             |    /        |
+             |   /         |
+           -----         -----
+           | 10 |         | 6 |
+           -----         -----
+             |             |
+          =======          |
+          block 2  ________|
+            (12)
+          =======
+    */
+
+    setBestDag.clear();
+    mapExpectedScores.clear();
+    mapScores.clear();
+
+    node.hash = InsecureRand256();
+    node.dagHeight = 1;
+    node.fUncle = false;
+    node.setAncestors.clear();
+    node.setDescendants.clear();
+    noderef1a = MakeTreeNodeRef(node);
+    setBestDag.insert(noderef1a);
+    mapExpectedScores.emplace(node.hash, 6);
+
+    node.hash = InsecureRand256();
+    node.dagHeight = 1;
+    node.fUncle = false;
+    node.setAncestors.clear();
+    node.setDescendants.clear();
+    noderef1b = MakeTreeNodeRef(node);
+    setBestDag.insert(noderef1b);
+    mapExpectedScores.emplace(node.hash, 10);
+
+    node.hash = InsecureRand256();
+    node.dagHeight = 2;
+    node.fUncle = false;
+    node.setAncestors.clear();
+    node.setDescendants.clear();
+    node.setAncestors.insert(noderef1a);
+    noderef2a = MakeTreeNodeRef(node);
+    setBestDag.insert(noderef2a);
+    mapExpectedScores.emplace(node.hash, 6);
+
+    node.hash = InsecureRand256();
+    node.dagHeight = 2;
+    node.fUncle = false;
+    node.setAncestors.clear();
+    node.setDescendants.clear();
+    node.setAncestors.insert(noderef1b);
+    noderef2b = MakeTreeNodeRef(node);
+    setBestDag.insert(noderef2b);
+    mapExpectedScores.emplace(node.hash, 6);
+
+    node.hash = InsecureRand256();
+    node.dagHeight = 2;
+    node.fUncle = false;
+    node.setAncestors.clear();
+    node.setDescendants.clear();
+    node.setAncestors.insert(noderef1b);
+    noderef2c = MakeTreeNodeRef(node);
+    setBestDag.insert(noderef2c);
+    mapExpectedScores.emplace(node.hash, 6);
+
+    node.hash = InsecureRand256();
+    node.dagHeight = 2;
+    node.fUncle = false;
+    node.setAncestors.clear();
+    node.setDescendants.clear();
+    node.setAncestors.insert(noderef1b);
+    noderef2d = MakeTreeNodeRef(node);
+    setBestDag.insert(noderef2d);
+    mapExpectedScores.emplace(node.hash, 7);
+
+    node.hash = InsecureRand256();
+    node.dagHeight = 3;
+    node.fUncle = false;
+    node.setAncestors.clear();
+    node.setDescendants.clear();
+    node.setAncestors.insert(noderef2a);
+    node.setAncestors.insert(noderef2b);
+    node.setAncestors.insert(noderef2c);
+    noderef3 = MakeTreeNodeRef(node);
+    setBestDag.insert(noderef3);
+    mapExpectedScores.emplace(node.hash, 9);
+
+    node.hash = InsecureRand256();
+    node.dagHeight = 3;
+    node.fUncle = false;
+    node.setAncestors.clear();
+    node.setDescendants.clear();
+    node.setAncestors.insert(noderef2d);
+    noderef3a = MakeTreeNodeRef(node);
+    setBestDag.insert(noderef3a);
+    mapExpectedScores.emplace(node.hash, 6);
+
+    node.hash = InsecureRand256();
+    node.dagHeight = 4;
+    node.fUncle = false;
+    node.setAncestors.clear();
+    node.setDescendants.clear();
+    node.setAncestors.insert(noderef3a);
+    noderef4a = MakeTreeNodeRef(node);
+    setBestDag.insert(noderef4a);
+    mapExpectedScores.emplace(node.hash, 6);
+
+    node.hash = InsecureRand256();
+    node.dagHeight = 4;
+    node.fUncle = false;
+    node.setAncestors.clear();
+    node.setDescendants.clear();
+    node.setAncestors.insert(noderef2d);
+    node.setAncestors.insert(noderef3);
+    noderef4 = MakeTreeNodeRef(node);
+    setBestDag.insert(noderef4);
+    mapExpectedScores.emplace(node.hash, 10);
+
+    // Add the descendants
+    noderef1a->setDescendants.insert(noderef2a);
+    noderef1b->setDescendants.insert(noderef2b);
+    noderef1b->setDescendants.insert(noderef2c);
+    noderef1b->setDescendants.insert(noderef2d);
+    noderef2a->setDescendants.insert(noderef3);
+    noderef2b->setDescendants.insert(noderef3);
+    noderef2c->setDescendants.insert(noderef3);
+    noderef2d->setDescendants.insert(noderef4);
+    noderef2d->setDescendants.insert(noderef3a);
+    noderef3->setDescendants.insert(noderef4);
+    noderef3a->setDescendants.insert(noderef4a);
+
+    // Add Uncles
+    noderefUncle1->dagHeight = 1;
+    noderefUncle1->setAncestors.clear();
+    noderefUncle1->setDescendants.clear();
+    noderefUncle1->fUncle = true;
+    setBestDag.insert(noderefUncle1);
+    mapExpectedScores.emplace(noderefUncle1->hash, 8);
+
+    node.hash = InsecureRand256();
+    node.dagHeight = 1;
+    node.setAncestors.clear();
+    node.setDescendants.clear();
+    node.fUncle = true;
+    CTreeNodeRef noderefUncle2 = MakeTreeNodeRef(node);
+    setBestDag.insert(noderefUncle2);
+    mapExpectedScores.emplace(noderefUncle2->hash, 8);
+
+    mapScores = GetDagScores(setBestDag);
+    for (auto &mi : mapScores)
+    {
+        BOOST_CHECK_EQUAL(mapExpectedScores[mi.first->hash], mi.second);
+    }
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()

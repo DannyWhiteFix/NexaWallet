@@ -457,6 +457,9 @@ void CommitTxToMempool(int nCorral)
 }
 void _CommitTxToMempool()
 {
+    if (!txCommitQ)
+        return;
+
     // Committing the tx to the mempool takes time.  We can continue to validate non-conflicting tx during this time.
     // To do so, before the transactions are finally commited to the mempool the txCommitQ pointer is copied
     // to txCommitQFinal so that the lock on txCommitQ can be released and processing can continue.

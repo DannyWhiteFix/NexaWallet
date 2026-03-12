@@ -862,6 +862,7 @@ void IsInitialSyncCompleteInit(bool *fInit)
     {
         fComplete = true;
     }
+
     fIsInitialSyncComplete.store(fComplete);
     return;
 }

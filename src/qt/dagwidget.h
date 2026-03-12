@@ -61,7 +61,8 @@ public:
     {
         STORM_BLOCK = 0,
         SUMMARY = 1,
-        LEGACY_BLOCK = 2
+        LEGACY_BLOCK = 2,
+        ORPHAN_BLOCK = 3
     };
 
     struct Link
@@ -80,7 +81,6 @@ public:
         uint32_t nBlockHeight = 0;
         uint64_t nTransactions = 0;
         uint64_t nBlockSize = 0;
-        uint32_t nFork = 0;
         qreal x = 0;
         qreal y = 0;
         qreal itemWidth = 0;
@@ -111,7 +111,6 @@ public:
         uint64_t nBlockSize,
         std::vector<Link> &_vpointsto,
         bool fDoubleSpend,
-        uint32_t nFork,
         uint8_t blockType,
         bool fHeader,
         const CBlockHeader &header);
@@ -127,14 +126,13 @@ public:
         uint64_t nBlockSize,
         std::vector<Link> _vpointsto,
         bool fDoubleSpend,
-        uint32_t nFork,
         uint8_t blockType,
         bool fHeader,
         const CBlockHeader &header);
 
     // Get the next height in the dag which we use to position the item
     // in the dagviewer's scene.
-    int32_t GetNextDagViewerHeight(uint256 &prevDagHash, const CBlockHeader &header);
+    int32_t GetNextDagViewerHeight(uint256 &prevDagHash, const CBlockHeader &header, const uint32_t blockType);
 
     // Try to connect any orphaned items.
     void ProcessOrphans();
@@ -154,6 +152,7 @@ private:
 
     // Data structures for holding graphic items and related data
     std::map<uint256, std::shared_ptr<ItemInfo> > mapInfo GUARDED_BY(cs_info);
+    std::map<uint256, std::shared_ptr<ItemInfo> > mapOrphanInfo GUARDED_BY(cs_info);
     std::map<uint256, std::shared_ptr<ItemInfo> > mapInfoByMiningHash GUARDED_BY(cs_info);
     std::map<uint256, std::shared_ptr<ItemInfo> > mapDeferredInfo GUARDED_BY(cs_info);
     std::map<uint32_t, std::vector<std::shared_ptr<ItemInfo> > > mapDag GUARDED_BY(cs_info);
@@ -211,7 +210,7 @@ private:
     /** The maximum number of blocks we keep in the graphics scene (make it a little bigger than the view can hold) */
     const size_t DEFAULT_MAX_BLOCKS = (DEFAULT_WIDTH_OF_VIEW * 1.05) / (size_t)(subblockWidth + distance);
     /** Are QLabels enabled */
-    const bool fQLabelsEnabled = false;
+    const bool fQLabelsEnabled = true;
 
     QTimer *pollTimer;
     QTimer *pollTimer2;
@@ -261,6 +260,7 @@ private:
     // Save boost signals so we can unsubsribe the exact signal.
     boost::signals2::connection blockTipConn;
     boost::signals2::connection headerTipConn;
+    boost::signals2::connection uncleConn;
     boost::signals2::connection resetConn;
 
 

@@ -152,7 +152,7 @@ class TailstormActivationTest(BitcoinTestFramework):
         assert_equal(tailstorminfo['dagtip'], subblock_hash[0])
         assert_equal(tailstorminfo['total'], 1)
         assert_equal(tailstorminfo['bestdag'], 1)
-        assert_equal(tailstorminfo['competing'], 0)
+        assert_equal(tailstorminfo['uncles'], 0)
 
         subblock_hash1 = self.nodes[1].generate(1)
         tailstorminfo = self.nodes[1].gettailstorminfo()
@@ -160,7 +160,7 @@ class TailstormActivationTest(BitcoinTestFramework):
         assert_equal(tailstorminfo['dagtip'], subblock_hash1[0])
         assert_equal(tailstorminfo['total'], 1)
         assert_equal(tailstorminfo['bestdag'], 1)
-        assert_equal(tailstorminfo['competing'], 0)
+        assert_equal(tailstorminfo['uncles'], 0)
 
         # Interconnect peers and check that both competing blocks and subblocks were propagated
         # and that all dag and chain info is correct.
@@ -175,13 +175,13 @@ class TailstormActivationTest(BitcoinTestFramework):
         waitFor(waitTime, lambda: self.nodes[0].gettailstorminfo()['dagtip'] == subblock_hash[0])
         waitFor(waitTime, lambda: self.nodes[0].gettailstorminfo()['total'] == 2)
         waitFor(waitTime, lambda: self.nodes[0].gettailstorminfo()['bestdag'] == 1)
-        waitFor(waitTime, lambda: self.nodes[0].gettailstorminfo()['competing'] == 1)
+        waitFor(waitTime, lambda: self.nodes[0].gettailstorminfo()['uncles'] == 0)
 
         waitFor(waitTime, lambda: self.nodes[1].gettailstorminfo()['chaintip'] == blockchaininfo1['bestblockhash'])
         waitFor(waitTime, lambda: self.nodes[1].gettailstorminfo()['dagtip'] == subblock_hash1[0])
         waitFor(waitTime, lambda: self.nodes[1].gettailstorminfo()['total'] == 2)
         waitFor(waitTime, lambda: self.nodes[1].gettailstorminfo()['bestdag'] == 1)
-        waitFor(waitTime, lambda: self.nodes[1].gettailstorminfo()['competing'] == 1)
+        waitFor(waitTime, lambda: self.nodes[1].gettailstorminfo()['uncles'] == 0)
 
         # Continue generating subblocks (both peers should now be on same fork with same best dag)
         # Also, get the mining commitment and make sure it changes after a subblock is mined
@@ -193,13 +193,13 @@ class TailstormActivationTest(BitcoinTestFramework):
         waitFor(waitTime, lambda: self.nodes[0].gettailstorminfo()['dagtip'] == subblock_hash[0])
         waitFor(waitTime, lambda: self.nodes[0].gettailstorminfo()['total'] == 3)
         waitFor(waitTime, lambda: self.nodes[0].gettailstorminfo()['bestdag'] == 2)
-        waitFor(waitTime, lambda: self.nodes[0].gettailstorminfo()['competing'] == 1)
+        waitFor(waitTime, lambda: self.nodes[0].gettailstorminfo()['uncles'] == 0)
 
         waitFor(waitTime, lambda: self.nodes[1].gettailstorminfo()['chaintip'] == blockchaininfo['bestblockhash'])
         waitFor(waitTime, lambda: self.nodes[1].gettailstorminfo()['dagtip'] == subblock_hash[0])
         waitFor(waitTime, lambda: self.nodes[1].gettailstorminfo()['total'] == 3)
         waitFor(waitTime, lambda: self.nodes[1].gettailstorminfo()['bestdag'] == 2)
-        waitFor(waitTime, lambda: self.nodes[1].gettailstorminfo()['competing'] == 1)
+        waitFor(waitTime, lambda: self.nodes[1].gettailstorminfo()['uncles'] == 0)
 
         assert_not_equal(commitment_before0['headerCommitment'], self.nodes[0].getminingcandidate()['headerCommitment']);
         assert_not_equal(commitment_before1['headerCommitment'], self.nodes[1].getminingcandidate()['headerCommitment']);
@@ -211,7 +211,7 @@ class TailstormActivationTest(BitcoinTestFramework):
         assert_equal(tailstorminfo['dagtip'], subblock_hash[0])
         assert_equal(tailstorminfo['total'], 4)
         assert_equal(tailstorminfo['bestdag'], 3)
-        assert_equal(tailstorminfo['competing'], 1)
+        assert_equal(tailstorminfo['uncles'], 0)
 
         # Check that block rewards being given out correctly to the right miners
         waitFor(waitTime, lambda: self.nodes[0].getwalletinfo()['balance'] == 180000000)
@@ -230,7 +230,7 @@ class TailstormActivationTest(BitcoinTestFramework):
         assert_equal(tailstorminfo['dagtip'], blockchaininfo['bestblockhash'])
         assert_equal(tailstorminfo['total'], 4)
         assert_equal(tailstorminfo['bestdag'], 0)
-        assert_equal(tailstorminfo['competing'], 4)
+        assert_equal(tailstorminfo['uncles'], 0)
 
         info = self.nodes[0].getmininginfo()
         assert_equal(info["currentmaxblocksize"], 400000)
@@ -256,7 +256,7 @@ class TailstormActivationTest(BitcoinTestFramework):
         assert_equal(tailstorminfo['dagtip'], subblock_hash[0])
         assert_equal(tailstorminfo['total'], 5)
         assert_equal(tailstorminfo['bestdag'], 1)
-        assert_equal(tailstorminfo['competing'], 4)
+        assert_equal(tailstorminfo['uncles'], 0)
 
         ##### Make sure we don't mine previously mined transactions.
         # Create a transaction that gets added to the txpool in both nodes
@@ -899,22 +899,34 @@ class TailstormActivationTest(BitcoinTestFramework):
         #     block validity. So check that after a while the dag size doesn't change as we mined more
         #     blocks.
         logging.info("Check the trimming of the dag")
+        currentCount = self.nodes[1].getblockcount();
         self.nodes[0].generate(4)
+        waitFor(waitTime, lambda: currentCount + 1 == self.nodes[1].getblockcount())
         self.sync_all()
 
+        currentCount = self.nodes[0].getblockcount();
         self.nodes[1].generate(4)
+        waitFor(waitTime, lambda: currentCount + 1 == self.nodes[0].getblockcount())
         self.sync_all()
 
+        currentCount = self.nodes[1].getblockcount();
         self.nodes[0].generate(4)
+        waitFor(waitTime, lambda: currentCount + 1 == self.nodes[1].getblockcount())
         self.sync_all()
 
+        currentCount = self.nodes[0].getblockcount();
         self.nodes[1].generate(4)
+        waitFor(waitTime, lambda: currentCount + 1 == self.nodes[0].getblockcount())
         self.sync_all()
 
+        currentCount = self.nodes[0].getblockcount();
         self.nodes[1].generate(4)
+        waitFor(waitTime, lambda: currentCount + 1 == self.nodes[0].getblockcount())
         self.sync_all()
 
+        currentCount = self.nodes[0].getblockcount();
         self.nodes[1].generate(4)
+        waitFor(waitTime, lambda: currentCount + 1 == self.nodes[0].getblockcount())
         self.sync_all()
 
         waitFor(waitTime, lambda: self.nodes[0].gettailstorminfo()['total'] == 18)
@@ -926,7 +938,9 @@ class TailstormActivationTest(BitcoinTestFramework):
         # by the receiving node.
         logging.info("Check out of order block handling")
         for i in range(3):
+            currentCount = self.nodes[1].getblockcount();
             self.nodes[1].generate(16)
+            waitFor(waitTime, lambda: currentCount + 4 == self.nodes[1].getblockcount())
             self.sync_all()
 
         # Create enough large transactions that would more than fill a summary block
@@ -963,6 +977,85 @@ class TailstormActivationTest(BitcoinTestFramework):
         summaryBlockSize = self.nodes[0].getblock(summaryhash[0])["size"]
         assert_greater_than(summaryBlockSize, 300000)
         assert_greater_than(maxSummaryBlockSize, summaryBlockSize)
+
+
+        ####  Test Emergent Consensus snap to chain.
+        #     Mine a few subblocks and then delete one from one of the nodes.
+        #     Then continue to mine on the peer that was not deleted from until
+        #     you mine beyond the "check depth" limit. What should happen is the
+        #     node you "did" delete from will fall behind until the check depth
+        #     is exceeded at which point it will "snap" back to the chain tip of the other.
+        logging.info("Emergent Consensus: snap to chaintip")
+        self.sync_all()
+        subblock_hash1 = self.nodes[1].generate(1)
+        subblock_hash2 = self.nodes[1].generate(1)
+        subblock_hash3 = self.nodes[1].generate(1)
+        waitFor(waitTime, lambda: self.nodes[0].gettailstorminfo()['bestdag'] == 3)
+        waitFor(waitTime, lambda: self.nodes[1].gettailstorminfo()['bestdag'] == 3)
+        waitFor(waitTime, lambda: self.nodes[0].gettailstorminfo()['dagtip'] == subblock_hash3[0])
+        waitFor(waitTime, lambda: self.nodes[1].gettailstorminfo()['dagtip'] == subblock_hash3[0])
+
+        node0_chaintip = self.nodes[0].getbestblockhash()
+        node1_chaintip = self.nodes[1].getbestblockhash()
+        assert_equal(node0_chaintip, node1_chaintip)
+
+        # delete the last subblock on node0: chaintips will be equal but dags will not
+        self.nodes[0].getsubblock(subblock_hash2[0], "remove")
+        waitFor(waitTime, lambda: self.nodes[0].gettailstorminfo()['bestdag'] == 1)
+        waitFor(waitTime, lambda: self.nodes[1].gettailstorminfo()['bestdag'] == 3)
+        waitFor(waitTime, lambda: self.nodes[0].gettailstorminfo()['dagtip'] == subblock_hash1[0])
+        waitFor(waitTime, lambda: self.nodes[1].gettailstorminfo()['dagtip'] == subblock_hash3[0])
+
+        node0_chaintip = self.nodes[0].getbestblockhash()
+        node1_chaintip = self.nodes[1].getbestblockhash()
+        assert_equal(node0_chaintip, node1_chaintip)
+
+        # Advance the chain on node1: node0 should fall behind
+        summary_hash = self.nodes[1].generate(1)
+        waitFor(waitTime, lambda: self.nodes[0].gettailstorminfo()['bestdag'] == 1)
+        waitFor(waitTime, lambda: self.nodes[1].gettailstorminfo()['bestdag'] == 0)
+        waitFor(waitTime, lambda: self.nodes[0].gettailstorminfo()['dagtip'] == subblock_hash1[0])
+        waitFor(waitTime, lambda: self.nodes[1].gettailstorminfo()['dagtip'] == summary_hash[0])
+        waitFor(waitTime, lambda: self.nodes[0].gettailstorminfo()['chaintip'] == node0_chaintip)
+        waitFor(waitTime, lambda: self.nodes[1].gettailstorminfo()['chaintip'] == summary_hash[0])
+
+        node0_chaintip = self.nodes[0].getbestblockhash()
+        node1_chaintip = self.nodes[1].getbestblockhash()
+        assert_not_equal(node0_chaintip, node1_chaintip)
+
+        # Advance 4 more summary blocks which makes the check depth limit of 4+1 or 5: node0 should still not have advanced.
+        self.nodes[1].generate(4)
+        self.nodes[1].generate(4)
+        self.nodes[1].generate(3)
+        summary_hash = self.nodes[1].generate(1)
+        self.nodes[1].generate(2)
+
+        sublock_hash1 = self.nodes[1].generate(1)
+        summary_hash = self.nodes[1].generate(1)
+        waitFor(waitTime, lambda: self.nodes[0].gettailstorminfo()['bestdag'] == 1)
+        waitFor(waitTime, lambda: self.nodes[1].gettailstorminfo()['bestdag'] == 0)
+        waitFor(waitTime, lambda: self.nodes[0].gettailstorminfo()['dagtip'] == subblock_hash1[0])
+        waitFor(waitTime, lambda: self.nodes[1].gettailstorminfo()['dagtip'] == summary_hash[0])
+        waitFor(waitTime, lambda: self.nodes[0].gettailstorminfo()['chaintip'] == node0_chaintip)
+        waitFor(waitTime, lambda: self.nodes[1].gettailstorminfo()['chaintip'] == summary_hash[0])
+
+        node0_chaintip = self.nodes[0].getbestblockhash()
+        node1_chaintip = self.nodes[1].getbestblockhash()
+        assert_not_equal(node0_chaintip, node1_chaintip)
+
+        # mine one more summary block: node0 should catch up now and have the same chaintip
+        self.nodes[1].generate(3)
+        summary_hash = self.nodes[1].generate(1)
+        waitFor(waitTime, lambda: self.nodes[0].gettailstorminfo()['bestdag'] == 0)
+        waitFor(waitTime, lambda: self.nodes[1].gettailstorminfo()['bestdag'] == 0)
+        waitFor(waitTime, lambda: self.nodes[0].gettailstorminfo()['dagtip'] == summary_hash[0])
+        waitFor(waitTime, lambda: self.nodes[1].gettailstorminfo()['dagtip'] == summary_hash[0])
+        waitFor(waitTime, lambda: self.nodes[0].gettailstorminfo()['chaintip'] == summary_hash[0])
+        waitFor(waitTime, lambda: self.nodes[1].gettailstorminfo()['chaintip'] == summary_hash[0])
+
+        node0_chaintip = self.nodes[0].getbestblockhash()
+        node1_chaintip = self.nodes[1].getbestblockhash()
+        assert_equal(node0_chaintip, node1_chaintip)
 
 
 if __name__ == '__main__':

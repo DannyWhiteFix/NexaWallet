@@ -178,8 +178,8 @@ class WalletTest (BitcoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_all()
 
-        assert self.nodes[2].getbalance() == SentAmt
-        assert self.nodes[2].getbalance("*") == SentAmt
+        waitFor(waitTime, lambda: self.nodes[2].getbalance() == SentAmt)
+        waitFor(waitTime, lambda: self.nodes[2].getbalance("*") == SentAmt)
 
         # Exercise locking of unspent outputs
         unspent_0 = self.nodes[2].listunspent()[0]
@@ -187,7 +187,7 @@ class WalletTest (BitcoinTestFramework):
         tmp1 = unspent_0["outpoint"]
         bal_before = self.nodes[2].getbalance()
         self.nodes[2].lockunspent(False, [tmp])
-        assert_equal(bal_before, self.nodes[2].getbalance()) # balance before locking coins should be the same as after
+        waitFor(waitTime, lambda: bal_before == self.nodes[2].getbalance()) # balance before locking coins should be the same as after
         assert_raises(JSONRPCException, self.nodes[2].sendtoaddress, self.nodes[2].getnewaddress(addrType), 20000000)
         assert_equal([{'outpoint': unspent_0['outpoint']}], self.nodes[2].listlockunspent())
         self.nodes[2].lockunspent(True, [tmp1])
@@ -199,8 +199,8 @@ class WalletTest (BitcoinTestFramework):
 
         # node0 should end up with 100 btc in block rewards plus fees, but
         # minus the 21 plus fees sent to node2
-        assert_equal(self.nodes[0].getbalance(), (COINBASE_REWARD*2)-SentAmt)
-        assert_equal(self.nodes[2].getbalance(), SentAmt)
+        waitFor(waitTime, lambda: self.nodes[0].getbalance() == (COINBASE_REWARD*2) - SentAmt)
+        waitFor(waitTime, lambda: self.nodes[2].getbalance() == SentAmt)
 
         # Node0 should have two unspent outputs.
         # Create a couple of transactions to send them to node2, submit them through
@@ -231,9 +231,9 @@ class WalletTest (BitcoinTestFramework):
         self.nodes[1].generate(1)
         self.sync_all()
 
-        assert_equal(self.nodes[0].getbalance(), 0)
-        assert_equal(self.nodes[2].getbalance(), COINBASE_REWARD*2)
-        assert_equal(self.nodes[2].getbalance("from1"), COINBASE_REWARD*2-SentAmt)
+        waitFor(waitTime, lambda: self.nodes[0].getbalance() == 0)
+        waitFor(waitTime, lambda: self.nodes[2].getbalance() == COINBASE_REWARD*2)
+        waitFor(waitTime, lambda: self.nodes[2].getbalance("from1") == COINBASE_REWARD*2-SentAmt)
 
         # Send 5 BTC normal
         address = self.nodes[0].getnewaddress(addrType, "test")
@@ -250,7 +250,7 @@ class WalletTest (BitcoinTestFramework):
         self.nodes[2].generate(1)
         self.sync_all()
         node_2_bal -= Decimal('5000000')
-        assert_equal(self.nodes[2].getbalance(), node_2_bal)
+        waitFor(waitTime, lambda: self.nodes[2].getbalance() == node_2_bal)
         node_0_bal = self.check_fee_amount(self.nodes[0].getbalance(), Decimal('10000000'), fee_per_byte, count_bytes(self.nodes[2].getrawtransaction(txid)))
 
 
@@ -260,14 +260,14 @@ class WalletTest (BitcoinTestFramework):
         self.sync_all()
         node_0_bal += Decimal('2000000')
         node_2_bal = self.check_fee_amount(self.nodes[2].getbalance(), node_2_bal - Decimal('2000000'), fee_per_byte, count_bytes(self.nodes[2].getrawtransaction(txid)))
-        assert_equal(self.nodes[0].getbalance(), node_0_bal)
+        waitFor(waitTime, lambda: self.nodes[0].getbalance() == node_0_bal)
 
         # Sendmany 1 BTC with subtract fee from amountd
         txid = self.nodes[2].sendmany('from1', {address: 1000000}, 0, "", [address])
         self.nodes[2].generate(1)
         self.sync_all()
         node_2_bal -= Decimal('1000000')
-        assert_equal(self.nodes[2].getbalance(), node_2_bal)
+        waitFor(waitTime, lambda: self.nodes[2].getbalance() == node_2_bal)
         node_0_bal = self.check_fee_amount(self.nodes[0].getbalance(), node_0_bal + Decimal('1000000'), fee_per_byte, count_bytes(self.nodes[2].getrawtransaction(txid)))
 
         # Test ResendWalletTransactions:
@@ -290,8 +290,8 @@ class WalletTest (BitcoinTestFramework):
         assert(txid1 in self.nodes[3].getrawtxpool())
 
         # Exercise balance rpcs
-        assert_equal(self.nodes[0].getwalletinfo()["unconfirmed_balance"], 1000000)
-        assert_equal(self.nodes[0].getunconfirmedbalance(), 1000000)
+        waitFor(waitTime, lambda: self.nodes[0].getwalletinfo()["unconfirmed_balance"] == 1000000)
+        waitFor(waitTime, lambda: self.nodes[0].getunconfirmedbalance() == 1000000)
 
         #check if we can list zero value tx as available coins
         #1. create rawtx
@@ -348,7 +348,7 @@ class WalletTest (BitcoinTestFramework):
         self.sync_all()
         node_2_bal += 2000000
         txObjNotBroadcasted = self.nodes[0].gettransaction(txIdNotBroadcasted)
-        waitFor(30, lambda: self.nodes[2].getbalance(), node_2_bal)
+        waitFor(waitTime, lambda: self.nodes[2].getbalance() == node_2_bal)
 
         #create another tx
         txIdNotBroadcasted  = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(addrType), 2000000)
@@ -366,7 +366,7 @@ class WalletTest (BitcoinTestFramework):
         node_2_bal += 2000000
 
         #tx should be added to balance because after restarting the nodes tx should be broadcastet
-        assert_equal(self.nodes[2].getbalance(), node_2_bal)
+        waitFor(waitTime, lambda: self.nodes[2].getbalance() == node_2_bal)
 
         #send a tx with value in a string (PR#6380 +)
         txId  = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(addrType), "2000000")
@@ -437,7 +437,7 @@ class WalletTest (BitcoinTestFramework):
         SendQty = Decimal("100000")
         for a in addrs:
             self.nodes[0].sendtoaddress(a, SendQty)
-        waitFor(30, lambda: self.nodes[0].gettxpoolinfo()["size"] == 21)
+        waitFor(waitTime, lambda: self.nodes[0].gettxpoolinfo()["size"] == 21)
         while self.nodes[0].gettxpoolinfo()["size"] > 0: self.nodes[0].generate(1)
         sync_blocks(self.nodes)
         sync_wallets(self.nodes)
@@ -513,11 +513,11 @@ class WalletTest (BitcoinTestFramework):
         # Check wallet unspent counts. The counts may be different from the listunspent count because
         # they include watch-only amounts as well as any immature coinbases, unconfirmed and/or locked coins.
         waitFor(waitTime, lambda: self.nodes[0].getwalletinfo()["unspentcount"] == 11, lambda: "Expecting unspent count of 11: wallet Info: %s" % self.nodes[0].getwalletinfo())
-        assert_equal(len(self.nodes[0].listunspent()), 5)
-        assert_equal(self.nodes[1].getwalletinfo()["unspentcount"], 229)
-        assert_equal(len(self.nodes[1].listunspent()), 139)
-        assert_equal(self.nodes[2].getwalletinfo()["unspentcount"], 37)
-        assert_equal(len(self.nodes[2].listunspent()), 33)
+        waitFor(waitTime, lambda: len(self.nodes[0].listunspent()) == 5)
+        waitFor(waitTime, lambda: self.nodes[1].getwalletinfo()["unspentcount"] == 229)
+        waitFor(waitTime, lambda: len(self.nodes[1].listunspent()) == 139)
+        waitFor(waitTime, lambda: self.nodes[2].getwalletinfo()["unspentcount"] == 37)
+        waitFor(waitTime, lambda: len(self.nodes[2].listunspent()) == 33)
 
         # check if wallet or blockchain maintenance changes the balance
         self.sync_blocks()
@@ -650,7 +650,7 @@ class WalletTest (BitcoinTestFramework):
         time.sleep(instantDelay - 1.5) # wait until just before the delay expires
         assert_equal(self.nodes[2].getbalance(), balance2)
         time.sleep(2) # wait the last second and the balance should update (wait just a little longer for the tx to get into the txpool)
-        assert_equal(self.nodes[2].getbalance(), balance2 + sendQty)
+        waitFor(waitTime, lambda: self.nodes[2].getbalance() == balance2 + sendQty)
 
         # send from node0 to node2, but make node2 have an wallet.instantLimit value
         # which would be larger than any NEX amount associated with the token transaction. This
@@ -665,7 +665,7 @@ class WalletTest (BitcoinTestFramework):
         self.nodes[0].sendtoaddress(addr2a, sendQty)
         self.sync_all()
         time.sleep(instantDelay + 1) # wait one second extra to be sure
-        assert_equal(self.nodes[2].getbalance(), balance2)
+        waitFor(waitTime, lambda: self.nodes[2].getbalance() == balance2)
 
         # generate a block and the balance should now update
         self.nodes[2].generate(1)
@@ -690,7 +690,7 @@ class WalletTest (BitcoinTestFramework):
         time.sleep(instantDelay - 1.5) # wait until just before the delay expires
         assert_equal(self.nodes[2].getbalance(), balance2)
         time.sleep(2) # wait the last second and the balance should update (wait just a little longer for the tx to get into the txpool)
-        assert_equal(self.nodes[2].getbalance(), balance2 + sendQty)
+        waitFor(waitTime, lambda: self.nodes[2].getbalance() == balance2 + sendQty)
 
 
         ### Test instant transactions for tokens can be turned off.
@@ -709,7 +709,7 @@ class WalletTest (BitcoinTestFramework):
         self.nodes[0].sendtoaddress(addr3, sendQty)
         self.sync_all()
         time.sleep(instantDelay + 1) # wait one second extra to be sure
-        assert_equal(self.nodes[2].getbalance(), balance2)
+        waitFor(waitTime, lambda: self.nodes[2].getbalance() == balance2)
 
         # generate a block and the balance should now update
         self.nodes[0].generate(1)
